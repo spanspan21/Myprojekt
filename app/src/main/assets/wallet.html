@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -7,7 +7,8 @@
 <style>
     /*
        OFFLINE DEMO — no network, no fetch(), no external resources.
-       Visual recreation of the Phantom wallet home screen for demo purposes.
+       1:1 visual recreation of the Phantom wallet home screen (German UI).
+       Tapping anything only opens a demo dialog — no real transactions.
        To use the real Inter font, drop Inter.woff2 into app/src/main/assets/
        and uncomment the @font-face block below (still fully offline).
     */
@@ -16,17 +17,17 @@
     */
 
     :root {
-        --bg: #1c1c22;
-        --bg-elev: #2a2a31;
-        --bg-elev-2: #33333b;
-        --accent: #ab9ff2;
-        --accent-tint: rgba(171,159,242,0.14);
+        --bg: #000000;
+        --card: #1b1b1d;
+        --card-press: #242427;
+        --chip: #1c1c1e;
         --text: #ffffff;
-        --text-dim: #9b9ba5;
-        --text-dim2: #6f6f7a;
+        --text-dim: #8e8e93;
+        --text-dim2: #6a6a70;
+        --accent: #ab9ff2;
         --green: #4fd17a;
-        --red: #ff6b6b;
-        --nav-h: 64px;
+        --green-pill: #4ed07a;
+        --red: #ff5a5a;
     }
 
     * {
@@ -35,338 +36,175 @@
         -webkit-user-select: none; user-select: none;
         font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
-
     html, body { background: var(--bg); color: var(--text); height: 100%; }
     body { overflow: hidden; }
 
-    .app {
-        max-width: 480px; margin: 0 auto; height: 100%;
-        display: flex; flex-direction: column; position: relative;
-    }
+    .app { max-width: 480px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; position: relative; }
 
-    /* ---------- Header ---------- */
-    .header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 14px 16px 6px;
+    /* ---------- Top tabs ---------- */
+    .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px 4px; }
+    .avatar {
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+        background: radial-gradient(circle at 35% 30%, #cdb4ff, #7c5cf0 70%);
+        display: grid; place-items: center; overflow: hidden;
     }
-    .hicon {
-        width: 40px; height: 40px; border-radius: 50%;
-        display: grid; place-items: center; color: var(--text);
-    }
-    .hicon:active { background: var(--bg-elev); }
-    .hicon svg { width: 22px; height: 22px; }
-    .acct {
-        display: flex; align-items: center; gap: 7px;
-        padding: 6px 12px; border-radius: 999px;
-    }
-    .acct:active { background: var(--bg-elev); }
-    .acct .av {
-        width: 24px; height: 24px; border-radius: 50%;
-        background: conic-gradient(from 220deg, #ab9ff2, #6c5ce7, #e0a9f2, #ab9ff2);
-    }
-    .acct .nm { font-size: 16px; font-weight: 600; }
-    .acct .cv { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
-    .hright { display: flex; align-items: center; gap: 2px; }
+    .avatar svg { width: 26px; height: 26px; }
+    .tabs { display: flex; gap: 9px; overflow: hidden; }
+    .tab { font-size: 15px; font-weight: 600; padding: 8px 17px; border-radius: 999px; background: var(--chip); color: var(--text-dim); white-space: nowrap; }
+    .tab.on { background: #c8bdf7; color: #1a1626; }
 
-    /* ---------- Scroll body ---------- */
-    .scroll {
-        flex: 1; overflow-y: auto; overflow-x: hidden;
-        padding-bottom: calc(var(--nav-h) + 16px);
-        -webkit-overflow-scrolling: touch;
-    }
+    /* ---------- Scroll ---------- */
+    .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 16px 92px; -webkit-overflow-scrolling: touch; }
     .scroll::-webkit-scrollbar { width: 0; }
 
-    /* ---------- Balance ---------- */
-    .balance-block { text-align: center; padding: 18px 16px 6px; }
-    .addr-chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: var(--bg-elev); color: var(--text-dim);
-        font-size: 13px; font-weight: 500;
-        padding: 6px 12px; border-radius: 999px; margin-bottom: 16px;
-    }
-    .addr-chip svg { width: 13px; height: 13px; opacity: .8; }
-    .balance {
-        font-size: 42px; font-weight: 700; letter-spacing: -1.2px;
-        line-height: 1.05; display: inline-block; cursor: pointer;
-    }
+    /* ---------- Account + balance ---------- */
+    .acct { display: inline-flex; align-items: center; gap: 6px; margin: 14px 0 6px; color: #d6d6db; font-size: 18px; font-weight: 500; }
+    .acct .cv { font-size: 12px; color: var(--text-dim); }
+    .balance { font-size: 40px; font-weight: 700; letter-spacing: -1.4px; line-height: 1.04; cursor: pointer; white-space: nowrap; }
     .balance:active { opacity: .7; }
-    .balance .cents { color: var(--text-dim); }
-    .change {
-        margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;
-        font-size: 15px; font-weight: 600; color: var(--green);
-    }
-    .change .tri { font-size: 10px; }
-    .change .muted { color: var(--text-dim); font-weight: 500; }
+    .change { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+    .change .abs { color: var(--green); font-size: 16px; font-weight: 600; }
+    .change .pct { background: var(--green-pill); color: #06270f; font-size: 15px; font-weight: 700; padding: 3px 9px; border-radius: 8px; }
 
-    /* ---------- Action buttons ---------- */
-    .actions {
-        display: flex; gap: 10px; padding: 22px 16px 10px;
-    }
-    .act { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .act .sq {
-        width: 100%; height: 62px; border-radius: 18px;
-        background: var(--accent-tint);
-        display: grid; place-items: center; color: var(--accent);
-    }
-    .act .sq:active { background: rgba(171,159,242,0.26); }
-    .act .sq svg { width: 24px; height: 24px; }
-    .act .lbl { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+    /* ---------- Cash card ---------- */
+    .cash { display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: 18px; padding: 16px 16px; margin: 22px 0 6px; }
+    .cash:active { background: var(--card-press); }
+    .cash .ic { width: 40px; height: 40px; border-radius: 11px; background: #2c2c2e; display: grid; place-items: center; }
+    .cash .ic svg { width: 22px; height: 22px; }
+    .cash .nm { flex: 1; font-size: 18px; font-weight: 600; }
+    .cash .val { font-size: 18px; font-weight: 600; }
 
-    /* ---------- Section ---------- */
-    .seg {
-        display: flex; gap: 22px; padding: 14px 18px 6px;
-    }
-    .seg .s { font-size: 15px; font-weight: 600; color: var(--text-dim2); }
-    .seg .s.on { color: var(--text); }
+    /* ---------- Token header ---------- */
+    .thead { display: flex; align-items: center; gap: 6px; margin: 26px 2px 14px; }
+    .thead .t { font-size: 26px; font-weight: 700; }
+    .thead .cv { color: var(--text-dim); font-size: 18px; }
 
-    /* ---------- Token rows ---------- */
-    .list { padding: 4px 8px; }
-    .row {
-        display: flex; align-items: center; gap: 13px;
-        padding: 11px 10px; border-radius: 16px;
-    }
-    .row:active { background: var(--bg-elev); }
-    .logo {
-        width: 40px; height: 40px; border-radius: 50%;
-        flex-shrink: 0; overflow: hidden; background: var(--bg-elev-2);
-    }
+    /* ---------- Token cards ---------- */
+    .tok { display: flex; align-items: center; gap: 13px; background: var(--card); border-radius: 18px; padding: 14px 16px; margin-bottom: 11px; }
+    .tok:active { background: var(--card-press); }
+    .logo { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; overflow: hidden; background: #2c2c2e; }
     .logo svg { width: 100%; height: 100%; display: block; }
-    .row .mid { flex: 1; min-width: 0; }
-    .row .t1 { font-size: 16px; font-weight: 600; }
-    .row .t2 { font-size: 13px; color: var(--text-dim); margin-top: 3px; display: flex; gap: 6px; align-items: center; }
-    .row .t2 .up { color: var(--green); }
-    .row .t2 .down { color: var(--red); }
-    .row .end { text-align: right; }
-    .row .v1 { font-size: 16px; font-weight: 600; }
-    .row .v2 { font-size: 13px; color: var(--text-dim); margin-top: 3px; }
+    .tok .mid { flex: 1; min-width: 0; }
+    .tok .nm { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tok .nm .vb { width: 16px; height: 16px; flex-shrink: 0; }
+    .tok .nm .tag { font-size: 12px; font-weight: 600; color: var(--text-dim); background: #2c2c2e; padding: 2px 8px; border-radius: 7px; }
+    .tok .amt { font-size: 15px; color: var(--text-dim); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tok .end { flex-shrink: 0; }
+    .tok .end { text-align: right; }
+    .tok .v1 { font-size: 17px; font-weight: 600; }
+    .tok .v2 { font-size: 15px; margin-top: 4px; }
+    .tok .v2.up { color: var(--green); } .tok .v2.down { color: var(--red); } .tok .v2.flat { color: var(--text-dim); }
 
-    /* ---------- Activity ---------- */
-    .activity { padding: 4px 8px; display: none; }
-    .activity.show { display: block; }
-    .list.hide { display: none; }
-    .day-label { font-size: 13px; color: var(--text-dim2); font-weight: 600; padding: 12px 12px 4px; }
-    .arow { display: flex; align-items: center; gap: 13px; padding: 11px 10px; border-radius: 16px; }
-    .arow:active { background: var(--bg-elev); }
-    .aic {
-        width: 40px; height: 40px; border-radius: 50%;
-        background: var(--bg-elev-2); display: grid; place-items: center; flex-shrink: 0;
-    }
-    .aic svg { width: 20px; height: 20px; }
-    .aic.in { color: var(--green); } .aic.out { color: var(--accent); }
-    .arow .mid { flex: 1; min-width: 0; }
-    .arow .t1 { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .arow .t2 { font-size: 13px; color: var(--text-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .arow .amt { font-size: 15px; font-weight: 600; text-align: right; white-space: nowrap; flex-shrink: 0; }
-    .arow .amt.in { color: var(--green); }
-
-    /* ---------- Bottom nav ---------- */
-    .nav {
-        position: absolute; left: 0; right: 0; bottom: 0; height: var(--nav-h);
-        background: rgba(28,28,34,0.92);
-        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        border-top: 1px solid #2e2e36;
-        display: flex; align-items: center; justify-content: space-around;
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-    .nb { display: grid; place-items: center; color: var(--text-dim2); padding: 8px 16px; }
-    .nb.on { color: var(--text); }
-    .nb svg { width: 25px; height: 25px; }
+    /* ---------- Bottom search + FAB ---------- */
+    .bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; background: linear-gradient(to top, #000 70%, transparent); }
+    .search { flex: 1; display: flex; align-items: center; gap: 10px; background: #1c1c1e; border-radius: 999px; padding: 15px 18px; color: var(--text-dim); font-size: 16px; }
+    .search svg { width: 19px; height: 19px; }
+    .fab { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+    .fab:active { opacity: .85; }
+    .fab svg { width: 26px; height: 26px; color: #1a1626; }
 
     /* ---------- Demo badge ---------- */
-    .demo-badge {
-        position: absolute; top: 60px; right: 10px;
-        background: var(--accent-tint); color: var(--accent);
-        border: 1px solid rgba(171,159,242,0.3);
-        font-size: 10px; font-weight: 700; letter-spacing: .6px;
-        padding: 3px 8px; border-radius: 999px; z-index: 40; pointer-events: none;
-    }
+    .demo-badge { position: absolute; top: 64px; right: 14px; background: rgba(171,159,242,0.14); color: var(--accent); border: 1px solid rgba(171,159,242,0.3); font-size: 9px; font-weight: 700; letter-spacing: .6px; padding: 2px 7px; border-radius: 999px; z-index: 40; pointer-events: none; }
 
     /* ---------- Modal ---------- */
-    .overlay {
-        position: absolute; inset: 0; background: rgba(0,0,0,0.55);
-        display: none; align-items: flex-end; justify-content: center; z-index: 100;
-    }
+    .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
     .overlay.show { display: flex; }
-    .sheet {
-        background: var(--bg-elev); width: 100%;
-        border-radius: 24px 24px 0 0; padding: 26px 22px calc(28px + env(safe-area-inset-bottom));
-        text-align: center; animation: rise .18s ease;
-    }
+    .sheet { background: #1b1b1d; width: 100%; border-radius: 24px 24px 0 0; padding: 26px 22px calc(28px + env(safe-area-inset-bottom)); text-align: center; animation: rise .18s ease; }
     @keyframes rise { from { transform: translateY(40px); } to { transform: translateY(0); } }
     .sheet .grab { width: 38px; height: 4px; border-radius: 2px; background: #4a4a53; margin: -10px auto 18px; }
     .sheet h3 { font-size: 19px; margin-bottom: 8px; }
     .sheet p { font-size: 14px; color: var(--text-dim); line-height: 1.45; margin-bottom: 20px; }
-    .sheet input {
-        width: 100%; background: var(--bg); border: 1px solid #3d3d46; color: var(--text);
-        font-size: 17px; padding: 14px; border-radius: 14px; margin-bottom: 16px;
-        outline: none; -webkit-user-select: text; user-select: text; text-align: center;
-    }
+    .sheet input { width: 100%; background: #000; border: 1px solid #3d3d46; color: var(--text); font-size: 17px; padding: 14px; border-radius: 14px; margin-bottom: 16px; outline: none; -webkit-user-select: text; user-select: text; text-align: center; }
     .sheet input:focus { border-color: var(--accent); }
     .btns { display: flex; gap: 10px; }
     .btn { flex: 1; padding: 15px; border-radius: 16px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; }
     .btn.primary { background: var(--accent); color: #1a1626; }
-    .btn.ghost { background: var(--bg-elev-2); color: var(--text); }
+    .btn.ghost { background: #2c2c2e; color: var(--text); }
     .btn:active { opacity: .85; }
 </style>
 </head>
 <body>
 <div class="app">
 
-    <!-- Header -->
-    <div class="header">
-        <div class="hicon" onclick="demo()" aria-label="menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    <!-- Top tabs -->
+    <div class="topbar">
+        <div class="avatar" onclick="demo()">
+            <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 4c-3.6 0-6.5 2.9-6.5 6.5V16c0 .6.7.9 1.1.4l1.2-1.3c.3-.3.7-.3 1 0l1.2 1.3c.3.3.7.3 1 0l1-1.1c.3-.3.7-.3 1 0l1 1.1c.3.3.7.3 1 0l1.2-1.3c.3-.3.7-.3 1 0l1.2 1.3c.4.5 1.1.2 1.1-.4v-5.5C18.5 6.9 15.6 4 12 4z" opacity=".95"/><circle cx="10" cy="11" r="1.4" fill="#7c5cf0"/><circle cx="14" cy="11" r="1.4" fill="#7c5cf0"/></svg>
         </div>
-        <div class="acct" onclick="demo()">
-            <div class="av"></div>
-            <div class="nm">Account 1</div>
-            <div class="cv">▾</div>
-        </div>
-        <div class="hright">
-            <div class="hicon" onclick="demo()" aria-label="search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-            </div>
-            <div class="hicon" onclick="demo()" aria-label="scan">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M4 12h16"/></svg>
-            </div>
+        <div class="tabs">
+            <div class="tab on">Start</div>
+            <div class="tab" onclick="demo()">Handel</div>
+            <div class="tab" onclick="demo()">Erkunden</div>
         </div>
     </div>
 
     <div class="demo-badge">DEMO</div>
 
     <div class="scroll">
+        <!-- Account -->
+        <div class="acct" onclick="demo()">Konto 1 <span class="cv">▾</span></div>
+
         <!-- Balance -->
-        <div class="balance-block">
-            <div class="addr-chip" onclick="demo()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                7xKXtg…W3kF
-            </div>
-            <div class="balance" id="balance">$47,823,422<span class="cents">.18</span></div>
-            <div class="change">
-                <span class="tri">▲</span>
-                <span>$1,204,889</span>
-                <span class="muted">+2.58%</span>
-            </div>
+        <div class="balance" id="balance">$47,823,422.18</div>
+        <div class="change">
+            <span class="abs">+$1,204,889.00</span>
+            <span class="pct">+2.58%</span>
         </div>
 
-        <!-- Actions -->
-        <div class="actions">
-            <div class="act" onclick="demo()">
-                <div class="sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
-                <div class="lbl">Receive</div>
-            </div>
-            <div class="act" onclick="demo()">
-                <div class="sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
-                <div class="lbl">Send</div>
-            </div>
-            <div class="act" onclick="demo()">
-                <div class="sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4L3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 4 4"/><path d="M17 20l4-4-4-4"/><path d="M21 16H8a4 4 0 0 1-4-4"/></svg></div>
-                <div class="lbl">Swap</div>
-            </div>
-            <div class="act" onclick="demo()">
-                <div class="sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
-                <div class="lbl">Buy</div>
-            </div>
+        <!-- Cash -->
+        <div class="cash" onclick="demo()">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#aeaeb2" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <div class="nm">Cash</div>
+            <div class="val">$0.00</div>
         </div>
 
-        <!-- Segments -->
-        <div class="seg">
-            <div class="s on">Tokens</div>
-            <div class="s" onclick="demo()">Collectibles</div>
+        <!-- Token header -->
+        <div class="thead" onclick="demo()"><span class="t">Token</span><span class="cv">›</span></div>
+
+        <!-- Solana -->
+        <div class="tok" onclick="demo()">
+            <div class="logo"><svg viewBox="0 0 42 42"><rect width="42" height="42" rx="21" fill="#000"/><defs><linearGradient id="sol" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#9945FF"/><stop offset="1" stop-color="#14F195"/></linearGradient></defs><path d="M13 16h16l-3 3H10z" fill="url(#sol)"/><path d="M13 20.5h16l-3 3H10z" fill="url(#sol)"/><path d="M10 25h16l3-3H13z" fill="url(#sol)"/></svg></div>
+            <div class="mid"><div class="nm">Solana <svg class="vb" viewBox="0 0 24 24"><path fill="#ab9ff2" d="M12 2l2.3 1.7 2.85-.15.95 2.7 2.5 1.35-.6 2.8 1.55 2.4-1.9 2.1.2 2.85-2.7.85-1.55 2.4-2.7-.95L12 22l-2.35-1.3-2.7.95-1.55-2.4-2.7-.85.2-2.85-1.9-2.1L2.55 11l-.6-2.8 2.5-1.35.95-2.7L8.25 3.7z"/><path d="M8.3 12.2l2.4 2.4 5-5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="amt">218,540 SOL</div></div>
+            <div class="end"><div class="v1">$2,100,000</div><div class="v2 up">+3.0%</div></div>
         </div>
 
-        <!-- Token list -->
-        <div class="list" id="tokens">
-            <!-- SOL -->
-            <div class="row" onclick="demo()">
-                <div class="logo">
-                    <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="20" fill="#000"/><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9945FF"/><stop offset="1" stop-color="#14F195"/></linearGradient></defs><path d="M12 15.5h15.5l-3 3H9z" fill="url(#g1)"/><path d="M12 19.5h15.5l-3 3H9z" fill="url(#g1)"/><path d="M9 24.5h15.5l3-3H12z" fill="url(#g1)" transform="translate(0,0)"/></svg>
-                </div>
-                <div class="mid"><div class="t1">Solana</div><div class="t2"><span>$169.42</span><span class="up">+3.0%</span></div></div>
-                <div class="end"><div class="v1">$2,100,000</div><div class="v2">12,395 SOL</div></div>
-            </div>
-            <!-- USDC -->
-            <div class="row" onclick="demo()">
-                <div class="logo">
-                    <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#2775ca"/><circle cx="20" cy="20" r="13" fill="none" stroke="#fff" stroke-width="2"/><text x="20" y="26" font-size="16" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">$</text></svg>
-                </div>
-                <div class="mid"><div class="t1">USD Coin</div><div class="t2"><span>$1.00</span><span class="muted">0.0%</span></div></div>
-                <div class="end"><div class="v1">$3,500,000</div><div class="v2">3,500,000 USDC</div></div>
-            </div>
-            <!-- BONK -->
-            <div class="row" onclick="demo()">
-                <div class="logo">
-                    <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#f7a600"/><ellipse cx="14" cy="14" rx="5" ry="7" fill="#e08e00"/><ellipse cx="26" cy="14" rx="5" ry="7" fill="#e08e00"/><circle cx="15" cy="19" r="2.4" fill="#1a1a1a"/><circle cx="25" cy="19" r="2.4" fill="#1a1a1a"/><path d="M13 26q7 6 14 0" stroke="#1a1a1a" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="20" cy="24" r="1.6" fill="#1a1a1a"/></svg>
-                </div>
-                <div class="mid"><div class="t1">Bonk</div><div class="t2"><span>$0.0000252</span><span class="up">+4.2%</span></div></div>
-                <div class="end"><div class="v1">$31,240,000</div><div class="v2">1.24B BONK</div></div>
-            </div>
-            <!-- WIF -->
-            <div class="row" onclick="demo()">
-                <div class="logo">
-                    <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#e8c9a8"/><path d="M9 16q11 -9 22 0l-2 4q-9 -5 -18 0z" fill="#ec7a9c"/><path d="M9 16q11 -9 22 0" fill="none" stroke="#d65c82" stroke-width="1.5"/><circle cx="15" cy="24" r="2.2" fill="#1a1a1a"/><circle cx="25" cy="24" r="2.2" fill="#1a1a1a"/><ellipse cx="20" cy="29" rx="3" ry="2.2" fill="#1a1a1a"/></svg>
-                </div>
-                <div class="mid"><div class="t1">dogwifhat</div><div class="t2"><span>$1.26</span><span class="up">+1.1%</span></div></div>
-                <div class="end"><div class="v1">$12,373,200</div><div class="v2">9,820 WIF</div></div>
-            </div>
-            <!-- SAMO -->
-            <div class="row" onclick="demo()">
-                <div class="logo">
-                    <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#b9d4f5"/><path d="M11 12l6 6M29 12l-6 6" stroke="#5b6b85" stroke-width="3.4" stroke-linecap="round"/><ellipse cx="20" cy="22" rx="11" ry="9" fill="#dce9f9"/><circle cx="15" cy="21" r="2.2" fill="#1a1a1a"/><circle cx="25" cy="21" r="2.2" fill="#1a1a1a"/><ellipse cx="20" cy="26" rx="2.4" ry="1.8" fill="#1a1a1a"/></svg>
-                </div>
-                <div class="mid"><div class="t1">Samoyedcoin</div><div class="t2"><span>$0.00196</span><span class="down">-0.8%</span></div></div>
-                <div class="end"><div class="v1">$4,210,222</div><div class="v2">2.15M SAMO</div></div>
-            </div>
+        <!-- USDC -->
+        <div class="tok" onclick="demo()">
+            <div class="logo"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="21" fill="#2775ca"/><circle cx="21" cy="21" r="13.5" fill="none" stroke="#fff" stroke-width="2.2"/><text x="21" y="27.5" font-size="17" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">$</text></svg></div>
+            <div class="mid"><div class="nm">USDC <svg class="vb" viewBox="0 0 24 24"><path fill="#ab9ff2" d="M12 2l2.3 1.7 2.85-.15.95 2.7 2.5 1.35-.6 2.8 1.55 2.4-1.9 2.1.2 2.85-2.7.85-1.55 2.4-2.7-.95L12 22l-2.35-1.3-2.7.95-1.55-2.4-2.7-.85.2-2.85-1.9-2.1L2.55 11l-.6-2.8 2.5-1.35.95-2.7L8.25 3.7z"/><path d="M8.3 12.2l2.4 2.4 5-5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="amt">3,500,000 USDC</div></div>
+            <div class="end"><div class="v1">$3,500,000</div><div class="v2 flat">0.0%</div></div>
         </div>
 
-        <!-- Activity -->
-        <div class="activity" id="activity">
-            <div class="day-label">Today</div>
-            <div class="arow" onclick="demo()">
-                <div class="aic in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
-                <div class="mid"><div class="t1">Received BONK</div><div class="t2">09:14 · From 4f9…Qx2</div></div>
-                <div class="amt in">+2,000,000 BONK</div>
-            </div>
-            <div class="arow" onclick="demo()">
-                <div class="aic out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4L3 8l4 4M3 8h13a4 4 0 0 1 4 4M17 20l4-4-4-4M21 16H8a4 4 0 0 1-4-4"/></svg></div>
-                <div class="mid"><div class="t1">Swapped SOL → WIF</div><div class="t2">08:02 · Jupiter</div></div>
-                <div class="amt">-4 SOL</div>
-            </div>
-            <div class="day-label">Yesterday</div>
-            <div class="arow" onclick="demo()">
-                <div class="aic out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
-                <div class="mid"><div class="t1">Sent SAMO</div><div class="t2">21:47 · To 8kR…m1P</div></div>
-                <div class="amt">-500,000 SAMO</div>
-            </div>
-            <div class="arow" onclick="demo()">
-                <div class="aic in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
-                <div class="mid"><div class="t1">Received SOL</div><div class="t2">16:30 · From 2pN…Lh7</div></div>
-                <div class="amt in">+1.2 SOL</div>
-            </div>
-            <div class="arow" onclick="demo()">
-                <div class="aic out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4L3 8l4 4M3 8h13a4 4 0 0 1 4 4M17 20l4-4-4-4M21 16H8a4 4 0 0 1-4-4"/></svg></div>
-                <div class="mid"><div class="t1">Swapped USDC → BONK</div><div class="t2">11:09 · Jupiter</div></div>
-                <div class="amt">-1,500 USDC</div>
-            </div>
+        <!-- BONK -->
+        <div class="tok" onclick="demo()">
+            <div class="logo"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="21" fill="#f7a600"/><ellipse cx="14.5" cy="14.5" rx="5.5" ry="7.5" fill="#e08e00"/><ellipse cx="27.5" cy="14.5" rx="5.5" ry="7.5" fill="#e08e00"/><circle cx="15.5" cy="20" r="2.6" fill="#1a1a1a"/><circle cx="26.5" cy="20" r="2.6" fill="#1a1a1a"/><path d="M14 27q7 6 14 0" stroke="#1a1a1a" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="21" cy="25" r="1.7" fill="#1a1a1a"/></svg></div>
+            <div class="mid"><div class="nm">Bonk</div><div class="amt">1.24B BONK</div></div>
+            <div class="end"><div class="v1">$31,240,000</div><div class="v2 up">+4.2%</div></div>
+        </div>
+
+        <!-- WIF -->
+        <div class="tok" onclick="demo()">
+            <div class="logo"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="21" fill="#e8c9a8"/><path d="M9 17q12 -10 24 0l-2.2 4.3q-9.8 -5.5 -19.6 0z" fill="#ec7a9c"/><path d="M9 17q12 -10 24 0" fill="none" stroke="#d65c82" stroke-width="1.6"/><circle cx="16" cy="25.5" r="2.4" fill="#1a1a1a"/><circle cx="26" cy="25.5" r="2.4" fill="#1a1a1a"/><ellipse cx="21" cy="31" rx="3.2" ry="2.3" fill="#1a1a1a"/></svg></div>
+            <div class="mid"><div class="nm">dogwifhat</div><div class="amt">9,820 WIF</div></div>
+            <div class="end"><div class="v1">$12,373,200</div><div class="v2 up">+1.1%</div></div>
+        </div>
+
+        <!-- SAMO -->
+        <div class="tok" onclick="demo()">
+            <div class="logo"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="21" fill="#b9d4f5"/><path d="M11 12l6.5 6.5M31 12l-6.5 6.5" stroke="#5b6b85" stroke-width="3.6" stroke-linecap="round"/><ellipse cx="21" cy="23" rx="11.5" ry="9.5" fill="#dce9f9"/><circle cx="15.5" cy="22" r="2.4" fill="#1a1a1a"/><circle cx="26.5" cy="22" r="2.4" fill="#1a1a1a"/><ellipse cx="21" cy="27" rx="2.6" ry="1.9" fill="#1a1a1a"/></svg></div>
+            <div class="mid"><div class="nm">Samoyedcoin</div><div class="amt">2,150,000 SAMO</div></div>
+            <div class="end"><div class="v1">$4,210,222</div><div class="v2 down">-0.8%</div></div>
         </div>
     </div>
 
-    <!-- Bottom navigation -->
-    <div class="nav">
-        <div class="nb on" id="nav-home" onclick="showView('home')" aria-label="home">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+    <!-- Bottom search + FAB -->
+    <div class="bottom">
+        <div class="search" onclick="demo()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            Phantom durchsuchen
         </div>
-        <div class="nb" onclick="demo()" aria-label="collectibles">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
-        </div>
-        <div class="nb" onclick="demo()" aria-label="swap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4L3 8l4 4M3 8h13a4 4 0 0 1 4 4M17 20l4-4-4-4M21 16H8a4 4 0 0 1-4-4"/></svg>
-        </div>
-        <div class="nb" id="nav-history" onclick="showView('history')" aria-label="history">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        </div>
-        <div class="nb" onclick="demo()" aria-label="explore">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <div class="fab" onclick="demo()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </div>
     </div>
 
@@ -374,9 +212,9 @@
     <div class="overlay" id="info" onclick="closeInfo(event)">
         <div class="sheet" onclick="event.stopPropagation()">
             <div class="grab"></div>
-            <h3>Demo Mode</h3>
-            <p>Feature not available in demo mode.</p>
-            <div class="btns"><button class="btn primary" onclick="closeInfo(event,true)">Got it</button></div>
+            <h3>Demo-Modus</h3>
+            <p>Diese Funktion ist im Demo-Modus nicht verfügbar.</p>
+            <div class="btns"><button class="btn primary" onclick="closeInfo(event,true)">Verstanden</button></div>
         </div>
     </div>
 
@@ -384,12 +222,12 @@
     <div class="overlay" id="edit">
         <div class="sheet" onclick="event.stopPropagation()">
             <div class="grab"></div>
-            <h3>Edit Total Balance</h3>
-            <p>Demo only — change the displayed balance value.</p>
+            <h3>Gesamtbilanz ändern</h3>
+            <p>Nur Demo — ändert den angezeigten Bilanzwert.</p>
             <input id="binput" type="text" inputmode="decimal" placeholder="47823422">
             <div class="btns">
-                <button class="btn ghost" onclick="closeEdit()">Cancel</button>
-                <button class="btn primary" onclick="applyBalance()">Save</button>
+                <button class="btn ghost" onclick="closeEdit()">Abbrechen</button>
+                <button class="btn primary" onclick="applyBalance()">Speichern</button>
             </div>
         </div>
     </div>
@@ -398,29 +236,8 @@
 
 <script>
     "use strict";
-
-    function showView(v) {
-        var t = document.getElementById('tokens');
-        var a = document.getElementById('activity');
-        var nh = document.getElementById('nav-home');
-        var nb = document.getElementById('nav-history');
-        var segs = document.querySelectorAll('.seg');
-        if (v === 'home') {
-            t.classList.remove('hide'); a.classList.remove('show');
-            nh.classList.add('on'); nb.classList.remove('on');
-            segs[0].style.display = 'flex';
-        } else {
-            t.classList.add('hide'); a.classList.add('show');
-            nh.classList.remove('on'); nb.classList.add('on');
-            segs[0].style.display = 'none';
-        }
-        document.querySelector('.scroll').scrollTop = 0;
-    }
-
     function demo() { document.getElementById('info').classList.add('show'); }
-    function closeInfo(e, force) {
-        if (force || e.target.id === 'info') document.getElementById('info').classList.remove('show');
-    }
+    function closeInfo(e, force) { if (force || e.target.id === 'info') document.getElementById('info').classList.remove('show'); }
 
     /* Hidden balance editor: 5 quick taps on the balance */
     var taps = 0, last = 0;
@@ -444,9 +261,7 @@
         var num = Number(raw);
         var whole = Math.floor(num);
         var cents = Math.round((num - whole) * 100);
-        var s = '$' + whole.toLocaleString('en-US');
-        s += '<span class="cents">.' + String(cents).padStart(2, '0') + '</span>';
-        bal.innerHTML = s;
+        bal.textContent = '$' + whole.toLocaleString('en-US') + '.' + String(cents).padStart(2, '0');
         closeEdit();
     }
 </script>
