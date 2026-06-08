@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Crypto Demo Wallet</title>
+<style>
+    /*
+       OFFLINE DEMO — no network, no fetch(), no external resources.
+       Everything (CSS, JS, icons) is inline or a data: URI.
+
+       Font: a system-font stack that visually approximates "Inter".
+       If you want the real Inter typeface, drop an "Inter.woff2" file into
+       app/src/main/assets/ and uncomment the @font-face block below — it will
+       be served locally, still fully offline.
+    */
+    /*
+    @font-face {
+        font-family: 'Inter';
+        src: url('Inter.woff2') format('woff2');
+        font-weight: 100 900;
+        font-display: swap;
+    }
+    */
+
+    :root {
+        --bg: #1a1b1f;
+        --bg-card: #222328;
+        --bg-card-2: #2a2b31;
+        --accent: #ab9ff2;       /* Phantom purple */
+        --accent-soft: #6b5fc7;
+        --text: #ffffff;
+        --text-dim: #8e8e93;
+        --green: #21c08b;
+        --red: #ff5c5c;
+        --radius: 18px;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    html, body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    body {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 18px 18px 40px;
+        background:
+            radial-gradient(1200px 400px at 50% -10%, rgba(171,159,242,0.18), transparent 60%),
+            var(--bg);
+        min-height: 100%;
+    }
+
+    /* ---------- Top bar ---------- */
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 26px;
+    }
+    .account {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--bg-card);
+        padding: 7px 12px 7px 7px;
+        border-radius: 999px;
+    }
+    .avatar {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ab9ff2, #6b5fc7);
+        flex-shrink: 0;
+    }
+    .account .addr {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+    }
+    .account .chev { color: var(--text-dim); font-size: 12px; }
+
+    .topbar .icons { display: flex; gap: 8px; }
+    .icon-btn {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        display: grid;
+        place-items: center;
+        color: var(--text);
+        font-size: 17px;
+    }
+
+    /* ---------- Balance ---------- */
+    .balance-wrap {
+        text-align: center;
+        margin: 12px 0 26px;
+    }
+    .balance-label {
+        font-size: 14px;
+        color: var(--text-dim);
+        margin-bottom: 6px;
+        letter-spacing: 0.3px;
+    }
+    .balance {
+        font-size: 44px;
+        font-weight: 700;
+        letter-spacing: -1px;
+        cursor: pointer;
+        display: inline-block;
+        line-height: 1.1;
+    }
+    .balance:active { transform: scale(0.98); }
+    .balance-change {
+        margin-top: 8px;
+        font-size: 15px;
+        color: var(--green);
+        font-weight: 600;
+    }
+
+    /* ---------- Action buttons ---------- */
+    .actions {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    .action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: var(--text);
+    }
+    .action .circle {
+        width: 58px; height: 58px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        color: var(--accent);
+        transition: background 0.15s;
+    }
+    .action:active .circle { background: var(--bg-card-2); }
+    .action span { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+
+    /* ---------- Tabs ---------- */
+    .tabs {
+        display: flex;
+        gap: 26px;
+        border-bottom: 1px solid #2c2d33;
+        margin-bottom: 14px;
+    }
+    .tab {
+        padding-bottom: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-dim);
+        position: relative;
+    }
+    .tab.active { color: var(--text); }
+    .tab.active::after {
+        content: '';
+        position: absolute;
+        left: 0; right: 0; bottom: -1px;
+        height: 2px;
+        background: var(--accent);
+        border-radius: 2px;
+    }
+
+    /* ---------- Token list ---------- */
+    .list { display: flex; flex-direction: column; }
+    .row {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 12px 6px;
+        border-radius: 14px;
+    }
+    .row:active { background: var(--bg-card); }
+    .token-icon {
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        overflow: hidden;
+        background: var(--bg-card-2);
+    }
+    .token-icon img { width: 100%; height: 100%; display: block; }
+    .row .main { flex: 1; min-width: 0; }
+    .row .name { font-size: 15px; font-weight: 600; }
+    .row .sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .row .right { text-align: right; }
+    .row .usd { font-size: 15px; font-weight: 600; }
+    .row .delta { font-size: 13px; margin-top: 2px; }
+    .delta.up { color: var(--green); }
+    .delta.down { color: var(--red); }
+
+    /* ---------- Activity ---------- */
+    .activity { display: none; flex-direction: column; }
+    .activity.show { display: flex; }
+    .list.show { display: flex; }
+    .act-row {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 12px 6px;
+    }
+    .act-icon {
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        background: var(--bg-card-2);
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .act-icon.in { color: var(--green); }
+    .act-icon.out { color: var(--accent); }
+    .act-row .main { flex: 1; min-width: 0; }
+    .act-row .title { font-size: 15px; font-weight: 600; }
+    .act-row .date { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .act-row .amt { font-size: 15px; font-weight: 600; text-align: right; }
+    .amt.in { color: var(--green); }
+
+    /* ---------- Demo badge ---------- */
+    .demo-badge {
+        position: fixed;
+        right: 10px;
+        bottom: 10px;
+        background: rgba(171,159,242,0.15);
+        color: var(--accent);
+        border: 1px solid rgba(171,159,242,0.35);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        z-index: 50;
+        pointer-events: none;
+    }
+
+    /* ---------- Modal ---------- */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 24px;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+        background: var(--bg-card);
+        border-radius: 22px;
+        padding: 24px 22px;
+        width: 100%;
+        max-width: 340px;
+        text-align: center;
+    }
+    .modal h3 { font-size: 18px; margin-bottom: 8px; }
+    .modal p { font-size: 14px; color: var(--text-dim); line-height: 1.4; margin-bottom: 18px; }
+    .modal input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid #3a3b42;
+        color: var(--text);
+        font-size: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        outline: none;
+        -webkit-user-select: text;
+        user-select: text;
+        text-align: center;
+    }
+    .modal input:focus { border-color: var(--accent); }
+    .modal .btns { display: flex; gap: 10px; }
+    .btn {
+        flex: 1;
+        padding: 13px;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+    }
+    .btn.primary { background: var(--accent); color: #16131f; }
+    .btn.ghost { background: var(--bg-card-2); color: var(--text); }
+    .btn:active { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="account" onclick="demoDialog()">
+            <div class="avatar"></div>
+            <div class="addr">0x71C...F3k</div>
+            <div class="chev">▾</div>
+        </div>
+        <div class="icons">
+            <div class="icon-btn" onclick="demoDialog()">&#9783;</div>
+            <div class="icon-btn" onclick="demoDialog()">&#9881;</div>
+        </div>
+    </div>
+
+    <!-- Balance -->
+    <div class="balance-wrap">
+        <div class="balance-label">Total Balance</div>
+        <div class="balance" id="balance">$47,823,422</div>
+        <div class="balance-change">+$1,204,889 (2.58%) Today</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <div class="action" onclick="demoDialog()">
+            <div class="circle">&#8593;</div>
+            <span>Send</span>
+        </div>
+        <div class="action" onclick="demoDialog()">
+            <div class="circle">&#8595;</div>
+            <span>Receive</span>
+        </div>
+        <div class="action" onclick="demoDialog()">
+            <div class="circle">&#8644;</div>
+            <span>Swap</span>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" id="tab-tokens" onclick="switchTab('tokens')">Tokens</div>
+        <div class="tab" id="tab-activity" onclick="switchTab('activity')">Activity</div>
+    </div>
+
+    <!-- Token list -->
+    <div class="list show" id="view-tokens">
+        <!-- BONK -->
+        <div class="row" onclick="demoDialog()">
+            <div class="token-icon"><img alt="BONK" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'&gt;&lt;rect width='64' height='64' rx='32' fill='%23f7a600'/&gt;&lt;circle cx='24' cy='28' r='4' fill='%23000'/&gt;&lt;circle cx='40' cy='28' r='4' fill='%23000'/&gt;&lt;path d='M22 40 q10 10 20 0' stroke='%23000' stroke-width='3' fill='none' stroke-linecap='round'/&gt;&lt;/svg&gt;"></div>
+            <div class="main">
+                <div class="name">Bonk</div>
+                <div class="sub">12,400,000 BONK</div>
+            </div>
+            <div class="right">
+                <div class="usd">$31,240,000</div>
+                <div class="delta up">+4.2%</div>
+            </div>
+        </div>
+        <!-- WIF -->
+        <div class="row" onclick="demoDialog()">
+            <div class="token-icon"><img alt="WIF" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'&gt;&lt;rect width='64' height='64' rx='32' fill='%23d9b08c'/&gt;&lt;rect x='16' y='12' width='32' height='20' rx='10' fill='%23f4e3d3'/&gt;&lt;circle cx='26' cy='34' r='3' fill='%23000'/&gt;&lt;circle cx='38' cy='34' r='3' fill='%23000'/&gt;&lt;ellipse cx='32' cy='42' rx='4' ry='3' fill='%23000'/&gt;&lt;/svg&gt;"></div>
+            <div class="main">
+                <div class="name">dogwifhat</div>
+                <div class="sub">9,820 WIF</div>
+            </div>
+            <div class="right">
+                <div class="usd">$12,373,200</div>
+                <div class="delta up">+1.1%</div>
+            </div>
+        </div>
+        <!-- SAMO -->
+        <div class="row" onclick="demoDialog()">
+            <div class="token-icon"><img alt="SAMO" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'&gt;&lt;rect width='64' height='64' rx='32' fill='%23a0c4ff'/&gt;&lt;path d='M18 20 l8 8 M46 20 l-8 8' stroke='%23394867' stroke-width='4' stroke-linecap='round'/&gt;&lt;circle cx='25' cy='34' r='3' fill='%23000'/&gt;&lt;circle cx='39' cy='34' r='3' fill='%23000'/&gt;&lt;circle cx='32' cy='42' r='3' fill='%23000'/&gt;&lt;/svg&gt;"></div>
+            <div class="main">
+                <div class="name">Samoyedcoin</div>
+                <div class="sub">2,150,000 SAMO</div>
+            </div>
+            <div class="right">
+                <div class="usd">$4,210,222</div>
+                <div class="delta down">-0.8%</div>
+            </div>
+        </div>
+        <!-- SOL -->
+        <div class="row" onclick="demoDialog()">
+            <div class="token-icon"><img alt="SOL" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'&gt;&lt;rect width='64' height='64' rx='32' fill='%23111'/&gt;&lt;path d='M20 24 h22 l-6 6 h-22 z' fill='%2300ffa3'/&gt;&lt;path d='M20 32 h22 l-6 6 h-22 z' fill='%2303e1ff'/&gt;&lt;path d='M20 40 h22 l-6 -0 h-22 z' fill='%23dc1fff'/&gt;&lt;/svg&gt;"></div>
+            <div class="main">
+                <div class="name">Solana</div>
+                <div class="sub">12.4 SOL</div>
+            </div>
+            <div class="right">
+                <div class="usd">$2,100,000</div>
+                <div class="delta up">+3.0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity list -->
+    <div class="activity" id="view-activity">
+        <div class="act-row">
+            <div class="act-icon in">&#8595;</div>
+            <div class="main">
+                <div class="title">Received 2,000,000 BONK</div>
+                <div class="date">Today, 09:14</div>
+            </div>
+            <div class="amt in">+$5,040</div>
+        </div>
+        <div class="act-row">
+            <div class="act-icon out">&#8644;</div>
+            <div class="main">
+                <div class="title">Swapped 4 SOL to WIF</div>
+                <div class="date">Today, 08:02</div>
+            </div>
+            <div class="amt">-4 SOL</div>
+        </div>
+        <div class="act-row">
+            <div class="act-icon out">&#8593;</div>
+            <div class="main">
+                <div class="title">Sent 500,000 SAMO</div>
+                <div class="date">Yesterday, 21:47</div>
+            </div>
+            <div class="amt">-$980</div>
+        </div>
+        <div class="act-row">
+            <div class="act-icon in">&#8595;</div>
+            <div class="main">
+                <div class="title">Received 1.2 SOL</div>
+                <div class="date">Yesterday, 16:30</div>
+            </div>
+            <div class="amt in">+$203</div>
+        </div>
+        <div class="act-row">
+            <div class="act-icon out">&#8644;</div>
+            <div class="main">
+                <div class="title">Swapped USDC to BONK</div>
+                <div class="date">Yesterday, 11:09</div>
+            </div>
+            <div class="amt">-$1,500</div>
+        </div>
+    </div>
+
+    <!-- Demo badge -->
+    <div class="demo-badge">DEMO WALLET</div>
+
+    <!-- Generic "not available" dialog -->
+    <div class="overlay" id="info-overlay" onclick="closeInfo(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3>Demo Mode</h3>
+            <p>Feature not available in demo mode.</p>
+            <div class="btns">
+                <button class="btn primary" onclick="closeInfo(event, true)">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden balance editor (5 quick taps on the balance) -->
+    <div class="overlay" id="edit-overlay">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3>Edit Total Balance</h3>
+            <p>Demo only — change the displayed balance value.</p>
+            <input id="balance-input" type="text" inputmode="decimal" placeholder="e.g. 47,823,422">
+            <div class="btns">
+                <button class="btn ghost" onclick="closeEdit()">Cancel</button>
+                <button class="btn primary" onclick="applyBalance()">Save</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    "use strict";
+
+    /* ---- Tab switching ---- */
+    function switchTab(which) {
+        var tokens = document.getElementById('view-tokens');
+        var activity = document.getElementById('view-activity');
+        var tabT = document.getElementById('tab-tokens');
+        var tabA = document.getElementById('tab-activity');
+        if (which === 'tokens') {
+            tokens.classList.add('show');
+            activity.classList.remove('show');
+            tabT.classList.add('active');
+            tabA.classList.remove('active');
+        } else {
+            tokens.classList.remove('show');
+            activity.classList.add('show');
+            tabT.classList.remove('active');
+            tabA.classList.add('active');
+        }
+    }
+
+    /* ---- Generic demo dialog ---- */
+    function demoDialog() {
+        document.getElementById('info-overlay').classList.add('show');
+    }
+    function closeInfo(e, force) {
+        if (force || e.target.id === 'info-overlay') {
+            document.getElementById('info-overlay').classList.remove('show');
+        }
+    }
+
+    /* ---- Hidden balance editor: 5 quick taps ---- */
+    var tapCount = 0;
+    var lastTap = 0;
+    var balanceEl = document.getElementById('balance');
+
+    balanceEl.addEventListener('click', function () {
+        var now = Date.now();
+        // Reset the counter if taps are more than 600ms apart.
+        if (now - lastTap > 600) {
+            tapCount = 0;
+        }
+        lastTap = now;
+        tapCount++;
+        if (tapCount >= 5) {
+            tapCount = 0;
+            openEdit();
+        }
+    });
+
+    function openEdit() {
+        var input = document.getElementById('balance-input');
+        // Pre-fill with the current numeric value (digits only).
+        input.value = balanceEl.textContent.replace(/[^0-9.]/g, '');
+        document.getElementById('edit-overlay').classList.add('show');
+        setTimeout(function () { input.focus(); }, 50);
+    }
+    function closeEdit() {
+        document.getElementById('edit-overlay').classList.remove('show');
+    }
+    function applyBalance() {
+        var raw = document.getElementById('balance-input').value.replace(/[^0-9.]/g, '');
+        if (raw === '' || isNaN(Number(raw))) {
+            closeEdit();
+            return;
+        }
+        var num = Number(raw);
+        // Format with thousands separators, no decimals.
+        var formatted = '$' + Math.round(num).toLocaleString('en-US');
+        balanceEl.textContent = formatted;
+        closeEdit();
+    }
+</script>
+</body>
+</html>
