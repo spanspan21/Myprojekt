@@ -6,56 +6,44 @@
 <title>Ascend</title>
 <style>
   :root{
-    --bg:#06080c; --card:rgba(255,255,255,.035); --card2:rgba(255,255,255,.055);
-    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.15);
-    --txt:#f3f5f9; --muted:#9096a3; --dim:#5b616e;
-    --green:#4ade80; --green2:#22c55e; --orange:#ff8a3d; --amber:#f5b301;
-    --teal:#2dd4bf; --red:#ff5d63; --blue:#5b9dff; --purple:#b794ff; --gold:#f5c451;
-    --grad:linear-gradient(115deg,#2dd4bf,#4ade80);
-    --gradO:linear-gradient(115deg,#ff8a3d,#ff5d63);
-    --gradP:linear-gradient(115deg,#b794ff,#7c5cff);
-    --gradG:linear-gradient(115deg,#f5c451,#f59e0b);
+    --bg:#070a0f; --card:#0f131a; --card2:#151a22; --line:rgba(255,255,255,.07);
+    --line2:rgba(255,255,255,.14); --txt:#eef1f6; --muted:#8b93a1; --dim:#59616e;
+    --acc:#3dd7a0; --acc2:#2dd4bf; --green:#3dd7a0; --amber:#f5c451; --orange:#ff8a4c;
+    --red:#ff6169; --blue:#5b9dff; --purple:#b794ff; --gold:#f5c451;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;margin:0;padding:0;color:var(--txt);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
-  body{overflow:hidden;max-width:700px;margin:0 auto;position:relative;
-    background:
-      radial-gradient(120% 60% at 50% -10%, rgba(45,212,191,.10), transparent 60%),
-      radial-gradient(90% 50% at 100% 0%, rgba(124,92,255,.07), transparent 55%),
-      #06080c;}
+  body{overflow:hidden;max-width:720px;margin:0 auto;position:relative;
+    background:radial-gradient(130% 55% at 50% -8%, rgba(61,215,160,.08), transparent 55%), #070a0f;}
+  #app{height:100%;}
   ::-webkit-scrollbar{width:0;height:0;display:none;}
 
-  .pager{display:flex;height:100dvh;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior:contain;}
-  .page{flex:0 0 100%;width:100%;height:100dvh;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;
-    padding:calc(env(safe-area-inset-top) + 16px) 16px 104px;overscroll-behavior-y:contain;}
+  .pager{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior:contain;}
+  .page{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;
+    padding:calc(env(safe-area-inset-top) + 18px) 17px 104px;overscroll-behavior-y:contain;}
+  body.kb .page{padding-bottom:22px;}
 
-  /* headers */
   .phead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:12px;}
-  .phead .ptitle{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.05;
-    background:linear-gradient(180deg,#fff,#c9ccd4);-webkit-background-clip:text;background-clip:text;color:transparent;}
-  .phead .psub{font-size:12px;color:var(--dim);margin-top:3px;}
-  .datechip{font-size:10px;letter-spacing:.16em;color:var(--teal);font-weight:700;
-    font-family:ui-monospace,Menlo,monospace;text-transform:uppercase;}
-  .pill{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:22px;font-size:11px;font-weight:700;letter-spacing:.03em;white-space:nowrap;}
-  .pill.amber{color:var(--amber);background:rgba(245,179,1,.09);border:1px solid rgba(245,179,1,.22);}
-  .pill.teal{color:var(--teal);background:rgba(45,212,191,.09);border:1px solid rgba(45,212,191,.22);}
-  .pill.gold{color:var(--gold);background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.24);}
+  .phead .ptitle{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.05;}
+  .phead .psub{font-size:12px;color:var(--dim);margin-top:4px;letter-spacing:.01em;}
+  .datechip{font-size:10px;letter-spacing:.15em;color:var(--acc);font-weight:700;font-family:ui-monospace,Menlo,monospace;text-transform:uppercase;}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:11px;font-size:11.5px;font-weight:700;letter-spacing:.02em;white-space:nowrap;}
+  .pill.amber{color:var(--amber);background:rgba(245,196,81,.09);border:1px solid rgba(245,196,81,.2);}
+  .pill.acc{color:var(--acc);background:rgba(61,215,160,.09);border:1px solid rgba(61,215,160,.2);}
+  .pill.gold{color:var(--gold);background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.22);}
 
-  .seclabel{font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;font-weight:700;
-    margin:24px 3px 12px;display:flex;align-items:center;gap:10px;}
-  .seclabel::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);}
-  .seclabel .r{margin-left:auto;color:var(--dim);letter-spacing:.06em;font-weight:600;}
+  .seclabel{font-size:10.5px;letter-spacing:.19em;color:var(--muted);text-transform:uppercase;font-weight:700;
+    margin:26px 3px 13px;display:flex;align-items:center;gap:9px;}
+  .seclabel .r{margin-left:auto;color:var(--dim);letter-spacing:.05em;font-weight:600;}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px -18px rgba(0,0,0,.8);
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;}
   .card + .card{margin-top:12px;}
 
   .ring{position:relative;flex:0 0 auto;}
   .ring .ct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}
   .ring .pct{font-size:28px;font-weight:800;letter-spacing:-.02em;}
-  .ring .sub{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-top:5px;}
+  .ring .sub{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.11em;margin-top:5px;}
 
   .hero{display:flex;align-items:center;gap:20px;}
   .hero .info h3{margin:0 0 6px;font-size:16px;font-weight:700;}
@@ -66,63 +54,60 @@
   .track i{display:block;height:100%;border-radius:7px;transition:width .5s cubic-bezier(.2,.8,.2,1);}
 
   .stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:12px;}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 10px;text-align:center;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
-  .stat .ic{font-size:18px;}
-  .stat .v{font-size:20px;font-weight:800;margin-top:7px;letter-spacing:-.02em;}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 10px;text-align:center;}
+  .stat .ic{color:var(--acc);height:18px;display:flex;justify-content:center;}
+  .stat .v{font-size:20px;font-weight:800;margin-top:8px;letter-spacing:-.02em;}
   .stat .l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+  svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 
-  /* coach */
   .cx-head{display:flex;align-items:center;gap:13px;margin-bottom:14px;}
-  .cx-badge{width:44px;height:44px;border-radius:14px;flex:0 0 auto;background:var(--gradO);
-    display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 24px rgba(255,93,99,.3);}
+  .cx-badge{width:44px;height:44px;border-radius:14px;flex:0 0 auto;background:#12181e;border:1px solid var(--line2);
+    display:flex;align-items:center;justify-content:center;color:var(--acc);box-shadow:0 0 20px rgba(61,215,160,.12);}
   .cx-head .nm{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:-.01em;}
-  .cx-head .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+  .cx-head .dot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc);}
   .cx-head .desc{font-size:11px;color:var(--dim);margin-top:2px;}
-  .cx-msg{background:linear-gradient(160deg,rgba(255,138,61,.1),rgba(255,93,99,.05));border:1px solid rgba(255,138,61,.16);
-    border-radius:16px;padding:14px 15px;font-size:14px;line-height:1.58;color:#fbeee6;font-weight:500;}
+  .cx-msg{background:#12181e;border:1px solid var(--line);border-left:2px solid var(--acc);
+    border-radius:12px;padding:14px 15px;font-size:14px;line-height:1.6;color:#eaf1ee;}
   .cx-log{margin-top:13px;display:flex;flex-direction:column;gap:9px;}
-  .bubble{max-width:87%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.5;}
+  .bubble{max-width:87%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.55;}
   .bubble.me{align-self:flex-end;background:#eef1f6;color:#0a0a0a;border-bottom-right-radius:5px;font-weight:500;}
-  .bubble.cx{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid var(--line);border-bottom-left-radius:5px;line-height:1.55;}
-  .cx-input{display:flex;gap:9px;margin-top:14px;align-items:center;background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:18px;padding:6px 6px 6px 15px;}
-  .cx-input input{flex:1;background:none;border:none;outline:none;color:var(--txt);font-size:14px;padding:9px 0;}
+  .bubble.cx{align-self:flex-start;background:var(--card2);border:1px solid var(--line);border-bottom-left-radius:5px;}
+  .cx-input{display:flex;gap:9px;margin-top:14px;align-items:center;background:var(--card2);border:1px solid var(--line2);border-radius:16px;padding:6px 6px 6px 15px;}
+  .cx-input input{flex:1;background:none;border:none;outline:none;color:var(--txt);font-size:14px;padding:10px 0;}
   .cx-input input::placeholder{color:var(--dim);}
-  .sendbtn{width:40px;height:40px;border-radius:50%;border:none;flex:0 0 auto;background:var(--gradO);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .sendbtn{width:40px;height:40px;border-radius:50%;border:none;flex:0 0 auto;background:var(--acc);color:#04120c;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;}
   .sendbtn:active{transform:scale(.92);}
-  .linkchip{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:14px;padding:11px 15px;font-size:13px;color:var(--txt);cursor:pointer;font-weight:600;}
+  .linkchip{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:var(--card2);border:1px solid var(--line2);border-radius:13px;padding:11px 15px;font-size:13px;color:var(--txt);cursor:pointer;font-weight:600;}
   .linkchip:active{transform:scale(.97);}
 
-  /* goals */
-  .goalhead{display:flex;align-items:flex-end;justify-content:space-between;}
   .goalhead .big{font-size:32px;font-weight:800;line-height:1;letter-spacing:-.03em;}
   .goalhead .big span{font-size:15px;color:var(--dim);font-weight:600;letter-spacing:0;}
   .prog{height:7px;border-radius:7px;background:rgba(255,255,255,.06);overflow:hidden;margin:14px 0 2px;}
-  .prog i{display:block;height:100%;border-radius:7px;background:var(--grad);transition:width .5s;}
+  .prog i{display:block;height:100%;border-radius:7px;background:var(--acc);transition:width .5s;}
   .glist{margin-top:8px;}
   .goal{display:flex;align-items:center;gap:13px;padding:13px 2px;border-bottom:1px solid var(--line);}
   .goal:last-child{border-bottom:none;}
-  .cbox{width:25px;height:25px;border-radius:9px;border:2px solid var(--line2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;font-size:14px;color:#04120a;font-weight:800;}
-  .cbox.on{background:var(--grad);border-color:transparent;box-shadow:0 0 14px rgba(74,222,128,.45);}
+  .cbox{width:25px;height:25px;border-radius:9px;border:2px solid var(--line2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;color:#04120c;}
+  .cbox.on{background:var(--acc);border-color:transparent;box-shadow:0 0 14px rgba(61,215,160,.4);}
   .cbox.auto{border-style:dashed;}
+  .cbox svg{width:14px;height:14px;stroke:#04120c;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
   .goal .gt{flex:1;font-size:14.5px;} .goal .gt small{display:block;color:var(--dim);font-size:11px;margin-top:2px;}
   .goal.done .gt{color:var(--dim);}
   .goal .x{color:var(--dim);font-size:19px;cursor:pointer;padding:0 5px;opacity:.5;}
   .addrow{display:flex;gap:9px;margin-top:15px;}
-  .addrow input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:13px;outline:none;color:var(--txt);font-size:14px;padding:12px 14px;min-width:0;}
+  .addrow input{flex:1;background:var(--card2);border:1px solid var(--line2);border-radius:13px;outline:none;color:var(--txt);font-size:14px;padding:12px 14px;min-width:0;}
   .addrow input::placeholder{color:var(--dim);}
-  .addbtn{background:var(--grad);color:#04120a;border:none;border-radius:13px;padding:0 17px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;}
+  .addbtn{background:var(--acc);color:#04120c;border:none;border-radius:13px;padding:0 17px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;}
   .addbtn:active{transform:scale(.96);}
-  .addbtn.o{background:var(--gradO);color:#fff;} .addbtn.p{background:var(--gradP);color:#fff;} .addbtn.g{background:var(--gradG);color:#1a1205;}
 
   .waterrow{display:flex;align-items:center;justify-content:space-between;}
   .waterrow .wv{font-size:27px;font-weight:800;letter-spacing:-.02em;} .waterrow .wv span{font-size:14px;color:var(--dim);font-weight:600;}
   .dots{display:flex;gap:5px;margin-top:13px;flex-wrap:wrap;}
   .dot8{width:15px;height:23px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid var(--line2);}
-  .dot8.f{background:linear-gradient(180deg,#7cc0ff,#3b7fe0);border-color:transparent;box-shadow:0 0 8px rgba(91,157,255,.5);}
+  .dot8.f{background:var(--blue);border-color:transparent;box-shadow:0 0 8px rgba(91,157,255,.5);}
   .qbtns{display:flex;gap:9px;margin-top:15px;}
-  .qbtn{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--txt);border-radius:13px;padding:12px 0;font-size:15px;font-weight:800;cursor:pointer;}
-  .qbtn.primary{background:rgba(91,157,255,.16);border-color:rgba(91,157,255,.34);color:#9fc4ff;}
+  .qbtn{flex:1;background:var(--card2);border:1px solid var(--line2);color:var(--txt);border-radius:13px;padding:12px 0;font-size:15px;font-weight:800;cursor:pointer;}
+  .qbtn.primary{background:rgba(91,157,255,.15);border-color:rgba(91,157,255,.32);color:#9fc4ff;}
   .qbtn:active{transform:scale(.96);}
 
   .lg{padding:15px 0;border-bottom:1px solid var(--line);} .lg:last-child{border-bottom:none;}
@@ -130,106 +115,112 @@
   .lg .lgt .del{color:var(--dim);font-size:17px;opacity:.5;cursor:pointer;padding:0 5px;}
   .lg .lgn{font-size:12px;color:var(--muted);margin-top:4px;}
   .lg .lgbar{height:8px;border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden;margin:10px 0;}
-  .lg .lgbar i{display:block;height:100%;border-radius:8px;background:var(--gradP);}
+  .lg .lgbar i{display:block;height:100%;border-radius:8px;background:var(--purple);}
   .lg .lgctl{display:flex;align-items:center;gap:11px;}
-  .lg .lgctl button{width:34px;height:34px;border-radius:11px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:var(--txt);font-size:18px;cursor:pointer;}
+  .lg .lgctl button{width:34px;height:34px;border-radius:11px;border:1px solid var(--line2);background:var(--card2);color:var(--txt);font-size:18px;cursor:pointer;}
   .lg .lgctl .cur{font-size:13px;color:var(--muted);}
-  .miniadd{display:grid;grid-template-columns:1fr 60px 60px auto;gap:8px;margin-top:15px;}
-  .miniadd input{background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:12px;outline:none;color:var(--txt);font-size:13.5px;padding:11px 10px;min-width:0;}
+  .miniadd{display:grid;grid-template-columns:1fr 58px 58px auto;gap:8px;margin-top:15px;}
+  .miniadd input{background:var(--card2);border:1px solid var(--line2);border-radius:12px;outline:none;color:var(--txt);font-size:13.5px;padding:11px 10px;min-width:0;}
   .miniadd input::placeholder{color:var(--dim);}
 
-  /* exercises */
-  .exc{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+  .exc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;}
   .exc + .exc{margin-top:11px;}
   .exc .eh{display:flex;align-items:center;justify-content:space-between;}
   .exc .en{font-size:16px;font-weight:800;letter-spacing:-.01em;}
   .exc .eb{font-size:11px;color:var(--gold);background:rgba(245,196,81,.09);border:1px solid rgba(245,196,81,.22);padding:3px 10px;border-radius:20px;font-weight:700;}
   .exc .edel{color:var(--dim);font-size:17px;opacity:.5;cursor:pointer;padding:0 4px;}
   .sets{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0;min-height:8px;}
-  .setchip{background:rgba(255,255,255,.06);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;font-size:14px;font-weight:800;cursor:pointer;}
+  .setchip{background:var(--card2);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;font-size:14px;font-weight:800;cursor:pointer;}
   .setchip small{color:var(--dim);font-weight:500;font-size:10px;margin-left:3px;}
   .sets .empty{color:var(--dim);font-size:12.5px;font-style:italic;}
   .logrow{display:flex;align-items:center;gap:10px;}
-  .stepper{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:13px;padding:5px 7px;}
-  .stepper button{width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.07);color:var(--txt);font-size:19px;cursor:pointer;}
+  .stepper{display:flex;align-items:center;gap:11px;background:var(--card2);border:1px solid var(--line2);border-radius:13px;padding:5px 7px;}
+  .stepper button{width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.06);color:var(--txt);font-size:19px;cursor:pointer;}
   .stepper .sv{font-size:17px;font-weight:800;min-width:36px;text-align:center;}
-  .logbtn{flex:1;background:var(--grad);border:none;color:#04120a;border-radius:13px;padding:12px 0;font-size:14px;font-weight:800;cursor:pointer;}
+  .logbtn{flex:1;background:var(--acc);border:none;color:#04120c;border-radius:13px;padding:12px 0;font-size:14px;font-weight:800;cursor:pointer;}
   .logbtn:active{transform:scale(.97);}
 
   /* chess */
   .chesstop{display:flex;align-items:center;gap:18px;}
-  .chesstop .rt{flex:1;}
-  .chessrate{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;}
-  .chessrate small{font-size:14px;color:var(--dim);font-weight:600;letter-spacing:0;}
-  .record{display:flex;gap:8px;margin-top:14px;}
-  .rec{flex:1;text-align:center;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:11px 4px;}
-  .rec .rv{font-size:19px;font-weight:800;} .rec .rl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+  .chessrate{font-size:46px;font-weight:800;letter-spacing:-.03em;line-height:1;}
+  .chesssub{font-size:11px;color:var(--dim);margin-top:5px;}
+  .record{display:flex;gap:8px;margin-top:16px;}
+  .rec{flex:1;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:11px 4px;}
+  .rec .rv{font-size:19px;font-weight:800;} .rec .rl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;}
   .rec.w .rv{color:var(--green);} .rec.d .rv{color:var(--amber);} .rec.l .rv{color:var(--red);}
-  .gamebtns{display:flex;gap:9px;margin-top:14px;}
-  .gb{flex:1;border:none;border-radius:13px;padding:13px 0;font-size:14px;font-weight:800;cursor:pointer;color:#fff;}
-  .gb.w{background:linear-gradient(115deg,#22c55e,#16a34a);} .gb.d{background:linear-gradient(115deg,#f5b301,#d99400);color:#1a1205;} .gb.l{background:linear-gradient(115deg,#ff5d63,#e0343a);}
+  .ctiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+  .ct4{background:var(--card2);border:1px solid var(--line);border-radius:13px;padding:11px 6px;text-align:center;}
+  .ct4 .cv{font-size:17px;font-weight:800;} .ct4 .cl{font-size:8.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;} .ct4 .cx{font-size:9px;color:var(--dim);margin-top:2px;}
+  .gamebtns{display:flex;gap:9px;margin-top:15px;}
+  .gb{flex:1;border:1px solid var(--line2);border-radius:13px;padding:13px 0;font-size:14px;font-weight:800;cursor:pointer;background:var(--card2);}
+  .gb.w{color:var(--green);} .gb.d{color:var(--amber);} .gb.l{color:var(--red);}
   .gb:active{transform:scale(.96);}
+  .linkednote{display:flex;align-items:center;gap:9px;background:rgba(61,215,160,.07);border:1px solid rgba(61,215,160,.2);border-radius:13px;padding:12px 14px;font-size:12.5px;color:#bfeeda;margin-top:15px;line-height:1.45;}
+  .seg{display:flex;background:var(--card2);border:1px solid var(--line2);border-radius:13px;padding:4px;gap:4px;}
+  .seg button{flex:1;border:none;background:none;color:var(--muted);border-radius:10px;padding:11px 0;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .seg button.on{background:var(--card);color:var(--txt);box-shadow:0 1px 6px rgba(0,0,0,.4);}
 
   .hc-status{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);margin-bottom:15px;}
   .hc-status .sd{width:8px;height:8px;border-radius:50%;background:var(--dim);}
-  .hc-status.live .sd{background:var(--green);box-shadow:0 0 8px var(--green);} .hc-status.demo .sd{background:var(--amber);box-shadow:0 0 8px var(--amber);}
+  .hc-status.live .sd{background:var(--acc);box-shadow:0 0 8px var(--acc);} .hc-status.demo .sd{background:var(--amber);box-shadow:0 0 8px var(--amber);}
   .recovery{display:flex;align-items:center;gap:18px;}
   .recovery .rt{flex:1;} .recovery .rt .call{font-size:14.5px;font-weight:800;margin-bottom:8px;}
   .recovery .rt ul{margin:0;padding:0;list-style:none;font-size:12px;color:var(--muted);line-height:1.9;}
   .recovery .rt li::before{content:"› ";color:var(--dim);}
   .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:16px;}
-  .metric{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:15px;padding:13px;text-align:center;}
+  .metric{background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:13px;text-align:center;}
   .metric .mv{font-size:19px;font-weight:800;} .metric .ml{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
-  .sleepbar{display:flex;height:34px;border-radius:11px;overflow:hidden;margin-top:8px;background:rgba(255,255,255,.05);}
+  .sleepbar{display:flex;height:34px;border-radius:11px;overflow:hidden;margin-top:8px;background:var(--card2);}
   .sleepbar i{height:100%;}
   .sleeplegend{display:flex;gap:13px;flex-wrap:wrap;margin-top:11px;font-size:11px;color:var(--muted);}
   .sleeplegend span{display:flex;align-items:center;gap:5px;} .sleeplegend b{width:9px;height:9px;border-radius:3px;display:inline-block;}
-  .subhdr{font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:20px 0 9px;font-weight:700;}
+  .subhdr{font-size:10px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin:20px 0 9px;font-weight:700;}
   canvas{width:100%;display:block;}
-  .btn{display:block;width:100%;text-align:center;background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--txt);border-radius:15px;padding:15px;font-size:14px;font-weight:800;cursor:pointer;}
-  .btn.glow{background:var(--grad);border-color:transparent;color:#04120a;box-shadow:0 8px 26px -8px rgba(74,222,128,.5);}
+  .btn{display:block;width:100%;text-align:center;background:var(--card2);border:1px solid var(--line2);color:var(--txt);border-radius:15px;padding:15px;font-size:14px;font-weight:800;cursor:pointer;}
+  .btn.acc{background:var(--acc);border-color:transparent;color:#04120c;}
   .btn.ghost{background:none;border:1px solid var(--line);color:var(--muted);font-weight:600;margin-top:10px;padding:13px;}
   .btn:active{transform:scale(.98);}
   .hint{font-size:11px;color:var(--dim);text-align:center;margin-top:11px;line-height:1.5;}
 
-  textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:15px;color:var(--txt);font-size:14px;padding:14px;outline:none;resize:none;min-height:84px;font-family:inherit;line-height:1.5;}
+  textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:15px;color:var(--txt);font-size:14px;padding:14px;outline:none;resize:none;min-height:84px;font-family:inherit;line-height:1.5;}
   textarea::placeholder{color:var(--dim);}
   .setrow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);gap:12px;}
   .setrow:last-child{border-bottom:none;} .setrow .k{font-size:14px;} .setrow .k small{display:block;color:var(--dim);font-size:11px;margin-top:2px;}
-  .setrow input{background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:11px;color:var(--txt);padding:10px 12px;outline:none;width:130px;font-size:14px;}
+  .setrow input{background:var(--card2);border:1px solid var(--line2);border-radius:11px;color:var(--txt);padding:10px 12px;outline:none;width:130px;font-size:14px;}
   .stepper2{display:flex;align-items:center;gap:13px;}
-  .stepper2 button{width:32px;height:32px;border-radius:10px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:var(--txt);font-size:18px;cursor:pointer;}
-  .stepper2 .val{font-size:16px;font-weight:800;min-width:24px;text-align:center;}
+  .stepper2 button{width:32px;height:32px;border-radius:10px;border:1px solid var(--line2);background:var(--card2);color:var(--txt);font-size:18px;cursor:pointer;}
+  .stepper2 .val{font-size:16px;font-weight:800;min-width:34px;text-align:center;}
   .linkbtn{background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;font-weight:600;}
   .foot{text-align:center;color:var(--dim);font-size:11px;margin:28px 0 6px;letter-spacing:.04em;}
 
-  /* tab bar */
-  .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:700px;
-    height:calc(72px + env(safe-area-inset-bottom));padding:6px 8px env(safe-area-inset-bottom);
-    display:flex;gap:2px;background:rgba(9,11,16,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:720px;
+    height:calc(70px + env(safe-area-inset-bottom));padding:7px 8px env(safe-area-inset-bottom);
+    display:flex;gap:2px;background:rgba(9,12,17,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     border-top:1px solid var(--line);z-index:30;}
+  body.kb .tabbar{display:none;}
   .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--dim);
-    cursor:pointer;font-size:9px;font-weight:700;letter-spacing:.02em;border-radius:16px;transition:.2s;position:relative;}
-  .tab .ti{font-size:19px;line-height:1;filter:grayscale(1) opacity(.55);transition:.2s;}
-  .tab.on{color:var(--txt);background:rgba(255,255,255,.055);}
-  .tab.on .ti{filter:none;transform:translateY(-1px);}
+    cursor:pointer;font-size:9.5px;font-weight:700;letter-spacing:.01em;border-radius:15px;transition:.2s;}
+  .tab .ti{height:23px;display:flex;align-items:center;}
+  .tab .ti svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .tab.on{color:var(--txt);background:rgba(255,255,255,.05);}
+  .tab.on .ti{color:var(--acc);}
 
   .pop{animation:pop .3s cubic-bezier(.2,1.4,.4,1);} @keyframes pop{0%{transform:scale(.85);opacity:.5}100%{transform:scale(1);opacity:1}}
 
-  .lock{position:fixed;inset:0;background:#06080c;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:30px;}
+  .lock{position:fixed;inset:0;background:#070a0f;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:30px;}
   .lock h2{margin:0;font-size:21px;font-weight:700;} .lock p{margin:0;color:var(--dim);font-size:13px;}
   .pins{display:flex;gap:15px;} .pin{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line2);} .pin.f{background:var(--txt);border-color:var(--txt);}
   .pad{display:grid;grid-template-columns:repeat(3,72px);gap:15px;}
-  .key{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:25px;color:var(--txt);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .key{width:72px;height:72px;border-radius:50%;background:var(--card2);border:1px solid var(--line);font-size:25px;color:var(--txt);cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .key:active{background:rgba(255,255,255,.15);} .key.blank{background:none;border:none;}
   .shake{animation:shake .4s;} @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
 
   .modal{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:26px;}
   .modal.show{display:flex;}
-  .modal .box{background:#12151c;border:1px solid var(--line2);border-radius:22px;padding:22px;max-width:340px;width:100%;text-align:center;}
+  .modal .box{background:#12161d;border:1px solid var(--line2);border-radius:22px;padding:22px;max-width:340px;width:100%;text-align:center;}
   .modal h4{margin:0 0 8px;font-size:17px;} .modal p{margin:0 0 18px;color:var(--muted);font-size:13.5px;line-height:1.5;}
   .modal .mb{display:flex;gap:10px;} .modal .mb button{flex:1;border-radius:13px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;border:1px solid var(--line2);}
-  .modal .mb .no{background:rgba(255,255,255,.05);color:var(--txt);} .modal .mb .yes{background:var(--red);color:#fff;border-color:transparent;}
+  .modal .mb .no{background:var(--card2);color:var(--txt);} .modal .mb .yes{background:var(--red);color:#fff;border-color:transparent;}
 </style>
 </head>
 <body>
@@ -245,7 +236,7 @@
 <div id="app" style="display:none;">
 <div class="pager" id="pager">
 
-  <!-- ===== 0 · HEUTE ===== -->
+  <!-- 0 HEUTE -->
   <section class="page" id="p0">
     <div class="phead"><div><div class="datechip" id="dateLine">—</div><div class="ptitle" id="heroName" style="margin-top:5px">Heute</div></div>
       <span class="pill amber">⚡ <b id="streakTop">0</b> Tage</span></div>
@@ -255,26 +246,26 @@
       <div class="hero"><div class="ring" id="goalRing"></div>
         <div class="info"><h3 id="phaseTitle">—</h3><p id="phaseSub">—</p></div></div>
       <div class="timebar"><div class="tl"><span>Tageszeit</span><span id="timeTxt">—</span></div>
-        <div class="track"><i id="timeBar" style="width:0%;background:var(--gradO)"></i></div></div>
+        <div class="track"><i id="timeBar" style="width:0%;background:var(--orange)"></i></div></div>
     </div>
 
     <div class="stats3">
-      <div class="stat"><div class="ic">💧</div><div class="v" id="sWater">0/8</div><div class="l">Wasser</div></div>
-      <div class="stat"><div class="ic">💪</div><div class="v" id="sWork">0</div><div class="l">Sätze</div></div>
-      <div class="stat"><div class="ic">♟️</div><div class="v" id="sChess">0</div><div class="l">Rating</div></div>
+      <div class="stat"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c4 4 6 6.5 6 9.5a6 6 0 0 1-12 0C6 9.5 8 7 12 3Z"/></svg></div><div class="v" id="sWater">0/8</div><div class="l">Wasser</div></div>
+      <div class="stat"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg></div><div class="v" id="sWork">0</div><div class="l">Sätze</div></div>
+      <div class="stat"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M9 20h6M10 20l.5-4M13.5 20l-.5-4M8 16h8l-1-3H9l-1 3ZM12 4a2 2 0 0 1 1.4 3.4A3.5 3.5 0 0 1 15 10.5c0 .8-.6 1.5-1.4 1.5h-3.2C9.6 12 9 11.3 9 10.5A3.5 3.5 0 0 1 10.6 7.4 2 2 0 0 1 12 4Z"/></svg></div><div class="v" id="sChess">0</div><div class="l">Rating</div></div>
     </div>
 
     <div class="seclabel">Coach</div>
     <div class="card">
-      <div class="cx-head"><div class="cx-badge">🔥</div>
-        <div><div class="nm">Coach <span class="dot"></span></div><div class="desc">Kennt dein Dashboard. Duldet keine Ausreden.</div></div></div>
+      <div class="cx-head"><div class="cx-badge"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c1 2.5-.5 3.8-.5 5.5a2.5 2.5 0 0 0 5 0c0-.9-.3-1.7-.9-2.5 1.8 1 3 2.9 3 5.2a6.6 6.6 0 1 1-13.2 0c0-2.7 1.8-4.6 4.6-8.2Z"/></svg></div>
+        <div><div class="nm">Coach <span class="dot"></span></div><div class="desc">Kennt dein Dashboard. Direkt & ehrlich.</div></div></div>
       <div class="cx-msg" id="cxProactive">…</div>
-      <div class="linkchip" data-go="5">🔥 Mit dem Coach reden →</div>
+      <div class="linkchip" data-go="5"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M21 15a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z"/></svg> Mit dem Coach reden</div>
     </div>
     <div class="foot">← wische zwischen den Sektionen →</div>
   </section>
 
-  <!-- ===== 1 · ZIELE ===== -->
+  <!-- 1 ZIELE -->
   <section class="page" id="p1">
     <div class="phead"><div><div class="ptitle">Ziele</div><div class="psub">Jeden Tag dran bleiben — Kette nicht brechen</div></div>
       <span class="pill amber">⚡ <b id="streakG">0</b></span></div>
@@ -302,15 +293,15 @@
         <input id="lgTitle" placeholder="Ziel (z.B. 15 Klimmzüge)">
         <input id="lgCur" type="number" inputmode="numeric" placeholder="jetzt">
         <input id="lgTgt" type="number" inputmode="numeric" placeholder="Ziel">
-        <button class="addbtn p" id="lgAdd">+</button>
+        <button class="addbtn" id="lgAdd">+</button>
       </div>
     </div>
   </section>
 
-  <!-- ===== 2 · TRAINING ===== -->
+  <!-- 2 TRAINING -->
   <section class="page" id="p2">
     <div class="phead"><div><div class="ptitle">Training</div><div class="psub">Calisthenics · Sätze & Wiederholungen</div></div>
-      <span class="pill teal">🗓️ <b id="workWeek">0</b>/Woche</span></div>
+      <span class="pill acc">🗓️ <b id="workWeek">0</b>/Woche</span></div>
 
     <div class="seclabel">Heute</div>
     <div class="card" style="display:flex;justify-content:space-around;text-align:center;">
@@ -322,19 +313,19 @@
     <div class="seclabel">Übungen <span class="r">Satz antippen = löschen</span></div>
     <div id="excList"></div>
     <div class="addrow" style="margin-top:14px"><input id="excInput" placeholder="Übung hinzufügen (z.B. Muscle-ups)" autocomplete="off"><button class="addbtn" id="excAdd">+ Übung</button></div>
-    <button class="btn glow" id="workFinish" style="margin-top:14px">✅ Workout abschließen</button>
+    <button class="btn acc" id="workFinish" style="margin-top:14px">Workout abschließen</button>
   </section>
 
-  <!-- ===== 3 · SCHACH ===== -->
+  <!-- 3 SCHACH -->
   <section class="page" id="p3">
     <div class="phead"><div><div class="ptitle">Schach</div><div class="psub">Rating, Partien & Performance</div></div>
-      <span class="pill gold">♟️ Peak <b id="chessPeak">—</b></span></div>
+      <span class="pill gold">Peak <b id="chessPeak">—</b></span></div>
 
-    <div class="seclabel">Rating</div>
+    <div class="seclabel">Übersicht <span class="r" id="chessSrc">Manuell</span></div>
     <div class="card">
       <div class="chesstop">
-        <div class="rt"><div class="chessrate" id="chessRating">1200</div><div style="font-size:11px;color:var(--dim);margin-top:4px">Aktuelles Rating anpassen</div></div>
-        <div class="stepper"><button data-crate="-1">−</button><span class="sv" id="crVal">1200</span><button data-crate="1">+</button></div>
+        <div style="flex:1"><div class="chessrate" id="chessRating">1200</div><div class="chesssub" id="chessMode">Aktuelles Rating</div></div>
+        <div class="stepper" id="crBox"><button data-crate="-1">−</button><span class="sv" id="crVal">1200</span><button data-crate="1">+</button></div>
       </div>
       <div class="record">
         <div class="rec w"><div class="rv" id="cW">0</div><div class="rl">Siege</div></div>
@@ -342,36 +333,37 @@
         <div class="rec l"><div class="rv" id="cL">0</div><div class="rl">Niederl.</div></div>
         <div class="rec"><div class="rv" id="cWR">–</div><div class="rl">Siegquote</div></div>
       </div>
-      <div class="gamebtns"><button class="gb w" data-game="w">Sieg +</button><button class="gb d" data-game="d">Remis</button><button class="gb l" data-game="l">Niederlage</button></div>
-      <div class="hint">Stell zuerst dein neues Rating oben ein, dann logge das Ergebnis.</div>
+      <div class="ctiles" id="chDetail"></div>
+      <div class="gamebtns" id="gameBtns"><button class="gb w" data-game="w">+ Sieg</button><button class="gb d" data-game="d">+ Remis</button><button class="gb l" data-game="l">+ Niederlage</button></div>
+      <div class="hint" id="manualHint">Stell zuerst dein Rating ein, dann logge das Ergebnis. Oder verknüpfe unten dein Konto.</div>
+      <div class="linkednote" id="linkedNote" style="display:none"></div>
     </div>
 
     <div class="seclabel">Konto verknüpfen</div>
     <div class="card">
-      <div class="qbtns" style="margin-top:0">
-        <button class="qbtn" id="platCC" data-plat="chesscom">♟️ Chess.com</button>
-        <button class="qbtn" id="platLI" data-plat="lichess">🐴 Lichess</button>
+      <div class="seg" style="margin-bottom:11px">
+        <button id="platCC" data-plat="chesscom" class="on">♟ Chess.com</button>
+        <button id="platLI" data-plat="lichess">♞ Lichess</button>
       </div>
-      <div class="addrow"><input id="chessUser" placeholder="Benutzername" autocomplete="off" autocapitalize="off"><button class="addbtn g" id="chessLink">Verknüpfen</button></div>
+      <div class="addrow"><input id="chessUser" placeholder="Benutzername" autocomplete="off" autocapitalize="off"><button class="addbtn" id="chessLink">Verknüpfen</button></div>
       <div class="hint" id="chessLinkStatus" style="margin-top:11px">Rating, Puzzle-Rating & Bilanz automatisch übernehmen.</div>
-      <button class="btn ghost" id="chessRefresh" style="display:none;margin-top:12px">🔄 Jetzt aktualisieren</button>
+      <button class="btn" id="chessRefresh" style="display:none;margin-top:12px">Jetzt aktualisieren</button>
+      <button class="linkbtn" id="chessUnlink" style="display:none;margin-top:12px;width:100%">Verknüpfung trennen</button>
     </div>
 
     <div class="seclabel">Rating-Verlauf <span class="r" id="chessGames">0 Partien</span></div>
     <div class="card"><canvas id="chessChart" height="140"></canvas>
       <div class="sleeplegend" style="justify-content:space-between;margin-top:6px"><span id="chLo">–</span><span id="chHi" style="color:var(--txt)"></span></div></div>
 
-    <div class="seclabel">Ziele & Puzzle</div>
+    <div class="seclabel">Ziel</div>
     <div class="card">
-      <div class="setrow"><div class="k">Rating-Ziel<small id="chGoalTxt">—</small></div>
+      <div class="setrow" style="border:none;padding-bottom:6px"><div class="k">Rating-Ziel<small id="chGoalTxt">—</small></div>
         <div class="stepper2"><button data-cgoal="-50">−</button><span class="val" id="cgVal">1500</span><button data-cgoal="50">+</button></div></div>
-      <div class="prog"><i id="chGoalBar" style="width:0%;background:var(--gradG)"></i></div>
-      <div class="setrow" style="margin-top:6px"><div class="k">Puzzle-Rating<small>Taktik-Training</small></div>
-        <div class="stepper2"><button data-cpuz="-10">−</button><span class="val" id="cpVal">1000</span><button data-cpuz="10">+</button></div></div>
+      <div class="prog"><i id="chGoalBar" style="width:0%;background:var(--gold)"></i></div>
     </div>
   </section>
 
-  <!-- ===== 4 · KÖRPER ===== -->
+  <!-- 4 KÖRPER -->
   <section class="page" id="p4">
     <div class="phead"><div><div class="ptitle">Körper</div><div class="psub">Fitnessuhr · Schlaf · Puls · Erholung</div></div>
       <span class="datechip" id="hcUpdated"></span></div>
@@ -397,19 +389,20 @@
       <div class="subhdr">Herzfrequenz über den Tag</div>
       <canvas id="hrChart" height="150"></canvas>
       <div class="sleeplegend" style="justify-content:space-between;margin-top:6px"><span id="hrMin">–</span><span id="hrAvg" style="color:var(--txt)"></span><span id="hrMax">–</span></div>
-      <button class="btn glow" id="hcConnect" style="margin-top:18px">⌚ Fitnessuhr verbinden</button>
+      <button class="btn acc" id="hcConnect" style="margin-top:18px">Fitnessuhr verbinden</button>
       <button class="btn ghost" id="hcDemo">Ohne Uhr: Demo-Daten anzeigen</button>
       <div class="hint" id="hcHint">Liest aus Samsung Health, Google Fit, Fitbit, Garmin, Zepp u.&nbsp;a. über Health&nbsp;Connect.</div>
     </div>
   </section>
 
-  <!-- ===== 5 · COACH ===== -->
+  <!-- 5 COACH -->
   <section class="page" id="p5">
-    <div class="phead"><div><div class="ptitle">Coach</div><div class="psub">Kompromisslos. Kennt dein Dashboard.</div></div>
+    <div class="phead"><div><div class="ptitle">Coach</div><div class="psub">Kennt dein Dashboard. Direkt & ehrlich.</div></div>
       <span class="pill amber">⚡ <b id="streakO">0</b></span></div>
     <div class="seclabel">Chat</div>
     <div class="card">
-      <div class="cx-head"><div class="cx-badge">🔥</div><div><div class="nm">Coach <span class="dot"></span></div><div class="desc">Sag mir was los ist — ich hol dich raus.</div></div></div>
+      <div class="cx-head"><div class="cx-badge"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c1 2.5-.5 3.8-.5 5.5a2.5 2.5 0 0 0 5 0c0-.9-.3-1.7-.9-2.5 1.8 1 3 2.9 3 5.2a6.6 6.6 0 1 1-13.2 0c0-2.7 1.8-4.6 4.6-8.2Z"/></svg></div>
+        <div><div class="nm">Coach <span class="dot"></span></div><div class="desc">Sag mir, was los ist.</div></div></div>
       <div class="cx-msg" id="cxProactive2">…</div>
       <div class="cx-log" id="cxLog"></div>
       <div class="cx-input"><input id="cxInput" placeholder="Schreib dem Coach…" autocomplete="off"><button class="sendbtn" id="cxSend">↑</button></div>
@@ -435,12 +428,12 @@
 </div>
 
 <nav class="tabbar" id="tabbar">
-  <div class="tab on" data-i="0"><span class="ti">🏠</span>Heute</div>
-  <div class="tab" data-i="1"><span class="ti">🎯</span>Ziele</div>
-  <div class="tab" data-i="2"><span class="ti">💪</span>Training</div>
-  <div class="tab" data-i="3"><span class="ti">♟️</span>Schach</div>
-  <div class="tab" data-i="4"><span class="ti">❤️</span>Körper</div>
-  <div class="tab" data-i="5"><span class="ti">🔥</span>Coach</div>
+  <div class="tab on" data-i="0"><span class="ti"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/></svg></span>Heute</div>
+  <div class="tab" data-i="1"><span class="ti"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/></svg></span>Ziele</div>
+  <div class="tab" data-i="2"><span class="ti"><svg viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg></span>Training</div>
+  <div class="tab" data-i="3"><span class="ti"><svg viewBox="0 0 24 24"><path d="M9 20h6M10 20l.4-4h3.2l.4 4M8.5 16h7l-1-3h-5l-1 3ZM12 4a1.8 1.8 0 0 1 1.3 3.1A3.3 3.3 0 0 1 14.7 10c0 .7-.5 1.2-1.2 1.2h-3c-.7 0-1.2-.5-1.2-1.2a3.3 3.3 0 0 1 1.4-2.9A1.8 1.8 0 0 1 12 4Z"/></svg></span>Schach</div>
+  <div class="tab" data-i="4"><span class="ti"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 5 4-10 2 5h6"/></svg></span>Körper</div>
+  <div class="tab" data-i="5"><span class="ti"><svg viewBox="0 0 24 24"><path d="M12 3c1 2.5-.5 3.8-.5 5.5a2.5 2.5 0 0 0 5 0c0-.9-.3-1.7-.9-2.5 1.8 1 3 2.9 3 5.2a6.6 6.6 0 1 1-13.2 0c0-2.7 1.8-4.6 4.6-8.2Z"/></svg></span>Coach</div>
 </nav>
 </div>
 
@@ -450,6 +443,7 @@ const $=id=>document.getElementById(id);
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const pad2=n=>String(n).padStart(2,"0");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CHK='<svg viewBox="0 0 24 24"><path d="M5 12.5 10 17l9-10"/></svg>';
 
 function dayKey(d){d=d||new Date();const x=new Date(d);if(x.getHours()<6)x.setDate(x.getDate()-1);
   return x.getFullYear()+"-"+pad2(x.getMonth()+1)+"-"+pad2(x.getDate());}
@@ -464,7 +458,7 @@ const DEF_PROFILE={name:"",waterGoal:8,streak:0,longest:0,lastFullKey:null,passc
     {id:"dips",name:"Dips",unit:"reps"},{id:"squats",name:"Kniebeugen",unit:"reps"},{id:"plank",name:"Plank",unit:"sec"}],
   caliBest:{},workoutDays:{},
   longGoals:[{id:"lg1",title:"Klimmzüge am Stück",current:5,target:15,unit:"Wdh"},{id:"lg2",title:"Liegestütze am Stück",current:20,target:50,unit:"Wdh"}],
-  chess:{rating:1200,peak:1200,puzzle:1000,goal:1500,games:{w:0,l:0,d:0},history:[]}};
+  chess:{rating:1200,peak:1200,puzzle:1000,goal:1500,games:{w:0,l:0,d:0},history:[],detail:null,account:null}};
 let profile=Object.assign({},DEF_PROFILE,DB.load("profile",{}));
 profile.caliBest=profile.caliBest||{};profile.workoutDays=profile.workoutDays||{};
 if(!profile.caliDefs||!profile.caliDefs.length)profile.caliDefs=DEF_PROFILE.caliDefs.slice();
@@ -478,6 +472,7 @@ function loadDay(){let d=DB.load("day:"+TODAY,null);
   d.cali=d.cali||{};d.goals=d.goals||[];return d;}
 let day=loadDay();
 const saveP=()=>DB.save("profile",profile),saveD=()=>DB.save("day:"+TODAY,day);
+const chessLinked=()=>!!(profile.chess.account&&profile.chess.account.username);
 
 function workoutSets(){let n=0;for(const k in day.cali)n+=(day.cali[k]||[]).length;return n;}
 function workoutReps(){let n=0;for(const k in day.cali)(day.cali[k]||[]).forEach(v=>n+=v);return n;}
@@ -492,12 +487,10 @@ function weekWorkouts(){let n=0;const now=new Date();for(let i=0;i<7;i++){const 
 
 function ring(el,pct,size,color,width){size=size||118;width=width||10;const r=(size-width)/2,c=2*Math.PI*r,off=c*(1-clamp(pct,0,1));
   const inner=el.querySelector(".ct");el.style.width=size+"px";el.style.height=size+"px";
-  const gid="g"+Math.random().toString(36).slice(2,7);const isGrad=typeof color==="object";
-  const stroke=isGrad?`url(#${gid})`:color;
-  el.innerHTML=`<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">${isGrad?`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${color.a}"/><stop offset="1" stop-color="${color.b}"/></linearGradient></defs>`:""}
+  el.innerHTML=`<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
     <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="${width}"/>
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round"
-      stroke-dasharray="${c}" stroke-dashoffset="${off}" style="filter:drop-shadow(0 0 5px ${isGrad?color.b:color}77);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)"/></svg>`;
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" style="filter:drop-shadow(0 0 5px ${color}66);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)"/></svg>`;
   if(inner)el.appendChild(inner);}
 
 const WS=6,WE=24;
@@ -507,11 +500,11 @@ function phaseInfo(){const now=new Date();const h=now.getHours()+now.getMinutes(
   else if(h>=14&&h<18){title="Nachmittag — durchziehen";emoji="🔥";}else if(h>=18&&h<22){title="Abend — stark bleiben";emoji="🌙";}
   else{title="Nacht — Regeneration";emoji="😴";}
   const left=Math.max(0,WE-eff),lh=Math.floor(left),lm=Math.round((left-lh)*60);
-  return{pct,title,emoji,leftTxt:lh+"h "+pad2(lm)+"m wach",now};}
+  return{pct,title,emoji,leftTxt:lh+"h "+pad2(lm)+"m wach",now,h};}
 function fmtDur(m){if(m==null)return"–";const h=Math.floor(m/60),mm=Math.round(m%60);return h+"h "+pad2(mm);}
 function fmtM(m){const h=Math.floor(m/60),mm=Math.round(m%60);return h>0?h+"h"+pad2(mm):mm+"m";}
 
-/* ===== RENDER ===== */
+/* RENDER */
 function renderHeader(){const now=new Date();const days=["SO","MO","DI","MI","DO","FR","SA"];
   const mon=["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"];
   $("dateLine").textContent=days[now.getDay()]+", "+now.getDate()+". "+mon[now.getMonth()]+" · "+pad2(now.getHours())+":"+pad2(now.getMinutes());
@@ -519,7 +512,7 @@ function renderHeader(){const now=new Date();const days=["SO","MO","DI","MI","DO
   const s=profile.streak;["streakTop","streakG","streakO"].forEach(id=>$(id).textContent=s);}
 function renderDash(){const c=completion(),p=phaseInfo();const el=$("goalRing");
   el.innerHTML='<div class="ct"><div class="pct">'+Math.round(c.pct*100)+'%</div><div class="sub">'+c.done+'/'+c.total+' Ziele</div></div>';
-  const col=c.pct>=1?{a:"#2dd4bf",b:"#4ade80"}:c.pct>=.5?{a:"#f5b301",b:"#4ade80"}:{a:"#ff8a3d",b:"#ff5d63"};
+  const col=c.pct>=1?"var(--acc)":c.pct>=.5?"var(--amber)":"var(--orange)";
   ring(el,c.pct,124,col,11);
   $("phaseTitle").textContent=p.emoji+" "+p.title;$("phaseSub").textContent=c.done+" von "+c.total+" Zielen erledigt.";
   $("timeTxt").textContent=Math.round(p.pct*100)+"% vorbei · "+p.leftTxt;$("timeBar").style.width=Math.round(p.pct*100)+"%";
@@ -527,9 +520,10 @@ function renderDash(){const c=completion(),p=phaseInfo();const el=$("goalRing");
   $("cxProactive").textContent=Coach.proactive();}
 function renderGoals(){const c=completion();
   $("goalDone").textContent=c.done;$("goalTotal").textContent=c.total;$("goalCount").textContent=c.done+"/"+c.total;$("goalProg").style.width=Math.round(c.pct*100)+"%";
-  let html=`<div class="goal ${day.water>=profile.waterGoal?'done':''}"><div class="cbox auto ${day.water>=profile.waterGoal?'on':''}" data-jump="1">${day.water>=profile.waterGoal?'✓':''}</div><div class="gt">💧 Wasser-Ziel<small>${day.water}/${profile.waterGoal} Gläser</small></div></div>`;
-  html+=`<div class="goal ${trainedToday()?'done':''}"><div class="cbox auto ${trainedToday()?'on':''}" data-jump="2">${trainedToday()?'✓':''}</div><div class="gt">💪 Training<small>${workoutSets()} Sätze heute</small></div></div>`;
-  html+=day.goals.map(g=>`<div class="goal ${g.done?'done':''}" data-id="${g.id}"><div class="cbox ${g.done?'on':''}" data-act="toggle">${g.done?'✓':''}</div><div class="gt">${esc(g.text)}</div><div class="x" data-act="del">×</div></div>`).join("");
+  const wOn=day.water>=profile.waterGoal,tOn=trainedToday();
+  let html=`<div class="goal ${wOn?'done':''}"><div class="cbox auto ${wOn?'on':''}" data-jump="1">${wOn?CHK:''}</div><div class="gt">Wasser-Ziel<small>${day.water}/${profile.waterGoal} Gläser</small></div></div>`;
+  html+=`<div class="goal ${tOn?'done':''}"><div class="cbox auto ${tOn?'on':''}" data-jump="2">${tOn?CHK:''}</div><div class="gt">Training<small>${workoutSets()} Sätze heute</small></div></div>`;
+  html+=day.goals.map(g=>`<div class="goal ${g.done?'done':''}" data-id="${g.id}"><div class="cbox ${g.done?'on':''}" data-act="toggle">${g.done?CHK:''}</div><div class="gt">${esc(g.text)}</div><div class="x" data-act="del">×</div></div>`).join("");
   $("goalList").innerHTML=html;
   $("waterCount").textContent=day.water;$("waterGoal").textContent=profile.waterGoal;
   let wd="";for(let i=0;i<profile.waterGoal;i++)wd+=`<div class="dot8 ${i<day.water?'f':''}"></div>`;$("waterDots").innerHTML=wd;renderLong();}
@@ -544,29 +538,42 @@ function renderTraining(){$("tSets").textContent=workoutSets();$("tReps").textCo
   $("tExc").textContent=Object.keys(day.cali).filter(k=>(day.cali[k]||[]).length).length;$("workWeek").textContent=weekWorkouts();
   $("excList").innerHTML=profile.caliDefs.map(ex=>{const sets=day.cali[ex.id]||[];const best=profile.caliBest[ex.id];const step=stepVals[ex.id]||(ex.unit==="sec"?30:10);
     const chips=sets.length?sets.map((v,i)=>`<div class="setchip" data-ex="${ex.id}" data-i="${i}">${v}<small>${ex.unit==="sec"?"s":"×"}</small></div>`).join(""):'<div class="empty">Noch kein Satz — leg los.</div>';
-    return `<div class="exc"><div class="eh"><div class="en">${esc(ex.name)}</div><div style="display:flex;gap:8px;align-items:center">${best?`<span class="eb">🏆 ${best}${ex.unit==="sec"?"s":""}</span>`:""}<span class="edel" data-exdel="${ex.id}">×</span></div></div>
+    return `<div class="exc"><div class="eh"><div class="en">${esc(ex.name)}</div><div style="display:flex;gap:8px;align-items:center">${best?`<span class="eb">Best ${best}${ex.unit==="sec"?"s":""}</span>`:""}<span class="edel" data-exdel="${ex.id}">×</span></div></div>
       <div class="sets">${chips}</div><div class="logrow"><div class="stepper"><button data-step="${ex.id}" data-d="-1">−</button><span class="sv" id="sv-${ex.id}">${step}</span><button data-step="${ex.id}" data-d="1">+</button></div>
       <button class="logbtn" data-log="${ex.id}">+ Satz (${ex.unit==="sec"?"Sek":"Wdh"})</button></div></div>`;}).join("");}
 
 /* chess */
-function renderChess(){const ch=profile.chess;
+function renderChess(){const ch=profile.chess,linked=chessLinked();
   $("chessRating").textContent=ch.rating;$("crVal").textContent=ch.rating;$("chessPeak").textContent=ch.peak;
   $("cW").textContent=ch.games.w;$("cD").textContent=ch.games.d;$("cL").textContent=ch.games.l;
   const tot=ch.games.w+ch.games.d+ch.games.l;$("cWR").textContent=tot?Math.round(ch.games.w/tot*100)+"%":"–";
-  $("chessGames").textContent=tot+" Partien";
-  $("cgVal").textContent=ch.goal;$("cpVal").textContent=ch.puzzle;
+  $("chessGames").textContent=tot+" Partien";$("cgVal").textContent=ch.goal;
   const gp=clamp(ch.rating/ch.goal,0,1);$("chGoalBar").style.width=Math.round(gp*100)+"%";
   $("chGoalTxt").textContent=ch.rating+" / "+ch.goal+" · noch "+Math.max(0,ch.goal-ch.rating)+" Punkte";
+  // detail tiles
+  const d=ch.detail||{};const tiles=[["rapid","Rapid"],["blitz","Blitz"],["bullet","Bullet"]];
+  let dh=tiles.map(([k,l])=>{const o=d[k];const rv=o&&o.rating?o.rating:"–";const sub=o?(o.best?"best "+o.best:(o.games?o.games+" P.":"")):"";
+    return `<div class="ct4"><div class="cv">${rv}</div><div class="cl">${l}</div><div class="cx">${sub}</div></div>`;}).join("");
+  dh+=`<div class="ct4"><div class="cv">${ch.puzzle||"–"}</div><div class="cl">Puzzle</div><div class="cx">Taktik</div></div>`;
+  $("chDetail").innerHTML=dh;
+  // lock manual controls when linked
+  $("chessSrc").textContent=linked?(ch.account.platform==="lichess"?"Lichess":"Chess.com"):"Manuell";
+  $("chessMode").textContent=linked?"Rating (automatisch)":"Aktuelles Rating";
+  $("crBox").style.display=linked?"none":"flex";
+  $("gameBtns").style.display=linked?"none":"flex";
+  $("manualHint").style.display=linked?"none":"block";
+  const ln=$("linkedNote");
+  if(linked){ln.style.display="flex";ln.innerHTML=`🔗 Verknüpft mit <b style="margin:0 3px">${ch.account.platform==="lichess"?"Lichess":"Chess.com"}</b> · ${esc(ch.account.username)}. Rating, Puzzle & Bilanz kommen automatisch — nur dein Rating-Ziel ist manuell.`;}
+  else ln.style.display="none";
   const hist=ch.history.map(h=>h.rating);const series=hist.length?hist:[ch.rating];
   $("chLo").textContent="min "+Math.min(...series);$("chHi").textContent="Ø "+Math.round(series.reduce((a,b)=>a+b,0)/series.length)+" · max "+Math.max(...series);
   lineChart($("chessChart"),series,"#f5c451");renderChessAccount();}
-function logGame(res){const ch=profile.chess;ch.games[res]++;ch.history.push({t:Date.now(),rating:ch.rating,result:res});
+function logGame(res){const ch=profile.chess;if(chessLinked())return;ch.games[res]++;ch.history.push({t:Date.now(),rating:ch.rating,result:res});
   if(ch.rating>ch.peak)ch.peak=ch.rating;if(ch.history.length>60)ch.history=ch.history.slice(-60);saveP();renderChess();renderDash();
-  toast(res==="w"?"♟️ Sieg geloggt — Rating "+ch.rating:res==="d"?"♟️ Remis geloggt":"♟️ Niederlage geloggt. Analyse machen.");}
-
+  toast(res==="w"?"Sieg geloggt":res==="d"?"Remis geloggt":"Niederlage geloggt");}
 function lineChart(cv,vals,color){const ctx=cv.getContext("2d");const W=cv.clientWidth||320,H=140,dpr=window.devicePixelRatio||1;
   cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-  if(!vals||!vals.length){ctx.fillStyle="#5b616e";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText("Noch keine Daten",W/2,H/2);return;}
+  if(!vals||!vals.length){ctx.fillStyle="#59616e";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText("Noch keine Daten",W/2,H/2);return;}
   const lo=Math.min(...vals)-15,hi=Math.max(...vals)+15,n=vals.length;
   const X=i=>n<=1?W/2:(i/(n-1))*(W-8)+4,Y=v=>H-14-((v-lo)/(hi-lo||1))*(H-28);
   ctx.strokeStyle="rgba(255,255,255,.05)";for(let i=0;i<4;i++){const y=14+i*((H-28)/3);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
@@ -576,65 +583,96 @@ function lineChart(cv,vals,color){const ctx=cv.getContext("2d");const W=cv.clien
   ctx.beginPath();vals.forEach((v,i)=>{const x=X(i),y=Y(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
   ctx.strokeStyle=color;ctx.lineWidth=2.6;ctx.lineJoin="round";ctx.shadowColor=color+"88";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
   vals.forEach((v,i)=>{ctx.beginPath();ctx.arc(X(i),Y(v),n<=20?3:1.5,0,7);ctx.fillStyle=color;ctx.fill();});}
-
 function renderStats(){renderDash();renderGoals();renderTraining();renderChess();}
 
-/* ===== COACH ===== */
-const Coach={log:DB.load("ovlog:"+TODAY,[]),last:"",
-  proactive(){const c=completion(),p=phaseInfo(),s=profile.streak;const nm=profile.name?" "+profile.name:"";
-    if(c.pct>=1)return`Alle ${c.total} Ziele platt${nm}. Tag ${s}. Und jetzt? Kein Schulterklopfen. Das ist der MINDEST-Standard des Menschen, der du wirst — nicht die Ausnahme. Iss, schlaf, komm morgen hungriger zurück.`;
-    if(c.pct>=.6)return`${c.done}/${c.total}${nm}. Zielgerade — genau da, wo die Weichen einknicken. Beweis mir, dass du aus anderem Holz bist. Keine ${c.total-c.done} Ausreden mehr. Beende. Den. Tag.`;
-    if(p.now.getHours()<11)return`Aufwachen${nm}. Keiner kommt, um dich zu retten. Kein Talent, kein Glück — nur DU und die Entscheidung, jetzt zu handeln. Wasser, ein Satz, ein Häkchen. BEVOR dein Kopf Lügen erfindet.`;
-    if(p.now.getHours()>=20&&c.pct<1)return`Noch ${c.total-c.done} offen und du sitzt da${nm}. Die Uhr verhandelt nicht. Deine Serie stirbt heute Nacht, wenn du dich nicht bewegst. Also steh auf. Sofort. Keine Diskussion.`;
-    if(!trainedToday())return`${p.emoji} NULL Sätze heute${nm}. Während du zögerst, wird jemand mit weniger Talent besser als du. Dein Körper wartet auf einen Befehl — gib ihn. Training. Jetzt. Geh.`;
-    return`${p.emoji} ${p.title}. ${c.done}/${c.total}${nm}. Motivation ist Müll — sie kommt und geht. Disziplin bleibt. Der nächste Schritt gehört dir, ob du Lust hast oder nicht. MACH ihn.`;},
-  reply(text){const t=text.toLowerCase(),c=completion(),s=profile.streak,open=c.total-c.done,has=(...w)=>w.some(x=>t.includes(x));
-    const nm=profile.name?" "+profile.name:"";let pool;
-    if(has("tiktok","insta","instagram","scroll","reel","youtube","netflix","zock","gaming","daddel","feed","story","snap"))
-      pool=[`TikTok?${nm} Ernsthaft? Du verkaufst deine EINZIGE Lebenszeit an einen Algorithmus, der reich wird, während du verblödest. Das ist kein Spaß — das ist Diebstahl an DIR. Handy weg. Ein Satz Klimmzüge. SOFORT.`,
-        `Jeder Swipe ist eine kleine Kapitulation. Du wurdest nicht geboren, um zuzusehen, wie andere das Leben führen, das du gerade verschläfst. Steh auf. Beweg dich. Jetzt — nicht „gleich".`,
-        `Der Feed will dich schwach, süchtig und abgelenkt. Ich will dich gefährlich. Du hast ${open} Ziele offen — erledige EINES in den nächsten 5 Minuten, oder hör auf, dir was vorzumachen.`];
-    else if(has("später","gleich","morgen","gleich mal","nachher","keine zeit","dann mach ich"))
-      pool=[`„Später"${nm} ist die Sprache derer, die im Bett sterben und sich fragen, was hätte sein können. Es gibt kein Später. Es gibt JETZT. 30 Sekunden. Erster Schritt. Los.`,
-        `„Morgen" ist die bequemste Lüge, die du dir erzählst. Der Mensch, der du sein willst, hätte längst angefangen. Sei er — in den nächsten 60 Sekunden, oder hör auf, davon zu träumen.`,
-        `Aufschieben ist Feigheit in Zeitlupe. Ein Ziel. Jetzt. Ich schau dir zu.`];
-    else if(has("keine lust","kein bock","null bock","bock","faul","will nicht","mag nicht"))
-      pool=[`„Keine Lust"?${nm} Na und? Niemand fragt dich, ob du Lust hast — das Leben fragt, ob du LIEFERST. Disziplin frisst Motivation zum Frühstück. EIN Satz. Kein Verhandeln, kein Jammern.`,
-        `Deine Lust ist mir egal — und deiner Zukunft auch. Jeder, den du bewunderst, hat gehandelt, als er keinen Bock hatte. Genau DAS trennt sie von der Masse. Beweg dich.`,
-        `„Kein Bock" ist die Stimme der schwachen Version von dir, die du eigentlich begraben willst. Übertön sie mit Taten. Welches der ${open} Ziele überlebt deine Faulheit NICHT? Zieh es durch.`];
-    else if(has("müde","kaputt","erschöpft","schlapp","keine kraft","kann nicht mehr"))
-      pool=[`Müde?${nm} Willkommen im Club der Menschen, die trotzdem liefern. Du brauchst keine 100 % — du brauchst den nächsten Schritt. Wasser, die kleinste Aufgabe. Energie kommt DURCHS Handeln, nicht davor. Los.`,
-        `Dein Körper flüstert „müde", dein Potenzial brüllt „WEITER". Rate, auf wen du hören solltest. Eine Sache. Die kleinste. Zeig deinem Kopf, wer hier befiehlt.`,
-        `Jeder Champion war todmüde und hat trotzdem gemacht. Ein sauberer Schritt reicht heute. Ausruhen ja — aufgeben nein. Beweg dich.`];
-    else if(has("aufgeben","schaff ich nicht","zu schwer","sinnlos","bringt nichts","hoffnungslos"))
-      pool=[`Aufgeben?${nm} Nicht solange du atmest. Große Dinge fühlen sich schwer an — das ist kein Stoppschild, das ist der Eintrittspreis. Zerleg es. Der nächste Schritt ist winzig. NIMM ihn.`,
-        `„Zu schwer" heißt nur: du wächst gerade dort, wo es zählt. Bleib im Kampf. Wer nicht aufhört, kann nicht verlieren. Ein Prozent heute. Los.`];
-    else if(has("hallo","hi","hey","moin","servus"))
-      pool=[`Da bist du${nm}. ${c.done}/${c.total} Ziele, Streak ${s}. Genug Smalltalk — was ziehst du als Nächstes durch? Und komm mir nicht mit „gleich".`];
-    else if(has("motivier","push","antreib","ansporn","mach mich"))
-      pool=[`Du willst Feuer?${nm} Hier: Jedes Häkchen heute ist eine Stimme für den Menschen, der du wirst — jede Ausrede eine für den Feigling, den du hinter dir lassen willst. Stimm. Ab. Jetzt.`,
-        `Streak ${s}. In 90 Tagen ${s+90} — ein Mensch, den dein heutiges Ich nicht wiedererkennt. Der wird JETZT gebaut, in diesem Atemzug. Fang an oder hör auf zu reden.`,
-        `Warte nicht, bis es sich gut anfühlt — das tut es nie. Handel ZUERST, das Gefühl kriecht hinterher. Beweg dich, und die Motivation rennt dir nach wie ein Hund.`];
-    else if(has("wie mach","wie steh","fortschritt","stand","status","überblick"))
-      pool=[`Klartext${nm}: ${c.done}/${c.total} Ziele (${Math.round(c.pct*100)}%), Wasser ${day.water}/${profile.waterGoal}, ${workoutSets()} Sätze, Schach ${profile.chess.rating}, Streak ${s} (Rekord ${profile.longest}). ${c.pct<1?"Noch "+open+" bis zum perfekten Tag. Und du redest mit mir, statt sie zu erledigen?":"Perfekter Tag. Jetzt bloß nicht selbstzufrieden werden."}`];
-    else if(has("schach","chess","elo","rating","partie"))
-      pool=[`Schach ist Krafttraining fürs Hirn${nm} — und du trainierst zu selten. Aktuell ${profile.chess.rating}, Ziel ${profile.chess.goal}. Spiel eine Partie und zerreiß jeden Fehler in der Analyse. So klettert Rating — nicht durch sinnloses Blitzen.`,
-        `Rating ${profile.chess.rating}, Ziel ${profile.chess.goal}. Die Lücke schließt sich nicht durch Wünschen. Bessere Partien, nicht mehr Partien. Log deine nächste im Schach-Tab.`];
-    else if(has("training","workout","calis","klimmzug","liegestütz","dips","übung"))
-      pool=[trainedToday()?`${workoutSets()} Sätze / ${workoutReps()} Wdh${nm} — solide. Aber „solide" baut keine Legende. Nächstes Mal 1-2 saubere Wdh mehr im Top-Satz. Progressive Overload — oder Stillstand. Deine Wahl.`:`Null Sätze.${nm} Hör auf, über Training zu REDEN, und TU es. Training-Tab, erster Satz, jetzt. Ausreden gibt's danach — nach der Arbeit.`];
-    else if(has("wasser","trinken","durst"))
-      pool=[day.water>=profile.waterGoal?`Wasserziel steht 💧 (${day.water}/${profile.waterGoal}). Kleine Disziplin, große Wirkung. Weiter im Text.`:`Erst ${day.water}/${profile.waterGoal} Gläser${nm}. Kraft, Fokus, Laune — alles verdurstet gerade. Steh auf, trink eins. Kein „gleich". JETZT.`];
-    else if(has("schlaf","recovery","erholung","puls","herz","hrv"))
-      pool=[(health.data&&health.data.sleep)?`${fmtDur(health.data.sleep.totalMin)} Schlaf${health.data.hrv?", HRV "+health.data.hrv+"ms":""}. ${health.data.sleep.totalMin>=420?"Ausgeruht — also KEINE Ausreden. Heute Vollgas.":"Kurz geschlafen — dann eben mit Disziplin statt Energie. Und heute früher ins Bett, kein Bildschirm."}`:`Verbinde im Körper-Tab deine Uhr, dann steuer ich dich mit echten Daten. Bis dahin gilt: Ausreden zählen trotzdem nicht.`];
-    else if(has("danke","top","cool","stark","geil","nice"))
-      pool=[`Spar dir den Dank${nm} — zeig ihn mir in Häkchen, nicht in Worten. Nächstes Ziel. Los.`,`Dankbarkeit ist nett. Ergebnisse sind besser. Weiter.`];
-    else if(has("hilfe","was kannst","help"))
-      pool=[`Ich kenne dein ganzes Dashboard — Ziele, Wasser, Calisthenics, Schach, Streak, deine Uhr. Sag mir wie's läuft, oder gib mir deine beste Ausrede: Ich zerlege sie und schick dich in Bewegung.`];
-    else pool=[`Verstanden${nm} — aber Reden baut keinen Muskel und gewinnt keine Partie. ${open} Ziele offen. Welches erledigst du JETZT, in diesem Moment?`,
-        `Ich hör dir zu. Und dann treib ich dich trotzdem zurück an die Arbeit. Nenn mir EINEN konkreten Schritt — und mach ihn, bevor du mir antwortest.`,
-        `Ausreden oder Ergebnisse${nm} — was sammelst du heute? Streak ${s}. Nächstes Häkchen. Beweg dich.`];
-    let r=pick(pool);if(pool.length>1){let g=0;while(r===this.last&&g++<5)r=pick(pool);}this.last=r;return r;}};
-function pick(a){return a[Math.floor(Math.random()*a.length)];}
+/* ===== COACH — local, varied, context-aware ===== */
+const Coach={log:DB.load("ovlog:"+TODAY,[]),recent:[],
+  remember(r){this.recent.push(r);if(this.recent.length>12)this.recent.shift();},
+  fresh(pool){let c=pool.filter(x=>this.recent.indexOf(x)<0);if(!c.length)c=pool;const r=c[Math.floor(Math.random()*c.length)];this.remember(r);return r;},
+  openThing(){const u=day.goals.filter(g=>!g.done).map(g=>g.text.replace(/^[^\wÄÖÜäöü]+/,"").trim());
+    if(!trainedToday())u.push("dein Training");if(day.water<profile.waterGoal)u.push("dein Wasserziel");
+    return u.length?u[Math.floor(Math.random()*u.length)]:null;},
+  proactive(){const c=completion(),p=phaseInfo(),s=profile.streak,nm=profile.name?" "+profile.name:"",og=this.openThing();
+    let pool;
+    if(c.pct>=1)pool=[`Alles erledigt${nm} — Tag ${s}. Kein Zufall, sondern Wiederholung. Genieß das Gefühl kurz, dann schlaf, damit morgen genauso läuft.`,
+      `${c.done}/${c.total}. Perfekter Tag${nm}. Solche Tage summieren sich zu einem Menschen, den dein altes Ich beneidet. Weiter so.`,
+      `Sauber durchgezogen — Streak ${s}. Das ist der Beweis, dass Konstanz keine Frage der Stimmung ist. Ruh dich verdient aus.`];
+    else if(c.pct>=.6)pool=[`${c.done}/${c.total}${nm} — du bist fast durch. ${og?"Nur noch „"+og+"“ und der Tag steht.":"Zieh den Rest durch."}`,
+      `Guter Lauf: ${c.done} von ${c.total}. Der letzte Schritt ist meist der, den alle auslassen. Sei nicht alle.`,
+      `Fast am Ziel${nm}. ${c.total-c.done} offen. Kurz vor der Ziellinie stehen bleiben wäre Verschwendung.`];
+    else if(p.h<11)pool=[`Morgen${nm}. Der Tag ist noch unbeschrieben — der erste erledigte Punkt gibt den Ton vor. ${og?"Fang mit „"+og+"“ an.":"Fang klein an, aber fang an."}`,
+      `Frisch aus dem Bett heißt frische Chance. Ein Glas Wasser, ein Satz, ein Häkchen — Schwung entsteht durch Anfangen, nicht durch Warten.`,
+      `Guten Morgen${nm}. ${s>0?"Serie steht bei "+s+" — heute nicht abreißen lassen.":"Heute ist ein guter Tag, eine neue Serie zu starten."}`];
+    else if(p.h>=20&&c.pct<1)pool=[`Es wird spät und ${c.total-c.done} sind offen${nm}. ${og?"„"+og+"“ dauert Minuten — mach es jetzt, nicht morgen.":"Die schnellen Dinge gehen noch."}`,
+      `Der Abend entscheidet über deine Serie${nm}. ${s>0?"Streak "+s+" — nicht heute wegwerfen.":""} Was geht noch?`,
+      `Noch wach, noch ${c.total-c.done} offen. Die letzten Punkte des Tages sind oft die günstigsten. Hol sie dir.`];
+    else if(!trainedToday())pool=[`Noch kein Satz heute${nm}. Dein Körper wird nicht durch Absicht stärker, sondern durch Wiederholungen. Geh auf Training.`,
+      `${p.emoji} ${p.title}. Bewegung fehlt noch. Ein Satz Klimmzüge schaltet oft den Rest des Tages frei.`,
+      `Training steht auf null${nm}. Kein großes Workout nötig — nur der Anfang. Der erste Satz ist der wichtigste.`];
+    else pool=[`${p.emoji} ${p.title}. ${c.done}/${c.total}${nm}. ${og?"Nächster Zug: „"+og+"“.":"Nächster kleiner Schritt — jetzt."}`,
+      `Halbzeitgefühl${nm}: ${c.done} erledigt, ${c.total-c.done} offen. Momentum lebt vom nächsten Häkchen.`,
+      `${s>0?"Serie "+s+". ":""}Du bist im Fluss — halt ihn. Was ist der nächste konkrete Schritt?`];
+    return this.fresh(pool);},
+  reply(text){const t=text.toLowerCase().trim(),c=completion(),s=profile.streak,open=c.total-c.done,og=this.openThing();
+    const nm=profile.name?" "+profile.name:"",ch=profile.chess,q=t.endsWith("?");
+    const has=(...w)=>w.some(x=>t.includes(x));let pool;
+    if(has("tiktok","insta","reel","story","snap","youtube","netflix","serie schauen","feed","scroll"))
+      pool=[`Klar kannst du scrollen${nm}. Die Frage ist nur, ob du am Ende des Tages stolz darauf bist. ${open} Ziele offen — erledige eins, dann hast du's dir verdient.`,
+        `Der Feed läuft auch in 20 Minuten noch. „${og||'dein nächstes Ziel'}“ nicht unbedingt. Erst das Echte, dann die Belohnung.`,
+        `Ehrlich? Zehn Minuten Feed werden zu sechzig, und du weißt es. Setz dir ein Limit oder mach vorher ein Häkchen. Deine Entscheidung — aber triff sie bewusst.`,
+        `Scrollen ist okay als Belohnung, nicht als Flucht. Was vermeidest du gerade? Nenn mir das eine Ding, das du eigentlich tun solltest.`];
+    else if(has("später","gleich","morgen","nachher","gleich mal","dann mach ich","irgendwann"))
+      pool=[`„Später“ hat schon viele Pläne beerdigt${nm}. Der Schritt, den du meinst, dauert oft weniger als die Ausrede. Fang die nächsten 2 Minuten an — dann sehen wir weiter.`,
+        `Verschieben fühlt sich gut an und kostet dich trotzdem. Mach nur den Anfang von „${og||'dem, was ansteht'}“ — nicht das Ganze. Anfangen ist der Trick.`,
+        `Morgen-Du wird dir nicht danken, wenn Heute-Du alles liegen lässt. Ein winziger Schritt jetzt schlägt einen großen Plan für später.`];
+    else if(has("keine lust","kein bock","null bock","faul","mag nicht","will nicht","unmotiviert"))
+      pool=[`Lust ist überbewertet${nm} — die meisten guten Sachen macht man ohne. Streich die Erwartung, dass es sich gut anfühlen muss, und mach den kleinsten Schritt.`,
+        `Kein Bock ist ein ehrliches Gefühl, aber ein schlechter Chef. Zwei Minuten an „${og||'einer Sache'}“ — wenn du dann immer noch nicht willst, hast du wenigstens angefangen.`,
+        `Motivation kommt oft erst NACH dem Anfangen, nicht davor. Trick dich: nur einen Satz, nur eine Seite, nur ein Glas. Der Rest folgt meistens.`];
+    else if(has("müde","kaputt","erschöpft","schlapp","keine kraft","kann nicht mehr","ausgelaugt"))
+      pool=[`Müde ist real${nm} — dann eben kleiner. Nicht das volle Programm, nur ein Zeichen an dich selbst, dass du nicht ausfällst. Ein Glas Wasser, ein Häkchen.`,
+        `Wenn der Tank leer ist, fahr langsamer — aber roll weiter. ${health.data&&health.data.sleep?"Nach "+fmtDur(health.data.sleep.totalMin)+" Schlaf ist gedämpft okay.":"Kürzer schlafen rächt sich — heute früher ins Bett."} Ein Mini-Schritt reicht.`,
+        `Erschöpfung ist ein Grund zu dosieren, kein Grund zu verschwinden. Mach die leichteste offene Sache, dann darfst du ruhen — mit gutem Gewissen.`];
+    else if(has("aufgeben","schaff ich nicht","zu schwer","sinnlos","bringt nichts","hoffnungslos","keinen sinn"))
+      pool=[`Es fühlt sich groß an, weil es dir wichtig ist${nm}. Große Dinge zerlegt man. Was ist der allerkleinste nächste Schritt? Den — und nur den — machen wir jetzt.`,
+        `Aufgeben löst das Problem nicht, es vertagt nur den Frust. Ein Prozent heute ist mehr als das perfekte Konzept, das nie kommt. Fang bei „${og||'einer Sache'}“ an.`,
+        `„Zu schwer“ heißt oft: falsch portioniert. Mach die Aufgabe kleiner, bis sie lächerlich einfach wirkt — und dann tu genau das.`];
+    else if((has("hallo","hi","hey","moin","servus","na ")||t==="na")&&t.length<14)
+      pool=[`Hey${nm}. Stand: ${c.done}/${c.total} Ziele, Streak ${s}. Wo hakt's — oder worauf hast du Bock?`,
+        `Da bist du${nm}. ${og?"Ganz oben auf der Liste: „"+og+"“.":"Alles erledigt heute — respekt."} Was brauchst du von mir?`,
+        `Servus${nm}. Erzähl — läuft's, oder soll ich dir in den Hintern treten?`];
+    else if(has("motivier","push","antreib","ansporn","mach mich","feuer","brauche einen tritt"))
+      pool=[`Kein Pathos${nm}, nur Mathematik: ${c.done}/${c.total} heute, Streak ${s}. Jedes Häkchen ist ein Datenpunkt für den Menschen, der du wirst. Setz den nächsten.`,
+        `Du brauchst keinen Spruch, du brauchst Bewegung. Streak ${s} heute → ${s+30} in einem Monat, wenn du nicht abreißt. Fang bei „${og||'dem Naheliegendsten'}“ an.`,
+        `Warte nicht auf den perfekten Moment — den gibt's nicht. Der nächste Schritt ist unspektakulär und genau deshalb machbar. Los.`];
+    else if(has("wie steh","wie mach","wie läuft","fortschritt","stand","status","überblick","zusammenfass"))
+      pool=[`Klartext${nm}: ${c.done}/${c.total} Ziele (${Math.round(c.pct*100)}%), Wasser ${day.water}/${profile.waterGoal}, ${workoutSets()} Sätze, Schach ${ch.rating}, Streak ${s} (Rekord ${profile.longest}). ${c.pct<1?"Größter Hebel jetzt: „"+(og||"das Nächstbeste")+"“.":"Perfekter Tag — nicht nachlassen."}`];
+    else if(has("schach","chess","elo","rating","partie","blitz","rapid","puzzle"))
+      pool=[`Rating ${ch.rating}, Ziel ${ch.goal} — Lücke ${Math.max(0,ch.goal-ch.rating)}. ${ch.puzzle?"Puzzle "+ch.puzzle+". ":""}Die schließt du mit Analyse, nicht mit Bauch-Blitzen. Jede Partie: einen Fehler finden und verstehen.`,
+        `${chessLinked()?"Dein Konto ist verknüpft — die Zahlen kommen automatisch. ":""}Rating ${ch.rating}. Willst du ${ch.goal}? Dann Qualität vor Quantität: langsamer spielen, mehr nachdenken, Fehler nachbereiten.`,
+        `Schach belohnt Geduld — dieselbe, die du im Training brauchst. ${ch.games.w+ch.games.l+ch.games.d>0?"Bei "+Math.round(ch.games.w/Math.max(1,ch.games.w+ch.games.l+ch.games.d)*100)+"% Siegquote":"Spiel eine Partie"} und lern aus der nächsten Niederlage mehr als aus zehn Siegen.`];
+    else if(has("training","workout","calis","klimmzug","liegestütz","dips","kniebeug","übung","muskel","sätze"))
+      pool=[trainedToday()?`${workoutSets()} Sätze / ${workoutReps()} Wdh heute${nm}. Solide. Für Fortschritt: nächstes Mal eine saubere Wdh mehr im besten Satz — winzig, aber messbar. Das ist Progressive Overload.`:`Noch null Sätze${nm}. Kein Motivationsvortrag — geh in den Training-Tab und log einen einzigen Satz. Der Rest ergibt sich fast von allein.`,
+        `Calisthenics lebt von Konstanz, nicht von Rekorden. ${weekWorkouts()} Trainingstage diese Woche. Ein bisschen, aber regelmäßig, schlägt alles-oder-nichts.`];
+    else if(has("wasser","trinken","durst","hydr"))
+      pool=[day.water>=profile.waterGoal?`Wasserziel steht${nm} (${day.water}/${profile.waterGoal}). Kleine Gewohnheit, große Wirkung. Weiter.`:`${day.water}/${profile.waterGoal} Gläser${nm}. Fokus, Kraft und Laune hängen mehr am Wasser, als du denkst. Trink jetzt eins — dauert 20 Sekunden.`];
+    else if(has("schlaf","recovery","erholung","puls","herz","hrv","wach","müde geschlafen"))
+      pool=[(health.data&&health.data.sleep)?`${fmtDur(health.data.sleep.totalMin)} Schlaf${health.data.hrv?", HRV "+health.data.hrv+"ms":""}${nm}. ${health.data.sleep.totalMin>=420?"Gute Basis — heute darfst du fordern.":"Wenig — heute clever dosieren und früh ins Bett."}`:`Verbinde im Körper-Tab deine Uhr, dann rede ich mit echten Zahlen zu dir — Schlaf, Puls, HRV. Bis dahin: Schlaf ist kein Luxus, sondern dein Fundament.`];
+    else if(has("danke","top","cool","stark","geil","nice","passt"))
+      pool=[`Gern${nm}. Reden wir in Häkchen weiter — was ist der nächste?`,`Dafür bin ich da. Jetzt der nächste Schritt.`,`Freut mich. Nicht stehenbleiben — weiter.`];
+    else if(has("gute nacht","bye","tschüss","ciao","bis morgen","schlafen geh"))
+      pool=[`Gute Nacht${nm}. ${c.pct>=1?"Perfekter Tag im Rücken — schlaf gut.":c.total-c.done+" blieben offen. Notier sie dir für morgen früh, dann startest du mit Klarheit."} Ruh dich aus.`,
+        `Bis dann${nm}. Schlaf ist Teil des Trainings, nicht das Gegenteil davon. Morgen holen wir den Rest.`];
+    else if(has("hilfe","was kannst","help","funktion"))
+      pool=[`Ich sehe dein ganzes Dashboard — Ziele, Wasser, Calisthenics, Schach, Streak, deine Uhr. Frag nach deinem Stand, lass dich pushen, oder sag mir ehrlich, was dich gerade blockiert. Ich finde den nächsten Schritt mit dir.`];
+    else if(q)
+      pool=[`Gute Frage${nm}. Kurz: mach den nächsten kleinen, konkreten Schritt — bei dir wäre das gerade „${og||'ein offenes Ziel'}“. Willst du's genauer, frag konkreter.`,
+        `Kommt drauf an, was du wirklich willst. Sag mir dein Ziel in einem Satz, und ich sag dir den nächsten Schritt.`,
+        `Ich halt's einfach: Wissen ist billig, Handeln teuer. Was hält dich gerade konkret auf?`];
+    else pool=[`Verstanden${nm}. Übersetzen wir's in einen Schritt: ${og?"„"+og+"“ — machst du das als Nächstes?":"was ist die eine Sache, die den größten Unterschied macht?"}`,
+        `Notiert. Aber Reden verändert nichts, Tun schon. ${open} Ziele offen — welches nimmst du dir?`,
+        `Ich hör zu — und schick dich trotzdem in Bewegung. Nenn mir einen konkreten nächsten Schritt.`];
+    return this.fresh(pool);}};
 function renderCoach(){$("cxProactive2").textContent=Coach.proactive();
   $("cxLog").innerHTML=Coach.log.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join("");
   const lg=$("cxLog");lg.scrollTop=lg.scrollHeight;}
@@ -642,13 +680,13 @@ function cxSend(){const inp=$("cxInput"),text=inp.value.trim();if(!text)return;
   Coach.log.push({who:"me",text});Coach.log.push({who:"cx",text:Coach.reply(text)});
   DB.save("ovlog:"+TODAY,Coach.log);inp.value="";renderCoach();}
 
-/* ===== HEALTH ===== */
+/* HEALTH */
 const health={data:DB.load("health",null),mode:DB.load("healthmode","none")};
 window.AscendHealth={
   onData(json){try{const d=JSON.parse(json);d.source="live";health.data=d;health.mode="live";
-    DB.save("health",d);DB.save("healthmode","live");renderHealth();renderDash();toast("⌚ Fitnessuhr verbunden");}catch(e){toast("Fehler beim Lesen");}},
+    DB.save("health",d);DB.save("healthmode","live");renderHealth();renderDash();toast("Fitnessuhr verbunden");}catch(e){toast("Fehler beim Lesen");}},
   onError(code){const m={permission_denied:"Zugriff verweigert. In Health Connect erlauben.",unavailable:"Health Connect nicht verfügbar.",update_required:"Health Connect aktualisieren.",error:"Verbindung fehlgeschlagen."}[code]||"Fehler.";toast(m);
-    if(code==="unavailable"||code==="update_required"){$("hcHint").innerHTML="Health Connect fehlt. <b style='color:var(--teal)'>Hier tippen zum Installieren.</b>";$("hcHint").onclick=()=>{if(window.AndroidHealth&&AndroidHealth.openSettings)AndroidHealth.openSettings();};}}};
+    if(code==="unavailable"||code==="update_required"){$("hcHint").innerHTML="Health Connect fehlt. <b style='color:var(--acc)'>Hier tippen zum Installieren.</b>";$("hcHint").onclick=()=>{if(window.AndroidHealth&&AndroidHealth.openSettings)AndroidHealth.openSettings();};}}};
 function hasBridge(){return typeof AndroidHealth!=="undefined"&&AndroidHealth&&AndroidHealth.status;}
 function connectHealth(){if(hasBridge()){const st=AndroidHealth.status();
   if(st==="available"){toast("Verbinde…");AndroidHealth.connect();}else{toast("Health Connect öffnen…");AndroidHealth.openSettings();}}
@@ -665,10 +703,10 @@ function renderHealth(){const d=health.data;const st=$("hcStatus");
   $("hcStatusTxt").textContent=health.mode==="live"?"Live · verbunden":health.mode==="demo"?"Demo-Modus":"Nicht verbunden";
   $("hcUpdated").textContent=d&&d.updatedAt?"AKT. "+new Date(d.updatedAt).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"";
   const rec=recoveryScore(d),recEl=$("recRing");
-  const col=rec==null?"rgba(255,255,255,.15)":rec>=66?{a:"#2dd4bf",b:"#4ade80"}:rec>=40?{a:"#f5b301",b:"#f59e0b"}:{a:"#ff8a3d",b:"#ff5d63"};
+  const col=rec==null?"rgba(255,255,255,.15)":rec>=66?"var(--acc)":rec>=40?"var(--amber)":"var(--red)";
   recEl.innerHTML='<div class="ct"><div class="pct" style="font-size:24px">'+(rec==null?"–":rec)+'</div><div class="sub">Recovery</div></div>';
   ring(recEl,rec==null?0:rec/100,112,col,9);
-  if(d){$("recCall").textContent=rec>=66?"Grün — heute Vollgas 💪":rec>=40?"Gelb — dosiert pushen":"Rot — Regeneration";
+  if(d){$("recCall").textContent=rec>=66?"Grün — heute Vollgas":rec>=40?"Gelb — dosiert pushen":"Rot — Regeneration";
     const li=[];if(d.sleep)li.push("Schlaf "+fmtDur(d.sleep.totalMin)+(d.sleep.totalMin<420?" — kurz":" — solide"));
     if(d.hrv)li.push("HRV "+d.hrv+"ms"+(d.hrv>=60?" — erholt":" — angespannt"));if(d.restingHr)li.push("Ruhepuls "+d.restingHr+" bpm");
     if(d.steps)li.push(d.steps.toLocaleString("de-DE")+" Schritte");
@@ -683,20 +721,20 @@ function renderSleep(s){const bar=$("sleepBar");if(!s){bar.innerHTML="";return;}
 function renderHR(hr){const cv=$("hrChart"),ctx=cv.getContext("2d");const W=cv.clientWidth||320,H=150,dpr=window.devicePixelRatio||1;
   cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
   $("hrMin").textContent=hr&&hr.min?"min "+hr.min:"–";$("hrMax").textContent=hr&&hr.max?"max "+hr.max:"–";$("hrAvg").textContent=hr&&hr.avg?"Ø "+hr.avg+" bpm":"";
-  if(!hr||!hr.series||!hr.series.length){ctx.fillStyle="#5b616e";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText("Keine Puls-Daten — Uhr verbinden",W/2,H/2);return;}
+  if(!hr||!hr.series||!hr.series.length){ctx.fillStyle="#59616e";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText("Keine Puls-Daten — Uhr verbinden",W/2,H/2);return;}
   const p=hr.series,t0=p[0].t,t1=Math.max(p[p.length-1].t,t0+1),lo=Math.min(...p.map(x=>x.bpm))-6,hi=Math.max(...p.map(x=>x.bpm))+6;
   const X=t=>((t-t0)/(t1-t0))*(W-8)+4,Y=b=>H-14-((b-lo)/(hi-lo))*(H-28);
   ctx.strokeStyle="rgba(255,255,255,.05)";for(let i=0;i<4;i++){const y=14+i*((H-28)/3);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,"#2dd4bf");grad.addColorStop(.5,"#f5b301");grad.addColorStop(1,"#ff5d63");
+  const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,"#2dd4bf");grad.addColorStop(.5,"#f5c451");grad.addColorStop(1,"#ff6169");
   ctx.beginPath();p.forEach((x,i)=>{const px=X(x.t),py=Y(x.bpm);i?ctx.lineTo(px,py):ctx.moveTo(px,py);});
   ctx.lineTo(X(p[p.length-1].t),H);ctx.lineTo(X(p[0].t),H);ctx.closePath();const fl=ctx.createLinearGradient(0,0,0,H);
-  fl.addColorStop(0,"rgba(245,179,1,.16)");fl.addColorStop(1,"rgba(245,179,1,0)");ctx.fillStyle=fl;ctx.fill();
+  fl.addColorStop(0,"rgba(245,196,81,.16)");fl.addColorStop(1,"rgba(245,196,81,0)");ctx.fillStyle=fl;ctx.fill();
   ctx.beginPath();p.forEach((x,i)=>{const px=X(x.t),py=Y(x.bpm);i?ctx.lineTo(px,py):ctx.moveTo(px,py);});
-  ctx.strokeStyle=grad;ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.shadowColor="rgba(245,179,1,.5)";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;}
+  ctx.strokeStyle=grad;ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.shadowColor="rgba(245,196,81,.5)";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;}
 
 /* toast + modal */
 let toastTO;function toast(msg){let el=$("toast");if(!el){el=document.createElement("div");el.id="toast";
-  el.style.cssText="position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:99;background:#eef1f6;color:#0a0a0a;padding:12px 18px;border-radius:15px;font-size:13.5px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:88%;text-align:center;transition:.3s;opacity:0;";document.body.appendChild(el);}
+  el.style.cssText="position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:99;background:#eef1f6;color:#0a0a0a;padding:12px 18px;border-radius:14px;font-size:13.5px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:88%;text-align:center;transition:.3s;opacity:0;";document.body.appendChild(el);}
   el.textContent=msg;el.style.opacity="1";clearTimeout(toastTO);toastTO=setTimeout(()=>el.style.opacity="0",2100);}
 let modalCB=null;
 function confirmBox(title,text,onYes){$("modalTitle").textContent=title;$("modalText").textContent=text;modalCB=onYes;$("modal").classList.add("show");}
@@ -705,7 +743,7 @@ $("modalYes").onclick=()=>{$("modal").classList.remove("show");if(modalCB)modalC
 
 /* events */
 function afterChange(){refreshStreak();saveD();renderStats();}
-$("goalList").addEventListener("click",e=>{const jump=e.target.getAttribute("data-jump");if(jump){goTo(+jump);return;}
+$("goalList").addEventListener("click",e=>{const jump=e.target.closest("[data-jump]");if(jump){goTo(+jump.getAttribute("data-jump"));return;}
   const act=e.target.getAttribute("data-act");if(!act)return;const row=e.target.closest(".goal"),id=row&&row.getAttribute("data-id");if(!id)return;
   const g=day.goals.find(x=>x.id===id);if(!g)return;if(act==="toggle"){g.done=!g.done;if(g.done)e.target.classList.add("pop");}if(act==="del")day.goals=day.goals.filter(x=>x.id!==id);afterChange();});
 function addGoal(){const i=$("goalInput"),v=i.value.trim();if(!v)return;day.goals.push({id:"g"+Date.now(),text:v,done:false});i.value="";afterChange();}
@@ -725,63 +763,62 @@ $("excList").addEventListener("click",e=>{const stepId=e.target.getAttribute("da
   const setEx=e.target.closest(".setchip");if(setEx){const exId=setEx.getAttribute("data-ex"),i=+setEx.getAttribute("data-i");if(day.cali[exId]){day.cali[exId].splice(i,1);if(!day.cali[exId].length)delete day.cali[exId];saveD();afterChange();}return;}});
 $("excAdd").onclick=()=>{const i=$("excInput"),v=i.value.trim();if(!v)return;const isTime=/plank|halten|hang|sek|sec|zeit|hold/i.test(v);
   profile.caliDefs.push({id:"ex"+Date.now(),name:v,unit:isTime?"sec":"reps"});i.value="";saveP();renderTraining();toast("Übung hinzugefügt");};
-$("workFinish").onclick=()=>{if(workoutSets()===0){toast("Logge zuerst mindestens einen Satz");return;}day.workoutDone=true;profile.workoutDays[TODAY]=true;saveP();afterChange();toast("✅ Workout abgeschlossen — stark!");};
+$("workFinish").onclick=()=>{if(workoutSets()===0){toast("Logge zuerst mindestens einen Satz");return;}day.workoutDone=true;profile.workoutDays[TODAY]=true;saveP();afterChange();toast("Workout abgeschlossen — stark!");};
 
 /* chess events */
-$("p3").addEventListener("click",e=>{const cr=e.target.getAttribute("data-crate");if(cr){profile.chess.rating=clamp(profile.chess.rating+ +cr,100,3500);if(profile.chess.rating>profile.chess.peak)profile.chess.peak=profile.chess.rating;saveP();renderChess();renderDash();return;}
+$("p3").addEventListener("click",e=>{const cr=e.target.getAttribute("data-crate");if(cr){if(chessLinked())return;profile.chess.rating=clamp(profile.chess.rating+ +cr,100,3500);if(profile.chess.rating>profile.chess.peak)profile.chess.peak=profile.chess.rating;saveP();renderChess();renderDash();return;}
   const g=e.target.getAttribute("data-game");if(g){logGame(g);return;}
-  const cg=e.target.getAttribute("data-cgoal");if(cg){profile.chess.goal=clamp(profile.chess.goal+ +cg,200,3500);saveP();renderChess();return;}
-  const cp=e.target.getAttribute("data-cpuz");if(cp){profile.chess.puzzle=clamp(profile.chess.puzzle+ +cp,100,4000);saveP();renderChess();return;}});
+  const cg=e.target.getAttribute("data-cgoal");if(cg){profile.chess.goal=clamp(profile.chess.goal+ +cg,200,3500);saveP();renderChess();return;}});
 
-/* chess account link (Chess.com / Lichess) */
+/* chess account link */
 window.AscendNet={cbs:{},onResult(id,code,body){const cb=this.cbs[id];if(cb){delete this.cbs[id];cb(code,body);}}};
 function netFetch(url){return new Promise(res=>{const id="n"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
   if(typeof AndroidNet!=="undefined"&&AndroidNet&&AndroidNet.fetch){AscendNet.cbs[id]=(code,body)=>res({code,body});try{AndroidNet.fetch(url,id);}catch(e){res({code:0,body:""});}}
   else{fetch(url).then(r=>r.text().then(t=>res({code:r.status,body:t}))).catch(()=>res({code:0,body:""}));}});}
 let chessPlat=(profile.chess.account&&profile.chess.account.platform)||"chesscom";
-function renderChessAccount(){
-  const cc=$("platCC"),li=$("platLI");if(!cc)return;
-  cc.classList.toggle("primary",chessPlat==="chesscom");li.classList.toggle("primary",chessPlat==="lichess");
+function renderChessAccount(){const cc=$("platCC"),li=$("platLI");if(!cc)return;
+  cc.classList.toggle("on",chessPlat==="chesscom");li.classList.toggle("on",chessPlat==="lichess");
   const acc=profile.chess.account;
   if(acc&&acc.username){if(document.activeElement!==$("chessUser"))$("chessUser").value=acc.username;
-    $("chessRefresh").style.display="block";
+    $("chessRefresh").style.display="block";$("chessUnlink").style.display="block";
     $("chessLinkStatus").textContent="✓ Verknüpft: "+(acc.platform==="lichess"?"Lichess":"Chess.com")+" · "+acc.username+(acc.syncedAt?" · aktualisiert "+new Date(acc.syncedAt).toLocaleDateString("de-DE"):"");}
-  else $("chessRefresh").style.display="none";}
-async function chessSync(user,plat){
-  user=(user||"").trim().replace(/^@/,"");if(!user){toast("Benutzername eingeben");return;}
+  else{$("chessRefresh").style.display="none";$("chessUnlink").style.display="none";}}
+async function chessSync(user,plat){user=(user||"").trim().replace(/^@/,"");if(!user){toast("Benutzername eingeben");return;}
   $("chessLinkStatus").textContent="Verknüpfe "+user+" …";toast("Verknüpfe "+user+" …");
-  let rating,puzzle,rec,peak;
+  let rating,puzzle,rec,peak,detail={};
   try{
     if(plat==="chesscom"){
       const r0=await netFetch("https://api.chess.com/pub/player/"+encodeURIComponent(user.toLowerCase())+"/stats");
       if(r0.code===404){toast("Chess.com: Nutzer nicht gefunden");$("chessLinkStatus").textContent="✗ Nutzer nicht gefunden.";return;}
       if(r0.code!==200){toast("Keine Verbindung");$("chessLinkStatus").textContent="✗ Keine Verbindung. Internet prüfen.";return;}
-      const d=JSON.parse(r0.body);const r=d.chess_rapid,bl=d.chess_blitz,bu=d.chess_bullet;
-      rating=(r&&r.last&&r.last.rating)||(bl&&bl.last&&bl.last.rating)||(bu&&bu.last&&bu.last.rating);
-      peak=(r&&r.best&&r.best.rating)||rating;
-      puzzle=d.tactics&&d.tactics.highest&&d.tactics.highest.rating;
-      const rc=r&&r.record;if(rc)rec={w:rc.win||0,l:rc.loss||0,d:rc.draw||0};
+      const dt=JSON.parse(r0.body);let w=0,l=0,dd=0;
+      [["rapid","chess_rapid"],["blitz","chess_blitz"],["bullet","chess_bullet"]].forEach(([k,src])=>{const o=dt[src];if(o&&o.last){detail[k]={rating:o.last.rating,best:o.best&&o.best.rating,games:o.record?(o.record.win+o.record.loss+o.record.draw):undefined};if(o.record){w+=o.record.win||0;l+=o.record.loss||0;dd+=o.record.draw||0;}}});
+      rating=(detail.rapid&&detail.rapid.rating)||(detail.blitz&&detail.blitz.rating)||(detail.bullet&&detail.bullet.rating);
+      peak=(detail.rapid&&detail.rapid.best)||(detail.blitz&&detail.blitz.best)||rating;
+      puzzle=dt.tactics&&dt.tactics.highest&&dt.tactics.highest.rating;
+      if(w+l+dd>0)rec={w,l,d:dd};
     }else{
       const r0=await netFetch("https://lichess.org/api/user/"+encodeURIComponent(user));
       if(r0.code===404){toast("Lichess: Nutzer nicht gefunden");$("chessLinkStatus").textContent="✗ Nutzer nicht gefunden.";return;}
       if(r0.code!==200){toast("Keine Verbindung");$("chessLinkStatus").textContent="✗ Keine Verbindung. Internet prüfen.";return;}
-      const d=JSON.parse(r0.body);const p=d.perfs||{};
-      rating=(p.rapid&&p.rapid.rating)||(p.blitz&&p.blitz.rating)||(p.classical&&p.classical.rating)||(p.bullet&&p.bullet.rating);
-      puzzle=p.puzzle&&p.puzzle.rating;peak=rating;
-      const co=d.count;if(co)rec={w:co.win||0,l:co.loss||0,d:co.draw||0};
+      const dt=JSON.parse(r0.body);const pf=dt.perfs||{};
+      [["rapid","rapid"],["blitz","blitz"],["bullet","bullet"]].forEach(([k,src])=>{const o=pf[src];if(o&&o.rating)detail[k]={rating:o.rating,games:o.games};});
+      rating=(detail.rapid&&detail.rapid.rating)||(detail.blitz&&detail.blitz.rating)||(pf.classical&&pf.classical.rating)||(detail.bullet&&detail.bullet.rating);
+      puzzle=pf.puzzle&&pf.puzzle.rating;peak=rating;
+      const co=dt.count;if(co)rec={w:co.win||0,l:co.loss||0,d:co.draw||0};
     }
   }catch(e){toast("Antwort ungültig");$("chessLinkStatus").textContent="✗ Fehler beim Verarbeiten.";return;}
-  if(!rating){toast("Keine Rating-Daten gefunden");$("chessLinkStatus").textContent="✗ Keine Rating-Daten (noch keine gewerteten Partien?).";return;}
-  const ch=profile.chess;ch.rating=Math.round(rating);
-  if(peak&&Math.round(peak)>ch.peak)ch.peak=Math.round(peak);if(ch.rating>ch.peak)ch.peak=ch.rating;
-  if(puzzle)ch.puzzle=Math.round(puzzle);if(rec)ch.games=rec;
+  if(!rating){toast("Keine Rating-Daten gefunden");$("chessLinkStatus").textContent="✗ Keine gewerteten Partien gefunden.";return;}
+  const ch=profile.chess;ch.rating=Math.round(rating);if(peak&&Math.round(peak)>ch.peak)ch.peak=Math.round(peak);if(ch.rating>ch.peak)ch.peak=ch.rating;
+  if(puzzle)ch.puzzle=Math.round(puzzle);if(rec)ch.games=rec;ch.detail=detail;
   ch.history.push({t:Date.now(),rating:ch.rating,result:"sync"});if(ch.history.length>60)ch.history=ch.history.slice(-60);
   ch.account={platform:plat,username:user,syncedAt:Date.now()};
-  saveP();renderChess();renderDash();toast("♟️ Übernommen: Rating "+ch.rating+(puzzle?" · Puzzle "+Math.round(puzzle):""));}
+  saveP();renderChess();renderDash();toast("Übernommen: Rating "+ch.rating+(puzzle?" · Puzzle "+Math.round(puzzle):""));}
 $("platCC").onclick=()=>{chessPlat="chesscom";renderChessAccount();};
 $("platLI").onclick=()=>{chessPlat="lichess";renderChessAccount();};
 $("chessLink").onclick=()=>chessSync($("chessUser").value,chessPlat);
 $("chessRefresh").onclick=()=>{const a=profile.chess.account;chessSync(a?a.username:$("chessUser").value,a?a.platform:chessPlat);};
+$("chessUnlink").onclick=()=>confirmBox("Verknüpfung trennen?","Danach kannst du Rating & Ergebnisse wieder manuell setzen. Deine Werte bleiben erhalten.",()=>{profile.chess.account=null;profile.chess.detail=null;saveP();renderChess();toast("Verknüpfung getrennt");});
 $("chessUser").addEventListener("keydown",e=>{if(e.key==="Enter")chessSync($("chessUser").value,chessPlat);});
 
 /* coach */
@@ -805,6 +842,11 @@ function setActive(i){if(i===curPage)return;curPage=i;document.querySelectorAll(
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>goTo(+t.getAttribute("data-i")));
 let scrTO;pager.addEventListener("scroll",()=>{clearTimeout(scrTO);scrTO=setTimeout(()=>{setActive(clamp(Math.round(pager.scrollLeft/pager.clientWidth),0,5));},60);});
 
+/* keyboard handling */
+if(window.visualViewport){const vv=window.visualViewport;vv.addEventListener("resize",()=>{
+  const kb=(window.innerHeight-vv.height)>140;document.body.classList.toggle("kb",kb);});}
+document.addEventListener("focusin",e=>{if(e.target.matches("input,textarea")){setTimeout(()=>{try{e.target.scrollIntoView({block:"center",behavior:"smooth"});}catch(_){}} ,280);}});
+
 /* passcode */
 let pinEntry="",pinSetup=null;
 function updateLockDesc(){$("lockDesc").textContent=profile.passcode?"An · 4-stellig":"Aus";$("lockToggle").textContent=profile.passcode?"Entfernen":"Einrichten";}
@@ -821,7 +863,7 @@ function closeLock(){$("lock").style.display="none";}
 
 /* boot */
 function boot(){refreshStreak();renderHeader();renderStats();renderHealth();renderCoach();updateLockDesc();
-  if(!Coach.log.length){Coach.log.push({who:"cx",text:"Ich bin dein Coach. Ich kenne deine Ziele, dein Training, dein Schach, deinen Streak und – wenn du willst – deine Fitnessuhr. Erzähl mir keine Märchen. Sag mir was los ist, und ich zeig dir den nächsten Schritt."});DB.save("ovlog:"+TODAY,Coach.log);renderCoach();}
+  if(!Coach.log.length){Coach.log.push({who:"cx",text:"Ich bin dein Coach. Ich sehe deine Ziele, dein Training, dein Schach, deinen Streak und – wenn du willst – deine Fitnessuhr. Sag mir ehrlich, was los ist, und wir finden den nächsten Schritt."});DB.save("ovlog:"+TODAY,Coach.log);renderCoach();}
   setInterval(()=>{renderHeader();renderDash();},30000);
   window.addEventListener("resize",()=>{if(health.data)renderHR(health.data.hr);renderChess();});}
 if(profile.passcode){$("app").style.display="none";const oc=closeLock;closeLock=function(){oc();$("app").style.display="block";boot();};openLock(false);}
