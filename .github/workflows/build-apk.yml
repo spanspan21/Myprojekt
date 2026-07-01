@@ -1,12 +1,12 @@
-name: Build APK
+name: Build Ascend APK
 
 # Builds an installable debug APK on GitHub's runners (which have the Android
-# SDK and access to Google's Maven repo). Runs on every push to the feature
-# branch and can also be triggered manually from the Actions tab.
+# SDK and access to Google's Maven repo) and publishes it as a GitHub Release
+# asset so it can be downloaded and installed directly on a phone.
 on:
   push:
     branches:
-      - claude/crypto-demo-wallet-app-vxxjc
+      - claude/life-tracking-ai-app-8fajp4
   workflow_dispatch:
 
 jobs:
@@ -36,19 +36,26 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: crypto-demo-wallet-debug-apk
+          name: ascend-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk crypto-demo-wallet.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk ascend.apk
 
       - name: Publish APK to a GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: demo-latest
-          name: Crypto Demo Wallet (latest)
+          tag_name: ascend-latest
+          name: Ascend — Life OS (latest)
           body: |
-            Installierbare Demo-APK (Phantom-Look, offline, keine echten Transaktionen).
-            Direkt herunterladen: crypto-demo-wallet.apk
-          files: crypto-demo-wallet.apk
+            Installierbare APK von **Ascend — Life OS**.
+
+            Futuristisches Life-Tracking-Dashboard mit:
+            - 🤖 Overseer-KI, die dich motiviert
+            - 🎯 Tägliche Ziele, Wasser- & Schach-Tracker mit Streak
+            - ⌚ Fitnessuhr-Anbindung über Health Connect (Schlaf, Puls, HRV)
+
+            Direkt herunterladen: **ascend.apk**
+            (Auf dem Handy „Installation aus unbekannten Quellen" erlauben.)
+          files: ascend.apk

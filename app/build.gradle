@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace 'com.demo.cryptowallet'
+    namespace 'com.ascend.lifeos'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.demo.cryptowallet"
-        minSdk 24
+        applicationId "com.ascend.lifeos"
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -35,4 +35,11 @@ android {
 dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.activity:activity-ktx:1.9.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+
+    // Android Health Connect — reads sleep, heart rate, HRV & resting HR
+    // from the user's fitness band / smartwatch.
+    implementation 'androidx.health.connect:connect-client:1.1.0-rc02'
 }

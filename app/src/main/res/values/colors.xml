@@ -1,4 +1,5 @@
 <resources>
-    <color name="wallet_bg">#1a1b1f</color>
-    <color name="purple_accent">#ab9ff2</color>
+    <color name="app_bg">#000000</color>
+    <color name="accent_green">#4ade80</color>
+    <color name="accent_orange">#ff7a1a</color>
 </resources>

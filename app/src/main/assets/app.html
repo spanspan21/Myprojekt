@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Ascend</title>
+<style>
+  :root{
+    --bg:#000000;
+    --panel:#0b0c10;
+    --panel2:#111318;
+    --line:rgba(255,255,255,.07);
+    --line2:rgba(255,255,255,.12);
+    --txt:#f2f4f8;
+    --muted:#8a8f9a;
+    --dim:#565b66;
+    --green:#4ade80;
+    --green2:#22c55e;
+    --orange:#ff7a1a;
+    --amber:#f5b301;
+    --teal:#2dd4bf;
+    --red:#ff5a5f;
+    --blue:#5b9dff;
+    --purple:#b794ff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;overscroll-behavior:none;}
+  body{padding:0 0 96px;max-width:640px;margin:0 auto;}
+  .wrap{padding:16px 16px 0;}
+  ::-webkit-scrollbar{width:0;height:0;}
+
+  /* radial glow at top */
+  .glow{position:fixed;top:-160px;left:50%;transform:translateX(-50%);
+    width:520px;height:360px;pointer-events:none;z-index:0;
+    background:radial-gradient(closest-side, rgba(255,122,26,.14), transparent 70%);}
+  .content{position:relative;z-index:1;}
+
+  /* ---------- header ---------- */
+  .topline{display:flex;align-items:center;justify-content:space-between;
+    font-size:11px;letter-spacing:.16em;color:var(--green);font-weight:700;
+    text-transform:uppercase;font-family:ui-monospace,"SF Mono",Menlo,monospace;}
+  .topline .dim{color:var(--dim);}
+  .streakpill{display:flex;align-items:center;gap:5px;color:var(--amber);
+    background:rgba(245,179,1,.08);border:1px solid rgba(245,179,1,.25);
+    padding:4px 10px;border-radius:20px;font-size:11px;letter-spacing:.06em;}
+
+  .hero{margin:14px 0 4px;text-align:center;}
+  .hero h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;}
+  .hero h1 .accent{color:var(--orange);}
+  .hero p{margin:4px 0 0;color:var(--muted);font-size:12.5px;}
+
+  /* metric chip row */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none;}
+  .chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:9px 13px;min-width:78px;}
+  .chip .ic{font-size:15px;}
+  .chip .v{font-size:14px;font-weight:700;}
+  .chip .l{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;}
+  .chip .col{display:flex;flex-direction:column;line-height:1.15;}
+
+  /* section label */
+  .seclabel{display:flex;align-items:center;gap:10px;margin:26px 2px 12px;
+    font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;font-weight:600;}
+  .seclabel::before{content:"";width:16px;height:1px;background:var(--line2);}
+  .seclabel .r{margin-left:auto;color:var(--dim);letter-spacing:.1em;font-weight:500;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;}
+  .card + .card{margin-top:12px;}
+
+  /* ---------- day progress ---------- */
+  .dayrow{display:flex;align-items:center;gap:18px;}
+  .ring{position:relative;flex:0 0 auto;}
+  .ring .ct{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;line-height:1;}
+  .ring .pct{font-size:26px;font-weight:800;}
+  .ring .sub{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-top:3px;}
+  .dayinfo h3{margin:0 0 6px;font-size:16px;font-weight:700;}
+  .dayinfo p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5;}
+  .dayinfo .time{font-family:ui-monospace,Menlo,monospace;color:var(--dim);font-size:12px;}
+
+  /* ---------- overseer ---------- */
+  .ov-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .ov-badge{width:42px;height:42px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(145deg,#1b1d24,#0c0d12);border:1px solid var(--line2);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    box-shadow:0 0 22px rgba(74,222,128,.15);}
+  .ov-head .nm{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .ov-head .dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);}
+  .ov-head .desc{font-size:11.5px;color:var(--dim);margin-top:1px;}
+  .ov-msg{background:linear-gradient(160deg,rgba(255,122,26,.09),rgba(74,222,128,.05));
+    border:1px solid var(--line);border-radius:14px;padding:14px 15px;font-size:14px;
+    line-height:1.55;color:#eaeef4;}
+  .ov-log{margin-top:12px;display:flex;flex-direction:column;gap:9px;max-height:340px;overflow-y:auto;}
+  .bubble{max-width:85%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;}
+  .bubble.me{align-self:flex-end;background:#e9edf4;color:#0a0a0a;border-bottom-right-radius:5px;}
+  .bubble.ov{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);
+    border-bottom-left-radius:5px;}
+  .ov-input{display:flex;gap:9px;margin-top:12px;align-items:center;
+    background:var(--panel2);border:1px solid var(--line2);border-radius:16px;padding:6px 6px 6px 14px;}
+  .ov-input input{flex:1;background:none;border:none;outline:none;color:var(--txt);
+    font-size:14px;padding:8px 0;}
+  .ov-input input::placeholder{color:var(--dim);}
+  .sendbtn{width:38px;height:38px;border-radius:50%;border:none;flex:0 0 auto;
+    background:#f2f4f8;color:#000;font-size:17px;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;font-weight:700;}
+  .sendbtn:active{transform:scale(.92);}
+
+  /* ---------- goals ---------- */
+  .goalhead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:4px;}
+  .goalhead .big{font-size:34px;font-weight:800;line-height:1;}
+  .goalhead .big span{font-size:16px;color:var(--dim);font-weight:600;}
+  .prog{height:6px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;margin:14px 0 4px;}
+  .prog i{display:block;height:100%;border-radius:6px;
+    background:linear-gradient(90deg,var(--green2),var(--green));transition:width .5s cubic-bezier(.2,.8,.2,1);}
+  .glist{margin-top:14px;display:flex;flex-direction:column;gap:2px;}
+  .goal{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);}
+  .goal:last-child{border-bottom:none;}
+  .cbox{width:24px;height:24px;border-radius:8px;border:2px solid var(--line2);flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;font-size:14px;color:#000;}
+  .cbox.on{background:var(--green);border-color:var(--green);box-shadow:0 0 12px rgba(74,222,128,.4);}
+  .goal .gt{flex:1;font-size:14.5px;transition:.2s;}
+  .goal.done .gt{color:var(--dim);text-decoration:line-through;}
+  .goal .x{color:var(--dim);font-size:18px;cursor:pointer;padding:0 4px;opacity:.5;}
+  .goal .x:active{opacity:1;}
+  .addrow{display:flex;gap:9px;margin-top:14px;}
+  .addrow input{flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;
+    outline:none;color:var(--txt);font-size:14px;padding:11px 13px;}
+  .addrow input::placeholder{color:var(--dim);}
+  .addbtn{background:#f2f4f8;color:#000;border:none;border-radius:12px;padding:0 16px;
+    font-weight:700;font-size:14px;cursor:pointer;}
+  .addbtn:active{transform:scale(.96);}
+
+  /* quick trackers */
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  .qcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;}
+  .qcard .qtop{display:flex;align-items:center;justify-content:space-between;}
+  .qcard .qic{font-size:20px;}
+  .qcard .qval{font-size:30px;font-weight:800;margin-top:8px;line-height:1;}
+  .qcard .qval span{font-size:14px;color:var(--dim);font-weight:600;}
+  .qcard .qlbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:5px;}
+  .qbtns{display:flex;gap:8px;margin-top:14px;}
+  .qbtn{flex:1;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);
+    border-radius:11px;padding:10px 0;font-size:16px;font-weight:700;cursor:pointer;}
+  .qbtn.primary{background:rgba(74,222,128,.14);border-color:rgba(74,222,128,.3);color:var(--green);}
+  .qbtn:active{transform:scale(.95);}
+  .dots{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap;}
+  .dot8{width:14px;height:20px;border-radius:5px;background:rgba(255,255,255,.07);
+    border:1px solid var(--line2);}
+  .dot8.f{background:linear-gradient(180deg,var(--blue),#3b7fe0);border-color:transparent;
+    box-shadow:0 0 8px rgba(91,157,255,.5);}
+
+  /* ---------- health ---------- */
+  .hc-status{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);margin-bottom:14px;}
+  .hc-status .sd{width:8px;height:8px;border-radius:50%;background:var(--dim);}
+  .hc-status.live .sd{background:var(--green);box-shadow:0 0 8px var(--green);}
+  .hc-status.demo .sd{background:var(--amber);box-shadow:0 0 8px var(--amber);}
+  .recovery{display:flex;align-items:center;gap:20px;}
+  .recovery .rt{flex:1;}
+  .recovery .rt .call{font-size:15px;font-weight:700;margin-bottom:8px;}
+  .recovery .rt ul{margin:0;padding:0;list-style:none;font-size:12px;color:var(--muted);line-height:1.9;}
+  .recovery .rt li::before{content:"› ";color:var(--dim);}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;}
+  .metric .mv{font-size:19px;font-weight:800;}
+  .metric .ml{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+  .sleepbar{display:flex;height:34px;border-radius:9px;overflow:hidden;margin-top:8px;background:var(--panel2);}
+  .sleepbar i{height:100%;}
+  .sleeplegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--muted);}
+  .sleeplegend span{display:flex;align-items:center;gap:5px;}
+  .sleeplegend b{width:9px;height:9px;border-radius:3px;display:inline-block;}
+  .subhdr{font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin:20px 0 8px;}
+  canvas{width:100%;display:block;}
+  .btn{display:block;width:100%;text-align:center;background:linear-gradient(90deg,#1d2733,#141b24);
+    border:1px solid var(--line2);color:var(--txt);border-radius:14px;padding:14px;font-size:14px;
+    font-weight:700;cursor:pointer;}
+  .btn.glow{background:linear-gradient(90deg,rgba(45,212,191,.18),rgba(74,222,128,.12));
+    border-color:rgba(45,212,191,.35);color:#c9fff4;box-shadow:0 0 24px rgba(45,212,191,.15);}
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:none;border:1px solid var(--line);color:var(--muted);font-weight:600;margin-top:10px;padding:11px;}
+  .hint{font-size:11px;color:var(--dim);text-align:center;margin-top:10px;line-height:1.5;}
+
+  /* reflection */
+  textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:14px;
+    color:var(--txt);font-size:14px;padding:13px;outline:none;resize:none;min-height:90px;
+    font-family:inherit;line-height:1.5;}
+  textarea::placeholder{color:var(--dim);}
+
+  /* settings */
+  .setrow{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);}
+  .setrow:last-child{border-bottom:none;}
+  .setrow .k{font-size:14px;}
+  .setrow .k small{display:block;color:var(--dim);font-size:11px;margin-top:2px;}
+  .stepper{display:flex;align-items:center;gap:12px;}
+  .stepper button{width:30px;height:30px;border-radius:9px;border:1px solid var(--line2);
+    background:var(--panel2);color:var(--txt);font-size:18px;cursor:pointer;}
+  .stepper .val{font-size:16px;font-weight:700;min-width:22px;text-align:center;}
+  .linkbtn{background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;}
+
+  .foot{text-align:center;color:var(--dim);font-size:11px;margin:30px 0 10px;letter-spacing:.05em;}
+  .pop{animation:pop .35s cubic-bezier(.2,1.4,.4,1);}
+  @keyframes pop{0%{transform:scale(.85);opacity:.4}100%{transform:scale(1);opacity:1}}
+
+  /* lock screen */
+  .lock{position:fixed;inset:0;background:#050608;z-index:50;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:26px;padding:30px;}
+  .lock h2{margin:0;font-size:22px;font-weight:700;}
+  .lock p{margin:0;color:var(--dim);font-size:13px;}
+  .pins{display:flex;gap:16px;}
+  .pin{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--line2);}
+  .pin.f{background:var(--txt);border-color:var(--txt);}
+  .pad{display:grid;grid-template-columns:repeat(3,74px);gap:16px;}
+  .key{width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.05);
+    border:1px solid var(--line);font-size:26px;color:var(--txt);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;}
+  .key:active{background:rgba(255,255,255,.15);}
+  .key.blank{background:none;border:none;cursor:default;}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<!-- ===== LOCK SCREEN ===== -->
+<div class="lock" id="lock" style="display:none;">
+  <div style="font-size:34px;">🛡️</div>
+  <div style="text-align:center;">
+    <h2>Passcode eingeben</h2>
+    <p>Dieses Dashboard ist privat.</p>
+  </div>
+  <div class="pins" id="pins"></div>
+  <div class="pad" id="pad"></div>
+</div>
+
+<div class="content" id="app" style="display:none;">
+<div class="wrap">
+
+  <!-- header -->
+  <div class="topline">
+    <span id="dateLine">—</span>
+    <span class="streakpill">⚡ <b id="streakTop">0</b>&nbsp;TAGE STREAK</span>
+  </div>
+
+  <div class="hero">
+    <h1>Ascend <span class="accent">·</span> <span id="heroName">Life OS</span></h1>
+    <p>Tracke alles. Bleib jeden Tag dran. Werde die beste Version.</p>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <!-- ===== DAY PROGRESS ===== -->
+  <div class="seclabel">Dein Tag</div>
+  <div class="card">
+    <div class="dayrow">
+      <div class="ring" id="dayRing"></div>
+      <div class="dayinfo">
+        <h3 id="phaseTitle">—</h3>
+        <p id="phaseSub">—</p>
+        <p class="time" id="phaseWindow">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== OVERSEER (AI) ===== -->
+  <div class="seclabel">Overseer</div>
+  <div class="card">
+    <div class="ov-head">
+      <div class="ov-badge">✦</div>
+      <div>
+        <div class="nm">Overseer <span class="dot"></span></div>
+        <div class="desc">Kennt dein Dashboard. Motiviert dich. Frag alles.</div>
+      </div>
+    </div>
+    <div class="ov-msg" id="ovProactive">…</div>
+    <div class="ov-log" id="ovLog"></div>
+    <div class="ov-input">
+      <input id="ovInput" placeholder="Schreib dem Overseer…" autocomplete="off">
+      <button class="sendbtn" id="ovSend">↑</button>
+    </div>
+  </div>
+
+  <!-- ===== GOALS ===== -->
+  <div class="seclabel">Goalmaxxing <span class="r" id="goalStreakLbl">⚡ 0 Tage</span></div>
+  <div class="card">
+    <div class="goalhead">
+      <div class="big"><span id="goalDone">0</span><span> / <span id="goalTotal">0</span> erledigt</span></div>
+    </div>
+    <div class="prog"><i id="goalProg" style="width:0%"></i></div>
+    <div class="glist" id="goalList"></div>
+    <div class="addrow">
+      <input id="goalInput" placeholder="Neues Ziel für heute…" autocomplete="off">
+      <button class="addbtn" id="goalAdd">+ Add</button>
+    </div>
+  </div>
+
+  <!-- quick trackers -->
+  <div class="quick">
+    <div class="qcard">
+      <div class="qtop"><span class="qic">💧</span><span style="font-size:11px;color:var(--dim)">Reset 6:00</span></div>
+      <div class="qval"><span id="waterCount">0</span><span> / <span id="waterGoal">8</span></span></div>
+      <div class="qlbl">Wasser (Gläser)</div>
+      <div class="dots" id="waterDots"></div>
+      <div class="qbtns">
+        <button class="qbtn" id="waterMinus">−</button>
+        <button class="qbtn primary" id="waterPlus">+ Glas</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qtop"><span class="qic">♟️</span><span style="font-size:11px;color:var(--dim)">Täglich</span></div>
+      <div class="qval"><span id="chessCount">0</span><span> Partien</span></div>
+      <div class="qlbl">Schach</div>
+      <div class="dots" id="chessDots"></div>
+      <div class="qbtns">
+        <button class="qbtn" id="chessMinus">−</button>
+        <button class="qbtn primary" id="chessPlus">+ Partie</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HEALTH ===== -->
+  <div class="seclabel">Fitnessuhr <span class="r" id="hcUpdated"></span></div>
+  <div class="card">
+    <div class="hc-status" id="hcStatus"><span class="sd"></span><span id="hcStatusTxt">Nicht verbunden</span></div>
+
+    <div class="recovery">
+      <div class="ring" id="recRing"></div>
+      <div class="rt">
+        <div class="call" id="recCall">Verbinde deine Uhr</div>
+        <ul id="recList"><li>Schlaf, Herzfrequenz & HRV live aus deiner Fitnessuhr.</li></ul>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="mv" id="mSleep">–</div><div class="ml">Schlaf</div></div>
+      <div class="metric"><div class="mv" id="mHrv">–</div><div class="ml">HRV</div></div>
+      <div class="metric"><div class="mv" id="mRhr">–</div><div class="ml">Ruhepuls</div></div>
+    </div>
+
+    <div class="subhdr">Schlafphasen</div>
+    <div class="sleepbar" id="sleepBar"></div>
+    <div class="sleeplegend">
+      <span><b style="background:#b794ff"></b>REM <i id="lgRem" style="font-style:normal;color:var(--txt)"></i></span>
+      <span><b style="background:#5b9dff"></b>Tief <i id="lgDeep" style="font-style:normal;color:var(--txt)"></i></span>
+      <span><b style="background:#2dd4bf"></b>Leicht <i id="lgLight" style="font-style:normal;color:var(--txt)"></i></span>
+      <span><b style="background:#556"></b>Wach <i id="lgAwake" style="font-style:normal;color:var(--txt)"></i></span>
+    </div>
+
+    <div class="subhdr">Herzfrequenz über den Tag</div>
+    <canvas id="hrChart" height="150"></canvas>
+    <div class="sleeplegend" style="justify-content:space-between;margin-top:6px;">
+      <span id="hrMin">–</span><span id="hrAvg" style="color:var(--txt)"></span><span id="hrMax">–</span>
+    </div>
+
+    <button class="btn glow" id="hcConnect" style="margin-top:18px;">⌚ Fitnessuhr verbinden (Health Connect)</button>
+    <button class="btn ghost" id="hcDemo">Ohne Uhr: Demo-Daten anzeigen</button>
+    <div class="hint" id="hcHint">Liest Daten aus Samsung Health, Google Fit, Fitbit, Garmin, Zepp u.&nbsp;a. über Android Health&nbsp;Connect.</div>
+  </div>
+
+  <!-- ===== REFLECTION ===== -->
+  <div class="seclabel">Reflexion heute</div>
+  <div class="card">
+    <textarea id="reflect" placeholder="Was lief gut? Was war schwer? Was machst du morgen besser?"></textarea>
+    <div class="hint" id="reflectSaved" style="margin-top:8px;">Wird automatisch gespeichert.</div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="seclabel">Einstellungen</div>
+  <div class="card">
+    <div class="setrow">
+      <div class="k">Dein Name<small>Erscheint im Header & beim Overseer</small></div>
+      <input id="setName" placeholder="Name" style="background:var(--panel2);border:1px solid var(--line2);border-radius:10px;color:var(--txt);padding:9px 11px;outline:none;width:130px;font-size:14px;">
+    </div>
+    <div class="setrow">
+      <div class="k">Wasser-Ziel<small>Gläser pro Tag</small></div>
+      <div class="stepper">
+        <button id="wgMinus">−</button><span class="val" id="wgVal">8</span><button id="wgPlus">+</button>
+      </div>
+    </div>
+    <div class="setrow">
+      <div class="k">Passcode-Sperre<small id="lockDesc">Aus</small></div>
+      <button class="btn" style="width:auto;padding:9px 16px;font-size:13px;" id="lockToggle">Einrichten</button>
+    </div>
+    <div class="setrow">
+      <div class="k">Daten zurücksetzen<small>Löscht alles auf diesem Gerät</small></div>
+      <button class="linkbtn" id="resetBtn">Zurücksetzen</button>
+    </div>
+  </div>
+
+  <div class="foot">ASCEND · Life OS — alles lokal auf deinem Gerät gespeichert.</div>
+</div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Ascend — Life OS  (single-file offline dashboard)
+   ============================================================ */
+
+const $ = (id) => document.getElementById(id);
+const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
+const pad2 = (n) => String(n).padStart(2,"0");
+
+/* ---------- day model: day rolls over at 6:00 AM ---------- */
+function dayKey(d){
+  d = d || new Date();
+  const x = new Date(d);
+  if (x.getHours() < 6) x.setDate(x.getDate()-1);
+  return x.getFullYear()+"-"+pad2(x.getMonth()+1)+"-"+pad2(x.getDate());
+}
+function prevKey(key){
+  const [y,m,d] = key.split("-").map(Number);
+  const dt = new Date(y, m-1, d); dt.setDate(dt.getDate()-1);
+  return dt.getFullYear()+"-"+pad2(dt.getMonth()+1)+"-"+pad2(dt.getDate());
+}
+const TODAY = dayKey();
+
+/* ---------- persistence ---------- */
+const DB = {
+  load(k, def){ try{ const v = localStorage.getItem("ascend:"+k); return v?JSON.parse(v):def; }catch(e){ return def; } },
+  save(k, v){ try{ localStorage.setItem("ascend:"+k, JSON.stringify(v)); }catch(e){} }
+};
+
+const DEFAULT_GOALS = [
+  "🏋️ Training / Bewegung",
+  "📵 Kein sinnloses Scrollen",
+  "📖 20 Minuten lesen",
+  "🧘 10 Min Fokus / Meditation"
+];
+
+let profile = DB.load("profile", {
+  name:"", waterGoal:8, chessGoal:1, streak:0, longest:0, lastFullKey:null, passcode:null
+});
+
+function loadDay(){
+  let d = DB.load("day:"+TODAY, null);
+  if(!d){
+    d = { goals: DEFAULT_GOALS.map((t,i)=>({id:"g"+i, text:t, done:false})),
+          water:0, chess:0, reflection:"", waterDone:false, chessDone:false };
+    DB.save("day:"+TODAY, d);
+  }
+  return d;
+}
+let day = loadDay();
+
+function saveProfile(){ DB.save("profile", profile); }
+function saveDay(){ DB.save("day:"+TODAY, day); }
+
+/* ---------- completion + streak ---------- */
+function completion(){
+  // goals + water target + chess = the full daily "chain"
+  const total = day.goals.length + 2; // +water +chess
+  let done = day.goals.filter(g=>g.done).length;
+  if(day.water >= profile.waterGoal) done++;
+  if(day.chess >= profile.chessGoal) done++;
+  return { done, total, pct: total? done/total : 0 };
+}
+function refreshStreak(){
+  const c = completion();
+  const full = c.pct >= 1;
+  if(full && profile.lastFullKey !== TODAY){
+    if(profile.lastFullKey === prevKey(TODAY)) profile.streak += 1;
+    else profile.streak = 1;
+    profile.lastFullKey = TODAY;
+    if(profile.streak > profile.longest) profile.longest = profile.streak;
+    saveProfile();
+    toast("🔥 Tag komplett! Streak: "+profile.streak);
+  } else if(!full){
+    // chain broken? last full day older than yesterday
+    if(profile.lastFullKey && profile.lastFullKey !== TODAY && profile.lastFullKey !== prevKey(TODAY)){
+      if(profile.streak !== 0){ profile.streak = 0; saveProfile(); }
+    }
+  }
+}
+
+/* ---------- rings (SVG) ---------- */
+function ring(el, pct, size, color, track, width){
+  size = size||110; width = width||9;
+  const r = (size-width)/2, c = 2*Math.PI*r;
+  const off = c*(1-clamp(pct,0,1));
+  el.style.width = size+"px"; el.style.height = size+"px";
+  const inner = el.querySelector(".ct");
+  el.innerHTML =
+   `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${track||'rgba(255,255,255,.08)'}" stroke-width="${width}"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${width}"
+        stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+        style="filter:drop-shadow(0 0 6px ${color}88);transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)"/>
+    </svg>`;
+  if(inner) el.appendChild(inner);
+}
+
+/* ---------- phase / day progress ---------- */
+const WAKE_START = 6, WAKE_END = 24; // 6:00 → 24:00
+function phaseInfo(){
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+  const eff = h < WAKE_START ? h+24 : h; // pre-6am counts to previous day tail
+  const pct = clamp((eff - WAKE_START)/(WAKE_END - WAKE_START), 0, 1);
+  let title, emoji;
+  if(h>=6 && h<11){ title="Morgen — leg los"; emoji="🌅"; }
+  else if(h>=11 && h<14){ title="Mittag — bleib dran"; emoji="⚡"; }
+  else if(h>=14 && h<18){ title="Nachmittag — durchziehen"; emoji="🔥"; }
+  else if(h>=18 && h<22){ title="Abend — stark bleiben"; emoji="🌙"; }
+  else { title="Nacht — Regeneration"; emoji="😴"; }
+  const leftH = Math.max(0, WAKE_END - eff);
+  const lh = Math.floor(leftH), lm = Math.round((leftH-lh)*60);
+  return { pct, title, emoji, leftTxt: lh+"h "+pad2(lm)+"m wach", now };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function renderHeader(){
+  const now = new Date();
+  const days=["SO","MO","DI","MI","DO","FR","SA"];
+  const mon=["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"];
+  $("dateLine").innerHTML = days[now.getDay()]+", "+now.getDate()+". "+mon[now.getMonth()]+
+    ' <span class="dim">· '+pad2(now.getHours())+":"+pad2(now.getMinutes())+'</span>';
+  $("streakTop").textContent = profile.streak;
+  $("heroName").textContent = profile.name ? profile.name : "Life OS";
+}
+function renderChips(){
+  const c = completion();
+  const h = health.data;
+  const chips = [
+    {ic:"💧", v:day.water+"/"+profile.waterGoal, l:"Wasser"},
+    {ic:"🎯", v:c.done+"/"+c.total, l:"Ziele"},
+    {ic:"⚡", v:profile.streak, l:"Streak"},
+    {ic:"❤️", v:h&&h.hr&&h.hr.avg?h.hr.avg:"–", l:"Ø Puls"},
+    {ic:"🌙", v:h&&h.sleep?fmtDur(h.sleep.totalMin):"–", l:"Schlaf"},
+    {ic:"♟️", v:day.chess, l:"Schach"},
+  ];
+  $("chips").innerHTML = chips.map(x=>
+    `<div class="chip"><span class="ic">${x.ic}</span><div class="col"><span class="v">${x.v}</span><span class="l">${x.l}</span></div></div>`
+  ).join("");
+}
+function renderDay(){
+  const p = phaseInfo();
+  const el = $("dayRing");
+  el.innerHTML = '<div class="ct"><div class="pct">'+Math.round(p.pct*100)+'%</div><div class="sub">'+
+    (p.now.getHours()>=6?'Tag':'Nacht')+'</div></div>';
+  ring(el, p.pct, 120, "var(--orange)", "rgba(255,255,255,.07)", 10);
+  $("phaseTitle").textContent = p.emoji+" "+p.title;
+  const c = completion();
+  $("phaseSub").textContent = c.done+" von "+c.total+" Zielen erledigt · "+p.leftTxt;
+  $("phaseWindow").textContent = "06:00 — 24:00";
+}
+function renderGoals(){
+  const c = completion();
+  $("goalDone").textContent = c.done;
+  $("goalTotal").textContent = c.total;
+  $("goalProg").style.width = Math.round(c.pct*100)+"%";
+  $("goalStreakLbl").textContent = "⚡ "+profile.streak+" Tage";
+  $("goalList").innerHTML = day.goals.map(g=>
+    `<div class="goal ${g.done?'done':''}" data-id="${g.id}">
+       <div class="cbox ${g.done?'on':''}" data-act="toggle">${g.done?'✓':''}</div>
+       <div class="gt">${esc(g.text)}</div>
+       <div class="x" data-act="del">×</div>
+     </div>`).join("");
+}
+function renderQuick(){
+  $("waterCount").textContent = day.water;
+  $("waterGoal").textContent = profile.waterGoal;
+  $("chessCount").textContent = day.chess;
+  let wd=""; for(let i=0;i<profile.waterGoal;i++) wd+=`<div class="dot8 ${i<day.water?'f':''}"></div>`;
+  $("waterDots").innerHTML = wd;
+  let cd=""; const cg=Math.max(profile.chessGoal, day.chess, 1);
+  for(let i=0;i<cg;i++) cd+=`<div class="dot8 ${i<day.chess?'f':''}" style="${i<day.chess?'background:linear-gradient(180deg,#b794ff,#8b5cf6);':''}"></div>`;
+  $("chessDots").innerHTML = cd;
+}
+function fmtDur(min){ if(min==null) return "–"; const h=Math.floor(min/60), m=Math.round(min%60); return h+"h "+pad2(m); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function renderAll(){
+  renderHeader(); renderChips(); renderDay(); renderGoals(); renderQuick(); renderHealth();
+}
+
+/* ============================================================
+   OVERSEER — local motivational AI
+   ============================================================ */
+const Overseer = {
+  log: DB.load("ovlog:"+TODAY, []),
+  proactive(){
+    const c = completion(), p = phaseInfo(), s = profile.streak;
+    const name = profile.name ? " "+profile.name : "";
+    const lines = [];
+    if(c.pct>=1){
+      lines.push(`Alles erledigt heute${name}. 🔥 Tag ${s} in Folge — genau so baut man ein anderes Leben. Ruh dich aus, morgen wieder.`);
+    } else if(c.pct>=0.6){
+      lines.push(`Stark${name} — ${c.done}/${c.total} stehen. Nur noch ${c.total-c.done} und der Tag ist perfekt. Nicht kurz vorm Ziel abschalten.`);
+    } else if(p.now.getHours()<11){
+      lines.push(`Guten Morgen${name}. Frischer Tag, saubere Weste. Ein Glas Wasser, ein erledigtes Ziel — der erste Schritt zieht den Rest mit.`);
+    } else if(p.now.getHours()>=20 && c.pct<1){
+      lines.push(`Noch ${c.total-c.done} offen${name}. Der Abend entscheidet, ob die Serie hält. Zieh die schnellen Sachen jetzt durch.`);
+    } else {
+      lines.push(`${p.emoji} ${p.title}. Du bist bei ${c.done}/${c.total}${name}. Momentum entsteht durch das nächste kleine Ja. Los.`);
+    }
+    if(s>=3) lines.push(`Deine ${s}-Tage-Serie ist echtes Kapital — brich sie heute nicht.`);
+    if(day.water < profile.waterGoal && p.now.getHours()>=12) lines.push(`💧 Erst ${day.water}/${profile.waterGoal} Gläser Wasser. Trink jetzt eins.`);
+    return lines.join(" ");
+  },
+  reply(text){
+    const t = text.toLowerCase();
+    const c = completion(), s = profile.streak;
+    const has = (...w)=>w.some(x=>t.includes(x));
+    let r;
+    if(has("hallo","hi","hey","moin","servus")){
+      r = `Hey${profile.name?" "+profile.name:""}. Du stehst bei ${c.done}/${c.total} Zielen und ${s} Tagen Streak. Woran arbeiten wir als Nächstes?`;
+    } else if(has("müde","kaputt","keine lust","keine kraft","erschöpft","aufgeben","schwer","kann nicht")){
+      r = pick([
+        "Müdigkeit ist ein Gefühl, keine Anweisung. Mach nur EINE Sache von der Liste — die kleinste. Danach entscheidest du neu.",
+        "Genau an diesen Tagen wird der Unterschied gebaut. Niemand ist immer motiviert — Disziplin trägt dich, wenn die Motivation schläft. Ein Ziel. Jetzt.",
+        "Runterschalten ist okay, aufhören nicht. Trink Wasser, streich EIN Ziel von der Liste, und die Serie lebt weiter."
+      ]);
+    } else if(has("motivier","push","antreib","brauche einen tritt","ansporn")){
+      r = pick([
+        "Du willst nicht das Leben von morgen mit den Gewohnheiten von gestern. Jedes Häkchen heute ist eine Stimme für den Menschen, der du wirst. Setz das nächste.",
+        `Streak ${s}. Stell dir vor, das steht in 90 Tagen bei ${s+90}. Dieser Mensch wird heute gebaut — von dir, jetzt.`,
+        "Der Plan funktioniert nur, wenn du ihn ausführst. Nicht perfekt. Nur heute. Los, ein Ziel abhaken."
+      ]);
+    } else if(has("wie mach","wie steh","fortschritt","stand","überblick","status")){
+      r = `Heute: ${c.done}/${c.total} Ziele (${Math.round(c.pct*100)}%). Wasser ${day.water}/${profile.waterGoal}. Schach ${day.chess}. Streak ${s} Tage (Rekord ${profile.longest}).`+
+          (c.pct<1?` Noch ${c.total-c.done} bis zum perfekten Tag.`:" Perfekter Tag — sauber.");
+    } else if(has("wasser","trinken","durst")){
+      r = day.water>=profile.waterGoal ? `Wasserziel erreicht 💧 (${day.water}/${profile.waterGoal}). Sauber.`
+        : `Du bist bei ${day.water}/${profile.waterGoal} Gläsern. Nimm jetzt eins — Fokus und Energie hängen direkt daran. Tipp munten auf „+ Glas“.`;
+    } else if(has("schach","chess")){
+      r = day.chess>0 ? `${day.chess} Partie(n) heute — Kopftraining läuft. Analysier eine Partie, dann zählt sie doppelt.`
+        : "Noch keine Partie heute. Eine schnelle Runde schärft Fokus & Geduld. Tipp auf „+ Partie“, wenn du gespielt hast.";
+    } else if(has("schlaf","sleep","recovery","erholung","puls","herz","hrv")){
+      const h = health.data;
+      if(h&&h.sleep) r = `Letzte Nacht ${fmtDur(h.sleep.totalMin)} Schlaf`+(h.hr&&h.hr.avg?`, Ø Puls ${h.hr.avg}`:"")+(h.hrv?`, HRV ${h.hrv}ms`:"")+`. ${h.sleep.totalMin>=420?"Gute Basis — geh es heute an.":"Kurz geschlafen — heute clever dosieren, früh ins Bett."}`;
+      else r = "Verbinde unten deine Fitnessuhr über Health Connect — dann seh ich Schlaf, Puls und HRV und kann dich echt steuern.";
+    } else if(has("streak","serie","kette")){
+      r = `Aktuelle Serie: ${s} Tage. Rekord: ${profile.longest}. Regel: brich die Kette nicht. Ein kompletter Tag = die Serie lebt.`;
+    } else if(has("danke","top","cool","stark","geil")){
+      r = pick(["Immer. Jetzt weitermachen. 💪","Gern — aber die Arbeit machst du. Weiter.","Dafür bin ich da. Nächstes Ziel."]);
+    } else if(has("hilfe","was kannst du","funktion","help")){
+      r = "Ich kenne dein Dashboard: Ziele, Wasser, Schach, Streak und deine Fitnessuhr-Daten. Frag mich nach deinem Stand, lass dich pushen, oder sag mir wenn du keine Lust hast — ich hol dich zurück.";
+    } else {
+      r = pick([
+        `Verstanden. Aber Reden bewegt nichts — Häkchen schon. Du hast ${c.total-c.done} Ziele offen. Welches ziehst du jetzt durch?`,
+        "Notiert. Bring das in ein konkretes Ziel und häng es oben rein. Fortschritt entsteht durch Ausführung, nicht durch Pläne.",
+        `Ich bin bei dir. Fokus: ein Schritt jetzt. Streak ${s} — halt sie am Leben.`
+      ]);
+    }
+    return r;
+  }
+};
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+function renderOverseer(){
+  $("ovProactive").textContent = Overseer.proactive();
+  $("ovLog").innerHTML = Overseer.log.map(m=>
+    `<div class="bubble ${m.who}">${esc(m.text)}</div>`).join("");
+  $("ovLog").scrollTop = $("ovLog").scrollHeight;
+}
+function ovSend(){
+  const inp = $("ovInput"); const text = inp.value.trim();
+  if(!text) return;
+  Overseer.log.push({who:"me", text});
+  const reply = Overseer.reply(text);
+  Overseer.log.push({who:"ov", text:reply});
+  DB.save("ovlog:"+TODAY, Overseer.log);
+  inp.value="";
+  renderOverseer();
+}
+
+/* ============================================================
+   HEALTH — Health Connect bridge + demo fallback
+   ============================================================ */
+const health = {
+  data: DB.load("health", null),
+  mode: DB.load("healthmode", "none"), // none | live | demo
+};
+
+window.AscendHealth = {
+  onData(json){
+    try{
+      const d = JSON.parse(json);
+      d.source = "live";
+      health.data = d; health.mode = "live";
+      DB.save("health", d); DB.save("healthmode","live");
+      renderAll(); renderChips();
+      toast("⌚ Fitnessuhr verbunden");
+    }catch(e){ toast("Fehler beim Lesen der Daten"); }
+  },
+  onError(code){
+    const msg = {
+      permission_denied:"Zugriff verweigert. In Health Connect Berechtigungen erlauben.",
+      unavailable:"Health Connect nicht verfügbar. Bitte installieren/aktualisieren.",
+      update_required:"Health Connect muss aktualisiert werden.",
+      error:"Verbindung fehlgeschlagen. Health Connect prüfen."
+    }[code] || "Fehler.";
+    toast(msg);
+    if(code==="unavailable"||code==="update_required"){
+      $("hcHint").innerHTML = "Health Connect fehlt. <b style='color:var(--teal)'>Tippe hier zum Installieren.</b>";
+      $("hcHint").onclick = ()=>{ if(window.AndroidHealth&&AndroidHealth.openSettings) AndroidHealth.openSettings(); };
+    }
+  }
+};
+
+function hasBridge(){ return typeof AndroidHealth !== "undefined" && AndroidHealth && AndroidHealth.status; }
+
+function connectHealth(){
+  if(hasBridge()){
+    const st = AndroidHealth.status();
+    if(st==="available"){ toast("Verbinde…"); AndroidHealth.connect(); }
+    else if(st==="update_required"){ toast("Health Connect aktualisieren…"); AndroidHealth.openSettings(); }
+    else { toast("Health Connect nicht installiert"); AndroidHealth.openSettings(); }
+  } else {
+    // running in a plain browser / no native bridge → offer demo
+    toast("Health Connect nur in der App verfügbar — zeige Demo");
+    demoHealth();
+  }
+}
+
+function demoHealth(){
+  // plausible last-night sleep + heart-rate curve
+  const now = Date.now();
+  const series = [];
+  const start = new Date(); start.setHours(6,0,0,0);
+  let t = start.getTime();
+  let base = 62;
+  while(t < now){
+    const hr = new Date(t).getHours();
+    let target = 62;
+    if(hr>=7&&hr<9) target=78;
+    else if(hr>=9&&hr<12) target=72;
+    else if(hr>=12&&hr<14) target=70;
+    else if(hr>=17&&hr<19) target=118; // workout spike
+    else if(hr>=19&&hr<22) target=74;
+    else if(hr>=22) target=64;
+    base += (target-base)*0.25 + (Math.random()-0.5)*6;
+    series.push({t, bpm: Math.round(clamp(base,52,150))});
+    t += 5*60*1000;
+  }
+  const bpms = series.map(s=>s.bpm);
+  const d = {
+    ok:true, source:"demo", updatedAt: now,
+    hr:{ series, min:Math.min(...bpms), max:Math.max(...bpms), avg:Math.round(bpms.reduce((a,b)=>a+b,0)/bpms.length) },
+    hrv:64, restingHr:52, steps:6420,
+    sleep:{ totalMin:414, rem:96, deep:78, light:240, awake:22, start:now-8*3600e3, end:now-30*60e3 }
+  };
+  health.data = d; health.mode="demo";
+  DB.save("health", d); DB.save("healthmode","demo");
+  renderAll();
+  toast("Demo-Daten geladen");
+}
+
+function recoveryScore(d){
+  if(!d) return null;
+  let score = 55;
+  if(d.sleep){ score = clamp(Math.round((d.sleep.totalMin/480)*60 + (d.hrv?clamp(d.hrv,20,120)/120*25:15) + (d.restingHr?clamp(70-d.restingHr,-10,20):5) + 5), 5, 99); }
+  return score;
+}
+
+function renderHealth(){
+  const d = health.data;
+  const st = $("hcStatus");
+  st.className = "hc-status" + (health.mode==="live"?" live":health.mode==="demo"?" demo":"");
+  $("hcStatusTxt").textContent = health.mode==="live"?"Live · verbunden":health.mode==="demo"?"Demo-Modus (keine echte Uhr)":"Nicht verbunden";
+  $("hcUpdated").textContent = d&&d.updatedAt ? "akt. "+new Date(d.updatedAt).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) : "";
+
+  const rec = recoveryScore(d);
+  const recEl = $("recRing");
+  const col = rec==null?"rgba(255,255,255,.15)":rec>=66?"var(--green)":rec>=40?"var(--amber)":"var(--red)";
+  recEl.innerHTML = '<div class="ct"><div class="pct" style="font-size:24px">'+(rec==null?"–":rec)+
+    '</div><div class="sub">Recovery</div></div>';
+  ring(recEl, rec==null?0:rec/100, 108, col, "rgba(255,255,255,.07)", 9);
+
+  if(d){
+    $("recCall").textContent = rec>=66?"Grün — heute Vollgas 💪":rec>=40?"Gelb — solide, dosiert pushen":"Rot — heute Regeneration";
+    const li=[];
+    if(d.sleep) li.push("Schlaf "+fmtDur(d.sleep.totalMin)+(d.sleep.totalMin<420?" — kurz":" — solide"));
+    if(d.hrv) li.push("HRV "+d.hrv+"ms"+(d.hrv>=60?" — erholt":" — angespannt"));
+    if(d.restingHr) li.push("Ruhepuls "+d.restingHr+" bpm");
+    if(d.steps) li.push((d.steps).toLocaleString("de-DE")+" Schritte heute");
+    $("recList").innerHTML = li.map(x=>"<li>"+x+"</li>").join("") || "<li>Keine Detaildaten.</li>";
+    $("mSleep").textContent = d.sleep?fmtDur(d.sleep.totalMin):"–";
+    $("mHrv").textContent = d.hrv?d.hrv+"ms":"–";
+    $("mRhr").textContent = d.restingHr?d.restingHr:"–";
+    renderSleep(d.sleep);
+    renderHR(d.hr);
+  } else {
+    $("recCall").textContent = "Verbinde deine Uhr";
+    $("recList").innerHTML = "<li>Schlaf, Herzfrequenz & HRV live aus deiner Fitnessuhr.</li>";
+  }
+}
+function renderSleep(s){
+  const bar=$("sleepBar");
+  if(!s){ bar.innerHTML=""; return; }
+  const seg=[["#b794ff",s.rem,"lgRem"],["#5b9dff",s.deep,"lgDeep"],["#2dd4bf",s.light,"lgLight"],["#556",s.awake,"lgAwake"]];
+  const tot=Math.max(1,s.rem+s.deep+s.light+s.awake);
+  bar.innerHTML = seg.map(([c,v])=>`<i style="width:${v/tot*100}%;background:${c}"></i>`).join("");
+  $("lgRem").textContent=fmtM(s.rem); $("lgDeep").textContent=fmtM(s.deep);
+  $("lgLight").textContent=fmtM(s.light); $("lgAwake").textContent=fmtM(s.awake);
+}
+function fmtM(m){ const h=Math.floor(m/60),mm=Math.round(m%60); return h>0?h+"h"+pad2(mm):mm+"m"; }
+
+function renderHR(hr){
+  const cv=$("hrChart"); const ctx=cv.getContext("2d");
+  const W=cv.clientWidth, H=150, dpr=window.devicePixelRatio||1;
+  cv.width=W*dpr; cv.height=H*dpr; ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  $("hrMin").textContent = hr&&hr.min?"min "+hr.min:"–";
+  $("hrMax").textContent = hr&&hr.max?"max "+hr.max:"–";
+  $("hrAvg").textContent = hr&&hr.avg?"Ø "+hr.avg+" bpm":"";
+  if(!hr||!hr.series||!hr.series.length){
+    ctx.fillStyle="#565b66"; ctx.font="12px system-ui"; ctx.textAlign="center";
+    ctx.fillText("Keine Puls-Daten — Uhr verbinden", W/2, H/2); return;
+  }
+  const pts=hr.series;
+  const t0=pts[0].t, t1=Math.max(pts[pts.length-1].t, t0+1);
+  const lo=Math.min(...pts.map(p=>p.bpm))-6, hi=Math.max(...pts.map(p=>p.bpm))+6;
+  const X=t=>((t-t0)/(t1-t0))*(W-8)+4;
+  const Y=b=>H-14-((b-lo)/(hi-lo))*(H-28);
+  // grid
+  ctx.strokeStyle="rgba(255,255,255,.05)"; ctx.lineWidth=1;
+  for(let i=0;i<4;i++){ const y=14+i*((H-28)/3); ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+  // gradient area
+  const grad=ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0,"#2dd4bf"); grad.addColorStop(.5,"#f5b301"); grad.addColorStop(1,"#ff5a5f");
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ const x=X(p.t),y=Y(p.bpm); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.lineTo(X(pts[pts.length-1].t),H); ctx.lineTo(X(pts[0].t),H); ctx.closePath();
+  const fill=ctx.createLinearGradient(0,0,0,H);
+  fill.addColorStop(0,"rgba(245,179,1,.18)"); fill.addColorStop(1,"rgba(245,179,1,0)");
+  ctx.fillStyle=fill; ctx.fill();
+  // line
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ const x=X(p.t),y=Y(p.bpm); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.strokeStyle=grad; ctx.lineWidth=2.4; ctx.lineJoin="round"; ctx.shadowColor="rgba(245,179,1,.5)"; ctx.shadowBlur=8; ctx.stroke();
+  ctx.shadowBlur=0;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTO;
+function toast(msg){
+  let el=$("toast");
+  if(!el){ el=document.createElement("div"); el.id="toast";
+    el.style.cssText="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:99;"+
+      "background:#eef1f6;color:#0a0a0a;padding:11px 18px;border-radius:14px;font-size:13.5px;"+
+      "font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:88%;text-align:center;transition:.3s;opacity:0;";
+    document.body.appendChild(el);
+  }
+  el.textContent=msg; el.style.opacity="1"; el.style.transform="translateX(-50%) translateY(0)";
+  clearTimeout(toastTO); toastTO=setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateX(-50%) translateY(8px)"; },2200);
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function afterChange(){ refreshStreak(); saveDay(); renderAll(); }
+
+$("goalList").addEventListener("click",(e)=>{
+  const act=e.target.getAttribute("data-act"); if(!act) return;
+  const id=e.target.closest(".goal").getAttribute("data-id");
+  const g=day.goals.find(x=>x.id===id); if(!g) return;
+  if(act==="toggle"){ g.done=!g.done; if(g.done) e.target.classList.add("pop"); }
+  if(act==="del"){ day.goals=day.goals.filter(x=>x.id!==id); }
+  afterChange();
+});
+function addGoal(){
+  const inp=$("goalInput"); const v=inp.value.trim(); if(!v) return;
+  day.goals.push({id:"g"+Date.now(), text:v, done:false}); inp.value=""; afterChange();
+}
+$("goalAdd").onclick=addGoal;
+$("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter") addGoal(); });
+
+$("waterPlus").onclick=()=>{ day.water++; afterChange(); };
+$("waterMinus").onclick=()=>{ day.water=Math.max(0,day.water-1); afterChange(); };
+$("chessPlus").onclick=()=>{ day.chess++; afterChange(); };
+$("chessMinus").onclick=()=>{ day.chess=Math.max(0,day.chess-1); afterChange(); };
+
+$("ovSend").onclick=ovSend;
+$("ovInput").addEventListener("keydown",e=>{ if(e.key==="Enter") ovSend(); });
+
+$("hcConnect").onclick=connectHealth;
+$("hcDemo").onclick=demoHealth;
+
+$("reflect").value=day.reflection||"";
+let refTO;
+$("reflect").addEventListener("input",()=>{
+  day.reflection=$("reflect").value; clearTimeout(refTO);
+  refTO=setTimeout(()=>{ saveDay(); $("reflectSaved").textContent="✓ Gespeichert "+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}); },500);
+});
+
+/* settings */
+$("setName").value=profile.name||"";
+$("setName").addEventListener("input",()=>{ profile.name=$("setName").value; saveProfile(); renderHeader(); });
+$("wgVal").textContent=profile.waterGoal;
+$("wgPlus").onclick=()=>{ profile.waterGoal=clamp(profile.waterGoal+1,1,20); $("wgVal").textContent=profile.waterGoal; saveProfile(); afterChange(); };
+$("wgMinus").onclick=()=>{ profile.waterGoal=clamp(profile.waterGoal-1,1,20); $("wgVal").textContent=profile.waterGoal; saveProfile(); afterChange(); };
+$("resetBtn").onclick=()=>{
+  if(confirm("Wirklich ALLE Ascend-Daten auf diesem Gerät löschen?")){
+    Object.keys(localStorage).filter(k=>k.startsWith("ascend:")).forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  }
+};
+
+/* ============================================================
+   PASSCODE LOCK
+   ============================================================ */
+let pinEntry="", pinSetupBuf=null;
+function updateLockDesc(){ $("lockDesc").textContent = profile.passcode?"An · 4-stellig":"Aus";
+  $("lockToggle").textContent = profile.passcode?"Entfernen":"Einrichten"; }
+$("lockToggle").onclick=()=>{
+  if(profile.passcode){ profile.passcode=null; saveProfile(); updateLockDesc(); toast("Passcode entfernt"); }
+  else{ pinSetupBuf=""; openLock(true); }
+};
+function buildPad(){
+  const pad=$("pad"); pad.innerHTML="";
+  ["1","2","3","4","5","6","7","8","9","","0","⌫"].forEach(k=>{
+    const b=document.createElement("div");
+    b.className="key"+(k===""?" blank":""); b.textContent=k;
+    if(k!=="") b.onclick=()=>pinPress(k);
+    pad.appendChild(b);
+  });
+}
+function renderPins(n){
+  $("pins").innerHTML=[0,1,2,3].map(i=>`<div class="pin ${i<n?'f':''}"></div>`).join("");
+}
+function pinPress(k){
+  if(k==="⌫"){ pinEntry=pinEntry.slice(0,-1); renderPins(pinEntry.length); return; }
+  if(pinEntry.length>=4) return;
+  pinEntry+=k; renderPins(pinEntry.length);
+  if(pinEntry.length===4) setTimeout(checkPin,150);
+}
+function checkPin(){
+  if(pinSetupBuf!==null){
+    if(pinSetupBuf===""){ pinSetupBuf=pinEntry; pinEntry=""; renderPins(0);
+      $("lock").querySelector("h2").textContent="Nochmal bestätigen"; return; }
+    if(pinSetupBuf===pinEntry){ profile.passcode=pinEntry; saveProfile(); updateLockDesc();
+      pinSetupBuf=null; pinEntry=""; closeLock(); toast("Passcode gesetzt 🔒"); }
+    else{ shakeLock(); pinSetupBuf=""; pinEntry=""; renderPins(0);
+      $("lock").querySelector("h2").textContent="Passcode eingeben"; }
+    return;
+  }
+  if(pinEntry===profile.passcode){ pinEntry=""; closeLock(); }
+  else{ shakeLock(); pinEntry=""; renderPins(0); }
+}
+function shakeLock(){ const l=$("lock"); l.classList.add("shake"); setTimeout(()=>l.classList.remove("shake"),400); }
+function openLock(setup){
+  buildPad(); renderPins(0); pinEntry="";
+  $("lock").querySelector("h2").textContent = setup?"Passcode wählen":"Passcode eingeben";
+  $("lock").style.display="flex";
+}
+function closeLock(){ $("lock").style.display="none"; }
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot(){
+  refreshStreak();
+  renderAll();
+  renderOverseer();
+  updateLockDesc();
+  // greet once per day
+  if(!Overseer.log.length){
+    Overseer.log.push({who:"ov", text:"Ich bin dein Overseer. Ich kenne deine Ziele, dein Wasser, deinen Streak und – wenn du willst – deine Fitnessuhr. Sag mir wie's läuft, oder lass dich pushen."});
+    DB.save("ovlog:"+TODAY, Overseer.log);
+    renderOverseer();
+  }
+  // live tick
+  setInterval(()=>{ renderHeader(); renderDay(); }, 30000);
+  window.addEventListener("resize", ()=>{ if(health.data) renderHR(health.data.hr); });
+}
+
+if(profile.passcode){
+  $("app").style.display="none";
+  const origClose=closeLock;
+  closeLock=function(){ origClose(); $("app").style.display="block"; boot(); };
+  openLock(false);
+} else {
+  $("app").style.display="block";
+  boot();
+}
+</script>
+</body>
+</html>

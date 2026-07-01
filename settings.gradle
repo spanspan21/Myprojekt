@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Crypto Demo Wallet"
+rootProject.name = "Ascend"
 include(":app")
