@@ -41,5 +41,7 @@ dependencies {
 
     // Android Health Connect — reads sleep, heart rate, HRV & resting HR
     // from the user's fitness band / smartwatch.
-    implementation 'androidx.health.connect:connect-client:1.1.0-rc02'
+    // Pinned to alpha07: last version compatible with compileSdk 34 / AGP 8.5.2
+    // (rc02 requires AGP 8.9.1 + compileSdk 36). Same APIs used here.
+    implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
 }
