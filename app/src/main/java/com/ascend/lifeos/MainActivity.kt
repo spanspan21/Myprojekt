@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.health.connect.client.HealthConnectClient
@@ -71,6 +72,8 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = false
         }
         webView.setBackgroundColor(0xFF000000.toInt())
+        // Enables default JS dialog handling (alert/confirm/prompt) used by the UI.
+        webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(HealthBridge(), "AndroidHealth")
 
         if (savedInstanceState == null) {
