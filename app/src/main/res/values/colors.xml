@@ -1,5 +1,4 @@
 <resources>
-    <color name="app_bg">#000000</color>
-    <color name="accent_green">#4ade80</color>
-    <color name="accent_orange">#ff7a1a</color>
+    <color name="app_bg">#0A0C10</color>
+    <color name="accent">#34E0A1</color>
 </resources>

@@ -2,10 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        Ascend — Life OS.
-        The UI lives fully offline inside a WebView (assets/app.html). No
-        network access is required for the app itself. Health data is read
-        locally from Android Health Connect via a native bridge.
+        Ascend — Life OS. Native Jetpack Compose app, offline-first.
+        Internet is used only to fetch public chess ratings; health data is
+        read locally from Android Health Connect.
     -->
 
     <!-- Needed only to fetch public chess ratings from Chess.com / Lichess. -->
