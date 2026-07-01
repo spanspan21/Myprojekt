@@ -19,8 +19,9 @@
   #app{height:100%;}
   ::-webkit-scrollbar{width:0;height:0;display:none;}
 
-  .pager{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior:contain;}
-  .page{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;
+  .pager{position:relative;height:100%;overflow:hidden;}
+  .track{display:flex;height:100%;transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform;}
+  .page{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;
     padding:calc(env(safe-area-inset-top) + 18px) 17px 104px;overscroll-behavior-y:contain;}
   body.kb .page{padding-bottom:22px;}
 
@@ -193,6 +194,24 @@
   .linkbtn{background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;font-weight:600;}
   .foot{text-align:center;color:var(--dim);font-size:11px;margin:28px 0 6px;letter-spacing:.04em;}
 
+  /* calendar */
+  .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .calhead #calMonth{font-size:15px;font-weight:700;}
+  .calhead button{width:34px;height:34px;border-radius:11px;border:1px solid var(--line2);background:var(--card2);color:var(--txt);font-size:19px;cursor:pointer;}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cwd{text-align:center;font-size:9.5px;color:var(--dim);font-weight:700;padding-bottom:3px;letter-spacing:.03em;}
+  .ccell{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12.5px;color:var(--muted);position:relative;cursor:pointer;font-weight:600;}
+  .ccell.empty{background:none;border:none;cursor:default;}
+  .ccell.today{outline:2px solid var(--acc);outline-offset:-2px;color:var(--txt);}
+  .ccell .wdot{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--amber);}
+  .callegend{display:flex;align-items:center;gap:5px;justify-content:flex-end;margin-top:11px;font-size:10px;color:var(--dim);}
+  .callegend i{width:13px;height:13px;border-radius:4px;display:inline-block;border:1px solid var(--line);}
+  .caldetail{margin-top:12px;font-size:12.5px;color:var(--muted);min-height:15px;line-height:1.5;}
+  .caldetail b{color:var(--txt);}
+  .calstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+  .calstats div{text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 4px;}
+  .calstats b{display:block;font-size:18px;font-weight:800;} .calstats span{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;display:block;}
+
   .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:720px;
     height:calc(70px + env(safe-area-inset-bottom));padding:7px 8px env(safe-area-inset-bottom);
     display:flex;gap:2px;background:rgba(9,12,17,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
@@ -235,6 +254,7 @@
 
 <div id="app" style="display:none;">
 <div class="pager" id="pager">
+<div class="track" id="track">
 
   <!-- 0 HEUTE -->
   <section class="page" id="p0">
@@ -253,6 +273,15 @@
       <div class="stat"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c4 4 6 6.5 6 9.5a6 6 0 0 1-12 0C6 9.5 8 7 12 3Z"/></svg></div><div class="v" id="sWater">0/8</div><div class="l">Wasser</div></div>
       <div class="stat"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg></div><div class="v" id="sWork">0</div><div class="l">Sätze</div></div>
       <div class="stat"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M9 20h6M10 20l.5-4M13.5 20l-.5-4M8 16h8l-1-3H9l-1 3ZM12 4a2 2 0 0 1 1.4 3.4A3.5 3.5 0 0 1 15 10.5c0 .8-.6 1.5-1.4 1.5h-3.2C9.6 12 9 11.3 9 10.5A3.5 3.5 0 0 1 10.6 7.4 2 2 0 0 1 12 4Z"/></svg></div><div class="v" id="sChess">0</div><div class="l">Rating</div></div>
+    </div>
+
+    <div class="seclabel">Verlauf <span class="r" id="calStat"></span></div>
+    <div class="card">
+      <div class="calhead"><button id="calPrev">‹</button><div id="calMonth">—</div><button id="calNext">›</button></div>
+      <div class="calgrid" id="calGrid"></div>
+      <div class="callegend">weniger <i style="background:rgba(61,215,160,.15)"></i><i style="background:rgba(61,215,160,.45)"></i><i style="background:rgba(61,215,160,.75)"></i><i style="background:rgba(61,215,160,1)"></i> mehr</div>
+      <div class="caldetail" id="calDetail">Tippe einen Tag für Details.</div>
+      <div class="calstats" id="calStats"></div>
     </div>
 
     <div class="seclabel">Coach</div>
@@ -321,10 +350,10 @@
     <div class="phead"><div><div class="ptitle">Schach</div><div class="psub">Rating, Partien & Performance</div></div>
       <span class="pill gold">Peak <b id="chessPeak">—</b></span></div>
 
-    <div class="seclabel">Übersicht <span class="r" id="chessSrc">Manuell</span></div>
+    <div class="seclabel">Übersicht</div>
     <div class="card">
       <div class="chesstop">
-        <div style="flex:1"><div class="chessrate" id="chessRating">1200</div><div class="chesssub" id="chessMode">Aktuelles Rating</div></div>
+        <div style="flex:1"><div class="chessrate" id="chessRating">1200</div></div>
         <div class="stepper" id="crBox"><button data-crate="-1">−</button><span class="sv" id="crVal">1200</span><button data-crate="1">+</button></div>
       </div>
       <div class="record">
@@ -335,8 +364,7 @@
       </div>
       <div class="ctiles" id="chDetail"></div>
       <div class="gamebtns" id="gameBtns"><button class="gb w" data-game="w">+ Sieg</button><button class="gb d" data-game="d">+ Remis</button><button class="gb l" data-game="l">+ Niederlage</button></div>
-      <div class="hint" id="manualHint">Stell zuerst dein Rating ein, dann logge das Ergebnis. Oder verknüpfe unten dein Konto.</div>
-      <div class="linkednote" id="linkedNote" style="display:none"></div>
+      <div class="hint" id="manualHint">Rating einstellen, dann Ergebnis loggen — oder unten dein Konto verknüpfen.</div>
     </div>
 
     <div class="seclabel">Konto verknüpfen</div>
@@ -425,6 +453,7 @@
     <div class="foot">ASCEND · Life OS — alles lokal auf deinem Gerät.</div>
   </section>
 
+</div>
 </div>
 
 <nav class="tabbar" id="tabbar">
@@ -556,15 +585,10 @@ function renderChess(){const ch=profile.chess,linked=chessLinked();
     return `<div class="ct4"><div class="cv">${rv}</div><div class="cl">${l}</div><div class="cx">${sub}</div></div>`;}).join("");
   dh+=`<div class="ct4"><div class="cv">${ch.puzzle||"–"}</div><div class="cl">Puzzle</div><div class="cx">Taktik</div></div>`;
   $("chDetail").innerHTML=dh;
-  // lock manual controls when linked
-  $("chessSrc").textContent=linked?(ch.account.platform==="lichess"?"Lichess":"Chess.com"):"Manuell";
-  $("chessMode").textContent=linked?"Rating (automatisch)":"Aktuelles Rating";
+  // lock manual controls when an account is linked
   $("crBox").style.display=linked?"none":"flex";
   $("gameBtns").style.display=linked?"none":"flex";
   $("manualHint").style.display=linked?"none":"block";
-  const ln=$("linkedNote");
-  if(linked){ln.style.display="flex";ln.innerHTML=`🔗 Verknüpft mit <b style="margin:0 3px">${ch.account.platform==="lichess"?"Lichess":"Chess.com"}</b> · ${esc(ch.account.username)}. Rating, Puzzle & Bilanz kommen automatisch — nur dein Rating-Ziel ist manuell.`;}
-  else ln.style.display="none";
   const hist=ch.history.map(h=>h.rating);const series=hist.length?hist:[ch.rating];
   $("chLo").textContent="min "+Math.min(...series);$("chHi").textContent="Ø "+Math.round(series.reduce((a,b)=>a+b,0)/series.length)+" · max "+Math.max(...series);
   lineChart($("chessChart"),series,"#f5c451");renderChessAccount();}
@@ -583,7 +607,34 @@ function lineChart(cv,vals,color){const ctx=cv.getContext("2d");const W=cv.clien
   ctx.beginPath();vals.forEach((v,i)=>{const x=X(i),y=Y(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
   ctx.strokeStyle=color;ctx.lineWidth=2.6;ctx.lineJoin="round";ctx.shadowColor=color+"88";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
   vals.forEach((v,i)=>{ctx.beginPath();ctx.arc(X(i),Y(v),n<=20?3:1.5,0,7);ctx.fillStyle=color;ctx.fill();});}
-function renderStats(){renderDash();renderGoals();renderTraining();renderChess();}
+function renderStats(){renderDash();renderGoals();renderTraining();renderChess();renderCalendar();}
+
+/* ===== CALENDAR (Verlauf) ===== */
+const calYM={y:new Date().getFullYear(),m:new Date().getMonth()};
+function ymd(y,m,d){return y+"-"+pad2(m+1)+"-"+pad2(d);}
+function dayStats(key){const rec=(key===TODAY)?day:DB.load("day:"+key,null);if(!rec)return null;
+  const goals=rec.goals||[],total=goals.length+2;let done=goals.filter(g=>g.done).length;
+  if((rec.water||0)>=profile.waterGoal)done++;
+  const sets=rec.cali?Object.keys(rec.cali).reduce((a,k)=>a+((rec.cali[k]||[]).length),0):0;
+  if(rec.workoutDone||sets>0)done++;
+  return{done,total,pct:total?done/total:0,sets,water:rec.water||0};}
+function renderCalendar(){
+  if(!$("calGrid"))return;
+  const MN=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  $("calMonth").textContent=MN[calYM.m]+" "+calYM.y;
+  const startDow=(new Date(calYM.y,calYM.m,1).getDay()+6)%7,days=new Date(calYM.y,calYM.m+1,0).getDate();
+  let html=["Mo","Di","Mi","Do","Fr","Sa","So"].map(w=>`<div class="cwd">${w}</div>`).join("");
+  for(let i=0;i<startDow;i++)html+='<div class="ccell empty"></div>';
+  let full=0,logged=0,setsM=0;const todayK=TODAY;
+  for(let d=1;d<=days;d++){const key=ymd(calYM.y,calYM.m,d);const c=dayStats(key);let cls="ccell",style="";
+    if(c){logged++;if(c.pct>=1)full++;setsM+=c.sets;const a=(.14+c.pct*.86).toFixed(2);style=`style="background:rgba(61,215,160,${a});border-color:transparent;color:${c.pct>.55?'#04120c':'var(--txt)'}"`;}
+    if(key===todayK)cls+=" today";
+    html+=`<div class="${cls}" ${style} data-day="${d}">${d}${c&&c.sets>0?'<i class="wdot"></i>':''}</div>`;}
+  $("calGrid").innerHTML=html;
+  const rate=logged?Math.round(full/logged*100):0;$("calStat").textContent=logged?rate+"% volle Tage":"";
+  $("calStats").innerHTML=`<div><b>${profile.streak}</b><span>Streak</span></div><div><b>${profile.longest}</b><span>Rekord</span></div><div><b>${full}</b><span>volle Tage</span></div><div><b>${setsM}</b><span>Sätze/Monat</span></div>`;}
+function calShow(d){const key=ymd(calYM.y,calYM.m,d);const c=dayStats(key);const WN=["So","Mo","Di","Mi","Do","Fr","Sa"];const dt=new Date(calYM.y,calYM.m,d);
+  $("calDetail").innerHTML=c?`<b>${WN[dt.getDay()]}, ${d}.${pad2(calYM.m+1)}.</b> · ${c.done}/${c.total} Ziele · ${c.sets} Sätze · ${c.water} Gläser${c.pct>=1?' · <span style="color:var(--acc)">✓ voller Tag</span>':''}`:`<b>${d}.${pad2(calYM.m+1)}.</b> · keine Daten an diesem Tag`;}
 
 /* ===== COACH — local, varied, context-aware ===== */
 const Coach={log:DB.load("ovlog:"+TODAY,[]),recent:[],
@@ -834,13 +885,21 @@ $("wgPlus").onclick=()=>{profile.waterGoal=clamp(profile.waterGoal+1,1,20);$("wg
 $("wgMinus").onclick=()=>{profile.waterGoal=clamp(profile.waterGoal-1,1,20);$("wgVal").textContent=profile.waterGoal;saveP();afterChange();};
 $("resetBtn").onclick=()=>confirmBox("Alles zurücksetzen?","Löscht ALLE Ascend-Daten auf diesem Gerät.",()=>{Object.keys(localStorage).filter(k=>k.startsWith("ascend:")).forEach(k=>localStorage.removeItem(k));location.reload();});
 
-/* pager nav */
-const pager=$("pager");let curPage=0;
-function goTo(i){pager.scrollTo({left:i*pager.clientWidth,behavior:"smooth"});}
-function setActive(i){if(i===curPage)return;curPage=i;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",+t.getAttribute("data-i")===i));
-  if(i===3)renderChess();if(i===4&&health.data)renderHR(health.data.hr);if(i===5)renderCoach();}
+/* pager nav — discrete, exactly one page per swipe */
+const track=$("track");let curPage=0;
+function goTo(i){i=clamp(i,0,5);curPage=i;track.style.transform="translateX(-"+(i*100)+"%)";
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",+t.getAttribute("data-i")===i));
+  if(i===0)renderCalendar();if(i===3)renderChess();if(i===4&&health.data)renderHR(health.data.hr);if(i===5)renderCoach();}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>goTo(+t.getAttribute("data-i")));
-let scrTO;pager.addEventListener("scroll",()=>{clearTimeout(scrTO);scrTO=setTimeout(()=>{setActive(clamp(Math.round(pager.scrollLeft/pager.clientWidth),0,5));},60);});
+let tsx=0,tsy=0,tsw=false;
+$("pager").addEventListener("touchstart",e=>{tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;tsw=true;},{passive:true});
+$("pager").addEventListener("touchend",e=>{if(!tsw)return;tsw=false;const dx=e.changedTouches[0].clientX-tsx,dy=e.changedTouches[0].clientY-tsy;
+  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4)goTo(curPage+(dx<0?1:-1));},{passive:true});
+
+/* calendar events */
+$("calPrev").onclick=()=>{calYM.m--;if(calYM.m<0){calYM.m=11;calYM.y--;}renderCalendar();};
+$("calNext").onclick=()=>{calYM.m++;if(calYM.m>11){calYM.m=0;calYM.y++;}renderCalendar();};
+$("calGrid").addEventListener("click",e=>{const cell=e.target.closest(".ccell");if(!cell||cell.classList.contains("empty"))return;const d=+cell.getAttribute("data-day");if(d)calShow(d);});
 
 /* keyboard handling */
 if(window.visualViewport){const vv=window.visualViewport;vv.addEventListener("resize",()=>{
