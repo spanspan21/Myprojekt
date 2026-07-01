@@ -8,6 +8,9 @@
         locally from Android Health Connect via a native bridge.
     -->
 
+    <!-- Needed only to fetch public chess ratings from Chess.com / Lichess. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Health Connect read permissions (fitness band / smartwatch data). -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />

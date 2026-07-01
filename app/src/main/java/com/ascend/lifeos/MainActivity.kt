@@ -21,6 +21,8 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -75,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         // Enables default JS dialog handling (alert/confirm/prompt) used by the UI.
         webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(HealthBridge(), "AndroidHealth")
+        webView.addJavascriptInterface(NetBridge(), "AndroidNet")
 
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/app.html")
@@ -157,6 +160,51 @@ class MainActivity : AppCompatActivity() {
                     } catch (_: Exception) { /* no-op */ }
                 }
             }
+        }
+    }
+
+    /* ----------------------- network bridge (chess) ----------------------- */
+
+    /** Hosts the app is allowed to reach — public chess rating APIs only. */
+    private val allowedHosts = setOf("api.chess.com", "lichess.org")
+
+    inner class NetBridge {
+        /**
+         * Fetches [url] (whitelisted hosts only) on a background thread and calls
+         * back into JS via window.AscendNet.onResult(callbackId, statusCode, body).
+         */
+        @JavascriptInterface
+        fun fetch(url: String, callbackId: String) {
+            Thread {
+                var code = 0
+                var body = ""
+                try {
+                    val u = URL(url)
+                    if (u.protocol == "https" && allowedHosts.contains(u.host)) {
+                        val conn = u.openConnection() as HttpURLConnection
+                        conn.connectTimeout = 9000
+                        conn.readTimeout = 9000
+                        conn.requestMethod = "GET"
+                        conn.setRequestProperty("User-Agent", "AscendLifeOS/1.0")
+                        conn.setRequestProperty("Accept", "application/json")
+                        code = conn.responseCode
+                        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                        body = stream?.bufferedReader()?.use { it.readText() } ?: ""
+                        conn.disconnect()
+                    }
+                } catch (_: Exception) {
+                    code = 0; body = ""
+                }
+                val finalCode = code
+                val finalBody = body
+                runOnUiThread {
+                    webView.evaluateJavascript(
+                        "window.AscendNet && window.AscendNet.onResult(" +
+                            "${JSONObject.quote(callbackId)}, $finalCode, ${JSONObject.quote(finalBody)});",
+                        null
+                    )
+                }
+            }.start()
         }
     }
 
