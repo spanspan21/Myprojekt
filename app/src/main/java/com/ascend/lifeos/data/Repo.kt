@@ -117,6 +117,10 @@ object Repo {
     fun setName(name: String) = updateProfile { it.copy(name = name) }
     fun setWaterGoal(n: Int) = updateProfile { it.copy(waterGoal = n.coerceIn(1, 20)) }
 
+    fun completeOnboarding(name: String, waterGoal: Int) = updateProfile {
+        it.copy(name = name.trim(), waterGoal = waterGoal.coerceIn(1, 20), onboarded = true)
+    }
+
     // ---- training ----
     fun logSet(exId: String, value: Int) {
         val k = todayKey()

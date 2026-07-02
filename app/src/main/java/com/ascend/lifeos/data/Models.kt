@@ -60,6 +60,7 @@ data class DayData(
 @Serializable
 data class Profile(
     val name: String = "",
+    val onboarded: Boolean = false,
     val waterGoal: Int = 8,
     val streak: Int = 0,
     val longest: Int = 0,

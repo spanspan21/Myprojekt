@@ -42,6 +42,7 @@ import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.CoachScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
 import com.ascend.lifeos.ui.screens.HistoryScreen
+import com.ascend.lifeos.ui.screens.OnboardingScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
 import com.ascend.lifeos.ui.screens.TrainingScreen
 import com.ascend.lifeos.ui.theme.Accent
@@ -63,6 +64,10 @@ private val tabs = listOf(
 
 @Composable
 fun AscendApp() {
+    if (!com.ascend.lifeos.data.Repo.data.profile.onboarded) {
+        OnboardingScreen(onDone = {})
+        return
+    }
     var selected by rememberSaveable { mutableStateOf(0) }
     var overlay by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize().background(Bg)) {
