@@ -221,6 +221,7 @@ private fun DayDetail(key: String) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MiniStat("${day.water}", "Wasser", Modifier.weight(1f))
                 MiniStat("${day.cali.values.sumOf { it.size }}", "Sätze", Modifier.weight(1f))
+                MiniStat("${day.meals.sumOf { it.kcal }}", "kcal", Modifier.weight(1f))
                 MiniStat("${day.cali.values.sumOf { s -> s.sum() }}", "Wdh", Modifier.weight(1f))
             }
             if (day.reflection.isNotBlank()) {

@@ -60,7 +60,12 @@ import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
 
 @Composable
-fun TodayScreen(onOpenCoach: () -> Unit, onOpenHistory: () -> Unit = {}, onOpenAchievements: () -> Unit = {}) {
+fun TodayScreen(
+    onOpenCoach: () -> Unit,
+    onOpenHistory: () -> Unit = {},
+    onOpenAchievements: () -> Unit = {},
+    onOpenNutrition: () -> Unit = {},
+) {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -131,6 +136,26 @@ fun TodayScreen(onOpenCoach: () -> Unit, onOpenHistory: () -> Unit = {}, onOpenA
             Stat("${day.water}/${p.waterGoal}", "Wasser", Modifier.weight(1f))
             Stat("${Repo.workoutSets(day)}", "Sätze", Modifier.weight(1f))
             Stat("${p.chess.rating}", "Rating", Modifier.weight(1f))
+        }
+
+        SectionLabel("Ernährung")
+        val nut = Repo.nutritionTotals(day)
+        AscendCard(modifier = Modifier.clickable { onOpenNutrition() }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${nut.kcal} / ${p.kcalGoal} kcal", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        if (p.kcalGoal - nut.kcal >= 0) "${p.kcalGoal - nut.kcal} kcal übrig · E ${nut.protein} · K ${nut.carbs} · F ${nut.fat}"
+                        else "${nut.kcal - p.kcalGoal} kcal drüber · E ${nut.protein} · K ${nut.carbs} · F ${nut.fat}",
+                        color = TextMuted, fontSize = 11.5.sp,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Text("→", color = TextDim, fontSize = 18.sp)
+            }
+            Spacer(Modifier.height(10.dp))
+            ProgressBar(if (p.kcalGoal <= 0) 0f else nut.kcal / p.kcalGoal.toFloat(), if (nut.kcal > p.kcalGoal) Orange else Accent)
         }
 
         SectionLabel("Termine heute")

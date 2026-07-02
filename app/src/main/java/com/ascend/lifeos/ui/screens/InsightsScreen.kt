@@ -98,6 +98,8 @@ fun InsightsScreen(onBack: () -> Unit) {
         AscendCard {
             InfoRow("Wasser-Schnitt", "${ins.waterAvg7} Gläser/Tag")
             Line()
+            InfoRow("Kalorien-Schnitt", if (ins.kcalDays7 > 0) "${ins.kcalAvg7} kcal/Tag" else "—")
+            Line()
             InfoRow("Trainingssätze", "${ins.sets7}")
             Line()
             InfoRow("Wiederholungen", "${ins.reps7}")

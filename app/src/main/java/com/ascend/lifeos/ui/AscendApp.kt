@@ -87,6 +87,7 @@ fun AscendApp() {
                         onOpenCoach = { selected = 6 },
                         onOpenHistory = { overlay = "history" },
                         onOpenAchievements = { overlay = "achievements" },
+                        onOpenNutrition = { selected = 5 },
                     )
                     1 -> GoalsScreen()
                     2 -> TrainingScreen()

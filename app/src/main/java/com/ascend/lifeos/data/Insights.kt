@@ -13,6 +13,8 @@ data class Insights(
     val goalRateSeries: List<Int>, // last 7 days completion %, oldest→newest
     val chessDelta: Int,
     val chessRating: Int,
+    val kcalAvg7: Int,
+    val kcalDays7: Int,
     val tips: List<String>,
 )
 
@@ -28,6 +30,7 @@ object InsightsEngine {
 
         var rateSum = 0; var perfect = 0; var tracked = 0
         var waterSum = 0; var sets = 0; var reps = 0; var workouts = 0
+        var kcalSum = 0; var kcalDays = 0
         val series = ArrayList<Int>()
         for (k in keys) {
             val day = d.days[k]
@@ -42,19 +45,22 @@ object InsightsEngine {
             sets += s
             reps += day.cali.values.sumOf { l -> l.sum() }
             if (day.workoutDone || s > 0) workouts++
+            val kc = day.meals.sumOf { it.kcal }
+            if (kc > 0) { kcalSum += kc; kcalDays++ }
         }
         val goalRate = if (tracked > 0) rateSum / tracked else 0
         val waterAvg = if (tracked > 0) waterSum / tracked else 0
+        val kcalAvg = if (kcalDays > 0) kcalSum / kcalDays else 0
 
         // Chess trend over the last ~week of recorded points.
         val hist = p.chess.history
         val chessDelta = if (hist.size >= 2) p.chess.rating - hist[maxOf(0, hist.size - 8)].rating else 0
 
-        val tips = buildTips(p, goalRate, perfect, waterAvg, workouts, chessDelta)
-        return Insights(goalRate, perfect, tracked, waterAvg, sets, reps, workouts, series, chessDelta, p.chess.rating, tips)
+        val tips = buildTips(p, goalRate, perfect, waterAvg, workouts, chessDelta, kcalAvg)
+        return Insights(goalRate, perfect, tracked, waterAvg, sets, reps, workouts, series, chessDelta, p.chess.rating, kcalAvg, kcalDays, tips)
     }
 
-    private fun buildTips(p: Profile, rate: Int, perfect: Int, waterAvg: Int, workouts: Int, chessDelta: Int): List<String> {
+    private fun buildTips(p: Profile, rate: Int, perfect: Int, waterAvg: Int, workouts: Int, chessDelta: Int, kcalAvg: Int): List<String> {
         val out = ArrayList<String>()
         if (workouts < 3) out.add("Nur $workouts Trainingstage diese Woche. Streb 3–4 an — Konstanz schlägt Intensität. Ein Satz zählt schon.")
         else out.add("$workouts Trainingstage — starke Woche. Halt den Rhythmus, dein Körper baut auf Wiederholung.")
@@ -70,6 +76,15 @@ object InsightsEngine {
         else if (chessDelta > 0) out.add("Schach +$chessDelta zuletzt. Der Trend stimmt. Bleib bei ruhigen, überlegten Zügen.")
 
         if (perfect >= 5) out.add("$perfect perfekte Tage in 7 — beeindruckende Serie. Genau so entsteht ein neues Ich.")
+
+        if (kcalAvg > 0) {
+            val diff = kcalAvg - p.kcalGoal
+            when {
+                diff > 300 -> out.add("Kalorien-Schnitt $kcalAvg — rund $diff über deinem Ziel. Kleinere Portionen oder ein Snack weniger bringen dich zurück in die Spur.")
+                diff < -300 -> out.add("Kalorien-Schnitt $kcalAvg — deutlich unter Ziel. Wenn du zunehmen/halten willst, leg eine ordentliche Mahlzeit drauf.")
+                else -> out.add("Kalorien-Schnitt $kcalAvg — nah an deinem Ziel von ${p.kcalGoal}. Sauber getrackt, weiter so.")
+            }
+        }
         return out
     }
 }
