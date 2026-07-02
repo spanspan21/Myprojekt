@@ -44,12 +44,16 @@ data class Chess(
 )
 
 @Serializable
+data class CoachMsg(val who: String, val text: String) // who = "me" | "cx"
+
+@Serializable
 data class DayData(
     val goals: List<Goal> = emptyList(),
     val water: Int = 0,
     val cali: Map<String, List<Int>> = emptyMap(),
     val workoutDone: Boolean = false,
     val reflection: String = "",
+    val coachLog: List<CoachMsg> = emptyList(),
     val seeded: Boolean = false,
 )
 

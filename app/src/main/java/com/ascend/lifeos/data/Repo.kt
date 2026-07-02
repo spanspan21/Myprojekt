@@ -220,6 +220,18 @@ object Repo {
 
     fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
 
+    fun coachSend(text: String) {
+        if (text.isBlank()) return
+        val reply = CoachEngine.reply(text)
+        updateDay { it.copy(coachLog = it.coachLog + CoachMsg("me", text.trim()) + CoachMsg("cx", reply)) }
+    }
+
+    fun exportJson(): String = json.encodeToString(data)
+
+    fun importJson(s: String): Boolean = try {
+        commit(json.decodeFromString<AppData>(s)); ensureToday(); true
+    } catch (e: Exception) { false }
+
     fun resetAll() {
         commit(AppData())
         ensureToday()
