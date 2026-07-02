@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Repo.init(applicationContext)
+        com.ascend.lifeos.ui.theme.applyAccent(Repo.profile().accent)
         if (Repo.profile().reminders && Notifier.hasPermission(applicationContext)) {
             Notifier.schedule(applicationContext)
         }

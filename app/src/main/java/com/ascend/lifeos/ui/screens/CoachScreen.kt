@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,8 +49,10 @@ import com.ascend.lifeos.ui.components.AscendTextField
 import com.ascend.lifeos.ui.components.SectionLabel
 import com.ascend.lifeos.ui.components.Stepper
 import com.ascend.lifeos.ui.components.Toggle
+import com.ascend.lifeos.ui.theme.ACCENT_PRESETS
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Amber
+import com.ascend.lifeos.ui.theme.applyAccent
 import com.ascend.lifeos.ui.theme.Bg
 import com.ascend.lifeos.ui.theme.Line
 import com.ascend.lifeos.ui.theme.Line2
@@ -56,6 +61,7 @@ import com.ascend.lifeos.ui.theme.SurfaceHi
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextPrimary
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CoachScreen(onOpenSubs: () -> Unit = {}) {
     val appData = Repo.data
@@ -142,6 +148,23 @@ fun CoachScreen(onOpenSubs: () -> Unit = {}) {
             Divider()
             SetRow("Wasser-Ziel", "Gläser pro Tag") {
                 Stepper("${p.waterGoal}", { Repo.setWaterGoal(p.waterGoal - 1) }, { Repo.setWaterGoal(p.waterGoal + 1) })
+            }
+            Divider()
+            Column(Modifier.fillMaxWidth().padding(vertical = 13.dp)) {
+                Text("Akzentfarbe", color = TextPrimary, fontSize = 14.sp)
+                Text("Färbt die ganze App", color = TextDim, fontSize = 11.sp)
+                Spacer(Modifier.height(12.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ACCENT_PRESETS.forEach { col ->
+                        val selected = p.accent == col
+                        Box(
+                            Modifier.size(34.dp).clip(CircleShape).background(Color(col))
+                                .border(if (selected) 2.5.dp else 0.dp, TextPrimary, CircleShape)
+                                .clickable { Repo.setAccent(col); applyAccent(col) },
+                            contentAlignment = Alignment.Center,
+                        ) { if (selected) Text("✓", color = Bg, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold) }
+                    }
+                }
             }
             Divider()
             SetRow("Erinnerungen", if (p.reminders) "Täglich ${Notifier.MORNING_HOUR}:00 & ${Notifier.EVENING_HOUR}:00 Uhr" else "Push-Nudges morgens & abends") {

@@ -1,6 +1,8 @@
 package com.ascend.lifeos.ui.theme
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 
 // ---- Ascend design tokens ---------------------------------------------------
 // One accent, disciplined neutral steps. Premium = restraint.
@@ -16,9 +18,26 @@ val TextPrimary = Color(0xFFEEF1F6)
 val TextMuted = Color(0xFF8B93A1)
 val TextDim = Color(0xFF565E6B)
 
-val Accent = Color(0xFF34E0A1)       // signature mint-green
-val AccentSoft = Color(0x2634E0A1)
-val AccentDim = Color(0xFF177A57)
+// Live accent: backed by snapshot state so every `Accent` read recomposes
+// when the user picks a new colour — no per-call-site changes needed.
+val accentState = mutableStateOf(Color(0xFF34E0A1)) // signature mint-green default
+val Accent: Color get() = accentState.value
+val AccentSoft: Color get() = accentState.value.copy(alpha = 0.15f)
+val AccentDim: Color get() = lerp(accentState.value, Color.Black, 0.45f)
+
+fun applyAccent(color: Long) { accentState.value = Color(color) }
+
+/** Selectable accent presets (ARGB longs). */
+val ACCENT_PRESETS: List<Long> = listOf(
+    0xFF34E0A1, // mint
+    0xFF5B9DFF, // blue
+    0xFFB794FF, // purple
+    0xFFF5C451, // amber
+    0xFFFF8A4C, // orange
+    0xFFFF6169, // red
+    0xFF4CD4C4, // teal
+    0xFFEC7FB4, // pink
+)
 
 // Status / data colours (used sparingly, never as decoration)
 val Amber = Color(0xFFF5C451)
