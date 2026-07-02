@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MonitorHeart
 import androidx.compose.material.icons.rounded.TrackChanges
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
 import com.ascend.lifeos.ui.screens.PlaceholderScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
@@ -51,6 +53,7 @@ private val tabs = listOf(
     Tab("Heute", Icons.Rounded.Home),
     Tab("Ziele", Icons.Rounded.TrackChanges),
     Tab("Training", Icons.Rounded.FitnessCenter),
+    Tab("Schach", Icons.Rounded.GridView),
     Tab("Körper", Icons.Rounded.MonitorHeart),
     Tab("Coach", Icons.Rounded.AutoAwesome),
 )
@@ -61,10 +64,11 @@ fun AscendApp() {
     Column(Modifier.fillMaxSize().background(Bg)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (selected) {
-                0 -> TodayScreen(onOpenCoach = { selected = 4 })
+                0 -> TodayScreen(onOpenCoach = { selected = 5 })
                 1 -> GoalsScreen()
                 2 -> TrainingScreen()
-                3 -> PlaceholderScreen("Körper", "Schlaf, Puls, HRV & Erholung von deiner Fitnessuhr.")
+                3 -> ChessScreen()
+                4 -> PlaceholderScreen("Körper", "Schlaf, Puls, HRV & Erholung von deiner Fitnessuhr.")
                 else -> PlaceholderScreen("Coach", "Dein lokaler Coach — kostenlos, ohne Abo, ohne API-Key.")
             }
         }

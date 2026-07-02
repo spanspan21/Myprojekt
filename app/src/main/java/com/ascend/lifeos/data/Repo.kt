@@ -192,6 +192,32 @@ object Repo {
 
     fun setChess(chess: Chess) = updateProfile { it.copy(chess = chess) }
 
+    fun chessPuzzleDelta(delta: Int) = updateProfile { p ->
+        if (p.chess.account != null) return@updateProfile p
+        p.copy(chess = p.chess.copy(puzzle = (p.chess.puzzle + delta).coerceIn(100, 4000)))
+    }
+
+    fun applyChessSync(r: ChessApi.Result, platform: String, username: String) = updateProfile { p ->
+        val ch = p.chess
+        val changed = ch.rating != r.rating || ch.history.isEmpty()
+        val hist = if (changed) (ch.history + ChessPoint(System.currentTimeMillis(), r.rating)).takeLast(90) else ch.history
+        p.copy(
+            chess = ch.copy(
+                rating = r.rating,
+                peak = maxOf(ch.peak, r.peak, r.rating),
+                puzzle = r.puzzle ?: ch.puzzle,
+                games = r.record ?: ch.games,
+                rapid = r.rapid, blitz = r.blitz, bullet = r.bullet,
+                history = hist,
+                account = ChessAccount(platform, username, System.currentTimeMillis()),
+            )
+        )
+    }
+
+    fun unlinkChess() = updateProfile { p ->
+        p.copy(chess = p.chess.copy(account = null, rapid = null, blitz = null, bullet = null))
+    }
+
     fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
 
     fun resetAll() {
