@@ -23,20 +23,48 @@ object FoodScore {
 
         val pros = ArrayList<String>()
         val cons = ArrayList<String>()
-        if (p.fiber100 >= 3.0) pros.add("Gute Quelle für Ballaststoffe")
-        if (p.protein100 >= 8.0) pros.add("Hoher Proteingehalt")
+
+        // Fiber
         when {
-            p.satFat100 in 0.001..1.5 -> pros.add("Wenig gesättigte Fette")
-            p.satFat100 >= 5.0 -> cons.add("Viel gesättigte Fette")
+            p.fiber100 >= 6.0 -> pros.add("Sehr ballaststoffreich")
+            p.fiber100 >= 3.0 -> pros.add("Gute Quelle für Ballaststoffe")
         }
+        // Protein
         when {
-            p.sugars100 in 0.001..5.0 -> pros.add("Zuckerarm")
-            p.sugars100 >= 15.0 -> cons.add("Hoher Zuckergehalt")
+            p.protein100 >= 15.0 -> pros.add("Sehr proteinreich")
+            p.protein100 >= 8.0 -> pros.add("Hoher Proteingehalt")
         }
-        if (p.salt100 >= 1.5) cons.add("Hoher Salzgehalt")
+        // Saturated fat (UK traffic-light thresholds per 100 g)
+        when {
+            p.satFat100 in 0.0001..1.5 -> pros.add("Wenig gesättigte Fette")
+            p.satFat100 > 5.0 -> cons.add("Viel gesättigte Fette")
+        }
+        // Total fat
+        when {
+            p.fat100 in 0.0001..3.0 -> pros.add("Fettarm")
+            p.fat100 > 17.5 -> cons.add("Fettreich")
+        }
+        // Sugar
+        when {
+            p.sugars100 in 0.0001..5.0 -> pros.add("Zuckerarm")
+            p.sugars100 > 22.5 -> cons.add("Sehr hoher Zuckergehalt")
+            p.sugars100 > 15.0 -> cons.add("Hoher Zuckergehalt")
+        }
+        // Salt
+        when {
+            p.salt100 in 0.0001..0.3 -> pros.add("Salzarm")
+            p.salt100 > 1.5 -> cons.add("Hoher Salzgehalt")
+        }
+        // Energy density
+        when {
+            p.kcal100 in 1..40 -> pros.add("Kalorienarm")
+            p.kcal100 >= 400 -> cons.add("Sehr kalorienreich")
+        }
+        // Processing (NOVA)
         when (p.nova) {
             1 -> pros.add("Kaum verarbeitet")
-            4 -> cons.add("Stark verarbeitet")
+            2 -> pros.add("Wenig verarbeitet")
+            4 -> cons.add("Stark verarbeitet (NOVA 4)")
         }
 
         val label = when {

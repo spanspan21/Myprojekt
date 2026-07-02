@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FoodApi
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.FoodScore
+import com.ascend.lifeos.data.NGroup
+import com.ascend.lifeos.data.NUTRIENTS
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.components.AscendCard
 import com.ascend.lifeos.ui.components.AscendTextField
@@ -96,6 +98,7 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
     var status by remember { mutableStateOf("") }
     var product by remember { mutableStateOf<FoodApi.Product?>(null) }
     var grams by remember { mutableStateOf("100") }
+    var showMicros by remember { mutableStateOf(false) }
 
     fun resetAdd() {
         mName = ""; mKcal = ""; mProt = ""; mCarb = ""; mFat = ""
@@ -295,6 +298,40 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
                             MacroRing("Kohlenhydrate", cK * 100 / tot, carb, Amber, Modifier.weight(1f))
                             MacroRing("Protein", pK * 100 / tot, prot, Blue, Modifier.weight(1f))
                             MacroRing("Fett", fK * 100 / tot, fat, Orange, Modifier.weight(1f))
+                        }
+
+                        // ---- full nutrition label ----
+                        Spacer(Modifier.height(16.dp))
+                        Text("NÄHRWERTE JE PORTION · $g g", color = TextDim, fontSize = 8.5.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(SurfaceHi).padding(horizontal = 14.dp, vertical = 4.dp)) {
+                            LabelRow("Energie", "$kcal kcal", false)
+                            LabelRow("Fett", "${fmt1(prod.fat100 * f)} g", false)
+                            LabelRow("davon gesättigt", "${fmt1(prod.satFat100 * f)} g", true)
+                            LabelRow("Kohlenhydrate", "$carb g", false)
+                            LabelRow("davon Zucker", "${fmt1(prod.sugars100 * f)} g", true)
+                            LabelRow("Ballaststoffe", "${fmt1(prod.fiber100 * f)} g", false)
+                            LabelRow("Eiweiß", "$prot g", false)
+                            LabelRow("Salz", "${fmt1(prod.salt100 * f)} g", false)
+                        }
+
+                        val micros = NUTRIENTS.filter { (it.group == NGroup.VITAMIN || it.group == NGroup.MINERAL) && (prod.per100[it.id] ?: 0.0) > 0.0 }
+                        if (micros.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                if (showMicros) "Vitamine & Mineralstoffe ausblenden" else "Vitamine & Mineralstoffe anzeigen (${micros.size})",
+                                color = Accent, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { showMicros = !showMicros }.padding(vertical = 5.dp),
+                            )
+                            if (showMicros) {
+                                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(SurfaceHi).padding(horizontal = 14.dp, vertical = 4.dp)) {
+                                    micros.forEach { nd ->
+                                        val disp = (prod.per100[nd.id] ?: 0.0) * f * nd.gToUnit
+                                        val pctText = nd.target?.let { "  ·  ${(disp / it * 100).roundToInt()}%" } ?: ""
+                                        LabelRow(nd.label, "${fmt1(disp)} ${nd.unit}$pctText", false)
+                                    }
+                                }
+                            }
                         }
 
                         if (prod.ingredients.isNotBlank()) {
@@ -522,6 +559,16 @@ private fun MiniNut(value: String, label: String, modifier: Modifier) {
     Column(modifier.clip(RoundedCornerShape(12.dp)).background(SurfaceHi).padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
         Text(label.uppercase(), color = TextDim, fontSize = 8.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+private fun fmt1(v: Double): String = ((v * 10).roundToInt() / 10.0).let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }
+
+@Composable
+private fun LabelRow(label: String, value: String, indented: Boolean) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = if (indented) TextDim else TextMuted, fontSize = if (indented) 12.sp else 13.sp, modifier = Modifier.weight(1f).padding(start = if (indented) 12.dp else 0.dp))
+        Text(value, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
