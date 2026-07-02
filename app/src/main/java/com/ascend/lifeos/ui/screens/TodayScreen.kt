@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material3.Icon
@@ -67,6 +68,7 @@ fun TodayScreen(
     onOpenNutrition: () -> Unit = {},
     onOpenGoals: () -> Unit = {},
     onOpenChess: () -> Unit = {},
+    onOpenFinance: () -> Unit = {},
 ) {
     val appData = Repo.data
     val day = Repo.today()
@@ -98,6 +100,8 @@ fun TodayScreen(
                 Text(if (p.name.isNotBlank()) "Hey, ${p.name}" else "Heute", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
             }
             IconBtn(Icons.Rounded.CalendarMonth, "Verlauf", onOpenHistory)
+            Spacer(Modifier.width(8.dp))
+            IconBtn(Icons.Rounded.AccountBalanceWallet, "Finanzen", onOpenFinance)
             Spacer(Modifier.width(8.dp))
             IconBtn(Icons.Rounded.EmojiEvents, "Erfolge", onOpenAchievements)
             Spacer(Modifier.width(8.dp))

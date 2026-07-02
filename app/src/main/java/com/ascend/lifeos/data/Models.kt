@@ -52,6 +52,17 @@ data class Subscription(
     val category: String = "",
 )
 
+/** A manual money transaction. [type] = "in" (Einnahme) | "out" (Ausgabe). */
+@Serializable
+data class Txn(
+    val id: String,
+    val name: String,
+    val amount: Double,
+    val category: String = "Sonstiges",
+    val type: String = "out",
+    val ts: Long = 0,
+)
+
 @Serializable
 data class CoachMsg(val who: String, val text: String) // who = "me" | "cx"
 
@@ -142,6 +153,7 @@ data class AppData(
     val profile: Profile = Profile(),
     val days: Map<String, DayData> = emptyMap(),
     val health: HealthSnapshot? = null,
+    val txns: List<Txn> = emptyList(),
 )
 
 val DEFAULT_EXERCISES = listOf(

@@ -195,6 +195,23 @@ object Repo {
     fun subsMonthly(): Double = data.profile.subs.sumOf { if (it.cycle == "yearly") it.cost / 12.0 else it.cost }
     fun subsYearly(): Double = data.profile.subs.sumOf { if (it.cycle == "yearly") it.cost else it.cost * 12.0 }
 
+    // ---- finance (manual transactions) ----
+    fun addTxn(name: String, amount: Double, category: String, type: String) {
+        if (name.isBlank() || amount <= 0) return
+        val t = Txn("t" + System.currentTimeMillis(), name.trim(), amount, category, type, System.currentTimeMillis())
+        commit(data.copy(txns = (data.txns + t).takeLast(2000)))
+    }
+
+    fun deleteTxn(id: String) = commit(data.copy(txns = data.txns.filter { it.id != id }))
+
+    fun txnsForMonth(year: Int, month: Int): List<Txn> {
+        val zone = java.time.ZoneId.systemDefault()
+        return data.txns.filter {
+            val d = java.time.Instant.ofEpochMilli(it.ts).atZone(zone).toLocalDate()
+            d.year == year && d.monthValue == month
+        }.sortedByDescending { it.ts }
+    }
+
     // ---- training ----
     fun logSet(exId: String, value: Int) {
         val k = todayKey()

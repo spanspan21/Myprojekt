@@ -92,6 +92,7 @@ fun AscendApp() {
                         onOpenNutrition = { selected = 1 },
                         onOpenGoals = { overlay = "goals" },
                         onOpenChess = { overlay = "chess" },
+                        onOpenFinance = { overlay = "subs" },
                     )
                     1 -> NutritionScreen(
                         onOpenOverview = { overlay = "nutriOverview" },

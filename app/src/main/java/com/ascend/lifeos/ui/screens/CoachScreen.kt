@@ -175,7 +175,7 @@ fun CoachScreen(onOpenSubs: () -> Unit = {}) {
                 Pill("🧊 ${p.freezeAvail}")
             }
             Divider()
-            SetRow("Abos & Kosten", "Fixkosten tracken") {
+            SetRow("Finanzen", "Ausgaben, Einnahmen & Abos") {
                 Text("Öffnen  →", color = Accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { onOpenSubs() }.padding(4.dp))
             }
             Divider()
