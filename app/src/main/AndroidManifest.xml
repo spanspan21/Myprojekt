@@ -73,6 +73,11 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- Ask Play services to pre-install the ML Kit barcode module. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
+
         <!-- Portrait barcode scanner (overrides ZXing's landscape default). -->
         <activity
             android:name=".PortraitCaptureActivity"

@@ -137,11 +137,13 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}, onOpenRecipes: () -> Unit =
         }
     }
 
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    fun onScanned(scanned: String) { mode = "barcode"; showAdd = true; code = scanned; lookup(scanned) }
+
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-        val scanned = result.contents
-        if (scanned != null) { mode = "barcode"; showAdd = true; code = scanned; lookup(scanned) }
+        result.contents?.let { onScanned(it) }
     }
-    fun startScan() {
+    fun startScanFallback() {
         val opts = ScanOptions()
             .setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES)
             .setPrompt("Barcode ins Sichtfeld halten")
@@ -149,6 +151,14 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}, onOpenRecipes: () -> Unit =
             .setOrientationLocked(true)
             .setCaptureActivity(com.ascend.lifeos.PortraitCaptureActivity::class.java)
         scanLauncher.launch(opts)
+    }
+    fun startScan() {
+        // ML Kit first (fast, on-device); ZXing if Play services are missing.
+        com.ascend.lifeos.data.ScannerEngine.scan(
+            ctx,
+            onResult = { onScanned(it) },
+            onFallback = { startScanFallback() },
+        )
     }
 
     Column(

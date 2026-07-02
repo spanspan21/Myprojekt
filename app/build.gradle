@@ -68,6 +68,8 @@ dependencies {
     // Android Health Connect — sleep, heart rate, HRV & resting HR from a band.
     implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
 
-    // Barcode scanning (camera) for the nutrition tracker.
+    // Barcode scanning for the nutrition tracker: ML Kit code scanner
+    // (on-device, no camera permission) with embedded ZXing as fallback.
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 }
