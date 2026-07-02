@@ -45,6 +45,7 @@ import com.ascend.lifeos.ui.screens.InsightsScreen
 import com.ascend.lifeos.ui.screens.NutritionOverviewScreen
 import com.ascend.lifeos.ui.screens.NutritionScreen
 import com.ascend.lifeos.ui.screens.OnboardingScreen
+import com.ascend.lifeos.ui.screens.RecipesScreen
 import com.ascend.lifeos.ui.screens.SubscriptionsScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
 import com.ascend.lifeos.ui.screens.TrainingScreen
@@ -82,6 +83,7 @@ fun AscendApp() {
                 "achievements" -> AchievementsScreen(onBack = { overlay = null })
                 "goals" -> GoalsScreen(onBack = { overlay = null })
                 "chess" -> ChessScreen(onBack = { overlay = null })
+                "recipes" -> RecipesScreen(onBack = { overlay = null })
                 else -> when (selected) {
                     0 -> TodayScreen(
                         onOpenCoach = { selected = 4 },
@@ -91,7 +93,10 @@ fun AscendApp() {
                         onOpenGoals = { overlay = "goals" },
                         onOpenChess = { overlay = "chess" },
                     )
-                    1 -> NutritionScreen(onOpenOverview = { overlay = "nutriOverview" })
+                    1 -> NutritionScreen(
+                        onOpenOverview = { overlay = "nutriOverview" },
+                        onOpenRecipes = { overlay = "recipes" },
+                    )
                     2 -> TrainingScreen()
                     3 -> BodyScreen()
                     else -> CoachScreen(onOpenSubs = { overlay = "subs" })

@@ -74,7 +74,7 @@ private val MEALS = listOf(
 )
 
 @Composable
-fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
+fun NutritionScreen(onOpenOverview: () -> Unit = {}, onOpenRecipes: () -> Unit = {}) {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -196,6 +196,18 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
         }
 
         Spacer(Modifier.height(12.dp))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Surface).border(1.dp, Line, RoundedCornerShape(14.dp))
+                .clickable { onOpenRecipes() }.padding(horizontal = 15.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Rezepte — Was soll ich essen?", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Tausende Gerichte, passend zu deinem Rest-Budget", color = TextDim, fontSize = 11.sp)
+            }
+            Text("→", color = TextDim, fontSize = 18.sp)
+        }
+        Spacer(Modifier.height(9.dp))
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Surface).border(1.dp, Line, RoundedCornerShape(14.dp))
                 .clickable { onOpenOverview() }.padding(horizontal = 15.dp, vertical = 13.dp),
