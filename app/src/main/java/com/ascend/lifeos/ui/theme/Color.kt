@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.lerp
 // ---- Ascend design tokens ---------------------------------------------------
 // One accent, disciplined neutral steps. Premium = restraint.
 
-val Bg = Color(0xFF0A0C10)          // app background (near-black, OLED friendly)
+val Bg = Color(0xFF0A0A0C)          // app background (cyber-dark, OLED friendly)
 val BgElevated = Color(0xFF0E1116)
 val Surface = Color(0xFF13171E)      // cards
 val SurfaceHi = Color(0xFF1A1F27)    // elevated / inputs
@@ -37,6 +37,7 @@ val ACCENT_PRESETS: List<Long> = listOf(
     0xFFFF6169, // red
     0xFF4CD4C4, // teal
     0xFFEC7FB4, // pink
+    0xFFFF6F61, // coral
 )
 
 // Status / data colours (used sparingly, never as decoration)

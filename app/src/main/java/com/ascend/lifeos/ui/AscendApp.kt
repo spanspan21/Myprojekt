@@ -1,6 +1,9 @@
 package com.ascend.lifeos.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.ui.screens.AchievementsScreen
+import com.ascend.lifeos.ui.screens.BentoHomeScreen
 import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.CoachScreen
@@ -73,6 +77,7 @@ fun AscendApp() {
     }
     var selected by rememberSaveable { mutableStateOf(0) }
     var overlay by rememberSaveable { mutableStateOf<String?>(null) }
+    var bentoOpen by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize().background(Bg)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (overlay) {
@@ -85,14 +90,29 @@ fun AscendApp() {
                 "chess" -> ChessScreen(onBack = { overlay = null })
                 "recipes" -> RecipesScreen(onBack = { overlay = null })
                 else -> when (selected) {
-                    0 -> TodayScreen(
-                        onOpenCoach = { selected = 4 },
-                        onOpenHistory = { overlay = "history" },
-                        onOpenAchievements = { overlay = "achievements" },
-                        onOpenNutrition = { selected = 1 },
-                        onOpenGoals = { overlay = "goals" },
-                        onOpenChess = { overlay = "chess" },
-                        onOpenFinance = { overlay = "subs" },
+                    0 -> BentoHomeScreen(
+                        open = bentoOpen,
+                        onOpen = { bentoOpen = it },
+                        cockpit = {
+                            TodayScreen(
+                                onOpenCoach = { bentoOpen = null; selected = 4 },
+                                onOpenHistory = { overlay = "history" },
+                                onOpenAchievements = { overlay = "achievements" },
+                                onOpenNutrition = { bentoOpen = null; selected = 1 },
+                                onOpenGoals = { overlay = "goals" },
+                                onOpenChess = { overlay = "chess" },
+                                onOpenFinance = { overlay = "subs" },
+                            )
+                        },
+                        nutrition = {
+                            NutritionScreen(
+                                onOpenOverview = { overlay = "nutriOverview" },
+                                onOpenRecipes = { overlay = "recipes" },
+                            )
+                        },
+                        training = { TrainingScreen() },
+                        body = { BodyScreen() },
+                        finance = { SubscriptionsScreen(onBack = { bentoOpen = null }) },
                     )
                     1 -> NutritionScreen(
                         onOpenOverview = { overlay = "nutriOverview" },
@@ -104,7 +124,11 @@ fun AscendApp() {
                 }
             }
         }
-        if (overlay == null) BottomBar(selected) { selected = it }
+        AnimatedVisibility(
+            visible = overlay == null && (selected != 0 || bentoOpen == null),
+            enter = slideInVertically { it },
+            exit = slideOutVertically { it },
+        ) { BottomBar(selected) { selected = it } }
     }
 }
 
