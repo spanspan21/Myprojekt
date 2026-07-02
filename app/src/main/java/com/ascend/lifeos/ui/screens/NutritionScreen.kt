@@ -306,6 +306,7 @@ fun NutritionScreen() {
                                             FoodEntry(
                                                 id = "", name = prod.name, meal = addMeal, kcal = kcal, protein = prot,
                                                 carbs = carb, fat = fat, grams = g, nutriScore = prod.nutriScore, barcode = prod.barcode,
+                                                nutrients = prod.per100.filterKeys { it !in com.ascend.lifeos.data.MACRO_IDS }.mapValues { it.value * f },
                                             )
                                         )
                                         showAdd = false; resetAdd()

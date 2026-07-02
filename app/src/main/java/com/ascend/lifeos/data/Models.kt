@@ -68,6 +68,7 @@ data class FoodEntry(
     val grams: Int = 0,       // eaten portion in grams (0 = per serving / n/a)
     val nutriScore: String = "", // a..e or ""
     val barcode: String = "",
+    val nutrients: Map<String, Double> = emptyMap(), // detailed nutrients for the eaten portion, in grams
     val ts: Long = 0,
 )
 

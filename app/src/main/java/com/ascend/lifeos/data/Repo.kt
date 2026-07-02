@@ -150,6 +150,24 @@ object Repo {
 
     fun kcalForDay(key: String): Int? = data.days[key]?.meals?.sumOf { it.kcal }?.takeIf { it > 0 }
 
+    /** Summed nutrient amounts (in grams) across the given day keys; macros pulled from entry fields. */
+    fun nutrientTotals(dayKeys: List<String>): Map<String, Double> {
+        val out = HashMap<String, Double>()
+        for (k in dayKeys) {
+            val day = data.days[k] ?: continue
+            for (e in day.meals) {
+                out.merge("protein", e.protein.toDouble()) { a, b -> a + b }
+                out.merge("carbs", e.carbs.toDouble()) { a, b -> a + b }
+                out.merge("fat", e.fat.toDouble()) { a, b -> a + b }
+                for ((id, v) in e.nutrients) out.merge(id, v) { a, b -> a + b }
+            }
+        }
+        return out
+    }
+
+    fun kcalTotal(dayKeys: List<String>): Int =
+        dayKeys.sumOf { k -> data.days[k]?.meals?.sumOf { it.kcal } ?: 0 }
+
     fun setNutritionGoals(kcal: Int, protein: Int, carbs: Int, fat: Int) = updateProfile {
         it.copy(
             kcalGoal = kcal.coerceIn(800, 6000),

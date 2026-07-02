@@ -30,6 +30,7 @@ object FoodApi {
         val nova: Int?,         // 1..4 processing level
         val ingredients: String,
         val servingG: Int?,     // serving size in grams if known
+        val per100: Map<String, Double>, // nutrient id -> grams per 100g (all tracked nutrients present in data)
     )
 
     class NotFound : Exception()
@@ -80,6 +81,15 @@ object FoodApi {
             val ingredients = p.optString("ingredients_text_de").ifBlank { p.optString("ingredients_text") }.trim()
             val nova = p.optInt("nova_group", 0).takeIf { it in 1..4 }
 
+            val per100 = HashMap<String, Double>()
+            for (nd in NUTRIENTS) {
+                val key = nd.offKey + "_100g"
+                if (n.has(key)) {
+                    val v = n.optDouble(key, -1.0)
+                    if (v >= 0.0) per100[nd.id] = v
+                }
+            }
+
             Product(
                 barcode = barcode,
                 name = name,
@@ -96,6 +106,7 @@ object FoodApi {
                 nova = nova,
                 ingredients = ingredients,
                 servingG = serving,
+                per100 = per100,
             )
         }
     }
