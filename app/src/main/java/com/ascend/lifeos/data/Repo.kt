@@ -148,6 +148,18 @@ object Repo {
         updateDay { it.copy(cali = it.cali - id) }
     }
 
+    fun finishWorkout() {
+        val k = todayKey()
+        val cur = data.days[k] ?: DayData()
+        commit(
+            data.copy(
+                days = data.days + (k to cur.copy(workoutDone = true)),
+                profile = data.profile.copy(workoutDays = data.profile.workoutDays + (k to true)),
+            )
+        )
+        refreshStreak()
+    }
+
     fun weekWorkouts(): Int {
         val today = java.time.LocalDate.now()
         var n = 0

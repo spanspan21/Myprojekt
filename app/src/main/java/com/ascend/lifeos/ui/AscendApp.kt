@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.ui.screens.GoalsScreen
 import com.ascend.lifeos.ui.screens.PlaceholderScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
+import com.ascend.lifeos.ui.screens.TrainingScreen
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Bg
 import com.ascend.lifeos.ui.theme.BgElevated
@@ -62,7 +63,7 @@ fun AscendApp() {
             when (selected) {
                 0 -> TodayScreen(onOpenCoach = { selected = 4 })
                 1 -> GoalsScreen()
-                2 -> PlaceholderScreen("Training", "Calisthenics, Routinen, Pausen-Timer & Progression.")
+                2 -> TrainingScreen()
                 3 -> PlaceholderScreen("Körper", "Schlaf, Puls, HRV & Erholung von deiner Fitnessuhr.")
                 else -> PlaceholderScreen("Coach", "Dein lokaler Coach — kostenlos, ohne Abo, ohne API-Key.")
             }
