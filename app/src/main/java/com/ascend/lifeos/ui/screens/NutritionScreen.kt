@@ -172,9 +172,7 @@ fun NutritionScreen() {
 
         if (showGoals) {
             Spacer(Modifier.height(12.dp))
-            GoalsEditor(p.kcalGoal, p.proteinGoal, p.carbGoal, p.fatGoal) { kc, pr, ca, fa ->
-                Repo.setNutritionGoals(kc, pr, ca, fa)
-            }
+            GoalsEditor(p)
         }
 
         // ---- Add actions ----
@@ -423,26 +421,75 @@ private fun MealPicker(selected: String, onSelect: (String) -> Unit) {
 }
 
 @Composable
-private fun GoalsEditor(kcal: Int, prot: Int, carb: Int, fat: Int, onSave: (Int, Int, Int, Int) -> Unit) {
-    var k by remember { mutableStateOf(kcal.toString()) }
-    var pr by remember { mutableStateOf(prot.toString()) }
-    var c by remember { mutableStateOf(carb.toString()) }
-    var f by remember { mutableStateOf(fat.toString()) }
+private fun GoalsEditor(p: com.ascend.lifeos.data.Profile) {
+    var sex by remember { mutableStateOf(p.sex) }
+    var age by remember { mutableStateOf(p.age.toString()) }
+    var height by remember { mutableStateOf(p.heightCm.toString()) }
+    var weight by remember { mutableStateOf(p.weightKg.toString()) }
+    var activity by remember { mutableStateOf(p.activity) }
+    var goal by remember { mutableStateOf(p.dietGoal) }
+    var saved by remember { mutableStateOf(false) }
+
+    val t = com.ascend.lifeos.data.NutritionCalc.compute(
+        sex, age.toIntOrNull() ?: p.age, height.toIntOrNull() ?: p.heightCm,
+        weight.toIntOrNull() ?: p.weightKg, activity, goal,
+    )
+
     AscendCard {
-        Text("Tagesziele", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text("Kalorien-Rechner", color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+        Text("Aus deinen Werten berechnet (Mifflin–St Jeor)", color = TextDim, fontSize = 11.sp)
+
+        Spacer(Modifier.height(13.dp))
+        SegRow(listOf("Mann", "Frau"), if (sex == "f") 1 else 0) { sex = if (it == 1) "f" else "m" }
         Spacer(Modifier.height(10.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            LabeledField("kcal", k, { k = it }, Modifier.weight(1f))
-            LabeledField("Eiweiß", pr, { pr = it }, Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(9.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            LabeledField("KH", c, { c = it }, Modifier.weight(1f))
-            LabeledField("Fett", f, { f = it }, Modifier.weight(1f))
+            LabeledField("Alter", age, { age = it }, Modifier.weight(1f))
+            LabeledField("Größe cm", height, { height = it }, Modifier.weight(1f))
+            LabeledField("Gewicht kg", weight, { weight = it }, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
-        AddButton(label = "Ziele speichern") {
-            onSave(k.toIntOrNull() ?: kcal, pr.toIntOrNull() ?: prot, c.toIntOrNull() ?: carb, f.toIntOrNull() ?: fat)
+        Text("Aktivität", color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(6.dp))
+        SegRow(com.ascend.lifeos.data.NutritionCalc.ACTIVITY_LABELS, activity - 1) { activity = it + 1 }
+        Spacer(Modifier.height(12.dp))
+        Text("Ziel", color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(6.dp))
+        val goals = com.ascend.lifeos.data.NutritionCalc.GOAL_LABELS
+        SegRow(goals.map { it.second }, goals.indexOfFirst { it.first == goal }.coerceAtLeast(0)) { goal = goals[it].first }
+
+        Spacer(Modifier.height(14.dp))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(SurfaceHi).padding(15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Empfehlung", color = TextDim, fontSize = 10.sp, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(3.dp))
+                Text("${t.kcal} kcal", color = Accent, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Eiweiß ${t.protein}g · KH ${t.carbs}g · Fett ${t.fat}g", color = TextMuted, fontSize = 11.5.sp)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        AddButton(label = if (saved) "✓ Übernommen" else "Als Tagesziel übernehmen") {
+            Repo.setBodyStats(sex, age.toIntOrNull() ?: p.age, height.toIntOrNull() ?: p.heightCm, weight.toIntOrNull() ?: p.weightKg, activity, goal)
+            Repo.setNutritionGoals(t.kcal, t.protein, t.carbs, t.fat)
+            saved = true
+        }
+    }
+}
+
+@Composable
+private fun SegRow(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        options.forEachIndexed { i, opt ->
+            val active = i == selected
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                    .background(if (active) Accent else SurfaceHi)
+                    .border(1.dp, if (active) Accent else Line2, RoundedCornerShape(10.dp))
+                    .clickable { onSelect(i) }.padding(vertical = 9.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text(opt, color = if (active) Bg else TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
         }
     }
 }

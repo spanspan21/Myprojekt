@@ -99,6 +99,12 @@ data class Profile(
     val proteinGoal: Int = 130,
     val carbGoal: Int = 250,
     val fatGoal: Int = 73,
+    val sex: String = "m",             // m | f
+    val age: Int = 25,
+    val heightCm: Int = 178,
+    val weightKg: Int = 75,
+    val activity: Int = 3,             // 1..5
+    val dietGoal: String = "maintain", // lose | maintain | gain
     val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
     val caliDefs: List<ExerciseDef> = DEFAULT_EXERCISES,
     val caliBest: Map<String, Int> = emptyMap(),

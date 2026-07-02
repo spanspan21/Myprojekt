@@ -159,6 +159,13 @@ object Repo {
         )
     }
 
+    fun setBodyStats(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, dietGoal: String) = updateProfile {
+        it.copy(
+            sex = sex, age = age.coerceIn(12, 100), heightCm = heightCm.coerceIn(120, 230),
+            weightKg = weightKg.coerceIn(30, 300), activity = activity.coerceIn(1, 5), dietGoal = dietGoal,
+        )
+    }
+
     // ---- subscriptions ----
     fun addSub(name: String, cost: Double, cycle: String) {
         if (name.isBlank() || cost <= 0) return
