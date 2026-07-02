@@ -36,10 +36,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.screens.AchievementsScreen
 import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.CoachScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
+import com.ascend.lifeos.ui.screens.HistoryScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
 import com.ascend.lifeos.ui.screens.TrainingScreen
 import com.ascend.lifeos.ui.theme.Accent
@@ -62,18 +64,27 @@ private val tabs = listOf(
 @Composable
 fun AscendApp() {
     var selected by rememberSaveable { mutableStateOf(0) }
+    var overlay by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize().background(Bg)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            when (selected) {
-                0 -> TodayScreen(onOpenCoach = { selected = 5 })
-                1 -> GoalsScreen()
-                2 -> TrainingScreen()
-                3 -> ChessScreen()
-                4 -> BodyScreen()
-                else -> CoachScreen()
+            when (overlay) {
+                "history" -> HistoryScreen(onBack = { overlay = null })
+                "achievements" -> AchievementsScreen(onBack = { overlay = null })
+                else -> when (selected) {
+                    0 -> TodayScreen(
+                        onOpenCoach = { selected = 5 },
+                        onOpenHistory = { overlay = "history" },
+                        onOpenAchievements = { overlay = "achievements" },
+                    )
+                    1 -> GoalsScreen()
+                    2 -> TrainingScreen()
+                    3 -> ChessScreen()
+                    4 -> BodyScreen()
+                    else -> CoachScreen()
+                }
             }
         }
-        BottomBar(selected) { selected = it }
+        if (overlay == null) BottomBar(selected) { selected = it }
     }
 }
 

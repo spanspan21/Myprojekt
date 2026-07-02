@@ -64,6 +64,11 @@ object Repo {
         return CompletionInfo(done, total)
     }
 
+    fun dayCompletion(key: String): CompletionInfo? {
+        val d = data.days[key] ?: return null
+        return completion(d, data.profile)
+    }
+
     fun workoutSets(day: DayData = today()): Int = day.cali.values.sumOf { it.size }
     fun workoutReps(day: DayData = today()): Int = day.cali.values.sumOf { it.sum() }
     fun trainedToday(day: DayData = today()): Boolean = day.workoutDone || workoutSets(day) > 0

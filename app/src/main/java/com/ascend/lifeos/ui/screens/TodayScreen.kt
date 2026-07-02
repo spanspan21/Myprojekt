@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,7 +48,7 @@ import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
 
 @Composable
-fun TodayScreen(onOpenCoach: () -> Unit) {
+fun TodayScreen(onOpenCoach: () -> Unit, onOpenHistory: () -> Unit = {}, onOpenAchievements: () -> Unit = {}) {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -65,6 +70,10 @@ fun TodayScreen(onOpenCoach: () -> Unit) {
                 Spacer(Modifier.height(5.dp))
                 Text(if (p.name.isNotBlank()) "Hey, ${p.name}" else "Heute", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
             }
+            IconBtn(Icons.Rounded.CalendarMonth, "Verlauf", onOpenHistory)
+            Spacer(Modifier.width(8.dp))
+            IconBtn(Icons.Rounded.EmojiEvents, "Erfolge", onOpenAchievements)
+            Spacer(Modifier.width(8.dp))
             Pill("⚡ ${p.streak} Tage", Amber)
         }
 
@@ -127,6 +136,15 @@ private fun coachLine(done: Int, total: Int, streak: Int, emoji: String, title: 
         done >= (total * 0.6) -> "$done/$total — fast durch. Genau hier geben die meisten auf. Nicht du. Zieh die letzten $open durch."
         else -> "$emoji $title. Mach den ersten Schritt, bevor dein Kopf Ausreden erfindet. Wasser, ein Satz, ein Häkchen."
     }
+}
+
+@Composable
+private fun IconBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, cd: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(Surface)
+            .border(1.dp, Line, RoundedCornerShape(12.dp)).clickable { onClick() },
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, cd, tint = TextMuted, modifier = Modifier.size(20.dp)) }
 }
 
 @Composable
