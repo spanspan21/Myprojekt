@@ -7,6 +7,7 @@ data class DayPhase(
     val title: String,
     val progress: Float,
     val leftText: String,
+    val h: Float,
 )
 
 /** The waking day runs 06:00–24:00, matching the 6 AM daily reset. */
@@ -26,7 +27,7 @@ fun phaseNow(now: LocalDateTime = LocalDateTime.now()): DayPhase {
     val left = (we - eff).coerceAtLeast(0f)
     val lh = left.toInt()
     val lm = ((left - lh) * 60).toInt()
-    return DayPhase(emoji, title, progress, "${lh}h ${lm}m wach")
+    return DayPhase(emoji, title, progress, "${lh}h ${lm}m wach", h)
 }
 
 fun todayLabel(now: LocalDateTime = LocalDateTime.now()): String {

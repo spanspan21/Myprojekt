@@ -76,9 +76,31 @@ data class Profile(
 )
 
 @Serializable
+data class HrPoint(val t: Long, val bpm: Int)
+
+@Serializable
+data class HealthSnapshot(
+    val updatedAt: Long,
+    val source: String = "live", // live | demo
+    val sleepMin: Int? = null,
+    val rem: Int = 0,
+    val deep: Int = 0,
+    val light: Int = 0,
+    val awake: Int = 0,
+    val hrv: Int? = null,
+    val restingHr: Int? = null,
+    val steps: Int? = null,
+    val hrSeries: List<HrPoint> = emptyList(),
+    val hrMin: Int? = null,
+    val hrMax: Int? = null,
+    val hrAvg: Int? = null,
+)
+
+@Serializable
 data class AppData(
     val profile: Profile = Profile(),
     val days: Map<String, DayData> = emptyMap(),
+    val health: HealthSnapshot? = null,
 )
 
 val DEFAULT_EXERCISES = listOf(

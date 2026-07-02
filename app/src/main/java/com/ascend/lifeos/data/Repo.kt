@@ -220,6 +220,19 @@ object Repo {
 
     fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
 
+    fun setHealth(h: HealthSnapshot) = commit(data.copy(health = h))
+
+    fun recoveryScore(h: HealthSnapshot? = data.health): Int? {
+        if (h == null) return null
+        var score = 55.0
+        if (h.sleepMin != null) {
+            score = (h.sleepMin / 480.0) * 60 +
+                (if (h.hrv != null) h.hrv.coerceIn(20, 120) / 120.0 * 25 else 15.0) +
+                (if (h.restingHr != null) (70 - h.restingHr).coerceIn(-10, 20).toDouble() else 5.0) + 5
+        }
+        return score.toInt().coerceIn(5, 99)
+    }
+
     fun coachSend(text: String) {
         if (text.isBlank()) return
         val reply = CoachEngine.reply(text)

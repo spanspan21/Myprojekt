@@ -36,10 +36,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.CoachScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
-import com.ascend.lifeos.ui.screens.PlaceholderScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
 import com.ascend.lifeos.ui.screens.TrainingScreen
 import com.ascend.lifeos.ui.theme.Accent
@@ -69,7 +69,7 @@ fun AscendApp() {
                 1 -> GoalsScreen()
                 2 -> TrainingScreen()
                 3 -> ChessScreen()
-                4 -> PlaceholderScreen("Körper", "Schlaf, Puls, HRV & Erholung von deiner Fitnessuhr.")
+                4 -> BodyScreen()
                 else -> CoachScreen()
             }
         }
