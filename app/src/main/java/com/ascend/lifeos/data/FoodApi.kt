@@ -1,0 +1,89 @@
+package com.ascend.lifeos.data
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.math.roundToInt
+
+/**
+ * Looks up product nutrition by barcode from Open Food Facts — free, no API key.
+ * Host-whitelisted. Returns per-100g values plus Nutri-Score when available.
+ */
+object FoodApi {
+    private val allowedHosts = setOf("world.openfoodfacts.org", "world.openfoodfacts.net")
+
+    data class Product(
+        val barcode: String,
+        val name: String,
+        val brand: String?,
+        val kcal100: Int,
+        val protein100: Double,
+        val carbs100: Double,
+        val fat100: Double,
+        val sugars100: Double,
+        val nutriScore: String, // a..e or ""
+        val servingG: Int?,     // serving size in grams if known
+    )
+
+    class NotFound : Exception()
+
+    private fun get(url: String): String? {
+        val u = URL(url)
+        if (u.protocol != "https" || u.host !in allowedHosts) return null
+        val conn = u.openConnection() as HttpURLConnection
+        conn.connectTimeout = 9000
+        conn.readTimeout = 9000
+        conn.requestMethod = "GET"
+        conn.setRequestProperty("User-Agent", "AscendLifeOS/2.0 (life-os app)")
+        conn.setRequestProperty("Accept", "application/json")
+        val code = conn.responseCode
+        if (code == 404) { conn.disconnect(); throw NotFound() }
+        if (code !in 200..299) { conn.disconnect(); throw java.io.IOException("http $code") }
+        val body = conn.inputStream.bufferedReader().use { it.readText() }
+        conn.disconnect()
+        return body
+    }
+
+    suspend fun fetch(barcodeRaw: String): kotlin.Result<Product> = withContext(Dispatchers.IO) {
+        runCatching {
+            val barcode = barcodeRaw.filter { it.isDigit() }
+            if (barcode.length < 6) throw NotFound()
+            val body = get(
+                "https://world.openfoodfacts.org/api/v2/product/$barcode.json" +
+                    "?fields=product_name,brands,nutriments,nutriscore_grade,serving_quantity"
+            ) ?: error("blockiert")
+            val d = JSONObject(body)
+            if (d.optInt("status", 0) != 1) throw NotFound()
+            val p = d.getJSONObject("product")
+            val n = p.optJSONObject("nutriments") ?: JSONObject()
+
+            fun num(vararg keys: String): Double {
+                for (k in keys) if (n.has(k)) return n.optDouble(k, 0.0)
+                return 0.0
+            }
+            var kcal = num("energy-kcal_100g")
+            if (kcal <= 0.0) {
+                val kj = num("energy-kj_100g", "energy_100g")
+                if (kj > 0) kcal = kj / 4.184
+            }
+            val name = p.optString("product_name").ifBlank { "Produkt $barcode" }
+            val brand = p.optString("brands").split(",").firstOrNull()?.trim()?.ifBlank { null }
+            val serving = p.optString("serving_quantity").toDoubleOrNull()?.roundToInt()?.takeIf { it in 1..2000 }
+
+            Product(
+                barcode = barcode,
+                name = name,
+                brand = brand,
+                kcal100 = kcal.roundToInt(),
+                protein100 = num("proteins_100g"),
+                carbs100 = num("carbohydrates_100g"),
+                fat100 = num("fat_100g"),
+                sugars100 = num("sugars_100g"),
+                nutriScore = p.optString("nutriscore_grade").lowercase().takeIf { it.length == 1 && it[0] in 'a'..'e' } ?: "",
+                servingG = serving,
+            )
+        }
+    }
+}

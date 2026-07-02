@@ -21,6 +21,7 @@ import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MonitorHeart
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.TrackChanges
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import com.ascend.lifeos.ui.screens.CoachScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
 import com.ascend.lifeos.ui.screens.HistoryScreen
 import com.ascend.lifeos.ui.screens.InsightsScreen
+import com.ascend.lifeos.ui.screens.NutritionScreen
 import com.ascend.lifeos.ui.screens.OnboardingScreen
 import com.ascend.lifeos.ui.screens.SubscriptionsScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
@@ -61,6 +63,7 @@ private val tabs = listOf(
     Tab("Training", Icons.Rounded.FitnessCenter),
     Tab("Schach", Icons.Rounded.GridView),
     Tab("Körper", Icons.Rounded.MonitorHeart),
+    Tab("Essen", Icons.Rounded.Restaurant),
     Tab("Coach", Icons.Rounded.AutoAwesome),
 )
 
@@ -81,7 +84,7 @@ fun AscendApp() {
                 "achievements" -> AchievementsScreen(onBack = { overlay = null })
                 else -> when (selected) {
                     0 -> TodayScreen(
-                        onOpenCoach = { selected = 5 },
+                        onOpenCoach = { selected = 6 },
                         onOpenHistory = { overlay = "history" },
                         onOpenAchievements = { overlay = "achievements" },
                     )
@@ -89,6 +92,7 @@ fun AscendApp() {
                     2 -> TrainingScreen()
                     3 -> ChessScreen()
                     4 -> BodyScreen()
+                    5 -> NutritionScreen()
                     else -> CoachScreen(onOpenSubs = { overlay = "subs" })
                 }
             }

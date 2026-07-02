@@ -16,6 +16,8 @@ data class CompletionInfo(val done: Int, val total: Int) {
     val pct: Float get() = if (total == 0) 0f else done / total.toFloat()
 }
 
+data class NutTotals(val kcal: Int, val protein: Int, val carbs: Int, val fat: Int)
+
 /**
  * Single source of truth. Backed by SharedPreferences (JSON). Exposes app state
  * as Compose snapshot state so the UI recomposes on change.
@@ -122,6 +124,40 @@ object Repo {
     }
 
     fun setReminders(on: Boolean) = updateProfile { it.copy(reminders = on) }
+
+    // ---- nutrition ----
+    fun addFood(entry: FoodEntry) {
+        val e = if (entry.id.isBlank()) entry.copy(id = "f" + System.currentTimeMillis(), ts = System.currentTimeMillis()) else entry
+        val k = todayKey()
+        val cur = data.days[k] ?: DayData()
+        val recents = (listOf(e.copy(meal = "b")) + data.profile.recentFoods.filter { it.name != e.name }).take(12)
+        commit(
+            data.copy(
+                days = data.days + (k to cur.copy(meals = cur.meals + e)),
+                profile = data.profile.copy(recentFoods = recents),
+            )
+        )
+        refreshStreak()
+    }
+
+    fun removeFood(id: String) = updateDay { d -> d.copy(meals = d.meals.filter { it.id != id }) }
+
+    fun nutritionTotals(day: DayData = today()): NutTotals {
+        var kcal = 0; var p = 0; var c = 0; var f = 0
+        for (m in day.meals) { kcal += m.kcal; p += m.protein; c += m.carbs; f += m.fat }
+        return NutTotals(kcal, p, c, f)
+    }
+
+    fun kcalForDay(key: String): Int? = data.days[key]?.meals?.sumOf { it.kcal }?.takeIf { it > 0 }
+
+    fun setNutritionGoals(kcal: Int, protein: Int, carbs: Int, fat: Int) = updateProfile {
+        it.copy(
+            kcalGoal = kcal.coerceIn(800, 6000),
+            proteinGoal = protein.coerceIn(0, 500),
+            carbGoal = carbs.coerceIn(0, 900),
+            fatGoal = fat.coerceIn(0, 400),
+        )
+    }
 
     // ---- subscriptions ----
     fun addSub(name: String, cost: Double, cycle: String) {

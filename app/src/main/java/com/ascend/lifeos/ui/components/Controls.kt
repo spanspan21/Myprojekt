@@ -128,6 +128,7 @@ fun AscendTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     onDone: (() -> Unit)? = null,
+    number: Boolean = false,
 ) {
     Box(
         modifier
@@ -144,7 +145,10 @@ fun AscendTextField(
             singleLine = true,
             textStyle = TextStyle(color = TextPrimary, fontSize = 14.sp),
             cursorBrush = SolidColor(Accent),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (number) androidx.compose.ui.text.input.KeyboardType.Number else androidx.compose.ui.text.input.KeyboardType.Text,
+                imeAction = ImeAction.Done,
+            ),
             keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
             modifier = Modifier.fillMaxWidth(),
         )

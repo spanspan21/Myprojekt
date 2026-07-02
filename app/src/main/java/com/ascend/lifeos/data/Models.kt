@@ -55,6 +55,22 @@ data class Subscription(
 @Serializable
 data class CoachMsg(val who: String, val text: String) // who = "me" | "cx"
 
+/** A single logged food item for a day. Values are the totals for the eaten portion. */
+@Serializable
+data class FoodEntry(
+    val id: String,
+    val name: String,
+    val meal: String = "b", // b breakfast | l lunch | d dinner | s snack
+    val kcal: Int = 0,
+    val protein: Int = 0,
+    val carbs: Int = 0,
+    val fat: Int = 0,
+    val grams: Int = 0,       // eaten portion in grams (0 = per serving / n/a)
+    val nutriScore: String = "", // a..e or ""
+    val barcode: String = "",
+    val ts: Long = 0,
+)
+
 @Serializable
 data class DayData(
     val goals: List<Goal> = emptyList(),
@@ -63,6 +79,7 @@ data class DayData(
     val workoutDone: Boolean = false,
     val reflection: String = "",
     val coachLog: List<CoachMsg> = emptyList(),
+    val meals: List<FoodEntry> = emptyList(),
     val seeded: Boolean = false,
 )
 
@@ -78,6 +95,11 @@ data class Profile(
     val freezeAvail: Int = 1,
     val freezeWeek: String? = null,
     val accent: Long = 0xFF34E0A1,
+    val kcalGoal: Int = 2200,
+    val proteinGoal: Int = 130,
+    val carbGoal: Int = 250,
+    val fatGoal: Int = 73,
+    val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
     val caliDefs: List<ExerciseDef> = DEFAULT_EXERCISES,
     val caliBest: Map<String, Int> = emptyMap(),
     val exHist: Map<String, List<Int>> = emptyMap(),
