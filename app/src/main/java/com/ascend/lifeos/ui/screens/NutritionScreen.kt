@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,6 +75,7 @@ private val MEALS = listOf(
     Meal("s", "Snacks", "Snack"),
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NutritionScreen(onOpenOverview: () -> Unit = {}, onOpenRecipes: () -> Unit = {}) {
     val appData = Repo.data
@@ -397,10 +400,45 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}, onOpenRecipes: () -> Unit =
                         }
 
                         if (prod.ingredients.isNotBlank()) {
+                            var ingExpanded by remember { mutableStateOf(false) }
                             Spacer(Modifier.height(14.dp))
                             Text("ZUTATEN", color = TextDim, fontSize = 8.5.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(5.dp))
-                            Text(prod.ingredients, color = TextMuted, fontSize = 11.5.sp, lineHeight = 17.sp, maxLines = 4)
+                            Text(
+                                prod.ingredients, color = TextMuted, fontSize = 11.5.sp, lineHeight = 17.sp,
+                                maxLines = if (ingExpanded) Int.MAX_VALUE else 4,
+                                modifier = Modifier.clickable { ingExpanded = !ingExpanded },
+                            )
+                        }
+
+                        if (prod.allergens.isNotEmpty()) {
+                            Spacer(Modifier.height(13.dp))
+                            Text("ALLERGENE", color = TextDim, fontSize = 8.5.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(7.dp))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                prod.allergens.forEach { a ->
+                                    Box(
+                                        Modifier.clip(RoundedCornerShape(9.dp)).background(Red.copy(alpha = 0.12f))
+                                            .border(1.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(9.dp))
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                    ) { Text(a, color = Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                                }
+                            }
+                        }
+
+                        if (prod.additives.isNotEmpty()) {
+                            Spacer(Modifier.height(13.dp))
+                            Text("ZUSATZSTOFFE (${prod.additives.size})", color = TextDim, fontSize = 8.5.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(7.dp))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                prod.additives.forEach { e ->
+                                    Box(
+                                        Modifier.clip(RoundedCornerShape(9.dp)).background(SurfaceHi)
+                                            .border(1.dp, Line2, RoundedCornerShape(9.dp))
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                    ) { Text(e, color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                                }
+                            }
                         }
 
                         // ---- eat or not ----

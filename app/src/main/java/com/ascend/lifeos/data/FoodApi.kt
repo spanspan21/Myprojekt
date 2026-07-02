@@ -31,6 +31,15 @@ object FoodApi {
         val ingredients: String,
         val servingG: Int?,     // serving size in grams if known
         val per100: Map<String, Double>, // nutrient id -> grams per 100g (all tracked nutrients present in data)
+        val allergens: List<String> = emptyList(),
+        val additives: List<String> = emptyList(), // E-numbers
+    )
+
+    private val ALLERGEN_DE = mapOf(
+        "milk" to "Milch", "gluten" to "Gluten", "eggs" to "Eier", "nuts" to "Schalenfrüchte",
+        "peanuts" to "Erdnüsse", "soybeans" to "Soja", "fish" to "Fisch", "crustaceans" to "Krebstiere",
+        "molluscs" to "Weichtiere", "celery" to "Sellerie", "mustard" to "Senf", "sesame-seeds" to "Sesam",
+        "sulphur-dioxide-and-sulphites" to "Sulfite", "lupin" to "Lupinen",
     )
 
     class NotFound : Exception()
@@ -53,7 +62,7 @@ object FoodApi {
     }
 
     private const val FIELDS = "code,product_name,product_name_de,brands,nutriments,nutriscore_grade," +
-        "nova_group,serving_quantity,ingredients_text_de,ingredients_text"
+        "nova_group,serving_quantity,ingredients_text_de,ingredients_text,allergens_tags,additives_tags"
 
     private fun parseProduct(p: JSONObject, fallbackCode: String): Product? {
         val n = p.optJSONObject("nutriments") ?: JSONObject()
@@ -83,6 +92,17 @@ object FoodApi {
             }
         }
 
+        fun tags(key: String): List<String> {
+            val a = p.optJSONArray(key) ?: return emptyList()
+            return (0 until a.length()).mapNotNull { i ->
+                a.optString(i).substringAfter(':').takeIf { it.isNotBlank() }
+            }
+        }
+        val allergens = tags("allergens_tags")
+            .map { t -> ALLERGEN_DE[t] ?: t.replace('-', ' ').replaceFirstChar { it.uppercase() } }
+            .distinct()
+        val additives = tags("additives_tags").map { it.uppercase() }.distinct()
+
         return Product(
             barcode = code,
             name = name,
@@ -100,6 +120,8 @@ object FoodApi {
             ingredients = ingredients,
             servingG = serving,
             per100 = per100,
+            allergens = allergens,
+            additives = additives,
         )
     }
 
