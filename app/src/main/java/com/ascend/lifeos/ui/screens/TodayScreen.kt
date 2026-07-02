@@ -21,20 +21,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ascend.lifeos.core.DayPhase
 import com.ascend.lifeos.core.phaseNow
 import com.ascend.lifeos.core.todayLabel
+import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.components.AscendCard
+import com.ascend.lifeos.ui.components.ProgressBar
 import com.ascend.lifeos.ui.components.RingProgress
 import com.ascend.lifeos.ui.components.SectionLabel
 import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.AccentSoft
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Line
 import com.ascend.lifeos.ui.theme.Orange
+import com.ascend.lifeos.ui.theme.Surface
 import com.ascend.lifeos.ui.theme.SurfaceHi
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
@@ -42,11 +44,12 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 
 @Composable
 fun TodayScreen(onOpenCoach: () -> Unit) {
-    val phase: DayPhase = phaseNow()
-    // Sample values until the data layer lands (Milestone 2).
-    val goalsDone = 0
-    val goalsTotal = 6
-    val streak = 0
+    val appData = Repo.data
+    val day = Repo.today()
+    val p = appData.profile
+    val c = Repo.completion(day, p)
+    val phase = phaseNow()
+    val pctInt = (c.pct * 100).toInt()
 
     Column(
         Modifier
@@ -56,42 +59,32 @@ fun TodayScreen(onOpenCoach: () -> Unit) {
             .padding(horizontal = 17.dp)
             .padding(top = 14.dp, bottom = 28.dp)
     ) {
-        // Header
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
-                Text(
-                    todayLabel(),
-                    color = Accent,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp,
-                )
+                Text(todayLabel(), color = Accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                 Spacer(Modifier.height(5.dp))
-                Text("Heute", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+                Text(if (p.name.isNotBlank()) "Hey, ${p.name}" else "Heute", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
             }
-            Pill("⚡ $streak Tage", Amber)
+            Pill("⚡ ${p.streak} Tage", Amber)
         }
 
         SectionLabel("Ziele heute")
         AscendCard {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RingProgress(
-                    progress = if (goalsTotal == 0) 0f else goalsDone / goalsTotal.toFloat(),
-                    color = if (goalsDone >= goalsTotal && goalsTotal > 0) Accent else Orange,
+                    progress = c.pct,
+                    color = if (c.pct >= 1f) Accent else if (c.pct >= 0.5f) Amber else Orange,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "${if (goalsTotal == 0) 0 else goalsDone * 100 / goalsTotal}%",
-                            color = TextPrimary, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold,
-                        )
-                        Text("$goalsDone/$goalsTotal Ziele", color = TextDim, fontSize = 9.sp, letterSpacing = 1.sp)
+                        Text("$pctInt%", color = TextPrimary, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("${c.done}/${c.total} Ziele", color = TextDim, fontSize = 9.sp, letterSpacing = 1.sp)
                     }
                 }
                 Spacer(Modifier.width(20.dp))
                 Column {
                     Text("${phase.emoji}  ${phase.title}", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(6.dp))
-                    Text("$goalsDone von $goalsTotal Zielen erledigt.", color = TextMuted, fontSize = 12.5.sp)
+                    Text("${c.done} von ${c.total} Zielen erledigt.", color = TextMuted, fontSize = 12.5.sp)
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -101,22 +94,19 @@ fun TodayScreen(onOpenCoach: () -> Unit) {
                 Text("${(phase.progress * 100).toInt()}% vorbei · ${phase.leftText}", color = TextDim, fontSize = 11.sp)
             }
             Spacer(Modifier.height(7.dp))
-            Track(phase.progress)
+            ProgressBar(phase.progress, Orange)
         }
 
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-            Stat("0/8", "Wasser", Modifier.weight(1f))
-            Stat("0", "Sätze", Modifier.weight(1f))
-            Stat("–", "Rating", Modifier.weight(1f))
+            Stat("${day.water}/${p.waterGoal}", "Wasser", Modifier.weight(1f))
+            Stat("${Repo.workoutSets(day)}", "Sätze", Modifier.weight(1f))
+            Stat("${p.chess.rating}", "Rating", Modifier.weight(1f))
         }
 
         SectionLabel("Coach")
         AscendCard {
-            Text(
-                "${phase.emoji} ${phase.title}. Frischer Tag, klare Ansage: mach den ersten Schritt, bevor dein Kopf Ausreden erfindet. Wasser, ein Satz, ein Häkchen.",
-                color = TextPrimary, fontSize = 14.sp, lineHeight = 21.sp,
-            )
+            Text(coachLine(c.done, c.total, p.streak, phase.emoji, phase.title), color = TextPrimary, fontSize = 14.sp, lineHeight = 21.sp)
             Spacer(Modifier.height(14.dp))
             Row(
                 Modifier
@@ -125,19 +115,24 @@ fun TodayScreen(onOpenCoach: () -> Unit) {
                     .border(1.dp, Line, RoundedCornerShape(13.dp))
                     .clickable { onOpenCoach() }
                     .padding(horizontal = 15.dp, vertical = 11.dp)
-            ) {
-                Text("Mit dem Coach reden  →", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            }
+            ) { Text("Mit dem Coach reden  →", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
         }
     }
 }
 
+private fun coachLine(done: Int, total: Int, streak: Int, emoji: String, title: String): String {
+    val open = total - done
+    return when {
+        done >= total && total > 0 -> "Alles erledigt — Tag $streak. Kein Zufall, sondern Wiederholung. Ruh dich aus, morgen wieder."
+        done >= (total * 0.6) -> "$done/$total — fast durch. Genau hier geben die meisten auf. Nicht du. Zieh die letzten $open durch."
+        else -> "$emoji $title. Mach den ersten Schritt, bevor dein Kopf Ausreden erfindet. Wasser, ein Satz, ein Häkchen."
+    }
+}
+
 @Composable
-private fun Pill(text: String, color: androidx.compose.ui.graphics.Color) {
+private fun Pill(text: String, color: Color) {
     Box(
-        Modifier
-            .clip(RoundedCornerShape(11.dp))
-            .background(color.copy(alpha = 0.09f))
+        Modifier.clip(RoundedCornerShape(11.dp)).background(color.copy(alpha = 0.09f))
             .border(1.dp, color.copy(alpha = 0.22f), RoundedCornerShape(11.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) { Text(text, color = color, fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
@@ -146,34 +141,11 @@ private fun Pill(text: String, color: androidx.compose.ui.graphics.Color) {
 @Composable
 private fun Stat(value: String, label: String, modifier: Modifier = Modifier) {
     Column(
-        modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(com.ascend.lifeos.ui.theme.Surface)
-            .border(1.dp, Line, RoundedCornerShape(16.dp))
-            .padding(vertical = 15.dp),
+        modifier.clip(RoundedCornerShape(16.dp)).background(Surface).border(1.dp, Line, RoundedCornerShape(16.dp)).padding(vertical = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(value, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
         Spacer(Modifier.height(4.dp))
         Text(label.uppercase(), color = TextDim, fontSize = 9.sp, letterSpacing = 0.8.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-private fun Track(progress: Float) {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(7.dp)
-            .clip(RoundedCornerShape(7.dp))
-            .background(SurfaceHi)
-    ) {
-        Box(
-            Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(7.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .background(Orange)
-        )
     }
 }
