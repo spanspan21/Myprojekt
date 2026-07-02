@@ -52,6 +52,32 @@ data class Subscription(
     val category: String = "",
 )
 
+/**
+ * One block in the local time-blocking planner. Times are minutes from 00:00.
+ * [flexible] blocks may be moved by the planner; fixed ones anchor the day.
+ */
+@Serializable
+data class TimeBlock(
+    val id: String,
+    val title: String,
+    val startMin: Int,
+    val durMin: Int,
+    val kind: String = "task",      // task | routine
+    val flexible: Boolean = true,
+    val done: Boolean = false,
+    val routineId: String? = null,  // set when materialized from a routine
+)
+
+/** A recurring routine, materialized into concrete TimeBlocks per day. */
+@Serializable
+data class Routine(
+    val id: String,
+    val title: String,
+    val startMin: Int,
+    val durMin: Int,
+    val days: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7), // ISO weekdays
+)
+
 /** A manual money transaction. [type] = "in" (Einnahme) | "out" (Ausgabe). */
 @Serializable
 data class Txn(
@@ -92,6 +118,7 @@ data class DayData(
     val reflection: String = "",
     val coachLog: List<CoachMsg> = emptyList(),
     val meals: List<FoodEntry> = emptyList(),
+    val blocks: List<TimeBlock> = emptyList(),
     val seeded: Boolean = false,
 )
 
@@ -125,6 +152,7 @@ data class Profile(
     val longGoals: List<LongGoal> = DEFAULT_LONG_GOALS,
     val chess: Chess = Chess(),
     val subs: List<Subscription> = emptyList(),
+    val routines: List<Routine> = emptyList(),
 )
 
 @Serializable

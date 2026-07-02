@@ -42,6 +42,7 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +61,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.core.PlannerEngine
 import com.ascend.lifeos.core.phaseNow
 import com.ascend.lifeos.core.todayLabel
 import com.ascend.lifeos.data.Repo
@@ -107,6 +109,7 @@ fun BentoHomeScreen(
     body: @Composable () -> Unit,
     finance: @Composable () -> Unit,
     coach: @Composable () -> Unit,
+    planner: @Composable () -> Unit,
 ) {
     BackHandler(enabled = open != null) { onOpen(null) }
     SharedTransitionLayout(Modifier.fillMaxSize()) {
@@ -140,6 +143,7 @@ fun BentoHomeScreen(
                             "body" -> body()
                             "finance" -> finance()
                             "coach" -> coach()
+                            "planner" -> planner()
                         }
                     }
                     if (target != "finance") CloseChip { onOpen(null) }
@@ -267,17 +271,29 @@ private fun SharedTransitionScope.BentoGrid(scope: AnimatedVisibilityScope, onOp
                 )
             }
 
-            // Row 4 — AI Coach (wide, flat)
-            BentoTile(
-                key = "coach", scope = scope,
-                icon = Icons.Rounded.AutoAwesome, title = "AI Coach",
-                modifier = Modifier.fillMaxWidth().height(96.dp),
-                onClick = { onOpen("coach") },
-            ) {
-                Spacer(Modifier.weight(1f))
-                Text("„Bereit, wenn du es bist.“", color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Spacer(Modifier.height(2.dp))
-                Text("Lokal · ehrlich · kostenlos", color = SubGray, fontSize = 10.5.sp)
+            // Row 4 — Planer · AI Coach
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+                val next = PlannerEngine.nextBlock(day.blocks, nowMin)
+                BentoTile(
+                    key = "planner", scope = scope,
+                    icon = Icons.Rounded.Schedule, title = "Planer",
+                    metric = next?.let { PlannerEngine.fmtHM(it.startMin) } ?: "—",
+                    sub = next?.title ?: "Tag planen",
+                    modifier = Modifier.weight(1f).aspectRatio(1f),
+                    onClick = { onOpen("planner") },
+                )
+                BentoTile(
+                    key = "coach", scope = scope,
+                    icon = Icons.Rounded.AutoAwesome, title = "AI Coach",
+                    modifier = Modifier.weight(1f).aspectRatio(1f),
+                    onClick = { onOpen("coach") },
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    Text("„Bereit, wenn\ndu es bist.“", color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp, maxLines = 2)
+                    Spacer(Modifier.height(3.dp))
+                    Text("Lokal · kostenlos", color = SubGray, fontSize = 10.5.sp)
+                }
             }
         }
     }

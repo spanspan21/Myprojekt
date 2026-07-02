@@ -15,6 +15,7 @@ import com.ascend.lifeos.ui.screens.BentoHomeScreen
 import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.CoachScreen
+import com.ascend.lifeos.ui.screens.DayPlannerScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
 import com.ascend.lifeos.ui.screens.HistoryScreen
 import com.ascend.lifeos.ui.screens.InsightsScreen
@@ -77,6 +78,7 @@ fun AscendApp() {
                 body = { BodyScreen() },
                 finance = { SubscriptionsScreen(onBack = { bentoOpen = null }) },
                 coach = { CoachScreen(onOpenSubs = { overlay = "subs" }) },
+                planner = { DayPlannerScreen() },
             )
         }
     }

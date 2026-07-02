@@ -37,6 +37,7 @@ object Repo {
         data = if (s != null) runCatching { json.decodeFromString<AppData>(s) }.getOrDefault(AppData()) else AppData()
         ensureToday()
         refreshStreak()
+        materializeRoutines()
     }
 
     private fun save() {
@@ -203,6 +204,50 @@ object Repo {
     }
 
     fun deleteTxn(id: String) = commit(data.copy(txns = data.txns.filter { it.id != id }))
+
+    // ---- time blocking ----
+    fun materializeRoutines() {
+        val k = todayKey()
+        val cur = data.days[k] ?: DayData()
+        val dow = java.time.LocalDate.parse(k).dayOfWeek.value
+        val missing = data.profile.routines.filter { r -> dow in r.days && cur.blocks.none { it.routineId == r.id } }
+        if (missing.isEmpty()) return
+        val blocks = (cur.blocks + missing.map {
+            TimeBlock("rb${it.id}$k", it.title, it.startMin, it.durMin, kind = "routine", flexible = false, routineId = it.id)
+        }).sortedBy { it.startMin }
+        commit(data.copy(days = data.days + (k to cur.copy(blocks = blocks))))
+    }
+
+    fun addBlock(title: String, startMin: Int, durMin: Int, flexible: Boolean) {
+        if (title.isBlank() || durMin <= 0) return
+        updateDay {
+            it.copy(blocks = (it.blocks + TimeBlock("b" + System.currentTimeMillis(), title.trim(), startMin, durMin, flexible = flexible)).sortedBy { b -> b.startMin })
+        }
+    }
+
+    fun addRoutine(title: String, startMin: Int, durMin: Int) {
+        if (title.isBlank() || durMin <= 0) return
+        updateProfile { it.copy(routines = it.routines + Routine("r" + System.currentTimeMillis(), title.trim(), startMin, durMin)) }
+        materializeRoutines()
+    }
+
+    fun toggleBlock(id: String) = updateDay { d ->
+        d.copy(blocks = d.blocks.map { if (it.id == id) it.copy(done = !it.done) else it })
+    }
+
+    /** Deletes a block; a routine instance also removes its recurring routine. */
+    fun deleteBlock(id: String) {
+        val k = todayKey()
+        val cur = data.days[k] ?: return
+        val blk = cur.blocks.find { it.id == id } ?: return
+        var nd = data.copy(days = data.days + (k to cur.copy(blocks = cur.blocks.filter { it.id != id })))
+        if (blk.routineId != null) {
+            nd = nd.copy(profile = nd.profile.copy(routines = nd.profile.routines.filter { it.id != blk.routineId }))
+        }
+        commit(nd)
+    }
+
+    fun autoPlan() = updateDay { it.copy(blocks = com.ascend.lifeos.core.PlannerEngine.resolve(it.blocks)) }
 
     fun txnsForMonth(year: Int, month: Int): List<Txn> {
         val zone = java.time.ZoneId.systemDefault()
