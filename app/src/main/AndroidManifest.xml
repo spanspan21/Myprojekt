@@ -10,6 +10,10 @@
     <!-- Needed only to fetch public chess ratings from Chess.com / Lichess. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Daily reminder notifications (opt-in in settings). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- Health Connect read permissions (fitness band / smartwatch data). -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
@@ -61,6 +65,19 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
+
+        <!-- Daily reminder notifications. -->
+        <receiver
+            android:name=".data.ReminderReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".data.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

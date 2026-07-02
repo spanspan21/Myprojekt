@@ -53,6 +53,24 @@ fun ProgressBar(progress: Float, color: Color = Accent, height: Dp = 7.dp, modif
 }
 
 @Composable
+fun Toggle(checked: Boolean, onToggle: (Boolean) -> Unit) {
+    val bg by animateColorAsState(if (checked) Accent else SurfaceHi, label = "tgbg")
+    val align by androidx.compose.animation.core.animateFloatAsState(if (checked) 1f else 0f, label = "tgknob")
+    Box(
+        Modifier
+            .width(48.dp).height(28.dp)
+            .clip(RoundedCornerShape(50))
+            .background(bg)
+            .border(1.dp, Line2, RoundedCornerShape(50))
+            .clickable { onToggle(!checked) }
+            .padding(3.dp),
+        contentAlignment = androidx.compose.ui.BiasAlignment(horizontalBias = align * 2 - 1, verticalBias = 0f),
+    ) {
+        Box(Modifier.size(22.dp).clip(RoundedCornerShape(50)).background(if (checked) Bg else TextPrimary))
+    }
+}
+
+@Composable
 fun CheckBox(checked: Boolean, onClick: () -> Unit, dashed: Boolean = false) {
     val bg by animateColorAsState(if (checked) Accent else Color.Transparent, label = "cbbg")
     val border by animateColorAsState(if (checked) Accent else Line2, label = "cbborder")

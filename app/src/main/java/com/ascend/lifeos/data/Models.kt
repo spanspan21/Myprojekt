@@ -61,6 +61,7 @@ data class DayData(
 data class Profile(
     val name: String = "",
     val onboarded: Boolean = false,
+    val reminders: Boolean = false,
     val waterGoal: Int = 8,
     val streak: Int = 0,
     val longest: Int = 0,

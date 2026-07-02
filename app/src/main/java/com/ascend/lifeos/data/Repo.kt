@@ -121,6 +121,8 @@ object Repo {
         it.copy(name = name.trim(), waterGoal = waterGoal.coerceIn(1, 20), onboarded = true)
     }
 
+    fun setReminders(on: Boolean) = updateProfile { it.copy(reminders = on) }
+
     // ---- training ----
     fun logSet(exId: String, value: Int) {
         val k = todayKey()

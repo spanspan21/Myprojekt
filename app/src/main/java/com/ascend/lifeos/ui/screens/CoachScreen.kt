@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -30,17 +32,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.CoachEngine
+import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.components.AscendCard
 import com.ascend.lifeos.ui.components.AscendTextField
 import com.ascend.lifeos.ui.components.SectionLabel
 import com.ascend.lifeos.ui.components.Stepper
+import com.ascend.lifeos.ui.components.Toggle
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Bg
@@ -57,6 +62,17 @@ fun CoachScreen() {
     val day = Repo.today()
     val p = appData.profile
     val clip = LocalClipboardManager.current
+    val ctx = LocalContext.current
+
+    val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) { Repo.setReminders(true); Notifier.schedule(ctx) }
+    }
+    fun toggleReminders(on: Boolean) {
+        if (on) {
+            if (Notifier.hasPermission(ctx)) { Repo.setReminders(true); Notifier.schedule(ctx) }
+            else permLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else { Repo.setReminders(false); Notifier.cancel(ctx) }
+    }
 
     var input by remember { mutableStateOf("") }
     var name by remember { mutableStateOf(p.name) }
@@ -126,6 +142,10 @@ fun CoachScreen() {
             Divider()
             SetRow("Wasser-Ziel", "Gläser pro Tag") {
                 Stepper("${p.waterGoal}", { Repo.setWaterGoal(p.waterGoal - 1) }, { Repo.setWaterGoal(p.waterGoal + 1) })
+            }
+            Divider()
+            SetRow("Erinnerungen", if (p.reminders) "Täglich ${Notifier.MORNING_HOUR}:00 & ${Notifier.EVENING_HOUR}:00 Uhr" else "Push-Nudges morgens & abends") {
+                Toggle(p.reminders) { on -> toggleReminders(on) }
             }
             Divider()
             SetRow("Streak-Freeze", if (p.freezeAvail > 0) "1 pro Woche · verfügbar" else "diese Woche genutzt") {
