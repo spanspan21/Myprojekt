@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowLeft
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +56,7 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 import kotlinx.coroutines.launch
 
 @Composable
-fun ChessScreen() {
+fun ChessScreen(onBack: (() -> Unit)? = null) {
     val appData = Repo.data
     val ch = appData.profile.chess
     val linked = ch.account != null
@@ -88,6 +91,15 @@ fun ChessScreen() {
             .padding(horizontal = 17.dp).padding(top = 14.dp, bottom = 28.dp)
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            if (onBack != null) {
+                Icon(
+                    Icons.Rounded.KeyboardArrowLeft, "Zurück",
+                    tint = com.ascend.lifeos.ui.theme.TextMuted,
+                    modifier = Modifier.padding(top = 6.dp, end = 6.dp).size(28.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .clickable { onBack() },
+                )
+            }
             Column(Modifier.weight(1f)) {
                 Text("Schach", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                 Text("Rating, Partien & Performance", color = TextDim, fontSize = 12.sp)

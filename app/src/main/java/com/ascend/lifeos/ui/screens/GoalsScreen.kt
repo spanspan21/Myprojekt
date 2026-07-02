@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowLeft
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,7 +55,7 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun GoalsScreen() {
+fun GoalsScreen(onBack: (() -> Unit)? = null) {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -67,6 +70,15 @@ fun GoalsScreen() {
             .padding(horizontal = 17.dp).padding(top = 14.dp, bottom = 28.dp)
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            if (onBack != null) {
+                Icon(
+                    Icons.Rounded.KeyboardArrowLeft, "Zurück",
+                    tint = TextMuted,
+                    modifier = Modifier.padding(top = 6.dp, end = 6.dp).size(28.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .clickable { onBack() },
+                )
+            }
             Column(Modifier.weight(1f)) {
                 Text("Ziele", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                 Text("Jeden Tag dran bleiben — Kette nicht brechen", color = TextDim, fontSize = 12.sp)

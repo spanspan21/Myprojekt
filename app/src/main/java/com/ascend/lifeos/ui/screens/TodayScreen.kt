@@ -65,6 +65,8 @@ fun TodayScreen(
     onOpenHistory: () -> Unit = {},
     onOpenAchievements: () -> Unit = {},
     onOpenNutrition: () -> Unit = {},
+    onOpenGoals: () -> Unit = {},
+    onOpenChess: () -> Unit = {},
 ) {
     val appData = Repo.data
     val day = Repo.today()
@@ -102,8 +104,8 @@ fun TodayScreen(
             Pill("⚡ ${p.streak} Tage", Amber)
         }
 
-        SectionLabel("Ziele heute")
-        AscendCard {
+        SectionLabel("Ziele heute", trailing = "verwalten →")
+        AscendCard(modifier = Modifier.clickable { onOpenGoals() }) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RingProgress(
                     progress = c.pct,
@@ -135,7 +137,7 @@ fun TodayScreen(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(11.dp)) {
             Stat("${day.water}/${p.waterGoal}", "Wasser", Modifier.weight(1f))
             Stat("${Repo.workoutSets(day)}", "Sätze", Modifier.weight(1f))
-            Stat("${p.chess.rating}", "Rating", Modifier.weight(1f))
+            Stat("${p.chess.rating}", "Schach", Modifier.weight(1f).clickable { onOpenChess() })
         }
 
         SectionLabel("Ernährung")

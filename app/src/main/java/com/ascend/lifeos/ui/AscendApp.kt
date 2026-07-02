@@ -18,11 +18,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MonitorHeart
 import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.TrackChanges
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,11 +58,9 @@ private data class Tab(val label: String, val icon: ImageVector)
 
 private val tabs = listOf(
     Tab("Heute", Icons.Rounded.Home),
-    Tab("Ziele", Icons.Rounded.TrackChanges),
-    Tab("Training", Icons.Rounded.FitnessCenter),
-    Tab("Schach", Icons.Rounded.GridView),
-    Tab("Körper", Icons.Rounded.MonitorHeart),
     Tab("Essen", Icons.Rounded.Restaurant),
+    Tab("Training", Icons.Rounded.FitnessCenter),
+    Tab("Körper", Icons.Rounded.MonitorHeart),
     Tab("Coach", Icons.Rounded.AutoAwesome),
 )
 
@@ -84,18 +80,20 @@ fun AscendApp() {
                 "subs" -> SubscriptionsScreen(onBack = { overlay = null })
                 "nutriOverview" -> NutritionOverviewScreen(onBack = { overlay = null })
                 "achievements" -> AchievementsScreen(onBack = { overlay = null })
+                "goals" -> GoalsScreen(onBack = { overlay = null })
+                "chess" -> ChessScreen(onBack = { overlay = null })
                 else -> when (selected) {
                     0 -> TodayScreen(
-                        onOpenCoach = { selected = 6 },
+                        onOpenCoach = { selected = 4 },
                         onOpenHistory = { overlay = "history" },
                         onOpenAchievements = { overlay = "achievements" },
-                        onOpenNutrition = { selected = 5 },
+                        onOpenNutrition = { selected = 1 },
+                        onOpenGoals = { overlay = "goals" },
+                        onOpenChess = { overlay = "chess" },
                     )
-                    1 -> GoalsScreen()
+                    1 -> NutritionScreen(onOpenOverview = { overlay = "nutriOverview" })
                     2 -> TrainingScreen()
-                    3 -> ChessScreen()
-                    4 -> BodyScreen()
-                    5 -> NutritionScreen(onOpenOverview = { overlay = "nutriOverview" })
+                    3 -> BodyScreen()
                     else -> CoachScreen(onOpenSubs = { overlay = "subs" })
                 }
             }
