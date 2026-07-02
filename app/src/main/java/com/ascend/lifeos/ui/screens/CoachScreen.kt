@@ -57,7 +57,7 @@ import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextPrimary
 
 @Composable
-fun CoachScreen() {
+fun CoachScreen(onOpenSubs: () -> Unit = {}) {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -150,6 +150,10 @@ fun CoachScreen() {
             Divider()
             SetRow("Streak-Freeze", if (p.freezeAvail > 0) "1 pro Woche · verfügbar" else "diese Woche genutzt") {
                 Pill("🧊 ${p.freezeAvail}")
+            }
+            Divider()
+            SetRow("Abos & Kosten", "Fixkosten tracken") {
+                Text("Öffnen  →", color = Accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { onOpenSubs() }.padding(4.dp))
             }
             Divider()
             SetRow("Backup", if (backupStatus.isEmpty()) "In Zwischenablage sichern / laden" else backupStatus) {

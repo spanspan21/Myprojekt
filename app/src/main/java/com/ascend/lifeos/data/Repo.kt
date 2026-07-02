@@ -123,6 +123,17 @@ object Repo {
 
     fun setReminders(on: Boolean) = updateProfile { it.copy(reminders = on) }
 
+    // ---- subscriptions ----
+    fun addSub(name: String, cost: Double, cycle: String) {
+        if (name.isBlank() || cost <= 0) return
+        updateProfile { it.copy(subs = it.subs + Subscription("s" + System.currentTimeMillis(), name.trim(), cost, cycle)) }
+    }
+
+    fun deleteSub(id: String) = updateProfile { p -> p.copy(subs = p.subs.filter { it.id != id }) }
+
+    fun subsMonthly(): Double = data.profile.subs.sumOf { if (it.cycle == "yearly") it.cost / 12.0 else it.cost }
+    fun subsYearly(): Double = data.profile.subs.sumOf { if (it.cycle == "yearly") it.cost else it.cost * 12.0 }
+
     // ---- training ----
     fun logSet(exId: String, value: Int) {
         val k = todayKey()

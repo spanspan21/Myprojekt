@@ -44,6 +44,15 @@ data class Chess(
 )
 
 @Serializable
+data class Subscription(
+    val id: String,
+    val name: String,
+    val cost: Double,
+    val cycle: String = "monthly", // monthly | yearly
+    val category: String = "",
+)
+
+@Serializable
 data class CoachMsg(val who: String, val text: String) // who = "me" | "cx"
 
 @Serializable
@@ -75,6 +84,7 @@ data class Profile(
     val workoutDays: Map<String, Boolean> = emptyMap(),
     val longGoals: List<LongGoal> = DEFAULT_LONG_GOALS,
     val chess: Chess = Chess(),
+    val subs: List<Subscription> = emptyList(),
 )
 
 @Serializable
