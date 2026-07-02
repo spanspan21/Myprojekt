@@ -17,12 +17,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.phaseNow
 import com.ascend.lifeos.core.todayLabel
+import com.ascend.lifeos.data.CalEvent
+import com.ascend.lifeos.data.CalendarSync
 import com.ascend.lifeos.data.Repo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.ascend.lifeos.ui.components.AscendCard
 import com.ascend.lifeos.ui.components.ProgressBar
 import com.ascend.lifeos.ui.components.RingProgress
@@ -55,6 +67,14 @@ fun TodayScreen(onOpenCoach: () -> Unit, onOpenHistory: () -> Unit = {}, onOpenA
     val c = Repo.completion(day, p)
     val phase = phaseNow()
     val pctInt = (c.pct * 100).toInt()
+
+    val ctx = LocalContext.current
+    var calGranted by remember { mutableStateOf(CalendarSync.granted(ctx)) }
+    var events by remember { mutableStateOf<List<CalEvent>>(emptyList()) }
+    val calLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { g -> calGranted = g }
+    LaunchedEffect(calGranted) {
+        if (calGranted) events = withContext(Dispatchers.IO) { CalendarSync.readToday(ctx) }
+    }
 
     Column(
         Modifier
@@ -113,6 +133,25 @@ fun TodayScreen(onOpenCoach: () -> Unit, onOpenHistory: () -> Unit = {}, onOpenA
             Stat("${p.chess.rating}", "Rating", Modifier.weight(1f))
         }
 
+        SectionLabel("Termine heute")
+        AscendCard {
+            if (!calGranted) {
+                Text("Verbinde deinen Kalender und sieh deine Termine für heute direkt hier.", color = TextMuted, fontSize = 13.5.sp, lineHeight = 20.sp)
+                Spacer(Modifier.height(12.dp))
+                Box(
+                    Modifier.clip(RoundedCornerShape(13.dp)).background(SurfaceHi).border(1.dp, Line, RoundedCornerShape(13.dp))
+                        .clickable { calLauncher.launch(CalendarSync.PERMISSION) }.padding(horizontal = 15.dp, vertical = 11.dp)
+                ) { Text("Kalender verbinden  →", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
+            } else if (events.isEmpty()) {
+                Text("Keine Termine heute — freie Bahn. 🎯", color = TextMuted, fontSize = 13.5.sp)
+            } else {
+                events.forEachIndexed { i, e ->
+                    EventRow(e)
+                    if (i < events.size - 1) Spacer(Modifier.height(11.dp))
+                }
+            }
+        }
+
         SectionLabel("Coach")
         AscendCard {
             Text(coachLine(c.done, c.total, p.streak, phase.emoji, phase.title), color = TextPrimary, fontSize = 14.sp, lineHeight = 21.sp)
@@ -135,6 +174,26 @@ private fun coachLine(done: Int, total: Int, streak: Int, emoji: String, title: 
         done >= total && total > 0 -> "Alles erledigt — Tag $streak. Kein Zufall, sondern Wiederholung. Ruh dich aus, morgen wieder."
         done >= (total * 0.6) -> "$done/$total — fast durch. Genau hier geben die meisten auf. Nicht du. Zieh die letzten $open durch."
         else -> "$emoji $title. Mach den ersten Schritt, bevor dein Kopf Ausreden erfindet. Wasser, ein Satz, ein Häkchen."
+    }
+}
+
+private fun hhmm(ms: Long): String {
+    val d = java.util.Date(ms)
+    return java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).format(d)
+}
+
+@Composable
+private fun EventRow(e: CalEvent) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.width(4.dp).height(38.dp).clip(RoundedCornerShape(2.dp)).background(Accent))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(e.title, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(
+                if (e.allDay) "ganztägig" else "${hhmm(e.start)} – ${hhmm(e.end)}",
+                color = TextDim, fontSize = 11.5.sp,
+            )
+        }
     }
 }
 
