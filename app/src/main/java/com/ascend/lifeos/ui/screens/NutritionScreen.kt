@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FoodApi
 import com.ascend.lifeos.data.FoodEntry
+import com.ascend.lifeos.data.FoodScore
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.components.AscendCard
 import com.ascend.lifeos.ui.components.AscendTextField
@@ -226,45 +227,93 @@ fun NutritionScreen() {
                     }
                     val prod = product
                     if (prod != null) {
-                        Spacer(Modifier.height(14.dp))
+                        val eval = FoodScore.evaluate(prod)
                         val g = grams.toIntOrNull() ?: 100
                         val f = g / 100.0
                         val kcal = (prod.kcal100 * f).roundToInt()
                         val prot = (prod.protein100 * f).roundToInt()
                         val carb = (prod.carbs100 * f).roundToInt()
                         val fat = (prod.fat100 * f).roundToInt()
+                        val cK = carb * 4; val pK = prot * 4; val fK = fat * 9
+                        val tot = (cK + pK + fK).coerceAtLeast(1)
+
+                        Spacer(Modifier.height(14.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(prod.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2)
+                                Text(prod.name, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2)
                                 val brand = prod.brand
                                 if (!brand.isNullOrBlank()) Text(brand, color = TextDim, fontSize = 11.5.sp)
                             }
                             if (prod.nutriScore.isNotEmpty()) { Spacer(Modifier.width(10.dp)); NutriScore(prod.nutriScore) }
                         }
-                        Spacer(Modifier.height(12.dp))
+
+                        // ---- health rating ----
+                        Spacer(Modifier.height(13.dp))
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(SurfaceHi).padding(14.dp)) {
+                            Text("LEBENSMITTELBEWERTUNG", color = TextDim, fontSize = 8.5.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(11.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                ScoreCircle(eval.score, eval.color)
+                                Spacer(Modifier.width(14.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(eval.label, color = Color(eval.color), fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+                                    Spacer(Modifier.height(6.dp))
+                                    eval.pros.forEach { ProCon(true, it) }
+                                    eval.cons.forEach { ProCon(false, it) }
+                                    if (eval.pros.isEmpty() && eval.cons.isEmpty()) Text("Keine Detaildaten verfügbar.", color = TextDim, fontSize = 11.5.sp)
+                                }
+                            }
+                        }
+
+                        // ---- portion ----
+                        Spacer(Modifier.height(13.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Menge", color = TextMuted, fontSize = 13.sp)
                             Spacer(Modifier.width(12.dp))
-                            AscendTextField(grams, { grams = it }, "g", Modifier.width(90.dp), number = true)
+                            AscendTextField(grams, { grams = it }, "g", Modifier.width(84.dp), number = true)
                             Spacer(Modifier.width(8.dp))
                             Text("g", color = TextDim, fontSize = 13.sp)
+                            Spacer(Modifier.weight(1f))
+                            Text("$kcal", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                            Text(" kcal", color = TextDim, fontSize = 12.sp)
                         }
-                        Spacer(Modifier.height(12.dp))
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                            MiniNut("$kcal", "kcal", Modifier.weight(1f))
-                            MiniNut("${prot}g", "Eiweiß", Modifier.weight(1f))
-                            MiniNut("${carb}g", "KH", Modifier.weight(1f))
-                            MiniNut("${fat}g", "Fett", Modifier.weight(1f))
-                        }
+
+                        // ---- macro rings ----
                         Spacer(Modifier.height(14.dp))
-                        AddButton {
-                            Repo.addFood(
-                                FoodEntry(
-                                    id = "", name = prod.name, meal = addMeal, kcal = kcal, protein = prot,
-                                    carbs = carb, fat = fat, grams = g, nutriScore = prod.nutriScore, barcode = prod.barcode,
-                                )
-                            )
-                            showAdd = false; resetAdd()
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            MacroRing("Kohlenhydrate", cK * 100 / tot, carb, Amber, Modifier.weight(1f))
+                            MacroRing("Protein", pK * 100 / tot, prot, Blue, Modifier.weight(1f))
+                            MacroRing("Fett", fK * 100 / tot, fat, Orange, Modifier.weight(1f))
+                        }
+
+                        if (prod.ingredients.isNotBlank()) {
+                            Spacer(Modifier.height(14.dp))
+                            Text("ZUTATEN", color = TextDim, fontSize = 8.5.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(5.dp))
+                            Text(prod.ingredients, color = TextMuted, fontSize = 11.5.sp, lineHeight = 17.sp, maxLines = 4)
+                        }
+
+                        // ---- eat or not ----
+                        Spacer(Modifier.height(16.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Box(
+                                Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(SurfaceHi).border(1.dp, Line2, RoundedCornerShape(14.dp))
+                                    .clickable { product = null; code = ""; status = "" }.padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("Verwerfen", color = TextMuted, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                            Box(
+                                Modifier.weight(1.4f).clip(RoundedCornerShape(14.dp)).background(Accent)
+                                    .clickable {
+                                        Repo.addFood(
+                                            FoodEntry(
+                                                id = "", name = prod.name, meal = addMeal, kcal = kcal, protein = prot,
+                                                carbs = carb, fat = fat, grams = g, nutriScore = prod.nutriScore, barcode = prod.barcode,
+                                            )
+                                        )
+                                        showAdd = false; resetAdd()
+                                    }.padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("Gegessen — hinzufügen", color = Bg, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                         }
                     }
                 } else {
@@ -412,6 +461,36 @@ private fun MiniNut(value: String, label: String, modifier: Modifier) {
     Column(modifier.clip(RoundedCornerShape(12.dp)).background(SurfaceHi).padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
         Text(label.uppercase(), color = TextDim, fontSize = 8.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun ScoreCircle(score: Int, colorLong: Long) {
+    Box(Modifier.size(52.dp).clip(RoundedCornerShape(50)).background(Color(colorLong)), contentAlignment = Alignment.Center) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text("$score", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+            Text("/10", color = Color.White.copy(alpha = 0.8f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun ProCon(positive: Boolean, text: String) {
+    Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(vertical = 2.dp)) {
+        Text(if (positive) "+" else "−", color = if (positive) Accent else Red, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.width(14.dp))
+        Text(text, color = TextMuted, fontSize = 11.5.sp, lineHeight = 15.sp)
+    }
+}
+
+@Composable
+private fun MacroRing(label: String, percent: Int, grams: Int, color: Color, modifier: Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        RingProgress(progress = percent / 100f, size = 60.dp, stroke = 6.dp, color = color) {
+            Text("$percent%", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(label, color = TextMuted, fontSize = 9.5.sp, maxLines = 1)
+        Text("${grams}g", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

@@ -23,7 +23,12 @@ object FoodApi {
         val carbs100: Double,
         val fat100: Double,
         val sugars100: Double,
+        val fiber100: Double,
+        val satFat100: Double,
+        val salt100: Double,
         val nutriScore: String, // a..e or ""
+        val nova: Int?,         // 1..4 processing level
+        val ingredients: String,
         val servingG: Int?,     // serving size in grams if known
     )
 
@@ -52,7 +57,8 @@ object FoodApi {
             if (barcode.length < 6) throw NotFound()
             val body = get(
                 "https://world.openfoodfacts.org/api/v2/product/$barcode.json" +
-                    "?fields=product_name,brands,nutriments,nutriscore_grade,serving_quantity"
+                    "?fields=product_name,product_name_de,brands,nutriments,nutriscore_grade," +
+                    "nova_group,serving_quantity,ingredients_text_de,ingredients_text"
             ) ?: error("blockiert")
             val d = JSONObject(body)
             if (d.optInt("status", 0) != 1) throw NotFound()
@@ -68,9 +74,11 @@ object FoodApi {
                 val kj = num("energy-kj_100g", "energy_100g")
                 if (kj > 0) kcal = kj / 4.184
             }
-            val name = p.optString("product_name").ifBlank { "Produkt $barcode" }
+            val name = p.optString("product_name_de").ifBlank { p.optString("product_name") }.ifBlank { "Produkt $barcode" }
             val brand = p.optString("brands").split(",").firstOrNull()?.trim()?.ifBlank { null }
             val serving = p.optString("serving_quantity").toDoubleOrNull()?.roundToInt()?.takeIf { it in 1..2000 }
+            val ingredients = p.optString("ingredients_text_de").ifBlank { p.optString("ingredients_text") }.trim()
+            val nova = p.optInt("nova_group", 0).takeIf { it in 1..4 }
 
             Product(
                 barcode = barcode,
@@ -81,7 +89,12 @@ object FoodApi {
                 carbs100 = num("carbohydrates_100g"),
                 fat100 = num("fat_100g"),
                 sugars100 = num("sugars_100g"),
+                fiber100 = num("fiber_100g"),
+                satFat100 = num("saturated-fat_100g"),
+                salt100 = num("salt_100g"),
                 nutriScore = p.optString("nutriscore_grade").lowercase().takeIf { it.length == 1 && it[0] in 'a'..'e' } ?: "",
+                nova = nova,
+                ingredients = ingredients,
                 servingG = serving,
             )
         }
