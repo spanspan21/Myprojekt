@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,12 +62,12 @@ import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private data class Meal(val code: String, val label: String, val emoji: String)
+private data class Meal(val code: String, val label: String, val short: String)
 private val MEALS = listOf(
-    Meal("b", "Frühstück", "🌅"),
-    Meal("l", "Mittagessen", "🍽️"),
-    Meal("d", "Abendessen", "🌙"),
-    Meal("s", "Snacks", "🍎"),
+    Meal("b", "Frühstück", "Früh"),
+    Meal("l", "Mittagessen", "Mittag"),
+    Meal("d", "Abendessen", "Abend"),
+    Meal("s", "Snacks", "Snack"),
 )
 
 @Composable
@@ -118,7 +122,8 @@ fun NutritionScreen() {
             .setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES)
             .setPrompt("Barcode ins Sichtfeld halten")
             .setBeepEnabled(true)
-            .setOrientationLocked(false)
+            .setOrientationLocked(true)
+            .setCaptureActivity(com.ascend.lifeos.PortraitCaptureActivity::class.java)
         scanLauncher.launch(opts)
     }
 
@@ -131,7 +136,7 @@ fun NutritionScreen() {
                 Text("Ernährung", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                 Text("Kalorien · Makros · Barcode", color = TextDim, fontSize = 12.sp)
             }
-            Chip("🎯 ${p.kcalGoal}") { showGoals = !showGoals }
+            Chip("Ziel · ${p.kcalGoal}") { showGoals = !showGoals }
         }
 
         // ---- Dashboard ring + macros ----
@@ -174,10 +179,10 @@ fun NutritionScreen() {
         // ---- Add actions ----
         Spacer(Modifier.height(18.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            BigAction("📷", "Barcode scannen", filled = true, modifier = Modifier.weight(1f)) {
+            BigAction(Icons.Rounded.PhotoCamera, "Barcode scannen", filled = true, modifier = Modifier.weight(1f)) {
                 startScan()
             }
-            BigAction("✏️", "Manuell", filled = false, modifier = Modifier.weight(1f)) {
+            BigAction(Icons.Rounded.Edit, "Manuell eingeben", filled = false, modifier = Modifier.weight(1f)) {
                 mode = "manual"; showAdd = true; resetAdd()
             }
         }
@@ -295,7 +300,7 @@ fun NutritionScreen() {
         MEALS.forEach { meal ->
             val items = day.meals.filter { it.meal == meal.code }
             val mkcal = items.sumOf { it.kcal }
-            SectionLabel("${meal.emoji}  ${meal.label}", trailing = if (mkcal > 0) "$mkcal kcal" else null)
+            SectionLabel(meal.label, trailing = if (mkcal > 0) "$mkcal kcal" else null)
             AscendCard {
                 if (items.isEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -361,9 +366,9 @@ private fun MealPicker(selected: String, onSelect: (String) -> Unit) {
                 Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                     .background(if (active) Accent else SurfaceHi)
                     .border(1.dp, if (active) Accent else Line2, RoundedCornerShape(11.dp))
-                    .clickable { onSelect(m.code) }.padding(vertical = 9.dp),
+                    .clickable { onSelect(m.code) }.padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text(m.emoji, fontSize = 15.sp, color = if (active) Bg else TextMuted) }
+            ) { Text(m.short, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = if (active) Bg else TextMuted) }
         }
     }
 }
@@ -432,15 +437,15 @@ private fun NutriScoreDot(grade: String) {
 }
 
 @Composable
-private fun BigAction(icon: String, label: String, filled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun BigAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, filled: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Column(
         modifier.clip(RoundedCornerShape(16.dp)).background(if (filled) Accent else Surface)
             .then(if (filled) Modifier else Modifier.border(1.dp, Line2, RoundedCornerShape(16.dp)))
-            .clickable { onClick() }.padding(vertical = 15.dp),
+            .clickable { onClick() }.padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(icon, fontSize = 20.sp)
-        Spacer(Modifier.height(5.dp))
+        Icon(icon, null, tint = if (filled) Bg else Accent, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.height(7.dp))
         Text(label, color = if (filled) Bg else TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
     }
 }

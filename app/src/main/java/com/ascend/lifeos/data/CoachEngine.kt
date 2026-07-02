@@ -44,10 +44,10 @@ object CoachEngine {
             )
             !Repo.trainedToday(day) -> listOf(
                 "Noch kein Satz heute$nm. Dein Körper wird nicht durch Absicht stärker, sondern durch Wiederholungen. Geh auf Training.",
-                "${ph.emoji} ${ph.title}. Ein Satz Klimmzüge schaltet oft den Rest des Tages frei.",
+                "${ph.title}. Ein Satz Klimmzüge schaltet oft den Rest des Tages frei.",
             )
             else -> listOf(
-                "${ph.emoji} ${ph.title}. ${c.done}/${c.total}$nm. ${if (og != null) "Nächster Zug: „$og“." else "Nächster kleiner Schritt — jetzt."}",
+                "${ph.title}. ${c.done}/${c.total}$nm. ${if (og != null) "Nächster Zug: „$og“." else "Nächster kleiner Schritt — jetzt."}",
                 "${if (s > 0) "Serie $s. " else ""}Du bist im Fluss — halt ihn. Was ist der nächste konkrete Schritt?",
             )
         }

@@ -116,7 +116,7 @@ fun TodayScreen(
                 }
                 Spacer(Modifier.width(20.dp))
                 Column {
-                    Text("${phase.emoji}  ${phase.title}", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(phase.title, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(6.dp))
                     Text("${c.done} von ${c.total} Zielen erledigt.", color = TextMuted, fontSize = 12.5.sp)
                 }
@@ -179,7 +179,7 @@ fun TodayScreen(
 
         SectionLabel("Coach")
         AscendCard {
-            Text(coachLine(c.done, c.total, p.streak, phase.emoji, phase.title), color = TextPrimary, fontSize = 14.sp, lineHeight = 21.sp)
+            Text(coachLine(c.done, c.total, p.streak, phase.title), color = TextPrimary, fontSize = 14.sp, lineHeight = 21.sp)
             Spacer(Modifier.height(14.dp))
             Row(
                 Modifier
@@ -193,12 +193,12 @@ fun TodayScreen(
     }
 }
 
-private fun coachLine(done: Int, total: Int, streak: Int, emoji: String, title: String): String {
+private fun coachLine(done: Int, total: Int, streak: Int, title: String): String {
     val open = total - done
     return when {
         done >= total && total > 0 -> "Alles erledigt — Tag $streak. Kein Zufall, sondern Wiederholung. Ruh dich aus, morgen wieder."
         done >= (total * 0.6) -> "$done/$total — fast durch. Genau hier geben die meisten auf. Nicht du. Zieh die letzten $open durch."
-        else -> "$emoji $title. Mach den ersten Schritt, bevor dein Kopf Ausreden erfindet. Wasser, ein Satz, ein Häkchen."
+        else -> "$title. Mach den ersten Schritt, bevor dein Kopf Ausreden erfindet. Wasser, ein Satz, ein Häkchen."
     }
 }
 
