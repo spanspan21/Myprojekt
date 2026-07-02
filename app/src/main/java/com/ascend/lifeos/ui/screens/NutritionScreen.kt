@@ -99,10 +99,27 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
     var product by remember { mutableStateOf<FoodApi.Product?>(null) }
     var grams by remember { mutableStateOf("100") }
     var showMicros by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var results by remember { mutableStateOf<List<FoodApi.Product>>(emptyList()) }
 
     fun resetAdd() {
         mName = ""; mKcal = ""; mProt = ""; mCarb = ""; mFat = ""
         code = ""; status = ""; product = null; grams = "100"
+        query = ""; results = emptyList(); showMicros = false
+    }
+
+    fun searchByName() {
+        if (query.trim().length < 2) { status = "Mind. 2 Zeichen eingeben"; return }
+        status = "Suche „${query.trim()}“…"; product = null; results = emptyList()
+        scope.launch {
+            FoodApi.search(query).fold(
+                onSuccess = {
+                    results = it
+                    status = if (it.isEmpty()) "Nichts gefunden — versuch es einfacher (z. B. „Brezel“)" else ""
+                },
+                onFailure = { status = "Netzwerkfehler bei der Suche" },
+            )
+        }
     }
 
     fun lookup(bc: String) {
@@ -224,20 +241,53 @@ fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
 
         // ---- Add panel ----
         if (showAdd) {
-            SectionLabel(if (mode == "barcode") "Barcode" else "Manuell hinzufügen")
+            SectionLabel(if (mode == "barcode") "Lebensmittel finden" else "Manuell hinzufügen")
             AscendCard {
                 MealPicker(addMeal) { addMeal = it }
                 Spacer(Modifier.height(12.dp))
                 if (mode == "barcode") {
+                    // Name search — for everything without a barcode (Brezel, Obst, Kantine).
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        AscendTextField(code, { code = it }, "Barcode-Nummer", Modifier.weight(1f), onDone = { lookup(code) }, number = true)
+                        AscendTextField(query, { query = it }, "Suche — z. B. Brezel, Banane, Döner", Modifier.weight(1f), onDone = { searchByName() })
                         Spacer(Modifier.width(9.dp))
                         Box(
-                            Modifier.clip(RoundedCornerShape(13.dp)).background(Accent).clickable { lookup(code) }.padding(horizontal = 16.dp, vertical = 13.dp),
+                            Modifier.clip(RoundedCornerShape(13.dp)).background(Accent).clickable { searchByName() }.padding(horizontal = 16.dp, vertical = 13.dp),
                         ) { Text("Suchen", color = Bg, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                    }
+                    Spacer(Modifier.height(9.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AscendTextField(code, { code = it }, "…oder Barcode-Nummer", Modifier.weight(1f), onDone = { lookup(code) }, number = true)
+                        Spacer(Modifier.width(9.dp))
+                        Box(
+                            Modifier.clip(RoundedCornerShape(13.dp)).background(SurfaceHi).border(1.dp, Line2, RoundedCornerShape(13.dp)).clickable { lookup(code) }.padding(horizontal = 16.dp, vertical = 13.dp),
+                        ) { Text("OK", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                     }
                     if (status.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp)); Text(status, color = TextMuted, fontSize = 12.5.sp)
+                    }
+                    if (results.isNotEmpty() && product == null) {
+                        Spacer(Modifier.height(11.dp))
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(SurfaceHi)) {
+                            results.forEachIndexed { i, r ->
+                                Row(
+                                    Modifier.fillMaxWidth().clickable {
+                                        product = r; grams = (r.servingG ?: 100).toString(); results = emptyList(); status = ""
+                                    }.padding(horizontal = 13.dp, vertical = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(r.name, color = TextPrimary, fontSize = 13.5.sp, maxLines = 1)
+                                        Text(
+                                            (r.brand ?: "") + (r.servingG?.let { "  ·  Portion ${it}g" } ?: ""),
+                                            color = TextDim, fontSize = 10.5.sp, maxLines = 1,
+                                        )
+                                    }
+                                    Spacer(Modifier.width(10.dp))
+                                    Text("${r.kcal100} kcal/100g", color = TextMuted, fontSize = 11.5.sp)
+                                }
+                                if (i < results.size - 1) Box(Modifier.fillMaxWidth().height(1.dp).background(Line))
+                            }
+                        }
                     }
                     val prod = product
                     if (prod != null) {

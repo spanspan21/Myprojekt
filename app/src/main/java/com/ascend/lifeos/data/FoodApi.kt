@@ -52,62 +52,85 @@ object FoodApi {
         return body
     }
 
+    private const val FIELDS = "code,product_name,product_name_de,brands,nutriments,nutriscore_grade," +
+        "nova_group,serving_quantity,ingredients_text_de,ingredients_text"
+
+    private fun parseProduct(p: JSONObject, fallbackCode: String): Product? {
+        val n = p.optJSONObject("nutriments") ?: JSONObject()
+        fun num(vararg keys: String): Double {
+            for (k in keys) if (n.has(k)) return n.optDouble(k, 0.0)
+            return 0.0
+        }
+        var kcal = num("energy-kcal_100g")
+        if (kcal <= 0.0) {
+            val kj = num("energy-kj_100g", "energy_100g")
+            if (kj > 0) kcal = kj / 4.184
+        }
+        if (kcal <= 0.0) return null
+        val code = p.optString("code").ifBlank { fallbackCode }
+        val name = p.optString("product_name_de").ifBlank { p.optString("product_name") }.ifBlank { return null }
+        val brand = p.optString("brands").split(",").firstOrNull()?.trim()?.ifBlank { null }
+        val serving = p.optString("serving_quantity").toDoubleOrNull()?.roundToInt()?.takeIf { it in 1..2000 }
+        val ingredients = p.optString("ingredients_text_de").ifBlank { p.optString("ingredients_text") }.trim()
+        val nova = p.optInt("nova_group", 0).takeIf { it in 1..4 }
+
+        val per100 = HashMap<String, Double>()
+        for (nd in NUTRIENTS) {
+            val key = nd.offKey + "_100g"
+            if (n.has(key)) {
+                val v = n.optDouble(key, -1.0)
+                if (v >= 0.0) per100[nd.id] = v
+            }
+        }
+
+        return Product(
+            barcode = code,
+            name = name,
+            brand = brand,
+            kcal100 = kcal.roundToInt(),
+            protein100 = num("proteins_100g"),
+            carbs100 = num("carbohydrates_100g"),
+            fat100 = num("fat_100g"),
+            sugars100 = num("sugars_100g"),
+            fiber100 = num("fiber_100g"),
+            satFat100 = num("saturated-fat_100g"),
+            salt100 = num("salt_100g"),
+            nutriScore = p.optString("nutriscore_grade").lowercase().takeIf { it.length == 1 && it[0] in 'a'..'e' } ?: "",
+            nova = nova,
+            ingredients = ingredients,
+            servingG = serving,
+            per100 = per100,
+        )
+    }
+
     suspend fun fetch(barcodeRaw: String): kotlin.Result<Product> = withContext(Dispatchers.IO) {
         runCatching {
             val barcode = barcodeRaw.filter { it.isDigit() }
             if (barcode.length < 6) throw NotFound()
-            val body = get(
-                "https://world.openfoodfacts.org/api/v2/product/$barcode.json" +
-                    "?fields=product_name,product_name_de,brands,nutriments,nutriscore_grade," +
-                    "nova_group,serving_quantity,ingredients_text_de,ingredients_text"
-            ) ?: error("blockiert")
+            val body = get("https://world.openfoodfacts.org/api/v2/product/$barcode.json?fields=$FIELDS")
+                ?: error("blockiert")
             val d = JSONObject(body)
             if (d.optInt("status", 0) != 1) throw NotFound()
-            val p = d.getJSONObject("product")
-            val n = p.optJSONObject("nutriments") ?: JSONObject()
+            parseProduct(d.getJSONObject("product"), barcode) ?: throw NotFound()
+        }
+    }
 
-            fun num(vararg keys: String): Double {
-                for (k in keys) if (n.has(k)) return n.optDouble(k, 0.0)
-                return 0.0
-            }
-            var kcal = num("energy-kcal_100g")
-            if (kcal <= 0.0) {
-                val kj = num("energy-kj_100g", "energy_100g")
-                if (kj > 0) kcal = kj / 4.184
-            }
-            val name = p.optString("product_name_de").ifBlank { p.optString("product_name") }.ifBlank { "Produkt $barcode" }
-            val brand = p.optString("brands").split(",").firstOrNull()?.trim()?.ifBlank { null }
-            val serving = p.optString("serving_quantity").toDoubleOrNull()?.roundToInt()?.takeIf { it in 1..2000 }
-            val ingredients = p.optString("ingredients_text_de").ifBlank { p.optString("ingredients_text") }.trim()
-            val nova = p.optInt("nova_group", 0).takeIf { it in 1..4 }
-
-            val per100 = HashMap<String, Double>()
-            for (nd in NUTRIENTS) {
-                val key = nd.offKey + "_100g"
-                if (n.has(key)) {
-                    val v = n.optDouble(key, -1.0)
-                    if (v >= 0.0) per100[nd.id] = v
-                }
-            }
-
-            Product(
-                barcode = barcode,
-                name = name,
-                brand = brand,
-                kcal100 = kcal.roundToInt(),
-                protein100 = num("proteins_100g"),
-                carbs100 = num("carbohydrates_100g"),
-                fat100 = num("fat_100g"),
-                sugars100 = num("sugars_100g"),
-                fiber100 = num("fiber_100g"),
-                satFat100 = num("saturated-fat_100g"),
-                salt100 = num("salt_100g"),
-                nutriScore = p.optString("nutriscore_grade").lowercase().takeIf { it.length == 1 && it[0] in 'a'..'e' } ?: "",
-                nova = nova,
-                ingredients = ingredients,
-                servingG = serving,
-                per100 = per100,
-            )
+    /** Free-text product search: built-in staples first (offline), then Open Food Facts. */
+    suspend fun search(termRaw: String): kotlin.Result<List<Product>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val term = termRaw.trim()
+            if (term.length < 2) return@runCatching emptyList()
+            val local = BasicFoods.search(term)
+            val remote = runCatching {
+                val enc = java.net.URLEncoder.encode(term, "UTF-8")
+                val body = get(
+                    "https://world.openfoodfacts.org/cgi/search.pl?search_terms=$enc" +
+                        "&search_simple=1&action=process&json=1&page_size=12&fields=$FIELDS"
+                ) ?: return@runCatching emptyList()
+                val arr = JSONObject(body).optJSONArray("products") ?: return@runCatching emptyList()
+                (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let { parseProduct(it, "") } }
+            }.getOrDefault(emptyList())
+            (local + remote).take(18)
         }
     }
 }
