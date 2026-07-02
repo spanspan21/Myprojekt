@@ -72,7 +72,7 @@ private val MEALS = listOf(
 )
 
 @Composable
-fun NutritionScreen() {
+fun NutritionScreen(onOpenOverview: () -> Unit = {}) {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -173,6 +173,19 @@ fun NutritionScreen() {
         if (showGoals) {
             Spacer(Modifier.height(12.dp))
             GoalsEditor(p)
+        }
+
+        Spacer(Modifier.height(12.dp))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Surface).border(1.dp, Line, RoundedCornerShape(14.dp))
+                .clickable { onOpenOverview() }.padding(horizontal = 15.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Alle Nährwerte & Mikros", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Vitamine, Mineralstoffe, Fettsäuren · Verlauf", color = TextDim, fontSize = 11.sp)
+            }
+            Text("→", color = TextDim, fontSize = 18.sp)
         }
 
         // ---- Add actions ----
