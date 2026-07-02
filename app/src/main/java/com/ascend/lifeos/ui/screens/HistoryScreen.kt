@@ -59,7 +59,7 @@ private val WEEKDAYS = arrayOf("MO", "DI", "MI", "DO", "FR", "SA", "SO")
 private fun keyOf(d: LocalDate) = "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
 
 @Composable
-fun HistoryScreen(onBack: () -> Unit) {
+fun HistoryScreen(onBack: () -> Unit, onOpenInsights: () -> Unit = {}) {
     val appData = Repo.data
     var ym by remember { mutableStateOf(YearMonth.now()) }
     var selected by remember { mutableStateOf<String?>(null) }
@@ -84,6 +84,10 @@ fun HistoryScreen(onBack: () -> Unit) {
                 Text("Verlauf", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                 Text("Dein Weg, Tag für Tag", color = TextDim, fontSize = 12.sp)
             }
+            Box(
+                Modifier.clip(RoundedCornerShape(12.dp)).background(SurfaceHi).border(1.dp, Line2, RoundedCornerShape(12.dp)).clickable { onOpenInsights() }.padding(horizontal = 13.dp, vertical = 9.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text("📊 Statistik", color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold) }
         }
 
         Spacer(Modifier.height(14.dp))

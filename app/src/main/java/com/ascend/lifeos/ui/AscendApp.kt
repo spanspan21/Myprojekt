@@ -42,6 +42,7 @@ import com.ascend.lifeos.ui.screens.ChessScreen
 import com.ascend.lifeos.ui.screens.CoachScreen
 import com.ascend.lifeos.ui.screens.GoalsScreen
 import com.ascend.lifeos.ui.screens.HistoryScreen
+import com.ascend.lifeos.ui.screens.InsightsScreen
 import com.ascend.lifeos.ui.screens.OnboardingScreen
 import com.ascend.lifeos.ui.screens.TodayScreen
 import com.ascend.lifeos.ui.screens.TrainingScreen
@@ -73,7 +74,8 @@ fun AscendApp() {
     Column(Modifier.fillMaxSize().background(Bg)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (overlay) {
-                "history" -> HistoryScreen(onBack = { overlay = null })
+                "history" -> HistoryScreen(onBack = { overlay = null }, onOpenInsights = { overlay = "insights" })
+                "insights" -> InsightsScreen(onBack = { overlay = "history" })
                 "achievements" -> AchievementsScreen(onBack = { overlay = null })
                 else -> when (selected) {
                     0 -> TodayScreen(
