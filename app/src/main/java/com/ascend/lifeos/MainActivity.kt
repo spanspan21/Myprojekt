@@ -8,6 +8,7 @@ import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.AscendApp
 import com.ascend.lifeos.ui.theme.AscendTheme
+import com.ascend.lifeos.widget.AscendWidget
 
 /**
  * Ascend — Life OS. Native Jetpack Compose app.
@@ -25,5 +26,11 @@ class MainActivity : ComponentActivity() {
                 AscendApp()
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Reflect the latest data on the home-screen widget when leaving the app.
+        AscendWidget.refresh(applicationContext)
     }
 }
