@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -52,6 +53,8 @@ import com.ascend.lifeos.ui.theme.SurfaceHi
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -64,7 +67,7 @@ private val MEALS = listOf(
 )
 
 @Composable
-fun NutritionScreen(onScanRequest: ((onResult: (String) -> Unit) -> Unit)? = null) {
+fun NutritionScreen() {
     val appData = Repo.data
     val day = Repo.today()
     val p = appData.profile
@@ -104,6 +107,19 @@ fun NutritionScreen(onScanRequest: ((onResult: (String) -> Unit) -> Unit)? = nul
                 onFailure = { status = if (it is FoodApi.NotFound) "Produkt nicht gefunden — manuell eingeben" else "Netzwerkfehler" },
             )
         }
+    }
+
+    val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        val scanned = result.contents
+        if (scanned != null) { mode = "barcode"; showAdd = true; code = scanned; lookup(scanned) }
+    }
+    fun startScan() {
+        val opts = ScanOptions()
+            .setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES)
+            .setPrompt("Barcode ins Sichtfeld halten")
+            .setBeepEnabled(true)
+            .setOrientationLocked(false)
+        scanLauncher.launch(opts)
     }
 
     Column(
@@ -159,8 +175,7 @@ fun NutritionScreen(onScanRequest: ((onResult: (String) -> Unit) -> Unit)? = nul
         Spacer(Modifier.height(18.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             BigAction("📷", "Barcode scannen", filled = true, modifier = Modifier.weight(1f)) {
-                mode = "barcode"; showAdd = true; resetAdd()
-                onScanRequest?.invoke { scanned -> code = scanned; lookup(scanned) }
+                startScan()
             }
             BigAction("✏️", "Manuell", filled = false, modifier = Modifier.weight(1f)) {
                 mode = "manual"; showAdd = true; resetAdd()

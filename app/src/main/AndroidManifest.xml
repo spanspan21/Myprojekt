@@ -17,6 +17,10 @@
     <!-- Read-only calendar sync: show today's events (opt-in). -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
+    <!-- Camera for the nutrition barcode scanner (opt-in). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <!-- Health Connect read permissions (fitness band / smartwatch data). -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
