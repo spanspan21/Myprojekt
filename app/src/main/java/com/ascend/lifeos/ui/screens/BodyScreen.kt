@@ -118,15 +118,16 @@ fun BodyScreen() {
 
             // Connected but nothing arrived -> the watch app isn't sharing into
             // Health Connect yet. Show diagnostics + exact fix per vendor app.
-            val liveEmpty = h != null && h.source == "live" &&
-                h.sleepMin == null && h.hrv == null && h.restingHr == null && h.hrSeries.isEmpty()
-            if (liveEmpty) {
+            val diagText = h?.takeIf {
+                it.source == "live" && it.sleepMin == null && it.hrv == null && it.restingHr == null && it.hrSeries.isEmpty()
+            }?.diag
+            if (diagText != null) {
                 Spacer(Modifier.height(13.dp))
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(SurfaceHi).padding(13.dp)) {
                     Text("Verbunden — aber keine Daten empfangen", color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
-                    if (h.diag.isNotBlank()) {
+                    if (diagText.isNotBlank()) {
                         Spacer(Modifier.height(4.dp))
-                        Text(h.diag, color = TextDim, fontSize = 10.5.sp)
+                        Text(diagText, color = TextDim, fontSize = 10.5.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     Text("Deine Uhr-App muss ihre Daten erst mit Health Connect teilen:", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
