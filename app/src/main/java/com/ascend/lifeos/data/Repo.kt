@@ -258,11 +258,12 @@ object Repo {
     }
 
     // ---- training ----
-    fun logSet(exId: String, value: Int) {
+    fun logSet(exId: String, value: Int, rpe: Int = 0) {
         val k = todayKey()
         val cur = data.days[k] ?: DayData()
         val sets = (cur.cali[exId] ?: emptyList()) + value
-        val newDay = cur.copy(cali = cur.cali + (exId to sets), workoutDone = true)
+        val rpes = (cur.caliRpe[exId] ?: List(sets.size - 1) { 0 }) + rpe.coerceIn(0, 10)
+        val newDay = cur.copy(cali = cur.cali + (exId to sets), caliRpe = cur.caliRpe + (exId to rpes), workoutDone = true)
         val dayBest = sets.max()
         val p = data.profile
         val newBest = if ((p.caliBest[exId] ?: 0) < value) p.caliBest + (exId to value) else p.caliBest
@@ -277,7 +278,27 @@ object Repo {
     fun removeSet(exId: String, index: Int) = updateDay { d ->
         val list = (d.cali[exId] ?: return@updateDay d).toMutableList()
         if (index in list.indices) list.removeAt(index)
-        if (list.isEmpty()) d.copy(cali = d.cali - exId) else d.copy(cali = d.cali + (exId to list))
+        val rpes = (d.caliRpe[exId] ?: emptyList()).toMutableList()
+        if (index in rpes.indices) rpes.removeAt(index)
+        if (list.isEmpty()) d.copy(cali = d.cali - exId, caliRpe = d.caliRpe - exId)
+        else d.copy(cali = d.cali + (exId to list), caliRpe = d.caliRpe + (exId to rpes))
+    }
+
+    fun setExLevel(exId: String, delta: Int) = updateProfile { p ->
+        val max = (PROGRESSIONS[exId]?.size ?: 1) - 1
+        p.copy(exLevel = p.exLevel + (exId to ((p.exLevel[exId] ?: baseLevel(exId)) + delta).coerceIn(0, max)))
+    }
+
+    /** Sets + RPEs of the most recent day (within 14 days, incl. today) on which [exId] was trained. */
+    fun lastWorkoutFor(exId: String): Pair<List<Int>, List<Int>>? {
+        var key = todayKey()
+        repeat(14) {
+            val d = data.days[key]
+            val sets = d?.cali?.get(exId)
+            if (!sets.isNullOrEmpty()) return sets to (d.caliRpe[exId] ?: emptyList())
+            key = prevKey(key)
+        }
+        return null
     }
 
     fun addExercise(name: String) {

@@ -114,6 +114,7 @@ data class DayData(
     val goals: List<Goal> = emptyList(),
     val water: Int = 0,
     val cali: Map<String, List<Int>> = emptyMap(),
+    val caliRpe: Map<String, List<Int>> = emptyMap(), // parallel to cali: RPE per set (0 = not rated)
     val workoutDone: Boolean = false,
     val reflection: String = "",
     val coachLog: List<CoachMsg> = emptyList(),
@@ -147,6 +148,8 @@ data class Profile(
     val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
     val caliDefs: List<ExerciseDef> = DEFAULT_EXERCISES,
     val caliBest: Map<String, Int> = emptyMap(),
+    val exLevel: Map<String, Int> = emptyMap(), // progression level per exercise id
+
     val exHist: Map<String, List<Int>> = emptyMap(),
     val workoutDays: Map<String, Boolean> = emptyMap(),
     val longGoals: List<LongGoal> = DEFAULT_LONG_GOALS,
