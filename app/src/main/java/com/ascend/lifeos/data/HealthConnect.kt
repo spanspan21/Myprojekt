@@ -56,11 +56,15 @@ object HealthConnect {
         val todayStart = LocalTime.of(6, 0)
             .let { LocalDate.now(zone).atTime(it).atZone(zone).toInstant() }
             .let { if (it.isAfter(now)) it.minus(1, ChronoUnit.DAYS) else it }
-        val sleepWindowStart = now.minus(20, ChronoUnit.HOURS)
+        // Generous windows: many watch apps sync into Health Connect with hours
+        // of delay, and sleep sessions are often written long after wake-up.
+        val hrStart = now.minus(24, ChronoUnit.HOURS)
+        val sleepWindowStart = now.minus(36, ChronoUnit.HOURS)
+        val vitalsStart = now.minus(48, ChronoUnit.HOURS)
 
         // Heart rate
         val hrRecords = client.readRecords(
-            ReadRecordsRequest(HeartRateRecord::class, timeRangeFilter = TimeRangeFilter.between(todayStart, now))
+            ReadRecordsRequest(HeartRateRecord::class, timeRangeFilter = TimeRangeFilter.between(hrStart, now))
         ).records
         val buckets = HashMap<Long, MutableList<Long>>()
         var minB = Long.MAX_VALUE; var maxB = 0L; var sum = 0L; var cnt = 0L
@@ -72,13 +76,15 @@ object HealthConnect {
         }
         val series = buckets.toSortedMap().map { (b, list) -> HrPoint(b * 5 * 60 * 1000, list.average().roundToInt()) }
 
-        val hrv = client.readRecords(
-            ReadRecordsRequest(HeartRateVariabilityRmssdRecord::class, timeRangeFilter = TimeRangeFilter.between(sleepWindowStart, now))
-        ).records.maxByOrNull { it.time }?.heartRateVariabilityMillis?.roundToInt()
+        val hrvRecords = client.readRecords(
+            ReadRecordsRequest(HeartRateVariabilityRmssdRecord::class, timeRangeFilter = TimeRangeFilter.between(vitalsStart, now))
+        ).records
+        val hrv = hrvRecords.maxByOrNull { it.time }?.heartRateVariabilityMillis?.roundToInt()
 
-        val rhr = client.readRecords(
-            ReadRecordsRequest(RestingHeartRateRecord::class, timeRangeFilter = TimeRangeFilter.between(sleepWindowStart, now))
-        ).records.maxByOrNull { it.time }?.beatsPerMinute?.toInt()
+        val rhrRecords = client.readRecords(
+            ReadRecordsRequest(RestingHeartRateRecord::class, timeRangeFilter = TimeRangeFilter.between(vitalsStart, now))
+        ).records
+        val rhr = rhrRecords.maxByOrNull { it.time }?.beatsPerMinute?.toInt()
 
         val steps = client.readRecords(
             ReadRecordsRequest(StepsRecord::class, timeRangeFilter = TimeRangeFilter.between(todayStart, now))
@@ -112,6 +118,8 @@ object HealthConnect {
             hrMin = if (cnt > 0) minB.toInt() else null,
             hrMax = if (cnt > 0) maxB.toInt() else null,
             hrAvg = if (cnt > 0) (sum.toDouble() / cnt).roundToInt() else null,
+            diag = "Gefunden: $cnt Puls-Messwerte · ${sleepRecords.size} Schlaf-Sessions · " +
+                "${hrvRecords.size} HRV · ${rhrRecords.size} Ruhepuls · $steps Schritte",
         )
     }
 

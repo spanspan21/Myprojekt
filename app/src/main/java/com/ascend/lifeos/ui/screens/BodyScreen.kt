@@ -115,6 +115,35 @@ fun BodyScreen() {
                 )
                 if (status.isNotEmpty()) { Spacer(Modifier.weight(1f)); Text(status, color = TextDim, fontSize = 11.sp) }
             }
+
+            // Connected but nothing arrived -> the watch app isn't sharing into
+            // Health Connect yet. Show diagnostics + exact fix per vendor app.
+            val liveEmpty = h != null && h.source == "live" &&
+                h.sleepMin == null && h.hrv == null && h.restingHr == null && h.hrSeries.isEmpty()
+            if (liveEmpty) {
+                Spacer(Modifier.height(13.dp))
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(SurfaceHi).padding(13.dp)) {
+                    Text("Verbunden — aber keine Daten empfangen", color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
+                    if (h.diag.isNotBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(h.diag, color = TextDim, fontSize = 10.5.sp)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Deine Uhr-App muss ihre Daten erst mit Health Connect teilen:", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Bullet("Samsung Health: Einstellungen → Health Connect → alle Daten freigeben")
+                    Bullet("Zepp / Amazfit: Profil → Add-ons → Health Connect aktivieren")
+                    Bullet("Garmin / Fitbit / Polar: in der App den Health-Connect-Sync einschalten")
+                    Bullet("Danach kurz warten und unten neu verbinden — Sync kann Minuten dauern.")
+                    Spacer(Modifier.height(10.dp))
+                    Row {
+                        Box(
+                            Modifier.clip(RoundedCornerShape(11.dp)).background(Bg).border(1.dp, Line2, RoundedCornerShape(11.dp))
+                                .clickable { HealthConnect.openSettings(ctx) }.padding(horizontal = 13.dp, vertical = 9.dp),
+                        ) { Text("Health Connect öffnen", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                    }
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RingProgress(
@@ -130,7 +159,13 @@ fun BodyScreen() {
                 Spacer(Modifier.width(18.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        if (h == null) "Verbinde deine Uhr" else if (rec != null && rec >= 66) "Grün — heute Vollgas" else if (rec != null && rec >= 40) "Gelb — dosiert pushen" else "Rot — Regeneration",
+                        when {
+                            h == null -> "Verbinde deine Uhr"
+                            rec == null -> "Keine Daten — Sync prüfen"
+                            rec >= 66 -> "Grün — heute Vollgas"
+                            rec >= 40 -> "Gelb — dosiert pushen"
+                            else -> "Rot — Regeneration"
+                        },
                         color = TextPrimary, fontSize = 14.5.sp, fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.height(6.dp))

@@ -177,6 +177,7 @@ data class HealthSnapshot(
     val hrMin: Int? = null,
     val hrMax: Int? = null,
     val hrAvg: Int? = null,
+    val diag: String = "", // record counts from the last sync, for troubleshooting
 )
 
 @Serializable

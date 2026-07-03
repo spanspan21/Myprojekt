@@ -390,6 +390,8 @@ object Repo {
 
     fun recoveryScore(h: HealthSnapshot? = data.health): Int? {
         if (h == null) return null
+        // No real signals -> no score (an empty live snapshot must not pretend).
+        if (h.sleepMin == null && h.hrv == null && h.restingHr == null) return null
         var score = 55.0
         if (h.sleepMin != null) {
             score = (h.sleepMin / 480.0) * 60 +
