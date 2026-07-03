@@ -35,15 +35,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.ExerciseDef
+import com.ascend.lifeos.data.PROGRESSIONS
+import com.ascend.lifeos.data.ProgressionEngine
+import com.ascend.lifeos.data.Recommendation
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.baseLevel
+import com.ascend.lifeos.data.displayName
 import com.ascend.lifeos.ui.components.AscendCard
 import com.ascend.lifeos.ui.components.AscendTextField
+import com.ascend.lifeos.ui.components.HudCurve
+import com.ascend.lifeos.ui.components.LoadBars
 import com.ascend.lifeos.ui.components.ProgressBar
 import com.ascend.lifeos.ui.components.SectionLabel
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Bg
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Line2
+import com.ascend.lifeos.ui.theme.Red
 import com.ascend.lifeos.ui.theme.SurfaceHi
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
@@ -64,6 +72,7 @@ fun TrainingScreen() {
     val day = Repo.today()
     val p = appData.profile
     val stepVals = remember { mutableStateMapOf<String, Int>() }
+    val rpeVals = remember { mutableStateMapOf<String, Int>() }
     var addExc by remember { mutableStateOf("") }
 
     var restLen by remember { mutableIntStateOf(90) }
@@ -83,7 +92,7 @@ fun TrainingScreen() {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
                 Text("Training", color = TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
-                Text("Calisthenics · Sätze & Wiederholungen", color = TextDim, fontSize = 12.sp)
+                Text("Calisthenics · Adaptive Progression", color = TextDim, fontSize = 12.sp)
             }
             Pill("🗓 ${Repo.weekWorkouts()}/Woche")
         }
@@ -95,6 +104,33 @@ fun TrainingScreen() {
                 StatBig("${Repo.workoutReps(day)}", "Wdh gesamt")
                 StatBig("${day.cali.count { it.value.isNotEmpty() }}", "Übungen")
             }
+        }
+
+        SectionLabel("Jarvis", "nächste Einheit")
+        AscendCard {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("FOKUS HEUTE", color = TextDim, fontSize = 9.sp, letterSpacing = 1.4.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(3.dp))
+                    Text("${ProgressionEngine.focusToday()}-Tag", color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                }
+                Text("am wenigsten trainiert\nin 7 Tagen", color = TextDim, fontSize = 10.sp, lineHeight = 13.sp)
+            }
+            val recs = ProgressionEngine.all()
+            if (recs.isEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text("Logge deine erste Einheit — danach plant Jarvis hier deinen nächsten Schritt pro Übung.", color = TextDim, fontSize = 12.sp, lineHeight = 17.sp)
+            } else {
+                recs.take(3).forEach { r ->
+                    Spacer(Modifier.height(12.dp))
+                    RecommendationRow(r)
+                }
+            }
+        }
+
+        SectionLabel("Aktivierung", "Volumen · 7 Tage")
+        AscendCard {
+            LoadBars(ProgressionEngine.weekVolume().toList())
         }
 
         SectionLabel("Routinen & Pause")
@@ -131,20 +167,25 @@ fun TrainingScreen() {
         SectionLabel("Übungen", "Satz antippen = löschen")
         Spacer(Modifier.height(2.dp))
         p.caliDefs.forEach { ex ->
+            val lvl = p.exLevel[ex.id] ?: baseLevel(ex.id)
             Spacer(Modifier.height(11.dp))
             ExerciseCard(
                 ex = ex,
+                name = displayName(ex, lvl),
+                level = if (PROGRESSIONS.containsKey(ex.id)) lvl + 1 else 0,
                 sets = day.cali[ex.id] ?: emptyList(),
                 best = p.caliBest[ex.id],
                 stepVal = stepVals[ex.id] ?: if (ex.unit == "sec") 30 else 10,
-                trend = (p.exHist[ex.id] ?: emptyList()).takeLast(6),
+                rpeVal = rpeVals[ex.id] ?: 0,
+                trend = (p.exHist[ex.id] ?: emptyList()).takeLast(10),
                 onStep = { delta ->
                     val cur = stepVals[ex.id] ?: if (ex.unit == "sec") 30 else 10
                     stepVals[ex.id] = (cur + delta * (if (ex.unit == "sec") 5 else 1)).coerceAtLeast(1)
                 },
+                onRpe = { r -> rpeVals[ex.id] = if (rpeVals[ex.id] == r) 0 else r },
                 onLog = {
                     val v = stepVals[ex.id] ?: if (ex.unit == "sec") 30 else 10
-                    Repo.logSet(ex.id, v)
+                    Repo.logSet(ex.id, v, rpeVals[ex.id] ?: 0)
                     restRemaining = restLen; restRunning = true
                 },
                 onDelete = { Repo.deleteExercise(ex.id) },
@@ -163,15 +204,46 @@ fun TrainingScreen() {
     }
 }
 
+@Composable
+private fun RecommendationRow(r: Recommendation) {
+    val dot = when (r.kind) {
+        "levelup" -> Accent
+        "deload" -> Red
+        "push" -> TextPrimary
+        else -> TextDim
+    }
+    Row(verticalAlignment = Alignment.Top) {
+        Box(Modifier.padding(top = 5.dp).size(7.dp).clip(RoundedCornerShape(50)).background(dot))
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f)) {
+            Text("${r.exName} — ${r.title}", color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(2.dp))
+            Text(r.detail, color = TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp)
+            if (r.kind == "levelup") {
+                Spacer(Modifier.height(7.dp))
+                Box(
+                    Modifier.clip(RoundedCornerShape(10.dp)).background(Accent)
+                        .clickable { Repo.setExLevel(r.exId, +1) }
+                        .padding(horizontal = 13.dp, vertical = 7.dp),
+                ) { Text("Freischalten →", color = Bg, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ExerciseCard(
     ex: ExerciseDef,
+    name: String,
+    level: Int,
     sets: List<Int>,
     best: Int?,
     stepVal: Int,
+    rpeVal: Int,
     trend: List<Int>,
     onStep: (Int) -> Unit,
+    onRpe: (Int) -> Unit,
     onLog: () -> Unit,
     onDelete: () -> Unit,
     onRemoveSet: (Int) -> Unit,
@@ -182,7 +254,13 @@ private fun ExerciseCard(
     val hit = todayBest >= target
     AscendCard(padding = 16.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(ex.name, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            Text(name, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            if (level > 0) {
+                Box(Modifier.clip(RoundedCornerShape(20.dp)).background(SurfaceHi).border(0.5.dp, Line2, RoundedCornerShape(20.dp)).padding(horizontal = 9.dp, vertical = 3.dp)) {
+                    Text("LVL $level", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                }
+                Spacer(Modifier.width(7.dp))
+            }
             if (best != null && best > 0) {
                 Box(Modifier.clip(RoundedCornerShape(20.dp)).background(Amber.copy(alpha = 0.09f)).border(1.dp, Amber.copy(alpha = 0.22f), RoundedCornerShape(20.dp)).padding(horizontal = 10.dp, vertical = 3.dp)) {
                     Text("Best $best${if (ex.unit == "sec") "s" else ""}", color = Amber, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -193,9 +271,13 @@ private fun ExerciseCard(
         }
         Spacer(Modifier.height(7.dp))
         Text(
-            "Ziel heute: $target${if (ex.unit == "sec") "s" else ""}${if (hit) " ✓" else ""}" + if (trend.isNotEmpty()) "  ·  Verlauf: ${trend.joinToString(" · ")}" else "",
+            "Ziel heute: $target${if (ex.unit == "sec") "s" else ""}${if (hit) " ✓" else ""}",
             color = if (hit) Accent else TextDim, fontSize = 11.sp,
         )
+        if (trend.size >= 2) {
+            Spacer(Modifier.height(10.dp))
+            HudCurve(trend, height = 64.dp)
+        }
         Spacer(Modifier.height(12.dp))
         if (sets.isEmpty()) {
             Text("Noch kein Satz — leg los.", color = TextDim, fontSize = 12.5.sp)
@@ -209,6 +291,22 @@ private fun ExerciseCard(
             }
         }
         Spacer(Modifier.height(13.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("RPE", color = TextDim, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Spacer(Modifier.width(9.dp))
+            (6..10).forEach { r ->
+                val active = rpeVal == r
+                Box(
+                    Modifier.padding(end = 6.dp).clip(RoundedCornerShape(9.dp))
+                        .background(if (active) Accent else SurfaceHi)
+                        .border(0.5.dp, if (active) Accent else Line2, RoundedCornerShape(9.dp))
+                        .clickable { onRpe(r) }.padding(horizontal = 10.dp, vertical = 6.dp),
+                ) { Text("$r", color = if (active) Bg else TextMuted, fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+            }
+            Spacer(Modifier.weight(1f))
+            Text("Anstrengung", color = TextDim.copy(alpha = 0.7f), fontSize = 9.sp)
+        }
+        Spacer(Modifier.height(11.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.clip(RoundedCornerShape(12.dp)).background(SurfaceHi).border(1.dp, Line2, RoundedCornerShape(12.dp)), verticalAlignment = Alignment.CenterVertically) {
                 MiniStep("−") { onStep(-1) }

@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.PlannerEngine
 import com.ascend.lifeos.core.phaseNow
+import com.ascend.lifeos.data.ProgressionEngine
 import com.ascend.lifeos.core.todayLabel
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.components.ProgressBar
@@ -246,10 +247,18 @@ private fun SharedTransitionScope.BentoGrid(scope: AnimatedVisibilityScope, onOp
                 BentoTile(
                     key = "training", scope = scope,
                     icon = Icons.Rounded.FitnessCenter, title = "Training",
-                    metric = "${Repo.workoutSets(day)}", sub = "Sätze · ${Repo.weekWorkouts()}× Woche",
                     modifier = Modifier.weight(1f).aspectRatio(1f),
                     onClick = { onOpen("training") },
-                )
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    Text("${ProgressionEngine.focusToday()}-Tag", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        ProgressionEngine.top()?.let { "${it.exName}: ${it.title}" }
+                            ?: "${Repo.workoutSets(day)} Sätze · ${Repo.weekWorkouts()}× Woche",
+                        color = SubGray, fontSize = 10.5.sp, maxLines = 1,
+                    )
+                }
             }
 
             // Row 3 — Schlaf · Finanzen
