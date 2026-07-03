@@ -116,26 +116,44 @@ fun BodyScreen() {
                 if (status.isNotEmpty()) { Spacer(Modifier.weight(1f)); Text(status, color = TextDim, fontSize = 11.sp) }
             }
 
-            // Connected but nothing arrived -> the watch app isn't sharing into
-            // Health Connect yet. Show diagnostics + exact fix per vendor app.
-            val diagText = h?.takeIf {
+            // Connected but some record types never arrive -> the watch app has
+            // permission but isn't exporting those types into Health Connect yet.
+            val missing = h?.takeIf {
                 it.source == "live" && it.sleepMin == null && it.hrv == null && it.restingHr == null && it.hrSeries.isEmpty()
-            }?.diag
-            if (diagText != null) {
+            }
+            if (missing != null) {
+                // Steps coming through proves our read + permissions work end to
+                // end; a partial gap is a vendor-app export delay, not a bug here.
+                val partial = missing.steps != null && missing.steps > 0
                 Spacer(Modifier.height(13.dp))
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(SurfaceHi).padding(13.dp)) {
-                    Text("Verbunden — aber keine Daten empfangen", color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
-                    if (diagText.isNotBlank()) {
+                    Text(
+                        if (partial) "Berechtigungen ok — Schlaf & Puls fehlen noch" else "Verbunden — aber keine Daten empfangen",
+                        color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.Bold,
+                    )
+                    if (missing.diag.isNotBlank()) {
                         Spacer(Modifier.height(4.dp))
-                        Text(diagText, color = TextDim, fontSize = 10.5.sp)
+                        Text(missing.diag, color = TextDim, fontSize = 10.5.sp)
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Deine Uhr-App muss ihre Daten erst mit Health Connect teilen:", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
-                    Spacer(Modifier.height(6.dp))
-                    Bullet("Samsung Health: Einstellungen → Health Connect → alle Daten freigeben")
-                    Bullet("Zepp / Amazfit: Profil → Add-ons → Health Connect aktivieren")
-                    Bullet("Garmin / Fitbit / Polar: in der App den Health-Connect-Sync einschalten")
-                    Bullet("Danach kurz warten und unten neu verbinden — Sync kann Minuten dauern.")
+                    if (partial) {
+                        Text(
+                            "Schritte kommen an — Health Connect und die Berechtigungen funktionieren also. Deine Uhr-App exportiert Schlaf/Puls/HRV nur unregelmäßig dorthin:",
+                            color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Bullet("Öffne zuerst Samsung Health / deine Uhr-App selbst — zeigt SIE dort Schlaf & Puls an?")
+                        Bullet("Wenn ja: Samsung Health → Einstellungen → Health Connect → Berechtigung einmal aus- und wieder einschalten (erzwingt neuen Export)")
+                        Bullet("Wenn nein: die Uhr hat noch nicht mit der Uhr-App synchronisiert — dort zuerst prüfen")
+                        Bullet("Erster Voll-Export kann laut Samsung bis zu 24h dauern")
+                    } else {
+                        Text("Deine Uhr-App muss ihre Daten erst mit Health Connect teilen:", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+                        Spacer(Modifier.height(6.dp))
+                        Bullet("Samsung Health: Einstellungen → Health Connect → alle Daten freigeben")
+                        Bullet("Zepp / Amazfit: Profil → Add-ons → Health Connect aktivieren")
+                        Bullet("Garmin / Fitbit / Polar: in der App den Health-Connect-Sync einschalten")
+                        Bullet("Danach kurz warten und unten neu verbinden — Sync kann Minuten dauern.")
+                    }
                     Spacer(Modifier.height(10.dp))
                     Row {
                         Box(
