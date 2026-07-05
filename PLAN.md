@@ -82,6 +82,15 @@
 8. **Weitere Engine-Tests**: `TrainBrain`, `PlanGenerator`, `MuscleRecovery`
    (data/training/) nach dem Muster von Zyklus 4 entkoppeln und testen.
 
-**Stand 20:38:** 20:45-Grenze fast erreicht → heute keine neuen Ideen mehr; Loop läuft
-bis zum Ziel-Check (≥21:00 Uhr, alles committet), dann Ende. Ideen 6–8 sind die
-Startpunkte für die nächste Session.
+## Session-Abschluss (2026-07-05, 21:00)
+
+**8 Zyklen, 9 Commits, alles grün.** Finale Verifikation 20:59: `testDebugUnitTest`
+(56/56) + `assembleDebug` erfolgreich, Working Tree sauber, nichts halb fertig.
+
+Ergebnis der Session: JARVIS-v2-Baseline gesichert (`f568a1c`), Crash-Blackbox
+(neue nutzersichtbare Funktion inkl. Changelog-Eintrag), SystemSheet-Dead-Code raus,
+Test-Suite von 0 auf 56 (WaterCalc, FoodScore, AdaptiveTdee entkoppelt, NutritionCalc,
+Progression-Strategien, FastingCalc).
+
+**Startpunkte für die nächste Session:** Ideen 6–8 oben (Boot-Flow-Politur,
+`Repo.kt`-Sichtung, TrainBrain/PlanGenerator/MuscleRecovery-Tests).
