@@ -52,6 +52,13 @@
       monoton, Input-Klemmen (Alter/Größe/Gewicht), Carbs ≥ 0. Suite: 35 Tests grün.
       (Aufruferprüfung: activity ist 1-basiert dokumentiert & genutzt — kein Bug.)
 
+### Zyklus 6 (2026-07-05, 20:31 – 20:33) ✅
+- [x] **Progression-Strategie-Tests**: 15 Tests — LevelUp (3 starke Sätze + Reserve,
+      höhere Hürde ohne RPE, Sekunden-Schwellen, letzte Stufe, <3 Sätze), Deload
+      (Ø RPE ≥ 9.2, unbewertete Sätze zählen nicht), RepProgression (push vs. hold,
+      +2 Wdh / +10 s), `baseLevel`-Kette, `groupOf`-Heuristik (IDs + Namens-Matching).
+      Suite: 50 Tests, 0 Failures.
+
 ## Priorisierte Ideen (nächste Zyklen)
 
 1. ~~**Crash-Blackbox**~~ → Zyklus 1 ✅
