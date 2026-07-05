@@ -18,12 +18,13 @@
 
 ## Zyklus-Log
 
-### Zyklus 1 (2026-07-05, 20:09 – laufend)
-- [x] Baseline gesichert: kompletter JARVIS-v2-Stand als Commit (Schutz vor Datenverlust,
-      saubere Basis für Einzel-Commits)
-- [ ] **Crash-Blackbox** (in Arbeit): `UncaughtExceptionHandler` schreibt Stacktrace nach
+### Zyklus 1 (2026-07-05, 20:09 – 20:30) ✅
+- [x] Baseline gesichert: kompletter JARVIS-v2-Stand als Commit `f568a1c` (Schutz vor
+      Datenverlust, saubere Basis für Einzel-Commits)
+- [x] **Crash-Blackbox**: `UncaughtExceptionHandler` schreibt Stacktrace nach
       `filesDir/crashlog` (max. 5 Reports), Settings → Diagnostics teilt den letzten Report
       per Share-Sheet (zum Einfügen in eine Dev-Session) + Clear. Neue `JarvisApp`-Application-Klasse.
+      Build-Test: `assembleDebug` grün.
 
 ## Priorisierte Ideen (nächste Zyklen)
 

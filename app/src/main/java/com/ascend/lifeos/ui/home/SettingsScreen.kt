@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Backup
+import com.ascend.lifeos.data.CrashLog
 import com.ascend.lifeos.data.JarvisSpeech
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Protocols
@@ -270,6 +271,25 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             ActionRow("Recalibrate", "Re-run the boot sequence — data stays") {
                 Repo.rebootOnboarding(); onClose()
+            }
+        }
+
+        // ── DIAGNOSTICS ──────────────────────────────────────────────
+        // Only surfaces once something actually crashed — the black box.
+        var crashStamp by remember { mutableStateOf(CrashLog.latestStamp(ctx)) }
+        crashStamp?.let { stamp ->
+            SettingsSection("Diagnostics") {
+                ActionRow("Share crash report", "Last crash: $stamp — send it to your dev chat") {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_SUBJECT, "JARVIS crash report")
+                        putExtra(android.content.Intent.EXTRA_TEXT, CrashLog.read(ctx) ?: "No report found")
+                    }
+                    runCatching { ctx.startActivity(android.content.Intent.createChooser(send, "Share crash report")) }
+                }
+                ActionRow("Clear crash logs", "Removes all stored reports") {
+                    CrashLog.clear(ctx); crashStamp = null
+                }
             }
         }
 
