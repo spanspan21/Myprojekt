@@ -64,6 +64,10 @@
       (4/12/24 h), elapsedHours-Kanten (unset, Clock-Skew), Stats (Adherence mit
       15-Min-Gnade, Streak vom Ende mit Reset, Leerfall). Suite: 56 Tests, 0 Failures.
 
+### Zyklus 8 (2026-07-05, 20:36 – 20:38) ✅
+- [x] **Changelog-Eintrag**: Crash-Blackbox ins "System Updates"-Sheet — der nächste
+      Geräte-Build zeigt die Neuerung an. `assembleDebug` grün. (Mini-Zyklus vor 20:45.)
+
 ## Priorisierte Ideen (nächste Zyklen)
 
 1. ~~**Crash-Blackbox**~~ → Zyklus 1 ✅

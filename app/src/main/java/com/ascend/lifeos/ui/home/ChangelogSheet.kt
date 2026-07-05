@@ -28,6 +28,7 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "Crash black box — if JARVIS ever crashes, Settings → Diagnostics holds the report, ready to share",
         "Settings hub — every module, notification and experiment is a toggle now",
         "Protocols — WHEN→THEN directives on Home (game day, exams, low recovery)",
         "School OS — grades in points, homework with Untis deadlines, vocab decks",
