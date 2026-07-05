@@ -46,6 +46,12 @@
       unsortierte Samples, lose/gain-Anpassung, 1400er-Klemme, Confidence-Schwellen.
       `testDebugUnitTest` (28 Tests) + `assembleDebug` grün.
 
+### Zyklus 5 (2026-07-05, 20:27 – 20:32) ✅
+- [x] **NutritionCalc-Tests**: 7 Tests — Mifflin–St-Jeor-Referenzprofil (2389 kcal / 126 P /
+      330 C / 63 F), m/f-Differenz, Cut −20 % / Build +15 %, Aktivitätsstufen 1..5 streng
+      monoton, Input-Klemmen (Alter/Größe/Gewicht), Carbs ≥ 0. Suite: 35 Tests grün.
+      (Aufruferprüfung: activity ist 1-basiert dokumentiert & genutzt — kein Bug.)
+
 ## Priorisierte Ideen (nächste Zyklen)
 
 1. ~~**Crash-Blackbox**~~ → Zyklus 1 ✅
