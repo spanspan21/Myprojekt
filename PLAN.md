@@ -26,6 +26,11 @@
       per Share-Sheet (zum Einfügen in eine Dev-Session) + Clear. Neue `JarvisApp`-Application-Klasse.
       Build-Test: `assembleDebug` grün.
 
+### Zyklus 2 (2026-07-05, 20:30 – 20:35) ✅
+- [x] **SystemSheet-Cleanup**: totes UI aus `AscendApp.kt` entfernt (410 → 260 Zeilen) —
+      `systemOpen` wurde nie true, SettingsScreen deckt Backup/Restore/Export/Recalibrate ab.
+      Inklusive `SystemAction`-Helper und 16 verwaister Imports. Build-Test: `assembleDebug` grün.
+
 ## Priorisierte Ideen (nächste Zyklen)
 
 1. **[Zyklus 1] Crash-Blackbox** — höchste Priorität: ohne sie ist jeder Absturz auf dem

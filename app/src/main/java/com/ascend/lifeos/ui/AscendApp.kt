@@ -16,13 +16,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,18 +28,10 @@ import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Hexagon
-import androidx.compose.material.icons.rounded.Assessment
-import androidx.compose.material.icons.rounded.IosShare
-import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material.icons.rounded.Save
-import androidx.compose.material.icons.rounded.SettingsBackupRestore
 import androidx.compose.material.icons.rounded.MonitorHeart
 import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,10 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.boot.BootScreen
 import com.ascend.lifeos.ui.calendar.CalendarScreen
@@ -67,11 +54,8 @@ import com.ascend.lifeos.ui.hud.NutritionScreen
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.skills.SkillsScreen
 import com.ascend.lifeos.ui.screens.BodyScreen
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
 import com.ascend.lifeos.ui.theme.Void
 import com.ascend.lifeos.ui.training.TrainingScreen
@@ -99,7 +83,6 @@ fun AscendApp() {
 
     var tab by rememberSaveable { mutableStateOf(Tab.HOME) }
     var guardOpen by rememberSaveable { mutableStateOf(false) }
-    var systemOpen by rememberSaveable { mutableStateOf(false) }
     var reportOpen by rememberSaveable { mutableStateOf(false) }
     var paletteOpen by remember { mutableStateOf(false) }
     var overlay by rememberSaveable { mutableStateOf<String?>(null) } // settings|mind|finance|goals|school|heatmap|explorer|wrapped
@@ -224,11 +207,6 @@ fun AscendApp() {
             }
         }
 
-        if (systemOpen) SystemSheet(
-            onDismiss = { systemOpen = false },
-            onOpenReport = { systemOpen = false; reportOpen = true },
-        )
-
         if (changelogOpen) com.ascend.lifeos.ui.home.ChangelogSheet(
             onDismiss = {
                 com.ascend.lifeos.ui.home.Changelog.markSeen(appCtx)
@@ -277,134 +255,6 @@ private fun JarvisDock(current: Tab, onSelect: (Tab) -> Unit, modifier: Modifier
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SystemAction(
-    icon: ImageVector,
-    title: String,
-    sub: String,
-    onClick: () -> Unit,
-) {
-    Box(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = TextMuted, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(title, color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-                Text(sub, color = TextDim, fontSize = 11.5.sp, fontFamily = Body)
-            }
-        }
-    }
-}
-
-// ─── System sheet ────────────────────────────────────────────────────────────
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SystemSheet(onDismiss: () -> Unit, onOpenReport: () -> Unit = {}) {
-    val ctx = LocalContext.current
-    var backupState by remember { mutableStateOf<String?>(null) }
-    val folderPicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree(),
-    ) { uri ->
-        if (uri != null) {
-            com.ascend.lifeos.data.Backup.setFolder(ctx, uri)
-            backupState = if (com.ascend.lifeos.data.Backup.runNow(ctx)) "Backup written ✓" else "Folder set — backup failed"
-        }
-    }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF0B0D10),
-        dragHandle = null,
-    ) {
-        Column(Modifier.fillMaxWidth().padding(24.dp).navigationBarsPadding()) {
-            Text(
-                "SYSTEM", color = TextDim, fontFamily = Display,
-                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
-            )
-            Spacer(Modifier.height(14.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Operator", color = TextMuted, fontSize = 12.sp, fontFamily = Body)
-                    Text(
-                        Repo.data.profile.name.ifBlank { "Unknown" },
-                        color = TextPrimary, fontSize = 16.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    )
-                }
-                val buildStamp = remember {
-                    runCatching {
-                        val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
-                        java.text.SimpleDateFormat("dd.MM HH:mm", java.util.Locale.getDefault())
-                            .format(java.util.Date(pi.lastUpdateTime))
-                    }.getOrDefault("?")
-                }
-                Text(
-                    "JARVIS v2 · $buildStamp", color = TextDim, fontFamily = Display,
-                    fontSize = 11.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.sp,
-                )
-            }
-            Spacer(Modifier.height(20.dp))
-            SystemAction(
-                icon = Icons.Rounded.IosShare, title = "Export data",
-                sub = "Full JSON backup of everything local",
-            ) {
-                val json = Repo.exportJson()
-                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                    type = "application/json"
-                    putExtra(android.content.Intent.EXTRA_TEXT, json)
-                }
-                runCatching { ctx.startActivity(android.content.Intent.createChooser(send, "Export JARVIS data")) }
-            }
-            Spacer(Modifier.height(9.dp))
-            SystemAction(
-                icon = Icons.Rounded.Assessment, title = "Weekly report",
-                sub = "The last 7 days across every module",
-            ) { onOpenReport() }
-            Spacer(Modifier.height(9.dp))
-            val hasFolder = com.ascend.lifeos.data.Backup.folder(ctx) != null
-            SystemAction(
-                icon = Icons.Rounded.Save,
-                title = if (hasFolder) "Backup now" else "Set backup folder",
-                sub = backupState ?: if (hasFolder) {
-                    val last = com.ascend.lifeos.data.Backup.lastBackupMs(ctx)
-                    if (last > 0) "Auto-backup weekly · last: " +
-                        java.text.SimpleDateFormat("dd.MM HH:mm", java.util.Locale.getDefault()).format(java.util.Date(last))
-                    else "Auto-backup weekly · none yet"
-                } else "Weekly versioned backups, survives anything",
-            ) {
-                if (hasFolder) {
-                    backupState = if (com.ascend.lifeos.data.Backup.runNow(ctx)) "Backup written ✓" else "Backup failed"
-                } else {
-                    runCatching { folderPicker.launch(null) }
-                }
-            }
-            if (hasFolder) {
-                Spacer(Modifier.height(9.dp))
-                SystemAction(
-                    icon = Icons.Rounded.SettingsBackupRestore, title = "Restore latest backup",
-                    sub = "Replaces current data with the newest backup file",
-                ) {
-                    backupState = if (com.ascend.lifeos.data.Backup.restoreLatest(ctx)) "Restored ✓ — restart the app" else "No backup found"
-                }
-            }
-            Spacer(Modifier.height(9.dp))
-            SystemAction(
-                icon = Icons.Rounded.RestartAlt, title = "Recalibrate",
-                sub = "Re-run the boot sequence — your data stays",
-            ) {
-                Repo.rebootOnboarding()
-                onDismiss()
-            }
-            Spacer(Modifier.height(24.dp))
         }
     }
 }
