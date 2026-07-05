@@ -18,7 +18,7 @@
 
 ## Zyklus-Log
 
-### Zyklus 1 (2026-07-05, 20:09 – 20:30) ✅
+### Zyklus 1 (2026-07-05, 20:09 – 20:17) ✅
 - [x] Baseline gesichert: kompletter JARVIS-v2-Stand als Commit `f568a1c` (Schutz vor
       Datenverlust, saubere Basis für Einzel-Commits)
 - [x] **Crash-Blackbox**: `UncaughtExceptionHandler` schreibt Stacktrace nach
@@ -26,23 +26,29 @@
       per Share-Sheet (zum Einfügen in eine Dev-Session) + Clear. Neue `JarvisApp`-Application-Klasse.
       Build-Test: `assembleDebug` grün.
 
-### Zyklus 2 (2026-07-05, 20:30 – 20:35) ✅
+### Zyklus 2 (2026-07-05, 20:17 – 20:21) ✅
 - [x] **SystemSheet-Cleanup**: totes UI aus `AscendApp.kt` entfernt (410 → 260 Zeilen) —
       `systemOpen` wurde nie true, SettingsScreen deckt Backup/Restore/Export/Recalibrate ab.
       Inklusive `SystemAction`-Helper und 16 verwaister Imports. Build-Test: `assembleDebug` grün.
 
+### Zyklus 3 (2026-07-05, 20:21 – 20:28) ✅
+- [x] **Unit-Test-Fundament**: JUnit 4 als `testImplementation` + 18 Tests für die puren
+      Engines — `WaterCalcTest` (Ziel-Formel, Klemmen, Glas-Rundung) und `FoodScoreTest`
+      (Nutri-Score-Mapping, NOVA-Modifikator, Alkohol-Hard-Override inkl. Namens-Erkennung,
+      Computed-Fallback, Pros/Cons-Texte). `testDebugUnitTest` grün.
+      `AdaptiveTdee` ist Repo-gekoppelt → als Refactoring-Idee notiert.
+
 ## Priorisierte Ideen (nächste Zyklen)
 
-1. **[Zyklus 1] Crash-Blackbox** — höchste Priorität: ohne sie ist jeder Absturz auf dem
-   Gerät unsichtbar; mit Share-Button wird jeder Crash direkt debugbar.
-2. **Dead Code raus: `SystemSheet`** in `AscendApp.kt` (~100 Zeilen + verwaiste Imports) —
-   wird nie geöffnet, SettingsScreen kann alles. Klein, sicher, hält die Shell sauber.
-3. **Unit-Test-Fundament** für pure Logik (`FoodScore`, `AdaptiveTdee`, `WaterCalc`,
-   `FastingCalc`, `Progression`): Regressionsschutz für die Engines hinter Trainings- und
-   Ernährungsempfehlungen — aktuell 0 Tests im Projekt.
-4. **Boot-Flow-Politur**: SYSTEMS-Stage prüfen — zeigen die Permission-LEDs echten Status,
+1. ~~**Crash-Blackbox**~~ → Zyklus 1 ✅
+2. ~~**Dead Code raus: `SystemSheet`**~~ → Zyklus 2 ✅
+3. ~~**Unit-Test-Fundament**~~ → Zyklus 3 ✅ (WaterCalc, FoodScore)
+4. **Test-Abdeckung ausbauen**: `AdaptiveTdee.compute()` von `Repo` entkoppeln (pure Funktion
+   mit Intake-/Gewichts-Serien als Parameter) und testen; danach `NutritionCalc`, `FastingCalc`.
+5. **Boot-Flow-Politur**: SYSTEMS-Stage prüfen — zeigen die Permission-LEDs echten Status,
    funktioniert Skip sauber (Masterplan 3.1: „ehrlich erklärt, skippable")?
-5. **`Repo.kt` sichten**: Der Prefs-Monolith wächst; prüfen, welche Domänen mittelfristig
+6. **`Repo.kt` sichten**: Der Prefs-Monolith wächst; prüfen, welche Domänen mittelfristig
    in Room gehören (Masterplan §4: Foods/Diary → `FuelDatabase`).
 
-**Als Nächstes (Zyklus 2):** Idee 2 — SystemSheet-Cleanup (klein & risikoarm), danach Idee 3.
+**Als Nächstes (Zyklus 4):** Idee 4 (AdaptiveTdee entkoppeln + testen) — falls vor 20:45
+begonnen; sonst sauber abschließen und Loop beenden.
