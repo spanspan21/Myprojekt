@@ -38,17 +38,26 @@
       Computed-Fallback, Pros/Cons-Texte). `testDebugUnitTest` grün.
       `AdaptiveTdee` ist Repo-gekoppelt → als Refactoring-Idee notiert.
 
+### Zyklus 4 (2026-07-05, 20:24 – 20:30) ✅
+- [x] **AdaptiveTdee entkoppelt + getestet**: `compute()` ist jetzt dünner Repo-Wrapper um
+      pure `computeFrom(intakes, weights, dietGoal)` (verhaltensgleich, sortiert selbst).
+      10 neue Tests: Honesty-Gates (zu wenig Tage/Wiegungen/Spanne → null), stabiles Gewicht
+      ⇒ Expenditure = Intake, fallendes Gewicht ⇒ Expenditure > Intake & Trend < 0,
+      unsortierte Samples, lose/gain-Anpassung, 1400er-Klemme, Confidence-Schwellen.
+      `testDebugUnitTest` (28 Tests) + `assembleDebug` grün.
+
 ## Priorisierte Ideen (nächste Zyklen)
 
 1. ~~**Crash-Blackbox**~~ → Zyklus 1 ✅
 2. ~~**Dead Code raus: `SystemSheet`**~~ → Zyklus 2 ✅
 3. ~~**Unit-Test-Fundament**~~ → Zyklus 3 ✅ (WaterCalc, FoodScore)
-4. **Test-Abdeckung ausbauen**: `AdaptiveTdee.compute()` von `Repo` entkoppeln (pure Funktion
-   mit Intake-/Gewichts-Serien als Parameter) und testen; danach `NutritionCalc`, `FastingCalc`.
-5. **Boot-Flow-Politur**: SYSTEMS-Stage prüfen — zeigen die Permission-LEDs echten Status,
+4. ~~**AdaptiveTdee entkoppeln + testen**~~ → Zyklus 4 ✅
+5. **Test-Abdeckung ausbauen**: `NutritionCalc`, `FastingCalc`, `Progression` — gleiche
+   Methode wie Zyklus 3/4 (pure Kerne direkt, Repo-gekoppelte Teile erst entkoppeln).
+6. **Boot-Flow-Politur**: SYSTEMS-Stage prüfen — zeigen die Permission-LEDs echten Status,
    funktioniert Skip sauber (Masterplan 3.1: „ehrlich erklärt, skippable")?
-6. **`Repo.kt` sichten**: Der Prefs-Monolith wächst; prüfen, welche Domänen mittelfristig
+7. **`Repo.kt` sichten**: Der Prefs-Monolith wächst; prüfen, welche Domänen mittelfristig
    in Room gehören (Masterplan §4: Foods/Diary → `FuelDatabase`).
 
-**Als Nächstes (Zyklus 4):** Idee 4 (AdaptiveTdee entkoppeln + testen) — falls vor 20:45
-begonnen; sonst sauber abschließen und Loop beenden.
+**Als Nächstes (Zyklus 5):** Idee 5, aber nur falls Start vor 20:45 — sonst Loop sauber
+beenden (Ziel: ≥21:00 Uhr und nichts halb fertig).

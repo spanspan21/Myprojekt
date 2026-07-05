@@ -27,21 +27,32 @@ object AdaptiveTdee {
         val intakes = keys.mapNotNull { k ->
             Repo.dayFor(k)?.meals?.sumOf { it.kcal }?.takeIf { it >= 800 }
         }
+
+        val cutoff = System.currentTimeMillis() - 28L * 86_400_000
+        val weights = Repo.weightLog().filter { it.ts >= cutoff }.map { it.ts to it.kg }
+
+        return computeFrom(intakes, weights, Repo.data.profile.dietGoal)
+    }
+
+    /**
+     * Pure core — all the math, none of the storage. [intakes] are kcal of
+     * logged days, [weights] are (epochMs, kg) samples in any order.
+     */
+    fun computeFrom(intakes: List<Int>, weights: List<Pair<Long, Double>>, dietGoal: String): Result? {
         if (intakes.size < 10) return null
 
         // EWMA weight trend across the same window
-        val cutoff = System.currentTimeMillis() - 28L * 86_400_000
-        val weights = Repo.weightLog().filter { it.ts >= cutoff }.sortedBy { it.ts }
-        if (weights.size < 4) return null
-        val spanDays = ((weights.last().ts - weights.first().ts) / 86_400_000L).toInt()
+        val sorted = weights.sortedBy { it.first }
+        if (sorted.size < 4) return null
+        val spanDays = ((sorted.last().first - sorted.first().first) / 86_400_000L).toInt()
         if (spanDays < 14) return null
 
-        var ewmaStart = weights.first().kg
-        var ewmaEnd = weights.first().kg
+        var ewmaStart = sorted.first().second
+        var ewmaEnd = sorted.first().second
         val alpha = 0.25
-        weights.forEachIndexed { i, p ->
-            ewmaEnd = alpha * p.kg + (1 - alpha) * ewmaEnd
-            if (i <= weights.size / 3) ewmaStart = ewmaEnd
+        sorted.forEachIndexed { i, (_, kg) ->
+            ewmaEnd = alpha * kg + (1 - alpha) * ewmaEnd
+            if (i <= sorted.size / 3) ewmaStart = ewmaEnd
         }
         val deltaKg = ewmaEnd - ewmaStart
         val effectiveDays = (spanDays * 2.0 / 3.0).coerceAtLeast(7.0) // trend windows overlap ~1/3
@@ -51,8 +62,7 @@ object AdaptiveTdee {
         // sanity clamp — nobody's TDEE is 900 or 6000
         val exp = expenditure.coerceIn(1400, 4500)
 
-        val goal = Repo.data.profile.dietGoal
-        val suggested = when (goal) {
+        val suggested = when (dietGoal) {
             "lose" -> (exp * 0.82).toInt()
             "gain" -> (exp * 1.12).toInt()
             else -> exp
@@ -64,7 +74,7 @@ object AdaptiveTdee {
             suggestedKcal = (suggested / 10) * 10,
             trendKgPerWeek = trendPerWeek,
             daysOfData = intakes.size,
-            confidence = if (intakes.size >= 18 && weights.size >= 8) "solid" else "low",
+            confidence = if (intakes.size >= 18 && sorted.size >= 8) "solid" else "low",
         )
     }
 
