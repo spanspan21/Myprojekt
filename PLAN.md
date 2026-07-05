@@ -59,18 +59,25 @@
       +2 Wdh / +10 s), `baseLevel`-Kette, `groupOf`-Heuristik (IDs + Namens-Matching).
       Suite: 50 Tests, 0 Failures.
 
+### Zyklus 7 (2026-07-05, 20:34 – 20:38) ✅
+- [x] **FastingCalc-Tests**: 6 Tests — Protokoll-Lookup + 16:8-Fallback, Zonen-Grenzen
+      (4/12/24 h), elapsedHours-Kanten (unset, Clock-Skew), Stats (Adherence mit
+      15-Min-Gnade, Streak vom Ende mit Reset, Leerfall). Suite: 56 Tests, 0 Failures.
+
 ## Priorisierte Ideen (nächste Zyklen)
 
 1. ~~**Crash-Blackbox**~~ → Zyklus 1 ✅
 2. ~~**Dead Code raus: `SystemSheet`**~~ → Zyklus 2 ✅
 3. ~~**Unit-Test-Fundament**~~ → Zyklus 3 ✅ (WaterCalc, FoodScore)
 4. ~~**AdaptiveTdee entkoppeln + testen**~~ → Zyklus 4 ✅
-5. **Test-Abdeckung ausbauen**: `NutritionCalc`, `FastingCalc`, `Progression` — gleiche
-   Methode wie Zyklus 3/4 (pure Kerne direkt, Repo-gekoppelte Teile erst entkoppeln).
+5. ~~**Test-Abdeckung ausbauen** (NutritionCalc, Progression, FastingCalc)~~ → Zyklen 5–7 ✅
 6. **Boot-Flow-Politur**: SYSTEMS-Stage prüfen — zeigen die Permission-LEDs echten Status,
    funktioniert Skip sauber (Masterplan 3.1: „ehrlich erklärt, skippable")?
 7. **`Repo.kt` sichten**: Der Prefs-Monolith wächst; prüfen, welche Domänen mittelfristig
    in Room gehören (Masterplan §4: Foods/Diary → `FuelDatabase`).
+8. **Weitere Engine-Tests**: `TrainBrain`, `PlanGenerator`, `MuscleRecovery`
+   (data/training/) nach dem Muster von Zyklus 4 entkoppeln und testen.
 
-**Als Nächstes (Zyklus 5):** Idee 5, aber nur falls Start vor 20:45 — sonst Loop sauber
-beenden (Ziel: ≥21:00 Uhr und nichts halb fertig).
+**Stand 20:38:** 20:45-Grenze fast erreicht → heute keine neuen Ideen mehr; Loop läuft
+bis zum Ziel-Check (≥21:00 Uhr, alles committet), dann Ende. Ideen 6–8 sind die
+Startpunkte für die nächste Session.
