@@ -1,0 +1,609 @@
+package com.ascend.lifeos.ui.training
+
+import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.ascend.lifeos.data.training.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.UUID
+
+class TrainingViewModel(app: Application) : AndroidViewModel(app) {
+
+    private val dao = TrainingDatabase.get(app).dao()
+
+    // ── Observable state ────────────────────────────────────────────────────
+
+    val exercises: StateFlow<List<ExerciseEntity>> = dao.allExercises()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val recentSessions: StateFlow<List<SessionWithSets>> = dao.recentSessions(20)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val recentPrs: StateFlow<List<PersonalRecordEntity>> = dao.recentPrs(10)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val progressions: StateFlow<List<UserProgressionEntity>> = dao.allProgressions()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // ── Active workout state ────────────────────────────────────────────────
+
+    var activeSessionId by mutableStateOf<String?>(null)
+        private set
+    var activeTemplateName by mutableStateOf("")
+        private set
+    var activeStartedAt by mutableLongStateOf(0L)
+        private set
+    val activeExercises = mutableStateListOf<ActiveExercise>()
+    var activeCurrentExIndex by mutableIntStateOf(0)
+        private set
+
+    // ── Rest timer ──────────────────────────────────────────────────────────
+
+    var restTimerRunning by mutableStateOf(false)
+        private set
+    var restTimerTotal by mutableIntStateOf(90)
+        private set
+    var restTimerRemaining by mutableIntStateOf(0)
+        private set
+    var restTimerStartedAt by mutableLongStateOf(0L)
+        private set
+
+    // ── New PR celebration ──────────────────────────────────────────────────
+
+    var newPrCelebration by mutableStateOf<PersonalRecordEntity?>(null)
+        private set
+
+    // ── Today stats ─────────────────────────────────────────────────────────
+
+    var todaySets by mutableIntStateOf(0)
+        private set
+    var todayReps by mutableIntStateOf(0)
+        private set
+    var weekSessions by mutableIntStateOf(0)
+        private set
+
+    // ── Deload state ────────────────────────────────────────────────────────
+
+    var deloadRecommended by mutableStateOf(false)
+        private set
+    var deloadActive by mutableStateOf(false)
+        private set
+
+    // ── Category filter ─────────────────────────────────────────────────────
+
+    var selectedCategory by mutableStateOf<ExCategory?>(null)
+        private set
+
+    init {
+        seed()
+        refreshTodayStats()
+    }
+
+    private fun seed() = viewModelScope.launch(Dispatchers.IO) {
+        // Always re-upsert: seed edits (e.g. renamed exercises) reach existing
+        // installs. REPLACE keys on id, so logged sets stay linked.
+        dao.upsertExercises(ExerciseSeed.ALL_EXERCISES)
+    }
+
+    fun refreshTodayStats() = viewModelScope.launch(Dispatchers.IO) {
+        val startOfDay = startOfToday()
+        todaySets = dao.totalSetsSince(startOfDay)
+        todayReps = dao.totalRepsSince(startOfDay)
+        val startOfWeek = startOfWeek()
+        weekSessions = dao.sessionCountSince(startOfWeek)
+        checkDeload()
+    }
+
+    // ── Category filter ─────────────────────────────────────────────────────
+
+    fun selectCategory(cat: ExCategory?) { selectedCategory = cat }
+
+    // ── Train brain: profile · plan · placement ─────────────────────────────
+
+    val fitnessProfile: FitnessProfile?
+        get() = TrainBrain.profile(com.ascend.lifeos.data.Repo.data.profile.assessResults)
+
+    var weekPlan by mutableStateOf<WeekPlan?>(null)
+        private set
+    var placements by mutableStateOf<List<Placement>>(emptyList())
+        private set
+    var scheduledOk by mutableStateOf(false)
+        private set
+    var muscleFreshness by mutableStateOf<MuscleRecovery.Freshness?>(null)
+        private set
+
+    fun refreshFreshness() = viewModelScope.launch(Dispatchers.IO) {
+        muscleFreshness = runCatching { MuscleRecovery.compute(getApplication()) }.getOrNull()
+    }
+
+    /** Mesocycle week 0..4 — advances once per ISO week (4 build + 1 deload). */
+    fun currentTrainWeek(): Int {
+        val p = com.ascend.lifeos.data.Repo.data.profile
+        val week = com.ascend.lifeos.core.isoWeek()
+        if (p.trainWeekStamp != week) {
+            val next = if (p.trainWeekStamp == null) p.trainWeekIndex else (p.trainWeekIndex + 1) % 5
+            com.ascend.lifeos.data.Repo.setTrainWeek(next, week)
+            return next
+        }
+        return p.trainWeekIndex
+    }
+
+    // ── Post-workout summary ────────────────────────────────────────────────
+
+    data class WorkoutSummary(
+        val name: String,
+        val sets: Int,
+        val reps: Int,
+        val durMin: Int,
+        val prs: List<PersonalRecordEntity>,
+        val primary: Set<Muscle>,
+        val secondary: Set<Muscle>,
+        val repsVsLast: Int?,   // percent, e.g. +12
+    )
+
+    var lastSummary by mutableStateOf<WorkoutSummary?>(null)
+        private set
+
+    fun dismissSummary() { lastSummary = null }
+
+    fun regeneratePlan() = viewModelScope.launch(Dispatchers.IO) {
+        val p = com.ascend.lifeos.data.Repo.data.profile
+        val best = runCatching { dao.bestRepsAll() }.getOrDefault(emptyList())
+            .associate { it.exerciseId to it.best }
+        val chainLv = progressions.value.associate { it.groupKey to it.currentLevel }
+        val goals = p.skillGoals.mapNotNull { SkillCatalog.byId(it) }
+        val readiness = com.ascend.lifeos.data.Repo.recoveryScore()
+        val fresh = runCatching { MuscleRecovery.compute(getApplication()) }.getOrNull()
+        muscleFreshness = fresh
+        // exam within the next 7 days → trimmed volume
+        val examSoon = runCatching {
+            val today = java.time.LocalDate.now()
+            com.ascend.lifeos.data.calendar.CalendarRepo.dao(getApplication())
+                .eventsInRangeOnce(today.toEpochDay(), today.plusDays(7).toEpochDay())
+                .any { it.type == com.ascend.lifeos.data.calendar.EventType.EXAM.name }
+        }.getOrDefault(false)
+
+        val plan = PlanGenerator.generate(
+            profile = fitnessProfile, skillGoals = goals,
+            freq = p.trainFreq, sessionLen = p.sessionLen,
+            chainLevels = chainLv, bestReps = best,
+            allExercises = exercises.value,
+            bodyweightKg = p.weightKg, hasVest = p.hasVest, vestMaxKg = p.vestMaxKg,
+            deload = deloadActive, readiness = readiness,
+            trainWeek = currentTrainWeek(), freshness = fresh,
+            sickMode = p.sickMode, examWeek = examSoon,
+            seasonPhase = com.ascend.lifeos.data.Prefs.string(getApplication(), com.ascend.lifeos.data.Prefs.SEASON_PHASE, ""),
+        )
+        weekPlan = plan
+        placements = runCatching {
+            PlanGenerator.placeWeek(getApplication(), plan, p.sessionLen)
+        }.getOrDefault(emptyList())
+        scheduledOk = false
+    }
+
+    fun scheduleWeek() = viewModelScope.launch(Dispatchers.IO) {
+        val p = com.ascend.lifeos.data.Repo.data.profile
+        runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }
+        scheduledOk = true
+    }
+
+    var rescheduleNote by mutableStateOf<String?>(null)
+        private set
+
+    /** Self-repair pass: fix scheduled sessions that reality broke. */
+    fun autoRescheduleCheck() = viewModelScope.launch(Dispatchers.IO) {
+        val p = com.ascend.lifeos.data.Repo.data.profile
+        val moved = runCatching {
+            PlanGenerator.autoReschedule(getApplication(), p.sessionLen)
+        }.getOrDefault(emptyList())
+        rescheduleNote = if (moved.isEmpty()) null else "Plan repaired: " + moved.joinToString(" · ")
+    }
+
+    fun dismissRescheduleNote() { rescheduleNote = null }
+
+    /** Launch a planned session as an active workout. */
+    fun startPlannedSession(session: PlannedSession) {
+        val template = WorkoutTemplate(
+            id = "plan_${session.index}",
+            name = session.name,
+            split = session.focus,
+            exercises = session.exercises.map { pe ->
+                TemplateExercise(
+                    exerciseId = pe.exerciseId,
+                    exerciseName = pe.name + (pe.vestKg?.let { " · vest ${it}kg" } ?: ""),
+                    targetSets = pe.sets,
+                    targetReps = if (pe.holdSec != null) pe.holdSec else pe.repsHigh,
+                    restSeconds = pe.restSec,
+                    supersetGroup = null,
+                )
+            },
+            estimatedMinutes = session.estMin,
+        )
+        startWorkout(template)
+    }
+
+    // ── Split rotation (Spec §5.3) ──────────────────────────────────────────
+
+    fun suggestedSplit(): String {
+        val sessions = recentSessions.value
+        if (sessions.isEmpty()) return "Push Day"
+        val lastTemplate = sessions.firstOrNull { it.session.isComplete }?.session?.templateName ?: ""
+        return when {
+            "Push" in lastTemplate -> "Pull Day"
+            "Pull" in lastTemplate -> "Leg Day"
+            "Leg" in lastTemplate -> "Push Day"
+            "Upper" in lastTemplate -> "Lower Body"
+            "Lower" in lastTemplate -> "Upper Body"
+            else -> "Push Day"
+        }
+    }
+
+    fun lastSplitInfo(): String {
+        val last = recentSessions.value.firstOrNull { it.session.isComplete } ?: return ""
+        val days = ((System.currentTimeMillis() - last.session.startedAt) / 86_400_000).toInt()
+        return "Last: ${last.session.templateName} (${days}d ago)"
+    }
+
+    // ── Start workout ───────────────────────────────────────────────────────
+
+    fun startWorkout(template: WorkoutTemplate?) {
+        val id = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+        activeSessionId = id
+        activeTemplateName = template?.name ?: "Free Workout"
+        activeStartedAt = now
+        activeExercises.clear()
+        activeCurrentExIndex = 0
+
+        template?.exercises?.forEach { te ->
+            activeExercises.add(ActiveExercise(
+                exerciseId = te.exerciseId,
+                exerciseName = te.exerciseName,
+                targetSets = te.targetSets,
+                targetReps = te.targetReps,
+                restSeconds = te.restSeconds,
+                supersetGroup = te.supersetGroup,
+            ))
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.upsertSession(WorkoutSessionEntity(
+                id = id, templateId = template?.id, templateName = activeTemplateName,
+                startedAt = now, finishedAt = null, isComplete = false,
+                totalSets = 0, totalReps = 0, durationMinutes = 0,
+            ))
+        }
+    }
+
+    fun startFreeWorkout() = startWorkout(null)
+
+    // ── Add exercise to active workout ──────────────────────────────────────
+
+    fun addExerciseToWorkout(ex: ExerciseEntity) {
+        activeExercises.add(ActiveExercise(
+            exerciseId = ex.id, exerciseName = ex.name,
+            targetSets = 3, targetReps = if (ex.unit == "sec") 30 else 10,
+            restSeconds = 90, supersetGroup = null,
+        ))
+    }
+
+    fun setCurrentExercise(index: Int) {
+        activeCurrentExIndex = index.coerceIn(0, (activeExercises.size - 1).coerceAtLeast(0))
+    }
+
+    // ── Log a set ───────────────────────────────────────────────────────────
+
+    fun logSet(
+        exerciseId: String,
+        reps: Int,
+        weight: Float? = null,
+        rpe: Int? = null,
+        tempo: String? = null,
+        note: String? = null,
+        setType: SetType = SetType.NORMAL,
+        holdSeconds: Int? = null,
+    ) {
+        val sid = activeSessionId ?: return
+        val ex = activeExercises.find { it.exerciseId == exerciseId } ?: return
+        val setId = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+        val setIndex = ex.loggedSets.size
+
+        val set = WorkoutSetEntity(
+            id = setId, sessionId = sid, exerciseId = exerciseId,
+            exerciseName = ex.exerciseName, setIndex = setIndex,
+            reps = reps, weight = weight, rpe = rpe, tempo = tempo, note = note,
+            setType = setType, holdSeconds = holdSeconds,
+            isPersonalRecord = false, loggedAt = now, supersetGroup = ex.supersetGroup,
+        )
+
+        ex.loggedSets.add(set)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.upsertSet(set)
+            if (setType == SetType.NORMAL || setType == SetType.FAILURE) {
+                checkAndRecordPr(exerciseId, ex.exerciseName, reps, weight, holdSeconds, sid)
+                checkProgressionUnlock(exerciseId, reps, weight, holdSeconds)
+            }
+        }
+
+        // superset auto-advance: partners cycle without rest; the timer only
+        // starts when the group wraps back to its first exercise
+        val group = ex.supersetGroup
+        if (group != null) {
+            val partners = activeExercises.withIndex().filter { it.value.supersetGroup == group }
+            if (partners.size > 1) {
+                val pos = partners.indexOfFirst { it.value.exerciseId == exerciseId }
+                val next = partners[(pos + 1) % partners.size]
+                activeCurrentExIndex = next.index
+                if ((pos + 1) % partners.size != 0) return   // mid-group: no rest yet
+            }
+        }
+
+        startRestTimer(ex.restSeconds)
+    }
+
+    fun deleteSet(exerciseId: String, index: Int) {
+        val ex = activeExercises.find { it.exerciseId == exerciseId } ?: return
+        if (index < 0 || index >= ex.loggedSets.size) return
+        val set = ex.loggedSets.removeAt(index)
+        viewModelScope.launch(Dispatchers.IO) { dao.deleteSet(set.id) }
+    }
+
+    // ── PR detection (Spec §4.1) ────────────────────────────────────────────
+
+    private suspend fun checkAndRecordPr(
+        exId: String, exName: String,
+        reps: Int, weight: Float?, holdSecs: Int?,
+        sessionId: String,
+    ) {
+        val existing = dao.prsForExercise(exId).first()
+        val now = System.currentTimeMillis()
+
+        val bestReps = existing.filter { it.type == PrType.MAX_REPS }.maxByOrNull { it.value }
+        if (reps > (bestReps?.value ?: 0f)) {
+            val pr = PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.MAX_REPS, reps.toFloat(), now, sessionId)
+            dao.upsertPr(pr)
+            newPrCelebration = pr
+        }
+
+        if (weight != null && weight > 0f) {
+            val bestWeight = existing.filter { it.type == PrType.MAX_WEIGHT }.maxByOrNull { it.value }
+            if (weight > (bestWeight?.value ?: 0f)) {
+                val pr = PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.MAX_WEIGHT, weight, now, sessionId)
+                dao.upsertPr(pr)
+                newPrCelebration = pr
+            }
+            val e1rm = weight * (1 + reps / 30f)
+            val best1rm = existing.filter { it.type == PrType.EST_1RM }.maxByOrNull { it.value }
+            if (e1rm > (best1rm?.value ?: 0f)) {
+                dao.upsertPr(PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.EST_1RM, e1rm, now, sessionId))
+            }
+        }
+
+        if (holdSecs != null && holdSecs > 0) {
+            val bestHold = existing.filter { it.type == PrType.LONGEST_HOLD }.maxByOrNull { it.value }
+            if (holdSecs > (bestHold?.value ?: 0f)) {
+                val pr = PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.LONGEST_HOLD, holdSecs.toFloat(), now, sessionId)
+                dao.upsertPr(pr)
+                newPrCelebration = pr
+            }
+        }
+    }
+
+    fun dismissPrCelebration() { newPrCelebration = null }
+
+    // ── Progression unlock (Spec §3.2) ──────────────────────────────────────
+
+    private suspend fun checkProgressionUnlock(exId: String, reps: Int, weight: Float?, holdSecs: Int?) {
+        for (chain in ExerciseSeed.PROGRESSIONS) {
+            val userProg = dao.progression(chain.groupKey) ?: UserProgressionEntity(chain.groupKey, 1, 0, null)
+            val currentLevel = chain.levels.find { it.level == userProg.currentLevel } ?: continue
+            if (currentLevel.isMastery) continue
+
+            val met = when {
+                currentLevel.unlockHoldSecs != null -> (holdSecs ?: 0) >= currentLevel.unlockHoldSecs
+                currentLevel.unlockWeight != null && currentLevel.unlockReps != null ->
+                    (weight ?: 0f) >= currentLevel.unlockWeight && reps >= currentLevel.unlockReps
+                currentLevel.unlockReps != null -> reps >= currentLevel.unlockReps
+                else -> false
+            }
+
+            if (met) {
+                val newCount = userProg.unlockHitCount + 1
+                if (newCount >= 3) {
+                    dao.upsertProgression(userProg.copy(
+                        currentLevel = userProg.currentLevel + 1,
+                        unlockHitCount = 0,
+                        lastUnlockDate = System.currentTimeMillis(),
+                    ))
+                } else {
+                    dao.upsertProgression(userProg.copy(unlockHitCount = newCount))
+                }
+            }
+        }
+    }
+
+    fun setProgressionLevel(groupKey: String, level: Int) = viewModelScope.launch(Dispatchers.IO) {
+        dao.upsertProgression(UserProgressionEntity(groupKey, level.coerceIn(1, 6), 0, System.currentTimeMillis()))
+    }
+
+    // ── Rest timer (Spec §2.4) ──────────────────────────────────────────────
+
+    fun startRestTimer(seconds: Int) {
+        restTimerTotal = seconds
+        restTimerRemaining = seconds
+        restTimerStartedAt = System.currentTimeMillis()
+        restTimerRunning = true
+        // off-screen countdown: chronometer notification, auto-expires
+        val ctx = getApplication<Application>()
+        if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.REST_NOTIFICATION, true)) {
+            runCatching {
+                com.ascend.lifeos.data.Notifier.ensureChannel(ctx)
+                val n = androidx.core.app.NotificationCompat.Builder(ctx, com.ascend.lifeos.data.Notifier.CHANNEL)
+                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                    .setContentTitle("Rest · ${seconds}s")
+                    .setContentText("Back under the bar when it ends")
+                    .setUsesChronometer(true)
+                    .setChronometerCountDown(true)
+                    .setWhen(System.currentTimeMillis() + seconds * 1000L)
+                    .setTimeoutAfter(seconds * 1000L + 3000)
+                    .setSilent(true)
+                    .build()
+                androidx.core.app.NotificationManagerCompat.from(ctx).notify(6, n)
+            }
+        }
+    }
+
+    fun adjustRestTimer(delta: Int) {
+        restTimerTotal = (restTimerTotal + delta).coerceIn(15, 600)
+        val elapsed = ((System.currentTimeMillis() - restTimerStartedAt) / 1000).toInt()
+        restTimerRemaining = restTimerTotal - elapsed
+    }
+
+    fun skipRestTimer() { restTimerRunning = false; restTimerRemaining = 0 }
+
+    fun tickRestTimer() {
+        if (!restTimerRunning) return
+        val elapsed = ((System.currentTimeMillis() - restTimerStartedAt) / 1000).toInt()
+        restTimerRemaining = restTimerTotal - elapsed
+    }
+
+    // ── Finish workout ──────────────────────────────────────────────────────
+
+    fun finishWorkout() {
+        val sid = activeSessionId ?: return
+        val now = System.currentTimeMillis()
+        val totalSets = activeExercises.sumOf { it.loggedSets.size }
+        val totalReps = activeExercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps } }
+        val durMin = ((now - activeStartedAt) / 60_000).toInt()
+        val sessionName = activeTemplateName
+
+        // muscles this session actually hit (for the summary heat view)
+        val byId = ExerciseSeed.ALL_EXERCISES.associateBy { it.id }
+        val prim = HashSet<Muscle>(); val sec = HashSet<Muscle>()
+        activeExercises.filter { it.loggedSets.isNotEmpty() }.forEach { ex ->
+            byId[ex.exerciseId]?.let { e -> prim.add(e.primaryMuscle); sec.addAll(e.secondaryMuscles) }
+        }
+        sec.removeAll(prim)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.upsertSession(WorkoutSessionEntity(
+                id = sid, templateId = null, templateName = sessionName,
+                startedAt = activeStartedAt, finishedAt = now, isComplete = true,
+                totalSets = totalSets, totalReps = totalReps, durationMinutes = durMin,
+            ))
+            val lastReps = runCatching { dao.lastRepsForTemplate(sessionName, sid) }.getOrDefault(0)
+            val delta = if (lastReps > 0 && totalReps > 0) ((totalReps - lastReps) * 100 / lastReps) else null
+            val sessionPrs = runCatching {
+                dao.recentPrs(10).first().filter { it.sessionId == sid }
+            }.getOrDefault(emptyList())
+            lastSummary = WorkoutSummary(sessionName, totalSets, totalReps, durMin, sessionPrs, prim, sec, delta)
+            if (sessionPrs.isNotEmpty()) {
+                runCatching { com.ascend.lifeos.data.SoundFx.levelUp(getApplication()) }
+            } else if (totalSets > 0) {
+                runCatching { com.ascend.lifeos.data.SoundFx.confirm(getApplication()) }
+            }
+            refreshTodayStats()
+            refreshFreshness()
+        }
+        // protein window: nudge in ~90 min unless food gets logged first
+        if (totalSets > 0) {
+            runCatching { com.ascend.lifeos.data.Notifier.scheduleProteinNudge(getApplication()) }
+        }
+
+        activeSessionId = null
+        activeExercises.clear()
+        restTimerRunning = false
+    }
+
+    fun cancelWorkout() {
+        val sid = activeSessionId ?: return
+        viewModelScope.launch(Dispatchers.IO) { dao.deleteSession(sid) }
+        activeSessionId = null
+        activeExercises.clear()
+        restTimerRunning = false
+    }
+
+    // ── Deload detection (Spec §10) ─────────────────────────────────────────
+
+    private suspend fun checkDeload() {
+        val fourWeeksAgo = System.currentTimeMillis() - 28L * 86_400_000
+        val sessions = dao.sessionsSince(fourWeeksAgo)
+        if (sessions.size < 4) { deloadRecommended = false; return }
+
+        val recent = sessions.take(2)
+        val older = sessions.drop(2).take(2)
+        val recentVol = recent.sumOf { it.session.totalReps }
+        val olderVol = older.sumOf { it.session.totalReps }
+
+        deloadRecommended = recentVol < olderVol * 0.85
+    }
+
+    fun activateDeload() { deloadActive = true }
+    fun endDeload() { deloadActive = false; deloadRecommended = false }
+
+    // ── Custom exercise (Spec §1.2) ─────────────────────────────────────────
+
+    fun addCustomExercise(name: String, category: ExCategory, primaryMuscle: Muscle, unit: String = "reps") {
+        val id = "custom_${UUID.randomUUID().toString().take(8)}"
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.upsertExercise(ExerciseEntity(
+                id = id, name = name, category = category, primaryMuscle = primaryMuscle,
+                secondaryMuscles = emptyList(), description = "", unit = unit,
+                youtubeUrl = null, isCustom = true, orderIndex = 99,
+            ))
+        }
+    }
+
+    fun deleteCustomExercise(id: String) = viewModelScope.launch(Dispatchers.IO) {
+        dao.deleteExercise(id)
+    }
+
+    // ── Exercise history for stats ──────────────────────────────────────────
+
+    fun exerciseHistory(exId: String): Flow<List<WorkoutSetEntity>> =
+        dao.setsForSession("").map { emptyList() } // placeholder, use setsForExercise
+
+    suspend fun getExerciseHistory(exId: String): List<WorkoutSetEntity> =
+        dao.recentNormalSets(exId, 100)
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    private fun startOfToday(): Long {
+        val c = Calendar.getInstance()
+        c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0)
+        c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
+        return c.timeInMillis
+    }
+
+    private fun startOfWeek(): Long {
+        val c = Calendar.getInstance()
+        c.set(Calendar.DAY_OF_WEEK, c.firstDayOfWeek)
+        c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0)
+        c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
+        return c.timeInMillis
+    }
+}
+
+// ── Active workout in-memory model ──────────────────────────────────────────
+
+class ActiveExercise(
+    val exerciseId: String,
+    val exerciseName: String,
+    val targetSets: Int,
+    val targetReps: Int,
+    val restSeconds: Int,
+    val supersetGroup: Int?,
+) {
+    val loggedSets = mutableStateListOf<WorkoutSetEntity>()
+}

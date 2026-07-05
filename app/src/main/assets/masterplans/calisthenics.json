@@ -1,0 +1,597 @@
+{
+  "id": "calisthenics",
+  "title": "Elite Calisthenics",
+  "tagline": "Bodyweight mastery: muscle-up, planche, front lever, handstand & flag",
+  "accent": "#34E0A1",
+  "icon": "bolt",
+  "order": 3,
+  "nodes": [
+    {
+      "key": "ca_assess",
+      "title": "Assess & Set Your Baseline",
+      "subtitle": "Where do you stand right now?",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": [],
+      "tasks": [
+        { "title": "Run max tests", "detail": "Max push-ups, pull-ups, plank hold, squat hold — noted." },
+        { "title": "Take photos & measurements", "detail": "Front, side, back + body weight noted." },
+        { "title": "Read the Recommended Routine", "detail": "You understand the RR structure (warm-up, pairs, core)." }
+      ],
+      "resources": [
+        { "title": "r/bwf Recommended Routine", "url": "https://www.reddit.com/r/bodyweightfitness/wiki/kb/recommended_routine", "kind": "ARTICLE", "provider": "r/bodyweightfitness" },
+        { "title": "Overcoming Gravity", "url": "https://stevenlow.org/overcoming-gravity/", "kind": "ARTICLE", "provider": "Steven Low" }
+      ]
+    },
+    {
+      "key": "ca_mobility",
+      "title": "Mobility Foundation",
+      "subtitle": "Wrists, shoulders, hips",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ca_assess"],
+      "tasks": [
+        { "title": "Daily wrist routine", "detail": "Pain-free load in every direction." },
+        { "title": "Shoulder Dislocates & Opener", "detail": "Overhead range improves week by week." },
+        { "title": "Hip & ankle mobility", "detail": "Comfortable deep squat hold for 30s." }
+      ],
+      "resources": [
+        { "title": "Wrist Prep", "url": "https://www.youtube.com/@FitnessFAQs/search?query=wrist%20prep", "kind": "VIDEO", "provider": "FitnessFAQs" },
+        { "title": "Mobility Basics", "url": "https://gmb.io/mobility/", "kind": "ARTICLE", "provider": "GMB" }
+      ]
+    },
+    {
+      "key": "ca_nutrition",
+      "title": "Nutrition & Recovery",
+      "subtitle": "The other half of progress",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ca_assess"],
+      "tasks": [
+        { "title": "Set a protein & calorie target", "detail": "Matched to your goal (recomp/bulk)." },
+        { "title": "Build a sleep log", "detail": "7-9h consistently, tracked." },
+        { "title": "Plan deload weeks", "detail": "Scheduled every 4-8 weeks." }
+      ],
+      "resources": [
+        { "title": "Calisthenics Nutrition", "url": "https://www.youtube.com/@FitnessFAQs/search?query=nutrition", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_rr_learn",
+      "title": "RR: Learn the Exercises",
+      "subtitle": "Correct form on every basic",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ca_mobility"],
+      "tasks": [
+        { "title": "Check push/pull pair form", "detail": "Push-up + row — clean form, shoulders correct." },
+        { "title": "Check squat/hinge form", "detail": "Squat + hinge — full ROM, no butt wink." },
+        { "title": "Learn the core pair", "detail": "Hollow hold + arch hold — clean position." }
+      ],
+      "resources": [
+        { "title": "Recommended Routine", "url": "https://www.reddit.com/r/bodyweightfitness/wiki/kb/recommended_routine", "kind": "ARTICLE", "provider": "r/bodyweightfitness" }
+      ]
+    },
+    {
+      "key": "ca_rr_run",
+      "title": "RR: Run It for 4 Weeks",
+      "subtitle": "Consistency over intensity",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ca_rr_learn"],
+      "tasks": [
+        { "title": "RR 3x/week for 4 weeks", "detail": "12 sessions logged." },
+        { "title": "Move up one progression on every exercise", "detail": "At least 1 step up on every movement." }
+      ],
+      "resources": [
+        { "title": "RR Walkthrough", "url": "https://www.youtube.com/@MinusTheGym", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_scap",
+      "title": "Scapular Strength",
+      "subtitle": "The foundation for every pull",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_rr_run"],
+      "tasks": [
+        { "title": "Scapular Pulls 3x8", "detail": "Controlled reps from a dead hang." },
+        { "title": "Hold an active hang for 30s", "detail": "Shoulder blades actively pulled down." },
+        { "title": "Dead Hang 60s", "detail": "Grip endurance built." }
+      ],
+      "resources": [
+        { "title": "Scapula Strength", "url": "https://www.youtube.com/@FitnessFAQs/search?query=scapula", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_pull_neg",
+      "title": "Negative Pull-ups",
+      "subtitle": "Eccentric Control",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_scap"],
+      "tasks": [
+        { "title": "5s Negatives 3x5", "detail": "Slow, controlled descent." },
+        { "title": "Band-Assisted Pull-ups", "detail": "Full ROM with minimal band." },
+        { "title": "Horizontal rows for volume", "detail": "3x10 clean rows." }
+      ],
+      "resources": [
+        { "title": "First Pull-up Guide", "url": "https://www.youtube.com/@MinusTheGym/search?query=first%20pull%20up", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_pullup",
+      "title": "First Pull-up",
+      "subtitle": "The milestone",
+      "energy": "HIGH",
+      "minutes": 20,
+      "prerequisites": ["ca_pull_neg"],
+      "tasks": [
+        { "title": "1 strict pull-up", "detail": "Dead hang, chin over the bar, no kipping." },
+        { "title": "Build up to 3 reps", "detail": "Consistent clean reps." }
+      ],
+      "resources": [
+        { "title": "Get Your First Pull-up", "url": "https://www.youtube.com/@FitnessFAQs/search?query=first%20pull%20up", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_pull_vol",
+      "title": "Pull-up Volume",
+      "subtitle": "5 clean reps",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ca_pullup"],
+      "tasks": [
+        { "title": "5 clean pull-ups", "detail": "Full ROM in one set." },
+        { "title": "Increase sets across the week", "detail": "Weekly volume grows." }
+      ],
+      "resources": [
+        { "title": "Pull-up Progression", "url": "https://www.reddit.com/r/bodyweightfitness/wiki/kb/recommended_routine", "kind": "ARTICLE", "provider": "r/bodyweightfitness" }
+      ]
+    },
+    {
+      "key": "ca_pull10",
+      "title": "10 Pull-ups",
+      "subtitle": "Real relative strength",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_pull_vol"],
+      "tasks": [
+        { "title": "10 strict pull-ups in one set", "detail": "Clean form, full ROM." },
+        { "title": "Introduce weighted singles", "detail": "Start adding weight to build strength." }
+      ],
+      "resources": [
+        { "title": "Weighted Calisthenics", "url": "https://www.youtube.com/@FitnessFAQs/search?query=weighted%20pull%20up", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_push",
+      "title": "Push-up Foundation",
+      "subtitle": "20 clean reps",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_rr_run"],
+      "tasks": [
+        { "title": "20 clean push-ups", "detail": "Full ROM, straight body." },
+        { "title": "Learn the hollow-body push-up", "detail": "No sagging at the hips." }
+      ],
+      "resources": [
+        { "title": "Perfect Push-up", "url": "https://www.youtube.com/@FitnessFAQs/search?query=push%20up", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_dips",
+      "title": "Dips",
+      "subtitle": "Deep pressing strength",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_push"],
+      "tasks": [
+        { "title": "10 full dips", "detail": "Shoulders below elbows, lockout at the top." },
+        { "title": "Support Hold 30s", "detail": "Stable support position on bars/rings." }
+      ],
+      "resources": [
+        { "title": "Dip Progression", "url": "https://www.youtube.com/@MinusTheGym/search?query=dips", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_dips_w",
+      "title": "Weighted Dips & Pike",
+      "subtitle": "Build vertical pressing strength",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_dips"],
+      "tasks": [
+        { "title": "Start weighted dips", "detail": "Add weight for pressing power." },
+        { "title": "Pike Push-ups 3x8", "detail": "Prepare for vertical pressing." }
+      ],
+      "resources": [
+        { "title": "Pike Push-up", "url": "https://www.youtube.com/@FitnessFAQs/search?query=pike%20push%20up", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_mu_prep",
+      "title": "Muscle-up Prep",
+      "subtitle": "Explosive pull + transition",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_pull10", "ca_dips"],
+      "tasks": [
+        { "title": "High pull-ups to the chest", "detail": "Explosive pull above chest height." },
+        { "title": "Straight-Bar Transition Drills", "detail": "Practice a controlled transition." },
+        { "title": "Master the false grip", "detail": "Hold the false grip through a pull." }
+      ],
+      "resources": [
+        { "title": "Muscle-up Progression", "url": "https://www.youtube.com/@FitnessFAQs/search?query=muscle%20up", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_muscleup",
+      "title": "The Muscle-up",
+      "subtitle": "Signature Skill",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_mu_prep"],
+      "tasks": [
+        { "title": "1 clean bar muscle-up", "detail": "No excessive kipping, controlled." },
+        { "title": "Attempt a ring muscle-up", "detail": "Started the harder ring variation." },
+        { "title": "Build up to 3 reps", "detail": "Repeatable strength." }
+      ],
+      "resources": [
+        { "title": "Muscle-up Tutorial", "url": "https://www.youtube.com/@THENX/search?query=muscle%20up", "kind": "VIDEO", "provider": "THENX" }
+      ]
+    },
+    {
+      "key": "ca_hs_wall",
+      "title": "Wall Handstand",
+      "subtitle": "Get comfortable upside down",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ca_dips_w", "ca_mobility"],
+      "tasks": [
+        { "title": "Chest-to-Wall Hold 60s", "detail": "Straight line, no banana." },
+        { "title": "Practice the wall kick-up", "detail": "Consistent, controlled entry." }
+      ],
+      "resources": [
+        { "title": "Handstand for Beginners", "url": "https://www.youtube.com/@FitnessFAQs/search?query=handstand", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_hs_balance",
+      "title": "Handstand: Practice Balance",
+      "subtitle": "A daily 10-minute practice",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ca_hs_wall"],
+      "tasks": [
+        { "title": "Toe pulls off the wall", "detail": "Slowly come off the wall, hold free for 2-3s." },
+        { "title": "Be able to bail safely", "detail": "Cartwheel/pirouette bail every time." },
+        { "title": "10 min daily handstand practice", "detail": "Consistent for 4+ weeks." }
+      ],
+      "resources": [
+        { "title": "Freestanding Handstand", "url": "https://www.youtube.com/@MinusTheGym/search?query=freestanding%20handstand", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_hs_free",
+      "title": "Free Handstand 10s",
+      "subtitle": "Balance mastery",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_hs_balance"],
+      "tasks": [
+        { "title": "Free handstand 10s+", "detail": "Away from the wall, controlled." },
+        { "title": "Consistent kick-ups", "detail": "3 of 5 attempts stick." }
+      ],
+      "resources": [
+        { "title": "Freestanding Handstand", "url": "https://www.youtube.com/@MinusTheGym/search?query=freestanding%20handstand", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_hspu",
+      "title": "Handstand Push-up",
+      "subtitle": "Vertical pressing strength",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_hs_free"],
+      "tasks": [
+        { "title": "Wall HSPU full ROM", "detail": "Head to the floor, press to lockout." },
+        { "title": "Deficit HSPU", "detail": "Increased ROM on parallettes." },
+        { "title": "Freestanding HSPU attempts", "detail": "First attempts away from the wall." }
+      ],
+      "resources": [
+        { "title": "HSPU Progression", "url": "https://www.youtube.com/@FitnessFAQs/search?query=handstand%20push%20up", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_hollow",
+      "title": "Hollow Body & Core",
+      "subtitle": "The core position behind every skill",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_rr_run"],
+      "tasks": [
+        { "title": "Hollow Hold 60s", "detail": "Lower back on the floor." },
+        { "title": "Arch/Superman Holds", "detail": "Balance the posterior chain." },
+        { "title": "Hanging Knee Raises 3x12", "detail": "Controlled, no swinging." }
+      ],
+      "resources": [
+        { "title": "Core for Calisthenics", "url": "https://www.youtube.com/@FitnessFAQs/search?query=hollow%20body", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_lsit",
+      "title": "L-Sit",
+      "subtitle": "Core + compression milestone",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_hollow", "ca_dips"],
+      "tasks": [
+        { "title": "L-Sit Hold 15s", "detail": "Legs straight, hips up." },
+        { "title": "On floor & parallettes", "detail": "Both surfaces mastered." },
+        { "title": "Work toward the V-sit", "detail": "Compression work started." }
+      ],
+      "resources": [
+        { "title": "L-Sit Progression", "url": "https://www.youtube.com/@MinusTheGym/search?query=l%20sit", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_planche_lean",
+      "title": "Planche Lean",
+      "subtitle": "Your entry into the planche",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_dips_w", "ca_hs_wall"],
+      "tasks": [
+        { "title": "Planche Lean 3x20s", "detail": "Shoulders far ahead of the wrists." },
+        { "title": "Protracted Straight-Arm Holds", "detail": "No elbow bending." }
+      ],
+      "resources": [
+        { "title": "Planche Progression", "url": "https://www.youtube.com/@FitnessFAQs/search?query=planche", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_tuck_planche",
+      "title": "Tuck Planche",
+      "subtitle": "Your first real planche",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_planche_lean"],
+      "tasks": [
+        { "title": "Tuck Planche Hold 10s+", "detail": "Hips at shoulder height, arms straight." },
+        { "title": "Advanced Tuck Work", "detail": "Slowly open the knees." }
+      ],
+      "resources": [
+        { "title": "Tuck Planche", "url": "https://www.youtube.com/@FitnessFAQs/search?query=tuck%20planche", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_planche_adv",
+      "title": "Straddle Planche",
+      "subtitle": "Elite Pressing Skill",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_tuck_planche"],
+      "tasks": [
+        { "title": "Straddle Planche Progressions", "detail": "Adv tuck → straddle attempts." },
+        { "title": "Planche-specific strength work", "detail": "Straight-arm & lean overload." }
+      ],
+      "resources": [
+        { "title": "Straddle Planche", "url": "https://www.youtube.com/@FitnessFAQs/search?query=straddle%20planche", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_fl_tuck",
+      "title": "Tuck Front Lever",
+      "subtitle": "Your entry into the front lever",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_hollow", "ca_pull_vol"],
+      "tasks": [
+        { "title": "Tuck Front Lever Hold 10s", "detail": "Back parallel to the floor, arms straight." },
+        { "title": "Front Lever Pulls", "detail": "Dynamic strength building." }
+      ],
+      "resources": [
+        { "title": "Front Lever Progression", "url": "https://www.youtube.com/@FitnessFAQs/search?query=front%20lever", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_fl_adv",
+      "title": "Advanced Tuck Front Lever",
+      "subtitle": "Open the hips",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_fl_tuck"],
+      "tasks": [
+        { "title": "Advanced Tuck Hold 10s+", "detail": "Hips extended, back flat." },
+        { "title": "One-Leg Progressions", "detail": "Extend one leg." }
+      ],
+      "resources": [
+        { "title": "Front Lever Tutorial", "url": "https://www.youtube.com/@THENX/search?query=front%20lever", "kind": "VIDEO", "provider": "THENX" }
+      ]
+    },
+    {
+      "key": "ca_fl_straddle",
+      "title": "Straddle Front Lever",
+      "subtitle": "Fast-Elite Pull",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_fl_adv"],
+      "tasks": [
+        { "title": "Straddle Front Lever Hold 5s+", "detail": "Legs wide, body flat." },
+        { "title": "Narrow the straddle", "detail": "Progress toward the full." }
+      ],
+      "resources": [
+        { "title": "Straddle Front Lever", "url": "https://www.youtube.com/@FitnessFAQs/search?query=straddle%20front%20lever", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_fl_full",
+      "title": "Full Front Lever",
+      "subtitle": "Elite Pulling Skill",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_fl_straddle"],
+      "tasks": [
+        { "title": "Full Front Lever Hold 5s+", "detail": "Legs together, body flat, arms straight." },
+        { "title": "Front Lever Raises", "detail": "Dynamic mastery." }
+      ],
+      "resources": [
+        { "title": "Full Front Lever", "url": "https://www.youtube.com/@FitnessFAQs/search?query=full%20front%20lever", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_backlever",
+      "title": "Back Lever",
+      "subtitle": "A complementary straight-arm skill",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_fl_tuck"],
+      "tasks": [
+        { "title": "Tuck → Straddle → Full Back Lever", "detail": "Progress the holds." },
+        { "title": "Protect the elbows", "detail": "Straight-arm prep before the full." }
+      ],
+      "resources": [
+        { "title": "Back Lever Progression", "url": "https://www.youtube.com/@FitnessFAQs/search?query=back%20lever", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_squat",
+      "title": "Squat Foundation",
+      "subtitle": "Legs matter too",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_rr_run"],
+      "tasks": [
+        { "title": "Bodyweight Squats 3x20", "detail": "Full depth, controlled." },
+        { "title": "Split Squats & Lunges", "detail": "Single-leg base built." }
+      ],
+      "resources": [
+        { "title": "Leg Training Bodyweight", "url": "https://www.youtube.com/@FitnessFAQs/search?query=leg%20workout", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_pistol_prep",
+      "title": "Pistol Squat Prep",
+      "subtitle": "Single-leg strength & balance",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ca_squat"],
+      "tasks": [
+        { "title": "Assisted Pistols", "detail": "Full depth with assistance." },
+        { "title": "Ankle mobility for pistols", "detail": "Heel stays down at the bottom." }
+      ],
+      "resources": [
+        { "title": "Pistol Squat Guide", "url": "https://www.youtube.com/@MinusTheGym/search?query=pistol%20squat", "kind": "VIDEO", "provider": "Minus The Gym" }
+      ]
+    },
+    {
+      "key": "ca_pistol",
+      "title": "Pistol Squat",
+      "subtitle": "Single-leg mastery",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_pistol_prep"],
+      "tasks": [
+        { "title": "1 clean pistol per leg", "detail": "Full depth, no assistance." },
+        { "title": "Build up to 5 per leg", "detail": "Left/right balanced." }
+      ],
+      "resources": [
+        { "title": "Pistol Progression", "url": "https://www.youtube.com/@FitnessFAQs/search?query=pistol%20squat", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_nordic",
+      "title": "Nordic Curls",
+      "subtitle": "Bulletproof knees",
+      "energy": "HIGH",
+      "minutes": 20,
+      "prerequisites": ["ca_squat"],
+      "tasks": [
+        { "title": "Assisted Nordic Curls", "detail": "Controlled eccentric." },
+        { "title": "Toward the full Nordic", "detail": "Reduce assistance week by week." }
+      ],
+      "resources": [
+        { "title": "Nordic Curl", "url": "https://www.youtube.com/@FitnessFAQs/search?query=nordic%20curl", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_flag_prep",
+      "title": "Human Flag Prep",
+      "subtitle": "Build lateral strength",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_pull10", "ca_dips_w"],
+      "tasks": [
+        { "title": "Vertical flag holds", "detail": "Support your body weight sideways." },
+        { "title": "Flag Raises & Tuck Flag", "detail": "Progress toward horizontal." }
+      ],
+      "resources": [
+        { "title": "Human Flag Progression", "url": "https://www.youtube.com/@THENX/search?query=human%20flag", "kind": "VIDEO", "provider": "THENX" }
+      ]
+    },
+    {
+      "key": "ca_flag",
+      "title": "Human Flag",
+      "subtitle": "An iconic display of strength",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_flag_prep"],
+      "tasks": [
+        { "title": "Straddle Human Flag Hold", "detail": "Body horizontal, legs straddled." },
+        { "title": "Toward the full flag", "detail": "Legs-together attempts." }
+      ],
+      "resources": [
+        { "title": "Human Flag Tutorial", "url": "https://www.youtube.com/@FitnessFAQs/search?query=human%20flag", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_year1",
+      "title": "Year-1 Athlete",
+      "subtitle": "A solid all-around base",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ca_pull10", "ca_dips", "ca_lsit", "ca_pistol"],
+      "tasks": [
+        { "title": "Hit all Year-1 standards", "detail": "10 pull-ups, 10 dips, L-sit 15s, pistol per leg." },
+        { "title": "Compare to baseline", "detail": "Compare photos and numbers." },
+        { "title": "Set a 3-year goal", "detail": "Choose your signature skills." }
+      ],
+      "resources": [
+        { "title": "Program Your Training", "url": "https://stevenlow.org/overcoming-gravity/", "kind": "ARTICLE", "provider": "Steven Low" }
+      ]
+    },
+    {
+      "key": "ca_intermediate",
+      "title": "Intermediate Master",
+      "subtitle": "Skills almost nobody reaches",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_muscleup", "ca_hs_free", "ca_fl_adv", "ca_tuck_planche"],
+      "tasks": [
+        { "title": "Muscle-up, Handstand, Adv Tuck FL, Tuck Planche", "detail": "All held to standard." },
+        { "title": "Build a skill-focused program", "detail": "Straight-arm strength block created." },
+        { "title": "Film a skills reel", "detail": "Progress documented." }
+      ],
+      "resources": [
+        { "title": "Skill Programming", "url": "https://www.youtube.com/@FitnessFAQs/search?query=programming", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    },
+    {
+      "key": "ca_elite",
+      "title": "Elite Calisthenics",
+      "subtitle": "10-year capstone",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ca_fl_full", "ca_planche_adv", "ca_flag", "ca_hspu", "ca_intermediate"],
+      "tasks": [
+        { "title": "Full Front Lever, Straddle Planche, Human Flag", "detail": "The elite trio held to standard." },
+        { "title": "Freestanding HSPU & clean muscle-ups", "detail": "Pressing mastery demonstrated." },
+        { "title": "Build your own elite routine", "detail": "Sustainable long-term skill practice." }
+      ],
+      "resources": [
+        { "title": "Elite Calisthenics", "url": "https://www.youtube.com/@FitnessFAQs", "kind": "VIDEO", "provider": "FitnessFAQs" }
+      ]
+    }
+  ]
+}

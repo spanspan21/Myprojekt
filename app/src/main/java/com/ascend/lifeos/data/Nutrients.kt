@@ -2,11 +2,11 @@ package com.ascend.lifeos.data
 
 /** Nutrient groups shown in the detailed overview. */
 enum class NGroup(val label: String) {
-    MACRO("Makronährstoffe"),
-    FAT("Fettaufschlüsselung"),
-    CARB("Kohlenhydrate"),
-    VITAMIN("Vitamine"),
-    MINERAL("Mineralstoffe"),
+    MACRO("Macros"),
+    FAT("Fat breakdown"),
+    CARB("Carbs"),
+    VITAMIN("Vitamins"),
+    MINERAL("Minerals"),
 }
 
 /**
@@ -28,19 +28,19 @@ data class NutrientDef(
 val NUTRIENTS: List<NutrientDef> = listOf(
     // Macros
     NutrientDef("protein", "Protein", NGroup.MACRO, "proteins", "g", 1.0, null),
-    NutrientDef("carbs", "Kohlenhydrate", NGroup.MACRO, "carbohydrates", "g", 1.0, null),
-    NutrientDef("fat", "Fett", NGroup.MACRO, "fat", "g", 1.0, null),
+    NutrientDef("carbs", "Carbs", NGroup.MACRO, "carbohydrates", "g", 1.0, null),
+    NutrientDef("fat", "Fat", NGroup.MACRO, "fat", "g", 1.0, null),
     // Fat breakdown
-    NutrientDef("saturated", "Gesättigte Fette", NGroup.FAT, "saturated-fat", "g", 1.0, 20.0, true),
-    NutrientDef("monounsaturated", "Einfach ungesättigt", NGroup.FAT, "monounsaturated-fat", "g", 1.0, null),
-    NutrientDef("polyunsaturated", "Mehrfach ungesättigt", NGroup.FAT, "polyunsaturated-fat", "g", 1.0, null),
+    NutrientDef("saturated", "Saturated fat", NGroup.FAT, "saturated-fat", "g", 1.0, 20.0, true),
+    NutrientDef("monounsaturated", "Monounsaturated", NGroup.FAT, "monounsaturated-fat", "g", 1.0, null),
+    NutrientDef("polyunsaturated", "Polyunsaturated", NGroup.FAT, "polyunsaturated-fat", "g", 1.0, null),
     NutrientDef("omega3", "Omega-3", NGroup.FAT, "omega-3-fat", "g", 1.0, 1.6),
     NutrientDef("omega6", "Omega-6", NGroup.FAT, "omega-6-fat", "g", 1.0, 12.0),
-    NutrientDef("trans", "Transfette", NGroup.FAT, "trans-fat", "g", 1.0, 2.0, true),
-    NutrientDef("cholesterol", "Cholesterin", NGroup.FAT, "cholesterol", "mg", 1000.0, 300.0, true),
+    NutrientDef("trans", "Trans fat", NGroup.FAT, "trans-fat", "g", 1.0, 2.0, true),
+    NutrientDef("cholesterol", "Cholesterol", NGroup.FAT, "cholesterol", "mg", 1000.0, 300.0, true),
     // Carbs
-    NutrientDef("sugars", "Zucker", NGroup.CARB, "sugars", "g", 1.0, 50.0, true),
-    NutrientDef("fiber", "Ballaststoffe", NGroup.CARB, "fiber", "g", 1.0, 30.0),
+    NutrientDef("sugars", "Sugar", NGroup.CARB, "sugars", "g", 1.0, 50.0, true),
+    NutrientDef("fiber", "Fiber", NGroup.CARB, "fiber", "g", 1.0, 30.0),
     // Vitamins
     NutrientDef("vitaminA", "Vitamin A", NGroup.VITAMIN, "vitamin-a", "µg", 1_000_000.0, 800.0),
     NutrientDef("vitaminC", "Vitamin C", NGroup.VITAMIN, "vitamin-c", "mg", 1000.0, 80.0),
@@ -51,19 +51,42 @@ val NUTRIENTS: List<NutrientDef> = listOf(
     NutrientDef("vitaminB2", "Vitamin B2", NGroup.VITAMIN, "vitamin-b2", "mg", 1000.0, 1.4),
     NutrientDef("vitaminB3", "Vitamin B3 (Niacin)", NGroup.VITAMIN, "vitamin-pp", "mg", 1000.0, 16.0),
     NutrientDef("vitaminB6", "Vitamin B6", NGroup.VITAMIN, "vitamin-b6", "mg", 1000.0, 1.4),
-    NutrientDef("vitaminB9", "Folsäure", NGroup.VITAMIN, "vitamin-b9", "µg", 1_000_000.0, 200.0),
+    NutrientDef("vitaminB9", "Folate", NGroup.VITAMIN, "vitamin-b9", "µg", 1_000_000.0, 200.0),
     NutrientDef("vitaminB12", "Vitamin B12", NGroup.VITAMIN, "vitamin-b12", "µg", 1_000_000.0, 2.5),
     // Minerals
-    NutrientDef("sodium", "Natrium", NGroup.MINERAL, "sodium", "mg", 1000.0, 2300.0, true),
-    NutrientDef("calcium", "Kalzium", NGroup.MINERAL, "calcium", "mg", 1000.0, 1000.0),
-    NutrientDef("iron", "Eisen", NGroup.MINERAL, "iron", "mg", 1000.0, 14.0),
+    NutrientDef("sodium", "Sodium", NGroup.MINERAL, "sodium", "mg", 1000.0, 2300.0, true),
+    NutrientDef("calcium", "Calcium", NGroup.MINERAL, "calcium", "mg", 1000.0, 1000.0),
+    NutrientDef("iron", "Iron", NGroup.MINERAL, "iron", "mg", 1000.0, 14.0),
     NutrientDef("magnesium", "Magnesium", NGroup.MINERAL, "magnesium", "mg", 1000.0, 375.0),
-    NutrientDef("potassium", "Kalium", NGroup.MINERAL, "potassium", "mg", 1000.0, 3500.0),
-    NutrientDef("zinc", "Zink", NGroup.MINERAL, "zinc", "mg", 1000.0, 10.0),
-    NutrientDef("phosphorus", "Phosphor", NGroup.MINERAL, "phosphorus", "mg", 1000.0, 700.0),
+    NutrientDef("potassium", "Potassium", NGroup.MINERAL, "potassium", "mg", 1000.0, 3500.0),
+    NutrientDef("zinc", "Zinc", NGroup.MINERAL, "zinc", "mg", 1000.0, 10.0),
+    NutrientDef("phosphorus", "Phosphorus", NGroup.MINERAL, "phosphorus", "mg", 1000.0, 700.0),
 )
 
 val NUTRIENTS_BY_ID: Map<String, NutrientDef> = NUTRIENTS.associateBy { it.id }
 
 /** Ids stored via dedicated FoodEntry fields, not the nutrients map. */
 val MACRO_IDS = setOf("protein", "carbs", "fat")
+
+/** Minerals lost through sweat — athletes (≥4 sessions/week) get a 15% bump. */
+private val SWEAT_MINERALS = setOf("magnesium", "zinc", "potassium")
+
+/**
+ * Personalized daily target for [def], in the same display unit convention as
+ * [NutrientDef.target] (mg/µg/g as declared by [NutrientDef.unit]). Key nutrients
+ * follow D-A-CH reference values by [sex] ("m"/"f") and [age]; everything else
+ * falls back to the generic [NutrientDef.target]. [athlete] multiplies
+ * magnesium/zinc/potassium by 1.15.
+ */
+fun targetFor(def: NutrientDef, sex: String, age: Int, athlete: Boolean): Double? {
+    val f = sex == "f"
+    val base = when (def.id) {
+        "iron" -> if (f && age < 50) 15.0 else 10.0
+        "calcium" -> if (age < 19) 1200.0 else 1000.0
+        "magnesium" -> if (f) 310.0 else 400.0
+        "zinc" -> if (f) 8.0 else 11.0
+        "potassium" -> 3500.0
+        else -> def.target
+    } ?: return null
+    return if (athlete && def.id in SWEAT_MINERALS) base * 1.15 else base
+}

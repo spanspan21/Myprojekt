@@ -19,8 +19,17 @@ object CalendarSync {
         val start = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-        val end = start + 24L * 60 * 60 * 1000
+        return readRange(ctx, start, start + 24L * 60 * 60 * 1000)
+    }
 
+    fun readDay(ctx: Context, day: java.time.LocalDate): List<CalEvent> {
+        val zone = java.time.ZoneId.systemDefault()
+        val start = day.atStartOfDay(zone).toInstant().toEpochMilli()
+        val end = day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        return readRange(ctx, start, end)
+    }
+
+    fun readRange(ctx: Context, start: Long, end: Long): List<CalEvent> {
         val uri = CalendarContract.Instances.CONTENT_URI.buildUpon().let {
             ContentUris.appendId(it, start); ContentUris.appendId(it, end); it.build()
         }
@@ -34,7 +43,7 @@ object CalendarSync {
         runCatching {
             ctx.contentResolver.query(uri, projection, null, null, "${CalendarContract.Instances.BEGIN} ASC")?.use { c ->
                 while (c.moveToNext()) {
-                    val title = c.getString(0)?.takeIf { it.isNotBlank() } ?: "(ohne Titel)"
+                    val title = c.getString(0)?.takeIf { it.isNotBlank() } ?: "(untitled)"
                     out.add(CalEvent(title, c.getLong(1), c.getLong(2), c.getInt(3) == 1))
                 }
             }

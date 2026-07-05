@@ -11,6 +11,7 @@ import com.ascend.lifeos.core.todayKey
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.math.roundToInt
 
 data class CompletionInfo(val done: Int, val total: Int) {
     val pct: Float get() = if (total == 0) 0f else done / total.toFloat()
@@ -89,7 +90,49 @@ object Repo {
         refreshStreak()
     }
 
-    fun addWater(n: Int) = updateDay { it.copy(water = (it.water + n).coerceAtLeast(0)) }
+    fun addWater(n: Int, dayKey: String = todayKey()) {
+        val cur = data.days[dayKey] ?: DayData()
+        val stamps = if (n > 0) cur.waterLog + List(n) { System.currentTimeMillis() }
+        else cur.waterLog.dropLast(-n)
+        commit(
+            data.copy(
+                days = data.days + (dayKey to cur.copy(
+                    water = (cur.water + n).coerceAtLeast(0),
+                    waterLog = stamps.takeLast(40),
+                )),
+            ),
+        )
+        refreshStreak()
+    }
+
+    /** Supplement check-off (creatine streak lives on these). */
+    fun toggleSupp(name: String, dayKey: String = todayKey()) {
+        val cur = data.days[dayKey] ?: DayData()
+        val next = if (name in cur.supps) cur.supps - name else cur.supps + name
+        commit(data.copy(days = data.days + (dayKey to cur.copy(supps = next))))
+    }
+
+    /** Days in a row (ending today/yesterday) this supplement was taken. */
+    fun suppStreak(name: String): Int {
+        var streak = 0
+        for (k in lastDayKeys(120).reversed()) {
+            val taken = data.days[k]?.supps?.contains(name) == true
+            if (taken) streak++
+            else if (k != todayKey()) break   // today still open — don't break the chain yet
+        }
+        return streak
+    }
+
+    /** One-minute journal: three lines + a mood tap. */
+    fun setJournal(answers: List<String>, mood: Int?) {
+        val k = todayKey()
+        val cur = data.days[k] ?: DayData()
+        commit(data.copy(days = data.days + (k to cur.copy(journal = answers.take(3)))))
+        mood?.let {
+            val prev = data.bodyDays[k] ?: BodyDay()
+            commit(data.copy(bodyDays = data.bodyDays + (k to prev.copy(mood = it))))
+        }
+    }
 
     fun addGoal(text: String) {
         if (text.isBlank()) return
@@ -124,24 +167,132 @@ object Repo {
         it.copy(name = name.trim(), waterGoal = waterGoal.coerceIn(1, 20), onboarded = true)
     }
 
+    /** System-boot onboarding: identity + calibration + objectives in one commit. */
+    fun completeBoot(name: String, sex: String, age: Int, heightCm: Int, weightKg: Int, objectives: List<String>) {
+        val t = NutritionCalc.compute(sex, age, heightCm, weightKg, activity = 3, goal = "maintain")
+        updateProfile {
+            it.copy(
+                name = name.trim(), sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
+                objectives = objectives, onboarded = true, reminders = true,
+                kcalGoal = t.kcal, proteinGoal = t.protein, carbGoal = t.carbs, fatGoal = t.fat,
+                waterGoal = WaterCalc.targetGlasses(weightKg, trainedToday = false),
+            )
+        }
+    }
+
     fun setReminders(on: Boolean) = updateProfile { it.copy(reminders = on) }
 
+    /** Re-enter the boot sequence without touching any logged data. */
+    fun rebootOnboarding() = updateProfile { it.copy(onboarded = false) }
+
+    // ---- train brain ----
+    fun saveAssessment(results: Map<String, Int>) = updateProfile {
+        it.copy(assessResults = results, assessDate = System.currentTimeMillis())
+    }
+
+    fun toggleSkillGoal(id: String) = updateProfile { p ->
+        p.copy(skillGoals = if (id in p.skillGoals) p.skillGoals - id else p.skillGoals + id)
+    }
+
+    fun setTrainPrefs(freq: Int, sessionLen: Int, hasVest: Boolean) = updateProfile {
+        it.copy(trainFreq = freq.coerceIn(2, 6), sessionLen = sessionLen.coerceIn(20, 120), hasVest = hasVest)
+    }
+
     // ---- nutrition ----
-    fun addFood(entry: FoodEntry) {
+    fun addFood(entry: FoodEntry, dayKey: String = todayKey()) {
         val e = if (entry.id.isBlank()) entry.copy(id = "f" + System.currentTimeMillis(), ts = System.currentTimeMillis()) else entry
-        val k = todayKey()
-        val cur = data.days[k] ?: DayData()
+        val cur = data.days[dayKey] ?: DayData()
         val recents = (listOf(e.copy(meal = "b")) + data.profile.recentFoods.filter { it.name != e.name }).take(12)
         commit(
             data.copy(
-                days = data.days + (k to cur.copy(meals = cur.meals + e)),
+                days = data.days + (dayKey to cur.copy(meals = cur.meals + e)),
                 profile = data.profile.copy(recentFoods = recents),
             )
         )
         refreshStreak()
     }
 
-    fun removeFood(id: String) = updateDay { d -> d.copy(meals = d.meals.filter { it.id != id }) }
+    fun removeFood(id: String, dayKey: String = todayKey()) {
+        val cur = data.days[dayKey] ?: return
+        commit(data.copy(days = data.days + (dayKey to cur.copy(meals = cur.meals.filter { it.id != id }))))
+    }
+
+    // ---- custom foods ----
+    fun customFoods(): List<CustomFood> = data.profile.customFoods
+
+    fun saveCustomFood(cf: CustomFood) = updateProfile {
+        val id = cf.id.ifBlank { "cf" + System.currentTimeMillis() }
+        it.copy(customFoods = it.customFoods.filter { f -> f.id != id } + cf.copy(id = id))
+    }
+
+    fun deleteCustomFood(id: String) = updateProfile { it.copy(customFoods = it.customFoods.filter { f -> f.id != id }) }
+
+    fun toggleFoodFavorite(id: String) = updateProfile {
+        it.copy(customFoods = it.customFoods.map { f -> if (f.id == id) f.copy(favorite = !f.favorite) else f })
+    }
+
+    fun customFoodByBarcode(code: String): CustomFood? =
+        data.profile.customFoods.firstOrNull { it.barcode.isNotBlank() && it.barcode == code }
+
+    // ---- saved meals / copy ----
+    fun savedMeals(): List<SavedMeal> = data.profile.savedMeals
+
+    fun saveMeal(name: String, entries: List<FoodEntry>) = updateProfile {
+        it.copy(savedMeals = it.savedMeals + SavedMeal("m" + System.currentTimeMillis(), name.trim(), entries))
+    }
+
+    fun deleteSavedMeal(id: String) = updateProfile { it.copy(savedMeals = it.savedMeals.filter { m -> m.id != id }) }
+
+    /** Add all entries of a saved meal / copied slot into today under [slot]. */
+    fun addEntries(entries: List<FoodEntry>, slot: String) {
+        entries.forEach { addFood(it.copy(id = "", ts = 0, meal = slot)) }
+    }
+
+    /** "Gestern gleich": copy yesterday's entries for a given slot into today. */
+    fun copyYesterday(slot: String) {
+        val y = data.days[prevKey(todayKey())] ?: return
+        addEntries(y.meals.filter { it.meal == slot }, slot)
+    }
+
+    // ---- shopping list ----
+    fun shopping(): List<ShopItem> = data.profile.shopping
+
+    fun addToShopping(names: List<String>) = updateProfile {
+        val existing = it.shopping.map { s -> s.name.lowercase() }.toSet()
+        it.copy(shopping = it.shopping + names.map { n -> n.trim() }.filter { n -> n.isNotBlank() && n.lowercase() !in existing }.distinct().map { n -> ShopItem(n) })
+    }
+
+    fun toggleShop(name: String) = updateProfile {
+        it.copy(shopping = it.shopping.map { s -> if (s.name == name) s.copy(checked = !s.checked) else s })
+    }
+
+    fun clearShoppingChecked() = updateProfile { it.copy(shopping = it.shopping.filter { s -> !s.checked }) }
+
+    fun clearShopping() = updateProfile { it.copy(shopping = emptyList()) }
+
+    // ---- bodyweight log (for correlations) ----
+    fun weightLog(): List<WeightPoint> = data.weightLog
+
+    fun logWeight(kg: Double) {
+        if (kg < 30 || kg > 400) return
+        commit(data.copy(weightLog = (data.weightLog + WeightPoint(System.currentTimeMillis(), kg)).takeLast(400)))
+        updateProfile { it.copy(weightKg = kg.roundToInt()) }
+    }
+
+    // ---- fasting ----
+    fun fasting(): FastingState = data.fasting
+    fun fastLog(): List<FastLog> = data.fastLog
+
+    fun startFast(protocol: String) = commit(data.copy(fasting = FastingState(protocol, System.currentTimeMillis())))
+
+    fun setFastProtocol(protocol: String) = commit(data.copy(fasting = data.fasting.copy(protocol = protocol)))
+
+    fun stopFast() {
+        val f = data.fasting
+        val log = if (f.active) (data.fastLog + FastLog(f.protocol, f.startEpoch, System.currentTimeMillis())).takeLast(90)
+        else data.fastLog
+        commit(data.copy(fasting = FastingState(f.protocol, 0L), fastLog = log))
+    }
 
     fun nutritionTotals(day: DayData = today()): NutTotals {
         var kcal = 0; var p = 0; var c = 0; var f = 0
@@ -337,74 +488,265 @@ object Repo {
         return n
     }
 
-    // ---- chess (manual; auto-sync added in a later milestone) ----
-    fun chessRatingDelta(delta: Int) = updateProfile { p ->
-        if (p.chess.account != null) return@updateProfile p
-        val r = (p.chess.rating + delta).coerceIn(100, 3500)
-        p.copy(chess = p.chess.copy(rating = r, peak = maxOf(p.chess.peak, r)))
+    fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
+
+    fun setHealth(h: HealthSnapshot) {
+        // persist a daily snapshot so trends & baselines survive past the live read
+        val k = todayKey()
+        val prev = data.bodyDays[k] ?: BodyDay()
+        val day = prev.copy(
+            sleepMin = h.sleepMin ?: prev.sleepMin,
+            rem = if (h.sleepMin != null) h.rem else prev.rem,
+            deep = if (h.sleepMin != null) h.deep else prev.deep,
+            light = if (h.sleepMin != null) h.light else prev.light,
+            awake = if (h.sleepMin != null) h.awake else prev.awake,
+            restingHr = h.restingHr ?: prev.restingHr,
+            steps = h.steps ?: prev.steps,
+            sleepStartMin = h.sleepStartMin ?: prev.sleepStartMin,
+        )
+        commit(data.copy(health = h, bodyDays = (data.bodyDays + (k to day)).takeLastDays(120)))
     }
 
-    fun chessGoalDelta(delta: Int) = updateProfile { p ->
-        p.copy(chess = p.chess.copy(goal = (p.chess.goal + delta).coerceIn(200, 3500)))
+    private fun Map<String, BodyDay>.takeLastDays(n: Int): Map<String, BodyDay> =
+        if (size <= n) this else entries.sortedBy { it.key }.takeLast(n).associate { it.key to it.value }
+
+    fun bodyDay(key: String = todayKey()): BodyDay? = data.bodyDays[key]
+
+    /** Last [n] day keys (today inclusive), oldest first. */
+    fun lastDayKeys(n: Int): List<String> {
+        var k = todayKey()
+        val out = ArrayList<String>(n)
+        repeat(n) { out.add(k); k = prevKey(k) }
+        return out.reversed()
     }
 
-    fun chessLogGame(result: String) = updateProfile { p ->
-        if (p.chess.account != null) return@updateProfile p
-        val g = p.chess.games
-        val ng = when (result) { "w" -> g.copy(w = g.w + 1); "d" -> g.copy(d = g.d + 1); else -> g.copy(l = g.l + 1) }
-        val hist = (p.chess.history + ChessPoint(System.currentTimeMillis(), p.chess.rating)).takeLast(90)
-        p.copy(chess = p.chess.copy(games = ng, history = hist, peak = maxOf(p.chess.peak, p.chess.rating)))
-    }
-
-    fun setChess(chess: Chess) = updateProfile { it.copy(chess = chess) }
-
-    fun chessPuzzleDelta(delta: Int) = updateProfile { p ->
-        if (p.chess.account != null) return@updateProfile p
-        p.copy(chess = p.chess.copy(puzzle = (p.chess.puzzle + delta).coerceIn(100, 4000)))
-    }
-
-    fun applyChessSync(r: ChessApi.Result, platform: String, username: String) = updateProfile { p ->
-        val ch = p.chess
-        val changed = ch.rating != r.rating || ch.history.isEmpty()
-        val hist = if (changed) (ch.history + ChessPoint(System.currentTimeMillis(), r.rating)).takeLast(90) else ch.history
-        p.copy(
-            chess = ch.copy(
-                rating = r.rating,
-                peak = maxOf(ch.peak, r.peak, r.rating),
-                puzzle = r.puzzle ?: ch.puzzle,
-                games = r.record ?: ch.games,
-                rapid = r.rapid, blitz = r.blitz, bullet = r.bullet,
-                history = hist,
-                account = ChessAccount(platform, username, System.currentTimeMillis()),
-            )
+    fun setCheckIn(morningEnergy: Int? = null, soreness: Int? = null, eveningStress: Int? = null) {
+        val k = todayKey()
+        val prev = data.bodyDays[k] ?: BodyDay()
+        commit(
+            data.copy(
+                bodyDays = data.bodyDays + (k to prev.copy(
+                    morningEnergy = morningEnergy ?: prev.morningEnergy,
+                    soreness = soreness ?: prev.soreness,
+                    eveningStress = eveningStress ?: prev.eveningStress,
+                )),
+            ),
         )
     }
 
-    fun unlinkChess() = updateProfile { p ->
-        p.copy(chess = p.chess.copy(account = null, rapid = null, blitz = null, bullet = null))
+    /** Whoop-style journal factors for tonight; alcohol/late meal can be auto-tagged from Fuel. */
+    fun setJournalFactor(caffeineLate: Boolean? = null, alcohol: Boolean? = null, lateMeal: Boolean? = null, screenLate: Boolean? = null) {
+        val k = todayKey()
+        val prev = data.bodyDays[k] ?: BodyDay()
+        commit(
+            data.copy(
+                bodyDays = data.bodyDays + (k to prev.copy(
+                    fCaffeineLate = caffeineLate ?: prev.fCaffeineLate,
+                    fAlcohol = alcohol ?: prev.fAlcohol,
+                    fLateMeal = lateMeal ?: prev.fLateMeal,
+                    fScreenLate = screenLate ?: prev.fScreenLate,
+                )),
+            ),
+        )
     }
 
-    fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
-
-    fun setHealth(h: HealthSnapshot) = commit(data.copy(health = h))
-
-    fun recoveryScore(h: HealthSnapshot? = data.health): Int? {
-        if (h == null) return null
-        // No real signals -> no score (an empty live snapshot must not pretend).
-        if (h.sleepMin == null && h.hrv == null && h.restingHr == null) return null
-        var score = 55.0
-        if (h.sleepMin != null) {
-            score = (h.sleepMin / 480.0) * 60 +
-                (if (h.hrv != null) h.hrv.coerceIn(20, 120) / 120.0 * 25 else 15.0) +
-                (if (h.restingHr != null) (70 - h.restingHr).coerceIn(-10, 20).toDouble() else 5.0) + 5
+    /**
+     * Whoop's 5+5 rule: a factor's impact only shows once ≥5 yes-days and
+     * ≥5 no-days exist. Impact = Ø recovery day-after(with) − day-after(without).
+     * Recovery of day D+1 reflects the night following day D's behaviour.
+     */
+    fun journalImpact(selector: (BodyDay) -> Boolean?): Double? {
+        val keys = lastDayKeys(90)
+        val withR = ArrayList<Int>(); val withoutR = ArrayList<Int>()
+        for (i in 0 until keys.size - 1) {
+            val d = data.bodyDays[keys[i]] ?: continue
+            val flag = selector(d) ?: continue
+            val next = data.bodyDays[keys[i + 1]] ?: continue
+            val sleepMin = next.sleepMin ?: continue
+            // reconstruct a pure sleep-driven score for the following night
+            val perf = (sleepMin / 480.0).coerceIn(0.0, 1.0)
+            val rest = if (sleepMin > 0) ((next.rem + next.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45 else 0.5
+            val score = ((0.65 * perf + 0.35 * rest) * 100).toInt()
+            if (flag) withR.add(score) else withoutR.add(score)
         }
-        return score.toInt().coerceIn(5, 99)
+        if (withR.size < 5 || withoutR.size < 5) return null
+        return withR.average() - withoutR.average()
     }
 
-    fun coachSend(text: String) {
-        if (text.isBlank()) return
-        val reply = CoachEngine.reply(text)
-        updateDay { it.copy(coachLog = it.coachLog + CoachMsg("me", text.trim()) + CoachMsg("cx", reply)) }
+    /** Sick mode: streaks pause, plan goes mobility-only, notifier stays quiet. */
+    fun setSickMode(on: Boolean) = updateProfile { it.copy(sickMode = on) }
+
+    fun setTrainWeek(index: Int, stamp: String) = updateProfile {
+        it.copy(trainWeekIndex = index.coerceIn(0, 4), trainWeekStamp = stamp)
+    }
+
+    fun setKcalGoal(kcal: Int) = updateProfile { it.copy(kcalGoal = kcal.coerceIn(1200, 6000)) }
+    fun markTdeeSuggested() = updateProfile { it.copy(tdeeLastSuggest = todayKey()) }
+
+    /**
+     * Learned sleep need (Rise-style): median sleep on free mornings — weekend
+     * days over the last 60 — because that's when no alarm cuts the night short.
+     * Falls back to 8h until ≥5 such nights exist. Clamped 6:30–9:00.
+     */
+    fun sleepNeedMin(): Int {
+        val samples = lastDayKeys(60).filter { key ->
+            runCatching {
+                val d = java.time.LocalDate.parse(key)
+                d.dayOfWeek == java.time.DayOfWeek.SATURDAY || d.dayOfWeek == java.time.DayOfWeek.SUNDAY
+            }.getOrDefault(false)
+        }.mapNotNull { data.bodyDays[it]?.sleepMin }.filter { it > 240 }
+        val base = if (samples.size < 5) 480 else samples.sorted()[samples.size / 2].coerceIn(390, 540)
+        // hard days earn extra sleep: today's training sets + growth spurts
+        var boost = 0
+        if (workoutSets(today()) >= 12) boost += 30
+        val heights = data.profile.measurements["height"].orEmpty()
+        if (heights.size >= 2) {
+            val monthAgo = System.currentTimeMillis() - 35L * 86_400_000
+            val old = heights.lastOrNull { it.ts < monthAgo }
+            if (old != null && heights.last().cm - old.cm > 0.5) boost += 20
+        }
+        return (base + boost).coerceAtMost(570)
+    }
+
+    /** Merge one historical day (Health Connect backfill) without clobbering check-ins. */
+    fun mergeBodyDay(key: String, sleepMin: Int?, rem: Int, deep: Int, light: Int, awake: Int, restingHr: Int?, steps: Int?, sleepStartMin: Int?) {
+        val prev = data.bodyDays[key] ?: BodyDay()
+        commit(
+            data.copy(
+                bodyDays = data.bodyDays + (key to prev.copy(
+                    sleepMin = sleepMin ?: prev.sleepMin,
+                    rem = if (sleepMin != null) rem else prev.rem,
+                    deep = if (sleepMin != null) deep else prev.deep,
+                    light = if (sleepMin != null) light else prev.light,
+                    awake = if (sleepMin != null) awake else prev.awake,
+                    restingHr = restingHr ?: prev.restingHr,
+                    steps = steps ?: prev.steps,
+                    sleepStartMin = sleepStartMin ?: prev.sleepStartMin,
+                )),
+            ),
+        )
+    }
+
+    /**
+     * Whoop-style illness early warning: resting HR ≥ +5 bpm over the 30-day
+     * baseline on two consecutive mornings. Returns the delta or null.
+     */
+    fun sicknessSignal(): Int? {
+        val base = rhrBaseline() ?: return null
+        val keys = lastDayKeys(2)
+        val deltas = keys.mapNotNull { data.bodyDays[it]?.restingHr?.minus(base) }
+        if (deltas.size < 2) return null
+        return if (deltas.all { it >= 5 }) deltas.last() else null
+    }
+
+    /** Bedtime consistency: std deviation of sleep-start over last 14 nights, or null. */
+    fun bedtimeConsistency(): Pair<Int, Int>? { // (medianMinuteOfDay, ±spreadMin)
+        val starts = lastDayKeys(14).mapNotNull { data.bodyDays[it]?.sleepStartMin }
+        if (starts.size < 5) return null
+        // circular-safe: shift so late-evening times cluster (treat <12:00 as +24h)
+        val shifted = starts.map { if (it < 12 * 60) it + 24 * 60 else it }
+        val med = shifted.sorted()[shifted.size / 2]
+        val dev = shifted.map { kotlin.math.abs(it - med) }.average().toInt()
+        return (med % (24 * 60)) to dev
+    }
+
+    /** MFP-style portion memory: the grams you logged last time win over the serving default. */
+    fun rememberPortion(foodName: String, grams: Int) = updateProfile { p ->
+        val next = p.lastPortion + (foodName to grams)
+        p.copy(lastPortion = if (next.size > 300) next.entries.drop(next.size - 300).associate { it.key to it.value } else next)
+    }
+
+    // ---- body measurements ----
+    fun logMeasurement(key: String, cm: Double) = updateProfile { p ->
+        val list = (p.measurements[key] ?: emptyList()) + MeasurePoint(System.currentTimeMillis(), cm)
+        p.copy(measurements = p.measurements + (key to list.takeLast(200)))
+    }
+
+    /** Resting-HR baseline over the last 30 recorded days (excluding today). */
+    fun rhrBaseline(): Int? {
+        val vals = lastDayKeys(31).dropLast(1).mapNotNull { data.bodyDays[it]?.restingHr }
+        return if (vals.size >= 5) vals.average().toInt() else null
+    }
+
+    /**
+     * Recovery v2 — sleep performance (40%) + restorative share (20%) +
+     * resting-HR delta vs personal baseline (25%) + training-load headroom (15%).
+     * Components renormalize honestly when a signal is missing; no sleep → null.
+     */
+    fun recoveryScoreV2(h: HealthSnapshot? = data.health): Int? {
+        val sleepMin = h?.sleepMin ?: return null
+        val sleepPerf = (sleepMin / 480.0).coerceIn(0.0, 1.0)
+        // 45% deep+REM share = full credit (physiological sweet spot; 60% was
+        // stricter than any consumer scorer and dragged normal nights down).
+        val restorative =
+            if (sleepMin > 0) ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45 else 0.5
+
+        val baseline = rhrBaseline()
+        val rhr = h.restingHr
+        val rhrScore = if (baseline != null && rhr != null) {
+            // +5 bpm over baseline → poor; −5 under → great
+            (0.5 - (rhr - baseline) / 10.0).coerceIn(0.0, 1.0)
+        } else null
+
+        val loadHeadroom = 1.0 - trainingLoad()
+
+        var score: Double
+        if (rhrScore != null) {
+            score = (0.40 * sleepPerf + 0.20 * restorative + 0.25 * rhrScore + 0.15 * loadHeadroom) * 100
+        } else {
+            score = (0.55 * sleepPerf + 0.30 * restorative + 0.15 * loadHeadroom) * 100
+        }
+        // subjective check-ins nudge the score honestly
+        data.bodyDays[todayKey()]?.let { d ->
+            if (d.soreness == 3) score -= 8.0
+            if (d.morningEnergy == 1) score -= 5.0
+            if (d.morningEnergy == 3) score += 3.0
+        }
+        return Math.round(score).toInt().coerceIn(5, 99)
+    }
+
+    /**
+     * Pure sleep-quality score (0-100), Samsung-Health-style: duration vs an
+     * 8h need (55%) + deep/REM share vs 45% (30%) + wake-time penalty (15%).
+     * Deliberately separate from recovery, which also folds in training load,
+     * resting-HR baseline and check-ins — the two are not supposed to match.
+     */
+    fun sleepScore(h: HealthSnapshot? = data.health): Int? {
+        val sleepMin = h?.sleepMin ?: return null
+        if (sleepMin <= 0) return null
+        // Samsung treats 6-9h as the healthy band, not a hard 8h wall — full
+        // duration credit from 7h30, partial credit down to short nights.
+        val duration = (sleepMin / 450.0).coerceIn(0.0, 1.0)
+        // 35% deep+REM = full quality credit: the typical healthy share.
+        // Calibrated against Samsung Health on real nights (they run ~±2 pts
+        // since they also fold sleeping heart rate in — we deliberately don't).
+        val share = ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.35) / 0.35
+        val awakeFrac = (h.awake.toDouble() / (sleepMin + h.awake).coerceAtLeast(1)).coerceIn(0.0, 0.25) / 0.25
+        val score = (0.55 * duration + 0.30 * share + 0.15 * (1.0 - awakeFrac)) * 100
+        // round like every consumer scorer does — truncating systematically
+        // reads one point low
+        return Math.round(score).toInt().coerceIn(10, 99)
+    }
+
+    /** Rolling 14-night sleep debt vs the learned need, in minutes. */
+    fun sleepDebtMin(needMin: Int = sleepNeedMin()): Int =
+        lastDayKeys(14).sumOf { k ->
+            val s = data.bodyDays[k]?.sleepMin ?: return@sumOf 0
+            (needMin - s).coerceAtLeast(0)
+        }
+
+    /**
+     * Readiness from REAL signals only — never fabricated. Delegates to the v2
+     * model (sleep + restorative share + resting-HR baseline + load headroom).
+     * HRV stays excluded: the Galaxy Watch Active 2 does not report it.
+     */
+    fun recoveryScore(h: HealthSnapshot? = data.health): Int? = recoveryScoreV2(h)
+
+    /** 0..1 training load from the last two days of logged calisthenics volume. */
+    private fun trainingLoad(): Double {
+        val todaySets = workoutSets(today())
+        val yesterdaySets = dayFor(prevKey(todayKey()))?.let { workoutSets(it) } ?: 0
+        return ((todaySets + yesterdaySets) / 40.0).coerceIn(0.0, 1.0)      // ~40 sets/2d = max
     }
 
     fun exportJson(): String = json.encodeToString(data)

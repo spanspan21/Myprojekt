@@ -1,0 +1,490 @@
+package com.ascend.lifeos.wellbeing
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
+import android.graphics.PixelFormat
+import android.os.Build
+import android.os.Bundle
+import android.os.IBinder
+import android.os.PowerManager
+import android.provider.Settings
+import android.view.View
+import android.view.WindowManager
+import androidx.compose.runtime.Recomposer
+import androidx.compose.ui.platform.AndroidUiDispatcher
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.compositionContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.masterplan.JarvisRoutingEngine
+import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
+import com.ascend.lifeos.data.skill.SkillMeta
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class JarvisGuardService : Service() {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var loop: Job? = null
+    private var wm: WindowManager? = null
+    private var overlay: View? = null
+    private val cooldownUntil = HashMap<String, Long>()
+    private val passUntil = HashMap<String, Long>()   // gate passes ("Continue · 5 min")
+    private var lastPkg: String? = null               // foreground-transition detection
+    private var sessionStart = 0L                     // start of the current continuous session
+    private var lastHeavyCheck = 0L                   // throttles the event-stream walk
+    private var lastGrayWrite: Boolean? = null        // last grayscale state we wrote
+    private var power: PowerManager? = null
+    private var overlayLifecycle: OverlayLifecycleOwner? = null
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        power = getSystemService(Context.POWER_SERVICE) as? PowerManager
+        createChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundCompat()
+        when (intent?.action) {
+            ACTION_STOP -> { removeOverlay(); stopSelf(); return START_NOT_STICKY }
+            ACTION_TEST -> scope.launch { showOverlay("Instagram", "com.instagram.android", 62, 45) }
+            else -> startLoop()
+        }
+        return START_STICKY
+    }
+
+    private fun startLoop() {
+        if (loop?.isActive == true) return
+        loop = scope.launch {
+            while (isActive) {
+                runCatching { tick() }
+                // Fast loop exists only to catch gate-app opens quickly — and only
+                // while the screen is on, so the battery stays sane.
+                val fast = runCatching {
+                    WellbeingStore.gateApps(this@JarvisGuardService).isNotEmpty() && power?.isInteractive == true
+                }.getOrDefault(false)
+                delay(if (fast) 1_500L else 5_000L)
+            }
+        }
+    }
+
+    private suspend fun tick() {
+        if (!WellbeingStore.isEnabled(this)) return
+        tickWindDown()
+        if (overlay != null) return
+        if (!DigitalWellbeingManager.hasUsageAccess(this) || !DigitalWellbeingManager.canOverlay(this)) return
+        if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
+            lastPkg = null // screen off ends the session; next unlock counts as a new open
+            return
+        }
+
+        val limits = WellbeingStore.limits(this)
+        val gates = WellbeingStore.gateApps(this)
+        val budgets = WellbeingStore.openBudgets(this)
+        val appCats = WellbeingStore.appCategories(this)
+        val catBudgets = WellbeingStore.categoryBudgets(this)
+        val anyCategoryRule = appCats.isNotEmpty() && catBudgets.isNotEmpty()
+        if (limits.isEmpty() && gates.isEmpty() && budgets.isEmpty() && !anyCategoryRule) return
+
+        val fg = DigitalWellbeingManager.foregroundApp(this) ?: return
+        val now = System.currentTimeMillis()
+
+        // Foreground transition → new continuous session; count opens for budgeted apps.
+        if (fg != lastPkg) {
+            lastPkg = fg
+            sessionStart = now
+            if (budgets.containsKey(fg)) runCatching { WellbeingStore.recordOpen(this, fg, todayKey()) }
+        }
+
+        val limitMin = limits[fg]
+        val budget = budgets[fg]
+        val gated = fg in gates
+        val category = appCats[fg]
+        val catBudgetMin = category?.let { catBudgets[it] }
+        if (limitMin == null && budget == null && !gated && catBudgetMin == null) return
+        if (now < (cooldownUntil[fg] ?: 0L)) return
+
+        // 0. Phone-free window — every guarded app is shut, gate passes included.
+        if (limitMin != null || budget != null || gated) {
+            val cal = java.util.Calendar.getInstance()
+            val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+            val window = runCatching { WellbeingStore.activePhoneFreeWindow(this, nowMin) }.getOrNull()
+            if (window != null) {
+                cooldownUntil[fg] = now + 90_000L
+                WellbeingStore.recordIntercept(this)
+                val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
+                showOverlay(
+                    DigitalWellbeingManager.appLabel(this, fg), fg, usedNow, 0,
+                    mode = InterceptMode.FOCUS,
+                    statusText = "Phone-free window · until %02d:%02d".format(window.second / 60, window.second % 60),
+                )
+                return
+            }
+        }
+
+        // 1. Pause gate — one breath before the app opens. Runs before any limit logic.
+        if (gated && now >= (passUntil[fg] ?: 0L)) {
+            WellbeingStore.recordIntercept(this)
+            showOverlay(DigitalWellbeingManager.appLabel(this, fg), fg, 0, 0, mode = InterceptMode.GATE)
+            return
+        }
+        if (limitMin == null && budget == null && catBudgetMin == null) return
+
+        // The full event-stream walk below is the expensive part — keep it at the
+        // normal ~5s cadence even while the gate loop runs fast. One walk covers
+        // both the per-app numbers and the category sums.
+        if (now - lastHeavyCheck < 4_500L) return
+        lastHeavyCheck = now
+
+        val dayDurations = DigitalWellbeingManager.foregroundDurations(
+            this, DigitalWellbeingManager.startOfToday(), now,
+        )
+        val usedMs = dayDurations[fg] ?: 0L
+        val usedMin = (usedMs / 60_000L).toInt()
+
+        // 2. Focus session — every limited app is shut, no matter the budget.
+        if (limitMin != null && WellbeingStore.inFocus(this)) {
+            cooldownUntil[fg] = now + 60_000L
+            WellbeingStore.recordIntercept(this)
+            showOverlay(DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0, mode = InterceptMode.FOCUS)
+            return
+        }
+
+        // 3. Morning block — limited apps stay dark before the cut-off.
+        val morningUntil = WellbeingStore.morningBlockUntil(this)
+        if (limitMin != null && morningUntil > 0) {
+            val cal = java.util.Calendar.getInstance()
+            val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+            if (nowMin < morningUntil) {
+                cooldownUntil[fg] = now + 90_000L
+                WellbeingStore.recordIntercept(this)
+                showOverlay(
+                    DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
+                    statusText = "Morning block · protected until %02d:%02d".format(morningUntil / 60, morningUntil % 60),
+                )
+                return
+            }
+        }
+
+        // 4. Per-open budget — too many opens today, or this session ran too long.
+        if (budget != null) {
+            val (opensPerDay, minutesPerOpen) = budget
+            val opens = runCatching { WellbeingStore.opensToday(this, fg, todayKey()) }.getOrDefault(0)
+            val overOpens = opens > opensPerDay
+            val overSession = now - sessionStart >= minutesPerOpen * 60_000L
+            if (overOpens || overSession) {
+                cooldownUntil[fg] = now + 90_000L
+                WellbeingStore.recordIntercept(this)
+                showOverlay(
+                    DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
+                    statusText = if (overOpens) "Open budget reached · open $opens/$opensPerDay"
+                    else "Session budget reached · open $opens/$opensPerDay",
+                )
+                return
+            }
+        }
+
+        // 5. Daily limit reached.
+        if (limitMin != null && usedMs >= limitMin * 60_000L) {
+            cooldownUntil[fg] = now + 90_000L
+            WellbeingStore.recordIntercept(this)
+            showOverlay(
+                DigitalWellbeingManager.appLabel(this, fg),
+                fg,
+                usedMin,
+                limitMin,
+            )
+            return
+        }
+
+        // 6. Category budget — one shared pool across every app of the category.
+        if (category != null && catBudgetMin != null) {
+            val catUsedMs = appCats.entries
+                .filter { it.value == category }
+                .sumOf { dayDurations[it.key] ?: 0L }
+            if (catUsedMs >= catBudgetMin * 60_000L) {
+                cooldownUntil[fg] = now + 90_000L
+                WellbeingStore.recordIntercept(this)
+                showOverlay(
+                    DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
+                    statusText = "%s budget reached · %d/%dm".format(
+                        category.replaceFirstChar { it.uppercase() },
+                        (catUsedMs / 60_000L).toInt(),
+                        catBudgetMin,
+                    ),
+                )
+            }
+        }
+    }
+
+    /**
+     * Grayscale wind-down via the accessibility daltonizer. Needs the
+     * WRITE_SECURE_SETTINGS permission (one-time adb grant) — without it this
+     * silently no-ops. Never writes unless the feature is (or was) active, so a
+     * user's own daltonizer config is left alone.
+     */
+    private fun tickWindDown() {
+        val start = WellbeingStore.windDownStartMin(this)
+        if (start <= 0 && lastGrayWrite != true) return
+        val granted = runCatching {
+            checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+        }.getOrDefault(false)
+        if (!granted) return
+        val cal = java.util.Calendar.getInstance()
+        val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+        val shouldGray = start > 0 && (nowMin >= start || nowMin < 4 * 60)
+        if (lastGrayWrite == shouldGray) return
+        runCatching {
+            if (shouldGray) {
+                Settings.Secure.putInt(contentResolver, "accessibility_display_daltonizer_enabled", 1)
+                Settings.Secure.putInt(contentResolver, "accessibility_display_daltonizer", 0)
+            } else {
+                Settings.Secure.putInt(contentResolver, "accessibility_display_daltonizer_enabled", 0)
+                Settings.Secure.putInt(contentResolver, "accessibility_display_daltonizer", -1)
+            }
+            lastGrayWrite = shouldGray
+        }
+    }
+
+    // ---- Compose overlay --------------------------------------------------------
+
+    private suspend fun showOverlay(
+        appLabel: String,
+        pkg: String,
+        used: Int,
+        limit: Int,
+        mode: InterceptMode = InterceptMode.LIMIT,
+        statusText: String? = null,
+    ) {
+        if (overlay != null) return
+
+        // The gate view shows neither guilt bars nor the alt plan — skip that work
+        // so the breathing screen appears fast. It gets one small offer instead.
+        val skillMin = if (mode == InterceptMode.GATE) 0
+        else (DigitalWellbeingManager.usageTodayMs(this, packageName) / 60_000L).toInt()
+
+        val lockedOut = DoomscrollDetector.isLockedOut(pkg)
+        val snoozes = DoomscrollDetector.snoozesToday(pkg)
+
+        val altText = if (mode == InterceptMode.GATE) "" else runCatching {
+            withContext(Dispatchers.IO) {
+                val domains = MasterPlanDatabase.get(applicationContext).dao().domainsOnce()
+                val plan = JarvisRoutingEngine().planDay(domains, readiness = null, availableMinutes = 15)
+                plan.items.firstOrNull()
+            }
+        }.getOrNull()?.let { item ->
+            "Do this instead: ${item.task?.title ?: item.node.node.title}\n${item.domainTitle} · ${item.minutes} min"
+        } ?: "Open JARVIS and put 15 minutes into one of your goals."
+
+        // Gate offer: one concrete 2-minute alternative. Priority: a due skill
+        // review, then a physical micro-dose, then breath work.
+        val offerText = if (mode != InterceptMode.GATE) "" else {
+            val dueTitle = runCatching {
+                withContext(Dispatchers.IO) {
+                    val domains = MasterPlanDatabase.get(applicationContext).dao().domainsOnce()
+                    val completed = domains.flatMap { it.completedNodeIds }.toSet()
+                    val dueId = SkillMeta.dueReviews(applicationContext, System.currentTimeMillis(), completed).firstOrNull()
+                    dueId?.let { id ->
+                        domains.asSequence().flatMap { it.nodes.asSequence() }
+                            .firstOrNull { it.node.id == id }?.node?.title
+                    }
+                }
+            }.getOrNull()
+            when {
+                dueTitle != null -> "Review: $dueTitle"
+                System.currentTimeMillis() / 60_000L % 2L == 0L -> "20 push-ups. Right now."
+                else -> "2 minutes of box breathing."
+            }
+        }
+
+        val lifecycleOwner = OverlayLifecycleOwner()
+        overlayLifecycle = lifecycleOwner
+
+        val composeView = ComposeView(this).apply {
+            setViewTreeLifecycleOwner(lifecycleOwner)
+            setViewTreeSavedStateRegistryOwner(lifecycleOwner)
+
+            val recomposer = Recomposer(AndroidUiDispatcher.CurrentThread)
+            compositionContext = recomposer
+            scope.launch(AndroidUiDispatcher.CurrentThread) { recomposer.runRecomposeAndApplyChanges() }
+
+            setContent {
+                JarvisInterceptScreen(
+                    appLabel = appLabel,
+                    usedMinutes = used,
+                    limitMinutes = limit,
+                    skillMinutes = skillMin,
+                    altText = altText,
+                    lockedOut = lockedOut,
+                    mode = mode,
+                    snoozeCount = snoozes,
+                    statusText = statusText,
+                    offerText = offerText,
+                    onOfferDone = {
+                        // "Done ✓" closes the overlay; nothing is recorded. A short
+                        // cooldown keeps the gate from re-firing mid-transition.
+                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
+                        removeOverlay()
+                    },
+                    onSnooze = {
+                        DoomscrollDetector.recordSnooze(pkg)
+                        removeOverlay()
+                    },
+                    onSkill = {
+                        removeOverlay()
+                        runCatching {
+                            packageManager.getLaunchIntentForPackage(packageName)
+                                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                ?.let { startActivity(it) }
+                        }
+                    },
+                    onGateContinue = {
+                        val n = System.currentTimeMillis()
+                        passUntil[pkg] = n + GATE_PASS_MS
+                        cooldownUntil[pkg] = n + GATE_PASS_MS
+                        removeOverlay()
+                    },
+                    onGateExit = {
+                        // Short cooldown so the gate doesn't re-fire mid-exit.
+                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
+                        removeOverlay()
+                        runCatching {
+                            startActivity(
+                                Intent(Intent.ACTION_MAIN)
+                                    .addCategory(Intent.CATEGORY_HOME)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
+                    },
+                )
+            }
+        }
+
+        lifecycleOwner.onCreate()
+        lifecycleOwner.onResume()
+
+        val lp = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT,
+        )
+        runCatching { wm?.addView(composeView, lp); overlay = composeView }
+    }
+
+    private fun removeOverlay() {
+        overlayLifecycle?.onDestroy()
+        overlayLifecycle = null
+        overlay?.let { runCatching { wm?.removeView(it) } }
+        overlay = null
+    }
+
+    // ---- foreground plumbing ----------------------------------------------------
+
+    private fun createChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(
+                NotificationChannel(CHANNEL, "Jarvis Guard", NotificationManager.IMPORTANCE_MIN),
+            )
+        }
+    }
+
+    private fun startForegroundCompat() {
+        val notif: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL)
+                .setContentTitle("Jarvis Guard active")
+                .setContentText("Protecting your focus")
+                .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
+                .build()
+        } else {
+            @Suppress("DEPRECATION") Notification.Builder(this)
+                .setContentTitle("Jarvis Guard active").setSmallIcon(android.R.drawable.ic_lock_idle_lock).build()
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(NOTIF_ID, notif)
+        }
+    }
+
+    override fun onDestroy() {
+        removeOverlay()
+        loop?.cancel()
+        super.onDestroy()
+    }
+
+    companion object {
+        private const val CHANNEL = "jarvis_guard"
+        private const val NOTIF_ID = 4711
+        private const val GATE_PASS_MS = 5 * 60_000L // "Continue · 5 min"
+        const val ACTION_STOP = "com.ascend.lifeos.STOP_GUARD"
+        const val ACTION_TEST = "com.ascend.lifeos.TEST_GUARD"
+
+        fun start(ctx: Context) {
+            val i = Intent(ctx, JarvisGuardService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(i) else ctx.startService(i)
+        }
+
+        fun stop(ctx: Context) {
+            ctx.startService(Intent(ctx, JarvisGuardService::class.java).setAction(ACTION_STOP))
+        }
+
+        fun test(ctx: Context) {
+            val i = Intent(ctx, JarvisGuardService::class.java).setAction(ACTION_TEST)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(i) else ctx.startService(i)
+        }
+    }
+}
+
+/**
+ * Minimal LifecycleOwner + SavedStateRegistryOwner so Compose can run inside a
+ * WindowManager overlay from a Service (which has no Activity lifecycle).
+ */
+private class OverlayLifecycleOwner : androidx.lifecycle.LifecycleOwner, SavedStateRegistryOwner {
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    private val savedStateController = SavedStateRegistryController.create(this)
+
+    override val lifecycle: Lifecycle get() = lifecycleRegistry
+    override val savedStateRegistry: SavedStateRegistry get() = savedStateController.savedStateRegistry
+
+    fun onCreate() {
+        savedStateController.performRestore(null)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    }
+    fun onResume() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    }
+    fun onDestroy() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    }
+}

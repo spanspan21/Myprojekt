@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ember variant — training-orange chevrons. -->
+    <path
+        android:fillColor="#FF8A5C"
+        android:pathData="M54,32 L74,58 L66,58 L54,42 L42,58 L34,58 Z" />
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M54,50 L74,76 L66,76 L54,60 L42,76 L34,76 Z" />
+</vector>

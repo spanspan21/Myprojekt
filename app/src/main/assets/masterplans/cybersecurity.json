@@ -1,0 +1,845 @@
+{
+  "id": "cybersecurity",
+  "title": "Cybersecurity Professional",
+  "tagline": "From zero to a remote-ready security engineer & pentester",
+  "accent": "#5B9DFF",
+  "icon": "shield",
+  "order": 1,
+  "nodes": [
+    {
+      "key": "cy_intro",
+      "title": "The Field & Roadmap",
+      "subtitle": "Map the whole journey",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": [],
+      "tasks": [
+        { "title": "Read the full cybersecurity roadmap", "detail": "Name the main branches: networking, offensive, defensive, GRC." },
+        { "title": "Write your 10-year goal", "detail": "One paragraph: which role, remote, salary." },
+        { "title": "Explain the CIA triad", "detail": "Confidentiality, Integrity, Availability — one example each." }
+      ],
+      "resources": [
+        { "title": "Cyber Security Roadmap", "url": "https://roadmap.sh/cyber-security", "kind": "INTERACTIVE", "provider": "roadmap.sh" },
+        { "title": "What is Cybersecurity?", "url": "https://www.youtube.com/@NetworkChuck/search?query=cybersecurity", "kind": "VIDEO", "provider": "NetworkChuck" }
+      ]
+    },
+    {
+      "key": "cy_os_basics",
+      "title": "Operating System Fundamentals",
+      "subtitle": "Processes, memory, kernel",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["cy_intro"],
+      "tasks": [
+        { "title": "Explain process vs thread", "detail": "Write one sentence each with an example." },
+        { "title": "RAM vs disk vs cache", "detail": "Draw a memory hierarchy." },
+        { "title": "Kernel vs userspace", "detail": "Explain why the separation matters for security." }
+      ],
+      "resources": [
+        { "title": "Operating Systems Crash Course", "url": "https://www.youtube.com/@freecodecamp/search?query=operating%20system", "kind": "VIDEO", "provider": "freeCodeCamp" }
+      ]
+    },
+    {
+      "key": "cy_vm_setup",
+      "title": "Set Up a VM Lab",
+      "subtitle": "VirtualBox + your first Linux VM",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_os_basics"],
+      "tasks": [
+        { "title": "Install VirtualBox", "detail": "VirtualBox runs, version visible in the About dialog." },
+        { "title": "Create an Ubuntu VM", "detail": "ISO downloaded, VM boots, desktop visible." },
+        { "title": "Create & restore a snapshot", "detail": "Snapshot taken, deleted, restored — it works." }
+      ],
+      "resources": [
+        { "title": "VirtualBox", "url": "https://www.virtualbox.org/", "kind": "DOCS", "provider": "Oracle" }
+      ]
+    },
+    {
+      "key": "cy_net_osi",
+      "title": "Networking: OSI & TCP/IP",
+      "subtitle": "Understand the 7 layers",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_vm_setup"],
+      "tasks": [
+        { "title": "Know the OSI model by heart", "detail": "Name all 7 layers with one protocol example each." },
+        { "title": "Trace a web request through every layer", "detail": "Write down what happens when you open google.com in the browser, layer by layer." }
+      ],
+      "resources": [
+        { "title": "Network+ Course (free)", "url": "https://www.professormesser.com/network-plus/n10-009/n10-009-video/n10-009-training-course/", "kind": "COURSE", "provider": "Professor Messer" }
+      ]
+    },
+    {
+      "key": "cy_net_ip",
+      "title": "Networking: IP, DNS, DHCP",
+      "subtitle": "How devices find each other",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_net_osi"],
+      "tasks": [
+        { "title": "Explain IP, DNS, DHCP, NAT", "detail": "One sentence each on what it does + when it happens." },
+        { "title": "nslookup/dig on 5 domains", "detail": "Query DNS records (A, MX, CNAME) for real domains." },
+        { "title": "Read ipconfig/ifconfig", "detail": "Note your own IP, gateway, subnet mask." }
+      ],
+      "resources": [
+        { "title": "Intro to Networking", "url": "https://tryhackme.com/room/introtonetworking", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_subnetting",
+      "title": "Subnetting Math",
+      "subtitle": "CIDR, network & broadcast address",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_net_ip"],
+      "tasks": [
+        { "title": "Calculate 10 subnets by hand", "detail": "CIDR → network, broadcast, host range correct." },
+        { "title": "Recognize RFC1918 ranges", "detail": "Identify 10.x, 172.16-31.x, 192.168.x as private instantly." },
+        { "title": "Verify with a subnet calculator", "detail": "Compare your own results with an online tool." }
+      ],
+      "resources": [
+        { "title": "Subnetting Explained", "url": "https://www.youtube.com/@PowerCertAnimatedVideos/search?query=subnetting", "kind": "VIDEO", "provider": "PowerCert" }
+      ]
+    },
+    {
+      "key": "cy_proto_http",
+      "title": "Protocols: HTTP & TLS",
+      "subtitle": "How the web encrypts",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_subnetting"],
+      "tasks": [
+        { "title": "Draw the TLS handshake", "detail": "Certificate, key exchange, symmetric switch — as a diagram." },
+        { "title": "HTTP methods and status codes", "detail": "Explain GET/POST/PUT/DELETE + 200/301/400/401/403/404/500." }
+      ],
+      "resources": [
+        { "title": "HTTP Overview", "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview", "kind": "DOCS", "provider": "MDN" }
+      ]
+    },
+    {
+      "key": "cy_proto_other",
+      "title": "Protocols: DNS, SSH, SMTP",
+      "subtitle": "Understand TCP vs UDP",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_proto_http"],
+      "tasks": [
+        { "title": "Compare TCP vs UDP", "detail": "Name 3 protocols that run on each and why." },
+        { "title": "Establish an SSH connection", "detail": "ssh user@host works, key auth over passwords explained." },
+        { "title": "Sketch the SMTP flow", "detail": "Write down the email path from sender → MTA → recipient." }
+      ],
+      "resources": [
+        { "title": "Networking Course", "url": "https://www.youtube.com/@freecodecamp/search?query=networking%20course", "kind": "VIDEO", "provider": "freeCodeCamp" }
+      ]
+    },
+    {
+      "key": "cy_wireshark_capture",
+      "title": "Wireshark: Capture Traffic",
+      "subtitle": "See packets, not just read about them",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_proto_other"],
+      "tasks": [
+        { "title": "Install Wireshark & pick an interface", "detail": "Live capture running, packets flowing." },
+        { "title": "Filter DNS packets", "detail": "Display filter: dns — your own DNS queries visible." },
+        { "title": "Filter HTTP packets", "detail": "http.request — web requests isolated." }
+      ],
+      "resources": [
+        { "title": "Wireshark 101", "url": "https://tryhackme.com/room/wireshark", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_wireshark_analysis",
+      "title": "Wireshark: Analyze Streams",
+      "subtitle": "Reconstruct entire connections",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_wireshark_capture"],
+      "tasks": [
+        { "title": "Follow a TCP stream", "detail": "Follow TCP Stream → read the full request/response." },
+        { "title": "Find suspicious traffic", "detail": "Identify an unusual connection in a PCAP sample." }
+      ],
+      "resources": [
+        { "title": "Wireshark Tutorial", "url": "https://www.youtube.com/@NetworkChuck/search?query=wireshark", "kind": "VIDEO", "provider": "NetworkChuck" }
+      ]
+    },
+    {
+      "key": "cy_linux_nav",
+      "title": "Linux: Navigation & Files",
+      "subtitle": "Core commands for the terminal",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_vm_setup"],
+      "tasks": [
+        { "title": "Use 20 core commands", "detail": "ls, cd, pwd, cp, mv, rm, mkdir, cat, less, head, tail, wc, echo, touch — from memory." },
+        { "title": "Search files with find & grep", "detail": "find / -name '*.conf' and grep -r 'password' /etc work." },
+        { "title": "TryHackMe Linux Fundamentals 1", "detail": "Room completed." }
+      ],
+      "resources": [
+        { "title": "Linux Fundamentals", "url": "https://tryhackme.com/module/linux-fundamentals", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_linux_perms",
+      "title": "Linux: Users & Permissions",
+      "subtitle": "Who is allowed to do what",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_linux_nav"],
+      "tasks": [
+        { "title": "Create a user with useradd", "detail": "New user can log in." },
+        { "title": "Apply chmod & chown", "detail": "Set file permissions for owner/group/other correctly." },
+        { "title": "Configure sudo", "detail": "A user has sudo rights for a specific command." }
+      ],
+      "resources": [
+        { "title": "Linux for Beginners", "url": "https://www.youtube.com/@LearnLinuxTV", "kind": "VIDEO", "provider": "LearnLinuxTV" }
+      ]
+    },
+    {
+      "key": "cy_linux_services",
+      "title": "Linux: Services & Processes",
+      "subtitle": "What's running on the system",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_linux_perms"],
+      "tasks": [
+        { "title": "Use ps, top, htop", "detail": "Identify running processes, see CPU/RAM." },
+        { "title": "systemctl: start/stop a service", "detail": "Start, stop, and check the status of a service (e.g. apache2)." },
+        { "title": "TryHackMe Linux Fundamentals 2+3", "detail": "Both rooms completed." }
+      ],
+      "resources": [
+        { "title": "Linux Fundamentals", "url": "https://tryhackme.com/module/linux-fundamentals", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_bash_basics",
+      "title": "Bash: Variables & Loops",
+      "subtitle": "Your first scripting",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_linux_services"],
+      "tasks": [
+        { "title": "Script with variables & if/else", "detail": "Takes an argument, checks if a file exists, prints a message." },
+        { "title": "for loop over files", "detail": "Go through all .log files in a folder and print the line count." },
+        { "title": "Make the script executable", "detail": "chmod +x, shebang #!/bin/bash, ./script.sh runs." }
+      ],
+      "resources": [
+        { "title": "Bash Scripting", "url": "https://www.youtube.com/@freecodecamp/search?query=bash%20scripting", "kind": "VIDEO", "provider": "freeCodeCamp" }
+      ]
+    },
+    {
+      "key": "cy_bash_tools",
+      "title": "Bash: Useful Scripts",
+      "subtitle": "Automate what you repeat",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_bash_basics"],
+      "tasks": [
+        { "title": "Write a backup script", "detail": "Folder → tar.gz with the date in the name." },
+        { "title": "Build a log parser", "detail": "grep + awk: count failed SSH logins from /var/log/auth.log." },
+        { "title": "Set up a cron job", "detail": "Script runs automatically every hour, output to a log file." }
+      ],
+      "resources": [
+        { "title": "Bash Reference", "url": "https://tldp.org/LDP/abs/html/", "kind": "DOCS", "provider": "TLDP" }
+      ]
+    },
+    {
+      "key": "cy_bandit_1",
+      "title": "OverTheWire Bandit: Level 0-10",
+      "subtitle": "Hacking through Linux basics",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_bash_tools"],
+      "tasks": [
+        { "title": "Solve levels 0-5", "detail": "SSH, cat, find, grep — passwords found." },
+        { "title": "Solve levels 6-10", "detail": "Permissions, redirects, base64 — solved." },
+        { "title": "Writeup for every level", "detail": "Notes in a private repo." }
+      ],
+      "resources": [
+        { "title": "Bandit Wargame", "url": "https://overthewire.org/wargames/bandit/", "kind": "INTERACTIVE", "provider": "OverTheWire" }
+      ]
+    },
+    {
+      "key": "cy_bandit_2",
+      "title": "OverTheWire Bandit: Level 11-25",
+      "subtitle": "SSH, Cron, Crypto Challenges",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_bandit_1"],
+      "tasks": [
+        { "title": "Solve levels 11-18", "detail": "SSH keys, cron jobs, network challenges solved." },
+        { "title": "Solve levels 19-25", "detail": "Setuid, scripting, binary challenges solved." },
+        { "title": "Continue the writeup", "detail": "All levels documented." }
+      ],
+      "resources": [
+        { "title": "Bandit Wargame", "url": "https://overthewire.org/wargames/bandit/", "kind": "INTERACTIVE", "provider": "OverTheWire" }
+      ]
+    },
+    {
+      "key": "cy_sec_threats",
+      "title": "Security: Understand Attacks",
+      "subtitle": "Phishing, MITM, Ransomware",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["cy_net_ip"],
+      "tasks": [
+        { "title": "Threat vs vulnerability vs risk", "detail": "Define each term and how they relate." },
+        { "title": "Explain 5 attack types", "detail": "Phishing, MITM, DoS, injection, ransomware — 2 sentences each on how it works." }
+      ],
+      "resources": [
+        { "title": "Security+ Course (free)", "url": "https://www.professormesser.com/security-plus/sy0-701/sy0-701-video/sy0-701-comptia-security-plus-course/", "kind": "COURSE", "provider": "Professor Messer" }
+      ]
+    },
+    {
+      "key": "cy_sec_controls",
+      "title": "Security: Controls & Defense",
+      "subtitle": "Defense in Depth",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["cy_sec_threats"],
+      "tasks": [
+        { "title": "Map controls to the CIA triad", "detail": "Name one control each for Confidentiality, Integrity, Availability." },
+        { "title": "Explain defense in depth", "detail": "Draw 4 layers: perimeter, network, host, data." }
+      ],
+      "resources": [
+        { "title": "Security+ Course", "url": "https://www.professormesser.com/security-plus/sy0-701/sy0-701-video/sy0-701-comptia-security-plus-course/", "kind": "COURSE", "provider": "Professor Messer" }
+      ]
+    },
+    {
+      "key": "cy_crypto_sym",
+      "title": "Cryptography: Symmetric & Hashing",
+      "subtitle": "AES, SHA-256, password hashing",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_sec_controls"],
+      "tasks": [
+        { "title": "Explain symmetric encryption", "detail": "AES-256: when do you use it, how long is the key?" },
+        { "title": "Hash and verify a file", "detail": "sha256sum on a file, compare the hash." },
+        { "title": "Explain collision resistance", "detail": "Why is MD5 insecure but SHA-256 (still) isn't?" }
+      ],
+      "resources": [
+        { "title": "Cryptography Basics", "url": "https://www.youtube.com/@freecodecamp/search?query=cryptography", "kind": "VIDEO", "provider": "freeCodeCamp" }
+      ]
+    },
+    {
+      "key": "cy_crypto_asym",
+      "title": "Cryptography: Asymmetric & PKI",
+      "subtitle": "RSA, certificates, HTTPS",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_crypto_sym"],
+      "tasks": [
+        { "title": "Explain asymmetric encryption", "detail": "Public key vs private key — who encrypts with what and when?" },
+        { "title": "Understand certificates & PKI", "detail": "How does a browser trust a website? Root CA → Intermediate → Leaf." },
+        { "title": "Create an SSH keypair", "detail": "ssh-keygen, copy the public key to a server, login works." }
+      ],
+      "resources": [
+        { "title": "Crypto101", "url": "https://www.crypto101.io/", "kind": "ARTICLE", "provider": "Crypto101" }
+      ]
+    },
+    {
+      "key": "cy_netplus_study",
+      "title": "Network+ Study Plan",
+      "subtitle": "Work through the Messer modules",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_wireshark_analysis"],
+      "tasks": [
+        { "title": "Work through Messer modules 1-3", "detail": "Notes on every objective." },
+        { "title": "Work through Messer modules 4-5", "detail": "Notes complete." }
+      ],
+      "resources": [
+        { "title": "Network+ Course", "url": "https://www.professormesser.com/network-plus/n10-009/n10-009-video/n10-009-training-course/", "kind": "COURSE", "provider": "Professor Messer" }
+      ]
+    },
+    {
+      "key": "cy_netplus_exam",
+      "title": "Network+ Exam Prep",
+      "subtitle": "Pass the practice exams",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_netplus_study"],
+      "tasks": [
+        { "title": "Pass 2 practice exams with 85%+", "detail": "Two full-length tests passed." },
+        { "title": "(Optional) Take the exam", "detail": "CompTIA Network+ passed." }
+      ],
+      "resources": [
+        { "title": "Network+ Practice", "url": "https://www.examcompass.com/", "kind": "INTERACTIVE", "provider": "ExamCompass" }
+      ]
+    },
+    {
+      "key": "cy_secplus_study",
+      "title": "Security+ Study Plan",
+      "subtitle": "Work through the SY0-701 modules",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_crypto_asym", "cy_proto_other"],
+      "tasks": [
+        { "title": "Work through Messer SY0-701 modules 1-3", "detail": "Notes on every objective." },
+        { "title": "Identify weak areas", "detail": "List the topics where you score below 80%." }
+      ],
+      "resources": [
+        { "title": "Security+ Course", "url": "https://www.professormesser.com/security-plus/sy0-701/sy0-701-video/sy0-701-comptia-security-plus-course/", "kind": "COURSE", "provider": "Professor Messer" }
+      ]
+    },
+    {
+      "key": "cy_secplus_exam",
+      "title": "Security+ Exam Prep",
+      "subtitle": "85%+ on practice tests",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_secplus_study"],
+      "tasks": [
+        { "title": "Pass 3 practice exams with 85%+", "detail": "Consistent passing scores." },
+        { "title": "(Optional) Take the exam", "detail": "CompTIA Security+ passed." }
+      ],
+      "resources": [
+        { "title": "Security+ Practice Tests", "url": "https://www.examcompass.com/", "kind": "INTERACTIVE", "provider": "ExamCompass" }
+      ]
+    },
+    {
+      "key": "cy_homelab_kali",
+      "title": "Homelab: Set Up Kali",
+      "subtitle": "Your hacking toolkit",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_bandit_2", "cy_wireshark_analysis", "cy_sec_controls"],
+      "tasks": [
+        { "title": "Install Kali Linux as a VM", "detail": "Kali boots, tools menu visible." },
+        { "title": "Set up a host-only network", "detail": "Kali and the target VM can ping each other but not the internet." },
+        { "title": "Take a snapshot", "detail": "Clean-state snapshot for reset." }
+      ],
+      "resources": [
+        { "title": "Kali Linux", "url": "https://www.kali.org/get-kali/", "kind": "DOCS", "provider": "Kali" }
+      ]
+    },
+    {
+      "key": "cy_homelab_target",
+      "title": "Homelab: Set Up a Vulnerable Target",
+      "subtitle": "A legal practice target",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_homelab_kali"],
+      "tasks": [
+        { "title": "Install Metasploitable or DVWA", "detail": "Target VM running, web interface reachable." },
+        { "title": "Document the lab topology", "detail": "Diagram with IPs and network segments in your repo." }
+      ],
+      "resources": [
+        { "title": "Build a Homelab", "url": "https://www.youtube.com/@NetworkChuck/search?query=home%20lab", "kind": "VIDEO", "provider": "NetworkChuck" }
+      ]
+    },
+    {
+      "key": "cy_recon_passive",
+      "title": "Recon: Passive Reconnaissance",
+      "subtitle": "Information without contact",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_homelab_target"],
+      "tasks": [
+        { "title": "Run a WHOIS query", "detail": "Find the registrar, nameservers, and contact for a domain." },
+        { "title": "DNS enumeration", "detail": "Find subdomains via crt.sh or Sublist3r." },
+        { "title": "Google dorking", "detail": "site:, filetype:, intitle: — write 3 useful dorks." }
+      ],
+      "resources": [
+        { "title": "Passive Recon Room", "url": "https://tryhackme.com/room/passiverecon", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_recon_active",
+      "title": "Recon: Active Scanning",
+      "subtitle": "Discover ports and services",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_recon_passive"],
+      "tasks": [
+        { "title": "Understand the port concept", "detail": "Name the well-known ports (22, 80, 443, 3389) from memory." },
+        { "title": "Run your first Nmap scan in the lab", "detail": "nmap -sV target-ip shows open ports and services." }
+      ],
+      "resources": [
+        { "title": "Active Recon Room", "url": "https://tryhackme.com/room/activerecon", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_nmap_deep",
+      "title": "Nmap: Advanced Scans",
+      "subtitle": "NSE Scripts, OS Detection",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_recon_active"],
+      "tasks": [
+        { "title": "TCP SYN vs Connect vs UDP scan", "detail": "nmap -sS, -sT, -sU — explain and test the differences." },
+        { "title": "OS detection & version scan", "detail": "nmap -O -sV — interpret the results in the lab." },
+        { "title": "Use 3 NSE scripts", "detail": "e.g. http-title, vuln, smb-enum-shares — understand the output." }
+      ],
+      "resources": [
+        { "title": "Nmap Room", "url": "https://tryhackme.com/room/furthernmap", "kind": "INTERACTIVE", "provider": "TryHackMe" },
+        { "title": "Nmap Reference", "url": "https://nmap.org/book/man.html", "kind": "DOCS", "provider": "Nmap" }
+      ]
+    },
+    {
+      "key": "cy_web_sqli",
+      "title": "Web Hacking: SQL Injection",
+      "subtitle": "The mother of all injections",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_nmap_deep"],
+      "tasks": [
+        { "title": "Manual SQLi on DVWA", "detail": "' OR 1=1 -- in a login field → access gained." },
+        { "title": "UNION-based SQLi", "detail": "Extract table names and columns from the DB." },
+        { "title": "sqlmap basics", "detail": "sqlmap -u 'url' --dbs → dump databases automatically." }
+      ],
+      "resources": [
+        { "title": "PortSwigger SQLi Lab", "url": "https://portswigger.net/web-security/sql-injection", "kind": "COURSE", "provider": "PortSwigger" }
+      ]
+    },
+    {
+      "key": "cy_web_xss",
+      "title": "Web Hacking: XSS & CSRF",
+      "subtitle": "Client-Side Attacks",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_web_sqli"],
+      "tasks": [
+        { "title": "Exploit reflected XSS", "detail": "<script>alert(1)</script> in a parameter → alert box." },
+        { "title": "Exploit stored XSS", "detail": "Payload is stored and runs on every visit." },
+        { "title": "Understand CSRF", "detail": "Explain how an attacker triggers an action on the user's behalf." }
+      ],
+      "resources": [
+        { "title": "PortSwigger XSS Lab", "url": "https://portswigger.net/web-security/cross-site-scripting", "kind": "COURSE", "provider": "PortSwigger" }
+      ]
+    },
+    {
+      "key": "cy_web_burp",
+      "title": "Burp Suite Essentials",
+      "subtitle": "Proxy, Repeater, Intruder",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_web_xss"],
+      "tasks": [
+        { "title": "Configure Burp as a proxy", "detail": "Browser → Burp → target: requests are intercepted." },
+        { "title": "Modify a request in Repeater", "detail": "Change parameters, compare the response." },
+        { "title": "Use Intruder for brute force", "detail": "Wordlist against a login form — successful login found." }
+      ],
+      "resources": [
+        { "title": "OWASP Top 10 Room", "url": "https://tryhackme.com/room/owasptop10", "kind": "INTERACTIVE", "provider": "TryHackMe" },
+        { "title": "OWASP Top 10", "url": "https://owasp.org/www-project-top-ten/", "kind": "DOCS", "provider": "OWASP" }
+      ]
+    },
+    {
+      "key": "cy_exploit_msf",
+      "title": "Metasploit: First Exploit",
+      "subtitle": "Vulnerability → Shell",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_web_burp"],
+      "tasks": [
+        { "title": "Start Metasploit & search modules", "detail": "msfconsole, search vsftpd — find the exploit." },
+        { "title": "Configure & run the exploit", "detail": "Set RHOSTS, LHOST, exploit → get a shell." },
+        { "title": "Explain bind vs reverse shell", "detail": "When do you use which? Draw the connection setup." }
+      ],
+      "resources": [
+        { "title": "Metasploit Room", "url": "https://tryhackme.com/room/rpmetasploit", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_exploit_manual",
+      "title": "Manual Exploitation",
+      "subtitle": "Work without Metasploit",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_exploit_msf"],
+      "tasks": [
+        { "title": "Set up a Netcat reverse shell", "detail": "nc -lvnp 4444 on Kali, reverse shell from the target — connection established." },
+        { "title": "Explain staged vs stageless payloads", "detail": "Write down the difference, pros and cons." },
+        { "title": "Search Exploit-DB", "detail": "Find a CVE for a service, understand the exploit code." }
+      ],
+      "resources": [
+        { "title": "Exploit Database", "url": "https://www.exploit-db.com/", "kind": "DOCS", "provider": "Exploit-DB" }
+      ]
+    },
+    {
+      "key": "cy_privesc_linux",
+      "title": "Privilege Escalation: Linux",
+      "subtitle": "From user to root",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_exploit_manual"],
+      "tasks": [
+        { "title": "Find SUID binaries", "detail": "find / -perm -4000 — use GTFOBins for escalation." },
+        { "title": "Cron job exploitation", "detail": "Find a writable cron script and inject your own code." },
+        { "title": "sudo -l misconfiguration", "detail": "sudo rights on a binary → root shell." }
+      ],
+      "resources": [
+        { "title": "Linux PrivEsc Room", "url": "https://tryhackme.com/room/linuxprivesc", "kind": "INTERACTIVE", "provider": "TryHackMe" },
+        { "title": "GTFOBins", "url": "https://gtfobins.github.io/", "kind": "DOCS", "provider": "GTFOBins" }
+      ]
+    },
+    {
+      "key": "cy_privesc_win",
+      "title": "Privilege Escalation: Windows",
+      "subtitle": "From user to SYSTEM",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_privesc_linux"],
+      "tasks": [
+        { "title": "Find a service misconfiguration", "detail": "Unquoted service path or writable service binary." },
+        { "title": "Understand token impersonation", "detail": "SeImpersonatePrivilege → explain the Potato exploit family." },
+        { "title": "Run WinPEAS", "detail": "Read the enumeration output and identify vectors." }
+      ],
+      "resources": [
+        { "title": "PEASS-ng", "url": "https://github.com/carlospolop/PEASS-ng", "kind": "GITHUB", "provider": "GitHub" }
+      ]
+    },
+    {
+      "key": "cy_htb_easy",
+      "title": "CTF: 5 Easy Boxes",
+      "subtitle": "Root your first real targets",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_privesc_win"],
+      "tasks": [
+        { "title": "Root 5 easy boxes on HTB/THM", "detail": "Root flag found for every box." },
+        { "title": "Document your methodology", "detail": "Recon → enum → exploit → privesc flow noted for every box." }
+      ],
+      "resources": [
+        { "title": "Hack The Box", "url": "https://www.hackthebox.com/", "kind": "INTERACTIVE", "provider": "Hack The Box" },
+        { "title": "IppSec Walkthroughs", "url": "https://www.youtube.com/@ippsec", "kind": "VIDEO", "provider": "IppSec" }
+      ]
+    },
+    {
+      "key": "cy_htb_medium",
+      "title": "CTF: 5 Medium Boxes",
+      "subtitle": "Your methodology becomes repeatable",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_htb_easy"],
+      "tasks": [
+        { "title": "Root 5 medium boxes", "detail": "More complex exploitation, multi-step privesc." },
+        { "title": "Publish writeups", "detail": "Your portfolio of solved boxes grows." }
+      ],
+      "resources": [
+        { "title": "Hack The Box", "url": "https://www.hackthebox.com/", "kind": "INTERACTIVE", "provider": "Hack The Box" }
+      ]
+    },
+    {
+      "key": "cy_oscp_path",
+      "title": "OSCP/PNPT: Prep Path",
+      "subtitle": "Work through the pentest path",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_htb_medium"],
+      "tasks": [
+        { "title": "Start the TCM PNPT or THM Jr Pentester path", "detail": "First 50% of the path completed." },
+        { "title": "Complete the path", "detail": "All modules done, notes complete." }
+      ],
+      "resources": [
+        { "title": "Practical Ethical Hacking", "url": "https://academy.tcm-sec.com/", "kind": "COURSE", "provider": "TCM Security" },
+        { "title": "Jr Penetration Tester", "url": "https://tryhackme.com/path/outline/jrpenetrationtester", "kind": "COURSE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_oscp_exam",
+      "title": "OSCP/PNPT: Mock Exam",
+      "subtitle": "Simulate the 24h exam",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_oscp_path"],
+      "tasks": [
+        { "title": "Do a 24h mock exam", "detail": "Mini-network rooted under time pressure." },
+        { "title": "Write a professional report", "detail": "Findings, risk rating, remediation, evidence — PDF report." }
+      ],
+      "resources": [
+        { "title": "OSCP Prep", "url": "https://academy.tcm-sec.com/", "kind": "COURSE", "provider": "TCM Security" }
+      ]
+    },
+    {
+      "key": "cy_blue_soc",
+      "title": "Blue Team: Understand the SOC",
+      "subtitle": "Alerts, Tiers, Escalation",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["cy_homelab_target"],
+      "tasks": [
+        { "title": "Explain SOC roles", "detail": "Tier 1/2/3, responsibilities, escalation path." },
+        { "title": "Cyber Kill Chain & MITRE ATT&CK", "detail": "Map an attack through every kill-chain phase." }
+      ],
+      "resources": [
+        { "title": "MITRE ATT&CK", "url": "https://attack.mitre.org/", "kind": "DOCS", "provider": "MITRE" },
+        { "title": "Intro to SOC", "url": "https://tryhackme.com/room/introtosoc", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_siem_splunk",
+      "title": "SIEM: Splunk/ELK Basics",
+      "subtitle": "Search through logs",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_blue_soc"],
+      "tasks": [
+        { "title": "Set up Splunk/ELK or start a room", "detail": "Interface open, logs are showing." },
+        { "title": "Spot brute force in logs", "detail": "Find many failed logins from one IP." }
+      ],
+      "resources": [
+        { "title": "SIEM Room", "url": "https://tryhackme.com/room/introtosiem", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_siem_detect",
+      "title": "SIEM: Write Detection Rules",
+      "subtitle": "Alerts that actually work",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_siem_splunk"],
+      "tasks": [
+        { "title": "Write 2 detection queries", "detail": "E.g. >5 failed logins in 5 min, or large data exfil." },
+        { "title": "Discuss false positives", "detail": "Describe one false-positive scenario for each detection." }
+      ],
+      "resources": [
+        { "title": "Splunk Training", "url": "https://www.splunk.com/en_us/training.html", "kind": "COURSE", "provider": "Splunk" }
+      ]
+    },
+    {
+      "key": "cy_ir_lifecycle",
+      "title": "Incident Response: Lifecycle",
+      "subtitle": "Detect → Contain → Eradicate",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["cy_siem_detect"],
+      "tasks": [
+        { "title": "Know the IR lifecycle phases", "detail": "Identify, Contain, Eradicate, Recover, Lessons Learned — one sentence each." },
+        { "title": "Run through a case", "detail": "Ransomware scenario: what do you do in each phase?" }
+      ],
+      "resources": [
+        { "title": "DFIR Intro", "url": "https://tryhackme.com/room/introdigitalforensics", "kind": "INTERACTIVE", "provider": "TryHackMe" }
+      ]
+    },
+    {
+      "key": "cy_ir_forensics",
+      "title": "Incident Response: Forensics",
+      "subtitle": "Preserve artifacts & build a timeline",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_ir_lifecycle"],
+      "tasks": [
+        { "title": "Extract disk/memory artifacts", "detail": "Autopsy or Volatility: process list, network connections." },
+        { "title": "Build a timeline", "detail": "Timeline: when was what compromised?" },
+        { "title": "Do a Blue Team Labs challenge", "detail": "One investigation completed." }
+      ],
+      "resources": [
+        { "title": "Blue Team Labs Online", "url": "https://blueteamlabs.online/", "kind": "INTERACTIVE", "provider": "BTLO" }
+      ]
+    },
+    {
+      "key": "cy_cloud_basics",
+      "title": "Cloud Security: AWS Basics",
+      "subtitle": "Understand EC2, S3, IAM",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_secplus_exam", "cy_linux_services"],
+      "tasks": [
+        { "title": "Create an AWS Free Tier account", "detail": "Account active, console reachable." },
+        { "title": "Explain EC2, S3, VPC", "detail": "Two sentences each on what the service does." },
+        { "title": "Create an IAM user & policy", "detail": "User with limited rights created." }
+      ],
+      "resources": [
+        { "title": "AWS Skill Builder", "url": "https://skillbuilder.aws/", "kind": "COURSE", "provider": "AWS" }
+      ]
+    },
+    {
+      "key": "cy_cloud_misconfig",
+      "title": "Cloud Security: Find Misconfigs",
+      "subtitle": "Public buckets & open IAM",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_cloud_basics"],
+      "tasks": [
+        { "title": "Solve flaws.cloud challenges", "detail": "Public S3 buckets, metadata service abused." },
+        { "title": "Find an overpermissive IAM policy", "detail": "Identify a too-broad policy and fix it." }
+      ],
+      "resources": [
+        { "title": "flaws.cloud", "url": "https://flaws.cloud/", "kind": "INTERACTIVE", "provider": "flAWS" }
+      ]
+    },
+    {
+      "key": "cy_bugbounty_read",
+      "title": "Bug Bounty: Read Reports",
+      "subtitle": "Learn from real bugs",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["cy_web_burp"],
+      "tasks": [
+        { "title": "Read 20 disclosed reports", "detail": "HackerOne Hacktivity: 20 reports read, impact understood." },
+        { "title": "Identify the top bug types", "detail": "Which 5 bug categories show up most often?" }
+      ],
+      "resources": [
+        { "title": "HackerOne", "url": "https://www.hackerone.com/", "kind": "INTERACTIVE", "provider": "HackerOne" }
+      ]
+    },
+    {
+      "key": "cy_bugbounty_hunt",
+      "title": "Bug Bounty: Submit Your First Report",
+      "subtitle": "Real target, real report",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_bugbounty_read"],
+      "tasks": [
+        { "title": "Pick a program & read the scope", "detail": "One program chosen, attack surface mapped." },
+        { "title": "Run recon on the target", "detail": "Subdomains, endpoints, tech stack identified." },
+        { "title": "Submit your first report", "detail": "A valid, well-written report submitted." }
+      ],
+      "resources": [
+        { "title": "Bug Bounty Methodology", "url": "https://www.youtube.com/@nahamsec", "kind": "VIDEO", "provider": "NahamSec" }
+      ]
+    },
+    {
+      "key": "cy_portfolio",
+      "title": "Build a Portfolio",
+      "subtitle": "Show, don't tell",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_htb_medium", "cy_ir_forensics"],
+      "tasks": [
+        { "title": "Publish 10 writeups", "detail": "Boxes, labs, or CTFs — clearly documented." },
+        { "title": "Create a personal website/blog", "detail": "Live, with writeups and an About page." },
+        { "title": "Contribute to a security repo", "detail": "One merged PR or a public tool." }
+      ],
+      "resources": [
+        { "title": "GitHub Pages", "url": "https://pages.github.com/", "kind": "DOCS", "provider": "GitHub" }
+      ]
+    },
+    {
+      "key": "cy_cv_remote",
+      "title": "Remote Job Prep",
+      "subtitle": "CV, LinkedIn, applications",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["cy_portfolio"],
+      "tasks": [
+        { "title": "Write a security-focused CV", "detail": "Skills, labs, certs, projects — one page." },
+        { "title": "Optimize your LinkedIn & HTB profile", "detail": "Recruiters find proof of your skills." },
+        { "title": "Apply to 20 remote roles", "detail": "Applications out or freelance profile live." }
+      ],
+      "resources": [
+        { "title": "Remote Security Jobs", "url": "https://www.linkedin.com/jobs/", "kind": "INTERACTIVE", "provider": "LinkedIn" },
+        { "title": "Cyber Resume Guide", "url": "https://www.youtube.com/@TheCyberMentor", "kind": "VIDEO", "provider": "The Cyber Mentor" }
+      ]
+    },
+    {
+      "key": "cy_master",
+      "title": "Security Engineer — Remote",
+      "subtitle": "10-year capstone",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["cy_oscp_exam", "cy_ir_forensics", "cy_cloud_misconfig", "cy_cv_remote", "cy_bugbounty_hunt"],
+      "tasks": [
+        { "title": "Remote role or freelance income", "detail": "A contract or first paid engagement." },
+        { "title": "Choose a specialization", "detail": "Pentest, cloud, AppSec, or DFIR — go deeper on purpose." },
+        { "title": "Give back", "detail": "Mentor, publish research, or give a meetup talk." }
+      ],
+      "resources": [
+        { "title": "r/cybersecurity", "url": "https://www.reddit.com/r/cybersecurity/", "kind": "INTERACTIVE", "provider": "Reddit" }
+      ]
+    }
+  ]
+}

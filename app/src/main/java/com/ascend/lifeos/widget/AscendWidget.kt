@@ -34,18 +34,29 @@ class AscendWidget : AppWidgetProvider() {
             val c = Repo.completion(day, p)
             val views = RemoteViews(ctx.packageName, R.layout.widget_ascend)
             views.setTextViewText(R.id.widget_streak, "⚡ ${p.streak}")
-            views.setTextViewText(R.id.widget_title, "${c.done}/${c.total} Ziele")
+            views.setTextViewText(R.id.widget_title, "${c.done}/${c.total} missions")
             views.setProgressBar(R.id.widget_progress, 100, (c.pct * 100).toInt(), false)
-            views.setTextViewText(R.id.widget_sub, "Wasser ${day.water}/${p.waterGoal} · ${Repo.workoutSets(day)} Sätze")
+            val kcal = day.meals.sumOf { it.kcal }
+            views.setTextViewText(R.id.widget_sub, "Fuel $kcal kcal · Water ${day.water}/${p.waterGoal}")
+
+            var flags = PendingIntent.FLAG_UPDATE_CURRENT
+            if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
 
             val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
                 ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             if (launch != null) {
-                var flags = PendingIntent.FLAG_UPDATE_CURRENT
-                if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
                 val pi = PendingIntent.getActivity(ctx, 7100, launch, flags)
                 views.setOnClickPendingIntent(R.id.widget_root, pi)
             }
+
+            // quick actions — log without opening the app
+            fun actionPi(req: Int, action: String): PendingIntent {
+                val i = Intent(ctx, WidgetActionReceiver::class.java).putExtra("action", action)
+                return PendingIntent.getBroadcast(ctx, req, i, flags)
+            }
+            views.setOnClickPendingIntent(R.id.widget_water, actionPi(7101, "water"))
+            views.setOnClickPendingIntent(R.id.widget_focus, actionPi(7102, "focus"))
+
             mgr.updateAppWidget(id, views)
         }
     }

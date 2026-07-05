@@ -1,0 +1,681 @@
+{
+  "id": "ai_automation",
+  "title": "AI Automation Mastery",
+  "tagline": "Ship self-running AI workflows — and get paid for them",
+  "accent": "#B794FF",
+  "icon": "workflow",
+  "order": 2,
+  "nodes": [
+    {
+      "key": "ai_intro",
+      "title": "Automation Mindset & Roadmap",
+      "subtitle": "See the whole board",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": [],
+      "tasks": [
+        { "title": "Map the automation landscape", "detail": "Note it down: no-code (n8n/Make) vs code (Python) — when do you use which?" },
+        { "title": "Set a 10-year outcome", "detail": "Write one paragraph: which role, which income, remote or not." },
+        { "title": "Install VS Code + Git", "detail": "VS Code runs, git --version prints a version number." }
+      ],
+      "resources": [
+        { "title": "Automation roadmap", "url": "https://roadmap.sh/", "kind": "INTERACTIVE", "provider": "roadmap.sh" },
+        { "title": "VS Code", "url": "https://code.visualstudio.com/", "kind": "DOCS", "provider": "Microsoft" }
+      ]
+    },
+    {
+      "key": "ai_py_setup",
+      "title": "Python Environment Setup",
+      "subtitle": "A clean development environment",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ai_intro"],
+      "tasks": [
+        { "title": "Install Python 3.11+", "detail": "python --version prints 3.11+." },
+        { "title": "Create a virtual environment", "detail": "python -m venv .venv && source .venv/bin/activate works." },
+        { "title": "Install a package with pip", "detail": "pip install requests && python -c 'import requests; print(requests.__version__)' runs." }
+      ],
+      "resources": [
+        { "title": "Python downloads", "url": "https://www.python.org/downloads/", "kind": "DOCS", "provider": "python.org" },
+        { "title": "Python setup guide", "url": "https://realpython.com/installing-python/", "kind": "ARTICLE", "provider": "Real Python" }
+      ]
+    },
+    {
+      "key": "ai_py_types",
+      "title": "Python: Variables & Types",
+      "subtitle": "Strings, numbers, booleans",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ai_py_setup"],
+      "tasks": [
+        { "title": "Declare 5 variables of different types", "detail": "str, int, float, bool, None — print type() for each." },
+        { "title": "Practice string operations", "detail": "Use f-strings, .split(), .strip(), .replace() in one script." },
+        { "title": "Type casting", "detail": "int('42'), str(3.14), bool(0) — write a script that shows every conversion." }
+      ],
+      "resources": [
+        { "title": "Python Tutorial Ch. 3", "url": "https://docs.python.org/3/tutorial/introduction.html", "kind": "DOCS", "provider": "python.org" }
+      ]
+    },
+    {
+      "key": "ai_py_flow",
+      "title": "Python: Control Flow",
+      "subtitle": "if/else, for, while",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_py_types"],
+      "tasks": [
+        { "title": "Write a FizzBuzz", "detail": "Numbers 1-100, Fizz on 3, Buzz on 5, FizzBuzz on 15." },
+        { "title": "Build a calculator", "detail": "Input: 2 numbers + operator → correct result. Edge case: division by 0." },
+        { "title": "while loop with break/continue", "detail": "Guessing game: random number 1-100, user guesses, program gives hot/cold feedback." }
+      ],
+      "resources": [
+        { "title": "Control Flow", "url": "https://docs.python.org/3/tutorial/controlflow.html", "kind": "DOCS", "provider": "python.org" }
+      ]
+    },
+    {
+      "key": "ai_py_lists",
+      "title": "Python: Lists & Dicts",
+      "subtitle": "The two most important data structures",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_py_flow"],
+      "tasks": [
+        { "title": "List: create, slice, sort", "detail": "Create a list of 10 names, sort alphabetically, print the last 3." },
+        { "title": "Dict: CRUD operations", "detail": "Create a contact-book dict, add 5 entries, delete one, look one up." },
+        { "title": "List comprehension", "detail": "Write [x**2 for x in range(20) if x % 3 == 0] and explain the output." }
+      ],
+      "resources": [
+        { "title": "Data Structures", "url": "https://docs.python.org/3/tutorial/datastructures.html", "kind": "DOCS", "provider": "python.org" }
+      ]
+    },
+    {
+      "key": "ai_py_func",
+      "title": "Python: Functions",
+      "subtitle": "def, args, return",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_py_lists"],
+      "tasks": [
+        { "title": "Write 3 functions with a return value", "detail": "calculate_bmi(kg, m), is_palindrome(s), celsius_to_fahrenheit(c)." },
+        { "title": "Default args & *args/**kwargs", "detail": "Build a log() function that accepts any number of arguments." },
+        { "title": "Pass a function as a parameter", "detail": "Write apply_to_list(func, lst) that applies func to every element." }
+      ],
+      "resources": [
+        { "title": "Defining Functions", "url": "https://docs.python.org/3/tutorial/controlflow.html#defining-functions", "kind": "DOCS", "provider": "python.org" }
+      ]
+    },
+    {
+      "key": "ai_py_modules",
+      "title": "Python: Modules & Packages",
+      "subtitle": "Organize your code",
+      "energy": "MED",
+      "minutes": 15,
+      "prerequisites": ["ai_py_func"],
+      "tasks": [
+        { "title": "Create your own module", "detail": "utils.py with 3 functions, import it into main.py." },
+        { "title": "Use the standard library", "detail": "Combine os.listdir(), datetime.now(), random.choice() in one script." }
+      ],
+      "resources": [
+        { "title": "Modules", "url": "https://docs.python.org/3/tutorial/modules.html", "kind": "DOCS", "provider": "python.org" }
+      ]
+    },
+    {
+      "key": "ai_py_errors",
+      "title": "Python: Error Handling",
+      "subtitle": "Use try/except the right way",
+      "energy": "MED",
+      "minutes": 15,
+      "prerequisites": ["ai_py_func"],
+      "tasks": [
+        { "title": "try/except for file I/O", "detail": "Open a non-existent file, catch FileNotFoundError, print a helpful message." },
+        { "title": "Create your own exception", "detail": "class ValidationError(Exception) — raise it on invalid input." }
+      ],
+      "resources": [
+        { "title": "Errors & Exceptions", "url": "https://docs.python.org/3/tutorial/errors.html", "kind": "DOCS", "provider": "python.org" }
+      ]
+    },
+    {
+      "key": "ai_py_oop",
+      "title": "Python: Classes & OOP",
+      "subtitle": "Data + behavior together",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_py_modules", "ai_py_errors"],
+      "tasks": [
+        { "title": "Build a BankAccount class", "detail": "__init__, deposit(), withdraw(), balance — with validation." },
+        { "title": "Inheritance: SavingsAccount", "detail": "Inherits from BankAccount, adds interest_rate and apply_interest()." },
+        { "title": "Refactor: script → class", "detail": "Take your contact-book script and turn it into a ContactBook class." }
+      ],
+      "resources": [
+        { "title": "OOP in Python", "url": "https://realpython.com/python3-object-oriented-programming/", "kind": "ARTICLE", "provider": "Real Python" }
+      ]
+    },
+    {
+      "key": "ai_git",
+      "title": "Git & GitHub",
+      "subtitle": "Version everything",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_py_setup"],
+      "tasks": [
+        { "title": "git init → add → commit → push", "detail": "A local repo pushed to GitHub." },
+        { "title": "Feature branch + merge", "detail": "Create a branch, commit 3 changes, merge back into main." },
+        { "title": "Publish a repo", "detail": "Public repo with README.md visible on GitHub." }
+      ],
+      "resources": [
+        { "title": "Git & GitHub Crash Course", "url": "https://www.youtube.com/@freecodecamp/search?query=git%20and%20github", "kind": "VIDEO", "provider": "freeCodeCamp" },
+        { "title": "GitHub Docs", "url": "https://docs.github.com/en/get-started", "kind": "DOCS", "provider": "GitHub" }
+      ]
+    },
+    {
+      "key": "ai_json_files",
+      "title": "File I/O: JSON & CSV",
+      "subtitle": "Read and write files",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_py_oop"],
+      "tasks": [
+        { "title": "Read and write JSON", "detail": "Load a .json file, change a field, write it back with json.dump()." },
+        { "title": "Process CSV", "detail": "Read a CSV with csv.DictReader, filter rows, write the result to a new CSV." },
+        { "title": "Build a file organizer", "detail": "Script that sorts files in a folder into subfolders by extension." }
+      ],
+      "resources": [
+        { "title": "Working with JSON", "url": "https://realpython.com/python-json/", "kind": "ARTICLE", "provider": "Real Python" }
+      ]
+    },
+    {
+      "key": "ai_http_theory",
+      "title": "Understand HTTP & REST",
+      "subtitle": "GET, POST, Status Codes, Headers",
+      "energy": "LOW",
+      "minutes": 15,
+      "prerequisites": ["ai_json_files"],
+      "tasks": [
+        { "title": "Explain the HTTP methods", "detail": "Write one sentence for each of GET/POST/PUT/DELETE on when to use it." },
+        { "title": "Know the status codes", "detail": "200, 201, 400, 401, 403, 404, 500 — what does each mean?" }
+      ],
+      "resources": [
+        { "title": "HTTP Overview", "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview", "kind": "DOCS", "provider": "MDN" }
+      ]
+    },
+    {
+      "key": "ai_requests",
+      "title": "API Calls with requests",
+      "subtitle": "Python talks to the world",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_http_theory"],
+      "tasks": [
+        { "title": "GET request to a public API", "detail": "Call https://jsonplaceholder.typicode.com/posts and print the titles." },
+        { "title": "POST request with a JSON body", "detail": "Send a new post to jsonplaceholder and check for the 201 status." },
+        { "title": "Error handling for APIs", "detail": "Catch timeouts and 4xx/5xx errors, print helpful messages." }
+      ],
+      "resources": [
+        { "title": "requests Docs", "url": "https://requests.readthedocs.io/", "kind": "DOCS", "provider": "requests" }
+      ]
+    },
+    {
+      "key": "ai_api_auth",
+      "title": "API Authentication",
+      "subtitle": "API Keys, Bearer Tokens, .env",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_requests"],
+      "tasks": [
+        { "title": "Send an API key in the header", "detail": "Call an API that needs a key in the header (e.g. OpenWeather)." },
+        { "title": "Store secrets in .env", "detail": "pip install python-dotenv, load the key from .env instead of hardcoding it." }
+      ],
+      "resources": [
+        { "title": "python-dotenv", "url": "https://pypi.org/project/python-dotenv/", "kind": "DOCS", "provider": "PyPI" }
+      ]
+    },
+    {
+      "key": "ai_scraping",
+      "title": "Web Scraping with BeautifulSoup",
+      "subtitle": "Extract data that has no API",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_requests"],
+      "tasks": [
+        { "title": "Scrape the headlines of a news site", "detail": "BeautifulSoup: extract all <h2> tags, print them as a list." },
+        { "title": "Parse a table from a web page", "detail": "Find an HTML table, extract the data into a list of dicts." },
+        { "title": "Handle pagination", "detail": "Scrape pages 1-5 of a paginated site, collect all results." }
+      ],
+      "resources": [
+        { "title": "BeautifulSoup Guide", "url": "https://realpython.com/beautiful-soup-web-scraper-python/", "kind": "ARTICLE", "provider": "Real Python" }
+      ]
+    },
+    {
+      "key": "ai_pandas",
+      "title": "pandas: Load & Filter Data",
+      "subtitle": "DataFrames are your best friend",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_json_files"],
+      "tasks": [
+        { "title": "Load a CSV into a DataFrame", "detail": "pd.read_csv(), .head(), .info(), .describe() on a real dataset." },
+        { "title": "Filter and sort", "detail": "df[df['price'] > 100].sort_values('rating', ascending=False) — 3 queries." },
+        { "title": "Compute new columns", "detail": "df['total'] = df['price'] * df['quantity'] — export the result to a new CSV." }
+      ],
+      "resources": [
+        { "title": "pandas Getting Started", "url": "https://pandas.pydata.org/docs/getting_started/index.html", "kind": "DOCS", "provider": "pandas" }
+      ]
+    },
+    {
+      "key": "ai_pandas_clean",
+      "title": "pandas: Clean Data",
+      "subtitle": "Nulls, duplicates, types",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_pandas"],
+      "tasks": [
+        { "title": "Handle missing values", "detail": "df.isna().sum(), .fillna(), .dropna() — decide per column." },
+        { "title": "Remove duplicates", "detail": "df.duplicated().sum(), df.drop_duplicates() on a messy dataset." },
+        { "title": "GroupBy aggregation", "detail": "df.groupby('category')['revenue'].sum() — top 5 categories as a report." }
+      ],
+      "resources": [
+        { "title": "Data Cleaning", "url": "https://realpython.com/python-data-cleaning-numpy-pandas/", "kind": "ARTICLE", "provider": "Real Python" }
+      ]
+    },
+    {
+      "key": "ai_sql",
+      "title": "SQL & SQLite Basics",
+      "subtitle": "Store data persistently",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_json_files"],
+      "tasks": [
+        { "title": "Create 2 tables with a relationship", "detail": "CREATE TABLE users(...), CREATE TABLE orders(..., FOREIGN KEY user_id)." },
+        { "title": "CRUD operations in Python", "detail": "INSERT 5 rows, SELECT with WHERE, UPDATE a value, DELETE a row." },
+        { "title": "Write a JOIN query", "detail": "SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id." }
+      ],
+      "resources": [
+        { "title": "SQLBolt", "url": "https://sqlbolt.com/", "kind": "INTERACTIVE", "provider": "SQLBolt" }
+      ]
+    },
+    {
+      "key": "ai_n8n_setup",
+      "title": "n8n: Setup & First Steps",
+      "subtitle": "No-Code Automation Engine",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ai_intro"],
+      "tasks": [
+        { "title": "Start n8n (Docker or Cloud)", "detail": "The editor loads at localhost:5678 or app.n8n.cloud." },
+        { "title": "Understand trigger vs action nodes", "detail": "Explain the difference using a webhook example." }
+      ],
+      "resources": [
+        { "title": "n8n Try it out", "url": "https://docs.n8n.io/try-it-out/", "kind": "DOCS", "provider": "n8n" },
+        { "title": "n8n Beginner Course", "url": "https://docs.n8n.io/courses/", "kind": "COURSE", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_n8n_nodes",
+      "title": "n8n: Master the Core Nodes",
+      "subtitle": "Set, IF, Merge, Code",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_n8n_setup"],
+      "tasks": [
+        { "title": "Build a Set → IF → Merge flow", "detail": "Set data, branch on a condition, merge the results." },
+        { "title": "Use the Code node", "detail": "Write a JS snippet that transforms items (e.g. format a date)." },
+        { "title": "Connect an app node", "detail": "Google Sheets or Telegram node integrated and working." }
+      ],
+      "resources": [
+        { "title": "n8n Courses", "url": "https://docs.n8n.io/courses/", "kind": "COURSE", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_n8n_webhooks",
+      "title": "n8n: Webhooks & HTTP Requests",
+      "subtitle": "Receive events, call APIs",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_n8n_nodes"],
+      "tasks": [
+        { "title": "Webhook → Process → Respond", "detail": "POST to your webhook, process the data, return a JSON response." },
+        { "title": "Call an external API", "detail": "HTTP Request node fetches weather data and forwards it to Telegram." }
+      ],
+      "resources": [
+        { "title": "Webhook Node", "url": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/", "kind": "DOCS", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_n8n_transform",
+      "title": "n8n: Transform Data",
+      "subtitle": "Expressions, Arrays, Pagination",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_n8n_webhooks"],
+      "tasks": [
+        { "title": "Map data with expressions", "detail": "{{ $json.name.toUpperCase() }} — 3 different transformations." },
+        { "title": "Paginate through an API", "detail": "Loop node paginates through every page of an API until everything is loaded." }
+      ],
+      "resources": [
+        { "title": "Data Transformation", "url": "https://docs.n8n.io/data/", "kind": "DOCS", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_n8n_errors",
+      "title": "n8n: Error Handling",
+      "subtitle": "Workflows that don't fail silently",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_n8n_transform"],
+      "tasks": [
+        { "title": "Set up an error workflow", "detail": "Forced failure → Error Trigger → Slack/email alert." },
+        { "title": "Add retry logic", "detail": "Retry on Fail on an HTTP node, 3 attempts with backoff." }
+      ],
+      "resources": [
+        { "title": "Error Handling", "url": "https://docs.n8n.io/flow-logic/error-handling/", "kind": "DOCS", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_llm_basics",
+      "title": "LLM Basics",
+      "subtitle": "Tokens, Context, Temperature",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ai_intro"],
+      "tasks": [
+        { "title": "Understand tokens", "detail": "Count tokens for 3 different texts with the OpenAI tokenizer." },
+        { "title": "Compare model families", "detail": "Table: Claude vs GPT vs Gemini — strengths, context length, price." }
+      ],
+      "resources": [
+        { "title": "Anthropic Docs", "url": "https://docs.anthropic.com/", "kind": "DOCS", "provider": "Anthropic" },
+        { "title": "LLM Intro", "url": "https://www.youtube.com/@AndrejKarpathy", "kind": "VIDEO", "provider": "Andrej Karpathy" }
+      ]
+    },
+    {
+      "key": "ai_prompt",
+      "title": "Prompt Engineering",
+      "subtitle": "Get reliable outputs",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_llm_basics"],
+      "tasks": [
+        { "title": "Write 3 system prompts", "detail": "Analyst, copywriter, code reviewer — test each with the same question." },
+        { "title": "Few-shot prompting", "detail": "Give 3 examples, then the real question. Compare the output with zero-shot." },
+        { "title": "Force chain-of-thought", "detail": "A prompt that demands step-by-step reasoning — the result is better." }
+      ],
+      "resources": [
+        { "title": "Prompt Engineering Guide", "url": "https://www.promptingguide.ai/", "kind": "ARTICLE", "provider": "DAIR.AI" },
+        { "title": "Anthropic Prompt Guide", "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview", "kind": "DOCS", "provider": "Anthropic" }
+      ]
+    },
+    {
+      "key": "ai_api_llm",
+      "title": "Use LLM APIs Programmatically",
+      "subtitle": "Python → Claude/GPT → structured output",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_prompt", "ai_api_auth"],
+      "tasks": [
+        { "title": "Send your first API call to Claude", "detail": "pip install anthropic, send a prompt, print the response." },
+        { "title": "Implement streaming", "detail": "The response appears token by token in the console." },
+        { "title": "Force structured output", "detail": "Make the model generate JSON with exactly 5 defined fields." }
+      ],
+      "resources": [
+        { "title": "Anthropic SDK", "url": "https://docs.anthropic.com/en/api/client-sdks", "kind": "DOCS", "provider": "Anthropic" }
+      ]
+    },
+    {
+      "key": "ai_tool_use",
+      "title": "Tool Use / Function Calling",
+      "subtitle": "The model calls your functions",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_api_llm"],
+      "tasks": [
+        { "title": "Write a tool definition", "detail": "Define a get_weather(city) tool with JSON Schema." },
+        { "title": "Build a tool-call loop", "detail": "The model decides to call a tool → your code runs it → result goes back." }
+      ],
+      "resources": [
+        { "title": "Tool Use Guide", "url": "https://docs.anthropic.com/en/docs/build-with-claude/tool-use", "kind": "DOCS", "provider": "Anthropic" }
+      ]
+    },
+    {
+      "key": "ai_n8n_ai",
+      "title": "n8n + AI Integration",
+      "subtitle": "Wire LLMs into workflows",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_n8n_errors", "ai_llm_basics"],
+      "tasks": [
+        { "title": "AI summariser workflow", "detail": "Input text → OpenAI node → summary saved to Google Sheets." },
+        { "title": "AI agent with tools in n8n", "detail": "Agent node that calls a sub-workflow as a tool." }
+      ],
+      "resources": [
+        { "title": "Advanced AI in n8n", "url": "https://docs.n8n.io/advanced-ai/", "kind": "DOCS", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_embeddings",
+      "title": "Embeddings & Similarity Search",
+      "subtitle": "Turn text into vectors",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_api_llm"],
+      "tasks": [
+        { "title": "Generate embeddings for 10 sentences", "detail": "OpenAI or Sentence-Transformers — 10 vectors as a NumPy array." },
+        { "title": "Compute cosine similarity", "detail": "Find the most similar sentence to a query — the result is correct." }
+      ],
+      "resources": [
+        { "title": "Embeddings Guide", "url": "https://platform.openai.com/docs/guides/embeddings", "kind": "DOCS", "provider": "OpenAI" }
+      ]
+    },
+    {
+      "key": "ai_rag_chunk",
+      "title": "RAG: Chunk Documents",
+      "subtitle": "Split text into searchable units",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_embeddings"],
+      "tasks": [
+        { "title": "Convert a PDF to text", "detail": "PyPDF2 or pdfplumber: extract text from a multi-page PDF." },
+        { "title": "Recursive text splitter", "detail": "500-character chunks with 50 overlap — check that no sentence is cut off." }
+      ],
+      "resources": [
+        { "title": "LangChain Text Splitter", "url": "https://python.langchain.com/docs/how_to/recursive_text_splitter/", "kind": "DOCS", "provider": "LangChain" }
+      ]
+    },
+    {
+      "key": "ai_rag_store",
+      "title": "RAG: Vector Store (ChromaDB)",
+      "subtitle": "Store and search chunks",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_rag_chunk"],
+      "tasks": [
+        { "title": "Set up ChromaDB", "detail": "pip install chromadb, create a collection, insert 20 chunks." },
+        { "title": "Test similarity search", "detail": "Query → 3 most relevant chunks back — the result is on point." }
+      ],
+      "resources": [
+        { "title": "ChromaDB Docs", "url": "https://docs.trychroma.com/getting-started", "kind": "DOCS", "provider": "Chroma" }
+      ]
+    },
+    {
+      "key": "ai_rag_gen",
+      "title": "RAG: Retrieval + Generation",
+      "subtitle": "End-to-end QA over your own documents",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_rag_store"],
+      "tasks": [
+        { "title": "Build a RAG pipeline", "detail": "Query → ChromaDB retrieve → context in prompt → LLM answers." },
+        { "title": "Build a CLI tool", "detail": "python qa.py 'What is X?' → answer with a source citation from your document." }
+      ],
+      "resources": [
+        { "title": "RAG Tutorial", "url": "https://python.langchain.com/docs/tutorials/rag/", "kind": "DOCS", "provider": "LangChain" }
+      ]
+    },
+    {
+      "key": "ai_agents_py",
+      "title": "AI Agents in Python",
+      "subtitle": "Autonomous, tool-using workflows",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_tool_use", "ai_rag_gen"],
+      "tasks": [
+        { "title": "Build an agent with 3 tools", "detail": "search_web(), read_file(), calculate() — the agent picks the right tool itself." },
+        { "title": "Implement the agent loop", "detail": "Think → Act → Observe loop that runs at most 5 iterations." }
+      ],
+      "resources": [
+        { "title": "Claude Agent SDK", "url": "https://docs.anthropic.com/en/docs/build-with-claude/agent-sdk/overview", "kind": "DOCS", "provider": "Anthropic" }
+      ]
+    },
+    {
+      "key": "ai_docker",
+      "title": "Docker Basics",
+      "subtitle": "Package anything, run anywhere",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_py_oop"],
+      "tasks": [
+        { "title": "Write a Dockerfile for a Python app", "detail": "FROM python:3.11-slim, COPY, RUN pip install, CMD — the image builds." },
+        { "title": "docker-compose for multi-service", "detail": "App + Redis/Postgres in docker-compose.yml, docker compose up runs." }
+      ],
+      "resources": [
+        { "title": "Docker Get Started", "url": "https://docs.docker.com/get-started/", "kind": "DOCS", "provider": "Docker" }
+      ]
+    },
+    {
+      "key": "ai_fastapi",
+      "title": "FastAPI: Build a REST Server",
+      "subtitle": "Your own API in 20 minutes",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_requests", "ai_py_oop"],
+      "tasks": [
+        { "title": "Build 3 endpoints", "detail": "GET /items, POST /items, DELETE /items/{id} — with Pydantic models." },
+        { "title": "Test in Swagger", "detail": "http://localhost:8000/docs — all 3 endpoints work interactively." }
+      ],
+      "resources": [
+        { "title": "FastAPI Tutorial", "url": "https://fastapi.tiangolo.com/tutorial/", "kind": "DOCS", "provider": "FastAPI" }
+      ]
+    },
+    {
+      "key": "ai_deploy",
+      "title": "VPS Deployment",
+      "subtitle": "Keep it running 24/7",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_docker", "ai_git"],
+      "tasks": [
+        { "title": "Provision a VPS", "detail": "SSH access, firewall (ufw), non-root user set up." },
+        { "title": "Deploy the app with HTTPS", "detail": "Docker + Caddy/Nginx reverse proxy — reachable via your domain." }
+      ],
+      "resources": [
+        { "title": "DigitalOcean Tutorials", "url": "https://www.digitalocean.com/community/tutorials", "kind": "ARTICLE", "provider": "DigitalOcean" }
+      ]
+    },
+    {
+      "key": "ai_n8n_selfhost",
+      "title": "n8n Self-Hosting",
+      "subtitle": "Own your infrastructure",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_n8n_errors", "ai_docker"],
+      "tasks": [
+        { "title": "Deploy n8n on a VPS", "detail": "Docker + Traefik/Caddy — reachable over HTTPS with login." },
+        { "title": "Backups & Queue Mode", "detail": "Automatic DB backups set up, queue mode for parallel executions." }
+      ],
+      "resources": [
+        { "title": "Hosting n8n", "url": "https://docs.n8n.io/hosting/", "kind": "DOCS", "provider": "n8n" }
+      ]
+    },
+    {
+      "key": "ai_make_intro",
+      "title": "Make.com Basics",
+      "subtitle": "The other no-code powerhouse",
+      "energy": "LOW",
+      "minutes": 20,
+      "prerequisites": ["ai_intro"],
+      "tasks": [
+        { "title": "Build your first scenario", "detail": "2 apps connected and one run successful." },
+        { "title": "Understand modules & operations", "detail": "You know how operations are billed." }
+      ],
+      "resources": [
+        { "title": "Make Academy", "url": "https://academy.make.com/", "kind": "COURSE", "provider": "Make" }
+      ]
+    },
+    {
+      "key": "ai_make_advanced",
+      "title": "Make.com: Router, Filter, AI",
+      "subtitle": "Advanced scenarios",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_make_intro", "ai_llm_basics"],
+      "tasks": [
+        { "title": "Router with 3 paths", "detail": "Route incoming data to different actions by type." },
+        { "title": "Add an AI module", "detail": "OpenAI HTTP module in a real workflow — e.g. email summarization." }
+      ],
+      "resources": [
+        { "title": "Make Academy", "url": "https://academy.make.com/", "kind": "COURSE", "provider": "Make" }
+      ]
+    },
+    {
+      "key": "ai_monitor",
+      "title": "Monitoring & Alerts",
+      "subtitle": "Know when something breaks",
+      "energy": "MED",
+      "minutes": 20,
+      "prerequisites": ["ai_deploy"],
+      "tasks": [
+        { "title": "Set up Uptime Kuma", "detail": "Monitoring for 3 services, Telegram alert on downtime." },
+        { "title": "Structured logging", "detail": "Python logging in JSON format, errors become visible immediately." }
+      ],
+      "resources": [
+        { "title": "Uptime Kuma", "url": "https://github.com/louislam/uptime-kuma", "kind": "GITHUB", "provider": "Uptime Kuma" }
+      ]
+    },
+    {
+      "key": "ai_portfolio",
+      "title": "Build an Automation Portfolio",
+      "subtitle": "Show, don't tell",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_n8n_ai", "ai_agents_py", "ai_make_advanced"],
+      "tasks": [
+        { "title": "Ship 5 real automations", "detail": "Each solves a concrete problem — documented with a screenshot + description." },
+        { "title": "Write case studies", "detail": "Write up problem → solution → result for 3 projects." },
+        { "title": "Record demo videos", "detail": "3 short Loom videos, each showing an automation in action." }
+      ],
+      "resources": [
+        { "title": "Loom", "url": "https://www.loom.com/", "kind": "INTERACTIVE", "provider": "Loom" }
+      ]
+    },
+    {
+      "key": "ai_freelance",
+      "title": "First Paying Client",
+      "subtitle": "Skill → income",
+      "energy": "MED",
+      "minutes": 25,
+      "prerequisites": ["ai_portfolio"],
+      "tasks": [
+        { "title": "Create an Upwork/Fiverr profile", "detail": "Optimized with portfolio, headline, skills — published." },
+        { "title": "Define a productized offer", "detail": "One clear package with a fixed price and scope — described on your profile." },
+        { "title": "Complete your first project", "detail": "Job accepted, delivered, 5-star review received." }
+      ],
+      "resources": [
+        { "title": "Upwork", "url": "https://www.upwork.com/", "kind": "INTERACTIVE", "provider": "Upwork" }
+      ]
+    },
+    {
+      "key": "ai_master",
+      "title": "Automation Business — Scaled",
+      "subtitle": "10-year capstone",
+      "energy": "HIGH",
+      "minutes": 25,
+      "prerequisites": ["ai_freelance", "ai_fastapi", "ai_monitor", "ai_n8n_selfhost"],
+      "tasks": [
+        { "title": "Build recurring revenue", "detail": "At least 1 retainer client or ongoing product income." },
+        { "title": "Systematize delivery", "detail": "Templates + SOPs so it scales beyond you." },
+        { "title": "Decide the next decade", "detail": "Agency, product, or job — a deliberate direction chosen." }
+      ],
+      "resources": [
+        { "title": "Indie Hackers", "url": "https://www.indiehackers.com/", "kind": "INTERACTIVE", "provider": "Indie Hackers" }
+      ]
+    }
+  ]
+}

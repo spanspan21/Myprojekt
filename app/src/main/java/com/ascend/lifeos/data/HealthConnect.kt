@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HeartRateRecord
-import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
@@ -23,7 +22,6 @@ object HealthConnect {
     val permissions = setOf(
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
-        HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
         HealthPermission.getReadPermission(StepsRecord::class),
     )
@@ -35,6 +33,10 @@ object HealthConnect {
 
     suspend fun grantedAll(ctx: Context): Boolean =
         client(ctx).permissionController.getGrantedPermissions().containsAll(permissions)
+
+    /** At least one of our read permissions is granted — enough to attempt a read. */
+    suspend fun grantedAny(ctx: Context): Boolean =
+        client(ctx).permissionController.getGrantedPermissions().any { it in permissions }
 
     fun openSettings(ctx: Context) {
         runCatching {
@@ -56,16 +58,24 @@ object HealthConnect {
         val todayStart = LocalTime.of(6, 0)
             .let { LocalDate.now(zone).atTime(it).atZone(zone).toInstant() }
             .let { if (it.isAfter(now)) it.minus(1, ChronoUnit.DAYS) else it }
-        // Generous windows: many watch apps sync into Health Connect with hours
-        // of delay, and sleep sessions are often written long after wake-up.
-        val hrStart = now.minus(24, ChronoUnit.HOURS)
-        val sleepWindowStart = now.minus(36, ChronoUnit.HOURS)
-        val vitalsStart = now.minus(48, ChronoUnit.HOURS)
+        // Very generous windows: many watch apps sync into Health Connect with
+        // hours of delay, sleep sessions are written long after wake-up, and HRV/
+        // resting-HR may only be sampled once a night. Wider = fewer false "no data".
+        val hrStart = now.minus(48, ChronoUnit.HOURS)
+        val sleepWindowStart = now.minus(72, ChronoUnit.HOURS)
+        val vitalsStart = now.minus(72, ChronoUnit.HOURS)
+
+        // Each type is read independently and defensively: a missing single
+        // permission (or a provider that offers only some types) must degrade to
+        // "that signal is absent", never fail the whole read.
+        suspend fun <T : androidx.health.connect.client.records.Record> readSafe(
+            klass: kotlin.reflect.KClass<T>, start: Instant,
+        ): List<T> = runCatching {
+            client.readRecords(ReadRecordsRequest(klass, timeRangeFilter = TimeRangeFilter.between(start, now))).records
+        }.getOrDefault(emptyList())
 
         // Heart rate
-        val hrRecords = client.readRecords(
-            ReadRecordsRequest(HeartRateRecord::class, timeRangeFilter = TimeRangeFilter.between(hrStart, now))
-        ).records
+        val hrRecords = readSafe(HeartRateRecord::class, hrStart)
         val buckets = HashMap<Long, MutableList<Long>>()
         var minB = Long.MAX_VALUE; var maxB = 0L; var sum = 0L; var cnt = 0L
         for (rec in hrRecords) for (s in rec.samples) {
@@ -76,82 +86,159 @@ object HealthConnect {
         }
         val series = buckets.toSortedMap().map { (b, list) -> HrPoint(b * 5 * 60 * 1000, list.average().roundToInt()) }
 
-        val hrvRecords = client.readRecords(
-            ReadRecordsRequest(HeartRateVariabilityRmssdRecord::class, timeRangeFilter = TimeRangeFilter.between(vitalsStart, now))
-        ).records
-        val hrv = hrvRecords.maxByOrNull { it.time }?.heartRateVariabilityMillis?.roundToInt()
-
-        val rhrRecords = client.readRecords(
-            ReadRecordsRequest(RestingHeartRateRecord::class, timeRangeFilter = TimeRangeFilter.between(vitalsStart, now))
-        ).records
+        val rhrRecords = readSafe(RestingHeartRateRecord::class, vitalsStart)
+        // Prefer an explicit resting-HR record; otherwise derive one from the low
+        // end of today's heart-rate samples (real data, just computed) so watches
+        // that stream HR but never write a RestingHeartRateRecord still yield one.
         val rhr = rhrRecords.maxByOrNull { it.time }?.beatsPerMinute?.toInt()
+            ?: series.map { it.bpm }.sorted().let { s ->
+                if (s.isEmpty()) null else s[(s.size * 0.05).toInt().coerceIn(0, s.size - 1)]
+            }
 
-        val steps = client.readRecords(
-            ReadRecordsRequest(StepsRecord::class, timeRangeFilter = TimeRangeFilter.between(todayStart, now))
-        ).records.sumOf { it.count }.toInt()
+        val steps = readSafe(StepsRecord::class, todayStart).sumOf { it.count }.toInt()
 
-        val sleepRecords = client.readRecords(
-            ReadRecordsRequest(SleepSessionRecord::class, timeRangeFilter = TimeRangeFilter.between(sleepWindowStart, now))
-        ).records
-        var rem = 0L; var deep = 0L; var light = 0L; var awake = 0L; var sleepMin: Int? = null
-        val lastSleep = sleepRecords.maxByOrNull { it.endTime }
-        if (lastSleep != null) {
-            for (stage in lastSleep.stages) {
+        val sleepRecords = readSafe(SleepSessionRecord::class, sleepWindowStart)
+        // Today's sleep = last night's main sleep PLUS any naps — exactly how
+        // Samsung Health counts it. A session belongs to today when it ends
+        // after (todayStart − 4h): catches early wakers and fragmented nights,
+        // excludes the previous night. If nothing landed in that window yet
+        // (watch sync delay), fall back to the most recent session so recovery
+        // stays honest instead of blank.
+        val sleepCutoff = todayStart.minus(4, ChronoUnit.HOURS)
+        val todaysSleep = sleepRecords.filter { it.endTime.isAfter(sleepCutoff) }
+            .ifEmpty { sleepRecords.maxByOrNull { it.endTime }?.let { listOf(it) } ?: emptyList() }
+
+        var rem = 0L; var deep = 0L; var light = 0L; var awake = 0L
+        var totalMin = 0L
+        for (session in todaysSleep) {
+            var sRem = 0L; var sDeep = 0L; var sLight = 0L; var sAwake = 0L
+            for (stage in session.stages) {
                 val m = ChronoUnit.MINUTES.between(stage.startTime, stage.endTime)
                 when (stage.stage) {
-                    SleepSessionRecord.STAGE_TYPE_REM -> rem += m
-                    SleepSessionRecord.STAGE_TYPE_DEEP -> deep += m
-                    SleepSessionRecord.STAGE_TYPE_LIGHT, SleepSessionRecord.STAGE_TYPE_SLEEPING -> light += m
-                    SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> awake += m
-                    else -> light += m
+                    SleepSessionRecord.STAGE_TYPE_REM -> sRem += m
+                    SleepSessionRecord.STAGE_TYPE_DEEP -> sDeep += m
+                    SleepSessionRecord.STAGE_TYPE_LIGHT, SleepSessionRecord.STAGE_TYPE_SLEEPING -> sLight += m
+                    SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> sAwake += m
+                    else -> sLight += m
                 }
             }
-            val staged = rem + deep + light
-            sleepMin = (if (staged > 0) staged else ChronoUnit.MINUTES.between(lastSleep.startTime, lastSleep.endTime)).toInt()
+            val staged = sRem + sDeep + sLight
+            // Sessions without stage data (typical for naps) count their full
+            // duration as light sleep so the total stays truthful.
+            if (staged > 0) {
+                totalMin += staged
+            } else {
+                val dur = ChronoUnit.MINUTES.between(session.startTime, session.endTime)
+                sLight += dur
+                totalMin += dur
+            }
+            rem += sRem; deep += sDeep; light += sLight; awake += sAwake
         }
+        val sleepMin: Int? = if (todaysSleep.isEmpty()) null else totalMin.toInt()
+        // bedtime = start of the longest session counted today (the main sleep)
+        val sleepStartMin: Int? = todaysSleep
+            .maxByOrNull { ChronoUnit.MINUTES.between(it.startTime, it.endTime) }
+            ?.let {
+                val t = it.startTime.atZone(zone).toLocalTime()
+                t.hour * 60 + t.minute
+            }
 
         return HealthSnapshot(
             updatedAt = now.toEpochMilli(), source = "live",
             sleepMin = sleepMin, rem = rem.toInt(), deep = deep.toInt(), light = light.toInt(), awake = awake.toInt(),
-            hrv = hrv, restingHr = rhr, steps = if (steps > 0) steps else null,
+            restingHr = rhr, steps = if (steps > 0) steps else null,
+            sleepStartMin = sleepStartMin,
             hrSeries = series,
             hrMin = if (cnt > 0) minB.toInt() else null,
             hrMax = if (cnt > 0) maxB.toInt() else null,
             hrAvg = if (cnt > 0) (sum.toDouble() / cnt).roundToInt() else null,
-            diag = "Gefunden: $cnt Puls-Messwerte · ${sleepRecords.size} Schlaf-Sessions · " +
-                "${hrvRecords.size} HRV · ${rhrRecords.size} Ruhepuls · $steps Schritte",
+            diag = "Found: $cnt heart-rate samples · ${sleepRecords.size} sleep sessions " +
+                "(${todaysSleep.size} counted today) · ${rhrRecords.size} resting HR · $steps steps",
         )
     }
 
-    fun demo(): HealthSnapshot {
-        val now = System.currentTimeMillis()
+    /**
+     * One-time history import so baselines, trends and sleep debt work from
+     * minute one instead of after weeks of collecting. Reads the last [days]
+     * days of sleep / resting HR / steps and merges them into Repo.bodyDays
+     * per day-key (06:00 rollover, same attribution rule as the live read).
+     * Returns the number of days that received any data.
+     */
+    suspend fun backfill(ctx: Context, days: Int = 30): Int {
+        val client = client(ctx)
         val zone = ZoneId.systemDefault()
-        var t = LocalDate.now(zone).atTime(6, 0).atZone(zone).toInstant().toEpochMilli()
-        var base = 62.0
-        val series = ArrayList<HrPoint>()
-        while (t < now) {
-            val hr = Instant.ofEpochMilli(t).atZone(zone).hour
-            val tg = when {
-                hr in 7..8 -> 78.0
-                hr in 9..11 -> 72.0
-                hr in 12..13 -> 70.0
-                hr in 17..18 -> 120.0
-                hr in 19..21 -> 74.0
-                hr >= 22 -> 64.0
-                else -> 62.0
-            }
-            base += (tg - base) * 0.25 + (Math.random() - 0.5) * 6
-            series.add(HrPoint(t, base.coerceIn(52.0, 150.0).roundToInt()))
-            t += 5 * 60 * 1000
+        val now = Instant.now()
+        val start = now.minus(days.toLong(), ChronoUnit.DAYS)
+
+        suspend fun <T : androidx.health.connect.client.records.Record> readSafe(
+            klass: kotlin.reflect.KClass<T>,
+        ): List<T> = runCatching {
+            client.readRecords(ReadRecordsRequest(klass, timeRangeFilter = TimeRangeFilter.between(start, now))).records
+        }.getOrDefault(emptyList())
+
+        val sleep = readSafe(SleepSessionRecord::class)
+        val rhrs = readSafe(RestingHeartRateRecord::class)
+        val stepRecs = readSafe(StepsRecord::class)
+
+        // a session belongs to the day-key whose [06:00−4h .. next 06:00−4h) window contains its end
+        fun dayKeyFor(instant: Instant): String {
+            val local = instant.atZone(zone).toLocalDateTime().minusHours(2) // 06:00 rollover − 4h cutoff ≈ 02:00 boundary
+            return "%04d-%02d-%02d".format(local.year, local.monthValue, local.dayOfMonth)
         }
-        val bpms = series.map { it.bpm }
-        return HealthSnapshot(
-            updatedAt = now, source = "demo",
-            sleepMin = 414, rem = 96, deep = 78, light = 240, awake = 22,
-            hrv = 64, restingHr = 52, steps = 6420,
-            hrSeries = series,
-            hrMin = bpms.minOrNull(), hrMax = bpms.maxOrNull(),
-            hrAvg = if (bpms.isNotEmpty()) bpms.average().roundToInt() else null,
+
+        data class Agg(
+            var sleepMin: Long = 0, var rem: Long = 0, var deep: Long = 0, var light: Long = 0, var awake: Long = 0,
+            var mainDur: Long = 0, var startMin: Int? = null,
+            var rhr: Int? = null, var steps: Long = 0,
         )
+        val perDay = HashMap<String, Agg>()
+
+        for (s in sleep) {
+            val key = dayKeyFor(s.endTime)
+            val a = perDay.getOrPut(key) { Agg() }
+            var sRem = 0L; var sDeep = 0L; var sLight = 0L; var sAwake = 0L
+            for (st in s.stages) {
+                val m = ChronoUnit.MINUTES.between(st.startTime, st.endTime)
+                when (st.stage) {
+                    SleepSessionRecord.STAGE_TYPE_REM -> sRem += m
+                    SleepSessionRecord.STAGE_TYPE_DEEP -> sDeep += m
+                    SleepSessionRecord.STAGE_TYPE_LIGHT, SleepSessionRecord.STAGE_TYPE_SLEEPING -> sLight += m
+                    SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> sAwake += m
+                    else -> sLight += m
+                }
+            }
+            val staged = sRem + sDeep + sLight
+            val dur = ChronoUnit.MINUTES.between(s.startTime, s.endTime)
+            a.sleepMin += if (staged > 0) staged else dur
+            a.rem += sRem; a.deep += sDeep; a.awake += sAwake
+            a.light += if (staged > 0) sLight else dur
+            if (dur > a.mainDur) {
+                a.mainDur = dur
+                val t = s.startTime.atZone(zone).toLocalTime()
+                a.startMin = t.hour * 60 + t.minute
+            }
+        }
+        for (r in rhrs) {
+            val key = dayKeyFor(r.time)
+            perDay.getOrPut(key) { Agg() }.rhr = r.beatsPerMinute.toInt()
+        }
+        for (r in stepRecs) {
+            val key = dayKeyFor(r.startTime)
+            perDay.getOrPut(key) { Agg() }.steps += r.count
+        }
+
+        var written = 0
+        perDay.entries.sortedBy { it.key }.forEach { (key, a) ->
+            Repo.mergeBodyDay(
+                key,
+                sleepMin = a.sleepMin.takeIf { it > 0 }?.toInt(),
+                rem = a.rem.toInt(), deep = a.deep.toInt(), light = a.light.toInt(), awake = a.awake.toInt(),
+                restingHr = a.rhr,
+                steps = a.steps.takeIf { it > 0 }?.toInt(),
+                sleepStartMin = a.startMin,
+            )
+            written++
+        }
+        return written
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
         Ascend — Life OS. Native Jetpack Compose app, offline-first.
@@ -7,8 +8,14 @@
         read locally from Android Health Connect.
     -->
 
-    <!-- Needed only to fetch public chess ratings from Chess.com / Lichess. -->
+    <!-- Open Food Facts, weather for hydration, resource links. -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Grayscale wind-down. Grantable only via one-time adb:
+         adb shell pm grant com.ascend.lifeos android.permission.WRITE_SECURE_SETTINGS -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- Daily reminder notifications (opt-in in settings). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -17,16 +24,36 @@
     <!-- Read-only calendar sync: show today's events (opt-in). -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
+    <!-- Haptic feedback for rest timer / HIIT / stretch. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- Camera for the nutrition barcode scanner (opt-in). -->
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Coarse location (opt-in): heat-based hydration bonus via Open-Meteo. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- Health Connect read permissions (fitness band / smartwatch data). -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_STEPS" />
+
+    <!-- Digital Wellbeing / Jarvis Override: read other apps' usage + draw a
+         focus overlay over them. Both are user-granted via system settings. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Required on Android 11+ so PackageManager can resolve app labels/icons
+         for ALL installed apps (Instagram, WhatsApp, etc.), not just those
+         declared in <queries>. Without this, getLaunchIntentForPackage() and
+         getApplicationInfo() silently fail for most third-party apps. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Allows the app to detect / launch the Health Connect app. -->
     <queries>
@@ -50,16 +77,60 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
             <!-- Health Connect permission-rationale entry point (API 33 and below). -->
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
+
+            <!-- NFC tag at the pull-up bar: jarvis://train opens today's session. -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="jarvis" />
+            </intent-filter>
         </activity>
+
+        <!-- Launcher icon variants (Settings → Experience). Exactly one alias is
+             enabled at a time; switching uses PackageManager component toggles. -->
+        <activity-alias
+            android:name=".LauncherDefault"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherStealth"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_stealth"
+            android:roundIcon="@mipmap/ic_launcher_stealth"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherEmber"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_ember"
+            android:roundIcon="@mipmap/ic_launcher_ember"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Health Connect permission-rationale entry point (API 34+). -->
         <activity-alias
@@ -91,6 +162,29 @@
             android:name=".data.ReminderReceiver"
             android:exported="false" />
 
+        <!-- NFC tag at the pull-up bar: jarvis://train → session opens instantly. -->
+        <!-- (intent-filter lives on MainActivity below via alias-free data filter) -->
+
+        <!-- 1-tap notification answers (check-ins) + widget quick actions. -->
+        <receiver
+            android:name=".data.CheckInReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".widget.WidgetActionReceiver"
+            android:exported="false" />
+
+        <!-- Quick-Settings tile: start/stop a focus session from anywhere. -->
+        <service
+            android:name=".wellbeing.FocusTileService"
+            android:exported="true"
+            android:icon="@android:drawable/ic_lock_idle_alarm"
+            android:label="JARVIS Focus"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".data.BootReceiver"
             android:exported="true">
@@ -98,6 +192,30 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Jarvis Override: foreground service that throws the focus overlay. -->
+        <service
+            android:name=".wellbeing.JarvisGuardService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="focus_guard_overlay" />
+        </service>
+
+        <!-- JARVIS live wallpaper — breathing void nebula, set from Settings. -->
+        <service
+            android:name=".ui.wallpaper.JarvisWallpaper"
+            android:exported="true"
+            android:label="JARVIS Nebula"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/jarvis_wallpaper" />
+        </service>
 
         <!-- Home-screen widget. -->
         <receiver

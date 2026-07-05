@@ -91,6 +91,8 @@ object FoodApi {
                 if (v >= 0.0) per100[nd.id] = v
             }
         }
+        // alcohol is not in NUTRIENTS but drives the food score hard-override
+        n.optDouble("alcohol_100g", -1.0).takeIf { it > 0.0 }?.let { per100["alcohol"] = it }
 
         fun tags(key: String): List<String> {
             val a = p.optJSONArray(key) ?: return emptyList()

@@ -9,3 +9,9 @@
 .cxx
 local.properties
 app/build/
+
+# Personal reference material dropped into the repo root (photos, spec PDFs) — not app source
+/Newpics/
+/Bilder app training/
+/kalender.jpeg
+/*.pdf

@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.lerp
 // ---- Ascend design tokens ---------------------------------------------------
 // One accent, disciplined neutral steps. Premium = restraint.
 
+val Void = Color(0xFF050505)         // deepest HUD background (Jarvis heads-up display)
 val Bg = Color(0xFF0A0A0C)          // app background (cyber-dark, OLED friendly)
 val BgElevated = Color(0xFF0E1116)
 val Surface = Color(0xFF13171E)      // cards
@@ -46,3 +47,27 @@ val Orange = Color(0xFFFF8A4C)
 val Blue = Color(0xFF5B9DFF)
 val Purple = Color(0xFFB794FF)
 val Red = Color(0xFFFF6169)
+val Cyan = Color(0xFF4CD4C4)         // secondary neon for HUD glows / gradients
+
+// ---- IRON HUD module identities --------------------------------------------
+// One foundation, seven signatures. Each tab owns exactly one accent; the
+// shared shell tints its background glow with it so switching tabs feels like
+// switching rooms of the same ship.
+
+object Mod {
+    val Home = Color(0xFF34E0A1)      // arc mint — command center
+    val Calendar = Color(0xFFB794FF)  // ion violet — timeline
+    val Train = Color(0xFFFF6B35)     // ember — power
+    val Fuel = Color(0xFFA8E05F)      // lime — nutrition
+    val Body = Color(0xFF4CD4FF)      // pulse cyan — vitals
+    val Guard = Color(0xFFF5C451)     // gold — shield
+    val Skills = Color(0xFF8B7CFF)    // nova purple — constellation
+}
+
+// Semantic verdicts — identical in every module, never used as decoration.
+val Good = Color(0xFF34E0A1)
+val Warn = Color(0xFFF5C451)
+val Crit = Color(0xFFFF6169)
+
+/** Theme preset: "stark" (signature) · "stealth" (no glow) · "reactor" (more energy). */
+val themeState = mutableStateOf("stark")

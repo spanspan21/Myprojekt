@@ -12,6 +12,22 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 }
 
+/** 1-tap answers from notification action buttons — no app open needed. */
+class CheckInReceiver : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        runCatching { Repo.init(ctx) }
+        when (intent.getStringExtra("what")) {
+            "stress" -> Repo.setCheckIn(eveningStress = intent.getIntExtra("value", 2))
+            "energy" -> Repo.setCheckIn(morningEnergy = intent.getIntExtra("value", 2))
+        }
+        // collapse the notification after answering
+        runCatching {
+            androidx.core.app.NotificationManagerCompat.from(ctx)
+                .cancel(intent.getIntExtra("notifId", 2))
+        }
+    }
+}
+
 /** Reschedules reminders after a device reboot (alarms are cleared on boot). */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {

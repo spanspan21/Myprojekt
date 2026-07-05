@@ -22,11 +22,23 @@ class MainActivity : ComponentActivity() {
         if (Repo.profile().reminders && Notifier.hasPermission(applicationContext)) {
             Notifier.schedule(applicationContext)
         }
+        com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
+        com.ascend.lifeos.ui.theme.themeState.value =
+            com.ascend.lifeos.data.Prefs.string(applicationContext, com.ascend.lifeos.data.Prefs.THEME, "stark")
+        intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
+        // NFC tag (jarvis://train/start) → straight into today's session
+        intent?.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }
         setContent {
             AscendTheme {
                 AscendApp()
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
+        intent.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }
     }
 
     override fun onStop() {

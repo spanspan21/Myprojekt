@@ -6,8 +6,8 @@ import kotlin.math.roundToInt
 object NutritionCalc {
     data class Targets(val kcal: Int, val protein: Int, val carbs: Int, val fat: Int)
 
-    val ACTIVITY_LABELS = listOf("Wenig", "Leicht", "Mittel", "Aktiv", "Sehr")
-    val GOAL_LABELS = listOf("lose" to "Abnehmen", "maintain" to "Halten", "gain" to "Aufbauen")
+    val ACTIVITY_LABELS = listOf("Sedentary", "Light", "Moderate", "Active", "Athlete")
+    val GOAL_LABELS = listOf("lose" to "Cut", "maintain" to "Maintain", "gain" to "Build")
 
     fun compute(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, goal: String): Targets {
         val w = weightKg.coerceIn(30, 300)

@@ -111,6 +111,9 @@ data class FoodEntry(
 
 @Serializable
 data class DayData(
+    val waterLog: List<Long> = emptyList(),   // timestamps of each glass (hydration curve)
+    val supps: List<String> = emptyList(),    // supplements checked off today
+    val journal: List<String> = emptyList(),  // 3 one-line answers (best/annoyed/grateful)
     val goals: List<Goal> = emptyList(),
     val water: Int = 0,
     val cali: Map<String, List<Int>> = emptyMap(),
@@ -145,7 +148,30 @@ data class Profile(
     val weightKg: Int = 75,
     val activity: Int = 3,             // 1..5
     val dietGoal: String = "maintain", // lose | maintain | gain
+    val objectives: List<String> = emptyList(), // onboarding: what Jarvis prioritizes
+
+    // ---- train brain (assessment · goals · equipment) ----
+    val assessResults: Map<String, Int> = emptyMap(), // testId -> reps/seconds
+    val assessDate: Long? = null,
+    val skillGoals: List<String> = emptyList(),       // SkillCatalog ids
+    val trainFreq: Int = 3,                            // sessions per week 2..6
+    val sessionLen: Int = 45,                          // minutes
+    val hasVest: Boolean = true,
+    val vestMaxKg: Int = 25,
+    val trainWeekIndex: Int = 0,                       // 0..4 → mesocycle week (4 build + 1 deload)
+    val trainWeekStamp: String? = null,                // iso-week the index was last advanced
+
+    // ---- body & system ----
+    val sickMode: Boolean = false,                     // pauses streaks, plan → mobility, notifier quiet
+    val lastPortion: Map<String, Int> = emptyMap(),    // food name -> grams last logged
+    val measurements: Map<String, List<MeasurePoint>> = emptyMap(), // "arm"/"chest"/… -> history
+    val kcalGoalAuto: Boolean = true,                  // adaptive TDEE may adjust kcalGoal weekly
+    val tdeeLastSuggest: String? = null,               // dayKey of last accepted/shown suggestion
+    val supplements: List<String> = listOf("Creatine 5g", "Vitamin D3", "Omega-3"),
     val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
+    val customFoods: List<CustomFood> = emptyList(), // user-created foods
+    val savedMeals: List<SavedMeal> = emptyList(),   // saved meal combinations
+    val shopping: List<ShopItem> = emptyList(),      // recipe-derived shopping list
     val caliDefs: List<ExerciseDef> = DEFAULT_EXERCISES,
     val caliBest: Map<String, Int> = emptyMap(),
     val exLevel: Map<String, Int> = emptyMap(), // progression level per exercise id
@@ -170,9 +196,9 @@ data class HealthSnapshot(
     val deep: Int = 0,
     val light: Int = 0,
     val awake: Int = 0,
-    val hrv: Int? = null,
     val restingHr: Int? = null,
     val steps: Int? = null,
+    val sleepStartMin: Int? = null, // minute-of-day the main sleep began
     val hrSeries: List<HrPoint> = emptyList(),
     val hrMin: Int? = null,
     val hrMax: Int? = null,
@@ -186,7 +212,87 @@ data class AppData(
     val days: Map<String, DayData> = emptyMap(),
     val health: HealthSnapshot? = null,
     val txns: List<Txn> = emptyList(),
+    val fasting: FastingState = FastingState(),
+    val fastLog: List<FastLog> = emptyList(),
+    val weightLog: List<WeightPoint> = emptyList(),
+    val bodyDays: Map<String, BodyDay> = emptyMap(), // per-day health history for trends & baselines
 )
+
+/** One day of body signals — written on every Health Connect sync + check-ins. */
+@Serializable
+data class BodyDay(
+    val sleepMin: Int? = null,
+    val rem: Int = 0,
+    val deep: Int = 0,
+    val light: Int = 0,
+    val awake: Int = 0,
+    val restingHr: Int? = null,
+    val steps: Int? = null,
+    val morningEnergy: Int? = null,   // 1 low · 2 ok · 3 high
+    val soreness: Int? = null,        // 1 none · 2 some · 3 heavy
+    val eveningStress: Int? = null,   // 1 calm · 2 ok · 3 fried
+    val mood: Int? = null,            // 1 rough · 2 ok · 3 great (journal/check-in)
+    val sleepStartMin: Int? = null,   // minute-of-day the main sleep began (bedtime consistency)
+    // journal factors (Whoop-style; some auto-tagged from Fuel)
+    val fCaffeineLate: Boolean? = null,
+    val fAlcohol: Boolean? = null,
+    val fLateMeal: Boolean? = null,
+    val fScreenLate: Boolean? = null,
+)
+
+@Serializable
+data class MeasurePoint(val ts: Long, val cm: Double)
+
+/** A user-authored food with full micronutrients — the "create own food" flow. */
+@Serializable
+data class CustomFood(
+    val id: String,
+    val name: String,
+    val servingG: Int = 100,
+    val unit: String = "g",              // g | ml | Stück | Portion
+    val kcal: Int = 0,
+    val protein: Int = 0,
+    val carbs: Int = 0,
+    val fat: Int = 0,
+    val micros: Map<String, Double> = emptyMap(), // per serving, in grams
+    val barcode: String = "",
+    val favorite: Boolean = false,
+)
+
+/** A saved meal combination, e.g. "Mein Standard-Frühstück". */
+@Serializable
+data class SavedMeal(
+    val id: String,
+    val name: String,
+    val entries: List<FoodEntry> = emptyList(),
+)
+
+/** A bodyweight measurement, for the kcal↔weight correlation. */
+@Serializable
+data class WeightPoint(val ts: Long, val kg: Double)
+
+/** A shopping-list line derived from recipe ingredients. */
+@Serializable
+data class ShopItem(val name: String, val checked: Boolean = false)
+
+/** Active intermittent-fasting session. startEpoch == 0 -> not fasting. */
+@Serializable
+data class FastingState(
+    val protocol: String = "16:8",
+    val startEpoch: Long = 0L,
+) {
+    val active: Boolean get() = startEpoch > 0L
+}
+
+/** A completed fast, for streak/adherence statistics. */
+@Serializable
+data class FastLog(
+    val protocol: String,
+    val start: Long,
+    val end: Long,
+) {
+    val hours: Double get() = (end - start) / 3_600_000.0
+}
 
 val DEFAULT_EXERCISES = listOf(
     ExerciseDef("pullups", "Klimmzüge", "reps"),

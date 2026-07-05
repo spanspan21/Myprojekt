@@ -1,0 +1,222 @@
+package com.ascend.lifeos.data.training
+
+// ─── Calisthenics skill catalog ──────────────────────────────────────────────
+// ~28 selectable goals with pattern-level prerequisites. Selected goals steer
+// the plan generator (skill-work slots) and get an honest ETA from the gap
+// between current levels and requirements.
+
+enum class SkillArea { PUSH, PULL, CORE, LEGS, BALANCE }
+
+data class SkillDef(
+    val id: String,
+    val name: String,
+    val area: SkillArea,
+    val tier: Int,                       // 1 easy … 5 elite
+    val requires: Map<Pattern, Int>,     // pattern -> min level
+    val feeders: List<String>,           // named skill-work drills for sessions
+    val blurb: String,
+)
+
+object SkillCatalog {
+
+    val ALL = listOf(
+        // ── PULL ────────────────────────────────────────────────────
+        SkillDef(
+            "first_pullup", "First Pull-up", SkillArea.PULL, 1,
+            mapOf(Pattern.PULL to 1, Pattern.HANG to 2),
+            listOf("Negative pull-ups", "Scapular pulls"),
+            "The gateway. Negatives and scap work until the first clean rep.",
+        ),
+        SkillDef(
+            "pullup_10", "10 Pull-ups", SkillArea.PULL, 2,
+            mapOf(Pattern.PULL to 3),
+            listOf("Weighted pull-ups", "Volume sets"),
+            "Double digits, strict. The base for everything above the bar.",
+        ),
+        SkillDef(
+            "archer_pullup", "Archer Pull-up", SkillArea.PULL, 3,
+            mapOf(Pattern.PULL to 4),
+            listOf("Archer negatives", "Typewriter pull-ups"),
+            "One arm does the work, the other guides. Unilateral strength.",
+        ),
+        SkillDef(
+            "muscle_up", "Muscle-up", SkillArea.PULL, 3,
+            mapOf(Pattern.PULL to 4, Pattern.DIP to 3),
+            listOf("High pull-ups", "Explosive pull + transition drills", "Straight-bar dips"),
+            "Pull-up + dip + the transition nobody trains. Now you will.",
+        ),
+        SkillDef(
+            "typewriter", "Typewriter Pull-up", SkillArea.PULL, 3,
+            mapOf(Pattern.PULL to 4),
+            listOf("Archer pull-ups", "Side-to-side holds"),
+            "Slide across the bar at the top. Control in every inch.",
+        ),
+        SkillDef(
+            "oap", "One-Arm Pull-up", SkillArea.PULL, 5,
+            mapOf(Pattern.PULL to 6, Pattern.HANG to 5),
+            listOf("One-arm negatives", "Weighted pull-ups (heavy)", "Archer pull-ups"),
+            "The summit of pulling. Years, not weeks — but the path is clear.",
+        ),
+        SkillDef(
+            "front_lever_tuck", "Front Lever · Tuck", SkillArea.CORE, 2,
+            mapOf(Pattern.PULL to 3, Pattern.CORE to 3),
+            listOf("Tuck front lever holds", "Ice cream makers"),
+            "Knees in, body horizontal, lats on fire. Step one of the lever.",
+        ),
+        SkillDef(
+            "front_lever_adv", "Front Lever · Advanced Tuck", SkillArea.CORE, 3,
+            mapOf(Pattern.PULL to 4, Pattern.CORE to 4),
+            listOf("Advanced tuck holds", "Front lever raises"),
+            "Hips open, back flat. The hold gets honest here.",
+        ),
+        SkillDef(
+            "front_lever", "Front Lever · Full", SkillArea.CORE, 5,
+            mapOf(Pattern.PULL to 5, Pattern.CORE to 5, Pattern.HANG to 4),
+            listOf("One-leg front lever", "Straddle front lever", "Lever pulls"),
+            "Body a straight line under the bar. The pull-side crown jewel.",
+        ),
+        SkillDef(
+            "back_lever", "Back Lever", SkillArea.CORE, 3,
+            mapOf(Pattern.PULL to 3, Pattern.CORE to 4, Pattern.HANG to 3),
+            listOf("Skin the cat", "Tuck back lever", "German hang"),
+            "Face-down horizontal hold. Shoulder prep is everything.",
+        ),
+        // ── PUSH ────────────────────────────────────────────────────
+        SkillDef(
+            "pushup_30", "30 Push-ups", SkillArea.PUSH, 1,
+            mapOf(Pattern.PUSH to 2),
+            listOf("Volume push-ups", "Tempo push-ups"),
+            "Strict thirty. Earn the right to load the vest.",
+        ),
+        SkillDef(
+            "archer_pushup", "Archer Push-up", SkillArea.PUSH, 2,
+            mapOf(Pattern.PUSH to 3),
+            listOf("Wide push-ups", "Archer negatives"),
+            "Shift the load to one side. Bridge to the one-arm.",
+        ),
+        SkillDef(
+            "oapu", "One-Arm Push-up", SkillArea.PUSH, 4,
+            mapOf(Pattern.PUSH to 5, Pattern.CORE to 4),
+            listOf("Archer push-ups", "One-arm negatives", "Uneven push-ups"),
+            "Full-body tension with one hand down. Core sells it.",
+        ),
+        SkillDef(
+            "pike_hspu", "Pike Push-up · Deep", SkillArea.PUSH, 2,
+            mapOf(Pattern.PUSH to 3),
+            listOf("Pike push-ups", "Elevated pike push-ups"),
+            "Shoulders take over. The handstand push-up starts here.",
+        ),
+        SkillDef(
+            "wall_hspu", "Wall Handstand Push-up", SkillArea.PUSH, 4,
+            mapOf(Pattern.PUSH to 4, Pattern.CORE to 4),
+            listOf("Wall handstand holds", "HSPU negatives", "Deep pike push-ups"),
+            "Vertical pressing against the wall. Strength meets balance.",
+        ),
+        SkillDef(
+            "hspu", "Freestanding HSPU", SkillArea.PUSH, 5,
+            mapOf(Pattern.PUSH to 6, Pattern.CORE to 5),
+            listOf("Wall HSPU", "Freestanding handstand", "Negatives"),
+            "No wall. Press your bodyweight upside down, balanced.",
+        ),
+        SkillDef(
+            "planche_lean", "Planche Lean", SkillArea.PUSH, 2,
+            mapOf(Pattern.PUSH to 3, Pattern.CORE to 3),
+            listOf("Planche leans", "Pseudo planche push-ups"),
+            "Shoulders past the hands, straight arms. The planche seed.",
+        ),
+        SkillDef(
+            "tuck_planche", "Tuck Planche", SkillArea.PUSH, 4,
+            mapOf(Pattern.PUSH to 4, Pattern.CORE to 4, Pattern.DIP to 4),
+            listOf("Tuck planche holds", "Planche leans (deep)", "Pseudo planche push-ups"),
+            "Feet off the floor, arms straight. Straight-arm strength begins.",
+        ),
+        SkillDef(
+            "straddle_planche", "Straddle Planche", SkillArea.PUSH, 5,
+            mapOf(Pattern.PUSH to 6, Pattern.CORE to 5, Pattern.DIP to 5),
+            listOf("Advanced tuck planche", "Straddle attempts", "Band-assisted planche"),
+            "Legs wide, hips at hand height. Elite territory.",
+        ),
+        SkillDef(
+            "ring_dips", "Ring Dips", SkillArea.PUSH, 3,
+            mapOf(Pattern.DIP to 3),
+            listOf("Ring support holds", "Ring dips (assisted)"),
+            "Dips on unstable rings. Stabilizers wake up fast.",
+        ),
+        // ── CORE ────────────────────────────────────────────────────
+        SkillDef(
+            "l_sit", "L-Sit (10s)", SkillArea.CORE, 2,
+            mapOf(Pattern.CORE to 3, Pattern.DIP to 2),
+            listOf("Tuck L-sit", "Support holds", "Compression drills"),
+            "Legs parallel to the floor. Compression + triceps + hip flexors.",
+        ),
+        SkillDef(
+            "v_sit", "V-Sit", SkillArea.CORE, 4,
+            mapOf(Pattern.CORE to 5, Pattern.DIP to 3),
+            listOf("L-sit (long holds)", "V-sit lifts", "Pike compressions"),
+            "The L-sit folded past 90°. Brutal compression strength.",
+        ),
+        SkillDef(
+            "dragon_flag", "Dragon Flag", SkillArea.CORE, 3,
+            mapOf(Pattern.CORE to 4),
+            listOf("Dragon flag negatives", "Hollow body holds"),
+            "Bruce Lee's move. Body straight from the shoulders.",
+        ),
+        SkillDef(
+            "hanging_leg_raise", "Toes-to-Bar", SkillArea.CORE, 2,
+            mapOf(Pattern.CORE to 3, Pattern.HANG to 2),
+            listOf("Hanging knee raises", "Toes-to-bar negatives"),
+            "Straight legs to the bar, no swing. Grip + core.",
+        ),
+        SkillDef(
+            "human_flag", "Human Flag", SkillArea.CORE, 5,
+            mapOf(Pattern.PULL to 5, Pattern.PUSH to 5, Pattern.CORE to 5),
+            listOf("Flag chamber holds", "Side plank (loaded)", "Vertical flag holds"),
+            "Sideways on a pole, parallel to the ground. The showstopper.",
+        ),
+        // ── LEGS ────────────────────────────────────────────────────
+        SkillDef(
+            "pistol", "Pistol Squat", SkillArea.LEGS, 3,
+            mapOf(Pattern.SQUAT to 3, Pattern.CORE to 3),
+            listOf("Box pistols", "Assisted pistols", "Ankle mobility work"),
+            "One leg, full depth. Strength, balance, ankle mobility.",
+        ),
+        SkillDef(
+            "shrimp", "Shrimp Squat", SkillArea.LEGS, 3,
+            mapOf(Pattern.SQUAT to 4),
+            listOf("Rear-foot elevated squats", "Shrimp negatives"),
+            "The pistol's meaner sibling. Knee tracks everything.",
+        ),
+        SkillDef(
+            "nordic", "Nordic Curl", SkillArea.LEGS, 4,
+            mapOf(Pattern.SQUAT to 4, Pattern.CORE to 4),
+            listOf("Nordic negatives", "Glute-ham raises (band)"),
+            "Hamstrings against gravity. Sprint armor for hockey.",
+        ),
+        // ── BALANCE ─────────────────────────────────────────────────
+        SkillDef(
+            "wall_handstand", "Wall Handstand (60s)", SkillArea.BALANCE, 2,
+            mapOf(Pattern.PUSH to 2, Pattern.CORE to 2),
+            listOf("Wall handstand holds", "Shoulder taps"),
+            "Sixty seconds nose-to-wall. The balance foundation.",
+        ),
+        SkillDef(
+            "handstand", "Freestanding Handstand", SkillArea.BALANCE, 4,
+            mapOf(Pattern.PUSH to 3, Pattern.CORE to 4),
+            listOf("Wall handstand (belly)", "Kick-up practice", "Heel pulls"),
+            "Balance, not strength. Practice daily, fall well.",
+        ),
+    )
+
+    fun byId(id: String): SkillDef? = ALL.find { it.id == id }
+
+    /** Honest ETA in weeks from level gaps (~3.5 weeks per missing level). */
+    fun etaWeeks(skill: SkillDef, profile: FitnessProfile?): Int {
+        if (profile == null) return -1
+        val gap = skill.requires.entries.sumOf { (p, req) -> (req - profile.level(p)).coerceAtLeast(0) }
+        return if (gap == 0) 0 else (gap * 3.5f).toInt().coerceAtLeast(2)
+    }
+
+    /** Requirements satisfied → the skill is "in reach" (trainable directly). */
+    fun inReach(skill: SkillDef, profile: FitnessProfile?): Boolean =
+        profile != null && skill.requires.all { (p, req) -> profile.level(p) >= req }
+}

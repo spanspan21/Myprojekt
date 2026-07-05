@@ -10,18 +10,25 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.ascend.lifeos.core.todayKey
 import java.util.Calendar
 
 /**
- * Local reminder notifications — no server, no account. Two daily nudges
- * (morning kick-off, evening streak-guard) scheduled via AlarmManager.
+ * JARVIS proactive layer — local only, max four planned pings a day, every one
+ * of them data-driven. A nudge that has nothing to say stays silent.
+ *
+ *   07:00  Morning briefing  (recovery + today's plan)
+ *   13:00  Fuel check        (only if nothing logged yet)
+ *   20:30  Evening review    (missions + bedtime)
+ *   Sun 19:00  Weekly report
  */
 object Notifier {
     const val CHANNEL = "ascend_reminders"
-    private const val MORNING_REQ = 4101
-    private const val EVENING_REQ = 4102
-    const val MORNING_HOUR = 9
-    const val EVENING_HOUR = 20
+
+    private const val REQ_MORNING = 4101
+    private const val REQ_EVENING = 4102
+    private const val REQ_FUEL = 4103
+    private const val REQ_WEEKLY = 4104
 
     fun hasPermission(ctx: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
@@ -32,8 +39,8 @@ object Notifier {
         if (Build.VERSION.SDK_INT >= 26) {
             val mgr = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (mgr.getNotificationChannel(CHANNEL) == null) {
-                val ch = NotificationChannel(CHANNEL, "Erinnerungen", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                    description = "Tägliche Motivations- und Ziel-Erinnerungen"
+                val ch = NotificationChannel(CHANNEL, "JARVIS briefings", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Morning briefing, fuel check, evening review, weekly report"
                 }
                 mgr.createNotificationChannel(ch)
             }
@@ -42,14 +49,32 @@ object Notifier {
 
     fun schedule(ctx: Context) {
         ensureChannel(ctx)
-        scheduleAt(ctx, MORNING_REQ, MORNING_HOUR, "morning")
-        scheduleAt(ctx, EVENING_REQ, EVENING_HOUR, "evening")
+        scheduleDaily(ctx, REQ_MORNING, 7, 0, "morning")
+        scheduleDaily(ctx, REQ_FUEL, 13, 0, "fuel")
+        scheduleDaily(ctx, REQ_EVENING, 20, 30, "evening")
+        scheduleWeekly(ctx, REQ_WEEKLY, Calendar.SUNDAY, 19, "weekly")
+    }
+
+    /** One-shot: protein-window nudge ~90 min after a finished workout. */
+    fun scheduleProteinNudge(ctx: Context) {
+        if (!Prefs.bool(ctx, Prefs.PROTEIN_NUDGE, true)) return
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        var flags = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
+        val pi = PendingIntent.getBroadcast(
+            ctx, 4105,
+            Intent(ctx, ReminderReceiver::class.java).putExtra("kind", "protein"),
+            flags,
+        )
+        runCatching { am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 90L * 60_000, pi) }
     }
 
     fun cancel(ctx: Context) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        am.cancel(pending(ctx, MORNING_REQ, "morning"))
-        am.cancel(pending(ctx, EVENING_REQ, "evening"))
+        am.cancel(pending(ctx, REQ_MORNING, "morning"))
+        am.cancel(pending(ctx, REQ_FUEL, "fuel"))
+        am.cancel(pending(ctx, REQ_EVENING, "evening"))
+        am.cancel(pending(ctx, REQ_WEEKLY, "weekly"))
     }
 
     private fun pending(ctx: Context, req: Int, kind: String): PendingIntent {
@@ -59,58 +84,152 @@ object Notifier {
         return PendingIntent.getBroadcast(ctx, req, intent, flags)
     }
 
-    private fun scheduleAt(ctx: Context, req: Int, hour: Int, kind: String) {
+    private fun scheduleDaily(ctx: Context, req: Int, hour: Int, minute: Int, kind: String) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val now = System.currentTimeMillis()
         val cal = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
             if (timeInMillis <= now) add(Calendar.DAY_OF_YEAR, 1)
         }
         am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.timeInMillis, AlarmManager.INTERVAL_DAY, pending(ctx, req, kind))
+    }
+
+    private fun scheduleWeekly(ctx: Context, req: Int, weekday: Int, hour: Int, kind: String) {
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val now = System.currentTimeMillis()
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, weekday)
+            set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            if (timeInMillis <= now) add(Calendar.WEEK_OF_YEAR, 1)
+        }
+        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.timeInMillis, AlarmManager.INTERVAL_DAY * 7, pending(ctx, req, kind))
     }
 
     fun show(ctx: Context, kind: String) {
         if (!hasPermission(ctx)) return
         ensureChannel(ctx)
         runCatching { Repo.init(ctx) }
-        val (title, text) = message(kind)
-        val open = Intent(ctx, Class.forName("com.ascend.lifeos.MainActivity"))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        if (Repo.profile().sickMode && kind != "morning") return  // rest means rest
+        // per-kind settings toggles
+        val allowed = when (kind) {
+            "morning" -> Prefs.bool(ctx, Prefs.NOTIF_MORNING, true)
+            "fuel" -> Prefs.bool(ctx, Prefs.NOTIF_FUEL, true)
+            "evening" -> Prefs.bool(ctx, Prefs.NOTIF_EVENING, true)
+            "weekly" -> Prefs.bool(ctx, Prefs.NOTIF_WEEKLY, true)
+            "protein" -> Prefs.bool(ctx, Prefs.PROTEIN_NUDGE, true)
+            else -> true
+        }
+        if (!allowed) return
+        val msg = message(ctx, kind) ?: return   // nothing worth saying → stay silent
+        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; else -> 4 }
+
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
-        val contentPi = PendingIntent.getActivity(ctx, 4200, open, flags)
-        val notif = NotificationCompat.Builder(ctx, CHANNEL)
+
+        fun openApp(tab: String?): PendingIntent {
+            val open = Intent(ctx, Class.forName("com.ascend.lifeos.MainActivity"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                .apply { tab?.let { putExtra("open", it) } }
+            return PendingIntent.getActivity(ctx, 4200 + (tab?.hashCode() ?: 0) % 100, open, flags)
+        }
+
+        val builder = NotificationCompat.Builder(ctx, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(title)
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentTitle(msg.first)
+            .setContentText(msg.second)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(msg.second))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
-            .setContentIntent(contentPi)
-            .build()
-        runCatching { NotificationManagerCompat.from(ctx).notify(if (kind == "evening") 2 else 1, notif) }
+            .setContentIntent(openApp(null))
+
+        // 1-tap dialogue: answer without opening the app
+        when (kind) {
+            "morning" -> builder.addAction(0, "Open training", openApp("train"))
+            "evening" -> {
+                fun checkPi(value: Int): PendingIntent {
+                    val i = Intent(ctx, CheckInReceiver::class.java)
+                        .putExtra("what", "stress").putExtra("value", value).putExtra("notifId", id)
+                    return PendingIntent.getBroadcast(ctx, 4300 + value, i, flags)
+                }
+                builder.addAction(0, "Calm", checkPi(1))
+                builder.addAction(0, "OK", checkPi(2))
+                builder.addAction(0, "Fried", checkPi(3))
+            }
+            "fuel" -> builder.addAction(0, "Log food", openApp("fuel"))
+            "weekly" -> builder.addAction(0, "Open report", openApp("report"))
+        }
+
+        runCatching { NotificationManagerCompat.from(ctx).notify(id, builder.build()) }
     }
 
-    private fun message(kind: String): Pair<String, String> {
+    private fun message(ctx: Context, kind: String): Pair<String, String>? {
         val p = runCatching { Repo.profile() }.getOrDefault(Profile())
-        val c = runCatching { Repo.completion() }.getOrNull()
-        val nm = if (p.name.isNotBlank()) " ${p.name}" else ""
-        val open = c?.let { it.total - it.done } ?: 0
-        return if (kind == "morning") {
-            val pool = listOf(
-                "Guten Morgen$nm 🌅" to "Neuer Tag, frische Chance. Der erste erledigte Punkt gibt den Ton vor — fang jetzt an.",
-                "Aufstehen und angreifen$nm ⚡" to "Deine Serie steht bei ${p.streak}. Heute legst du einen drauf. Ein Häkchen nach dem anderen.",
-                "Morgen$nm 🔥" to "Schwung entsteht durchs Anfangen, nicht durchs Warten. Öffne Ascend und mach den ersten Zug.",
-            )
-            pool.random()
-        } else {
-            val pool = if (c != null && c.done >= c.total && c.total > 0) listOf(
-                "Perfekter Tag$nm ✅" to "Alles erledigt, Serie ${p.streak}. Genieß es kurz und schlaf gut — morgen wieder.",
-            ) else listOf(
-                "Der Abend entscheidet$nm ⚡" to "$open ${if (open == 1) "Ziel ist" else "Ziele sind"} noch offen. ${if (p.streak > 0) "Serie ${p.streak} — nicht heute wegwerfen." else "Zieh es jetzt durch."}",
-                "Noch wach?$nm 🌙" to "Die schnellen Dinge gehen noch. $open offen — schließ sie, bevor der Tag kippt.",
-            )
-            pool.random()
+        val name = p.name.ifBlank { "operator" }
+        val day = Repo.today()
+        val kcal = day.meals.sumOf { it.kcal }
+        val recovery = Repo.recoveryScoreV2()
+
+        return when (kind) {
+            "morning" -> {
+                val rec = when {
+                    recovery == null -> "No recovery data yet — sync your watch."
+                    recovery >= 75 -> "Recovery $recovery. Green light — push today."
+                    recovery >= 50 -> "Recovery $recovery. Solid — train with headroom."
+                    else -> "Recovery $recovery. Keep it light, the gains happen when you rest."
+                }
+                "Morning briefing" to "$rec Check Home for today's plan, $name."
+            }
+            "fuel" -> {
+                if (kcal > 0) null  // already fueling — no nag
+                else "Fuel check" to "Nothing logged today. Even a quick entry keeps the data honest."
+            }
+            "evening" -> {
+                val water = day.water
+                val parts = buildList {
+                    add(if (kcal > 0) "$kcal kcal logged" else "no food logged")
+                    add("water $water/${p.waterGoal}")
+                    val debt = Repo.sleepDebtMin()
+                    if (debt > 120) add("sleep debt ${debt / 60}h ${debt % 60}m — tonight is the payback")
+                    // homework check for tomorrow (Settings → School)
+                    if (Prefs.bool(ctx, Prefs.HOMEWORK_PROMPT, true)) {
+                        val tomorrow = java.time.LocalDate.now().plusDays(1).toEpochDay()
+                        val due = runCatching {
+                            com.ascend.lifeos.data.school.SchoolStore.openHomework(ctx)
+                                .count { it.dueEpochDay <= tomorrow }
+                        }.getOrDefault(0)
+                        if (due > 0) add("$due homework due by tomorrow")
+                    }
+                }
+                "Evening review" to parts.joinToString(" · ").replaceFirstChar { it.uppercase() }
+            }
+            "untis" -> null  // built inline by UntisSync; never reached
+
+            "protein" -> {
+                val recent = Repo.today().meals.filter { it.ts > System.currentTimeMillis() - 100 * 60_000L }
+                if (recent.sumOf { it.protein } >= 20) null  // already eaten — stay silent
+                else {
+                    val top = Repo.profile().recentFoods.sortedByDescending { it.protein }.take(2)
+                    val suggestion = top.joinToString(" or ") { it.name }.ifBlank { "Quark or eggs" }
+                    "Protein window" to "~30–40 g within the next hour locks in today's session. $suggestion closes it."
+                }
+            }
+            "weekly" -> {
+                val workouts = runCatching {
+                    kotlinx.coroutines.runBlocking {
+                        com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao()
+                            .sessionCountSince(System.currentTimeMillis() - 7L * 86_400_000)
+                    }
+                }.getOrDefault(0)
+                val sleepAvg = Repo.lastDayKeys(7).mapNotNull { Repo.bodyDay(it)?.sleepMin }
+                    .takeIf { it.isNotEmpty() }?.average()?.toInt()
+                val parts = buildList {
+                    add("$workouts workouts")
+                    sleepAvg?.let { add("Ø sleep ${it / 60}h ${it % 60}m") }
+                    add("streak ${p.streak}")
+                }
+                "Weekly report" to "This week: ${parts.joinToString(" · ")}. Open JARVIS for the details."
+            }
+            else -> null
         }
     }
 }
