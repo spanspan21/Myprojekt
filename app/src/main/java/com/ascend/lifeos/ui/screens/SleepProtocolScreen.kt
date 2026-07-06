@@ -44,9 +44,16 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
     val state = SleepStore.state(ctx)
     val restricting = state != null && state.phase == SleepProtocol.Phase.RESTRICTION
 
-    // weekly titration — checked once per screen entry, at most once per ISO week
+    // nights sync themselves from the watch — nobody types what a sensor knows;
+    // then the weekly titration runs (at most once per ISO week)
     var adjustMsg by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(Unit) { adjustMsg = SleepStore.sundayAdjustIfDue(ctx) }
+    var synced by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        synced = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { SleepStore.syncFromHealth(ctx) }.getOrDefault(0)
+        }
+        adjustMsg = SleepStore.sundayAdjustIfDue(ctx)
+    }
 
     val headerLine = when {
         restricting -> "restriction · window ${fmtDur(state!!.tibMin)}"
@@ -65,13 +72,20 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
 
         // ── explainer ────────────────────────────────────────────────
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-            Text(
-                "Sleep restriction matches your bed window to real sleep — pressure builds, nights consolidate. " +
-                    "Stimulus control re-couples bed with sleep. " +
-                    "Self-help, not medical advice — persistent problems or apnea signs (loud snoring, gasping) need a doctor.",
-                color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp,
-                modifier = Modifier.padding(16.dp),
-            )
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    "Sleep restriction matches your bed window to real sleep — pressure builds, nights consolidate. " +
+                        "Stimulus control re-couples bed with sleep. " +
+                        "Self-help, not medical advice — persistent problems or apnea signs (loud snoring, gasping) need a doctor.",
+                    color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    if (synced > 0) "⚡ $synced night${if (synced == 1) "" else "s"} synced from your watch just now — nothing to type."
+                    else "⚡ Nights sync from your watch automatically.",
+                    color = Mod.Body, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
+            }
         }
         Spacer(Modifier.height(20.dp))
 
@@ -112,8 +126,22 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         }
         Spacer(Modifier.height(20.dp))
 
-        // ── morning log ──────────────────────────────────────────────
-        SectionLabel("Morning log")
+        // ── refine last night — only when the watch got something wrong ──
+        var refineOpen by remember { mutableStateOf(false) }
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                .clickable { refineOpen = !refineOpen }
+                .padding(vertical = 6.dp, horizontal = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionLabel("Refine last night")
+            Spacer(Modifier.width(8.dp))
+            Text(
+                if (refineOpen) "▴" else "▾  watch data is used automatically",
+                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+            )
+        }
+        if (refineOpen) {
         Spacer(Modifier.height(10.dp))
         val seed = remember { SleepStore.logs(ctx).lastOrNull() }
         var bed by remember { mutableIntStateOf(seed?.bedMin ?: 23 * 60) }
@@ -125,6 +153,11 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
 
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
             Column(Modifier.padding(16.dp)) {
+                Text(
+                    "The one thing no sensor knows: how long you lay in bed before sleep. Correct it here — manual entries always beat synced ones.",
+                    color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+                )
+                Spacer(Modifier.height(10.dp))
                 StepRow("To bed", SleepProtocol.formatMin(bed),
                     { bed = wrapMin(bed - 15); saved = false }, { bed = wrapMin(bed + 15); saved = false })
                 StepRow("Fell asleep after", "$onset m",
@@ -152,6 +185,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                     )
                 }
             }
+        }
         }
         Spacer(Modifier.height(20.dp))
 

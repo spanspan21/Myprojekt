@@ -138,6 +138,56 @@ fun MuscleMapMini(
 }
 
 /**
+ * Home hero: YOUR body, scanned. One front figure tinted by muscle recovery,
+ * swept top-to-bottom by a scanner line every few seconds — the JARVIS
+ * body-check as the dashboard's opening shot.
+ */
+@Composable
+fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier) {
+    val fresh = Color(0xFF34E0A1)
+    val fried = Color(0xFFFF6169)
+    fun tint(m: Muscle): Color? {
+        val f = freshness?.get(m)?.coerceIn(0f, 1f) ?: return null
+        return androidx.compose.ui.graphics.lerp(fried, fresh, f)
+            .copy(alpha = 0.28f + 0.45f * (1f - f))
+    }
+
+    val scan = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(350)
+        while (true) {
+            scan.snapTo(0f)
+            scan.animateTo(1f, androidx.compose.animation.core.tween(1300, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+            kotlinx.coroutines.delay(4600)
+        }
+    }
+
+    Canvas(modifier.aspectRatio(BodyPaths.VIEW_W / BodyPaths.VIEW_H)) {
+        drawBody(front = true, fillFor = ::tint)
+        // scanner sweep: soft trail above a bright line
+        val y = scan.value * size.height
+        if (scan.value > 0.01f && scan.value < 0.995f) {
+            drawRect(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    1f to Color(0xFF34E0A1).copy(alpha = 0.16f),
+                    startY = (y - size.height * 0.16f).coerceAtLeast(0f),
+                    endY = y,
+                ),
+                topLeft = androidx.compose.ui.geometry.Offset(0f, (y - size.height * 0.16f).coerceAtLeast(0f)),
+                size = androidx.compose.ui.geometry.Size(size.width, (size.height * 0.16f).coerceAtMost(y)),
+            )
+            drawLine(
+                color = Color(0xFF34E0A1).copy(alpha = 0.75f),
+                start = androidx.compose.ui.geometry.Offset(0f, y),
+                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                strokeWidth = 2.4f,
+            )
+        }
+    }
+}
+
+/**
  * Recovery heat view: muscles with recent load are tinted from fresh mint to
  * fried red — the wearier, the more present. Untouched muscles stay line art.
  */

@@ -117,7 +117,7 @@ fun HomeScreen(
             runCatching {
                 val today = LocalDate.now().toEpochDay()
                 val events = com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
-                    .eventsInRangeOnce(today, today + 1)
+                    .eventsInRangeOnce(today, today + 7)   // exams look a week ahead
                 val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
                 val hockey = events
                     .filter { it.type == "HOCKEY" && it.dayEpoch == today && it.endMin > nowMin }
@@ -207,24 +207,73 @@ fun HomeScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // ── ARC REACTOR — the readiness hero, powers up on open ──────
+            // ── BODY SCAN — your muscle map, swept by the scanner ────────
             Reveal(1) {
+                val freshness by produceState<Map<com.ascend.lifeos.data.training.Muscle, Float>?>(null) {
+                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        runCatching { com.ascend.lifeos.data.training.MuscleRecovery.compute(ctx).map }.getOrNull()
+                    }
+                }
                 val rColor = when {
                     readiness == null -> TextDim
                     readiness >= 75 -> Good
                     readiness >= 50 -> Warn
                     else -> Crit
                 }
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    ArcReactor(
-                        value = readiness,
-                        color = rColor,
-                        modifier = Modifier.size(168.dp).clickable(
+                // readiness counts up while the scanner makes its first pass
+                val rise = remember { androidx.compose.animation.core.Animatable(0f) }
+                LaunchedEffect(readiness) {
+                    rise.animateTo(
+                        (readiness ?: 0) / 100f,
+                        androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = 26f),
+                    )
+                }
+                Row(
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(22.dp))
+                        .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                             onClick = onOpenBody,
-                        ),
+                        )
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    com.ascend.lifeos.ui.training.ScanBodyFigure(
+                        freshness = freshness,
+                        modifier = Modifier.width(92.dp),
                     )
+                    Spacer(Modifier.width(22.dp))
+                    Column {
+                        Text(
+                            if (readiness == null) "—" else "${(rise.value * 100).toInt().coerceAtMost(readiness)}",
+                            color = rColor, fontFamily = Display, fontSize = 46.sp,
+                            fontWeight = FontWeight.ExtraBold, letterSpacing = (-1).sp,
+                        )
+                        Text(
+                            if (readiness == null) "CONNECT WATCH" else "READINESS",
+                            color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                        )
+                        Spacer(Modifier.height(9.dp))
+                        val scanLine = remember(freshness) {
+                            val f = freshness
+                            when {
+                                f.isNullOrEmpty() -> "Scan idle — log sets to light it up"
+                                else -> {
+                                    val tired = f.filterValues { it < 0.45f }.keys.take(2)
+                                    if (tired.isEmpty()) "All systems fresh — full send"
+                                    else "Recovering: " + tired.joinToString(" · ") {
+                                        it.name.lowercase().replaceFirstChar(Char::uppercase).replace('_', ' ')
+                                    }
+                                }
+                            }
+                        }
+                        Text(
+                            scanLine, color = TextMuted, fontFamily = Body,
+                            fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
+                        )
+                    }
                 }
             }
 
@@ -271,136 +320,68 @@ fun HomeScreen(
             val cardOrder = remember(cardsRev) { HomeCards.order(ctx) }
             val homeCards = linkedMapOf<String, @Composable () -> Unit>()
 
-            homeCards["directives"] = {
-            // ── PROTOCOL DIRECTIVES — WHEN→THEN, max two, dismissible ────
-            var protoTick by remember { mutableIntStateOf(0) }
-            val directives by produceState<List<Pair<com.ascend.lifeos.data.Protocol, String>>>(emptyList(), protoTick) {
-                value = runCatching { com.ascend.lifeos.data.Protocols.fire(ctx) }.getOrDefault(emptyList())
-            }
-            // user-authored rules (mini-IFTTT) fire in the same card slot
-            val customFired by produceState<List<Pair<com.ascend.lifeos.data.rules.CustomRule, String>>>(emptyList(), protoTick) {
-                value = runCatching { com.ascend.lifeos.data.rules.CustomRules.fire(ctx) }.getOrDefault(emptyList())
-            }
-            customFired.forEach { (_, text) ->
-                Spacer(Modifier.height(12.dp))
-                Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(6.dp).clip(CircleShape).background(Mod.Calendar))
-                        Spacer(Modifier.width(11.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                "YOUR RULE", color = Mod.Calendar, fontFamily = Display,
-                                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
-                            )
-                            Spacer(Modifier.height(3.dp))
-                            Text(text, color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium, lineHeight = 17.sp)
+            // ── DAILY BRIEFING — directives, patterns, exams: ONE panel ──
+            homeCards["briefing"] = {
+                var protoTick by remember { mutableIntStateOf(0) }
+                val directives by produceState<List<Pair<com.ascend.lifeos.data.Protocol, String>>>(emptyList(), protoTick) {
+                    value = runCatching { com.ascend.lifeos.data.Protocols.fire(ctx) }.getOrDefault(emptyList())
+                }
+                val customFired by produceState<List<Pair<com.ascend.lifeos.data.rules.CustomRule, String>>>(emptyList(), protoTick) {
+                    value = runCatching { com.ascend.lifeos.data.rules.CustomRules.fire(ctx) }.getOrDefault(emptyList())
+                }
+                val insight by produceState<com.ascend.lifeos.data.InsightMiner.Insight?>(null) {
+                    if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.INSIGHTS_ON, true)) {
+                        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            runCatching { com.ascend.lifeos.data.InsightMiner.mine(ctx) }.getOrNull()
                         }
                     }
                 }
-            }
-            directives.forEach { (proto, text) ->
-                Spacer(Modifier.height(12.dp))
-                Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(6.dp).clip(CircleShape).background(Mod.Home))
-                        Spacer(Modifier.width(11.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                proto.title.uppercase(), color = Mod.Home, fontFamily = Display,
-                                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
-                            )
-                            Spacer(Modifier.height(3.dp))
-                            Text(text, color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium, lineHeight = 17.sp)
-                        }
-                        Text(
-                            "✕", color = TextDim, fontSize = 13.sp,
-                            modifier = Modifier.clip(CircleShape)
-                                .clickable { com.ascend.lifeos.data.Protocols.dismissToday(ctx, proto.id); protoTick++ }
-                                .padding(6.dp),
-                        )
-                    }
-                }
-            }
+                var insightDismissed by remember { mutableStateOf(false) }
+                val exam = if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.EXAM_COUNTDOWN, true)) dayContext.second else null
 
-            }
+                val ins = insight?.takeIf { !insightDismissed }
+                val hasAny = directives.isNotEmpty() || customFired.isNotEmpty() || ins != null || exam != null
+                if (hasAny) {
+                    Spacer(Modifier.height(24.dp))
+                    SectionLabel("Daily briefing")
+                    Spacer(Modifier.height(10.dp))
+                    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                        Column(Modifier.padding(vertical = 5.dp)) {
+                            var first = true
+                            @Composable
+                            fun sep() { if (!first) HairLine(); first = false }
 
-            homeCards["insight"] = {
-            // ── INSIGHT — one honest correlation, shown once ─────────────
-            val insight by produceState<com.ascend.lifeos.data.InsightMiner.Insight?>(null) {
-                if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.INSIGHTS_ON, true)) {
-                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching { com.ascend.lifeos.data.InsightMiner.mine(ctx) }.getOrNull()
-                    }
-                }
-            }
-            var insightDismissed by remember { mutableStateOf(false) }
-            insight?.takeIf { !insightDismissed }?.let { ins ->
-                Spacer(Modifier.height(12.dp))
-                Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                    Column(Modifier.padding(14.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "PATTERN FOUND", color = Mod.Skills, fontFamily = Display,
-                                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
-                            )
-                            Spacer(Modifier.weight(1f))
-                            Text(
-                                "n=${ins.n} · r=${"%.2f".format(ins.r)}", color = TextDim, style = metricStyle(9),
-                            )
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        Text(ins.text, color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium, lineHeight = 17.sp)
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "Got it",
-                            color = Mod.Skills, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                .clickable { com.ascend.lifeos.data.InsightMiner.markSeen(ctx, ins.key); insightDismissed = true }
-                                .padding(vertical = 3.dp, horizontal = 2.dp),
-                        )
-                    }
-                }
-            }
-
-            }
-
-            homeCards["exam"] = {
-            // ── EXAM COUNTDOWN — next exam within 7 days ─────────────────
-            if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.EXAM_COUNTDOWN, true)) {
-                val exam by produceState<Pair<String, Long>?>(null) {
-                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching {
-                            val today = LocalDate.now().toEpochDay()
-                            com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
-                                .eventsInRangeOnce(today, today + 7)
-                                .filter { it.type == "EXAM" && it.dayEpoch >= today }
-                                .minByOrNull { it.dayEpoch }
-                                ?.let { it.title to it.dayEpoch }
-                        }.getOrNull()
-                    }
-                }
-                exam?.let { (title, dayEpoch) ->
-                    val days = (dayEpoch - LocalDate.now().toEpochDay()).toInt()
-                    Spacer(Modifier.height(12.dp))
-                    Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                if (days <= 0) "TODAY" else "${days}d",
-                                color = if (days <= 1) Crit else Warn, style = metricStyle(20),
-                            )
-                            Spacer(Modifier.width(13.dp))
-                            Column {
-                                Text(
-                                    "EXAM", color = TextDim, fontFamily = Display,
-                                    fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                            exam?.let { (title, days) ->
+                                sep()
+                                BriefRow(
+                                    dot = if (days <= 1) Crit else Warn,
+                                    overline = if (days <= 0) "EXAM · TODAY" else "EXAM · IN ${days}D",
+                                    text = title,
                                 )
-                                Text(title, color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            }
+                            directives.forEach { (proto, text) ->
+                                sep()
+                                BriefRow(
+                                    dot = Mod.Home, overline = proto.title.uppercase(), text = text,
+                                    action = "✕",
+                                ) { com.ascend.lifeos.data.Protocols.dismissToday(ctx, proto.id); protoTick++ }
+                            }
+                            customFired.forEach { (_, text) ->
+                                sep()
+                                BriefRow(dot = Mod.Calendar, overline = "YOUR RULE", text = text)
+                            }
+                            ins?.let { i ->
+                                sep()
+                                BriefRow(
+                                    dot = Mod.Skills,
+                                    overline = "PATTERN · n=${i.n} · r=${"%.2f".format(i.r)}",
+                                    text = i.text,
+                                    action = "Got it",
+                                ) { com.ascend.lifeos.data.InsightMiner.markSeen(ctx, i.key); insightDismissed = true }
                             }
                         }
                     }
                 }
-            }
-
             }
 
             homeCards["nextup"] = {
@@ -673,14 +654,13 @@ private fun HairLine() {
 
 internal object HomeCards {
     val ALL = listOf(
-        "directives" to "Protocol directives",
-        "insight" to "Pattern of the day",
-        "exam" to "Exam countdown",
+        "briefing" to "Daily briefing",
         "nextup" to "Next up",
         "missions" to "Today's missions",
         "systems" to "Systems row",
     )
     private val DEFAULT = ALL.map { it.first }
+    private val LEGACY = setOf("directives", "insight", "exam")
 
     // Format: visible keys in order, hidden keys prefixed with "-". Keys the
     // pref has never mentioned are new ships → they appear (at the end) instead
@@ -691,6 +671,8 @@ internal object HomeCards {
         )
         val known = DEFAULT.toSet()
         val tokens = raw.split(",")
+        // pre-briefing layouts reference retired card keys → reset to default
+        if (tokens.any { it.removePrefix("-") in LEGACY }) return DEFAULT
         val visible = tokens.filter { !it.startsWith("-") && it in known }
         val mentioned = tokens.map { it.removePrefix("-") }.toSet()
         return visible + DEFAULT.filter { it !in mentioned }
@@ -841,122 +823,6 @@ private fun TypedGreeting(full: String) {
     }
 }
 
-/**
- * The readiness hero: a triple-layer arc reactor. Outer tick ring rotates
- * perpetually, the progress arc sweeps in with a spring on every open, the
- * core number counts up, and a soft glow breathes behind it all.
- */
-@Composable
-private fun ArcReactor(value: Int?, color: Color, modifier: Modifier = Modifier) {
-    val target = (value ?: 0).coerceIn(0, 100)
-
-    // sweep powers up from zero on each composition of Home
-    val sweep = remember { androidx.compose.animation.core.Animatable(0f) }
-    LaunchedEffect(target) {
-        sweep.animateTo(
-            target / 100f,
-            androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = 28f),
-        )
-    }
-    val shownNumber = (sweep.value * 100).toInt().coerceAtMost(target)
-
-    val spin by rememberInfiniteTransition(label = "spin").animateFloat(
-        0f, 360f,
-        infiniteRepeatable(tween(24_000, easing = androidx.compose.animation.core.LinearEasing)),
-        label = "spinA",
-    )
-    val breath by rememberInfiniteTransition(label = "glow").animateFloat(
-        0.55f, 1f,
-        infiniteRepeatable(tween(2100, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "glowA",
-    )
-
-    Box(modifier, contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-            val cx = size.width / 2f
-            val cy = size.height / 2f
-            val r = size.minDimension / 2f
-
-            // breathing core glow
-            drawCircle(
-                brush = Brush.radialGradient(
-                    listOf(color.copy(alpha = 0.16f * breath), Color.Transparent),
-                    center = androidx.compose.ui.geometry.Offset(cx, cy), radius = r * 0.95f,
-                ),
-                radius = r * 0.95f, center = androidx.compose.ui.geometry.Offset(cx, cy),
-            )
-
-            // outer tick ring — 60 marks, rotating like idling machinery
-            rotate(spin, pivot = androidx.compose.ui.geometry.Offset(cx, cy)) {
-                repeat(60) { i ->
-                    val a = Math.toRadians(i * 6.0)
-                    val long = i % 5 == 0
-                    val r1 = r * if (long) 0.93f else 0.965f
-                    val r2 = r * 1.0f
-                    drawLine(
-                        color = Color.White.copy(alpha = if (long) 0.22f else 0.10f),
-                        start = androidx.compose.ui.geometry.Offset(
-                            cx + (r1 * kotlin.math.cos(a)).toFloat(), cy + (r1 * kotlin.math.sin(a)).toFloat(),
-                        ),
-                        end = androidx.compose.ui.geometry.Offset(
-                            cx + (r2 * kotlin.math.cos(a)).toFloat(), cy + (r2 * kotlin.math.sin(a)).toFloat(),
-                        ),
-                        strokeWidth = if (long) 2.2f else 1.2f,
-                    )
-                }
-            }
-
-            // track + progress arc (with a faint wide halo underneath)
-            val stroke = 10f
-            val inset = r * 0.16f
-            val arcSize = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
-            val arcTL = androidx.compose.ui.geometry.Offset(inset, inset)
-            drawArc(
-                color = Color.White.copy(alpha = 0.06f),
-                startAngle = -90f, sweepAngle = 360f, useCenter = false,
-                topLeft = arcTL, size = arcSize,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-            )
-            if (sweep.value > 0.01f) {
-                drawArc(
-                    color = color.copy(alpha = 0.22f),
-                    startAngle = -90f, sweepAngle = sweep.value * 360f, useCenter = false,
-                    topLeft = arcTL, size = arcSize,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke * 2.6f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-                )
-                drawArc(
-                    brush = Brush.sweepGradient(
-                        0f to color.copy(alpha = 0.35f), 0.8f to color, 1f to color,
-                        center = androidx.compose.ui.geometry.Offset(cx, cy),
-                    ),
-                    startAngle = -90f, sweepAngle = sweep.value * 360f, useCenter = false,
-                    topLeft = arcTL, size = arcSize,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-                )
-            }
-
-            // inner hairline
-            drawCircle(
-                color = Color.White.copy(alpha = 0.08f),
-                radius = r * 0.58f, center = androidx.compose.ui.geometry.Offset(cx, cy),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f),
-            )
-        }
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                if (value == null) "—" else "$shownNumber",
-                color = color, fontFamily = Display, fontSize = 44.sp,
-                fontWeight = FontWeight.ExtraBold, letterSpacing = (-1).sp,
-            )
-            Text(
-                if (value == null) "CONNECT WATCH" else "READINESS",
-                color = TextDim, fontFamily = Display, fontSize = 9.sp,
-                fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
-            )
-        }
-    }
-}
 
 /** One orb of the systems row — icon bubble + tiny label. */
 @Composable
@@ -981,5 +847,41 @@ private fun SystemOrb(label: String, icon: androidx.compose.ui.graphics.vector.I
             label, color = TextMuted, fontFamily = Body,
             fontSize = 10.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
         )
+    }
+}
+
+/** One line of the daily briefing: dot · overline · message · optional action. */
+@Composable
+private fun BriefRow(
+    dot: Color,
+    overline: String,
+    text: String,
+    action: String? = null,
+    onAction: () -> Unit = {},
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(6.dp).clip(CircleShape).background(dot))
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                overline, color = dot, fontFamily = Display,
+                fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.8.sp,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text, color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body,
+                fontWeight = FontWeight.Medium, lineHeight = 17.sp,
+            )
+        }
+        if (action != null) {
+            Spacer(Modifier.width(8.dp))
+            Text(
+                action, color = TextDim, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction).padding(6.dp),
+            )
+        }
     }
 }

@@ -65,6 +65,37 @@ object SleepStore {
         writeLogs(ctx, logs(ctx).filter { it.dayKey != log.dayKey } + log)
     }
 
+    /**
+     * Auto-import nights from the watch (Repo.bodyDays via Health Connect) —
+     * the user shouldn't type what the sensor already knows. Existing entries
+     * are never clobbered, so a manual refinement always wins. What the watch
+     * can't know (time in bed before sleep) defaults to zero and can be
+     * refined by hand. Returns how many nights were imported.
+     */
+    fun syncFromHealth(ctx: Context): Int {
+        val existing = logs(ctx).map { it.dayKey }.toSet()
+        var imported = 0
+        val batch = ArrayList<NightLog>()
+        com.ascend.lifeos.data.Repo.lastDayKeys(30).forEach { key ->
+            if (key in existing) return@forEach
+            val bd = com.ascend.lifeos.data.Repo.bodyDay(key) ?: return@forEach
+            val sleep = bd.sleepMin ?: return@forEach
+            if (sleep < 120) return@forEach          // fragments aren't nights
+            val start = bd.sleepStartMin ?: return@forEach
+            val awake = bd.awake.coerceAtLeast(0)
+            val wake = ((start + sleep + awake) % 1440 + 1440) % 1440
+            batch.add(
+                NightLog(
+                    dayKey = key, bedMin = start, sleepOnsetMin = 0,
+                    nightWakeMin = awake, finalWakeMin = wake, outOfBedMin = wake,
+                ),
+            )
+            imported++
+        }
+        if (batch.isNotEmpty()) writeLogs(ctx, logs(ctx) + batch)
+        return imported
+    }
+
     // ─── Window state ───────────────────────────────────────────────────────
 
     fun state(ctx: Context): SleepProtocol.State? {
