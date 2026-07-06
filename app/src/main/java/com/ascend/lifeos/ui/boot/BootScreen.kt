@@ -19,6 +19,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -55,14 +57,16 @@ import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 
-// ─── SYSTEM BOOT v2 — zero decisions, pure cinema ────────────────────────────
-// The suit doesn't ask questions when it powers on. Three phases, no forms:
+// ─── SYSTEM BOOT v3 — cinema first, one honest calibration card ──────────────
+// The suit doesn't ask questions while it powers on. Three cinematic phases,
+// then ONE compact card with the numbers every target is computed from:
 //   A MATERIALIZE  — the wordmark assembles, the hex ring draws itself (~2s)
-//   B CALIBRATION  — every module spins up on its own, no input (~3s)
-//   C OPERATOR     — "Max" is already known; one tap: GO ONLINE.
-// Any phase is tap-to-skip. Total auto runtime stays under ~6 seconds.
+//   B CALIBRATE    — every module spins up on its own, no input (~3s)
+//   C OPERATOR     — the name; one tap: GO ONLINE.
+//   D TUNE         — body stats · objectives · permission LEDs. Skippable.
+// Phases A–C are tap-to-skip; D pre-fills and never blocks.
 
-private enum class Phase { MATERIALIZE, CALIBRATE, OPERATOR }
+private enum class Phase { MATERIALIZE, CALIBRATE, OPERATOR, TUNE }
 
 /** Profile the boot writes — mirrors the old questionnaire's defaults. */
 private const val DEFAULT_NAME = "Max"
@@ -71,7 +75,7 @@ private val DEFAULT_OBJECTIVES = listOf("train", "learn", "sleep", "focus", "fue
 @Composable
 fun BootScreen(onDone: () -> Unit) {
     var phase by remember { mutableStateOf(Phase.MATERIALIZE) }
-    var name by remember { mutableStateOf(DEFAULT_NAME) }
+    var name by remember { mutableStateOf(Repo.profile().name.ifBlank { DEFAULT_NAME }) }
 
     // idempotent advance: auto-timer and tap-to-skip can both fire safely
     fun advance(from: Phase) {
@@ -79,15 +83,16 @@ fun BootScreen(onDone: () -> Unit) {
         phase = when (from) {
             Phase.MATERIALIZE -> Phase.CALIBRATE
             Phase.CALIBRATE -> Phase.OPERATOR
-            Phase.OPERATOR -> Phase.OPERATOR
+            Phase.OPERATOR -> Phase.TUNE
+            Phase.TUNE -> Phase.TUNE
         }
     }
 
-    fun finish() {
+    fun finish(sex: String, age: Int, heightCm: Int, weightKg: Int, objectives: List<String>) {
         Repo.completeBoot(
             name = name.trim().ifBlank { DEFAULT_NAME },
-            sex = "m", age = 16, heightCm = 178, weightKg = 70,
-            objectives = DEFAULT_OBJECTIVES,
+            sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
+            objectives = objectives.ifEmpty { DEFAULT_OBJECTIVES },
         )
         onDone()
     }
@@ -107,9 +112,199 @@ fun BootScreen(onDone: () -> Unit) {
             when (p) {
                 Phase.MATERIALIZE -> MaterializePhase { advance(Phase.MATERIALIZE) }
                 Phase.CALIBRATE -> CalibratePhase { advance(Phase.CALIBRATE) }
-                Phase.OPERATOR -> OperatorPhase(name, { name = it }, ::finish)
+                Phase.OPERATOR -> OperatorPhase(name, { name = it }) { advance(Phase.OPERATOR) }
+                Phase.TUNE -> TunePhase(::finish)
             }
         }
+    }
+}
+
+// ─── D · TUNE — the calibration card the targets are computed from ───────────
+
+@Composable
+private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
+    val ctx = LocalContext.current
+    val p = Repo.profile()
+    // Recalibrate keeps your numbers; a fresh boot starts from the house defaults.
+    var sex by remember { mutableStateOf(p.sex) }
+    var age by remember { mutableStateOf(if (p.onboarded) p.age else 16) }
+    var height by remember { mutableStateOf(p.heightCm) }
+    var weight by remember { mutableStateOf(if (p.onboarded) p.weightKg else 70) }
+    val objectives = remember {
+        mutableStateListOf<String>().apply { addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES }) }
+    }
+
+    var permTick by remember { mutableIntStateOf(0) }
+    val notifOk = remember(permTick) {
+        com.ascend.lifeos.data.Notifier.hasPermission(ctx)
+    }
+    val calOk = remember(permTick) {
+        runCatching { com.ascend.lifeos.data.CalendarSync.granted(ctx) }.getOrDefault(false)
+    }
+    val usageOk = remember(permTick) {
+        com.ascend.lifeos.wellbeing.DigitalWellbeingManager.hasUsageAccess(ctx)
+    }
+    val notifLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { permTick++ }
+    val calLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { permTick++ }
+
+    Column(
+        Modifier.fillMaxSize().statusBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 26.dp).padding(top = 40.dp, bottom = 30.dp),
+    ) {
+        Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
+        Spacer(Modifier.height(6.dp))
+        Text("The numbers everything is computed from", color = TextPrimary,
+            fontFamily = Display, fontSize = 21.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
+        Spacer(Modifier.height(18.dp))
+
+        BootPanel {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BootChip("Male", sex == "m") { sex = "m" }
+                BootChip("Female", sex == "f") { sex = "f" }
+            }
+            Spacer(Modifier.height(12.dp))
+            TuneStepper("Age", age, "y") { age = (age + it).coerceIn(12, 100) }
+            TuneStepper("Height", height, "cm") { height = (height + it).coerceIn(120, 230) }
+            TuneStepper("Weight", weight, "kg") { weight = (weight + it).coerceIn(30, 250) }
+        }
+
+        Spacer(Modifier.height(14.dp))
+        Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            listOf("train" to "Train", "fuel" to "Fuel", "sleep" to "Sleep").forEach { (id, label) ->
+                BootChip(label, id in objectives) {
+                    if (id in objectives) objectives.remove(id) else objectives.add(id)
+                }
+            }
+        }
+        Spacer(Modifier.height(7.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            listOf("learn" to "Learn skills", "focus" to "Screen focus").forEach { (id, label) ->
+                BootChip(label, id in objectives) {
+                    if (id in objectives) objectives.remove(id) else objectives.add(id)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(14.dp))
+        Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        BootPanel {
+            PermRow("Notifications", "briefings · nudges · check-ins", notifOk) {
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    notifLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+            PermRow("Calendar", "hockey & school merge read-only", calOk) {
+                calLauncher.launch(android.Manifest.permission.READ_CALENDAR)
+            }
+            PermRow("Usage access", "screen-time guard", usageOk) {
+                runCatching {
+                    ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                }
+            }
+        }
+        Text(
+            "Each one is optional — JARVIS stays honest about what it can't see.",
+            color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+
+        Spacer(Modifier.height(22.dp))
+        Box(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Home)
+                .clickable { onFinish(sex, age, height, weight, objectives.toList()) }
+                .padding(vertical = 15.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = 13.5.sp,
+                fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        }
+    }
+}
+
+@Composable
+private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.035f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(18.dp))
+            .padding(14.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.clip(RoundedCornerShape(11.dp))
+            .background(if (selected) Mod.Home.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
+            .border(0.5.dp, if (selected) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(11.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 13.dp, vertical = 8.dp),
+    ) {
+        Text(label, color = if (selected) Mod.Home else TextMuted, fontSize = 12.sp,
+            fontFamily = Body, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun TuneStepper(label: String, value: Int, unit: String, onDelta: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = TextMuted, fontSize = 13.sp, fontFamily = Body,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        StepBtn("−") { onDelta(-1) }
+        Text(
+            "$value $unit", color = TextPrimary, fontFamily = Display, fontSize = 16.sp,
+            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+            modifier = Modifier.width(86.dp),
+        )
+        StepBtn("+") { onDelta(+1) }
+    }
+}
+
+@Composable
+private fun StepBtn(sign: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(sign, color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
+}
+
+@Composable
+private fun PermRow(title: String, hint: String, granted: Boolean, onRequest: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+            .clickable(enabled = !granted, onClick = onRequest)
+            .padding(vertical = 8.dp, horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(8.dp).clip(CircleShape)
+                .background(if (granted) Good else Color.White.copy(alpha = 0.18f)),
+        )
+        Spacer(Modifier.width(11.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+            Text(hint, color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+        }
+        Text(
+            if (granted) "ONLINE" else "GRANT",
+            color = if (granted) Good else Mod.Home,
+            fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+        )
     }
 }
 
