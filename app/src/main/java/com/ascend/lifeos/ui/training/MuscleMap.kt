@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.PathParser
@@ -138,50 +139,51 @@ fun MuscleMapMini(
 }
 
 /**
- * Home hero: YOUR body, scanned. One front figure tinted by muscle recovery,
- * swept top-to-bottom by a scanner line every few seconds — the JARVIS
- * body-check as the dashboard's opening shot.
+ * Home hero: YOUR body, scanned once per open. Clean line art — fresh muscle
+ * stays invisible, only fatigue speaks (soft amber, then red). The scanner
+ * line makes a single pass while the figure draws in behind it, then rests.
  */
 @Composable
 fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier) {
-    val fresh = Color(0xFF34E0A1)
-    val fried = Color(0xFFFF6169)
+    // Only fatigue is painted; a fresh body reads as pure, calm line art.
     fun tint(m: Muscle): Color? {
         val f = freshness?.get(m)?.coerceIn(0f, 1f) ?: return null
-        return androidx.compose.ui.graphics.lerp(fried, fresh, f)
-            .copy(alpha = 0.28f + 0.45f * (1f - f))
-    }
-
-    val scan = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(350)
-        while (true) {
-            scan.snapTo(0f)
-            scan.animateTo(1f, androidx.compose.animation.core.tween(1300, easing = androidx.compose.animation.core.FastOutSlowInEasing))
-            kotlinx.coroutines.delay(4600)
+        return when {
+            f >= 0.72f -> null                                    // fresh → clean
+            f >= 0.45f -> Color(0xFFF5C451).copy(alpha = 0.16f)   // working on it
+            else -> Color(0xFFFF6169).copy(alpha = 0.22f)         // needs rest
         }
     }
 
+    // ONE sweep on open — then the scanner goes quiet (user request).
+    val scan = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(420)
+        scan.animateTo(1f, androidx.compose.animation.core.tween(1250, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+    }
+
     Canvas(modifier.aspectRatio(BodyPaths.VIEW_W / BodyPaths.VIEW_H)) {
-        drawBody(front = true, fillFor = ::tint)
-        // scanner sweep: soft trail above a bright line
+        // the figure reveals itself behind the passing line
         val y = scan.value * size.height
-        if (scan.value > 0.01f && scan.value < 0.995f) {
+        clipRect(bottom = y) {
+            drawBody(front = true, fillFor = ::tint)
+        }
+        if (scan.value > 0.01f && scan.value < 0.985f) {
             drawRect(
                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     0f to Color.Transparent,
-                    1f to Color(0xFF34E0A1).copy(alpha = 0.16f),
-                    startY = (y - size.height * 0.16f).coerceAtLeast(0f),
+                    1f to Color(0xFF34E0A1).copy(alpha = 0.10f),
+                    startY = (y - size.height * 0.10f).coerceAtLeast(0f),
                     endY = y,
                 ),
-                topLeft = androidx.compose.ui.geometry.Offset(0f, (y - size.height * 0.16f).coerceAtLeast(0f)),
-                size = androidx.compose.ui.geometry.Size(size.width, (size.height * 0.16f).coerceAtMost(y)),
+                topLeft = androidx.compose.ui.geometry.Offset(0f, (y - size.height * 0.10f).coerceAtLeast(0f)),
+                size = androidx.compose.ui.geometry.Size(size.width, (size.height * 0.10f).coerceAtMost(y)),
             )
             drawLine(
-                color = Color(0xFF34E0A1).copy(alpha = 0.75f),
+                color = Color(0xFF34E0A1).copy(alpha = 0.55f),
                 start = androidx.compose.ui.geometry.Offset(0f, y),
                 end = androidx.compose.ui.geometry.Offset(size.width, y),
-                strokeWidth = 2.4f,
+                strokeWidth = 2f,
             )
         }
     }

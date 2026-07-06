@@ -36,6 +36,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -775,19 +776,26 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
 
 // ─── The WOW layer: entrance choreography, typed greeting, arc reactor ───────
 
-/** Staggered entrance: each section rises 14dp and fades in, 55 ms apart. */
+/**
+ * Staggered entrance: each section rises a fixed 22dp and fades in, 55 ms
+ * apart. The offset is small and the node clips its own bounds, so sliding
+ * sections can never smear over their neighbours mid-animation (the
+ * "Dashboarderror" overlap).
+ */
 @Composable
 internal fun Reveal(index: Int, content: @Composable () -> Unit) {
     val state = remember {
         androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true }
     }
+    val offsetPx = with(androidx.compose.ui.platform.LocalDensity.current) { 22.dp.roundToPx() }
     androidx.compose.animation.AnimatedVisibility(
         visibleState = state,
+        modifier = Modifier.clipToBounds(),
         enter = fadeIn(
-            tween(340, delayMillis = 80 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            tween(300, delayMillis = 70 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
         ) + androidx.compose.animation.slideInVertically(
-            initialOffsetY = { it / 5 },
-            animationSpec = tween(420, delayMillis = 80 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            initialOffsetY = { offsetPx },
+            animationSpec = tween(360, delayMillis = 70 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
         ),
         exit = fadeOut(tween(120)),
     ) { content() }
