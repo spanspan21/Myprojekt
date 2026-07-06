@@ -37,6 +37,7 @@ object Changelog {
         "150 verified staples now: Döner, sushi set, ramen bowl, sauces with Teller-honest ~ estimates and S/M/L",
         "Quick-add takes protein too: type 450, add the grams, the entry wears ◌ until it's complete",
         "Weekly Fuel Review lands Sunday evening & Monday: seven bars, a Fuel-Score, no judgement",
+        "Hydration heals: tap a drop to SET your level — the bar no longer counts phantom glasses when you stop a scroll",
         "Stats deepened: 14-day protein trend, logging streak tile, and the micros your week actually missed",
         // ── v2.7 ──
         "FUEL v2 — your latte is now 4 taps: the new drink builder mixes coffee, cocoa, spritzers & shakes with live macros",

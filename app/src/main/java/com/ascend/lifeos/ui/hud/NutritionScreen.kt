@@ -505,7 +505,9 @@ private val TWIN_CARD_HEIGHT = 156.dp
 
 /**
  * Kap. 39 (User-Wunsch + P17): Wasser als leise Tropfen-Leiste statt lauter
- * Karte. Gefüllt aus Gläsern UND geloggten Getränken (volumeMl). Tap = +1 Glas.
+ * Karte. Gefüllt aus Gläsern UND geloggten Getränken (volumeMl). Tippen setzt
+ * den STAND aufs angetippte Segment — kein Ganze-Zeile-Klick mehr, der beim
+ * Scroll-Stoppen heimlich Gläser stapelt (so entstanden 46 Gläser an einem Tag).
  */
 @Composable
 private fun HydrationBar(
@@ -517,22 +519,30 @@ private fun HydrationBar(
     val targetMl = (targetGlasses * WaterCalc.GLASS_ML).coerceAtLeast(1)
     val filled = (totalMl.toFloat() / WaterCalc.GLASS_ML).toInt()
     val segments = targetGlasses.coerceIn(4, 12)
-    Column(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(enabled = canEdit) { com.ascend.lifeos.data.Haptics.tick(hCtx); Repo.addWater(1) }
-            .padding(vertical = 6.dp, horizontal = 2.dp),
-    ) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.WaterDrop, null, tint = Cyan.copy(alpha = 0.8f), modifier = Modifier.size(13.dp))
             Spacer(Modifier.width(6.dp))
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 repeat(segments) { i ->
                     val on = i < (filled * segments / targetGlasses.coerceAtLeast(1)).coerceAtMost(segments)
+                    // Größere Hit-Box (24dp) um die 6dp-Pille — bewusst treffen, nichts stapeln.
                     Box(
-                        Modifier.weight(1f).height(6.dp).clip(CircleShape)
-                            .background(if (on) Cyan.copy(alpha = 0.85f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)),
-                    )
+                        Modifier.weight(1f).height(24.dp)
+                            .clickable(enabled = canEdit) {
+                                // Segment i+1 als Zielstand: Gläser so setzen, dass total ≈ Stand
+                                val wantMl = (i + 1) * targetMl / segments
+                                val newGlasses = ((wantMl - drinkMl).coerceAtLeast(0) + WaterCalc.GLASS_ML / 2) / WaterCalc.GLASS_ML
+                                Repo.addWater(newGlasses - glasses)
+                                com.ascend.lifeos.data.Haptics.tick(hCtx)
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.fillMaxWidth().height(6.dp).clip(CircleShape)
+                                .background(if (on) Cyan.copy(alpha = 0.85f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)),
+                        )
+                    }
                 }
             }
             Spacer(Modifier.width(8.dp))
@@ -544,7 +554,7 @@ private fun HydrationBar(
         Spacer(Modifier.height(3.dp))
         Row {
             Text(
-                if (canEdit) "Tap = +1 Glas · Getränke zählen mit" else "$glasses Gläser + Getränke",
+                if (canEdit) "Tropfen antippen = Stand setzen · Getränke zählen mit" else "$glasses Gläser + Getränke",
                 color = TextDim.copy(alpha = 0.75f), fontSize = 9.sp,
             )
             if (hot) { Spacer(Modifier.width(6.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 9.sp, fontWeight = FontWeight.Bold) }
