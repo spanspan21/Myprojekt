@@ -76,7 +76,7 @@ fun HudBackground(modifier: Modifier = Modifier) {
 @Composable
 fun GlassPanel(
     modifier: Modifier = Modifier,
-    corner: Dp = 22.dp,
+    corner: Dp = com.ascend.lifeos.ui.theme.RCard,
     fill: Color = HudFill,
     line: Color = HudLine,
     content: @Composable () -> Unit,

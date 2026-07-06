@@ -94,3 +94,9 @@ val Crit = Color(0xFFF25F68)
 
 /** Theme preset: "sovereign" (default) · "stark" (IRON legacy) · "stealth" (no glow) · "reactor" (more energy). */
 val themeState = mutableStateOf("sovereign")
+
+// ---- Radius-Gesetz (Kap. 17): fünf Stufen, keine Fallentscheidungen ----------
+val RHero = androidx.compose.ui.unit.Dp(22f)    // Hero-Panels, Sheets, Wrapped
+val RCard = androidx.compose.ui.unit.Dp(18f)    // Standard-Karten
+val RElem = androidx.compose.ui.unit.Dp(13f)    // Chips, Buttons, Inputs
+val RMicro = androidx.compose.ui.unit.Dp(9f)    // Mini-Chips, Tags, Badges

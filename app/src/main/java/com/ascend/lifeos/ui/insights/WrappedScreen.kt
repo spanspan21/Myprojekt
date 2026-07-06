@@ -56,6 +56,7 @@ import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.training.TrainingDatabase
 import com.ascend.lifeos.ui.theme.Body
+import com.ascend.lifeos.ui.theme.Champagne
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
@@ -225,7 +226,8 @@ private suspend fun buildWrap(ctx: Context): WrapModel {
             "KEEP CLIMBING", null,
             "${p.streak}", "DAY STREAK",
             listOf(Sub("${p.longest}", "LONGEST"), Sub(num(unlocksTotal), "UNLOCKS · 60D")),
-            Mod.Home, footer = highlight,
+            // das Gold-Finale: der einzige Champagne-Slide der Sammlung (Kap. 26)
+            Champagne, footer = highlight,
         ),
     )
     return WrapModel(slides)
@@ -296,6 +298,15 @@ private fun SlidePage(s: WrapSlide, seed: Int, active: Boolean) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             WrapReveal(active, 0) {
+                // Editions-Prägung (Kap. 21): jede Ausgabe trägt ihren Monat
+                if (seed == 0) {
+                    Text(
+                        "EDITION · " + LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH)).uppercase(),
+                        color = Champagne.copy(alpha = 0.85f), fontFamily = Display,
+                        fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.5.sp,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
                 Text(
                     s.tag, color = s.accent, fontFamily = Display,
                     fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp,

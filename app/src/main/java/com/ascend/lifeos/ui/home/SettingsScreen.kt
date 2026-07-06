@@ -207,16 +207,52 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
             Spacer(Modifier.height(7.dp))
+            // Theme-Salon (Kap. 26): Materialproben statt Farbkreise
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf("sovereign" to "Sovereign", "stark" to "Stark", "stealth" to "Stealth", "reactor" to "Reactor").forEach { (v, label) ->
                     val on = theme == v
-                    Box(
-                        Modifier.clip(RoundedCornerShape(9.dp))
-                            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                    Column(
+                        Modifier.weight(1f)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(Ivory.copy(alpha = if (on) 0.06f else 0.03f))
+                            .border(
+                                0.5.dp,
+                                if (on) com.ascend.lifeos.ui.theme.ChampagneLine else Line,
+                                RoundedCornerShape(11.dp),
+                            )
                             .clickable { theme = v; Prefs.setString(ctx, Prefs.THEME, v); com.ascend.lifeos.ui.theme.themeState.value = v }
-                            .padding(horizontal = 12.dp, vertical = 7.dp),
-                    ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                            .padding(vertical = 9.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        // die Probe: Raum + Karte + (je nach Preset) Nebel/Gold
+                        Box(
+                            Modifier.size(34.dp, 24.dp).clip(RoundedCornerShape(6.dp))
+                                .background(com.ascend.lifeos.ui.theme.Void),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (v == "reactor") {
+                                Box(Modifier.size(20.dp).clip(CircleShape).background(Mod.Home.copy(alpha = 0.30f)))
+                            } else if (v != "stealth") {
+                                Box(Modifier.size(16.dp).clip(CircleShape).background(Mod.Home.copy(alpha = 0.14f)))
+                            }
+                            Box(
+                                Modifier.size(22.dp, 13.dp).clip(RoundedCornerShape(3.dp))
+                                    .background(Ivory.copy(alpha = 0.06f))
+                                    .border(
+                                        0.4.dp,
+                                        if (v == "sovereign") com.ascend.lifeos.ui.theme.Champagne.copy(alpha = 0.55f) else Line,
+                                        RoundedCornerShape(3.dp),
+                                    ),
+                            )
+                        }
+                        Spacer(Modifier.height(5.dp))
+                        Text(
+                            label,
+                            color = if (on) TextPrimary else TextMuted,
+                            fontSize = 9.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(4.dp))

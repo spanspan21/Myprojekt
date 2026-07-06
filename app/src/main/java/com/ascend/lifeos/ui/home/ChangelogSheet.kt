@@ -28,6 +28,16 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "Rings and bars feel the home stretch — from 80% they glow softly toward the goal",
+        "Missions count down beside the title (\"1 left\" turns gold); completing all three sweeps champagne across the cards",
+        "Streak milestones (7/30/60/100…) pulse a golden aura around the flame — once, then it's yours",
+        "Milestones became a mint cabinet: embossed plaques with the next streak mark waiting as a blank",
+        "One or two sets from today's target? The finish button quietly tells you",
+        "JARVIS greets you with fresh words every day — 24 lines across morning, day, evening, night",
+        "ALL SYSTEMS ONLINE now draws a golden curtain line before your day begins",
+        "Wrapped carries an edition stamp and ends on the one champagne slide",
+        "Theme salon shows real material samples; radius law unified across all cards",
+        // ── v2.4 ──
         "SOVEREIGN — a completely new theme: warm obsidian, ivory hairlines, one champagne-gold thread",
         "Every card is dual-glass now: depth in the surface, a polished light edge on top",
         "The room is lit: subtle grain kills gradient banding, a vignette draws your eye to the center",

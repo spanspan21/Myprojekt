@@ -154,6 +154,20 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
     ) { permTick++ }
 
+    // Der Vorhang (Kap. 21): ALL SYSTEMS ONLINE zieht eine Champagne-Linie
+    // auf, dann beginnt Home mit dem Scan — ein durchgehender Schnitt.
+    var leaving by remember { mutableStateOf(false) }
+    val curtain = remember { Animatable(0f) }
+    LaunchedEffect(leaving) {
+        if (leaving) {
+            if (!com.ascend.lifeos.ui.motion.Motion.reduced(ctx)) {
+                curtain.animateTo(1f, tween(700, easing = com.ascend.lifeos.ui.motion.Motion.easeOut))
+            }
+            onFinish(sex, age, height, weight, objectives.toList())
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
     Column(
         Modifier.fillMaxSize().statusBarsPadding()
             .verticalScroll(rememberScrollState())
@@ -234,7 +248,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
         com.ascend.lifeos.ui.home.Reveal(4) {
         Box(
             Modifier.fillMaxWidth()
-                .pressScale { onFinish(sex, age, height, weight, objectives.toList()) }
+                .pressScale { if (!leaving) leaving = true }
                 .clip(RoundedCornerShape(15.dp)).background(Mod.Home)
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
@@ -243,6 +257,22 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
                 fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         }
         }
+    }
+    // Vorhang-Overlay: Raum dimmt, der Goldfaden zieht sich über die Mitte
+    if (leaving) {
+        Box(
+            Modifier.fillMaxSize().background(Void.copy(alpha = curtain.value * 0.88f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                Modifier.fillMaxWidth(curtain.value).height(1.dp).background(
+                    Brush.horizontalGradient(
+                        listOf(Color.Transparent, com.ascend.lifeos.ui.theme.Champagne, Color.Transparent),
+                    ),
+                ),
+            )
+        }
+    }
     }
 }
 

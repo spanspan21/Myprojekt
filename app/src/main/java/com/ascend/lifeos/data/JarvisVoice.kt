@@ -78,14 +78,42 @@ object JarvisVoice {
         return "Systems online. Execute."
     }
 
+    // Varianz-Bank (SOVEREIGN Kap. 21): vier Tageszeit-Bänke à sechs Formeln.
+    // Deterministisch aus Tag+Stundenband geseedet — zweimal öffnen am selben
+    // Vormittag liest denselben Satz, der nächste Tag einen anderen. Kein
+    // Math.random zur Laufzeit, voll testbar. {n} wird zum Namen.
+    private val GREET_MORNING = listOf(
+        "Good morning, {n}.", "Systems up, {n}.", "Daylight, {n}. Let's work.",
+        "Morning, {n}. Clean slate.", "Up early, {n}.", "New day online, {n}.",
+    )
+    private val GREET_DAY = listOf(
+        "Good afternoon, {n}.", "Midday check, {n}.", "Back at it, {n}.",
+        "Steady hands, {n}.", "Afternoon, {n}. On course.", "Good to see you, {n}.",
+    )
+    private val GREET_EVENING = listOf(
+        "Good evening, {n}.", "Evening, {n}. Strong day.", "Winding in, {n}.",
+        "Lights low, {n}.", "Evening watch, {n}.", "Home stretch, {n}.",
+    )
+    private val GREET_NIGHT = listOf(
+        "Late shift, {n}.", "Still up, {n}?", "Night watch, {n}.",
+        "Quiet hours, {n}.", "After hours, {n}.", "The city sleeps, {n}.",
+    )
+
     fun greeting(name: String): String {
-        val h = LocalTime.now().hour
-        val part = when (h) {
-            in 5..10 -> "Good morning"
-            in 11..16 -> "Good afternoon"
-            in 17..21 -> "Good evening"
-            else -> "Late shift"
+        val now = java.time.LocalDateTime.now()
+        val (bank, band) = when (now.hour) {
+            in 5..10 -> GREET_MORNING to 0
+            in 11..16 -> GREET_DAY to 1
+            in 17..21 -> GREET_EVENING to 2
+            else -> GREET_NIGHT to 3
         }
-        return if (name.isBlank()) "$part." else "$part, ${name.trim()}."
+        // Seed = Tag × 4 + Stundenband — stabil im Moment, frisch am nächsten
+        val idx = ((now.toLocalDate().toEpochDay() * 4 + band) % bank.size)
+            .toInt().let { if (it < 0) it + bank.size else it }
+        val pick = bank[idx]
+        val n = name.trim()
+        return if (n.isBlank()) {
+            pick.replace(", {n}", "").replace(" {n}", "").replace("{n}", "")
+        } else pick.replace("{n}", n)
     }
 }

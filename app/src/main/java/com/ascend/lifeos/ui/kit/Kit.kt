@@ -120,7 +120,7 @@ fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
 @Composable
 fun Panel(
     modifier: Modifier = Modifier,
-    corner: Dp = 20.dp,
+    corner: Dp = RCard,
     fill: Color = Ivory.copy(alpha = 0.030f),
     line: Color = Line,
     onClick: (() -> Unit)? = null,
