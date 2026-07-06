@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.boot.BootScreen
 import com.ascend.lifeos.ui.calendar.CalendarScreen
 import com.ascend.lifeos.ui.home.HomeScreen
@@ -352,11 +353,8 @@ private fun MorphingDock(
                         val groupAccent = accentOf(group)
                         Column(
                             Modifier
+                                .pressScale { zoomedOut = true }
                                 .clip(RoundedCornerShape(18.dp))
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                ) { zoomedOut = true }
                                 .padding(horizontal = 10.dp, vertical = 7.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
@@ -388,12 +386,9 @@ private fun MorphingDock(
                             )
                             Column(
                                 Modifier
+                                    .pressScale { onSelectSub(s) }
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(bg)
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                    ) { onSelectSub(s) }
                                     .padding(horizontal = 11.dp, vertical = 10.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
@@ -421,15 +416,12 @@ private fun MorphingDock(
                             )
                             Column(
                                 Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(bg)
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                    ) {
+                                    .pressScale {
                                         if (g == group && g != Group.TODAY) zoomedOut = false
                                         else onSelectGroup(g)
                                     }
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(bg)
                                     .padding(horizontal = 15.dp, vertical = 6.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {

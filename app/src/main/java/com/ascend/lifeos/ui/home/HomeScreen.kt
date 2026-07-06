@@ -54,6 +54,8 @@ import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.JarvisVoice
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.kit.*
+import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.ui.calendar.eventColor
 import com.ascend.lifeos.ui.calendar.eventLabel
@@ -231,12 +233,8 @@ fun HomeScreen(
                 }
                 Row(
                     Modifier.fillMaxWidth()
+                        .pressScale(onOpenBody)
                         .clip(RoundedCornerShape(22.dp))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onOpenBody,
-                        )
                         .padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -784,6 +782,8 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
  */
 @Composable
 internal fun Reveal(index: Int, content: @Composable () -> Unit) {
+    // reduced motion: skip the choreography, content is simply there
+    if (Motion.reduced(LocalContext.current)) { Column { content() }; return }
     val state = remember {
         androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true }
     }
@@ -810,7 +810,9 @@ internal fun Reveal(index: Int, content: @Composable () -> Unit) {
 @Composable
 private fun TypedGreeting(full: String) {
     var shown by remember(full) { mutableStateOf(0) }
+    val reduced = Motion.reduced(LocalContext.current)
     LaunchedEffect(full) {
+        if (reduced) { shown = full.length; return@LaunchedEffect }
         shown = 0
         kotlinx.coroutines.delay(260)
         while (shown < full.length) {
@@ -843,8 +845,8 @@ private fun SystemOrb(label: String, icon: androidx.compose.ui.graphics.vector.I
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .pressScale(onClick)
             .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
             .padding(4.dp),
     ) {
         Box(

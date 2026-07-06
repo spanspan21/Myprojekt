@@ -57,6 +57,7 @@ import com.ascend.lifeos.data.FastingCalc
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.WaterCalc
 import com.ascend.lifeos.ui.kit.JarvisHeader
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Blue
 import com.ascend.lifeos.ui.theme.Cyan
@@ -279,6 +280,16 @@ private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, e
 
 @Composable
 private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalGoal: Int) {
+    // the three rings sweep to their values — grand spring, IRON MOTION
+    val pA by androidx.compose.animation.core.animateFloatAsState(
+        pPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrP",
+    )
+    val cA by androidx.compose.animation.core.animateFloatAsState(
+        cPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrC",
+    )
+    val fA by androidx.compose.animation.core.animateFloatAsState(
+        fPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrF",
+    )
     Box(Modifier.size(112.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val sw = 8.dp.toPx()
@@ -287,12 +298,12 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
                 drawArc(Color.White.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
                 if (pct > 0f) drawArc(color, -90f, 360f * pct, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
             }
-            ring(sw / 2, pPct, Cyan)                 // outer = protein
-            ring(sw / 2 + sw + 5.dp.toPx(), cPct, Blue)   // mid = carbs
-            ring(sw / 2 + 2 * (sw + 5.dp.toPx()), fPct, Purple) // inner = fat
+            ring(sw / 2, pA, Cyan)                 // outer = protein
+            ring(sw / 2 + sw + 5.dp.toPx(), cA, Blue)   // mid = carbs
+            ring(sw / 2 + 2 * (sw + 5.dp.toPx()), fA, Purple) // inner = fat
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$kcal", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            TickerNumber(kcal, fontSize = 20)
             Text("/$kcalGoal", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold)
         }
     }

@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.kit
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
 // ─── IRON HUD kit ────────────────────────────────────────────────────────────
@@ -75,9 +77,10 @@ fun Panel(
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    var m = modifier.clip(RoundedCornerShape(corner)).background(fill)
+    // tappable panels press down under the finger and spring back (IRON MOTION)
+    var m = if (onClick != null) modifier.pressScale(onClick) else modifier
+    m = m.clip(RoundedCornerShape(corner)).background(fill)
         .border(0.5.dp, line, RoundedCornerShape(corner))
-    if (onClick != null) m = m.clickable(onClick = onClick)
     Box(m, content = content)
 }
 
@@ -108,10 +111,11 @@ fun JarvisHeader(
 @Composable
 fun IconOrb(icon: ImageVector, tint: Color = TextMuted, size: Dp = 38.dp, onClick: () -> Unit) {
     Box(
-        Modifier.size(size).clip(CircleShape)
+        Modifier.size(size)
+            .pressScale(onClick)
+            .clip(CircleShape)
             .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
+            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.45f)) }
 }
@@ -272,6 +276,44 @@ fun EmptyState(
     }
 }
 
+/**
+ * Odometer number: each digit rolls vertically on change (up when growing,
+ * down when shrinking), tabular figures keep the row from wobbling. The HUD
+ * telemetry look for every stat (IRON MOTION M1.3).
+ */
+@Composable
+fun TickerNumber(
+    value: Int,
+    fontSize: Int,
+    color: Color = TextPrimary,
+    fontWeight: FontWeight = FontWeight.ExtraBold,
+    fontFamily: androidx.compose.ui.text.font.FontFamily? = null,
+) {
+    Row {
+        val s = value.toString()
+        s.forEachIndexed { i, ch ->
+            androidx.compose.animation.AnimatedContent(
+                targetState = ch,
+                label = "tick$i",
+                transitionSpec = {
+                    val dir = if (targetState > initialState) 1 else -1
+                    (androidx.compose.animation.slideInVertically { dir * it } +
+                        androidx.compose.animation.fadeIn(tween(180)) togetherWith
+                        androidx.compose.animation.slideOutVertically { -dir * it } +
+                        androidx.compose.animation.fadeOut(tween(120)))
+                        .using(androidx.compose.animation.SizeTransform(clip = true))
+                },
+            ) { c ->
+                Text(
+                    "$c", color = color, fontSize = fontSize.sp, fontWeight = fontWeight,
+                    fontFamily = fontFamily,
+                    style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"),
+                )
+            }
+        }
+    }
+}
+
 /** Standard mission chip with tiny progress bar underneath. */
 @Composable
 fun MissionChip(
@@ -294,9 +336,13 @@ fun MissionChip(
                 )
             }
             Spacer(Modifier.height(8.dp))
+            val p by animateFloatAsState(
+                progress.coerceIn(0f, 1f),
+                com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "mission",
+            )
             Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))) {
                 Box(
-                    Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).fillMaxHeight()
+                    Modifier.fillMaxWidth(p).fillMaxHeight()
                         .clip(CircleShape).background(color),
                 )
             }

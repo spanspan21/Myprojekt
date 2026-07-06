@@ -30,6 +30,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Cyan
 import com.ascend.lifeos.ui.theme.LocalModuleAccent
@@ -79,30 +85,47 @@ fun GlassPanel(
     ) { content() }
 }
 
-/** Selectable neon pill chip — tinted in the current module's accent. */
+/** Selectable neon pill chip — accent-tinted, colors glide, presses feel. */
 @Composable
 fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val accent = LocalModuleAccent.current
+    val bg by animateColorAsState(
+        if (selected) accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f),
+        tween(Motion.quick), label = "chipBg",
+    )
+    val edge by animateColorAsState(
+        if (selected) accent.copy(alpha = 0.5f) else HudLine,
+        tween(Motion.quick), label = "chipEdge",
+    )
+    val fg by animateColorAsState(
+        if (selected) accent else com.ascend.lifeos.ui.theme.TextMuted,
+        tween(Motion.quick), label = "chipFg",
+    )
     Box(
         modifier
+            .pressScale(onClick)
             .clip(RoundedCornerShape(11.dp))
-            .background(if (selected) accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, if (selected) accent.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(11.dp))
-            .clickable(onClick = onClick)
+            .background(bg)
+            .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
-    ) { Text(label, color = if (selected) accent else com.ascend.lifeos.ui.theme.TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = fg, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
 }
 
 /** Filled/ghost neon action button — tinted in the current module's accent. */
 @Composable
 fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = true, enabled: Boolean = true, onClick: () -> Unit) {
     val accent = LocalModuleAccent.current
+    val fill by animateColorAsState(
+        if (primary) (if (enabled) accent else accent.copy(alpha = 0.25f)) else HudFill,
+        tween(Motion.quick), label = "btnFill",
+    )
+    var m = modifier
+    if (enabled) m = m.pressScale(onClick)
     Box(
-        modifier
+        m
             .clip(RoundedCornerShape(14.dp))
-            .background(if (primary) (if (enabled) accent else accent.copy(alpha = 0.25f)) else HudFill)
+            .background(fill)
             .border(0.5.dp, if (primary) Color.Transparent else HudLine, RoundedCornerShape(14.dp))
-            .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -135,7 +158,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
     }
 }
 
-/** A glowing horizontal meter — bright neon fill over a faint track. */
+/** A glowing horizontal meter — the fill always springs to its value. */
 @Composable
 fun NeonBar(
     progress: Float,
@@ -143,6 +166,9 @@ fun NeonBar(
     modifier: Modifier = Modifier,
     height: Dp = 7.dp,
 ) {
+    val p by animateFloatAsState(
+        progress.coerceIn(0f, 1f), Motion.springSmooth, label = "neon",
+    )
     Box(
         modifier
             .height(height)
@@ -152,7 +178,7 @@ fun NeonBar(
         Box(
             Modifier
                 .fillMaxHeight()
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxWidth(p.coerceIn(0f, 1f))
                 .clip(CircleShape)
                 .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.55f), color))),
         )

@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.hud
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -48,6 +50,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -180,7 +184,12 @@ fun GuardScreen() {
                         modifier = Modifier.size(92.dp), stroke = 7.dp,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(focusScore?.toString() ?: "…", color = scoreColor, style = metricStyle(28))
+                            if (focusScore != null) {
+                                com.ascend.lifeos.ui.kit.TickerNumber(
+                                    focusScore, fontSize = 28, color = scoreColor,
+                                    fontWeight = FontWeight.Bold, fontFamily = Display,
+                                )
+                            } else Text("…", color = scoreColor, style = metricStyle(28))
                             Text(
                                 "FOCUS", color = TextDim, fontFamily = Display,
                                 fontSize = 8.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
@@ -604,16 +613,19 @@ private fun ScoreRow(label: String, value: String, quality: Float) {
 
 @Composable
 private fun TogglePill(on: Boolean, onClick: () -> Unit) {
+    val bg by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f), tween(Motion.quick), label = "tpB")
+    val edge by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.12f), tween(Motion.quick), label = "tpE")
+    val fg by animateColorAsState(if (on) Mod.Guard else TextDim, tween(Motion.quick), label = "tpF")
     Box(
-        Modifier.clip(RoundedCornerShape(12.dp))
-            .background(if (on) Mod.Guard.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, if (on) Mod.Guard.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+        Modifier.pressScale(onClick)
+            .clip(RoundedCornerShape(12.dp))
+            .background(bg)
+            .border(0.5.dp, edge, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 8.dp),
     ) {
         Text(
             if (on) "ON" else "OFF",
-            color = if (on) Mod.Guard else TextDim,
+            color = fg,
             fontFamily = Display, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
     }
@@ -870,12 +882,16 @@ private fun EmptyHint(text: String) {
 
 @Composable
 private fun LimitChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val bg by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f), tween(Motion.quick), label = "lcB")
+    val edge by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.5f) else HudLine, tween(Motion.quick), label = "lcE")
+    val fg by animateColorAsState(if (selected) Mod.Guard else TextMuted, tween(Motion.quick), label = "lcF")
     Box(
-        Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (selected) Mod.Guard.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, if (selected) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 7.dp),
-    ) { Text(label, color = if (selected) Mod.Guard else TextMuted, fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+        Modifier.pressScale(onClick)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bg)
+            .border(0.5.dp, edge, RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+    ) { Text(label, color = fg, fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
 }
 
 @Composable

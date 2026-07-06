@@ -44,9 +44,13 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 
 @Composable
 fun ProgressBar(progress: Float, color: Color = Accent, height: Dp = 7.dp, modifier: Modifier = Modifier) {
+    val p by androidx.compose.animation.core.animateFloatAsState(
+        progress.coerceIn(0f, 1f),
+        com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "pbar",
+    )
     Box(modifier.fillMaxWidth().height(height).clip(RoundedCornerShape(height)).background(SurfaceHi)) {
         Box(
-            Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(height)
+            Modifier.fillMaxWidth(p).height(height)
                 .clip(RoundedCornerShape(height)).background(color)
         )
     }

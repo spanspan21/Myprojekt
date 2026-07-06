@@ -675,8 +675,8 @@ private fun TodayStrip(sets: Int, reps: Int, weekSessions: Int) {
     } else {
         GlassPanel(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 15.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StatBlock("SETS", sets.toString(), Accent)
-                StatBlock("REPS", reps.toString(), Cyan)
+                TickerStatBlock("SETS", sets, Accent)
+                TickerStatBlock("REPS", reps, Cyan)
                 StatBlock("WEEK", "$weekSessions workouts", Amber)
             }
         }
@@ -687,6 +687,17 @@ private fun TodayStrip(sets: Int, reps: Int, weekSessions: Int) {
 private fun StatBlock(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = metricStyle(22))
+        Text(label, color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+    }
+}
+
+@Composable
+private fun TickerStatBlock(label: String, value: Int, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        com.ascend.lifeos.ui.kit.TickerNumber(
+            value, fontSize = 22, color = color,
+            fontWeight = FontWeight.Bold, fontFamily = Display,
+        )
         Text(label, color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
     }
 }

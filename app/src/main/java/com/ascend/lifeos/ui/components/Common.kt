@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,6 +73,10 @@ fun RingProgress(
     track: Color = Line2,
     content: @Composable () -> Unit = {},
 ) {
+    val p by androidx.compose.animation.core.animateFloatAsState(
+        progress.coerceIn(0f, 1f),
+        com.ascend.lifeos.ui.motion.Motion.springGrand, label = "ringP",
+    )
     Box(modifier.size(size), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(size)) {
             val sw = stroke.toPx()
@@ -79,7 +84,7 @@ fun RingProgress(
             val tl = Offset(sw / 2f, sw / 2f)
             val arc = Size(d, d)
             drawArc(track, 0f, 360f, false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
-            drawArc(color, -90f, progress.coerceIn(0f, 1f) * 360f, false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
+            drawArc(color, -90f, p * 360f, false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
         }
         content()
     }

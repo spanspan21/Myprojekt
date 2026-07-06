@@ -10,9 +10,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -245,14 +248,27 @@ private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val bg by animateColorAsState(
+        if (selected) Mod.Home.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f),
+        tween(Motion.quick), label = "bcB",
+    )
+    val edge by animateColorAsState(
+        if (selected) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f),
+        tween(Motion.quick), label = "bcE",
+    )
+    val fg by animateColorAsState(
+        if (selected) Mod.Home else TextMuted,
+        tween(Motion.quick), label = "bcF",
+    )
     Box(
-        Modifier.clip(RoundedCornerShape(11.dp))
-            .background(if (selected) Mod.Home.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, if (selected) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(11.dp))
-            .clickable(onClick = onClick)
+        Modifier
+            .pressScale(onClick)
+            .clip(RoundedCornerShape(11.dp))
+            .background(bg)
+            .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
     ) {
-        Text(label, color = if (selected) Mod.Home else TextMuted, fontSize = 12.sp,
+        Text(label, color = fg, fontSize = 12.sp,
             fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }

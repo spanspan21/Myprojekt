@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -52,6 +54,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.CalendarSync
 import com.ascend.lifeos.data.calendar.*
 import com.ascend.lifeos.ui.kit.*
+import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -266,30 +270,33 @@ private fun DayChip(d: LocalDate, selected: Boolean, isToday: Boolean, entities:
             .map { runCatching { EventType.valueOf(it.type) }.getOrDefault(EventType.PERSONAL) }
             .distinct().take(3)
     }
+    val bg by animateColorAsState(if (selected) Mod.Calendar.copy(alpha = 0.14f) else Color.Transparent, tween(Motion.quick), label = "dcB")
+    val edge by animateColorAsState(
+        when {
+            selected -> Mod.Calendar.copy(alpha = 0.5f)
+            isToday -> Color.White.copy(alpha = 0.18f)
+            else -> Color.Transparent
+        },
+        tween(Motion.quick), label = "dcE",
+    )
+    val over by animateColorAsState(if (selected) Mod.Calendar else TextDim, tween(Motion.quick), label = "dcO")
+    val num by animateColorAsState(if (selected) TextPrimary else TextMuted, tween(Motion.quick), label = "dcN")
     Column(
-        Modifier.clip(RoundedCornerShape(13.dp))
-            .background(if (selected) Mod.Calendar.copy(alpha = 0.14f) else Color.Transparent)
-            .border(
-                0.5.dp,
-                when {
-                    selected -> Mod.Calendar.copy(alpha = 0.5f)
-                    isToday -> Color.White.copy(alpha = 0.18f)
-                    else -> Color.Transparent
-                },
-                RoundedCornerShape(13.dp),
-            )
-            .clickable(onClick = onClick)
+        Modifier.pressScale(onClick)
+            .clip(RoundedCornerShape(13.dp))
+            .background(bg)
+            .border(0.5.dp, edge, RoundedCornerShape(13.dp))
             .padding(horizontal = 9.dp, vertical = 7.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             d.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase().take(2),
-            color = if (selected) Mod.Calendar else TextDim,
+            color = over,
             fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
         Spacer(Modifier.height(2.dp))
         Text(
-            "${d.dayOfMonth}", color = if (selected) TextPrimary else TextMuted,
+            "${d.dayOfMonth}", color = num,
             style = metricStyle(15, FontWeight.SemiBold),
         )
         Spacer(Modifier.height(3.dp))

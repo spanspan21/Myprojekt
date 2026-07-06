@@ -6,6 +6,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -13,6 +14,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -259,17 +262,20 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowCats.forEach { c ->
                     val on = cat == c
+                    val bg by animateColorAsState(if (on) FinAccent.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
+                    val edge by animateColorAsState(if (on) FinAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
+                    val fg by animateColorAsState(if (on) FinAccent else TextMuted, tween(Motion.quick), label = "qcF")
                     Box(
                         Modifier.weight(1f)
+                            .pressScale { cat = c }
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (on) FinAccent.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) FinAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
-                            .clickable { cat = c }
+                            .background(bg)
+                            .border(0.5.dp, edge, RoundedCornerShape(12.dp))
                             .padding(vertical = 11.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            c, color = if (on) FinAccent else TextMuted,
+                            c, color = fg,
                             fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                     }

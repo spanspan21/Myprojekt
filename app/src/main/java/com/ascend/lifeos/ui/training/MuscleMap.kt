@@ -156,8 +156,10 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
     }
 
     // ONE sweep on open — then the scanner goes quiet (user request).
-    val scan = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
+    val reduced = com.ascend.lifeos.ui.motion.Motion.reduced(androidx.compose.ui.platform.LocalContext.current)
+    val scan = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(if (reduced) 1f else 0f) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (reduced) return@LaunchedEffect
         kotlinx.coroutines.delay(420)
         scan.animateTo(1f, androidx.compose.animation.core.tween(1250, easing = androidx.compose.animation.core.FastOutSlowInEasing))
     }
