@@ -259,7 +259,9 @@ fun HomeScreen(
                         modifier = Modifier.width(92.dp),
                     )
                     Spacer(Modifier.width(22.dp))
-                    Column {
+                    // weighted column: the readout owns the right half — the ledger
+                    // rows below give it the same visual mass as the figure
+                    Column(Modifier.weight(1f).padding(end = 6.dp)) {
                         Text(
                             if (readiness == null) "—" else "${(rise.value * 100).toInt().coerceAtMost(readiness)}",
                             color = rColor, fontFamily = Display, fontSize = 46.sp,
@@ -288,6 +290,13 @@ fun HomeScreen(
                             scanLine, color = TextMuted, fontFamily = Body,
                             fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
                         )
+                        Spacer(Modifier.height(11.dp))
+                        HairLine()
+                        Spacer(Modifier.height(9.dp))
+                        val sleepMin = Repo.data.health?.sleepMin
+                        HeroStatRow("SLEEP", if (sleepMin != null) "${sleepMin / 60}h %02dm".format(sleepMin % 60) else "—")
+                        Spacer(Modifier.height(5.dp))
+                        HeroStatRow("STREAK", if (profile.streak > 0) "${profile.streak} days" else "day one")
                     }
                 }
             }
@@ -480,16 +489,17 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
                 SectionLabel("Systems")
                 Spacer(Modifier.height(12.dp))
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") }
-                    SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") }
-                    SystemOrb("Rules", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") }
-                    SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") }
-                    SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") }
-                    SystemOrb("Wrapped", Icons.Rounded.Bolt, Mod.Skills) { onOpenModule("wrapped") }
+                // 3×2 grid — every orb fully visible, evenly spread (no clipped scroll row)
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Rules", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Wrapped", Icons.Rounded.Bolt, Mod.Skills) { onOpenModule("wrapped") } }
                 }
             }
 
@@ -659,6 +669,22 @@ private fun EventLine(tag: String, title: String, sub: String, color: Color) {
             Text(sub, color = TextDim, fontSize = 11.5.sp, fontFamily = Body, maxLines = 1)
         }
         Icon(Icons.Rounded.Bolt, null, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
+    }
+}
+
+/** Tiny ledger row for the hero readout: dim overline label left, value right. */
+@Composable
+private fun HeroStatRow(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            label, color = TextDim, fontFamily = Display,
+            fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            value, color = TextMuted, fontFamily = Display,
+            fontSize = 12.sp, fontWeight = FontWeight.Bold,
+        )
     }
 }
 
