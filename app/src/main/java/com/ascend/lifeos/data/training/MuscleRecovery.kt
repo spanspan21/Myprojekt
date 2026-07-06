@@ -36,10 +36,25 @@ object MuscleRecovery {
         val since = now - 72L * 3600_000
 
         val dao = TrainingDatabase.get(ctx).dao()
-        val sets = runCatching { dao.setsLoggedSince(since) }.getOrDefault(emptyList())
-        // muscles per exercise come from the seed (covers all non-custom ids)
-        val muscleOf: Map<String, Pair<Muscle, List<Muscle>>> =
-            ExerciseSeed.ALL_EXERCISES.associate { it.id to (it.primaryMuscle to it.secondaryMuscles) }
+        var sets = runCatching { dao.setsLoggedSince(since) }.getOrDefault(emptyList())
+        // Fallback über die Session-Zeit — falls loggedAt auf alten Sets fehlt/0 ist
+        if (sets.isEmpty()) {
+            sets = runCatching { dao.setsInSessionsSince(since) }.getOrDefault(emptyList())
+        }
+
+        // Muskeln je Übung: die DB ist die Wahrheit (deckt Custom-Übungen und
+        // Alt-IDs früherer Seeds), der Seed füllt auf, der NAME fängt den Rest —
+        // vorher fiel jeder Satz einer unbekannten ID still aus der Heatmap.
+        val muscleOf = HashMap<String, Pair<Muscle, List<Muscle>>>()
+        val byName = HashMap<String, Pair<Muscle, List<Muscle>>>()
+        ExerciseSeed.ALL_EXERCISES.forEach {
+            muscleOf[it.id] = it.primaryMuscle to it.secondaryMuscles
+            byName[it.name.trim().lowercase()] = it.primaryMuscle to it.secondaryMuscles
+        }
+        runCatching { dao.allExercisesOnce() }.getOrDefault(emptyList()).forEach {
+            muscleOf[it.id] = it.primaryMuscle to it.secondaryMuscles
+            byName[it.name.trim().lowercase()] = it.primaryMuscle to it.secondaryMuscles
+        }
 
         val fatigue = HashMap<Muscle, Double>()
         fun add(m: Muscle, units: Double, ageH: Double) {
@@ -47,14 +62,41 @@ object MuscleRecovery {
             fatigue.merge(m, decayed) { a, b -> a + b }
         }
 
+        var resolved = 0
+        var skipped = 0
         for (s in sets) {
             if (s.setType == SetType.WARMUP) continue
-            val ageH = (now - s.loggedAt) / 3600_000.0
-            val (prim, secs) = muscleOf[s.exerciseId] ?: continue
+            val ageH = ((now - s.loggedAt).coerceAtLeast(0L)) / 3600_000.0
+            val pm = muscleOf[s.exerciseId] ?: byName[s.exerciseName.trim().lowercase()]
+            if (pm == null) { skipped++; continue }
+            val (prim, secs) = pm
+            resolved++
             val intensity = 1.0 + ((s.rpe ?: 7) - 7) * 0.15   // RPE 9 set hits harder
             add(prim, intensity, ageH)
             secs.forEach { add(it, intensity * 0.4, ageH) }
         }
+
+        // Rettungsnetz: Sessions, deren Einzel-Sets fehlen (Alt-Datenverlust durch
+        // den REPLACE/CASCADE-Bug) — das Session-Aggregat + Template-Name geben
+        // eine ehrliche Näherung, bis wieder echte Sätze in der Tabelle liegen.
+        var rescueSessions = -1
+        if (resolved == 0) {
+            val sessions = runCatching { dao.plainSessionsSince(since) }
+                .getOrElse { e -> android.util.Log.w("MuscleRecovery", "session query failed", e); emptyList() }
+            rescueSessions = sessions.size
+            for (sess in sessions) {
+                // totalSets wird erst beim Finish aggregiert — Reps/3 als Näherung davor
+                val units = if (sess.totalSets > 0) sess.totalSets else (sess.totalReps / 3).coerceAtLeast(0)
+                if (units <= 0) continue
+                val ageH = ((now - (sess.finishedAt ?: sess.startedAt)).coerceAtLeast(0L)) / 3600_000.0
+                val groups = templateMuscles(sess.templateName)
+                val perPrim = units.toDouble() / groups.first.size.coerceAtLeast(1)
+                groups.first.forEach { add(it, perPrim, ageH) }
+                groups.second.forEach { add(it, perPrim * 0.4, ageH) }
+                resolved += units
+            }
+        }
+        android.util.Log.i("MuscleRecovery", "sets=${sets.size} resolved=$resolved skipped=$skipped rescueSessions=$rescueSessions")
 
         // hockey blocks (yesterday + today) = leg/core/cardio load
         runCatching {
@@ -94,6 +136,19 @@ object MuscleRecovery {
                 (1.0 - ((fatigue[m] ?: 0.0) / CAPACITY).coerceIn(0.0, 1.0)).toFloat()
             }
         return Freshness(map)
+    }
+
+    /** Template-Name → (primäre, sekundäre) Muskeln — nur fürs Session-Rettungsnetz. */
+    private fun templateMuscles(name: String): Pair<List<Muscle>, List<Muscle>> {
+        val n = name.lowercase()
+        return when {
+            "push" in n -> listOf(Muscle.CHEST, Muscle.SHOULDERS, Muscle.TRICEPS) to listOf(Muscle.ABS)
+            "pull" in n -> listOf(Muscle.LATS, Muscle.BICEPS, Muscle.REAR_DELTS) to listOf(Muscle.FOREARMS, Muscle.TRAPS)
+            "leg" in n || "bein" in n -> listOf(Muscle.QUADS, Muscle.GLUTES, Muscle.HAMSTRINGS) to listOf(Muscle.CALVES, Muscle.LOWER_BACK)
+            "core" in n -> listOf(Muscle.ABS, Muscle.OBLIQUES) to listOf(Muscle.HIP_FLEXORS, Muscle.LOWER_BACK)
+            "upper" in n -> listOf(Muscle.CHEST, Muscle.LATS, Muscle.SHOULDERS) to listOf(Muscle.BICEPS, Muscle.TRICEPS)
+            else -> listOf(Muscle.CHEST, Muscle.LATS, Muscle.QUADS, Muscle.ABS) to listOf(Muscle.SHOULDERS)
+        }
     }
 
     /** Muscles a planned session mainly loads (for preview + ordering). */

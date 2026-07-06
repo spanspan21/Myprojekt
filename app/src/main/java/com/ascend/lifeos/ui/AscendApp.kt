@@ -78,6 +78,7 @@ import com.ascend.lifeos.ui.training.TrainingScreen
 /** Every reachable sub-screen (level 3). */
 private enum class Sub(val label: String, val accent: @Composable () -> Color) {
     HOME("Today", { Mod.Home }),
+    PRIME("Prime", { Mod.Home }),
     // Body group
     TRAIN("Train", { Mod.Train }),
     FUEL("Fuel", { Mod.Fuel }),
@@ -98,7 +99,7 @@ private enum class Sub(val label: String, val accent: @Composable () -> Color) {
 
 /** Level-2 groups on the dock. */
 private enum class Group(val label: String, val icon: ImageVector, val subs: List<Sub>) {
-    TODAY("Today", Icons.Rounded.Hexagon, listOf(Sub.HOME)),
+    TODAY("Today", Icons.Rounded.Hexagon, listOf(Sub.HOME, Sub.PRIME)),
     BODY("Body", Icons.Rounded.FitnessCenter, listOf(Sub.TRAIN, Sub.FUEL, Sub.VITALS, Sub.SLEEP)),
     LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.GOALS, Sub.FINANCE, Sub.SCHOOL, Sub.MIND)),
     SYSTEM("System", Icons.Rounded.Shield, listOf(Sub.GUARD, Sub.SKILLS, Sub.EXPLORER, Sub.SETTINGS)),
@@ -170,6 +171,7 @@ fun AscendApp() {
             "school" -> open(Sub.SCHOOL)
             "mind" -> open(Sub.MIND)
             "explorer" -> open(Sub.EXPLORER)
+            "prime" -> open(Sub.PRIME)
             "settings" -> open(Sub.SETTINGS)
             "report" -> reportOpen = true
             "heatmap", "wrapped", "achievements", "decisions", "rules" -> overlay = target
@@ -212,6 +214,7 @@ fun AscendApp() {
                         onOpenPalette = { paletteOpen = true },
                         onOpenModule = { navigate(it) },
                     )
+                    Sub.PRIME -> com.ascend.lifeos.ui.prime.PrimeScreen(onClose = { open(Sub.HOME) })
                     Sub.TRAIN -> TrainingScreen(onDockVisible = { dockVisible = it })
                     Sub.FUEL -> NutritionScreen()
                     Sub.VITALS -> BodyScreen()

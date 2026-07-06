@@ -60,7 +60,11 @@ interface TrainingDao {
     @Query("SELECT * FROM workout_sessions WHERE startedAt >= :since ORDER BY startedAt DESC")
     suspend fun sessionsSince(since: Long): List<SessionWithSets>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // ECHTES Upsert (INSERT or UPDATE) — niemals @Insert(REPLACE) auf dieser
+    // Entity: SQLite-REPLACE ist DELETE+INSERT, und der CASCADE-FK von
+    // workout_sets löschte dabei JEDEN geloggten Satz der Session (deshalb war
+    // die Muskel-Heatmap ewig „fresh": die Sets verschwanden beim Finish).
+    @androidx.room.Upsert
     suspend fun upsertSession(session: WorkoutSessionEntity)
 
     @Query("DELETE FROM workout_sessions WHERE id = :id")
@@ -147,6 +151,22 @@ interface TrainingDao {
 
     @Query("SELECT * FROM workout_sets WHERE loggedAt >= :since")
     suspend fun setsLoggedSince(since: Long): List<WorkoutSetEntity>
+
+    /** Sets der letzten Zeit über die SESSION-Zeit — Fallback, falls loggedAt je 0 war. */
+    @Query("""
+        SELECT ws.* FROM workout_sets ws
+        JOIN workout_sessions s ON s.id = ws.sessionId
+        WHERE s.startedAt >= :since
+    """)
+    suspend fun setsInSessionsSince(since: Long): List<WorkoutSetEntity>
+
+    @Query("SELECT * FROM exercises")
+    suspend fun allExercisesOnce(): List<ExerciseEntity>
+
+    // BEWUSST ohne isComplete-Filter: eine nie „beendete" Session hat trotzdem
+    // Muskeln ermüdet — fürs Recovery zählt der Reiz, nicht der Haken.
+    @Query("SELECT * FROM workout_sessions WHERE startedAt >= :since")
+    suspend fun plainSessionsSince(since: Long): List<WorkoutSessionEntity>
 
     @Query("""
         SELECT COALESCE(SUM(totalReps), 0) FROM workout_sessions

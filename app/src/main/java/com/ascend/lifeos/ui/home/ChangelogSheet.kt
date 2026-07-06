@@ -28,6 +28,10 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "PRIME — one head over every module: a live index, your three highest-impact moves, anomalies against YOUR normal, real correlations and honest forecasts (Today › Prime)",
+        "The muscle heatmap finally feels your sets: custom and legacy exercises resolve now — trained chest glows, nothing stays silently fresh",
+        "PRIME only speaks with receipts: every line names its reason, and missing data means silence, never guesses",
+        // ── v2.8 ──
         "Add food wears tabs now: Zuletzt · Favoriten · Getränke · Teller — recents sort to your current meal slot",
         "The ＋ basket: collect a whole canteen tray from the results, log it once — Mensa in five taps",
         "Empty slot? \"⟳ wie gestern\" sits right in the header; the sheet can copy the whole day too",
