@@ -83,6 +83,7 @@ object PlanGenerator {
         seasonPhase: String = "",             // "" | OFF | PRE | IN | PLAYOFF
         gameDayNextDay: Boolean = false,      // optional plumbing: skip the finisher before a game
         highStrain: Boolean = false,          // last session ground to RPE ≥ 9.3 → autoregulate down
+        daysSinceLastSession: Int = 0,        // detraining: long breaks re-enter lower, not at zero
     ): WeekPlan {
         // season phase (ice-hockey year): shifts frequency + volume character
         val season = seasonPhase
@@ -102,12 +103,20 @@ object PlanGenerator {
         // RPE autoregulation (masterplan §3.4): a ground-out last session takes
         // one notch of volume off the coming week — the log talks back to the plan.
         val strainScale = if (highStrain) 0.85 else 1.0
+        // Detraining re-entry (Ideensammlung): strength survives a break better
+        // than skill/work capacity. 2-4 weeks off → 85%, ≥4 weeks → 70% — never
+        // back at the old top, never back at zero.
+        val detrainScale = when {
+            daysSinceLastSession >= 28 -> 0.7
+            daysSinceLastSession >= 14 -> 0.85
+            else -> 1.0
+        }
         val volumeScale = when {
             sickMode -> 0.0
             deload || mesoDeload -> 0.6
             examWeek -> 0.7
             else -> listOf(1.0, 1.05, 1.1, 1.15)[trainWeek.coerceIn(0, 3)]
-        } * seasonScale * strainScale
+        } * seasonScale * strainScale * detrainScale
 
         // BIG units: sessions are 60–120 min structured blocks
         val len = sessionLen.coerceIn(60, 120)

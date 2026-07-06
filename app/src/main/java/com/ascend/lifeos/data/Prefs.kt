@@ -33,6 +33,9 @@ object Prefs {
     fun setInt(ctx: Context, key: String, value: Int) = sp(ctx).edit().putInt(key, value).apply()
 
     // ---- keys + defaults (single source of truth) ----------------------------
+    // Shell
+    const val CONTEXT_MODE = "context_mode"            // normal | exam | holiday
+    const val HOME_CARDS = "home_cards"                // ordered visible card keys, csv
     // Jarvis
     const val TTS_BRIEFING = "tts_briefing"            // default false — opt-in!
     const val NOTIF_MORNING = "notif_morning"          // true

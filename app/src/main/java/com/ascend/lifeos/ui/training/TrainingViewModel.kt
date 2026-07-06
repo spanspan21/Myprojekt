@@ -183,6 +183,14 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             rated.size >= 3 && rated.average() >= 9.3
         }.getOrDefault(false)
 
+        // Detraining: days since the last completed session (long break → soft re-entry)
+        val daysSince = runCatching {
+            val last = dao.sessionsSince(System.currentTimeMillis() - 90L * 86_400_000)
+                .filter { it.session.isComplete }
+                .maxOfOrNull { it.session.startedAt }
+            if (last == null) 0 else ((System.currentTimeMillis() - last) / 86_400_000L).toInt()
+        }.getOrDefault(0)
+
         val plan = PlanGenerator.generate(
             profile = fitnessProfile, skillGoals = goals,
             freq = p.trainFreq, sessionLen = p.sessionLen,
@@ -194,6 +202,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             sickMode = p.sickMode, examWeek = examSoon,
             seasonPhase = com.ascend.lifeos.data.Prefs.string(getApplication(), com.ascend.lifeos.data.Prefs.SEASON_PHASE, ""),
             highStrain = highStrain,
+            daysSinceLastSession = daysSince,
         )
         weekPlan = plan
         placements = runCatching {
@@ -618,7 +627,23 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val recentVol = recent.sumOf { it.session.totalReps }
         val olderVol = older.sumOf { it.session.totalReps }
 
-        deloadRecommended = recentVol < olderVol * 0.85
+        // Multi-signal deload (Ideensammlung): one noisy metric shouldn't trigger
+        // a whole easy week. Fire only when ≥2 independent signals agree.
+        val volumeDrop = recentVol < olderVol * 0.85
+        val grinding = runCatching {
+            val rpes = dao.setsLoggedSince(System.currentTimeMillis() - 7L * 86_400_000)
+                .filter { it.setType == SetType.NORMAL }
+                .mapNotNull { it.rpe }
+            rpes.size >= 6 && rpes.average() >= 8.8
+        }.getOrDefault(false)
+        val underslept = runCatching {
+            val need = com.ascend.lifeos.data.Repo.sleepNeedMin()
+            val nights = com.ascend.lifeos.data.Repo.lastDayKeys(3)
+                .mapNotNull { com.ascend.lifeos.data.Repo.bodyDay(it)?.sleepMin }
+            nights.size >= 2 && nights.average() < need * 0.85
+        }.getOrDefault(false)
+
+        deloadRecommended = listOf(volumeDrop, grinding, underslept).count { it } >= 2
     }
 
     fun activateDeload() { deloadActive = true }

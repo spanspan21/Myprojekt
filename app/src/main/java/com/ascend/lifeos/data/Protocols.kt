@@ -144,6 +144,28 @@ object Protocols {
             val delta = heights.last().cm - old.cm
             if (delta > 0.5) "Growth spurt: +%.1f cm this month — sleep target raised 20 min.".format(delta) else null
         },
+        Protocol(
+            "weather_watch", "Weather watch",
+            "Outdoor-flagged plans get a forecast check — one suggestion, never auto-moved",
+        ) { ctx ->
+            val titles = WeatherRepo.outdoorTitles(ctx)
+            if (titles.isEmpty()) return@Protocol null
+            runCatching { WeatherRepo.refresh(ctx) }
+            val codes = WeatherRepo.hourlyCode ?: return@Protocol null
+            val temps = WeatherRepo.hourlyTemp
+            val today = LocalDate.now()
+            val nowMin = LocalTime.now().let { it.hour * 60 + it.minute }
+            val ev = CalendarRepo.dao(ctx)
+                .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
+                .filter { !it.allDay && it.endMin > nowMin && it.title.trim().lowercase() in titles }
+                .minByOrNull { it.startMin } ?: return@Protocol null
+            val hour = (ev.startMin / 60).coerceIn(0, 23)
+            val temp = temps?.getOrNull(hour)
+            if (!WeatherRepo.badWeather(codes.getOrNull(hour) ?: 0, temp)) return@Protocol null
+            val tempTxt = temp?.let { " · ${it.toInt()}°" } ?: ""
+            "${ev.title} ${CalendarRepo.fmtMin(ev.startMin)} is outdoor — forecast looks rough$tempTxt. " +
+                "Move it or plan the indoor alternative? Your call."
+        },
     )
 
     /** Evaluate all enabled protocols; max one directive per protocol per day. */

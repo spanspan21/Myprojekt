@@ -35,6 +35,20 @@ import com.ascend.lifeos.ui.theme.*
 fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     val profile = vm.fitnessProfile
     val selected = Repo.data.profile.skillGoals
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+
+    // Adherence widens the ETA band honestly: train less than planned and the
+    // forecast says so instead of pretending precision (Ideensammlung).
+    val adherence by androidx.compose.runtime.produceState(1f) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val done = com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao()
+                    .sessionCountSince(System.currentTimeMillis() - 28L * 86_400_000)
+                val planned = (Repo.profile().trainFreq * 4).coerceAtLeast(1)
+                (done.toFloat() / planned).coerceIn(0.2f, 1f)
+            }.getOrDefault(1f)
+        }
+    }
 
     val areas = listOf(
         SkillArea.PULL to "Pull",
@@ -87,7 +101,7 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                 }
                 items(skills, key = { it.id }) { skill ->
-                    SkillCard(skill, profile, skill.id in selected) { Repo.toggleSkillGoal(skill.id) }
+                    SkillCard(skill, profile, adherence, skill.id in selected) { Repo.toggleSkillGoal(skill.id) }
                     Spacer(Modifier.height(8.dp))
                 }
             }
@@ -96,9 +110,10 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, selected: Boolean, onToggle: () -> Unit) {
+private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Float, selected: Boolean, onToggle: () -> Unit) {
     val inReach = SkillCatalog.inReach(skill, profile)
     val eta = SkillCatalog.etaWeeks(skill, profile)
+    val etaRange = SkillCatalog.etaRangeWeeks(skill, profile, adherence)
 
     Panel(
         Modifier.fillMaxWidth(),
@@ -131,6 +146,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, selected: Boole
                     when {
                         profile == null -> VerdictPill("? WKS", TextDim)
                         eta == 0 && inReach -> VerdictPill("IN REACH", Good)
+                        etaRange != null -> VerdictPill("${etaRange.first}–${etaRange.second} wks", Warn)
                         else -> VerdictPill("~$eta wks", Warn)
                     }
                     Spacer(Modifier.height(8.dp))

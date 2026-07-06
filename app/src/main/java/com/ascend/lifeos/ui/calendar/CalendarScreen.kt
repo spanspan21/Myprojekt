@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
@@ -118,6 +119,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
     var permTick by remember { mutableIntStateOf(0) }
     var monthOpen by remember { mutableStateOf(false) }
     var settingsOpen by remember { mutableStateOf(false) }
+    var tasksOpen by remember { mutableStateOf(false) }
 
     // timeline: own events are instant; device events load off the main thread
     var timeline by remember { mutableStateOf<DayTimeline?>(null) }
@@ -143,6 +145,8 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             }
             JarvisHeader("Calendar", contextLine, Mod.Calendar) {
                 IconOrb(Icons.Rounded.CalendarMonth, tint = Mod.Calendar, size = 36.dp) { monthOpen = true }
+                Spacer(Modifier.width(8.dp))
+                IconOrb(Icons.Rounded.Checklist, tint = Mod.Calendar, size = 36.dp) { tasksOpen = true }
                 Spacer(Modifier.width(8.dp))
                 IconOrb(Icons.Rounded.Tune, size = 36.dp) { settingsOpen = true }
             }
@@ -209,6 +213,10 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 
     if (settingsOpen) {
         CalendarSettingsSheet(onDismiss = { settingsOpen = false; permTick++ })
+    }
+
+    if (tasksOpen) {
+        TaskBlocksSheet(onDismiss = { tasksOpen = false; permTick++ })
     }
 
     if (addOpen) {
@@ -979,7 +987,35 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 else "${CalendarRepo.fmtMin(b.startMin)}–${CalendarRepo.fmtMin(b.endMin)} · ${eventLabel(b.type)}",
                 color = TextMuted, fontSize = 13.sp, fontFamily = Body,
             )
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(14.dp))
+
+            // Weather-dependent flag — learned per title: set once, every
+            // same-named/recurring instance inherits it (Ideensammlung).
+            val ctx = LocalContext.current
+            var outdoorTick by remember { mutableIntStateOf(0) }
+            val outdoor = remember(outdoorTick) { com.ascend.lifeos.data.WeatherRepo.isOutdoor(ctx, b.title) }
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                    .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.04f))
+                    .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                    .clickable { com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Weather-dependent", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Applies to every \"${b.title}\" — Jarvis checks the forecast and suggests, never moves.",
+                        color = TextDim, fontSize = 10.5.sp, fontFamily = Body, lineHeight = 14.sp,
+                    )
+                }
+                Text(
+                    if (outdoor) "ON" else "OFF",
+                    color = if (outdoor) Mod.Calendar else TextDim,
+                    fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+                )
+            }
+            Spacer(Modifier.height(12.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(Crit.copy(alpha = 0.10f))
@@ -1189,6 +1225,188 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
             // ── ICS feed (fallback for schools that publish one) ─────
             IcsFeedRow()
 
+            Spacer(Modifier.height(10.dp))
+        }
+    }
+}
+
+// ─── Auto time-blocking: tasks → free slots (replaces Motion/Reclaim) ────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TaskBlocksSheet(onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.calendar.TaskBlocks.rev
+    val tasks = com.ascend.lifeos.data.calendar.TaskBlocks.tasks(ctx)
+    var title by remember { mutableStateOf("") }
+    var prio by remember { mutableIntStateOf(2) }
+    var durMin by remember { mutableIntStateOf(45) }
+    var deadlineDays by remember { mutableIntStateOf(3) }
+    var planNote by remember { mutableStateOf<String?>(null) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+        Column(
+            Modifier.fillMaxWidth().navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 22.dp).padding(top = 20.dp, bottom = 22.dp),
+        ) {
+            Text(
+                "TIME BLOCKING", color = Mod.Calendar, fontFamily = Display,
+                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text("Tasks find their own slot", color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Priority beats deadline beats duration — transparent rules, fixed events never move.",
+                color = TextDim, fontSize = 11.5.sp, fontFamily = Body,
+            )
+            Spacer(Modifier.height(14.dp))
+
+            // add form
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(13.dp))
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                if (title.isEmpty()) Text("Task title…", color = TextDim, fontSize = 14.sp, fontFamily = Body)
+                androidx.compose.foundation.text.BasicTextField(
+                    value = title, onValueChange = { title = it.take(60) }, singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 14.sp),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(Mod.Calendar),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                listOf(1 to "Low", 2 to "Normal", 3 to "High").forEach { (p, label) ->
+                    val sel = prio == p
+                    Text(
+                        label, color = if (sel) Mod.Calendar else TextMuted,
+                        fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
+                            .clickable { prio = p }
+                            .padding(horizontal = 11.dp, vertical = 6.dp),
+                    )
+                    Spacer(Modifier.width(7.dp))
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Duration", color = TextMuted, fontSize = 12.sp, fontFamily = Body, modifier = Modifier.weight(1f))
+                Text(
+                    "−", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(CircleShape).clickable { durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                )
+                Text(
+                    "$durMin min", color = TextPrimary, fontFamily = Display, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
+                Text(
+                    "+", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(CircleShape).clickable { durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Deadline", color = TextMuted, fontSize = 12.sp, fontFamily = Body, modifier = Modifier.weight(1f))
+                Text(
+                    "−", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(CircleShape).clickable { deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                )
+                Text(
+                    if (deadlineDays == 0) "today" else "+$deadlineDays d",
+                    color = TextPrimary, fontFamily = Display, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
+                Text(
+                    "+", color = TextMuted, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(CircleShape).clickable { deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+                    .background(if (title.isBlank()) Mod.Calendar.copy(alpha = 0.25f) else Mod.Calendar)
+                    .clickable(enabled = title.isNotBlank()) {
+                        com.ascend.lifeos.data.calendar.TaskBlocks.add(
+                            ctx, title, prio,
+                            java.time.LocalDate.now().plusDays(deadlineDays.toLong()).toEpochDay(), durMin,
+                        )
+                        title = ""
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text("Add task", color = Void, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+
+            Spacer(Modifier.height(16.dp))
+
+            tasks.forEach { t ->
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier.size(19.dp).clip(CircleShape)
+                            .background(if (t.done) Mod.Calendar else Color.Transparent)
+                            .border(1.dp, if (t.done) Mod.Calendar else Color.White.copy(alpha = 0.25f), CircleShape)
+                            .clickable { com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
+                        contentAlignment = Alignment.Center,
+                    ) { if (t.done) Text("✓", color = Void, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                    Spacer(Modifier.width(11.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            t.title,
+                            color = if (t.done) TextDim else TextPrimary,
+                            fontSize = 13.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                        )
+                        val due = java.time.LocalDate.ofEpochDay(t.deadlineEpochDay)
+                        val sched = if (t.scheduledDay >= 0) {
+                            val d = java.time.LocalDate.ofEpochDay(t.scheduledDay)
+                            "${d.dayOfMonth}.${d.monthValue}. ${CalendarRepo.fmtMin(t.scheduledStart)}"
+                        } else "not placed yet"
+                        Text(
+                            "P${t.priority} · due ${due.dayOfMonth}.${due.monthValue}. · ${t.durationMin}m · $sched",
+                            color = if (t.scheduledDay >= 0 || t.done) TextDim else Warn,
+                            fontSize = 10.5.sp, fontFamily = Body,
+                        )
+                    }
+                    Text(
+                        "✕", color = TextDim, fontSize = 13.sp,
+                        modifier = Modifier.clip(CircleShape)
+                            .clickable { com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id) }
+                            .padding(6.dp),
+                    )
+                }
+            }
+            if (tasks.isEmpty()) {
+                Text("No tasks yet — add one above.", color = TextDim, fontSize = 12.sp, fontFamily = Body)
+            }
+
+            Spacer(Modifier.height(14.dp))
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+                    .background(Color.White.copy(alpha = 0.06f))
+                    .border(0.5.dp, Mod.Calendar.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
+                    .clickable(enabled = tasks.any { !it.done }) {
+                        planNote = "Planning…"
+                        scope.launch {
+                            val placed = runCatching {
+                                com.ascend.lifeos.data.calendar.TaskBlocks.plan(ctx)
+                            }.getOrDefault(0)
+                            planNote = "$placed placed into free slots ✓"
+                        }
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    planNote ?: "Plan now → free slots",
+                    color = Mod.Calendar, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
+            }
             Spacer(Modifier.height(10.dp))
         }
     }

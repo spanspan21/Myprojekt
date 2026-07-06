@@ -225,6 +225,12 @@ fun FinanceHome(onClose: () -> Unit) {
                 Spacer(Modifier.height(26.dp))
             }
 
+            // ── 6b · subscription radar: auto-detected from the ledger ───────
+            item(key = "abo_radar") {
+                SubscriptionRadarPanel(Modifier.fillMaxWidth())
+                Spacer(Modifier.height(26.dp))
+            }
+
             // ── 7 · savings goals ────────────────────────────────────────────
             item(key = "goals_label") {
                 SectionLabel("Savings goals")

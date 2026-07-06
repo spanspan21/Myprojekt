@@ -238,20 +238,36 @@ fun TrainingHub(
             }
 
             item {
-                // schedule week → calendar
+                // schedule week → calendar · re-plan on demand (Ideensammlung:
+                // "Jetzt neu planen" — the solver reruns whenever life changed)
                 val scheduled = vm.scheduledOk
-                Box(
-                    Modifier.clip(RoundedCornerShape(11.dp))
-                        .background(if (scheduled) Accent.copy(alpha = 0.12f) else Mod.Train.copy(alpha = 0.14f))
-                        .border(0.5.dp, if (scheduled) Accent.copy(alpha = 0.4f) else Mod.Train.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
-                        .clickable(enabled = !scheduled && vm.placements.isNotEmpty()) { vm.scheduleWeek() }
-                        .padding(horizontal = 13.dp, vertical = 8.dp),
-                ) {
-                    Text(
-                        if (scheduled) "✓ On your calendar" else "Schedule week → calendar",
-                        color = if (scheduled) Accent else Mod.Train,
-                        fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(11.dp))
+                            .background(if (scheduled) Accent.copy(alpha = 0.12f) else Mod.Train.copy(alpha = 0.14f))
+                            .border(0.5.dp, if (scheduled) Accent.copy(alpha = 0.4f) else Mod.Train.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
+                            .clickable(enabled = !scheduled && vm.placements.isNotEmpty()) { vm.scheduleWeek() }
+                            .padding(horizontal = 13.dp, vertical = 8.dp),
+                    ) {
+                        Text(
+                            if (scheduled) "✓ On your calendar" else "Schedule week → calendar",
+                            color = if (scheduled) Accent else Mod.Train,
+                            fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        Modifier.clip(RoundedCornerShape(11.dp))
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                            .clickable { vm.regeneratePlan() }
+                            .padding(horizontal = 13.dp, vertical = 8.dp),
+                    ) {
+                        Text(
+                            "Re-plan now",
+                            color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
                 Spacer(Modifier.height(10.dp))
                 ProgramRow(vm, onOpenSkillGoals, onOpenAssess)

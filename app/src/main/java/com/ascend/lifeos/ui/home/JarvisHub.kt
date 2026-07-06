@@ -130,6 +130,8 @@ fun JarvisHub(onClose: () -> Unit, onOpen: (String) -> Unit) {
         HubTile("explorer", "Explorer", "correlate any two metrics", Icons.Rounded.ScatterPlot, Mod.Skills),
         HubTile("wrapped", "Wrapped", "your season, recapped", Icons.Rounded.AutoAwesome, Mod.Train),
         HubTile("report", "Weekly Report", "last 7 days reviewed", Icons.Rounded.Assessment, Mod.Home),
+        HubTile("achievements", "Milestones", "the life changelog, auto-kept", Icons.Rounded.AutoAwesome, Mod.Train),
+        HubTile("decisions", "Decisions", "weighted calls, honest outcomes", Icons.Rounded.Flag, Mod.Mind),
     )
     val system = listOf(
         HubTile(
@@ -137,6 +139,7 @@ fun JarvisHub(onClose: () -> Unit, onOpen: (String) -> Unit) {
             screenMin?.let { "${it / 60}h ${it % 60}m screen today" } ?: "—",
             Icons.Rounded.Shield, Mod.Guard,
         ),
+        HubTile("rules", "Rules", "your own WHEN → THEN automations", Icons.Rounded.Tune, Mod.Home),
         HubTile("settings", "Settings", "system configuration", Icons.Rounded.Tune, TextMuted),
     )
 
@@ -174,7 +177,28 @@ fun JarvisHub(onClose: () -> Unit, onOpen: (String) -> Unit) {
                 IconOrb(Icons.Rounded.Close, size = 38.dp, onClick = onClose)
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(14.dp))
+
+            // Context modes: a life phase hides what it doesn't need right now.
+            val mode by com.ascend.lifeos.ui.ShellMode.current
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("normal" to "Normal", "exam" to "Exam phase", "holiday" to "Holidays").forEach { (id, label) ->
+                    val sel = mode == id
+                    Text(
+                        label,
+                        color = if (sel) Mod.Home else TextMuted,
+                        fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(if (sel) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (sel) Mod.Home.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(11.dp))
+                            .clickable { com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
 
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                 HubSection("Life", life, baseIndex = 0, onOpen = onOpen)

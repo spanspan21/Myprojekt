@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,21 +21,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Hexagon
-import androidx.compose.material.icons.rounded.MonitorHeart
-import androidx.compose.material.icons.rounded.Psychology
-import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,7 +46,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.boot.BootScreen
 import com.ascend.lifeos.ui.calendar.CalendarScreen
@@ -52,26 +57,67 @@ import com.ascend.lifeos.ui.home.HomeScreen
 import com.ascend.lifeos.ui.hud.GuardScreen
 import com.ascend.lifeos.ui.hud.NutritionScreen
 import com.ascend.lifeos.ui.kit.ModuleBackground
-import com.ascend.lifeos.ui.skills.SkillsScreen
 import com.ascend.lifeos.ui.screens.BodyScreen
+import com.ascend.lifeos.ui.skills.SkillsScreen
+import com.ascend.lifeos.ui.theme.Body
+import com.ascend.lifeos.ui.theme.LocalModuleAccent
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
+import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
 import com.ascend.lifeos.ui.theme.Void
 import com.ascend.lifeos.ui.training.TrainingScreen
 
-// ─── JARVIS shell ────────────────────────────────────────────────────────────
-// Five modules on an icon-only glass dock; each tab tints the void with its
-// own accent. Guard lives behind the shield orb on Home. One foundation,
-// seven identities — the puzzle, not the template.
+// ─── JARVIS shell v3 — three levels, one thumb ───────────────────────────────
+// Level 1: TODAY is the start screen. Level 2: four life-area groups on the
+// dock (people track ~5 things, not 10). Level 3: a segmented pill row inside
+// each group. Context modes hide what a phase of life doesn't need.
 
-private enum class Tab(val icon: ImageVector, val accent: @Composable () -> Color) {
-    HOME(Icons.Rounded.Hexagon, { Mod.Home }),
-    CALENDAR(Icons.Rounded.CalendarMonth, { Mod.Calendar }),
-    TRAIN(Icons.Rounded.FitnessCenter, { Mod.Train }),
-    FUEL(Icons.Rounded.Restaurant, { Mod.Fuel }),
-    BODY(Icons.Rounded.MonitorHeart, { Mod.Body }),
-    SKILLS(Icons.Rounded.Psychology, { Mod.Skills }),
+/** Every reachable sub-screen (level 3). */
+private enum class Sub(val label: String, val accent: @Composable () -> Color) {
+    HOME("Today", { Mod.Home }),
+    // Body group
+    TRAIN("Train", { Mod.Train }),
+    FUEL("Fuel", { Mod.Fuel }),
+    VITALS("Vitals", { Mod.Body }),
+    SLEEP("Sleep", { Mod.Body }),
+    // Life group
+    CALENDAR("Calendar", { Mod.Calendar }),
+    GOALS("Goals", { Mod.Home }),
+    FINANCE("Finance", { Mod.Finance }),
+    SCHOOL("School", { Mod.School }),
+    MIND("Mind", { Mod.Mind }),
+    // System group
+    GUARD("Guard", { Mod.Guard }),
+    SKILLS("Skills", { Mod.Skills }),
+    EXPLORER("Explorer", { Mod.Home }),
+    SETTINGS("Settings", { Mod.Home }),
+}
+
+/** Level-2 groups on the dock. */
+private enum class Group(val label: String, val icon: ImageVector, val subs: List<Sub>) {
+    TODAY("Today", Icons.Rounded.Hexagon, listOf(Sub.HOME)),
+    BODY("Body", Icons.Rounded.FitnessCenter, listOf(Sub.TRAIN, Sub.FUEL, Sub.VITALS, Sub.SLEEP)),
+    LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.GOALS, Sub.FINANCE, Sub.SCHOOL, Sub.MIND)),
+    SYSTEM("System", Icons.Rounded.Shield, listOf(Sub.GUARD, Sub.SKILLS, Sub.EXPLORER, Sub.SETTINGS)),
+}
+
+private fun groupOf(sub: Sub): Group = Group.entries.first { sub in it.subs }
+
+/** Context modes: a life phase hides what it doesn't need (PDF: Kontext-Modi). */
+object ShellMode {
+    val current = mutableStateOf("normal") // normal | exam | holiday
+
+    fun hiddenSubs(mode: String): Set<String> = when (mode) {
+        "exam" -> setOf("FINANCE", "MIND", "SKILLS", "EXPLORER")
+        "holiday" -> setOf("SCHOOL")
+        else -> emptySet()
+    }
+
+    fun set(ctx: android.content.Context, mode: String) {
+        current.value = mode
+        Prefs.setString(ctx, Prefs.CONTEXT_MODE, mode)
+    }
 }
 
 @Composable
@@ -81,24 +127,51 @@ fun AscendApp() {
         return
     }
 
-    var tab by rememberSaveable { mutableStateOf(Tab.HOME) }
-    var guardOpen by rememberSaveable { mutableStateOf(false) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) { ShellMode.current.value = Prefs.string(ctx, Prefs.CONTEXT_MODE, "normal") }
+
+    var sub by rememberSaveable { mutableStateOf(Sub.HOME) }
+    val lastSub = remember { mutableStateMapOf<Group, Sub>() }
     var reportOpen by rememberSaveable { mutableStateOf(false) }
     var paletteOpen by remember { mutableStateOf(false) }
-    var overlay by rememberSaveable { mutableStateOf<String?>(null) } // settings|mind|finance|goals|school|heatmap|explorer|wrapped
+    var overlay by rememberSaveable { mutableStateOf<String?>(null) } // heatmap|wrapped|achievements|decisions|rules
     var dockVisible by remember { mutableStateOf(true) }
+
+    val mode by ShellMode.current
+    val hidden = ShellMode.hiddenSubs(mode)
+    val group = groupOf(sub)
+
+    fun visibleSubs(g: Group): List<Sub> = g.subs.filter { it.name !in hidden }
+
+    fun open(target: Sub) {
+        val g = groupOf(target)
+        val t = if (target.name in hidden) visibleSubs(g).firstOrNull() ?: Sub.HOME else target
+        sub = t
+        lastSub[g] = t
+    }
+
+    fun openGroup(g: Group) {
+        open(lastSub[g]?.takeIf { it.name !in hidden } ?: visibleSubs(g).firstOrNull() ?: Sub.HOME)
+    }
 
     fun navigate(target: String) {
         when (target) {
-            "train" -> tab = Tab.TRAIN
-            "fuel" -> tab = Tab.FUEL
-            "body" -> tab = Tab.BODY
-            "skills" -> tab = Tab.SKILLS
-            "calendar" -> tab = Tab.CALENDAR
-            "guard" -> guardOpen = true
+            "train" -> open(Sub.TRAIN)
+            "fuel" -> open(Sub.FUEL)
+            "body" -> open(Sub.VITALS)
+            "sleep" -> open(Sub.SLEEP)
+            "skills" -> open(Sub.SKILLS)
+            "calendar" -> open(Sub.CALENDAR)
+            "guard" -> open(Sub.GUARD)
+            "goals" -> open(Sub.GOALS)
+            "finance" -> open(Sub.FINANCE)
+            "school" -> open(Sub.SCHOOL)
+            "mind" -> open(Sub.MIND)
+            "explorer" -> open(Sub.EXPLORER)
+            "settings" -> open(Sub.SETTINGS)
             "report" -> reportOpen = true
-            "settings", "mind", "finance", "goals", "school", "heatmap", "explorer", "wrapped" -> overlay = target
-            "quicklog" -> { tab = Tab.HOME; com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
+            "heatmap", "wrapped", "achievements", "decisions", "rules" -> overlay = target
+            "quicklog" -> { open(Sub.HOME); com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
         }
     }
 
@@ -108,68 +181,74 @@ fun AscendApp() {
         com.ascend.lifeos.data.DeepLink.consume()?.let { navigate(it) }
     }
 
-    val accent by animateColorAsState(tab.accent(), tween(400), label = "accent")
+    // a mode change can hide the screen you're on — fall back gracefully
+    LaunchedEffect(mode) { if (sub.name in hidden) openGroup(group) }
+
+    val accent by animateColorAsState(sub.accent(), tween(400), label = "accent")
 
     Box(Modifier.fillMaxSize().background(Void)) {
         ModuleBackground(accent)
 
-        // Registered first (lowest priority): hardware back on a tab root goes
-        // Home instead of quitting the app; screens' own handlers still win.
+        // Registered first (lowest priority): back walks pill → group root → Today.
         BackHandler(
-            enabled = tab != Tab.HOME && !guardOpen && !reportOpen && overlay == null && !paletteOpen,
-        ) { tab = Tab.HOME }
+            enabled = sub != Sub.HOME && !reportOpen && overlay == null && !paletteOpen,
+        ) {
+            val first = visibleSubs(group).firstOrNull() ?: Sub.HOME
+            if (sub != first) open(first) else open(Sub.HOME)
+        }
 
-        Crossfade(targetState = tab, animationSpec = tween(220), label = "tab") { t ->
-            androidx.compose.runtime.CompositionLocalProvider(
-                com.ascend.lifeos.ui.theme.LocalModuleAccent provides t.accent(),
-            ) {
-                when (t) {
-                    Tab.HOME -> HomeScreen(
-                        onOpenGuard = { guardOpen = true },
-                        onOpenSystem = { overlay = "settings" },
-                        onOpenTrain = { tab = Tab.TRAIN },
-                        onOpenFuel = { tab = Tab.FUEL },
-                        onOpenBody = { tab = Tab.BODY },
-                        onOpenSkills = { tab = Tab.SKILLS },
+        Crossfade(targetState = sub, animationSpec = tween(220), label = "sub") { s ->
+            CompositionLocalProvider(LocalModuleAccent provides s.accent()) {
+                when (s) {
+                    Sub.HOME -> HomeScreen(
+                        onOpenGuard = { open(Sub.GUARD) },
+                        onOpenSystem = { open(Sub.SETTINGS) },
+                        onOpenTrain = { open(Sub.TRAIN) },
+                        onOpenFuel = { open(Sub.FUEL) },
+                        onOpenBody = { open(Sub.VITALS) },
+                        onOpenSkills = { open(Sub.SKILLS) },
                         onOpenPalette = { paletteOpen = true },
                         onOpenModule = { navigate(it) },
                     )
-                    Tab.CALENDAR -> CalendarScreen()
-                    Tab.TRAIN -> TrainingScreen(onDockVisible = { dockVisible = it })
-                    Tab.FUEL -> NutritionScreen()
-                    Tab.BODY -> BodyScreen()
-                    Tab.SKILLS -> SkillsScreen()
+                    Sub.TRAIN -> TrainingScreen(onDockVisible = { dockVisible = it })
+                    Sub.FUEL -> NutritionScreen()
+                    Sub.VITALS -> BodyScreen()
+                    Sub.SLEEP -> com.ascend.lifeos.ui.screens.SleepProtocolScreen(onBack = { open(Sub.VITALS) })
+                    Sub.CALENDAR -> CalendarScreen()
+                    Sub.GOALS -> com.ascend.lifeos.ui.life.GoalsScreen(onClose = { open(Sub.CALENDAR) })
+                    Sub.FINANCE -> com.ascend.lifeos.ui.finance.FinanceHome(onClose = { open(Sub.CALENDAR) })
+                    Sub.SCHOOL -> com.ascend.lifeos.ui.school.SchoolScreen(onClose = { open(Sub.CALENDAR) })
+                    Sub.MIND -> com.ascend.lifeos.ui.life.MindScreen(onClose = { open(Sub.CALENDAR) })
+                    Sub.GUARD -> GuardScreen()
+                    Sub.SKILLS -> SkillsScreen()
+                    Sub.EXPLORER -> com.ascend.lifeos.ui.insights.ExplorerScreen(onClose = { open(Sub.GUARD) })
+                    Sub.SETTINGS -> com.ascend.lifeos.ui.home.SettingsScreen(
+                        onClose = { open(Sub.HOME) },
+                        onOpenReport = { reportOpen = true },
+                    )
                 }
             }
         }
 
+        // ---- pills + dock ----
         AnimatedVisibility(
-            visible = dockVisible && !guardOpen,
+            visible = dockVisible,
             enter = fadeIn(), exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
-            // re-tapping HOME while already there summons the command palette
-            JarvisDock(current = tab, onSelect = { if (it == Tab.HOME && tab == Tab.HOME) paletteOpen = true else tab = it })
-        }
-
-        // ---- Guard overlay (shield orb on Home) ----
-        AnimatedVisibility(visible = guardOpen, enter = fadeIn(tween(220)), exit = fadeOut(tween(160))) {
-            BackHandler(enabled = true) { guardOpen = false }
-            androidx.compose.runtime.CompositionLocalProvider(
-                com.ascend.lifeos.ui.theme.LocalModuleAccent provides Mod.Guard,
-            ) {
-            Box(Modifier.fillMaxSize().background(Void)) {
-                ModuleBackground(Mod.Guard)
-                GuardScreen()
-                Box(
-                    Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
-                        .size(40.dp).clip(RoundedCornerShape(13.dp))
-                        .background(Color.White.copy(alpha = 0.06f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-                        .clickable { guardOpen = false },
-                    contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.Close, "Close Guard", tint = TextPrimary, modifier = Modifier.size(19.dp)) }
-            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                val pills = visibleSubs(group)
+                AnimatedVisibility(visible = group != Group.TODAY && pills.size > 1) {
+                    PillBar(pills, sub, onSelect = { open(it) })
+                }
+                JarvisDock(
+                    current = group,
+                    accentOf = { g -> (lastSub[g] ?: g.subs.first()).accent() },
+                    onSelect = { g ->
+                        if (g == Group.TODAY && group == Group.TODAY) paletteOpen = true
+                        else openGroup(g)
+                    },
+                )
             }
         }
 
@@ -189,44 +268,68 @@ fun AscendApp() {
             )
         }
 
-        // ---- full-screen module overlays ----
+        // ---- full-screen overlays (rituals & archives, not daily modules) ----
         AnimatedVisibility(visible = overlay != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(160))) {
             BackHandler(enabled = true) { overlay = null }
-            val overlayAccent = when (overlay) {
-                "mind" -> Mod.Mind
-                "finance" -> Mod.Finance
-                "school" -> Mod.School
-                else -> Mod.Home
-            }
-            androidx.compose.runtime.CompositionLocalProvider(
-                com.ascend.lifeos.ui.theme.LocalModuleAccent provides overlayAccent,
-            ) {
-            Box(Modifier.fillMaxSize().background(Void)) {
-                ModuleBackground(overlayAccent)
-                when (overlay) {
-                    "settings" -> com.ascend.lifeos.ui.home.SettingsScreen(
-                        onClose = { overlay = null },
-                        onOpenReport = { overlay = null; reportOpen = true },
-                    )
-                    "mind" -> com.ascend.lifeos.ui.life.MindScreen(onClose = { overlay = null })
-                    "finance" -> com.ascend.lifeos.ui.finance.FinanceHome(onClose = { overlay = null })
-                    "goals" -> com.ascend.lifeos.ui.life.GoalsScreen(onClose = { overlay = null })
-                    "school" -> com.ascend.lifeos.ui.school.SchoolScreen(onClose = { overlay = null })
-                    "heatmap" -> com.ascend.lifeos.ui.insights.HeatmapScreen(onClose = { overlay = null })
-                    "explorer" -> com.ascend.lifeos.ui.insights.ExplorerScreen(onClose = { overlay = null })
-                    "wrapped" -> com.ascend.lifeos.ui.insights.WrappedScreen(onClose = { overlay = null })
+            CompositionLocalProvider(LocalModuleAccent provides Mod.Home) {
+                Box(Modifier.fillMaxSize().background(Void)) {
+                    ModuleBackground(Mod.Home)
+                    when (overlay) {
+                        "heatmap" -> com.ascend.lifeos.ui.insights.HeatmapScreen(onClose = { overlay = null })
+                        "wrapped" -> com.ascend.lifeos.ui.insights.WrappedScreen(onClose = { overlay = null })
+                        "achievements" -> com.ascend.lifeos.ui.life.AchievementsScreen(onClose = { overlay = null })
+                        "decisions" -> com.ascend.lifeos.ui.life.DecisionJournalScreen(onClose = { overlay = null })
+                        "rules" -> com.ascend.lifeos.ui.home.RuleBuilderScreen(onClose = { overlay = null })
+                    }
                 }
             }
-            }
         }
-
     }
 }
 
-// ─── Dock ────────────────────────────────────────────────────────────────────
+// ─── Pill bar (level 3) ──────────────────────────────────────────────────────
 
 @Composable
-private fun JarvisDock(current: Tab, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
+private fun PillBar(subs: List<Sub>, current: Sub, onSelect: (Sub) -> Unit) {
+    Row(
+        Modifier
+            .padding(bottom = 8.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF0B0D10).copy(alpha = 0.82f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 5.dp, vertical = 4.dp)
+            .horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        subs.forEach { s ->
+            val selected = s == current
+            val accent = s.accent()
+            Text(
+                s.label,
+                color = if (selected) accent else TextMuted,
+                fontFamily = Body, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(if (selected) accent.copy(alpha = 0.14f) else Color.Transparent)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { onSelect(s) }
+                    .padding(horizontal = 13.dp, vertical = 7.dp),
+            )
+        }
+    }
+}
+
+// ─── Dock (level 2) ──────────────────────────────────────────────────────────
+
+@Composable
+private fun JarvisDock(
+    current: Group,
+    accentOf: @Composable (Group) -> Color,
+    onSelect: (Group) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier.navigationBarsPadding().padding(bottom = 14.dp)) {
         Row(
             Modifier
@@ -236,9 +339,9 @@ private fun JarvisDock(current: Tab, onSelect: (Tab) -> Unit, modifier: Modifier
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Tab.entries.forEach { t ->
-                val selected = t == current
-                val accent = t.accent()
+            Group.entries.forEach { g ->
+                val selected = g == current
+                val accent = accentOf(g)
                 Column(
                     Modifier
                         .clip(RoundedCornerShape(20.dp))
@@ -246,19 +349,21 @@ private fun JarvisDock(current: Tab, onSelect: (Tab) -> Unit, modifier: Modifier
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                        ) { onSelect(t) }
-                        .padding(horizontal = 13.dp, vertical = 10.dp),
+                        ) { onSelect(g) }
+                        .padding(horizontal = 15.dp, vertical = 9.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Icon(
-                        t.icon, contentDescription = t.name,
+                        g.icon, contentDescription = g.label,
                         tint = if (selected) accent else TextDim,
                         modifier = Modifier.size(21.dp),
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Box(
-                        Modifier.size(3.5.dp).clip(CircleShape)
-                            .background(if (selected) accent else Color.Transparent),
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        g.label,
+                        color = if (selected) accent else TextDim,
+                        fontFamily = Body, fontSize = 8.5.sp, fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp,
                     )
                 }
             }

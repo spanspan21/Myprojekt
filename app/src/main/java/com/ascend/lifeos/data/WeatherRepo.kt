@@ -28,6 +28,28 @@ object WeatherRepo {
     var hourlyCode by mutableStateOf<List<Int>?>(null)
         private set
 
+    // ---- weather-dependent activities (Ideensammlung): flag a title once,
+    // every same-named/recurring instance inherits — no per-event fiddling.
+    private const val OUTDOOR_KEY = "outdoor_titles"
+
+    fun outdoorTitles(ctx: Context): Set<String> =
+        Prefs.string(ctx, OUTDOOR_KEY, "").split("|").filter { it.isNotBlank() }.toSet()
+
+    fun isOutdoor(ctx: Context, title: String): Boolean =
+        title.trim().lowercase() in outdoorTitles(ctx)
+
+    fun toggleOutdoor(ctx: Context, title: String) {
+        val key = title.trim().lowercase().replace("|", "")
+        if (key.isBlank()) return
+        val next = outdoorTitles(ctx).toMutableSet()
+        if (!next.remove(key)) next.add(key)
+        Prefs.setString(ctx, OUTDOOR_KEY, next.joinToString("|"))
+    }
+
+    /** WMO code counts as bad-for-outdoor (drizzle/rain/snow/storm) or freezing. */
+    fun badWeather(code: Int, temp: Double?): Boolean =
+        code >= 51 || (temp != null && temp <= 0.0)
+
     private var lastFetch = 0L
 
     val hot: Boolean get() = (tempC ?: 0.0) >= 30.0

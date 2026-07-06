@@ -216,6 +216,20 @@ object SkillCatalog {
         return if (gap == 0) 0 else (gap * 3.5f).toInt().coerceAtLeast(2)
     }
 
+    /**
+     * Confidence interval instead of a falsely precise number (Ideensammlung):
+     * the band's width scales with how consistently you actually train vs. plan
+     * (adherence 0..1). Full adherence → tight band; half adherence → wide.
+     */
+    fun etaRangeWeeks(skill: SkillDef, profile: FitnessProfile?, adherence: Float): Pair<Int, Int>? {
+        val eta = etaWeeks(skill, profile)
+        if (eta <= 0) return null
+        val a = adherence.coerceIn(0.3f, 1f)
+        val low = (eta * 0.85f).toInt().coerceAtLeast(1)
+        val high = (eta * (1.25f + (1f - a) * 1.7f)).toInt().coerceAtLeast(low + 1)
+        return low to high
+    }
+
     /** Requirements satisfied → the skill is "in reach" (trainable directly). */
     fun inReach(skill: SkillDef, profile: FitnessProfile?): Boolean =
         profile != null && skill.requires.all { (p, req) -> profile.level(p) >= req }

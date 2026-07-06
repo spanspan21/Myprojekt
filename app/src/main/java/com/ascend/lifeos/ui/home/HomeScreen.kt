@@ -258,10 +258,39 @@ fun HomeScreen(
                 }
             }
 
+            // ── configurable dashboard: the cards below render in the
+            //    user's own order; hidden ones never compose (PDF: anpassbar)
+            var cardsRev by remember { mutableIntStateOf(0) }
+            var editCards by remember { mutableStateOf(false) }
+            val cardOrder = remember(cardsRev) { HomeCards.order(ctx) }
+            val homeCards = linkedMapOf<String, @Composable () -> Unit>()
+
+            homeCards["directives"] = {
             // ── PROTOCOL DIRECTIVES — WHEN→THEN, max two, dismissible ────
             var protoTick by remember { mutableIntStateOf(0) }
             val directives by produceState<List<Pair<com.ascend.lifeos.data.Protocol, String>>>(emptyList(), protoTick) {
                 value = runCatching { com.ascend.lifeos.data.Protocols.fire(ctx) }.getOrDefault(emptyList())
+            }
+            // user-authored rules (mini-IFTTT) fire in the same card slot
+            val customFired by produceState<List<Pair<com.ascend.lifeos.data.rules.CustomRule, String>>>(emptyList(), protoTick) {
+                value = runCatching { com.ascend.lifeos.data.rules.CustomRules.fire(ctx) }.getOrDefault(emptyList())
+            }
+            customFired.forEach { (_, text) ->
+                Spacer(Modifier.height(12.dp))
+                Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(6.dp).clip(CircleShape).background(Mod.Calendar))
+                        Spacer(Modifier.width(11.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "YOUR RULE", color = Mod.Calendar, fontFamily = Display,
+                                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                            )
+                            Spacer(Modifier.height(3.dp))
+                            Text(text, color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium, lineHeight = 17.sp)
+                        }
+                    }
+                }
             }
             directives.forEach { (proto, text) ->
                 Spacer(Modifier.height(12.dp))
@@ -287,6 +316,9 @@ fun HomeScreen(
                 }
             }
 
+            }
+
+            homeCards["insight"] = {
             // ── INSIGHT — one honest correlation, shown once ─────────────
             val insight by produceState<com.ascend.lifeos.data.InsightMiner.Insight?>(null) {
                 if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.INSIGHTS_ON, true)) {
@@ -324,6 +356,9 @@ fun HomeScreen(
                 }
             }
 
+            }
+
+            homeCards["exam"] = {
             // ── EXAM COUNTDOWN — next exam within 7 days ─────────────────
             if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.EXAM_COUNTDOWN, true)) {
                 val exam by produceState<Pair<String, Long>?>(null) {
@@ -360,16 +395,19 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            }
 
+            homeCards["nextup"] = {
             // ── NEXT UP ──────────────────────────────────────────────────
+            Spacer(Modifier.height(24.dp))
             SectionLabel("Next up")
             Spacer(Modifier.height(10.dp))
             NextUpCard(trainVm, trainedToday, onOpenTrain)
+            }
 
-            Spacer(Modifier.height(24.dp))
-
+            homeCards["missions"] = {
             // ── MISSIONS ─────────────────────────────────────────────────
+            Spacer(Modifier.height(24.dp))
             SectionLabel("Today's missions")
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -433,9 +471,32 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(), onClick = onOpenSkills,
                 )
             }
+            }
+
+            // render in the saved order; key() keeps each card's state stable
+            // even when the user reorders
+            cardOrder.forEach { k ->
+                androidx.compose.runtime.key(k) { homeCards[k]?.invoke() }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Edit dashboard",
+                color = TextDim, fontSize = 10.5.sp, fontFamily = com.ascend.lifeos.ui.theme.Body,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { editCards = true }
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+            )
+
+            if (editCards) {
+                EditDashboardSheet(onDismiss = { editCards = false }, onChanged = { cardsRev++ })
+            }
 
             // ── JARVIS HUB bar — thumb-reachable gateway to the whole OS ─
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(14.dp))
             Row(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
@@ -611,4 +672,116 @@ private fun EventLine(tag: String, title: String, sub: String, color: Color) {
 @Composable
 private fun HairLine() {
     Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+}
+
+// ─── configurable dashboard (PDF: anpassbares Dashboard) ─────────────────────
+
+internal object HomeCards {
+    val ALL = listOf(
+        "directives" to "Protocol directives",
+        "insight" to "Pattern of the day",
+        "exam" to "Exam countdown",
+        "nextup" to "Next up",
+        "missions" to "Today's missions",
+    )
+    private val DEFAULT = ALL.map { it.first }
+
+    fun order(ctx: android.content.Context): List<String> {
+        val raw = com.ascend.lifeos.data.Prefs.string(
+            ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS, DEFAULT.joinToString(","),
+        )
+        val known = DEFAULT.toSet()
+        return raw.split(",").filter { it in known }
+    }
+
+    fun save(ctx: android.content.Context, order: List<String>) =
+        com.ascend.lifeos.data.Prefs.setString(
+            ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS, order.joinToString(","),
+        )
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
+    val ctx = LocalContext.current
+    var order by remember { mutableStateOf(HomeCards.order(ctx)) }
+
+    fun commit(next: List<String>) {
+        order = next
+        HomeCards.save(ctx, next)
+        onChanged()
+    }
+
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF0B0D10),
+        dragHandle = null,
+    ) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(22.dp)) {
+            Text(
+                "DASHBOARD", color = Mod.Home, fontFamily = Display,
+                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Your Today, your order", color = TextPrimary,
+                fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(14.dp))
+            HomeCards.ALL.forEach { (key, label) ->
+                val idx = order.indexOf(key)
+                val visible = idx >= 0
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        if (visible) "ON" else "OFF",
+                        color = if (visible) Mod.Home else TextDim,
+                        fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(if (visible) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+                            .clickable {
+                                commit(if (visible) order - key else order + key)
+                            }
+                            .padding(horizontal = 11.dp, vertical = 6.dp)
+                            .width(26.dp),
+                    )
+                    Spacer(Modifier.width(13.dp))
+                    Text(
+                        label,
+                        color = if (visible) TextPrimary else TextDim,
+                        fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (visible) {
+                        Text(
+                            "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = 13.sp,
+                            modifier = Modifier.clip(CircleShape).clickable(enabled = idx > 0) {
+                                val m = order.toMutableList()
+                                m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
+                                commit(m)
+                            }.padding(8.dp),
+                        )
+                        Text(
+                            "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = 13.sp,
+                            modifier = Modifier.clip(CircleShape).clickable(enabled = idx < order.lastIndex) {
+                                val m = order.toMutableList()
+                                m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }
+                                commit(m)
+                            }.padding(8.dp),
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Hidden cards stop computing entirely — less noise, less battery.",
+                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+            )
+            Spacer(Modifier.height(10.dp))
+        }
+    }
 }

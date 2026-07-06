@@ -28,6 +28,16 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "New shell: four groups (Today · Body · Life · System) with pill navigation — everything two taps away",
+        "Your dashboard, your order — show, hide and reorder the Today cards",
+        "Context modes: Exam phase and Holidays hide what that week doesn't need",
+        "Sleep Protocol — CBT-I sleep restriction with weekly auto-titration, in Body",
+        "Rules — build your own WHEN → THEN automations, no coding session needed",
+        "Time blocking: tasks with priority + deadline place themselves into free slots",
+        "Subscription radar — recurring charges and price hikes auto-detected from your ledger",
+        "Milestones — the auto-kept life changelog · Decisions — weighted calls with honest outcomes",
+        "Weather watch: outdoor-flagged plans get a forecast heads-up, never auto-moved",
+        "Goals check their own pace against the quarter; deloads need 2 of 3 signals; ETAs are honest ranges",
         "Notifications actually fire now — briefings, nudges and check-ins were silently blocked on Android 13+",
         "Training load: ATL/CTL with acute:chronic verdict in Body — push, maintain or back off (ice time counts)",
         "The plan listens to your log — a ground-out session (RPE ≥ 9.3) trims next week's volume automatically",

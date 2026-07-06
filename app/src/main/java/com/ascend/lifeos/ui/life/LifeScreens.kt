@@ -271,7 +271,7 @@ fun GoalsScreen(onClose: () -> Unit) {
 
     LifeScaffold("Goals", "$quarter · ${goals.size}/${LifeStores.MAX_GOALS} goals", Mod.Home, onClose) {
         goals.forEach { g ->
-            val progress = g.krs.map { krProgress(it) }.average().toFloat().takeIf { !it.isNaN() } ?: 0f
+            val progress = g.krs.map { krProgress(it, ctx) }.average().toFloat().takeIf { !it.isNaN() } ?: 0f
             Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                 Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -279,7 +279,15 @@ fun GoalsScreen(onClose: () -> Unit) {
                             Text("${(progress * 100).toInt()}", color = Mod.Home, style = metricStyle(13))
                         }
                         Spacer(Modifier.width(13.dp))
-                        Text(g.title, color = TextPrimary, fontSize = 15.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                        Column(Modifier.weight(1f)) {
+                            Text(g.title, color = TextPrimary, fontSize = 15.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                            val (paceText, onCourse) = quarterPaceLine(progress)
+                            Text(
+                                paceText,
+                                color = if (onCourse) Good else Warn,
+                                fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                         Icon(
                             Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(15.dp).clickable { LifeStores.deleteGoal(ctx, g.id) },
@@ -287,7 +295,7 @@ fun GoalsScreen(onClose: () -> Unit) {
                     }
                     Spacer(Modifier.height(10.dp))
                     g.krs.forEach { kr ->
-                        val p = krProgress(kr)
+                        val p = krProgress(kr, ctx)
                         Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(kr.label, color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -335,13 +343,40 @@ fun GoalsScreen(onClose: () -> Unit) {
     if (addOpen) AddGoalSheet(onDone = { addOpen = false })
 }
 
-private fun krProgress(kr: Kr): Float = when (kr.metric) {
+/**
+ * Auto-computed key results (Ideensammlung: Ziel-Kaskade) — progress comes from
+ * real tracking data wherever a binding exists; manual slider is the fallback.
+ * targetKg doubles as the generic numeric target for non-weight metrics.
+ */
+private fun krProgress(kr: Kr, ctx: android.content.Context? = null): Float = when (kr.metric) {
     "weight_trend" -> {
         val current = Repo.weightLog().lastOrNull()?.kg ?: kr.startKg
         val span = kr.startKg - kr.targetKg
         if (span == 0.0) 0f else (((kr.startKg - current) / span).toFloat()).coerceIn(0f, 1f)
     }
+    "streak" -> {
+        val target = kr.targetKg.takeIf { it > 0 } ?: 30.0
+        (Repo.profile().streak / target).toFloat().coerceIn(0f, 1f)
+    }
+    "savings" -> {
+        val goal = ctx?.let { runCatching { LifeStores.savingsGoal(it) }.getOrNull() }
+        if (goal == null || goal.third <= 0L) kr.manualProgress
+        else (goal.second.toFloat() / goal.third.toFloat()).coerceIn(0f, 1f)
+    }
     else -> kr.manualProgress
+}
+
+/** Simple linear pace check against the quarter (PDF: "auf Kurs fürs Jahresziel?"). */
+private fun quarterPaceLine(progress: Float): Pair<String, Boolean> {
+    val d = java.time.LocalDate.now()
+    val qStartMonth = ((d.monthValue - 1) / 3) * 3 + 1
+    val qStart = java.time.LocalDate.of(d.year, qStartMonth, 1)
+    val qEnd = qStart.plusMonths(3)
+    val elapsed = ((d.toEpochDay() - qStart.toEpochDay()).toFloat() /
+        (qEnd.toEpochDay() - qStart.toEpochDay()).toFloat()).coerceIn(0f, 1f)
+    val onCourse = progress + 0.05f >= elapsed
+    return if (onCourse) "On course · quarter is ${(elapsed * 100).toInt()}% through" to true
+    else "Behind pace — ${(progress * 100).toInt()}% done at ${(elapsed * 100).toInt()}% of the quarter" to false
 }
 
 @Composable
