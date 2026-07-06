@@ -137,6 +137,7 @@ data class Profile(
     val lastFullKey: String? = null,
     val freezeAvail: Int = 1,
     val freezeWeek: String? = null,
+    val lastFreezeKey: String? = null,   // day a freeze rescued — "streak saved" moment
     val accent: Long = 0xFF34E0A1,
     val kcalGoal: Int = 2200,
     val proteinGoal: Int = 130,

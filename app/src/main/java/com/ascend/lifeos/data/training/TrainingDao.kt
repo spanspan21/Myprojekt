@@ -66,6 +66,13 @@ interface TrainingDao {
     @Query("DELETE FROM workout_sessions WHERE id = :id")
     suspend fun deleteSession(id: String)
 
+    /** Newest unfinished session — powers "Resume workout?" after process death. */
+    @Query("SELECT * FROM workout_sessions WHERE isComplete = 0 AND startedAt >= :since ORDER BY startedAt DESC LIMIT 1")
+    suspend fun latestIncompleteSession(since: Long): WorkoutSessionEntity?
+
+    @Query("SELECT * FROM workout_sets WHERE sessionId = :sessionId ORDER BY loggedAt")
+    suspend fun setsForSessionOnce(sessionId: String): List<WorkoutSetEntity>
+
     // ── Sets ────────────────────────────────────────────────────────────────
 
     @Query("SELECT * FROM workout_sets WHERE sessionId = :sessionId ORDER BY setIndex")

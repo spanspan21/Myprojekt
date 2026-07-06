@@ -269,6 +269,13 @@ object Repo {
                 profile = data.profile.copy(recentFoods = recents),
             )
         )
+        // Whoop-journal factors, auto-tagged from the diary (a thing Whoop can't do):
+        // alcohol by name, late meal by wall clock. Only ever sets, never clears.
+        if (dayKey == todayKey()) {
+            if (FoodScore.nameLooksAlcoholic(e.name)) setJournalFactor(alcohol = true)
+            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            if (hour >= 21 || hour < 4) setJournalFactor(lateMeal = true)
+        }
         refreshStreak()
     }
 
@@ -820,7 +827,7 @@ object Repo {
         ensureToday()
     }
 
-    // ---- streak (with weekly freeze) ----
+    // ---- streak v2 (weekly freeze · sick-mode pause · strength fallback) ----
     private fun refreshStreak() {
         val k = todayKey()
         val day = data.days[k] ?: DayData()
@@ -835,11 +842,35 @@ object Repo {
         } else if (!full) {
             val yest = prevKey(k)
             if (p.lastFullKey != null && p.lastFullKey != k && p.lastFullKey != yest) {
-                p = if (p.lastFullKey == prevKey(yest) && p.freezeAvail > 0 && p.streak > 0) {
-                    p.copy(freezeAvail = p.freezeAvail - 1, lastFullKey = yest)
-                } else if (p.streak != 0) p.copy(streak = 0) else p
+                p = when {
+                    // Sick days never kill a streak (Gentler-Streak rule) — the
+                    // chain is quietly extended without spending a freeze.
+                    p.sickMode && p.streak > 0 -> p.copy(lastFullKey = yest)
+                    p.lastFullKey == prevKey(yest) && p.freezeAvail > 0 && p.streak > 0 ->
+                        p.copy(freezeAvail = p.freezeAvail - 1, lastFullKey = yest, lastFreezeKey = yest)
+                    p.streak != 0 -> p.copy(streak = 0)
+                    else -> p
+                }
             }
         }
         if (p != data.profile) { data = data.copy(profile = p); save() }
     }
+
+    /**
+     * Loop-style habit strength 0–100: an exponentially weighted average of the
+     * daily completion ratio. A missed day only dents it, so one bad day never
+     * zeroes motivation the way a raw streak reset does.
+     */
+    fun habitStrength(window: Int = 30): Int {
+        var s = 0.0
+        var seeded = false
+        for (key in lastDayKeys(window)) {
+            val pct = (dayCompletion(key)?.pct ?: 0f).toDouble()
+            s = if (!seeded) { seeded = true; pct } else s * 0.87 + pct * 0.13
+        }
+        return (s * 100).roundToInt().coerceIn(0, 100)
+    }
+
+    /** True exactly once: yesterday was rescued by a streak freeze. */
+    fun streakSavedYesterday(): Boolean = data.profile.lastFreezeKey == prevKey(todayKey())
 }

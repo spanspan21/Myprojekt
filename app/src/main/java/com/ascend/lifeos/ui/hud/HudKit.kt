@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Cyan
+import com.ascend.lifeos.ui.theme.LocalModuleAccent
 import com.ascend.lifeos.ui.theme.Void
 
 // The single HUD design language: deepest void, hairline neon edges, glassmorphism,
@@ -39,7 +40,6 @@ import com.ascend.lifeos.ui.theme.Void
 
 val HudFill = Color.White.copy(alpha = 0.04f)
 val HudLine = Color.White.copy(alpha = 0.09f)
-val HudNeon get() = Accent.copy(alpha = 0.45f)
 
 /** Void #050505 with two soft, blurred neon nebulae — the light the glass frosts. */
 @Composable
@@ -79,26 +79,28 @@ fun GlassPanel(
     ) { content() }
 }
 
-/** Selectable neon pill chip. */
+/** Selectable neon pill chip — tinted in the current module's accent. */
 @Composable
 fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val accent = LocalModuleAccent.current
     Box(
         modifier
             .clip(RoundedCornerShape(11.dp))
-            .background(if (selected) Accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, if (selected) Accent.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(11.dp))
+            .background(if (selected) accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
+            .border(0.5.dp, if (selected) accent.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(11.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 13.dp, vertical = 8.dp),
-    ) { Text(label, color = if (selected) Accent else com.ascend.lifeos.ui.theme.TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = if (selected) accent else com.ascend.lifeos.ui.theme.TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
 }
 
-/** Filled/ghost neon action button. */
+/** Filled/ghost neon action button — tinted in the current module's accent. */
 @Composable
 fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = true, enabled: Boolean = true, onClick: () -> Unit) {
+    val accent = LocalModuleAccent.current
     Box(
         modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(if (primary) (if (enabled) Accent else Accent.copy(alpha = 0.25f)) else HudFill)
+            .background(if (primary) (if (enabled) accent else accent.copy(alpha = 0.25f)) else HudFill)
             .border(0.5.dp, if (primary) Color.Transparent else HudLine, RoundedCornerShape(14.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 14.dp),
@@ -126,7 +128,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
         BasicTextField(
             value = value, onValueChange = onValue, singleLine = true,
             textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-            cursorBrush = SolidColor(Accent),
+            cursorBrush = SolidColor(LocalModuleAccent.current),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -137,7 +139,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
 @Composable
 fun NeonBar(
     progress: Float,
-    color: Color = Accent,
+    color: Color = LocalModuleAccent.current,
     modifier: Modifier = Modifier,
     height: Dp = 7.dp,
 ) {

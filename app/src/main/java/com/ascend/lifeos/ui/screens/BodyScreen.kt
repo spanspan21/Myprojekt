@@ -16,6 +16,7 @@ import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -234,14 +235,31 @@ fun BodyScreen() {
             Spacer(Modifier.height(20.dp))
         }
 
-        // ── 7-day trends ─────────────────────────────────────────────
-        val keys = Repo.lastDayKeys(7)
+        // ── trends: 7 / 30 / 90 days ─────────────────────────────────
+        var trendDays by rememberSaveable { mutableStateOf(7) }
+        val keys = Repo.lastDayKeys(trendDays)
         val sleepSeries = keys.map { (Repo.bodyDay(it)?.sleepMin ?: 0).toFloat() }
         val rhrSeries = keys.mapNotNull { Repo.bodyDay(it)?.restingHr?.toFloat() }
         val stepSeries = keys.map { (Repo.bodyDay(it)?.steps ?: 0).toFloat() }
         val haveTrend = sleepSeries.count { it > 0 } >= 2
 
-        SectionLabel("7-day trends")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SectionLabel("Trends")
+            Spacer(Modifier.weight(1f))
+            listOf(7, 30, 90).forEach { d ->
+                val sel = trendDays == d
+                Text(
+                    "${d}d",
+                    color = if (sel) Mod.Body else TextDim,
+                    fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (sel) Mod.Body.copy(alpha = 0.14f) else Color.Transparent)
+                        .clickable { trendDays = d }
+                        .padding(horizontal = 9.dp, vertical = 4.dp),
+                )
+            }
+        }
         Spacer(Modifier.height(10.dp))
         if (!haveTrend) {
             Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
@@ -260,8 +278,98 @@ fun BodyScreen() {
                     TrendTile("STEPS", stepSeries, Good, Modifier.weight(1f)) { v -> "${v.toInt()}" }
                 }
             }
+            // Long-range RHR is the quiet proof that training works.
+            if (trendDays >= 30 && rhrSeries.size >= 14) {
+                val early = rhrSeries.take(7).average()
+                val late = rhrSeries.takeLast(7).average()
+                val delta = late - early
+                if (delta <= -1.0) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Resting HR ${early.toInt()} → ${late.toInt()} bpm over this window — training is landing.",
+                        color = Good, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
         }
         Spacer(Modifier.height(20.dp))
+
+        // ── training load: ATL/CTL + acute:chronic verdict ───────────
+        val loadInfo by androidx.compose.runtime.produceState<Triple<com.ascend.lifeos.data.training.TrainingLoad.State, com.ascend.lifeos.data.training.TrainingLoad.Verdict, List<Double>>?>(null) {
+            value = withContext(Dispatchers.IO) {
+                runCatching {
+                    val today = java.time.LocalDate.now()
+                    val since = System.currentTimeMillis() - 60L * 86_400_000
+                    val sets = com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao().setsLoggedSince(since)
+                    val byDay = HashMap<Long, Double>()
+                    sets.forEach { s ->
+                        val d = java.time.Instant.ofEpochMilli(s.loggedAt)
+                            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+                        byDay[d] = (byDay[d] ?: 0.0) + com.ascend.lifeos.data.training.TrainingLoad.setLoad(s.rpe)
+                    }
+                    // hockey counts as leg/cardio load — no other app knows this
+                    val events = com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                        .eventsInRangeOnce(today.toEpochDay() - 60, today.toEpochDay())
+                    events.filter { it.type == com.ascend.lifeos.data.calendar.EventType.HOCKEY.name && !it.allDay }
+                        .forEach { e ->
+                            val mins = (e.endMin - e.startMin).coerceIn(0, 240)
+                            for (d in e.dayEpoch..e.endDayEpoch) {
+                                byDay[d] = (byDay[d] ?: 0.0) + com.ascend.lifeos.data.training.TrainingLoad.hockeyLoad(mins)
+                            }
+                        }
+                    val series = (59 downTo 0).map { back -> byDay[today.toEpochDay() - back] ?: 0.0 }
+                    val st = com.ascend.lifeos.data.training.TrainingLoad.compute(series)
+                    Triple(st, com.ascend.lifeos.data.training.TrainingLoad.verdict(st), series.takeLast(14))
+                }.getOrNull()
+            }
+        }
+        loadInfo?.let { (st, v, last14) ->
+            SectionLabel("Training load")
+            Spacer(Modifier.height(10.dp))
+            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            v.title,
+                            color = when (v.zone) {
+                                com.ascend.lifeos.data.training.TrainingLoad.Zone.PUSH -> Good
+                                com.ascend.lifeos.data.training.TrainingLoad.Zone.SWEET -> Mod.Body
+                                com.ascend.lifeos.data.training.TrainingLoad.Zone.CAUTION -> Warn
+                                com.ascend.lifeos.data.training.TrainingLoad.Zone.BACK_OFF -> Crit
+                                com.ascend.lifeos.data.training.TrainingLoad.Zone.BASE -> TextMuted
+                            },
+                            fontSize = 15.sp, fontFamily = Display, fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        if (st.ctl >= 0.35) {
+                            Text(
+                                "acute ${"%.1f".format(st.atl)} · base ${"%.1f".format(st.ctl)}",
+                                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(v.detail, color = TextMuted, fontSize = 12.sp, fontFamily = Body, lineHeight = 17.sp)
+                    if (last14.any { it > 0 }) {
+                        Spacer(Modifier.height(12.dp))
+                        Row(Modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.Bottom) {
+                            val peak = (last14.max()).coerceAtLeast(1.0)
+                            last14.forEach { l ->
+                                Box(
+                                    Modifier.weight(1f).padding(horizontal = 1.5.dp)
+                                        .height((28 * (l / peak)).dp.coerceAtLeast(2.dp))
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(if (l > 0) Mod.Body.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.07f)),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text("last 14 days · sets + ice time", color = TextDim, fontSize = 9.5.sp, fontFamily = Body)
+                    }
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+        }
 
         // ── heart rate curve (today) ─────────────────────────────────
         val series = h?.hrSeries.orEmpty()

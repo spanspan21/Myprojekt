@@ -119,8 +119,12 @@ object FoodScore {
         }
     }
 
-    private fun looksAlcoholic(p: FoodApi.Product): Boolean {
-        val hay = (p.name + " " + p.ingredients).lowercase()
+    private fun looksAlcoholic(p: FoodApi.Product): Boolean =
+        nameLooksAlcoholic(p.name + " " + p.ingredients)
+
+    /** Public name-only check — Fuel auto-tags the Whoop-style alcohol factor with it. */
+    fun nameLooksAlcoholic(text: String): Boolean {
+        val hay = text.lowercase()
         return listOf(
             "alkohol", "alcohol", "bier", "beer", "wein", "wine", "vodka", "wodka",
             "whisky", "whiskey", "rum ", "gin ", "likör", "liqueur", "sekt", "prosecco",

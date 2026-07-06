@@ -62,6 +62,7 @@ fun TrainingHub(
     LaunchedEffect(progs, profile != null) {
         if (profile != null) vm.regeneratePlan() else vm.refreshFreshness()
         vm.autoRescheduleCheck()
+        vm.checkAbandonedSession()
     }
 
     LazyColumn(
@@ -133,6 +134,36 @@ fun TrainingHub(
                     }
                     Spacer(Modifier.height(14.dp))
                 }
+            }
+        }
+
+        // ── Resume: an unfinished session survived a process death ──────
+        vm.abandonedSession?.let { s ->
+            item {
+                GlassPanel(
+                    Modifier.fillMaxWidth(),
+                    fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.35f), corner = 14.dp,
+                ) {
+                    Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Resume ${s.templateName}?", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            val startedAgoMin = ((System.currentTimeMillis() - s.startedAt) / 60_000L).toInt()
+                            Text(
+                                "Interrupted ${startedAgoMin} min ago — your logged sets are safe.",
+                                color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                            )
+                        }
+                        Text(
+                            "Resume", color = Mod.Train, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
+                        )
+                        Text(
+                            "Close", color = TextDim, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { vm.dismissAbandoned() }.padding(6.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
             }
         }
 

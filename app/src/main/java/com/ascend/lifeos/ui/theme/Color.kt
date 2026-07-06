@@ -62,7 +62,17 @@ object Mod {
     val Body = Color(0xFF4CD4FF)      // pulse cyan — vitals
     val Guard = Color(0xFFF5C451)     // gold — shield
     val Skills = Color(0xFF8B7CFF)    // nova purple — constellation
+    val Mind = Color(0xFF7C8CF8)      // indigo — journal & mood
+    val Finance = Color(0xFF9CC24A)   // moss — money
+    val School = Color(0xFF5B9DFF)    // sky — grades & homework
 }
+
+/**
+ * The accent of the module currently on screen. The shell provides it per tab
+ * and per overlay, so shared HUD components (buttons, chips, meters) render in
+ * the module's identity instead of a hardcoded global mint.
+ */
+val LocalModuleAccent = androidx.compose.runtime.staticCompositionLocalOf { Color(0xFF34E0A1) }
 
 // Semantic verdicts — identical in every module, never used as decoration.
 val Good = Color(0xFF34E0A1)

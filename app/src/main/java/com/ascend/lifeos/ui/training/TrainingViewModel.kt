@@ -13,6 +13,7 @@ import com.ascend.lifeos.data.training.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.UUID
 
@@ -172,6 +173,16 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 .any { it.type == com.ascend.lifeos.data.calendar.EventType.EXAM.name }
         }.getOrDefault(false)
 
+        // RPE feedback loop: if the most recent session averaged RPE ≥ 9.3 across
+        // ≥3 rated work sets, the generator pulls next volume down one notch.
+        val highStrain = runCatching {
+            val recent = dao.setsLoggedSince(System.currentTimeMillis() - 5L * 86_400_000)
+                .filter { it.setType == SetType.NORMAL && it.rpe != null }
+            val lastSession = recent.maxByOrNull { it.loggedAt }?.sessionId
+            val rated = recent.filter { it.sessionId == lastSession }.mapNotNull { it.rpe }
+            rated.size >= 3 && rated.average() >= 9.3
+        }.getOrDefault(false)
+
         val plan = PlanGenerator.generate(
             profile = fitnessProfile, skillGoals = goals,
             freq = p.trainFreq, sessionLen = p.sessionLen,
@@ -182,6 +193,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             trainWeek = currentTrainWeek(), freshness = fresh,
             sickMode = p.sickMode, examWeek = examSoon,
             seasonPhase = com.ascend.lifeos.data.Prefs.string(getApplication(), com.ascend.lifeos.data.Prefs.SEASON_PHASE, ""),
+            highStrain = highStrain,
         )
         weekPlan = plan
         placements = runCatching {
@@ -534,6 +546,66 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         restTimerRunning = false
     }
 
+    // ── Resume after process death ──────────────────────────────────────────
+    // The active session lives only in this VM; Android kills the process at
+    // will. The incomplete Room row lets us offer "Resume workout?" instead of
+    // silently dumping the user back on the hub mid-session.
+
+    var abandonedSession by mutableStateOf<WorkoutSessionEntity?>(null)
+        private set
+
+    fun checkAbandonedSession() = viewModelScope.launch(Dispatchers.IO) {
+        if (activeSessionId != null) { abandonedSession = null; return@launch }
+        abandonedSession = runCatching {
+            dao.latestIncompleteSession(System.currentTimeMillis() - 3L * 3_600_000)
+        }.getOrNull()
+    }
+
+    fun resumeAbandoned(onReady: () -> Unit) {
+        val s = abandonedSession ?: return
+        viewModelScope.launch {
+            val sets = withContext(Dispatchers.IO) { runCatching { dao.setsForSessionOnce(s.id) }.getOrDefault(emptyList()) }
+            activeSessionId = s.id
+            activeTemplateName = s.templateName
+            activeStartedAt = s.startedAt
+            activeExercises.clear()
+            sets.groupBy { it.exerciseId }.forEach { (exId, logged) ->
+                val ex = ActiveExercise(
+                    exerciseId = exId,
+                    exerciseName = logged.first().exerciseName,
+                    targetSets = maxOf(3, logged.size),
+                    targetReps = logged.lastOrNull()?.reps ?: 10,
+                    restSeconds = 90,
+                    supersetGroup = logged.firstOrNull()?.supersetGroup,
+                )
+                ex.loggedSets.addAll(logged)
+                activeExercises.add(ex)
+            }
+            activeCurrentExIndex = 0
+            abandonedSession = null
+            onReady()
+        }
+    }
+
+    /** Close the orphan honestly: keep its sets as a finished (short) session. */
+    fun dismissAbandoned() {
+        val s = abandonedSession ?: return
+        abandonedSession = null
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val sets = dao.setsForSessionOnce(s.id)
+                if (sets.isEmpty()) dao.deleteSession(s.id)
+                else dao.upsertSession(s.copy(
+                    finishedAt = sets.maxOf { it.loggedAt },
+                    isComplete = true,
+                    totalSets = sets.size,
+                    totalReps = sets.sumOf { it.reps },
+                    durationMinutes = ((sets.maxOf { it.loggedAt } - s.startedAt) / 60_000).toInt().coerceAtLeast(1),
+                ))
+            }
+        }
+    }
+
     // ── Deload detection (Spec §10) ─────────────────────────────────────────
 
     private suspend fun checkDeload() {
@@ -571,11 +643,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     // ── Exercise history for stats ──────────────────────────────────────────
 
-    fun exerciseHistory(exId: String): Flow<List<WorkoutSetEntity>> =
-        dao.setsForSession("").map { emptyList() } // placeholder, use setsForExercise
-
     suspend fun getExerciseHistory(exId: String): List<WorkoutSetEntity> =
         dao.recentNormalSets(exId, 100)
+
+    suspend fun exerciseById(exId: String): ExerciseEntity? = dao.exercise(exId)
 
     // ── Helpers ─────────────────────────────────────────────────────────────
 

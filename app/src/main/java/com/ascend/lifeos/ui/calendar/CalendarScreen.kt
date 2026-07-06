@@ -119,9 +119,6 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
     var monthOpen by remember { mutableStateOf(false) }
     var settingsOpen by remember { mutableStateOf(false) }
 
-    val calPermission = remember(permTick) { CalendarSync.granted(ctx) }
-    val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { permTick++ }
-
     // timeline: own events are instant; device events load off the main thread
     var timeline by remember { mutableStateOf<DayTimeline?>(null) }
     LaunchedEffect(day, entities, permTick) {
@@ -176,7 +173,12 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             }
 
             // ── timeline ─────────────────────────────────────────────
-            timeline?.let { t ->
+            val t = timeline
+            if (t == null) {
+                Box(Modifier.fillMaxWidth().padding(vertical = 80.dp), contentAlignment = Alignment.Center) {
+                    Text("Reading timeline…", color = TextDim, fontSize = 13.sp, fontFamily = Body)
+                }
+            } else {
                 DayTimelineView(
                     t,
                     onBlockTap = { if (!it.fromDevice) detailBlock = it },
@@ -192,7 +194,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                 .background(Mod.Calendar)
                 .clickable { prefillStart = null; addOpen = true },
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Rounded.Add, null, tint = Void, modifier = Modifier.size(24.dp)) }
+        ) { Icon(Icons.Rounded.Add, "Add event", tint = Void, modifier = Modifier.size(24.dp)) }
 
         // month overlay — above everything incl. FAB
         if (monthOpen) {

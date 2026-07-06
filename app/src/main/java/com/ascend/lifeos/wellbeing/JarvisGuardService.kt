@@ -55,6 +55,21 @@ class JarvisGuardService : Service() {
     private var power: PowerManager? = null
     private var overlayLifecycle: OverlayLifecycleOwner? = null
 
+    // Battery: the poll loop only runs while the screen is on. Screen-off kills
+    // it completely; this receiver restarts it on the next unlock.
+    private val screenReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> startLoop()
+                Intent.ACTION_SCREEN_OFF -> {
+                    lastPkg = null
+                    loop?.cancel()
+                    loop = null
+                }
+            }
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -62,6 +77,16 @@ class JarvisGuardService : Service() {
         wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         power = getSystemService(Context.POWER_SERVICE) as? PowerManager
         createChannel()
+        runCatching {
+            registerReceiver(
+                screenReceiver,
+                android.content.IntentFilter().apply {
+                    addAction(Intent.ACTION_SCREEN_ON)
+                    addAction(Intent.ACTION_SCREEN_OFF)
+                    addAction(Intent.ACTION_USER_PRESENT)
+                },
+            )
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -78,13 +103,17 @@ class JarvisGuardService : Service() {
         if (loop?.isActive == true) return
         loop = scope.launch {
             while (isActive) {
+                // Screen off → stop polling entirely; the screen receiver revives us.
+                if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
+                    lastPkg = null
+                    break
+                }
                 runCatching { tick() }
-                // Fast loop exists only to catch gate-app opens quickly — and only
-                // while the screen is on, so the battery stays sane.
+                // Fast cadence exists only to catch gate-app opens quickly.
                 val fast = runCatching {
-                    WellbeingStore.gateApps(this@JarvisGuardService).isNotEmpty() && power?.isInteractive == true
+                    WellbeingStore.gateApps(this@JarvisGuardService).isNotEmpty()
                 }.getOrDefault(false)
-                delay(if (fast) 1_500L else 5_000L)
+                delay(if (fast) 2_000L else 5_000L)
             }
         }
     }
@@ -133,6 +162,7 @@ class JarvisGuardService : Service() {
             if (window != null) {
                 cooldownUntil[fg] = now + 90_000L
                 WellbeingStore.recordIntercept(this)
+                WellbeingStore.recordWindowViolation(this, todayKey())
                 val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
                 showOverlay(
                     DigitalWellbeingManager.appLabel(this, fg), fg, usedNow, 0,
@@ -163,6 +193,17 @@ class JarvisGuardService : Service() {
         val usedMs = dayDurations[fg] ?: 0L
         val usedMin = (usedMs / 60_000L).toInt()
 
+        // Just-in-time budget warning: fires once, at 80% of the day budget.
+        runCatching {
+            val totalMin = (dayDurations.values.sum() / 60_000L).toInt()
+            val budgetDay = WellbeingStore.budgetMin(this)
+            if (budgetDay > 0 && totalMin >= budgetDay * 0.8 &&
+                WellbeingStore.markBudgetWarned(this, todayKey())
+            ) {
+                com.ascend.lifeos.data.Notifier.show(this, "screen80")
+            }
+        }
+
         // 2. Focus session — every limited app is shut, no matter the budget.
         if (limitMin != null && WellbeingStore.inFocus(this)) {
             cooldownUntil[fg] = now + 60_000L
@@ -179,6 +220,7 @@ class JarvisGuardService : Service() {
             if (nowMin < morningUntil) {
                 cooldownUntil[fg] = now + 90_000L
                 WellbeingStore.recordIntercept(this)
+                WellbeingStore.recordWindowViolation(this, todayKey())
                 showOverlay(
                     DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
                     statusText = "Morning block · protected until %02d:%02d".format(morningUntil / 60, morningUntil % 60),
@@ -285,7 +327,7 @@ class JarvisGuardService : Service() {
         else (DigitalWellbeingManager.usageTodayMs(this, packageName) / 60_000L).toInt()
 
         val lockedOut = DoomscrollDetector.isLockedOut(pkg)
-        val snoozes = DoomscrollDetector.snoozesToday(pkg)
+        val snoozes = DoomscrollDetector.snoozesToday(this, pkg)
 
         val altText = if (mode == InterceptMode.GATE) "" else runCatching {
             withContext(Dispatchers.IO) {
@@ -348,7 +390,7 @@ class JarvisGuardService : Service() {
                         removeOverlay()
                     },
                     onSnooze = {
-                        DoomscrollDetector.recordSnooze(pkg)
+                        DoomscrollDetector.recordSnooze(this@JarvisGuardService, pkg)
                         removeOverlay()
                     },
                     onSkill = {
@@ -437,6 +479,7 @@ class JarvisGuardService : Service() {
     override fun onDestroy() {
         removeOverlay()
         loop?.cancel()
+        runCatching { unregisterReceiver(screenReceiver) }
         super.onDestroy()
     }
 

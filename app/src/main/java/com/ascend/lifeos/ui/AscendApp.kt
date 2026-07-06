@@ -113,23 +113,33 @@ fun AscendApp() {
     Box(Modifier.fillMaxSize().background(Void)) {
         ModuleBackground(accent)
 
+        // Registered first (lowest priority): hardware back on a tab root goes
+        // Home instead of quitting the app; screens' own handlers still win.
+        BackHandler(
+            enabled = tab != Tab.HOME && !guardOpen && !reportOpen && overlay == null && !paletteOpen,
+        ) { tab = Tab.HOME }
+
         Crossfade(targetState = tab, animationSpec = tween(220), label = "tab") { t ->
-            when (t) {
-                Tab.HOME -> HomeScreen(
-                    onOpenGuard = { guardOpen = true },
-                    onOpenSystem = { overlay = "settings" },
-                    onOpenTrain = { tab = Tab.TRAIN },
-                    onOpenFuel = { tab = Tab.FUEL },
-                    onOpenBody = { tab = Tab.BODY },
-                    onOpenSkills = { tab = Tab.SKILLS },
-                    onOpenPalette = { paletteOpen = true },
-                    onOpenModule = { navigate(it) },
-                )
-                Tab.CALENDAR -> CalendarScreen()
-                Tab.TRAIN -> TrainingScreen(onDockVisible = { dockVisible = it })
-                Tab.FUEL -> NutritionScreen()
-                Tab.BODY -> BodyScreen()
-                Tab.SKILLS -> SkillsScreen()
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.ascend.lifeos.ui.theme.LocalModuleAccent provides t.accent(),
+            ) {
+                when (t) {
+                    Tab.HOME -> HomeScreen(
+                        onOpenGuard = { guardOpen = true },
+                        onOpenSystem = { overlay = "settings" },
+                        onOpenTrain = { tab = Tab.TRAIN },
+                        onOpenFuel = { tab = Tab.FUEL },
+                        onOpenBody = { tab = Tab.BODY },
+                        onOpenSkills = { tab = Tab.SKILLS },
+                        onOpenPalette = { paletteOpen = true },
+                        onOpenModule = { navigate(it) },
+                    )
+                    Tab.CALENDAR -> CalendarScreen()
+                    Tab.TRAIN -> TrainingScreen(onDockVisible = { dockVisible = it })
+                    Tab.FUEL -> NutritionScreen()
+                    Tab.BODY -> BodyScreen()
+                    Tab.SKILLS -> SkillsScreen()
+                }
             }
         }
 
@@ -145,6 +155,9 @@ fun AscendApp() {
         // ---- Guard overlay (shield orb on Home) ----
         AnimatedVisibility(visible = guardOpen, enter = fadeIn(tween(220)), exit = fadeOut(tween(160))) {
             BackHandler(enabled = true) { guardOpen = false }
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.ascend.lifeos.ui.theme.LocalModuleAccent provides Mod.Guard,
+            ) {
             Box(Modifier.fillMaxSize().background(Void)) {
                 ModuleBackground(Mod.Guard)
                 GuardScreen()
@@ -155,7 +168,8 @@ fun AscendApp() {
                         .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
                         .clickable { guardOpen = false },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }
+                ) { Icon(Icons.Rounded.Close, "Close Guard", tint = TextPrimary, modifier = Modifier.size(19.dp)) }
+            }
             }
         }
 
@@ -178,15 +192,17 @@ fun AscendApp() {
         // ---- full-screen module overlays ----
         AnimatedVisibility(visible = overlay != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(160))) {
             BackHandler(enabled = true) { overlay = null }
+            val overlayAccent = when (overlay) {
+                "mind" -> Mod.Mind
+                "finance" -> Mod.Finance
+                "school" -> Mod.School
+                else -> Mod.Home
+            }
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.ascend.lifeos.ui.theme.LocalModuleAccent provides overlayAccent,
+            ) {
             Box(Modifier.fillMaxSize().background(Void)) {
-                ModuleBackground(
-                    when (overlay) {
-                        "mind" -> Color(0xFF7C8CF8)
-                        "finance" -> Color(0xFF9CC24A)
-                        "school" -> Color(0xFF5B9DFF)
-                        else -> Mod.Home
-                    },
-                )
+                ModuleBackground(overlayAccent)
                 when (overlay) {
                     "settings" -> com.ascend.lifeos.ui.home.SettingsScreen(
                         onClose = { overlay = null },
@@ -200,6 +216,7 @@ fun AscendApp() {
                     "explorer" -> com.ascend.lifeos.ui.insights.ExplorerScreen(onClose = { overlay = null })
                     "wrapped" -> com.ascend.lifeos.ui.insights.WrappedScreen(onClose = { overlay = null })
                 }
+            }
             }
         }
 

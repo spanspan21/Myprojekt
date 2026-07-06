@@ -127,19 +127,24 @@ fun GuardScreen() {
 
     var expandedPkg by remember { mutableStateOf<String?>(null) }
 
-    // ---- focus score ----
+    // ---- focus score v2: all four masterplan terms ----
+    // budget 45 · unlocks 20 · first pickup 10 · doomscroll snoozes 15 · schedule adherence 10
     val usedMin = ((data?.totalMs ?: 0L) / 60_000L).toInt()
     val unlocks = data?.unlocks ?: 0
-    val budgetPart = (60f * (1f - usedMin.toFloat() / budget)).coerceIn(0f, 60f)
-    val unlockPart = (25f * (1f - unlocks / 60f)).coerceIn(0f, 25f)
+    val dsSnoozes = remember(tick) { WellbeingStore.dsSnoozesTotal(ctx, com.ascend.lifeos.core.todayKey()) }
+    val windowViolations = remember(tick) { WellbeingStore.windowViolationsToday(ctx, com.ascend.lifeos.core.todayKey()) }
+    val budgetPart = (45f * (1f - usedMin.toFloat() / budget)).coerceIn(0f, 45f)
+    val unlockPart = (20f * (1f - unlocks / 60f)).coerceIn(0f, 20f)
     val pickupPart = when {
-        firstPickup == null -> 10f
-        firstPickup!! >= 8 * 60 -> 15f
-        firstPickup!! >= 7 * 60 -> 10f
-        firstPickup!! >= 6 * 60 -> 5f
+        firstPickup == null -> 7f
+        firstPickup!! >= 8 * 60 -> 10f
+        firstPickup!! >= 7 * 60 -> 7f
+        firstPickup!! >= 6 * 60 -> 3f
         else -> 0f
     }
-    val focusScore = if (data == null) null else (budgetPart + unlockPart + pickupPart).toInt()
+    val doomPart = (15f - dsSnoozes * 5f).coerceIn(0f, 15f)
+    val schedulePart = (10f - windowViolations * 5f).coerceIn(0f, 10f)
+    val focusScore = if (data == null) null else (budgetPart + unlockPart + pickupPart + doomPart + schedulePart).toInt()
     val scoreColor = when {
         focusScore == null -> TextDim
         focusScore >= 70 -> Good
@@ -184,13 +189,15 @@ fun GuardScreen() {
                     }
                     Spacer(Modifier.width(18.dp))
                     Column(Modifier.weight(1f)) {
-                        ScoreRow("Budget", "${usedMin}m / ${budget}m", budgetPart / 60f)
-                        ScoreRow("Unlocks", "$unlocks×", unlockPart / 25f)
+                        ScoreRow("Budget", "${usedMin}m / ${budget}m", budgetPart / 45f)
+                        ScoreRow("Unlocks", "$unlocks×", unlockPart / 20f)
                         ScoreRow(
                             "First pickup",
                             firstPickup?.let { "%02d:%02d".format(it / 60, it % 60) } ?: "—",
-                            pickupPart / 15f,
+                            pickupPart / 10f,
                         )
+                        ScoreRow("Doomscroll", if (dsSnoozes == 0) "clean" else "$dsSnoozes snoozes", doomPart / 15f)
+                        ScoreRow("Schedules", if (windowViolations == 0) "honored" else "$windowViolations hits", schedulePart / 10f)
                         val saved = WellbeingStore.interceptCount(ctx)
                         if (saved > 0) {
                             Spacer(Modifier.height(4.dp))

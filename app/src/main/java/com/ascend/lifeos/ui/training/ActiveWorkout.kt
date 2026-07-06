@@ -268,10 +268,15 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
         }
     }
 
+    // Real category icon instead of a hardcoded PUSH glyph for every exercise.
+    val exCategory by androidx.compose.runtime.produceState<ExCategory?>(null, ex.exerciseId) {
+        value = runCatching { vm.exerciseById(ex.exerciseId)?.category }.getOrNull()
+    }
+
     GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(catIcon(ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                Icon(catIcon(exCategory ?: ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(ex.exerciseName, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -522,6 +527,8 @@ private fun prTypeLabel(t: PrType) = when (t) {
 }
 
 private fun haptic(ctx: Context, ms: Long) {
+    // Respect the global Settings → Haptics toggle (QuickLog already does).
+    if (!com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.HAPTICS_ON, true)) return
     try {
         val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             (ctx.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator

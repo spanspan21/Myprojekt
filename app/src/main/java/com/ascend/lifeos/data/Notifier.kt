@@ -29,6 +29,7 @@ object Notifier {
     private const val REQ_EVENING = 4102
     private const val REQ_FUEL = 4103
     private const val REQ_WEEKLY = 4104
+    private const val REQ_WORKOUT_SOON = 4106
 
     fun hasPermission(ctx: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
@@ -54,6 +55,36 @@ object Notifier {
         scheduleDaily(ctx, REQ_EVENING, 20, 30, "evening")
         scheduleWeekly(ctx, REQ_WEEKLY, Calendar.SUNDAY, 19, "weekly")
     }
+
+    /**
+     * One-shot heads-up 30 min before today's first scheduled TRAINING block
+     * (masterplan §3.9 — the just-in-time moment). Re-armed by the morning and
+     * fuel alarms so a block scheduled later in the day still gets its warning.
+     */
+    fun scheduleWorkoutHeadsUp(ctx: Context) {
+        if (!Prefs.bool(ctx, Prefs.NOTIF_MORNING, true)) return
+        val startMin = todaysTrainingStartMin(ctx) ?: return
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, startMin / 60); set(Calendar.MINUTE, startMin % 60)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            add(Calendar.MINUTE, -30)
+        }
+        if (cal.timeInMillis <= System.currentTimeMillis()) return
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        runCatching { am.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pending(ctx, REQ_WORKOUT_SOON, "workout_soon")) }
+    }
+
+    private fun todaysTrainingStartMin(ctx: Context): Int? = runCatching {
+        kotlinx.coroutines.runBlocking {
+            val today = java.time.LocalDate.now()
+            val bit = 1 shl (today.dayOfWeek.value - 1)
+            com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
+                .filter { it.type == "TRAINING" && !it.allDay }
+                .filter { it.repeatMask == 0 || (it.repeatMask and bit) != 0 }
+                .minByOrNull { it.startMin }?.startMin
+        }
+    }.getOrNull()
 
     /** One-shot: protein-window nudge ~90 min after a finished workout. */
     fun scheduleProteinNudge(ctx: Context) {
@@ -112,7 +143,7 @@ object Notifier {
         if (Repo.profile().sickMode && kind != "morning") return  // rest means rest
         // per-kind settings toggles
         val allowed = when (kind) {
-            "morning" -> Prefs.bool(ctx, Prefs.NOTIF_MORNING, true)
+            "morning", "workout_soon" -> Prefs.bool(ctx, Prefs.NOTIF_MORNING, true)
             "fuel" -> Prefs.bool(ctx, Prefs.NOTIF_FUEL, true)
             "evening" -> Prefs.bool(ctx, Prefs.NOTIF_EVENING, true)
             "weekly" -> Prefs.bool(ctx, Prefs.NOTIF_WEEKLY, true)
@@ -121,7 +152,7 @@ object Notifier {
         }
         if (!allowed) return
         val msg = message(ctx, kind) ?: return   // nothing worth saying → stay silent
-        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; else -> 4 }
+        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; else -> 4 }
 
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -157,6 +188,8 @@ object Notifier {
             }
             "fuel" -> builder.addAction(0, "Log food", openApp("fuel"))
             "weekly" -> builder.addAction(0, "Open report", openApp("report"))
+            "workout_soon" -> builder.addAction(0, "Start session", openApp("train"))
+            "screen80" -> builder.addAction(0, "Open Guard", openApp("guard"))
         }
 
         runCatching { NotificationManagerCompat.from(ctx).notify(id, builder.build()) }
@@ -203,6 +236,23 @@ object Notifier {
                 "Evening review" to parts.joinToString(" · ").replaceFirstChar { it.uppercase() }
             }
             "untis" -> null  // built inline by UntisSync; never reached
+
+            "workout_soon" -> {
+                val start = todaysTrainingStartMin(ctx) ?: return null
+                if (Repo.today().workoutDone) null
+                else "Training in ~30 minutes" to
+                    "Scheduled %02d:%02d. Water bottle, vest, playlist — see you at the bar, %s."
+                        .format(start / 60, start % 60, name)
+            }
+
+            "screen80" -> {
+                val budget = com.ascend.lifeos.wellbeing.WellbeingStore.budgetMin(ctx)
+                val used = runCatching {
+                    (com.ascend.lifeos.wellbeing.DigitalWellbeingManager.todayUsage(ctx).totalMs / 60_000L).toInt()
+                }.getOrNull() ?: return null
+                "Screen budget 80%" to
+                    "$used of $budget min used — the rest of the day still needs some. Guard has the details."
+            }
 
             "protein" -> {
                 val recent = Repo.today().meals.filter { it.ts > System.currentTimeMillis() - 100 * 60_000L }

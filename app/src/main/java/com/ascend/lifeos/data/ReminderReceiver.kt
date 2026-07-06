@@ -9,6 +9,11 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val kind = intent.getStringExtra("kind") ?: "morning"
         Notifier.show(ctx, kind)
+        // Arm the "training in 30 min" heads-up off the daily anchors, so a
+        // block placed later in the morning still gets its warning.
+        if (kind == "morning" || kind == "fuel") {
+            runCatching { Notifier.scheduleWorkoutHeadsUp(ctx) }
+        }
     }
 }
 

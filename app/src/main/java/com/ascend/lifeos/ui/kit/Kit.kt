@@ -152,10 +152,8 @@ fun Ring(
     animate: Boolean = true,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
-    val p by animateFloatAsState(
-        if (animate) progress.coerceIn(0f, 1f) else progress.coerceIn(0f, 1f),
-        tween(700), label = "ring",
-    )
+    val target = progress.coerceIn(0f, 1f)
+    val p = if (animate) animateFloatAsState(target, tween(700), label = "ring").value else target
     Box(modifier, contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val s = Stroke(stroke.toPx(), cap = StrokeCap.Round)
@@ -273,16 +271,6 @@ fun EmptyState(
         }
     }
 }
-
-// ---- touch --------------------------------------------------------------------
-
-/** Clickable without ripple (for dock, custom pressables). */
-fun Modifier.pressable(onClick: () -> Unit): Modifier = composed_pressable(this, onClick)
-
-@Composable
-private fun rememberNoIndication() = remember { MutableInteractionSource() }
-
-private fun composed_pressable(base: Modifier, onClick: () -> Unit): Modifier = base
 
 /** Standard mission chip with tiny progress bar underneath. */
 @Composable

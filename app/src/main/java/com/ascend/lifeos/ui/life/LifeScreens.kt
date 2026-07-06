@@ -269,7 +269,7 @@ fun GoalsScreen(onClose: () -> Unit) {
         "Q${(d.monthValue - 1) / 3 + 1} ${d.year}"
     }
 
-    LifeScaffold("Goals", "$quarter · ${goals.size}/3 goals", Mod.Home, onClose) {
+    LifeScaffold("Goals", "$quarter · ${goals.size}/${LifeStores.MAX_GOALS} goals", Mod.Home, onClose) {
         goals.forEach { g ->
             val progress = g.krs.map { krProgress(it) }.average().toFloat().takeIf { !it.isNaN() } ?: 0f
             Panel(Modifier.fillMaxWidth(), corner = 18.dp) {

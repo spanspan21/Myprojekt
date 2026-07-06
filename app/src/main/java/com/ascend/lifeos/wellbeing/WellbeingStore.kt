@@ -64,6 +64,58 @@ object WellbeingStore {
     fun recordIntercept(ctx: Context) =
         prefs(ctx).edit().putInt("intercepts", interceptCount(ctx) + 1).apply()
 
+    // ---- 80% screen-budget warning: at most once per day ----
+    fun markBudgetWarned(ctx: Context, dayKey: String): Boolean {
+        if (prefs(ctx).getString("warn80", "") == dayKey) return false
+        prefs(ctx).edit().putString("warn80", dayKey).apply()
+        return true
+    }
+
+    // ---- schedule adherence: intercepts inside a blocked window (per day) ----
+    fun windowViolationsToday(ctx: Context, dayKey: String): Int {
+        val raw = prefs(ctx).getString("viol", "") ?: ""
+        val p = raw.split("|")
+        return if (p.size == 2 && p[0] == dayKey) p[1].toIntOrNull() ?: 0 else 0
+    }
+
+    fun recordWindowViolation(ctx: Context, dayKey: String) {
+        val next = windowViolationsToday(ctx, dayKey) + 1
+        prefs(ctx).edit().putString("viol", "$dayKey|$next").apply()
+    }
+
+    // ---- doomscroll snoozes (persisted: the friction ladder must survive process death) ----
+    fun dsSnoozes(ctx: Context, dayKey: String, pkg: String): Int {
+        val raw = prefs(ctx).getString("ds", "") ?: ""
+        val p = raw.split("|", limit = 2)
+        if (p.size != 2 || p[0] != dayKey) return 0
+        return p[1].split(",").firstNotNullOfOrNull {
+            val kv = it.split("=")
+            if (kv.size == 2 && kv[0] == pkg) kv[1].toIntOrNull() else null
+        } ?: 0
+    }
+
+    fun dsSnoozesTotal(ctx: Context, dayKey: String): Int {
+        val raw = prefs(ctx).getString("ds", "") ?: ""
+        val p = raw.split("|", limit = 2)
+        if (p.size != 2 || p[0] != dayKey) return 0
+        return p[1].split(",").sumOf { it.substringAfter("=", "0").toIntOrNull() ?: 0 }
+    }
+
+    fun recordDsSnooze(ctx: Context, dayKey: String, pkg: String) {
+        val raw = prefs(ctx).getString("ds", "") ?: ""
+        val p = raw.split("|", limit = 2)
+        val map = LinkedHashMap<String, Int>()
+        if (p.size == 2 && p[0] == dayKey) {
+            p[1].split(",").forEach {
+                val kv = it.split("=")
+                if (kv.size == 2) map[kv[0]] = kv[1].toIntOrNull() ?: 0
+            }
+        }
+        map[pkg] = (map[pkg] ?: 0) + 1
+        val body = map.entries.joinToString(",") { "${it.key.replace("|", "").replace(",", "").replace("=", "")}=${it.value}" }
+        prefs(ctx).edit().putString("ds", "$dayKey|$body").apply()
+    }
+
     // ---- usage history (UsageStats only keeps ~7 days — we keep 60) ----
     // format: "yyyy-MM-dd|totalMin|unlocks;…"
     fun recordDay(ctx: Context, date: String, totalMin: Int, unlocks: Int) {
