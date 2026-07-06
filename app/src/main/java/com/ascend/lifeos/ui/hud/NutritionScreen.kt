@@ -86,7 +86,8 @@ private const val MAX_BACKDATE_DAYS = 30
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NutritionScreen() {
-    var view by remember { mutableStateOf(NView.DASH) }
+    // Survives process death — you come back to the sub-screen you were on.
+    var view by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(NView.DASH) }
     BackHandler(enabled = view != NView.DASH) { view = NView.DASH }
 
     when (view) {
@@ -94,19 +95,20 @@ fun NutritionScreen() {
         NView.STATS -> StatsView(onBack = { view = NView.DASH })
         NView.FASTING -> FastingScreen(onBack = { view = NView.DASH })
         NView.RECIPES -> RecipesView(onBack = { view = NView.DASH }, onShopping = { view = NView.SHOPPING })
-        NView.SHOPPING -> ShoppingView(onBack = { view = NView.RECIPES })
+        NView.SHOPPING -> ShoppingView(onBack = { view = NView.DASH })
         NView.DASH -> Dashboard(
             onMicros = { view = NView.MICROS },
             onStats = { view = NView.STATS },
             onFasting = { view = NView.FASTING },
             onRecipes = { view = NView.RECIPES },
+            onShopping = { view = NView.SHOPPING },
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -> Unit, onRecipes: () -> Unit) {
+private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -> Unit, onRecipes: () -> Unit, onShopping: () -> Unit = {}) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val p = Repo.profile()
 
@@ -195,6 +197,12 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 HudChip("Recipes", false, Modifier.weight(1f)) { onRecipes() }
                 HudChip("Stats", false, Modifier.weight(1f)) { onStats() }
                 HudChip("Goals", false, Modifier.weight(1f)) { goalsOpen = true }
+            }
+            Spacer(Modifier.height(9.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                val openShop = Repo.shopping().count { !it.checked }
+                HudChip(if (openShop > 0) "Shopping · $openShop" else "Shopping", false, Modifier.weight(1f)) { onShopping() }
+                Spacer(Modifier.weight(3f))
             }
 
             Spacer(Modifier.height(20.dp))

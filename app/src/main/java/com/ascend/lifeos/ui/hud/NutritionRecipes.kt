@@ -62,6 +62,7 @@ import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.Red
+import com.ascend.lifeos.ui.theme.Void
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
@@ -490,12 +491,35 @@ fun ShoppingView(onBack: () -> Unit) {
             }
         }
 
+        // Manual add — the list works without a recipe as the entry point.
+        var newItem by remember { mutableStateOf("") }
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 14.dp)) {
+            Box(Modifier.weight(1f)) {
+                GlassField("Add item…", newItem, KeyboardType.Text) { newItem = it.take(40) }
+            }
+            Spacer(Modifier.width(9.dp))
+            Box(
+                Modifier.size(44.dp).clip(RoundedCornerShape(13.dp))
+                    .background(if (newItem.isBlank()) Mod.Fuel.copy(alpha = 0.15f) else Mod.Fuel)
+                    .clickable(enabled = newItem.isNotBlank()) {
+                        Repo.addToShopping(listOf(newItem.trim()))
+                        newItem = ""
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Rounded.Add, "Add to shopping list",
+                    tint = if (newItem.isBlank()) Mod.Fuel else Void, modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+
         if (items.isEmpty()) {
             GlassPanel(Modifier.fillMaxWidth()) {
                 EmptyState(
                     icon = Icons.Rounded.ShoppingCart,
                     title = "List is empty",
-                    hint = "Add ingredients from recipes.",
+                    hint = "Add ingredients from recipes — or type one above.",
                     accent = Mod.Fuel,
                 )
             }
