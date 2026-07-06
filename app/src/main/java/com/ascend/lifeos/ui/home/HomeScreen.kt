@@ -798,7 +798,12 @@ internal fun Reveal(index: Int, content: @Composable () -> Unit) {
             animationSpec = tween(360, delayMillis = 70 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
         ),
         exit = fadeOut(tween(120)),
-    ) { content() }
+    ) {
+        // AnimatedVisibility lays multiple children out like a Box — card
+        // lambdas emit siblings, so give them the Column they expect (this
+        // stacking was the "Dashboarderror").
+        Column { content() }
+    }
 }
 
 /** Jarvis types the greeting, one glyph at a time, with a breathing cursor. */
