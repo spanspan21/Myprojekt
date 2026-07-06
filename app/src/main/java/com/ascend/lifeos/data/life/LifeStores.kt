@@ -98,13 +98,15 @@ object LifeStores {
         return out.sortedByDescending { it.ts }
     }
 
-    fun addTxn(ctx: Context, amountCents: Long, category: String, note: String = "") {
-        if (amountCents == 0L) return
+    /** Returns the created txn id so callers can attach metadata race-free. */
+    fun addTxn(ctx: Context, amountCents: Long, category: String, note: String = ""): String? {
+        if (amountCents == 0L) return null
         val t = Txn(newId("t"), System.currentTimeMillis(), amountCents, category, note.trim())
         val list = txns(ctx).take(999) // keep the store bounded
         val arr = JSONArray().put(t.toJson())
         list.forEach { arr.put(it.toJson()) }
         put(ctx, "txns", arr.toString())
+        return t.id
     }
 
     fun deleteTxn(ctx: Context, id: String) {

@@ -8,6 +8,12 @@ import androidx.compose.runtime.setValue
 import com.ascend.lifeos.core.isoWeek
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -26,23 +32,77 @@ data class NutTotals(val kcal: Int, val protein: Int, val carbs: Int, val fat: I
 object Repo {
     private const val PREF = "ascend_v2"
     private const val KEY = "data"
+    private const val KEY_PREV = "data_prev"
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private lateinit var prefs: SharedPreferences
+    private var filesDir: java.io.File? = null
+    private val saveScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var saveJob: Job? = null
+    private val idSeq = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis())
 
     var data by mutableStateOf(AppData())
         private set
 
+    /** Set when the primary blob was corrupt and we fell back to the twin copy. */
+    var recoveryNote: String? = null
+        private set
+
+    /** Collision-free id: strictly monotonic, seeded from wall clock. */
+    fun newId(prefix: String): String = prefix + idSeq.incrementAndGet()
+
     fun init(ctx: Context) {
-        prefs = ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        val s = prefs.getString(KEY, null)
-        data = if (s != null) runCatching { json.decodeFromString<AppData>(s) }.getOrDefault(AppData()) else AppData()
+        val app = ctx.applicationContext
+        prefs = app.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        filesDir = app.filesDir
+        val primary = prefs.getString(KEY, null)
+        var loaded = primary?.let { runCatching { json.decodeFromString<AppData>(it) }.getOrNull() }
+        if (loaded == null && primary != null) {
+            // Never overwrite good bytes with an empty state: archive, then try the twin.
+            archiveCorrupt("data", primary)
+            val fallback = prefs.getString(KEY_PREV, null)
+            loaded = fallback?.let { runCatching { json.decodeFromString<AppData>(it) }.getOrNull() }
+            if (loaded != null) recoveryNote = "Primary store was corrupt — restored from the twin copy."
+            else if (fallback != null) archiveCorrupt("data_prev", fallback)
+        }
+        data = loaded ?: AppData()
+        // Promote the known-good bytes to the twin slot once per cold start.
+        if (loaded != null && primary != null && recoveryNote == null) {
+            prefs.edit().putString(KEY_PREV, primary).apply()
+        }
         ensureToday()
         refreshStreak()
         materializeRoutines()
     }
 
+    private fun archiveCorrupt(slot: String, blob: String) {
+        runCatching {
+            val dir = java.io.File(filesDir, "corrupt").apply { mkdirs() }
+            java.io.File(dir, "$slot-${System.currentTimeMillis()}.json").writeText(blob)
+            dir.listFiles()?.sortedByDescending { it.name }?.drop(4)?.forEach { it.delete() }
+        }
+    }
+
+    /** Serialize off the main thread, debounced; [flush] forces a synchronous write. */
     private fun save() {
-        if (::prefs.isInitialized) prefs.edit().putString(KEY, json.encodeToString(data)).apply()
+        if (!::prefs.isInitialized) return
+        val snapshot = data
+        saveJob?.cancel()
+        saveJob = saveScope.launch {
+            delay(350)
+            write(snapshot)
+        }
+    }
+
+    @Synchronized
+    private fun write(d: AppData) {
+        runCatching { prefs.edit().putString(KEY, json.encodeToString(d)).commit() }
+    }
+
+    /** Called from Activity.onPause so process death never loses the last edits. */
+    fun flush() {
+        if (!::prefs.isInitialized) return
+        saveJob?.cancel()
+        write(data)
     }
 
     private fun commit(nd: AppData) { data = nd; save() }
@@ -136,7 +196,7 @@ object Repo {
 
     fun addGoal(text: String) {
         if (text.isBlank()) return
-        updateDay { it.copy(goals = it.goals + Goal("g" + System.currentTimeMillis(), text.trim())) }
+        updateDay { it.copy(goals = it.goals + Goal(newId("g"), text.trim())) }
     }
 
     fun toggleGoal(id: String) = updateDay { d ->
@@ -150,7 +210,7 @@ object Repo {
     fun addLongGoal(title: String, current: Int, target: Int) {
         if (title.isBlank()) return
         updateProfile {
-            it.copy(longGoals = it.longGoals + LongGoal("lg" + System.currentTimeMillis(), title.trim(), current, maxOf(target, current + 1), "Wdh"))
+            it.copy(longGoals = it.longGoals + LongGoal(newId("lg"), title.trim(), current, maxOf(target, current + 1), "Wdh"))
         }
     }
 
@@ -200,7 +260,7 @@ object Repo {
 
     // ---- nutrition ----
     fun addFood(entry: FoodEntry, dayKey: String = todayKey()) {
-        val e = if (entry.id.isBlank()) entry.copy(id = "f" + System.currentTimeMillis(), ts = System.currentTimeMillis()) else entry
+        val e = if (entry.id.isBlank()) entry.copy(id = newId("f"), ts = System.currentTimeMillis()) else entry
         val cur = data.days[dayKey] ?: DayData()
         val recents = (listOf(e.copy(meal = "b")) + data.profile.recentFoods.filter { it.name != e.name }).take(12)
         commit(
@@ -221,7 +281,7 @@ object Repo {
     fun customFoods(): List<CustomFood> = data.profile.customFoods
 
     fun saveCustomFood(cf: CustomFood) = updateProfile {
-        val id = cf.id.ifBlank { "cf" + System.currentTimeMillis() }
+        val id = cf.id.ifBlank { newId("cf") }
         it.copy(customFoods = it.customFoods.filter { f -> f.id != id } + cf.copy(id = id))
     }
 
@@ -238,7 +298,7 @@ object Repo {
     fun savedMeals(): List<SavedMeal> = data.profile.savedMeals
 
     fun saveMeal(name: String, entries: List<FoodEntry>) = updateProfile {
-        it.copy(savedMeals = it.savedMeals + SavedMeal("m" + System.currentTimeMillis(), name.trim(), entries))
+        it.copy(savedMeals = it.savedMeals + SavedMeal(newId("m"), name.trim(), entries))
     }
 
     fun deleteSavedMeal(id: String) = updateProfile { it.copy(savedMeals = it.savedMeals.filter { m -> m.id != id }) }
@@ -339,7 +399,7 @@ object Repo {
     // ---- subscriptions ----
     fun addSub(name: String, cost: Double, cycle: String) {
         if (name.isBlank() || cost <= 0) return
-        updateProfile { it.copy(subs = it.subs + Subscription("s" + System.currentTimeMillis(), name.trim(), cost, cycle)) }
+        updateProfile { it.copy(subs = it.subs + Subscription(newId("s"), name.trim(), cost, cycle)) }
     }
 
     fun deleteSub(id: String) = updateProfile { p -> p.copy(subs = p.subs.filter { it.id != id }) }
@@ -350,7 +410,7 @@ object Repo {
     // ---- finance (manual transactions) ----
     fun addTxn(name: String, amount: Double, category: String, type: String) {
         if (name.isBlank() || amount <= 0) return
-        val t = Txn("t" + System.currentTimeMillis(), name.trim(), amount, category, type, System.currentTimeMillis())
+        val t = Txn(newId("t"), name.trim(), amount, category, type, System.currentTimeMillis())
         commit(data.copy(txns = (data.txns + t).takeLast(2000)))
     }
 
@@ -372,13 +432,13 @@ object Repo {
     fun addBlock(title: String, startMin: Int, durMin: Int, flexible: Boolean) {
         if (title.isBlank() || durMin <= 0) return
         updateDay {
-            it.copy(blocks = (it.blocks + TimeBlock("b" + System.currentTimeMillis(), title.trim(), startMin, durMin, flexible = flexible)).sortedBy { b -> b.startMin })
+            it.copy(blocks = (it.blocks + TimeBlock(newId("b"), title.trim(), startMin, durMin, flexible = flexible)).sortedBy { b -> b.startMin })
         }
     }
 
     fun addRoutine(title: String, startMin: Int, durMin: Int) {
         if (title.isBlank() || durMin <= 0) return
-        updateProfile { it.copy(routines = it.routines + Routine("r" + System.currentTimeMillis(), title.trim(), startMin, durMin)) }
+        updateProfile { it.copy(routines = it.routines + Routine(newId("r"), title.trim(), startMin, durMin)) }
         materializeRoutines()
     }
 
@@ -456,7 +516,7 @@ object Repo {
         if (name.isBlank()) return
         val isTime = Regex("plank|halten|hang|sek|sec|hold", RegexOption.IGNORE_CASE).containsMatchIn(name)
         updateProfile {
-            it.copy(caliDefs = it.caliDefs + ExerciseDef("ex" + System.currentTimeMillis(), name.trim(), if (isTime) "sec" else "reps"))
+            it.copy(caliDefs = it.caliDefs + ExerciseDef(newId("ex"), name.trim(), if (isTime) "sec" else "reps"))
         }
     }
 

@@ -210,13 +210,10 @@ object FinanceStore {
      */
     fun bookTxn(ctx: Context, amountCents: Long, category: String, note: String = "", accountId: String? = null) {
         if (amountCents == 0L) return
-        LifeStores.addTxn(ctx, amountCents, category, note)
-        val newest = LifeStores.txns(ctx).firstOrNull()
-        if (newest != null && newest.amountCents == amountCents &&
-            accountId != null && accounts(ctx).any { it.id == accountId }
-        ) {
+        val txnId = LifeStores.addTxn(ctx, amountCents, category, note)
+        if (txnId != null && accountId != null && accounts(ctx).any { it.id == accountId }) {
             val map = obj(ctx, "txn_acc")
-            map.put(newest.id, accountId)
+            map.put(txnId, accountId)
             pruneMapQuiet(ctx, map)
             adjustBalanceQuiet(ctx, accountId, amountCents)
         }

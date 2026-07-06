@@ -171,13 +171,21 @@ abstract class TrainingDatabase : RoomDatabase() {
     companion object {
         @Volatile private var inst: TrainingDatabase? = null
 
+        // User-authored history: no destructive fallback — schema bumps need real
+        // migrations so a version change can never silently wipe workouts.
         fun get(ctx: Context): TrainingDatabase =
             inst ?: synchronized(this) {
                 inst ?: Room.databaseBuilder(
                     ctx.applicationContext,
                     TrainingDatabase::class.java,
                     "ascend_training.db",
-                ).fallbackToDestructiveMigration().build().also { inst = it }
+                ).build().also { inst = it }
             }
+
+        /** Close + forget the instance so backup/restore can swap the files. */
+        fun close() = synchronized(this) {
+            runCatching { inst?.close() }
+            inst = null
+        }
     }
 }

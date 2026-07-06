@@ -113,5 +113,11 @@ abstract class MasterPlanDatabase : RoomDatabase() {
                     .build()
                     .also { instance = it }
             }
+
+        /** Close + forget the instance so backup/restore can swap the files. */
+        fun close() = synchronized(this) {
+            runCatching { instance?.close() }
+            instance = null
+        }
     }
 }

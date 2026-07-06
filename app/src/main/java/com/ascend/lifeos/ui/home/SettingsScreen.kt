@@ -44,7 +44,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     ) { uri ->
         if (uri != null) {
             Backup.setFolder(ctx, uri)
-            backupState = if (Backup.runNow(ctx)) "Backup written ✓" else "Folder set — backup failed"
+            backupState = "Writing backup…"
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val ok = Backup.runNow(ctx)
+                backupState = if (ok) "Backup written ✓" else "Folder set — backup failed"
+            }
         }
     }
 
@@ -239,12 +243,36 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 if (hasFolder) "Backup now" else "Set backup folder",
                 backupState ?: if (hasFolder) "Auto-backup weekly · versioned" else "Survives anything, even a new phone",
             ) {
-                if (hasFolder) backupState = if (Backup.runNow(ctx)) "Backup written ✓" else "Backup failed"
-                else runCatching { folderPicker.launch(null) }
+                if (hasFolder) {
+                    backupState = "Writing backup…"
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val ok = Backup.runNow(ctx)
+                        backupState = if (ok) "Backup written ✓" else "Backup failed"
+                    }
+                } else runCatching { folderPicker.launch(null) }
             }
             if (hasFolder) {
                 ActionRow("Restore latest backup", "Replaces current data") {
-                    backupState = if (Backup.restoreLatest(ctx)) "Restored ✓ — restart the app" else "No backup found"
+                    val r = Backup.restoreLatest(ctx)
+                    backupState = when {
+                        r.ok && r.needsRestart -> "Restored ✓ — restarting…"
+                        r.ok -> "Restored ✓"
+                        else -> "No backup found"
+                    }
+                    if (r.ok && r.needsRestart) {
+                        // Full restore swapped prefs + db files under a running
+                        // process — relaunch cleanly so every store reloads.
+                        scope.launch {
+                            kotlinx.coroutines.delay(900)
+                            val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+                            launch?.addFlags(
+                                android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            )
+                            launch?.let { ctx.startActivity(it) }
+                            Runtime.getRuntime().exit(0)
+                        }
+                    }
                 }
             }
             ActionRow("Export data", "Full JSON via share sheet") {

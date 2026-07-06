@@ -72,6 +72,8 @@ dependencies {
     implementation 'androidx.compose.material:material-icons-extended'
 
     // Android Health Connect — sleep, heart rate, HRV & resting HR from a band.
+    // NOTE: stable 1.1.0 needs compileSdk 36 + AGP 8.9 — bump alongside the next
+    // toolchain upgrade; until then this alpha is the newest SDK-34-compatible.
     implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
 
     // Barcode scanning for the nutrition tracker: ML Kit code scanner

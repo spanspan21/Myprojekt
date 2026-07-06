@@ -14,6 +14,12 @@ import com.ascend.lifeos.widget.AscendWidget
  * Ascend — Life OS. Native Jetpack Compose app.
  */
 class MainActivity : ComponentActivity() {
+    private val notifPermission = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted && Repo.profile().reminders) Notifier.schedule(applicationContext)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -21,6 +27,9 @@ class MainActivity : ComponentActivity() {
         com.ascend.lifeos.ui.theme.applyAccent(Repo.profile().accent)
         if (Repo.profile().reminders && Notifier.hasPermission(applicationContext)) {
             Notifier.schedule(applicationContext)
+        } else if (Repo.profile().reminders && android.os.Build.VERSION.SDK_INT >= 33) {
+            // The proactive layer is dead on 13+ until this is granted — ask once per launch.
+            notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
         com.ascend.lifeos.ui.theme.themeState.value =
@@ -39,6 +48,12 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         intent.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
         intent.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Process death must never lose the debounced write.
+        Repo.flush()
     }
 
     override fun onStop() {

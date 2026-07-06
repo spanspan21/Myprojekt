@@ -55,10 +55,18 @@ abstract class CalendarDatabase : RoomDatabase() {
 
     companion object {
         @Volatile private var inst: CalendarDatabase? = null
+
+        // User-authored events: no destructive fallback (see TrainingDatabase).
         fun get(ctx: Context): CalendarDatabase =
             inst ?: synchronized(this) {
                 inst ?: Room.databaseBuilder(ctx.applicationContext, CalendarDatabase::class.java, "jarvis_calendar.db")
-                    .fallbackToDestructiveMigration().build().also { inst = it }
+                    .build().also { inst = it }
             }
+
+        /** Close + forget the instance so backup/restore can swap the files. */
+        fun close() = synchronized(this) {
+            runCatching { inst?.close() }
+            inst = null
+        }
     }
 }
