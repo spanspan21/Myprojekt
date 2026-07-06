@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -230,26 +231,26 @@ fun AscendApp() {
             }
         }
 
-        // ---- pills + dock ----
+        // ---- morphing dock: ONE bar, two zoom levels ----
+        // Inside a group the same bar shows its sub-areas; the leading anchor
+        // zooms back out to the four groups. Sub-navigation costs zero extra
+        // screen height — the bar morphs instead of stacking (user request).
         AnimatedVisibility(
             visible = dockVisible,
             enter = fadeIn(), exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val pills = visibleSubs(group)
-                AnimatedVisibility(visible = group != Group.TODAY && pills.size > 1) {
-                    PillBar(pills, sub, onSelect = { open(it) })
-                }
-                JarvisDock(
-                    current = group,
-                    accentOf = { g -> (lastSub[g] ?: g.subs.first()).accent() },
-                    onSelect = { g ->
-                        if (g == Group.TODAY && group == Group.TODAY) paletteOpen = true
-                        else openGroup(g)
-                    },
-                )
-            }
+            MorphingDock(
+                group = group,
+                current = sub,
+                subs = visibleSubs(group),
+                accentOf = { g -> (lastSub[g] ?: g.subs.first()).accent() },
+                onSelectGroup = { g ->
+                    if (g == Group.TODAY && group == Group.TODAY) paletteOpen = true
+                    else openGroup(g)
+                },
+                onSelectSub = { open(it) },
+            )
         }
 
         // ---- Weekly report overlay ----
@@ -287,84 +288,126 @@ fun AscendApp() {
     }
 }
 
-// ─── Pill bar (level 3) ──────────────────────────────────────────────────────
+// ─── Morphing dock — one bar, two zoom levels ────────────────────────────────
+// Group mode: the four life areas. Sub mode: inside a group the SAME bar shows
+// its sub-areas, anchored by the group's icon (tap = zoom back out). Navigation
+// depth never costs a second row of screen height.
 
 @Composable
-private fun PillBar(subs: List<Sub>, current: Sub, onSelect: (Sub) -> Unit) {
-    Row(
-        Modifier
-            .padding(bottom = 8.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF0B0D10).copy(alpha = 0.82f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp))
-            .padding(horizontal = 5.dp, vertical = 4.dp)
-            .horizontalScroll(rememberScrollState()),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        subs.forEach { s ->
-            val selected = s == current
-            val accent = s.accent()
-            Text(
-                s.label,
-                color = if (selected) accent else TextMuted,
-                fontFamily = Body, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(if (selected) accent.copy(alpha = 0.14f) else Color.Transparent)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) { onSelect(s) }
-                    .padding(horizontal = 13.dp, vertical = 7.dp),
-            )
-        }
-    }
-}
-
-// ─── Dock (level 2) ──────────────────────────────────────────────────────────
-
-@Composable
-private fun JarvisDock(
-    current: Group,
+private fun MorphingDock(
+    group: Group,
+    current: Sub,
+    subs: List<Sub>,
     accentOf: @Composable (Group) -> Color,
-    onSelect: (Group) -> Unit,
+    onSelectGroup: (Group) -> Unit,
+    onSelectSub: (Sub) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Zoomed in whenever the group has real sub-navigation; the anchor zooms out.
+    var zoomedOut by remember(group) { mutableStateOf(false) }
+    val subMode = group != Group.TODAY && subs.size > 1 && !zoomedOut
+
     Box(modifier.navigationBarsPadding().padding(bottom = 14.dp)) {
-        Row(
+        Box(
             Modifier
                 .clip(RoundedCornerShape(28.dp))
                 .background(Color(0xFF0B0D10).copy(alpha = 0.88f))
                 .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(28.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+                .animateContentSize(tween(260)),
         ) {
-            Group.entries.forEach { g ->
-                val selected = g == current
-                val accent = accentOf(g)
-                Column(
-                    Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (selected) accent.copy(alpha = 0.13f) else Color.Transparent)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) { onSelect(g) }
-                        .padding(horizontal = 15.dp, vertical = 9.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        g.icon, contentDescription = g.label,
-                        tint = if (selected) accent else TextDim,
-                        modifier = Modifier.size(21.dp),
-                    )
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        g.label,
-                        color = if (selected) accent else TextDim,
-                        fontFamily = Body, fontSize = 8.5.sp, fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp,
-                    )
+            Crossfade(targetState = subMode, animationSpec = tween(200), label = "dockMorph") { inSub ->
+                if (inSub) {
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // anchor: the group glyph — tap to zoom back to the 4 areas
+                        val groupAccent = accentOf(group)
+                        Column(
+                            Modifier
+                                .clip(RoundedCornerShape(18.dp))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                ) { zoomedOut = true }
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Icon(
+                                group.icon, contentDescription = "All areas",
+                                tint = groupAccent.copy(alpha = 0.9f),
+                                modifier = Modifier.size(19.dp),
+                            )
+                            Text(
+                                "▾", color = TextDim, fontSize = 7.sp, fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Box(
+                            Modifier.padding(horizontal = 2.dp).size(0.5.dp, 26.dp)
+                                .background(Color.White.copy(alpha = 0.12f)),
+                        )
+                        subs.forEach { s ->
+                            val selected = s == current
+                            val accent = s.accent()
+                            Column(
+                                Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(if (selected) accent.copy(alpha = 0.14f) else Color.Transparent)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                    ) { onSelectSub(s) }
+                                    .padding(horizontal = 11.dp, vertical = 10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    s.label,
+                                    color = if (selected) accent else TextMuted,
+                                    fontFamily = Body, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Box(
+                                    Modifier.size(3.5.dp).clip(CircleShape)
+                                        .background(if (selected) accent else Color.Transparent),
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Group.entries.forEach { g ->
+                            val selected = g == group
+                            val accent = accentOf(g)
+                            Column(
+                                Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(if (selected) accent.copy(alpha = 0.13f) else Color.Transparent)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                    ) {
+                                        if (g == group && g != Group.TODAY) zoomedOut = false
+                                        else onSelectGroup(g)
+                                    }
+                                    .padding(horizontal = 15.dp, vertical = 9.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Icon(
+                                    g.icon, contentDescription = g.label,
+                                    tint = if (selected) accent else TextDim,
+                                    modifier = Modifier.size(21.dp),
+                                )
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    g.label,
+                                    color = if (selected) accent else TextDim,
+                                    fontFamily = Body, fontSize = 8.5.sp, fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
