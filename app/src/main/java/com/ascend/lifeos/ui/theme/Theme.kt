@@ -6,7 +6,8 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun AscendTheme(content: @Composable () -> Unit) {
-    // Built inside composition so the live Accent flows into the scheme.
+    // Built inside composition so the live spec + accent flow into scheme
+    // and typography — theme switches recompose the whole tree, no restart.
     val scheme = darkColorScheme(
         primary = Accent,
         onPrimary = Bg,
@@ -22,7 +23,7 @@ fun AscendTheme(content: @Composable () -> Unit) {
     )
     MaterialTheme(
         colorScheme = scheme,
-        typography = AscendType,
+        typography = ascendTypography(),
         content = content,
     )
 }

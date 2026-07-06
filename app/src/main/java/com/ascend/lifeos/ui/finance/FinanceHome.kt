@@ -402,8 +402,8 @@ private fun BalanceHero(
 private fun AccountChip(a: Account, onClick: () -> Unit) {
     Row(
         Modifier.clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 11.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -481,7 +481,7 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
                     ratio < 1f -> Warn
                     else -> Crit
                 }
-                Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))) {
+                Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
                     Box(Modifier.fillMaxWidth(ratio.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(barColor))
                 }
                 Spacer(Modifier.height(5.dp))
@@ -497,11 +497,11 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
             val maxFlow = maxOf(income, spend, 1L)
             FlowBar("In", income, maxFlow, Good)
             Spacer(Modifier.height(6.dp))
-            FlowBar("Out", spend, maxFlow, Color.White.copy(alpha = 0.30f))
+            FlowBar("Out", spend, maxFlow, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.30f))
 
             if (spend > 0) {
                 Spacer(Modifier.height(12.dp))
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+                Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(10.dp))
                 val monthEnd = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -538,7 +538,7 @@ private fun FlowBar(label: String, cents: Long, maxCents: Long, color: Color) {
             fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
             modifier = Modifier.width(30.dp),
         )
-        Box(Modifier.weight(1f).height(5.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))) {
+        Box(Modifier.weight(1f).height(5.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
             val frac = (cents.toFloat() / maxCents).coerceIn(0f, 1f)
             if (frac > 0f) Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(CircleShape).background(color))
         }
@@ -607,7 +607,7 @@ private fun BreakdownPanel(
                     }
                 }
                 Spacer(Modifier.height(14.dp))
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+                Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(6.dp))
             }
 
@@ -648,7 +648,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
                 }
                 Box(
                     Modifier.fillMaxWidth(0.72f).height(3.dp)
-                        .clip(CircleShape).background(Color.White.copy(alpha = 0.06f)),
+                        .clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)),
                 ) {
                     Box(Modifier.fillMaxWidth(ratio.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(barColor))
                 }
@@ -715,7 +715,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
             }
             if (insights.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+                Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(10.dp))
                 insights.forEachIndexed { i, line ->
                     if (i > 0) Spacer(Modifier.height(7.dp))
@@ -751,7 +751,7 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
     Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
             recurrings.forEachIndexed { i, r ->
-                if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.06f)))
+                if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)))
                 RecurringRow(
                     r,
                     onToggle = { FinanceStore.setRecurringActive(ctx, r.id, !r.active) },
@@ -770,7 +770,7 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
         Box(
             Modifier.size(18.dp).clip(CircleShape)
                 .background(if (r.active) FinAccent.copy(alpha = 0.18f) else Color.Transparent)
-                .border(1.dp, if (r.active) FinAccent else Color.White.copy(alpha = 0.20f), CircleShape)
+                .border(1.dp, if (r.active) FinAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.20f), CircleShape)
                 .clickable(onClick = onToggle),
             contentAlignment = Alignment.Center,
         ) {
@@ -935,8 +935,8 @@ private fun TxnRow(t: Txn, accountName: String?, onClick: () -> Unit) {
 private fun ExportCsvButton(count: Int, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,

@@ -94,8 +94,8 @@ fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
                 Box(
                     Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
                         .size(40.dp).clip(RoundedCornerShape(13.dp))
-                        .background(Color.White.copy(alpha = 0.06f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
                         .clickable { constellation = false },
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }
@@ -227,8 +227,8 @@ private fun ReviewQueue(due: List<DueReview>, vocabDue: Int = 0, onGraded: () ->
                 if (due.isNotEmpty()) Spacer(Modifier.height(6.dp))
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.03f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
                         .padding(horizontal = 12.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -252,8 +252,8 @@ private fun ReviewQueue(due: List<DueReview>, vocabDue: Int = 0, onGraded: () ->
 private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onGrade: (Int) -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = if (expanded) 0.05f else 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (expanded) 0.05f else 0.03f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp, vertical = 9.dp),
     ) {
@@ -432,8 +432,8 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
     Panel(
         Modifier.fillMaxWidth(),
         corner = 16.dp,
-        fill = if (state == NodeState.CURRENT) accent.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.03f),
-        line = if (state == NodeState.CURRENT) accent.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.10f),
+        fill = if (state == NodeState.CURRENT) accent.copy(alpha = 0.06f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f),
+        line = if (state == NodeState.CURRENT) accent.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
         onClick = { if (state != NodeState.LOCKED) expanded = !expanded },
     ) {
         Column(Modifier.padding(14.dp)) {
@@ -444,7 +444,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                             when (state) {
                                 NodeState.DONE -> accent.copy(alpha = 0.18f)
                                 NodeState.CURRENT -> accent
-                                else -> Color.White.copy(alpha = 0.06f)
+                                else -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)
                             },
                         ),
                     contentAlignment = Alignment.Center,
@@ -533,7 +533,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                             Box(
                                 Modifier.size(18.dp).clip(CircleShape)
                                     .background(if (doneTask) accent else Color.Transparent)
-                                    .border(1.dp, if (doneTask) accent else Color.White.copy(alpha = 0.25f), CircleShape),
+                                    .border(1.dp, if (doneTask) accent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) { if (doneTask) Icon(Icons.Rounded.Check, null, tint = Void, modifier = Modifier.size(11.dp)) }
                             Spacer(Modifier.width(10.dp))
@@ -618,8 +618,8 @@ private fun ResourceRowMini(r: ResourceEntity, accent: Color) {
     val ctx = LocalContext.current
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-            .background(Color.White.copy(alpha = 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
             .clickable {
                 runCatching {
                     ctx.startActivity(
@@ -658,8 +658,8 @@ private fun MetaField(
         decorationBox = { inner ->
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                    .background(Color.White.copy(alpha = 0.03f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
                     .padding(horizontal = 11.dp, vertical = 9.dp),
             ) {
                 if (value.isEmpty()) {

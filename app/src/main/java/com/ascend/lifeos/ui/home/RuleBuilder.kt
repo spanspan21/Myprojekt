@@ -120,8 +120,8 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -313,10 +313,10 @@ private fun RuleEditor(onDone: () -> Unit) {
 private fun Chip(label: String, on: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
+            .background(if (on) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (on) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f),
+                if (on) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
             .clickable(onClick = onClick)
@@ -360,8 +360,8 @@ private fun ActionChips(selected: RAction, onSelect: (RAction) -> Unit) {
 private fun StepOrb(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(30.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextMuted, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
@@ -383,8 +383,8 @@ private fun Stepper(value: Int, unit: String, step: Int, onChange: (Int) -> Unit
 private fun GlassField(placeholder: String, value: String, onValue: (String) -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
             .padding(horizontal = 13.dp, vertical = 11.dp),
     ) {
         if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = 13.sp, fontFamily = Body)

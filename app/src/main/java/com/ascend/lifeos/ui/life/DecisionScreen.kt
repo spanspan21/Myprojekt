@@ -155,7 +155,7 @@ private fun ScoreRow(label: String, score: Int, other: Int, color: Color, leads:
             Text("$score", color = if (leads) TextPrimary else TextMuted, style = metricStyle(13))
         }
         Spacer(Modifier.height(4.dp))
-        Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))) {
+        Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
             Box(
                 Modifier.fillMaxWidth((score / top.toFloat()).coerceIn(0f, 1f))
                     .fillMaxHeight().clip(CircleShape).background(color),
@@ -171,7 +171,7 @@ private fun ExpandedBody(d: Decision) {
     val ctx = LocalContext.current
     Column {
         Spacer(Modifier.height(13.dp))
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
         Spacer(Modifier.height(12.dp))
 
         if (d.factors.isNotEmpty()) {
@@ -259,8 +259,8 @@ private fun DecideButton(label: String, modifier: Modifier = Modifier, onClick: 
 private fun OutcomeButton(label: String, color: Color, on: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier.clip(RoundedCornerShape(11.dp))
-            .background(if (on) color.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+            .background(if (on) color.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
@@ -324,8 +324,8 @@ private fun Stepper(label: String, value: Int, onValue: (Int) -> Unit) {
 private fun StepBox(sign: String, onClick: () -> Unit) {
     Box(
         Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
@@ -396,8 +396,8 @@ private fun LifeScaffold(title: String, context: String, accent: Color, onClose:
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -411,8 +411,8 @@ private fun LifeScaffold(title: String, context: String, accent: Color, onClose:
 private fun LifeField(placeholder: String, value: String, accent: Color, onValue: (String) -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
             .padding(horizontal = 13.dp, vertical = 11.dp),
     ) {
         if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = 13.sp, fontFamily = Body)

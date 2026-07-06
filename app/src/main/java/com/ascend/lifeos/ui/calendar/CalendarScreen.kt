@@ -274,7 +274,7 @@ private fun DayChip(d: LocalDate, selected: Boolean, isToday: Boolean, entities:
     val edge by animateColorAsState(
         when {
             selected -> Mod.Calendar.copy(alpha = 0.5f)
-            isToday -> Color.White.copy(alpha = 0.18f)
+            isToday -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.18f)
             else -> Color.Transparent
         },
         tween(Motion.quick), label = "dcE",
@@ -447,7 +447,7 @@ private fun MonthDayCell(
                 0.5.dp,
                 when {
                     isSelected -> Mod.Calendar.copy(alpha = 0.55f)
-                    isToday -> Color.White.copy(alpha = 0.30f)
+                    isToday -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.30f)
                     else -> Color.Transparent
                 },
                 RoundedCornerShape(11.dp),
@@ -565,8 +565,8 @@ private fun IcsFeedRow() {
                 Spacer(Modifier.height(9.dp))
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                 ) {
                     if (input.isEmpty()) Text(
@@ -684,7 +684,7 @@ private fun DayTimelineView(
                         modifier = Modifier.width(26.dp).padding(top = 0.dp),
                     )
                     Column(Modifier.weight(1f)) {
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.05f)))
+                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)))
                     }
                 }
             }
@@ -834,8 +834,8 @@ private fun QuickAddSheet(
             // title
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 if (title.isEmpty()) Text(
@@ -857,8 +857,8 @@ private fun QuickAddSheet(
                     val on = t == type
                     Box(
                         Modifier.clip(RoundedCornerShape(10.dp))
-                            .background(if (on) c.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                            .background(if (on) c.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                             .clickable { type = t }
                             .padding(horizontal = 11.dp, vertical = 7.dp),
                     ) {
@@ -893,8 +893,8 @@ private fun QuickAddSheet(
                         val on = repeatMask and (1 shl i) != 0
                         Box(
                             Modifier.size(34.dp).clip(CircleShape)
-                                .background(if (on) Mod.Calendar.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
-                                .border(0.5.dp, if (on) Mod.Calendar.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), CircleShape)
+                                .background(if (on) Mod.Calendar.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                                .border(0.5.dp, if (on) Mod.Calendar.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
                                 .clickable { repeatMask = repeatMask xor (1 shl i) },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -907,8 +907,8 @@ private fun QuickAddSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Length", color = TextMuted, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Box(
-                        Modifier.size(38.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+                        Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
                             .clickable { holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
                     ) { Text("−", color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
@@ -917,8 +917,8 @@ private fun QuickAddSheet(
                         modifier = Modifier.widthIn(min = 78.dp), textAlign = TextAlign.Center,
                     )
                     Box(
-                        Modifier.size(38.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+                        Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
                             .clickable { holidayDays += 1 },
                         contentAlignment = Alignment.Center,
                     ) { Text("+", color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
@@ -954,8 +954,8 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
         Spacer(Modifier.height(6.dp))
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -1003,8 +1003,8 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
             val outdoor = remember(outdoorTick) { com.ascend.lifeos.data.WeatherRepo.isOutdoor(ctx, b.title) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.04f))
-                    .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                    .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                    .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
                     .clickable { com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1152,8 +1152,8 @@ private fun UntisField(label: String, value: String, hint: String, password: Boo
         Spacer(Modifier.height(3.dp))
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
-                .background(Color.White.copy(alpha = 0.05f))
-                .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
             if (value.isEmpty()) Text(hint, color = TextDim, fontSize = 12.5.sp, fontFamily = Body)
@@ -1200,7 +1200,7 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier.size(8.dp).clip(CircleShape)
-                            .background(if (calPermission) Good else Color.White.copy(alpha = 0.15f)),
+                            .background(if (calPermission) Good else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f)),
                     )
                     Spacer(Modifier.width(10.dp))
                     Icon(Icons.Rounded.Link, null, tint = Mod.Calendar, modifier = Modifier.size(16.dp))
@@ -1274,8 +1274,8 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             // add form
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(13.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 if (title.isEmpty()) Text("Task title…", color = TextDim, fontSize = 14.sp, fontFamily = Body)
@@ -1294,7 +1294,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         label, color = if (sel) Mod.Calendar else TextMuted,
                         fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(10.dp))
-                            .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
+                            .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                             .clickable { prio = p }
                             .padding(horizontal = 11.dp, vertical = 6.dp),
                     )
@@ -1358,7 +1358,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     Box(
                         Modifier.size(19.dp).clip(CircleShape)
                             .background(if (t.done) Mod.Calendar else Color.Transparent)
-                            .border(1.dp, if (t.done) Mod.Calendar else Color.White.copy(alpha = 0.25f), CircleShape)
+                            .border(1.dp, if (t.done) Mod.Calendar else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
                             .clickable { com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
                         contentAlignment = Alignment.Center,
                     ) { if (t.done) Text("✓", color = Void, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
@@ -1395,7 +1395,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(14.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Mod.Calendar.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
                     .clickable(enabled = tasks.any { !it.done }) {
                         planNote = "Planning…"

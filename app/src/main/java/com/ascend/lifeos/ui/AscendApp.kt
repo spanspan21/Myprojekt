@@ -377,7 +377,7 @@ private fun MorphingDock(
                         }
                         Box(
                             Modifier.padding(horizontal = 2.dp).size(0.5.dp, 26.dp)
-                                .background(Color.White.copy(alpha = 0.12f)),
+                                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f)),
                         )
                         subs.forEach { s ->
                             val selected = s == current

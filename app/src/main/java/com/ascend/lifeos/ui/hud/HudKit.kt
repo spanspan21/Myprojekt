@@ -89,10 +89,11 @@ fun GlassPanel(
             .border(0.5.dp, line, RoundedCornerShape(corner))
             .drawWithContent {
                 drawContent()
+                val spec = com.ascend.lifeos.ui.theme.themeSpec.value.specular
                 val inset = corner.toPx() * 0.9f
-                if (size.width > inset * 2.5f) {
+                if (spec > 0f && size.width > inset * 2.5f) {
                     drawLine(
-                        Brush.horizontalGradient(listOf(Color.Transparent, Ivory.copy(alpha = 0.16f), Color.Transparent)),
+                        Brush.horizontalGradient(listOf(Color.Transparent, Ivory.copy(alpha = spec), Color.Transparent)),
                         Offset(inset, 0.75f), Offset(size.width - inset, 0.75f),
                         strokeWidth = 1.2f,
                     )
@@ -106,7 +107,7 @@ fun GlassPanel(
 fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val accent = LocalModuleAccent.current
     val bg by animateColorAsState(
-        if (selected) accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f),
+        if (selected) accent.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
         tween(Motion.quick), label = "chipBg",
     )
     val edge by animateColorAsState(
@@ -159,7 +160,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
     Box(
         modifier
             .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, HudLine, RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 13.dp),
     ) {
@@ -196,7 +197,8 @@ fun NeonBar(
         if (sprint) {
             Box(
                 Modifier.fillMaxHeight().fillMaxWidth(p.coerceIn(0f, 1f))
-                    .clip(CircleShape).background(color.copy(alpha = 0.20f)),
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.20f * com.ascend.lifeos.ui.theme.themeSpec.value.glow.coerceAtLeast(0.3f))),
             )
         }
         Box(

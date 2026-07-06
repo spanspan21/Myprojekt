@@ -280,8 +280,8 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
 private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(18.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.035f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(18.dp))
             .padding(14.dp),
         content = content,
     )
@@ -290,11 +290,11 @@ private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val bg by animateColorAsState(
-        if (selected) Mod.Home.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f),
+        if (selected) Mod.Home.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
         tween(Motion.quick), label = "bcB",
     )
     val edge by animateColorAsState(
-        if (selected) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f),
+        if (selected) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f),
         tween(Motion.quick), label = "bcE",
     )
     val fg by animateColorAsState(
@@ -333,8 +333,8 @@ private fun TuneStepper(label: String, value: Int, unit: String, onDelta: (Int) 
 private fun StepBtn(sign: String, onClick: () -> Unit) {
     Box(
         Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
@@ -350,7 +350,7 @@ private fun PermRow(title: String, hint: String, granted: Boolean, onRequest: ()
     ) {
         Box(
             Modifier.size(8.dp).clip(CircleShape)
-                .background(if (granted) Good else Color.White.copy(alpha = 0.18f)),
+                .background(if (granted) Good else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.18f)),
         )
         Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f)) {
@@ -392,7 +392,7 @@ private fun ParticleField() {
     Canvas(Modifier.fillMaxSize()) {
         parts.forEach { p ->
             val y = (((p.y - drift * p.speed) % 1f) + 1f) % 1f
-            val col = if (p.mint) Mod.Home.copy(alpha = p.alpha + 0.05f) else Color.White.copy(alpha = p.alpha)
+            val col = if (p.mint) Mod.Home.copy(alpha = p.alpha + 0.05f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = p.alpha)
             drawCircle(col, p.radius.dp.toPx(), Offset(p.x * size.width, y * size.height))
         }
     }
@@ -439,7 +439,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                             close()
                         }
                         // ghost track
-                        drawPath(hex, Color.White.copy(alpha = 0.06f), style = Stroke(1.5.dp.toPx()))
+                        drawPath(hex, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), style = Stroke(1.5.dp.toPx()))
                         // animated stroke
                         val pm = PathMeasure().apply { setPath(hex, true) }
                         if (hexSweep.value > 0f) {
@@ -454,7 +454,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                             val a = Math.toRadians(i * 30.0)
                             val p1 = Offset(c.x + (r2 - 4.dp.toPx()) * cos(a).toFloat(), c.y + (r2 - 4.dp.toPx()) * sin(a).toFloat())
                             val p2 = Offset(c.x + r2 * cos(a).toFloat(), c.y + r2 * sin(a).toFloat())
-                            drawLine(Color.White.copy(alpha = 0.12f), p1, p2, 1.dp.toPx())
+                            drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), p1, p2, 1.dp.toPx())
                         }
                     }
                     Box(Modifier.size(7.dp).clip(CircleShape).background(Mod.Home))
@@ -573,7 +573,7 @@ private fun CalibratePhase(onNext: () -> Unit) {
                     modifier = Modifier.width(84.dp),
                 )
                 Column(Modifier.weight(1f)) {
-                    Box(Modifier.fillMaxWidth().height(2.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.07f))) {
+                    Box(Modifier.fillMaxWidth().height(2.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f))) {
                         Box(
                             Modifier.fillMaxWidth(p.coerceIn(0f, 1f)).fillMaxHeight()
                                 .clip(CircleShape).background(s.accent),
@@ -689,7 +689,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {
                 val base = 68.dp.toPx()
-                drawCircle(Color.White.copy(alpha = 0.08f), radius = base + 12.dp.toPx(), style = Stroke(1.dp.toPx()))
+                drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), radius = base + 12.dp.toPx(), style = Stroke(1.dp.toPx()))
                 if (!engaged) {
                     val pr = base + 8.dp.toPx() + pulse * 24.dp.toPx()
                     drawCircle(Mod.Home.copy(alpha = (1f - pulse) * 0.32f), radius = pr, style = Stroke(1.5.dp.toPx()))
@@ -720,8 +720,8 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         if (showHc) {
             Row(
                 Modifier.clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.04f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable { hcLauncher.launch(HealthConnect.permissions) }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,

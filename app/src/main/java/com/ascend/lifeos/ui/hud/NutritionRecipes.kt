@@ -324,7 +324,7 @@ private fun matchesPantry(partName: String, pantry: List<String>): Boolean {
 @Composable
 private fun IngredientField(value: String, onValue: (String) -> Unit, onAdd: () -> Unit, modifier: Modifier) {
     Box(
-        modifier.clip(RoundedCornerShape(13.dp)).background(Color.White.copy(alpha = 0.05f))
+        modifier.clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) Text("Type an ingredient you have…", color = TextDim, fontSize = 13.5.sp)
@@ -559,7 +559,7 @@ fun ShoppingView(onBack: () -> Unit) {
 
 @Composable
 private fun BackBox(onBack: () -> Unit) {
-    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Color.White.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
+    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
         Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
     }
 }
@@ -695,8 +695,8 @@ private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planne
     }
     val bg = when {
         active -> Mod.Fuel.copy(alpha = 0.18f)
-        isToday -> Color.White.copy(alpha = 0.07f)
-        else -> Color.White.copy(alpha = 0.04f)
+        isToday -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)
+        else -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

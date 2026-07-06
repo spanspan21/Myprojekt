@@ -169,7 +169,7 @@ fun SkillNetworkCanvas(
                                 drawLine(accent, a, b, 1.4.dp.toPx(), StrokeCap.Round)
                             }
                             live -> drawLine(accent.copy(alpha = 0.45f), a, b, 0.5.dp.toPx(), StrokeCap.Round)
-                            else -> drawLine(Color.White.copy(alpha = 0.06f), a, b, 0.5.dp.toPx(), StrokeCap.Round)
+                            else -> drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), a, b, 0.5.dp.toPx(), StrokeCap.Round)
                         }
                     }
                 }
@@ -192,8 +192,8 @@ fun SkillNetworkCanvas(
                             drawCircle(accent.copy(alpha = 0.10f), r * 0.7f, c)
                         }
                         NodeState.LOCKED -> {
-                            drawCircle(Color.White.copy(alpha = 0.05f), r * 0.9f, c)
-                            drawCircle(Color.White.copy(alpha = 0.14f), r * 0.9f, c, style = Stroke(1.dp.toPx()))
+                            drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), r * 0.9f, c)
+                            drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.14f), r * 0.9f, c, style = Stroke(1.dp.toPx()))
                         }
                     }
                 }
@@ -221,7 +221,7 @@ fun SkillNetworkCanvas(
                 .size(44.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(SurfaceHi)
-                .border(0.5.dp, Color.White.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
+                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
                 .clickable { scale = initialScale; pan = initialPan },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.CenterFocusStrong, null, tint = TextPrimary, modifier = Modifier.size(20.dp)) }

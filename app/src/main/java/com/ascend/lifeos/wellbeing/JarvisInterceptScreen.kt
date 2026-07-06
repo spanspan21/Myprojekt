@@ -50,12 +50,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
-private val Neon = Color(0xFF34E0A1)
+private val Neon get() = com.ascend.lifeos.ui.theme.Mod.Guard
 private val NeonCyan = Color(0xFF4CD4C4)
 private val DoomRed = Color(0xFFFF6169)
-private val SkillGreen = Color(0xFF34E0A1)
+private val SkillGreen get() = com.ascend.lifeos.ui.theme.Good
 private val Void = Color(0xFF050505)
-private val CardFill = Color.White.copy(alpha = 0.04f)
+private val CardFill = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)
 private val CardLine = NeonCyan.copy(alpha = 0.35f)
 private val Dim = Color(0xFF565E6B)
 private val Muted = Color(0xFF8B93A1)
@@ -229,7 +229,7 @@ private fun InterceptCard(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White.copy(alpha = 0.03f))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
                     .border(0.5.dp, NeonCyan.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
                     .padding(16.dp),
             ) {
@@ -246,8 +246,8 @@ private fun InterceptCard(
                         Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White.copy(alpha = 0.04f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(14.dp))
+                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f), RoundedCornerShape(14.dp))
                             .clickable(enabled = !waiting, onClick = onSnooze)
                             .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
@@ -402,7 +402,7 @@ private fun GateCard(
                     .weight(1f)
                     .clip(RoundedCornerShape(14.dp))
                     .background(CardFill)
-                    .border(0.5.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(14.dp))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f), RoundedCornerShape(14.dp))
                     .clickable(enabled = ready, onClick = onContinue)
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
@@ -451,7 +451,7 @@ private fun GuiltBar(
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.05f)),
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)),
         ) {
             Box(
                 Modifier

@@ -217,7 +217,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, Mod.Home.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
                         .padding(horizontal = 15.dp, vertical = 13.dp),
                 ) {

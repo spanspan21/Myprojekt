@@ -142,10 +142,10 @@ internal fun Overline(text: String, color: Color = TextDim) {
 internal fun FinChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (selected) FinAccent.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.04f))
+            .background(if (selected) FinAccent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) FinAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f),
+                if (selected) FinAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
             .clickable(onClick = onClick)
@@ -162,7 +162,7 @@ internal fun FinChip(label: String, selected: Boolean, onClick: () -> Unit) {
 internal fun ActionButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-            .background(if (enabled) FinAccent else Color.White.copy(alpha = 0.06f))
+            .background(if (enabled) FinAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
@@ -217,8 +217,8 @@ internal fun GlassField(
     Box(
         Modifier.fillMaxWidth().heightIn(min = minHeight)
             .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) {
@@ -242,8 +242,8 @@ internal fun GlassField(
 internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder: String) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -281,8 +281,8 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -313,8 +313,8 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
 internal fun StepperOrb(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(40.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) }

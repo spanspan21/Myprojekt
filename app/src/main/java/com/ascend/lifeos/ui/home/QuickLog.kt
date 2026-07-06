@@ -188,8 +188,8 @@ private fun RowScope.QlTile(
     Column(
         Modifier.weight(1f)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -223,8 +223,8 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         Box(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(0.5.dp, if (cents > 0) FinAccent.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                .border(0.5.dp, if (cents > 0) FinAccent.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
                 .padding(vertical = 18.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -258,8 +258,8 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowCats.forEach { c ->
                     val on = cat == c
-                    val bg by animateColorAsState(if (on) FinAccent.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
-                    val edge by animateColorAsState(if (on) FinAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
+                    val bg by animateColorAsState(if (on) FinAccent.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
+                    val edge by animateColorAsState(if (on) FinAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
                     val fg by animateColorAsState(if (on) FinAccent else TextMuted, tween(Motion.quick), label = "qcF")
                     Box(
                         Modifier.weight(1f)
@@ -286,8 +286,8 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         Box(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(13.dp))
-                .background(Color.White.copy(alpha = 0.03f))
-                .border(0.5.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(13.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f), RoundedCornerShape(13.dp))
                 .padding(horizontal = 14.dp, vertical = 11.dp),
         ) {
             if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = 12.5.sp, fontFamily = Body)
@@ -368,8 +368,8 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
 private fun QlStep(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(44.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

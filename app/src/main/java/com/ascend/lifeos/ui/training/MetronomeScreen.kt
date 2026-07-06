@@ -99,7 +99,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
             val fraction = remaining.toFloat() / totalPhase
             Canvas(Modifier.size(200.dp)) {
                 val stroke = Stroke(6.dp.toPx(), cap = StrokeCap.Round)
-                drawArc(Color.White.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
+                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
                 if (running) {
                     drawArc(phaseColors[phase], -90f, fraction * 360f, false, style = stroke)
                 }

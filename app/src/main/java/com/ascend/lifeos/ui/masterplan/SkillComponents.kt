@@ -65,9 +65,9 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 // ---- Design tokens (Nothing-OS / cyber glass) -------------------------------
 // Restraint: translucent fills, hairline borders, zero shadows.
 
-val GlassFill = Color.White.copy(alpha = 0.05f)
-val GlassLine = Color.White.copy(alpha = 0.10f)
-val GlassLineSoft = Color.White.copy(alpha = 0.06f)
+val GlassFill = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)
+val GlassLine = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f)
+val GlassLineSoft = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)
 
 /** A frosted glass surface: translucent fill + 0.5dp hairline, no shadow. */
 @Composable
@@ -100,7 +100,7 @@ fun VoidBackground(accent: Color, modifier: Modifier = Modifier) {
             )
             Box(
                 Modifier.size(360.dp).offset(x = 180.dp, y = 120.dp)
-                    .background(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent)), CircleShape),
+                    .background(Brush.radialGradient(listOf(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), Color.Transparent)), CircleShape),
             )
             Box(
                 Modifier.size(300.dp).offset(x = 60.dp, y = 460.dp)

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,8 +68,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -106,10 +107,10 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .clip(RoundedCornerShape(11.dp))
-                            .background(if (sel) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
+                            .background(if (sel) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                             .border(
                                 0.5.dp,
-                                if (sel) Mod.Home.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.1f),
+                                if (sel) Mod.Home.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f),
                                 RoundedCornerShape(11.dp),
                             )
                             .clickable { com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
@@ -162,8 +163,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     val on = season == v
                     Box(
                         Modifier.clip(RoundedCornerShape(9.dp))
-                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
                             .clickable { season = v; Prefs.setString(ctx, Prefs.SEASON_PHASE, v) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -199,68 +200,96 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ToggleRow("Weather on free slots", "Sun glyph on outdoor-worthy slots", Prefs.WEATHER_SLOTS, true)
         }
 
-        // ── EXPERIENCE ───────────────────────────────────────────────
-        SettingsSection("Experience") {
-            var theme by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "sovereign")) }
+        // ── DESIGN — der Themen-Salon (ATELIER Kap. 24) ──────────────
+        SettingsSection("Design") {
+            var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "sovereign")) }
             Text(
                 "THEME", color = TextDim, fontFamily = Display,
                 fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
-            Spacer(Modifier.height(7.dp))
-            // Theme-Salon (Kap. 26): Materialproben statt Farbkreise
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf("sovereign" to "Sovereign", "stark" to "Stark", "stealth" to "Stealth", "reactor" to "Reactor").forEach { (v, label) ->
-                    val on = theme == v
+            Spacer(Modifier.height(8.dp))
+            // Fünf Welt-Karten: echte Materialprobe (Raum + Nebel + Karte im
+            // Welt-Radius + Metall-Rand) und die Schrift-Stimme als "Aa"
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                com.ascend.lifeos.ui.theme.Themes.ALL.forEach { spec ->
+                    val on = themeId == spec.id
                     Column(
-                        Modifier.weight(1f)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(Ivory.copy(alpha = if (on) 0.06f else 0.03f))
+                        Modifier
+                            .width(86.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Ivory.copy(alpha = if (on) 0.07f else 0.03f))
                             .border(
                                 0.5.dp,
-                                if (on) com.ascend.lifeos.ui.theme.ChampagneLine else Line,
-                                RoundedCornerShape(11.dp),
+                                if (on) spec.metal.copy(alpha = 0.60f) else Line,
+                                RoundedCornerShape(12.dp),
                             )
-                            .clickable { theme = v; Prefs.setString(ctx, Prefs.THEME, v); com.ascend.lifeos.ui.theme.themeState.value = v }
-                            .padding(vertical = 9.dp),
+                            .clickable {
+                                themeId = spec.id
+                                Prefs.setString(ctx, Prefs.THEME, spec.id)
+                                com.ascend.lifeos.ui.theme.applyTheme(spec.id)
+                                com.ascend.lifeos.data.Haptics.tick(ctx)
+                            }
+                            .padding(7.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        // die Probe: Raum + Karte + (je nach Preset) Nebel/Gold
                         Box(
-                            Modifier.size(34.dp, 24.dp).clip(RoundedCornerShape(6.dp))
-                                .background(com.ascend.lifeos.ui.theme.Void),
+                            Modifier.fillMaxWidth().height(44.dp)
+                                .clip(RoundedCornerShape(7.dp))
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        0f to spec.bgTop, 1f to spec.void,
+                                    ),
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (v == "reactor") {
-                                Box(Modifier.size(20.dp).clip(CircleShape).background(Mod.Home.copy(alpha = 0.30f)))
-                            } else if (v != "stealth") {
-                                Box(Modifier.size(16.dp).clip(CircleShape).background(Mod.Home.copy(alpha = 0.14f)))
+                            if (spec.nebulaAlpha > 0f) {
+                                Box(
+                                    Modifier.size(30.dp).clip(CircleShape).background(
+                                        (if (spec.nebulaDual) spec.accentDefault else spec.mods.home)
+                                            .copy(alpha = 0.22f),
+                                    ),
+                                )
                             }
                             Box(
-                                Modifier.size(22.dp, 13.dp).clip(RoundedCornerShape(3.dp))
-                                    .background(Ivory.copy(alpha = 0.06f))
+                                Modifier.size(46.dp, 24.dp)
+                                    .clip(RoundedCornerShape(spec.rMicro))
+                                    .background(spec.ivory.copy(alpha = 0.07f))
                                     .border(
                                         0.4.dp,
-                                        if (v == "sovereign") com.ascend.lifeos.ui.theme.Champagne.copy(alpha = 0.55f) else Line,
-                                        RoundedCornerShape(3.dp),
+                                        if (on) spec.metal.copy(alpha = 0.65f) else spec.ivory.copy(alpha = 0.14f),
+                                        RoundedCornerShape(spec.rMicro),
                                     ),
-                            )
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "Aa", color = spec.textPrimary,
+                                    fontFamily = com.ascend.lifeos.ui.theme.displayFamilyOf(spec),
+                                    fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                )
+                            }
                         }
-                        Spacer(Modifier.height(5.dp))
+                        Spacer(Modifier.height(6.dp))
                         Text(
-                            label,
+                            spec.label,
                             color = if (on) TextPrimary else TextMuted,
-                            fontSize = 9.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
-                            maxLines = 1,
+                            fontFamily = com.ascend.lifeos.ui.theme.displayFamilyOf(spec),
+                            fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1,
                         )
                     }
                 }
             }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
-                "Sovereign = obsidian & champagne · Stark = signature glow · Stealth = no nebula · Reactor = more energy",
+                com.ascend.lifeos.ui.theme.Themes.byId(themeId).tagline,
                 color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
             )
-            Spacer(Modifier.height(12.dp))
+        }
+
+        // ── EXPERIENCE ───────────────────────────────────────────────
+        SettingsSection("Experience") {
             // launcher icon variant — switching may briefly restart the launcher entry
             var icon by remember { mutableStateOf(currentIconAlias(ctx)) }
             Text(
@@ -277,8 +306,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     val on = icon == alias
                     Box(
                         Modifier.clip(RoundedCornerShape(9.dp))
-                            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
                             .clickable { if (!on) { switchIconAlias(ctx, alias); icon = alias } }
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -461,8 +490,8 @@ private fun ToggleRow(title: String, sub: String, key: String, default: Boolean)
 private fun TogglePill(on: Boolean) {
     Box(
         Modifier.width(40.dp).height(22.dp).clip(CircleShape)
-            .background(if (on) Mod.Home.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.06f))
-            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.14f), CircleShape),
+            .background(if (on) Mod.Home.copy(alpha = 0.25f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.6f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.14f), CircleShape),
         contentAlignment = if (on) Alignment.CenterEnd else Alignment.CenterStart,
     ) {
         Box(

@@ -305,7 +305,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                                 m.facts.values.forEach { f ->
                                     val v = f.metricValue(metric)
                                     val color =
-                                        if (v == null) Color.White.copy(alpha = 0.03f)
+                                        if (v == null) com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f)
                                         else metric.tint.copy(alpha = 0.08f + 0.8f * v.coerceIn(0f, 1f))
                                     val tl = Offset(f.col * step, labelH + f.row * step)
                                     drawRoundRect(color, tl, Size(cellPx, cellPx), corner)
@@ -317,7 +317,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                                     }
                                     if (f.key == selected) {
                                         drawRoundRect(
-                                            Color.White.copy(alpha = 0.85f), tl, Size(cellPx, cellPx),
+                                            com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.85f), tl, Size(cellPx, cellPx),
                                             corner, style = Stroke(1.2.dp.toPx()),
                                         )
                                     }
@@ -328,7 +328,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         LegendLabel("LESS")
-                        LegendCell(Color.White.copy(alpha = 0.03f))
+                        LegendCell(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
                         listOf(0.25f, 0.5f, 0.75f, 1f).forEach { v ->
                             LegendCell(metric.tint.copy(alpha = 0.08f + 0.8f * v))
                         }
@@ -377,10 +377,10 @@ fun HeatmapScreen(onClose: () -> Unit) {
 private fun MetricChip(m: HeatMetric, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(11.dp))
-            .background(if (selected) m.tint.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
+            .background(if (selected) m.tint.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) m.tint.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f),
+                if (selected) m.tint.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(11.dp),
             )
             .clickable(onClick = onClick)
@@ -440,8 +440,8 @@ private fun BoxScope.CloseOrb(onClose: () -> Unit) {
     Box(
         Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
             .size(40.dp).clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
             .clickable(onClick = onClose),
         contentAlignment = Alignment.Center,
     ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }

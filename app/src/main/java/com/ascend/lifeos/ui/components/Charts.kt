@@ -50,7 +50,7 @@ fun LineChart(
         // grid
         for (g in 0..3) {
             val y = 14f + g * ((h - 28f) / 3f)
-            drawLine(Color.White.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 1f)
+            drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 1f)
         }
         val p = draw.value
         // line (partial while drawing on)

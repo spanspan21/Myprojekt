@@ -176,7 +176,7 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
                 Box(
                     Modifier.align(Alignment.TopCenter).padding(top = 14.dp)
                         .width(1.5.dp).fillMaxHeight()
-                        .background(Color.White.copy(alpha = 0.08f)),
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)),
                 )
             }
             Box(
@@ -222,8 +222,8 @@ private fun LifeScaffold(title: String, context: String, accent: Color, onClose:
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }

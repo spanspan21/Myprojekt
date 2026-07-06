@@ -118,8 +118,8 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
     Panel(
         Modifier.fillMaxWidth(),
         corner = 16.dp,
-        fill = if (selected) Mod.Train.copy(alpha = 0.07f) else Color.White.copy(alpha = 0.03f),
-        line = if (selected) Mod.Train.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.10f),
+        fill = if (selected) Mod.Train.copy(alpha = 0.07f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f),
+        line = if (selected) Mod.Train.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
         onClick = onToggle,
     ) {
         Column(Modifier.padding(14.dp)) {
@@ -133,7 +133,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                             repeat(5) { i ->
                                 Box(
                                     Modifier.size(4.dp).clip(CircleShape)
-                                        .background(if (i < skill.tier) Mod.Train.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.10f)),
+                                        .background(if (i < skill.tier) Mod.Train.copy(alpha = 0.8f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f)),
                                 )
                             }
                         }
@@ -153,7 +153,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                     Box(
                         Modifier.size(20.dp).clip(CircleShape)
                             .background(if (selected) Mod.Train else Color.Transparent)
-                            .border(1.dp, if (selected) Mod.Train else Color.White.copy(alpha = 0.22f), CircleShape),
+                            .border(1.dp, if (selected) Mod.Train else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.22f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) { if (selected) Text("✓", color = Void, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                 }
@@ -171,7 +171,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                         }
                         Box(
                             Modifier.clip(RoundedCornerShape(6.dp))
-                                .background(if (met) Good.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.04f))
+                                .background(if (met) Good.copy(alpha = 0.10f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                                 .padding(horizontal = 7.dp, vertical = 3.dp),
                         ) {
                             Text(

@@ -24,6 +24,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Repo.init(applicationContext)
+        // ATELIER: Welt zuerst (setzt Welt-Default-Akzent), dann gewinnt der
+        // gespeicherte Nutzer-Akzent
+        run {
+            val saved = com.ascend.lifeos.data.Prefs.string(applicationContext, com.ascend.lifeos.data.Prefs.THEME, "sovereign")
+            val id = com.ascend.lifeos.ui.theme.Themes.migrate(saved)
+            if (id != saved) com.ascend.lifeos.data.Prefs.setString(applicationContext, com.ascend.lifeos.data.Prefs.THEME, id)
+            com.ascend.lifeos.ui.theme.applyTheme(id)
+        }
         com.ascend.lifeos.ui.theme.applyAccent(Repo.profile().accent)
         if (Repo.profile().reminders && Notifier.hasPermission(applicationContext)) {
             Notifier.schedule(applicationContext)
@@ -32,8 +40,6 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
-        com.ascend.lifeos.ui.theme.themeState.value =
-            com.ascend.lifeos.data.Prefs.string(applicationContext, com.ascend.lifeos.data.Prefs.THEME, "sovereign")
         intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
         // NFC tag (jarvis://train/start) → straight into today's session
         intent?.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }

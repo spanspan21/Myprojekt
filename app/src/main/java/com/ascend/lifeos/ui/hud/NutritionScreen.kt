@@ -286,8 +286,8 @@ private fun DayCursor(offset: Int, dayKey: String, onPrev: () -> Unit, onNext: (
 private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.size(32.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = if (enabled) 0.05f else 0.02f))
-            .border(0.5.dp, if (enabled) HudLine else Color.White.copy(alpha = 0.04f), CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (enabled) 0.05f else 0.02f))
+            .border(0.5.dp, if (enabled) HudLine else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, tint = if (enabled) TextPrimary else TextDim.copy(alpha = 0.35f), modifier = Modifier.size(18.dp)) }
@@ -312,7 +312,7 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
             val sw = 8.dp.toPx()
             fun ring(inset: Float, pct: Float, color: Color) {
                 val d = inset
-                drawArc(Color.White.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
+                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
                 if (pct > 0f) drawArc(color, -90f, 360f * pct, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
             }
             ring(sw / 2, pA, Cyan)                 // outer = protein
@@ -385,7 +385,7 @@ private fun TdeeSuggestCard() {
                 ) { Text("Adopt ${s.suggestedKcal} kcal", color = Mod.Fuel, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
-                        .background(Color.White.copy(alpha = 0.04f))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                         .clickable {
                             com.ascend.lifeos.data.AdaptiveTdee.dismiss()
                             suggestion = null
@@ -415,11 +415,11 @@ private fun ProteinSpread(day: DayData) {
                     val col = when {
                         grams >= 20 -> Good
                         grams >= 10 -> Warn
-                        else -> Color.White.copy(alpha = 0.28f)
+                        else -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.28f)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
-                            Modifier.width(7.dp).height(24.dp).clip(RoundedCornerShape(3.5.dp)).background(Color.White.copy(alpha = 0.07f)),
+                            Modifier.width(7.dp).height(24.dp).clip(RoundedCornerShape(3.5.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)),
                             contentAlignment = Alignment.BottomCenter,
                         ) {
                             if (grams > 0) {
@@ -480,7 +480,7 @@ private fun WaterModule(glasses: Int, targetGlasses: Int, hot: Boolean, showHeat
 @Composable
 private fun RoundIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
     Box(
-        Modifier.size(30.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))
+        Modifier.size(30.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, HudLine, CircleShape).clickable { onClick() },
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, tint = TextPrimary, modifier = Modifier.size(16.dp)) }

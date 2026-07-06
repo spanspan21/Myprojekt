@@ -73,8 +73,8 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                 }
                 Box(
                     Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.06f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                         .clickable(onClick = onClose),
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -84,8 +84,8 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
             if (!camGranted) {
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
                         .clickable { permLauncher.launch(android.Manifest.permission.CAMERA) }
                         .padding(20.dp),
                     contentAlignment = Alignment.Center,
@@ -93,7 +93,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
             } else {
                 Box(
                     Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(20.dp))
-                        .border(0.5.dp, if (tracking) Good.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
+                        .border(0.5.dp, if (tracking) Good.copy(alpha = 0.6f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
                 ) {
                     AndroidView(
                         factory = { c ->
@@ -157,8 +157,8 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(
                         Modifier.weight(1f).clip(RoundedCornerShape(13.dp))
-                            .background(Color.White.copy(alpha = 0.06f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
+                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
                             .clickable { reps = 0; counter.reset() }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,

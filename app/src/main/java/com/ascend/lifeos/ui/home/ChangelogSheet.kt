@@ -28,6 +28,12 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "ATELIER — five complete worlds in Settings › Design: Sovereign, Glacier, Neon, Terra, Mono",
+        "Each theme changes everything: colors, typography voice, room light, grain, corner radii, its own metal",
+        "Total uniformity: 360 hardcoded colors were replaced by live tokens — no more cold spots, in any theme",
+        "Theme switches apply instantly, no restart — and your old preset maps to its heir automatically",
+        "Neon brings scanlines and a dual magenta/cyan room; Terra glows like a lamp; Mono is pure ink on paper",
+        // ── v2.5 ──
         "Rings and bars feel the home stretch — from 80% they glow softly toward the goal",
         "Missions count down beside the title (\"1 left\" turns gold); completing all three sweeps champagne across the cards",
         "Streak milestones (7/30/60/100…) pulse a golden aura around the flame — once, then it's yours",

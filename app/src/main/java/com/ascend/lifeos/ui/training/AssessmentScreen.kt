@@ -68,7 +68,7 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
             ASSESS_TESTS.forEachIndexed { i, _ ->
                 Box(
                     Modifier.weight(1f).height(2.dp).clip(CircleShape)
-                        .background(if (i < step || finished) Mod.Train else Color.White.copy(alpha = 0.08f)),
+                        .background(if (i < step || finished) Mod.Train else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)),
                 )
             }
         }
@@ -128,8 +128,8 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
                         listOf(5, 10, 30).forEach { inc ->
                             Box(
                                 Modifier.padding(horizontal = 5.dp).clip(RoundedCornerShape(9.dp))
-                                    .background(Color.White.copy(alpha = 0.04f))
-                                    .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
                                     .clickable { value += inc }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) { Text("+$inc", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -174,8 +174,8 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
 private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Box(
         Modifier.size(60.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = if (enabled) 0.06f else 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (enabled) 0.06f else 0.03f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
@@ -212,7 +212,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(label, color = TextMuted, fontFamily = Body, fontSize = 13.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
-                Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))) {
+                Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
                     Box(
                         Modifier.fillMaxWidth(lv / 6f).fillMaxHeight().clip(CircleShape)
                             .background(Mod.Train),

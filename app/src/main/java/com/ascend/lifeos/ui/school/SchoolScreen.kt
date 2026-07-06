@@ -364,8 +364,8 @@ private fun SubjectRow(
 
     Panel(
         Modifier.fillMaxWidth(), corner = 16.dp,
-        fill = Color.White.copy(alpha = if (expanded) 0.05f else 0.03f),
-        line = if (expanded) SchoolAccent.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.10f),
+        fill = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (expanded) 0.05f else 0.03f),
+        line = if (expanded) SchoolAccent.copy(alpha = 0.35f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
         onClick = onToggle,
     ) {
         Column(Modifier.padding(14.dp)) {
@@ -475,8 +475,8 @@ private fun SubjectRow(
 private fun GradeLine(g: Grade, onDelete: (String) -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-            .background(Color.White.copy(alpha = 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
             .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -564,7 +564,7 @@ private fun HomeworkPanel(
             }
 
             Spacer(Modifier.height(10.dp))
-            Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+            Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
             Spacer(Modifier.height(10.dp))
 
             if (!adding) {
@@ -635,7 +635,7 @@ private fun HwLine(hw: Hw, today: Long, onDone: () -> Unit) {
     ) {
         Box(
             Modifier.size(19.dp).clip(CircleShape)
-                .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape),
+                .border(1.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape),
         )
         Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f)) {
@@ -774,7 +774,7 @@ private fun ReviewOverlay(deck: Deck, onClose: () -> Unit) {
                         )
                         Spacer(Modifier.height(20.dp))
                         if (revealed) {
-                            Box(Modifier.width(44.dp).height(1.dp).background(Color.White.copy(alpha = 0.15f)))
+                            Box(Modifier.width(44.dp).height(1.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f)))
                             Spacer(Modifier.height(20.dp))
                             Text(
                                 card.back, color = SchoolAccent, fontFamily = Body,
@@ -952,10 +952,10 @@ private fun Overline(text: String) {
 private fun SchoolChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (selected) SchoolAccent.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.04f))
+            .background(if (selected) SchoolAccent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) SchoolAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f),
+                if (selected) SchoolAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
             .clickable(onClick = onClick)
@@ -972,10 +972,10 @@ private fun SchoolChip(label: String, selected: Boolean, onClick: () -> Unit) {
 private fun RowScope.WeightChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
-            .background(if (selected) SchoolAccent.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.04f))
+            .background(if (selected) SchoolAccent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) SchoolAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f),
+                if (selected) SchoolAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(12.dp),
             )
             .clickable(onClick = onClick)
@@ -1010,8 +1010,8 @@ private fun RowScope.GradeChipBtn(label: String, color: Color, onClick: () -> Un
 private fun StepperOrb(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(40.dp).clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
@@ -1021,7 +1021,7 @@ private fun StepperOrb(label: String, onClick: () -> Unit) {
 private fun ActionButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-            .background(if (enabled) SchoolAccent else Color.White.copy(alpha = 0.06f))
+            .background(if (enabled) SchoolAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
@@ -1066,8 +1066,8 @@ private fun GlassField(
     Box(
         Modifier.fillMaxWidth().heightIn(min = minHeight)
             .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) {

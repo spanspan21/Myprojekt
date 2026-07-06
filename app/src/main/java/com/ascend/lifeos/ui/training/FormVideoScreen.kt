@@ -90,8 +90,8 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable { recording?.stop(); onClose() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -109,7 +109,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
             // live preview
             Box(
                 Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(RoundedCornerShape(20.dp))
-                    .border(0.5.dp, if (recording != null) Crit.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
+                    .border(0.5.dp, if (recording != null) Crit.copy(alpha = 0.7f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
             ) {
                 AndroidView(
                     factory = { c ->
@@ -147,8 +147,8 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                 Box(
                     Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp).size(64.dp)
                         .clip(CircleShape)
-                        .background(if (recording != null) Crit else Color.White.copy(alpha = 0.15f))
-                        .border(2.dp, Color.White.copy(alpha = 0.8f), CircleShape)
+                        .background(if (recording != null) Crit else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f))
+                        .border(2.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.8f), CircleShape)
                         .clickable(enabled = camReady) {
                             val rec = recording
                             if (rec != null) { rec.stop(); recording = null } else {

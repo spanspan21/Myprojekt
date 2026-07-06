@@ -60,7 +60,7 @@ fun HudCurve(
         val hairline = 0.5.dp.toPx()
 
         // Grid: three horizontal hairlines.
-        val grid = Color.White.copy(alpha = 0.06f)
+        val grid = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)
         for (i in 1..3) {
             val y = h * i / 4f
             drawLine(grid, Offset(0f, y), Offset(w, y), strokeWidth = hairline)
@@ -101,8 +101,9 @@ fun HudCurve(
         }
         drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.14f * p), Color.Transparent), endY = h))
 
-        // Neon glow pass + thin core stroke.
-        drawPath(shown, color.copy(alpha = 0.16f), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
+        // Neon glow pass (Welt-Faktor) + thin core stroke.
+        val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+        if (glowF > 0f) drawPath(shown, color.copy(alpha = 0.16f * glowF), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
         drawPath(shown, color, style = Stroke(1.dp.toPx(), cap = StrokeCap.Round))
 
         // Endpoint marker appears when the line arrives.
@@ -129,7 +130,7 @@ fun LoadBars(data: List<Pair<String, Int>>, modifier: Modifier = Modifier, color
                 Canvas(Modifier.weight(1f).height(12.dp)) {
                     val w = size.width
                     val cy = size.height / 2f
-                    drawLine(Color.White.copy(alpha = 0.08f), Offset(0f, cy), Offset(w, cy), strokeWidth = 0.5.dp.toPx())
+                    drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), Offset(0f, cy), Offset(w, cy), strokeWidth = 0.5.dp.toPx())
                     if (value > 0) {
                         val bw = w * value / maxV
                         val bh = 3.dp.toPx()

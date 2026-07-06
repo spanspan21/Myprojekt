@@ -334,8 +334,8 @@ private fun StepRow(label: String, value: String, onMinus: () -> Unit, onPlus: (
 @Composable
 private fun StepOrb(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(32.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+        Modifier.size(32.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold) }

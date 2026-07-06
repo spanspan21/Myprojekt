@@ -175,7 +175,7 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>) {
                 val vol = muscleMap[muscle] ?: 0
                 val frac = vol.toFloat() / maxVol
                 val color = when {
-                    frac > 0.7f -> Color(0xFF34E0A1)
+                    frac > 0.7f -> Good
                     frac > 0.3f -> Amber
                     frac > 0f -> Color(0xFFFF6B6B)
                     else -> TextDim.copy(alpha = 0.3f)
@@ -183,7 +183,7 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>) {
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(muscleLabel(muscle), color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(80.dp))
                     Box(
-                        Modifier.weight(1f).height(10.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.04f)),
+                        Modifier.weight(1f).height(10.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)),
                     ) {
                         Box(Modifier.fillMaxHeight().fillMaxWidth(frac.coerceIn(0f, 1f)).clip(CircleShape).background(color))
                     }
@@ -224,7 +224,7 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
                         val trained = dayKey in daySet
                         Box(
                             Modifier.size(12.dp).clip(RoundedCornerShape(2.dp))
-                                .background(if (trained) Accent.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.04f)),
+                                .background(if (trained) Accent.copy(alpha = 0.7f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)),
                         )
                     }
                 }

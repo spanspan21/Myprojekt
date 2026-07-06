@@ -364,8 +364,8 @@ fun HomeScreen(
                 Spacer(Modifier.height(10.dp))
                 Row(
                     Modifier.clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.04f))
-                        .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                         .clickable { com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -795,7 +795,7 @@ private fun HeroStatRow(label: String, value: String) {
 
 @Composable
 private fun HairLine() {
-    Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+    Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
 }
 
 // ─── configurable dashboard (PDF: anpassbares Dashboard) ─────────────────────
@@ -873,7 +873,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                         letterSpacing = 1.5.sp,
                         modifier = Modifier
                             .clip(RoundedCornerShape(9.dp))
-                            .background(if (visible) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+                            .background(if (visible) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .clickable {
                                 commit(if (visible) order - key else order + key)
                             }

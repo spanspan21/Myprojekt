@@ -259,8 +259,8 @@ fun TrainingHub(
                     Spacer(Modifier.width(8.dp))
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
                             .clickable { vm.regeneratePlan() }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
                     ) {
@@ -399,7 +399,7 @@ private fun BlockChips(blocks: List<PlannedBlock>) {
         blocks.forEach { b ->
             Row(
                 Modifier.clip(RoundedCornerShape(8.dp))
-                    .background(Color.White.copy(alpha = 0.04f))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, blockColor(b.type).copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -548,8 +548,8 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
     GlassPanel(
         Modifier.fillMaxWidth().then(if (mastery) Modifier else Modifier.clickable { onOpenTestDay(focused.chain.groupKey) }),
         corner = 16.dp,
-        fill = if (testReady) Amber.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.04f),
-        line = if (testReady) Amber.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.09f),
+        fill = if (testReady) Amber.copy(alpha = 0.06f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+        line = if (testReady) Amber.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f),
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -806,7 +806,7 @@ internal fun catIcon(cat: ExCategory): ImageVector = when (cat) {
 internal fun catColor(cat: ExCategory) = when (cat) {
     ExCategory.PUSH -> Color(0xFFFF6B6B); ExCategory.PULL -> Color(0xFF5B9DFF)
     ExCategory.LEGS -> Color(0xFFFFB347); ExCategory.CORE -> Color(0xFFB794FF)
-    ExCategory.SKILL -> Color(0xFF34E0A1); ExCategory.CARDIO -> Color(0xFFFF4081)
+    ExCategory.SKILL -> Mod.Home; ExCategory.CARDIO -> Red
     ExCategory.MOBILITY -> Color(0xFF26C6DA)
 }
 
@@ -832,12 +832,12 @@ private fun templateColor(split: String) = when {
     "Leg" in split -> Color(0xFFFFB347)
     "Upper" in split -> Color(0xFF5B9DFF)
     "Lower" in split -> Color(0xFFFFB347)
-    "Full" in split -> Color(0xFF34E0A1)
+    "Full" in split -> Mod.Home
     "Minimal" in split -> Color(0xFF4CD4C4)
     "Skill" in split || "Freestyle" in split -> Color(0xFFB794FF)
     "Mobility" in split || "Recovery" in split -> Color(0xFF26C6DA)
     "Frei" in split -> Color(0xFF4CD4C4)
-    else -> Color(0xFF34E0A1)
+    else -> Mod.Home
 }
 
 private fun templateIcon(split: String): ImageVector = when {

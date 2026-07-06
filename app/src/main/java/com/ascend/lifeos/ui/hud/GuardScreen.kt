@@ -457,8 +457,8 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
 
     Panel(
         Modifier.fillMaxWidth(), corner = 18.dp,
-        fill = if (active) Mod.Guard.copy(alpha = 0.07f) else Color.White.copy(alpha = 0.03f),
-        line = if (active) Mod.Guard.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.10f),
+        fill = if (active) Mod.Guard.copy(alpha = 0.07f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f),
+        line = if (active) Mod.Guard.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -601,7 +601,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
 private fun ScoreRow(label: String, value: String, quality: Float) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextDim, fontSize = 11.5.sp, fontFamily = Body, modifier = Modifier.width(84.dp))
-        Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.06f))) {
+        Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
             Box(
                 Modifier.fillMaxWidth(quality.coerceIn(0.04f, 1f)).height(4.dp).clip(RoundedCornerShape(2.dp))
                     .background(if (quality >= 0.66f) Good else if (quality >= 0.35f) Warn else Crit),
@@ -614,8 +614,8 @@ private fun ScoreRow(label: String, value: String, quality: Float) {
 
 @Composable
 private fun TogglePill(on: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f), tween(Motion.quick), label = "tpB")
-    val edge by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.12f), tween(Motion.quick), label = "tpE")
+    val bg by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), tween(Motion.quick), label = "tpB")
+    val edge by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), tween(Motion.quick), label = "tpE")
     val fg by animateColorAsState(if (on) Mod.Guard else TextDim, tween(Motion.quick), label = "tpF")
     Box(
         Modifier.pressScale(onClick)
@@ -634,7 +634,7 @@ private fun TogglePill(on: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun HairRow() {
-    Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.07f)))
+    Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)))
 }
 
 private fun fmtDur(ms: Long): String {
@@ -672,7 +672,7 @@ private fun WeekChart(week: List<Pair<Long, Long>>, budgetMin: Int, modifier: Mo
         // budget line
         val by = size.height - (budgetMin * 60_000L.toFloat() / max) * size.height
         drawLine(
-            Color.White.copy(alpha = 0.25f), Offset(0f, by), Offset(size.width, by),
+            com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), Offset(0f, by), Offset(size.width, by),
             strokeWidth = 1.5f,
             pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(8f, 8f)),
         )
@@ -709,7 +709,7 @@ private fun AppRow(
                 .padding(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(Color.White.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
                     if (icon != null) Image(icon, null, modifier = Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)))
                     else Text(app.label.take(1), color = TextMuted, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
@@ -813,7 +813,7 @@ private fun UnlockHeatmap(hours: Map<Int, IntArray>) {
                     for (h in 0 until 24) {
                         val c = arr?.getOrNull(h) ?: 0
                         val color =
-                            if (c <= 0) Color.White.copy(alpha = 0.05f)
+                            if (c <= 0) com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)
                             else Mod.Guard.copy(alpha = (0.18f + 0.82f * c.toFloat() / max).coerceAtMost(1f))
                         drawRoundRect(
                             color,
@@ -888,7 +888,7 @@ private fun EmptyHint(text: String) {
 
 @Composable
 private fun LimitChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f), tween(Motion.quick), label = "lcB")
+    val bg by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "lcB")
     val edge by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.5f) else HudLine, tween(Motion.quick), label = "lcE")
     val fg by animateColorAsState(if (selected) Mod.Guard else TextMuted, tween(Motion.quick), label = "lcF")
     Box(

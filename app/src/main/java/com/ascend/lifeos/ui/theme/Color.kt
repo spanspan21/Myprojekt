@@ -3,100 +3,94 @@ package com.ascend.lifeos.ui.theme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
 
-// ---- SOVEREIGN design tokens ------------------------------------------------
-// Obsidian & Champagne (JARVIS_SOVEREIGN_THEME.pdf, Kap. 10–12).
-// Warme Neutrale tragen die Temperatur, EIN Edelmetall trägt den Wert,
-// Module sind Juwelen im selben Gehäuse. Premium = restraint — geerbt.
+// ─── ATELIER-Tokens: Rollen, keine Werte ─────────────────────────────────────
+// JEDER Token ist ein Live-Getter auf themeSpec (ThemeSpec.kt) — die Welt
+// beantwortet den Wert, der Code fragt nur die Rolle (Gesetz 2, Kap. 30).
+//
+// VERFASSUNG FÜR UI-CODE: kein Color.White, kein Roh-Hex. Nimm die Rolle:
+//   Fläche/Kante/ruhendes Icon → Ivory.copy(alpha = …) · Hairline → Line/Line2
+//   Untergrund → Bg/BgElevated/Surface/SurfaceHi · Wert/Feier → Champagne
+//   Zustand → Good/Warn/Crit · Modul → Mod.<Name> · Radius → RHero…RMicro
 
-val Void = Color(0xFF060504)         // tiefste Bühne (Boot, Intercept, Wrapped)
-val Bg = Color(0xFF0B0A08)          // App-Grund — warmes Obsidian
-val BgElevated = Color(0xFF12100C)   // Sheets, erhöhte Zonen
-val Surface = Color(0xFF171411)      // Karten-Basiston
-val SurfaceHi = Color(0xFF1E1A15)    // Inputs / erhöhte Karten
+val Void: Color get() = themeSpec.value.void
+val Bg: Color get() = themeSpec.value.bg
+val BgElevated: Color get() = themeSpec.value.bgElevated
+val Surface: Color get() = themeSpec.value.surface
+val SurfaceHi: Color get() = themeSpec.value.surfaceHi
 
-// Elfenbein-Hairlines: Weiß-Alpha wirkt auf warmem Grund schmutzig —
-// Ivory bleibt „Metallkante" (Kap. 10).
-val Ivory = Color(0xFFF3E9D8)
-val Line = Ivory.copy(alpha = 0.08f)
-val Line2 = Ivory.copy(alpha = 0.14f)
+/** Die adaptive „Weiß-Rolle" der Welt (Elfenbein/Frost/Licht/Sand/Tinte). */
+val Ivory: Color get() = themeSpec.value.ivory
+val Line: Color get() = themeSpec.value.ivory.copy(alpha = themeSpec.value.lineAlpha)
+val Line2: Color get() = themeSpec.value.ivory.copy(alpha = themeSpec.value.line2Alpha)
 
-val TextPrimary = Color(0xFFF2EFE8)  // Elfenbein statt Papierweiß
-val TextMuted = Color(0xFF9B9487)
-val TextDim = Color(0xFF615B51)
+val TextPrimary: Color get() = themeSpec.value.textPrimary
+val TextMuted: Color get() = themeSpec.value.textMuted
+val TextDim: Color get() = themeSpec.value.textDim
 
-// ---- Champagne: das eine Edelmetall (Kap. 11) --------------------------------
-// KEIN Modul, KEINE Semantik. Budget ≤ 5 % pro Screen, nie Fläche, nie Loop.
-val Champagne = Color(0xFFE6C888)
-val ChampagneDeep = Color(0xFFB99154)
-val ChampagneSoft = Color(0xFFE6C888).copy(alpha = 0.14f)
-val ChampagneLine = Color(0xFFE6C888).copy(alpha = 0.45f)
+// ---- Edelmetall der Welt (Namen bleiben aus SOVEREIGN-Ära) -------------------
+val Champagne: Color get() = themeSpec.value.metal
+val ChampagneDeep: Color get() = themeSpec.value.metalDeep
+val ChampagneSoft: Color get() = themeSpec.value.metal.copy(alpha = 0.14f)
+val ChampagneLine: Color get() = themeSpec.value.metal.copy(alpha = 0.45f)
 
 // Live accent: backed by snapshot state so every `Accent` read recomposes
 // when the user picks a new colour — no per-call-site changes needed.
-val accentState = mutableStateOf(Color(0xFF35D19A)) // Jade — die Signatur
+val accentState = mutableStateOf(Color(0xFF35D19A))
 val Accent: Color get() = accentState.value
 val AccentSoft: Color get() = accentState.value.copy(alpha = 0.15f)
 val AccentDim: Color get() = lerp(accentState.value, Color.Black, 0.45f)
 
 fun applyAccent(color: Long) { accentState.value = Color(color) }
 
-/** Selectable accent presets (ARGB longs) — die Juwelen-Reihe. */
-val ACCENT_PRESETS: List<Long> = listOf(
-    0xFF35D19A, // jade
-    0xFF5893F0, // saphir
-    0xFFA98BF2, // amethyst
-    0xFFE6C888, // champagne
-    0xFFF0663A, // karneol
-    0xFFF25F68, // rubin
-    0xFF4AC3E8, // aquamarin
-    0xFFEC7FB4, // rosenquarz
-    0xFF9DCB55, // peridot
-)
+/** Selectable accent presets (ARGB longs) — die Juwelen-Reihe der aktiven Welt. */
+val ACCENT_PRESETS: List<Long>
+    get() = themeSpec.value.mods.let { m ->
+        listOf(
+            m.home, m.school, m.calendar, themeSpec.value.metal, m.train,
+            themeSpec.value.crit, m.body, m.skills, m.fuel,
+        ).map { it.toArgb().toLong() and 0xFFFFFFFFL }
+    }
 
 // Status / data colours (used sparingly, never as decoration)
-val Amber = Color(0xFFF0B94F)
-val Orange = Color(0xFFF0854C)
-val Blue = Color(0xFF5893F0)
-val Purple = Color(0xFFA98BF2)
-val Red = Color(0xFFF25F68)
-val Cyan = Color(0xFF4AC3E8)         // secondary glow for HUD gradients
+val Amber: Color get() = themeSpec.value.warn
+val Orange: Color get() = lerp(themeSpec.value.warn, themeSpec.value.crit, 0.4f)
+val Blue: Color get() = themeSpec.value.mods.school
+val Purple: Color get() = themeSpec.value.mods.calendar
+val Red: Color get() = themeSpec.value.crit
+val Cyan: Color get() = themeSpec.value.mods.body
 
-// ---- SOVEREIGN module jewels (Kap. 12) ---------------------------------------
-// One foundation, ten signatures. Jeder Tab behält seine Farbfamilie —
-// vom Neonröhren-Leuchten zum geschliffenen Stein.
-
+// ---- Modul-Juwelen der aktiven Welt ------------------------------------------
 object Mod {
-    val Home = Color(0xFF35D19A)      // Jade — command center
-    val Calendar = Color(0xFFA98BF2)  // Amethyst — timeline
-    val Train = Color(0xFFF0663A)     // Karneol — power
-    val Fuel = Color(0xFF9DCB55)      // Peridot — nutrition
-    val Body = Color(0xFF4AC3E8)      // Aquamarin — vitals
-    val Guard = Color(0xFFD9AF6B)     // Messing — der Schild ist das Wappen
-    val Skills = Color(0xFF8579EF)    // Iolith — constellation
-    val Mind = Color(0xFF7887EA)      // Tansanit — journal & mood
-    val Finance = Color(0xFF93B54B)   // Moos-Achat — money
-    val School = Color(0xFF5893F0)    // Saphir — grades & homework
+    val Home: Color get() = themeSpec.value.mods.home
+    val Calendar: Color get() = themeSpec.value.mods.calendar
+    val Train: Color get() = themeSpec.value.mods.train
+    val Fuel: Color get() = themeSpec.value.mods.fuel
+    val Body: Color get() = themeSpec.value.mods.body
+    val Guard: Color get() = themeSpec.value.mods.guard
+    val Skills: Color get() = themeSpec.value.mods.skills
+    val Mind: Color get() = themeSpec.value.mods.mind
+    val Finance: Color get() = themeSpec.value.mods.finance
+    val School: Color get() = themeSpec.value.mods.school
 }
 
 /**
  * The accent of the module currently on screen. The shell provides it per tab
  * and per overlay, so shared HUD components (buttons, chips, meters) render in
- * the module's identity instead of a hardcoded global jade.
+ * the module's identity instead of a hardcoded global tone.
  */
 val LocalModuleAccent = androidx.compose.runtime.staticCompositionLocalOf { Color(0xFF35D19A) }
 
-// Semantic verdicts — identical in every module, never used as decoration.
-// Gold ist nie Warnung, Warnung nie Feier (Kap. 11).
-val Good = Color(0xFF3BD693)
-val Warn = Color(0xFFF0B94F)
-val Crit = Color(0xFFF25F68)
+// Semantic verdicts — identical in every module, coloured in EVERY world
+// (auch MONO — Sicherheit schlägt Purismus, Gesetz 5).
+val Good: Color get() = themeSpec.value.good
+val Warn: Color get() = themeSpec.value.warn
+val Crit: Color get() = themeSpec.value.crit
 
-/** Theme preset: "sovereign" (default) · "stark" (IRON legacy) · "stealth" (no glow) · "reactor" (more energy). */
-val themeState = mutableStateOf("sovereign")
-
-// ---- Radius-Gesetz (Kap. 17): fünf Stufen, keine Fallentscheidungen ----------
-val RHero = androidx.compose.ui.unit.Dp(22f)    // Hero-Panels, Sheets, Wrapped
-val RCard = androidx.compose.ui.unit.Dp(18f)    // Standard-Karten
-val RElem = androidx.compose.ui.unit.Dp(13f)    // Chips, Buttons, Inputs
-val RMicro = androidx.compose.ui.unit.Dp(9f)    // Mini-Chips, Tags, Badges
+// ---- Radius-Gesetz (Kap. 17/22): Form folgt der Welt --------------------------
+val RHero: Dp get() = themeSpec.value.rHero
+val RCard: Dp get() = themeSpec.value.rCard
+val RElem: Dp get() = themeSpec.value.rElem
+val RMicro: Dp get() = themeSpec.value.rMicro

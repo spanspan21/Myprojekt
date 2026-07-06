@@ -201,7 +201,7 @@ fun MuscleHeatMap(
     freshness: Map<Muscle, Float>,
     modifier: Modifier = Modifier,
 ) {
-    val fresh = Color(0xFF34E0A1)
+    val fresh = com.ascend.lifeos.ui.theme.Good
     val fried = Color(0xFFFF6169)
     fun tint(m: Muscle): Color? {
         val f = freshness[m]?.coerceIn(0f, 1f) ?: return null

@@ -71,7 +71,7 @@ fun FastingScreen(onBack: () -> Unit) {
             .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 18.dp)) {
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Color.White.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(14.dp))
@@ -92,7 +92,7 @@ fun FastingScreen(onBack: () -> Unit) {
             Canvas(Modifier.size(260.dp)) {
                 val sw = 16.dp.toPx()
                 val inset = sw / 2
-                drawArc(Color.White.copy(alpha = 0.06f), -90f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw, cap = StrokeCap.Round))
+                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), -90f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw, cap = StrokeCap.Round))
                 if (state.active) {
                     drawArc(zone.color.copy(alpha = 0.25f), -90f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw))
                     drawArc(zone.color, -90f, 360f * progress, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw, cap = StrokeCap.Round))

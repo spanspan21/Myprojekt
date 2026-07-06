@@ -108,7 +108,7 @@ fun StretchScreen(onBack: () -> Unit) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.size(200.dp)) {
                     val stroke = Stroke(6.dp.toPx(), cap = StrokeCap.Round)
-                    drawArc(Color.White.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
+                    drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
                     drawArc(Cyan, -90f, fraction * 360f, false, style = stroke)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -139,7 +139,7 @@ fun StretchScreen(onBack: () -> Unit) {
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
                 Box(
-                    Modifier.size(56.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))
+                    Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, HudLine, CircleShape).clickable {
                             isSecondSide = false
                             if (exIndex < routine.exercises.size - 1) {

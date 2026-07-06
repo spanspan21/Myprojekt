@@ -97,7 +97,7 @@ fun ActiveWorkoutScreen(
                     }
                     // form-check camera
                     Box(
-                        Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.05f))
+                        Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
                             .clickable { formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                     ) { Icon(Icons.Rounded.Videocam, null, tint = TextMuted, modifier = Modifier.size(16.dp)) }
@@ -105,7 +105,7 @@ fun ActiveWorkoutScreen(
                     if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.AUTO_COUNT, false)) {
                         Spacer(Modifier.width(8.dp))
                         Box(
-                            Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.05f))
+                            Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
                                 .clickable { repCounterOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                         ) { Icon(Icons.Rounded.Visibility, null, tint = TextMuted, modifier = Modifier.size(16.dp)) }
@@ -136,7 +136,7 @@ fun ActiveWorkoutScreen(
                         HudChip(label, selected = i == vm.activeCurrentExIndex) { vm.setCurrentExercise(i) }
                     }
                     Box(
-                        Modifier.clip(RoundedCornerShape(11.dp)).background(Color.White.copy(alpha = 0.04f))
+                        Modifier.clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, HudLine, RoundedCornerShape(11.dp)).clickable(onClick = onAddExercise)
                             .padding(horizontal = 10.dp, vertical = 8.dp),
                     ) { Icon(Icons.Rounded.Add, null, tint = TextDim, modifier = Modifier.size(16.dp)) }
@@ -177,7 +177,7 @@ fun ActiveWorkoutScreen(
                                         Box(
                                             Modifier.size(16.dp).clip(CircleShape)
                                                 .background(if (done) Amber else Color.Transparent)
-                                                .border(1.dp, if (done) Amber else Color.White.copy(alpha = 0.25f), CircleShape),
+                                                .border(1.dp, if (done) Amber else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape),
                                         )
                                         Spacer(Modifier.width(10.dp))
                                         Text(
@@ -409,7 +409,7 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
 @Composable
 private fun StepperButton(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(56.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))
+        Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, HudLine, CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
@@ -460,7 +460,7 @@ private fun RestTimerCard(vm: TrainingViewModel) {
 
                 Canvas(Modifier.fillMaxSize()) {
                     val stroke = Stroke(4.dp.toPx(), cap = StrokeCap.Round)
-                    drawArc(Color.White.copy(alpha = 0.06f), 0f, 360f, false, style = stroke)
+                    drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, style = stroke)
                     drawArc(sweepColor, -90f, fraction * 360f, false, style = stroke)
 
                     val angle = (-90 + fraction * 360) * PI / 180
@@ -491,7 +491,7 @@ private fun RestTimerCard(vm: TrainingViewModel) {
 @Composable
 private fun MiniBtn(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.06f))
+        Modifier.clip(RoundedCornerShape(10.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, HudLine, RoundedCornerShape(10.dp)).clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) { Text(label, color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
@@ -560,7 +560,7 @@ private fun setTypeLabel(st: SetType) = when (st) {
 }
 
 private fun setTypeColor(st: SetType) = when (st) {
-    SetType.NORMAL -> Color(0xFF34E0A1); SetType.WARMUP -> Color(0xFFF5C451)
+    SetType.NORMAL -> Good; SetType.WARMUP -> Warn
     SetType.DROP -> Color(0xFF5B9DFF); SetType.FAILURE -> Color(0xFFFF6169)
     SetType.ASSISTED -> Color(0xFFB794FF); SetType.NEGATIVE -> Color(0xFF4CD4C4)
 }

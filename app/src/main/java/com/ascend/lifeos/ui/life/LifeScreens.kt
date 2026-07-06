@@ -53,8 +53,8 @@ private fun LifeScaffold(title: String, context: String, accent: Color, onClose:
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -68,8 +68,8 @@ private fun LifeScaffold(title: String, context: String, accent: Color, onClose:
 private fun LifeField(placeholder: String, value: String, accent: Color, onValue: (String) -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
             .padding(horizontal = 13.dp, vertical = 11.dp),
     ) {
         if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = 13.sp, fontFamily = Body)
@@ -126,8 +126,8 @@ fun MindScreen(onClose: () -> Unit) {
                         val c = when (v) { 1 -> Crit; 2 -> Warn; else -> Good }
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
-                                .background(if (on) c.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-                                .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                .background(if (on) c.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                                .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                                 .clickable { mood = v; saved = false }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) { Text(label, color = if (on) c else TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -299,7 +299,7 @@ fun GoalsScreen(onClose: () -> Unit) {
                         Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(kr.label, color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-                                Box(Modifier.fillMaxWidth().padding(top = 4.dp).height(5.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))) {
+                                Box(Modifier.fillMaxWidth().padding(top = 4.dp).height(5.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
                                     Box(Modifier.fillMaxWidth(p.coerceIn(0.02f, 1f)).fillMaxHeight().clip(CircleShape).background(Mod.Home))
                                 }
                             }
@@ -396,7 +396,7 @@ private fun HabitsBlock() {
                 Box(
                     Modifier.size(20.dp).clip(CircleShape)
                         .background(if (done) Mod.Home else Color.Transparent)
-                        .border(1.dp, if (done) Mod.Home else Color.White.copy(alpha = 0.25f), CircleShape)
+                        .border(1.dp, if (done) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
                         .clickable(enabled = scheduled) { LifeStores.setHabitDone(ctx, h.id, today, !done) },
                     contentAlignment = Alignment.Center,
                 ) { if (done) Text("✓", color = Void, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
@@ -444,7 +444,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
     var targetKg by remember { mutableStateOf("") }
 
     androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDone, containerColor = Color(0xFF0B0D10), dragHandle = null,
+        onDismissRequest = onDone, containerColor = com.ascend.lifeos.ui.theme.BgElevated, dragHandle = null,
     ) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text("NEW GOAL", color = Mod.Home, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
@@ -459,7 +459,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                 Box(
                     Modifier.size(18.dp).clip(CircleShape)
                         .background(if (weightBind) Mod.Home else Color.Transparent)
-                        .border(1.dp, if (weightBind) Mod.Home else Color.White.copy(alpha = 0.25f), CircleShape)
+                        .border(1.dp, if (weightBind) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
                         .clickable { weightBind = !weightBind },
                     contentAlignment = Alignment.Center,
                 ) { if (weightBind) Text("✓", color = Void, fontSize = 10.sp, fontWeight = FontWeight.Bold) }

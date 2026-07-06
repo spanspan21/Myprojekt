@@ -62,6 +62,8 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.ScannerEngine
 import com.ascend.lifeos.ui.kit.VerdictPill
 import com.ascend.lifeos.ui.theme.Amber
+import com.ascend.lifeos.ui.theme.Orange
+import com.ascend.lifeos.ui.theme.Warn
 import com.ascend.lifeos.ui.theme.BgElevated
 import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.Good
@@ -333,7 +335,7 @@ private fun SquareIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, on
 @Composable
 private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
     Row(
-        modifier.clip(RoundedCornerShape(13.dp)).background(Color.White.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).clickable { onClick() }.padding(vertical = 13.dp),
+        modifier.clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).clickable { onClick() }.padding(vertical = 13.dp),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, null, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
@@ -362,7 +364,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
                 if (score == "★") {
                     Icon(Icons.Rounded.Star, null, tint = Amber, modifier = Modifier.size(16.dp))
                 } else {
-                    val c = when (score) { "A" -> Color(0xFF34E0A1); "B" -> Color(0xFF9BD64C); "C" -> Color(0xFFF5C451); "D" -> Color(0xFFFF8A4C); else -> Color(0xFFFF6169) }
+                    val c = when (score) { "A" -> Good; "B" -> Mod.Fuel; "C" -> Warn; "D" -> Orange; else -> Crit }
                     Box(Modifier.size(24.dp).clip(RoundedCornerShape(7.dp)).background(c.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
                         Text(score, color = c, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
@@ -382,7 +384,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     val eval = remember(product) { FoodScore.evaluate(product) }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(Color.White.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
             Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(12.dp))

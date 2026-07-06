@@ -223,7 +223,7 @@ fun BodyScreen() {
                             Text("$sScore", color = sColor, style = metricStyle(26))
                         }
                         Spacer(Modifier.height(12.dp))
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.07f)))
+                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)))
                         Spacer(Modifier.height(12.dp))
                     }
                     val total = sm.coerceAtLeast(1)
@@ -365,7 +365,7 @@ fun BodyScreen() {
                                     Modifier.weight(1f).padding(horizontal = 1.5.dp)
                                         .height((28 * (l / peak)).dp.coerceAtLeast(2.dp))
                                         .clip(RoundedCornerShape(2.dp))
-                                        .background(if (l > 0) Mod.Body.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.07f)),
+                                        .background(if (l > 0) Mod.Body.copy(alpha = 0.75f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)),
                                 )
                             }
                         }
@@ -515,7 +515,7 @@ private fun MeasurementsCard() {
                     )
                 }
                 if (i < measures.size - 1) {
-                    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(0.5.dp).background(Color.White.copy(alpha = 0.06f)))
+                    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)))
                 }
             }
         }
@@ -536,7 +536,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
         )
     }
     androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null,
+        onDismissRequest = onDismiss, containerColor = com.ascend.lifeos.ui.theme.BgElevated, dragHandle = null,
     ) {
         Column(
             Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding(),
@@ -581,7 +581,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
 private fun WhyRow(label: String, value: String, quality: Float) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextDim, fontSize = 11.5.sp, fontFamily = Body, modifier = Modifier.width(86.dp))
-        Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))) {
+        Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
             Box(
                 Modifier.fillMaxWidth(quality.coerceIn(0.05f, 1f)).fillMaxHeight().clip(CircleShape)
                     .background(if (quality >= 0.66f) Good else if (quality >= 0.4f) Warn else Crit),
@@ -596,7 +596,7 @@ private fun WhyRow(label: String, value: String, quality: Float) {
 private fun StageBar(label: String, minutes: Int, total: Int, color: Color) {
     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp))
-        Box(Modifier.weight(1f).height(7.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))) {
+        Box(Modifier.weight(1f).height(7.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
             Box(
                 Modifier.fillMaxWidth((minutes.toFloat() / total).coerceIn(0f, 1f)).fillMaxHeight()
                     .clip(CircleShape).background(color),
@@ -726,8 +726,8 @@ private fun CheckInCard() {
 private fun FactorChip(label: String, on: Boolean, onToggle: (Boolean) -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (on) Mod.Body.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
-            .border(0.5.dp, if (on) Mod.Body.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+            .background(if (on) Mod.Body.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, if (on) Mod.Body.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
             .clickable { onToggle(!on) }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) Mod.Body else TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -771,8 +771,8 @@ private fun SickModeRow() {
     val sick = Repo.data.profile.sickMode
     Panel(
         Modifier.fillMaxWidth(), corner = 16.dp,
-        fill = if (sick) Crit.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.03f),
-        line = if (sick) Crit.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.10f),
+        fill = if (sick) Crit.copy(alpha = 0.06f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f),
+        line = if (sick) Crit.copy(alpha = 0.35f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
     ) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -788,8 +788,8 @@ private fun SickModeRow() {
             }
             Box(
                 Modifier.clip(RoundedCornerShape(11.dp))
-                    .background(if (sick) Crit.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
-                    .border(0.5.dp, if (sick) Crit.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                    .background(if (sick) Crit.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                    .border(0.5.dp, if (sick) Crit.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
                     .clickable { Repo.setSickMode(!sick) }
                     .padding(horizontal = 13.dp, vertical = 8.dp),
             ) {
@@ -924,7 +924,7 @@ private fun WeightSheet(onDismiss: () -> Unit) {
         mutableStateOf(Repo.weightLog().lastOrNull()?.kg ?: Repo.data.profile.weightKg.toDouble())
     }
     androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null,
+        onDismissRequest = onDismiss, containerColor = com.ascend.lifeos.ui.theme.BgElevated, dragHandle = null,
     ) {
         Column(
             Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding(),
@@ -966,8 +966,8 @@ private fun WeightSheet(onDismiss: () -> Unit) {
 @Composable
 private fun WeightStep(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(46.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+        Modifier.size(46.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold) }

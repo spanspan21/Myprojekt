@@ -275,8 +275,8 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Spacer(Modifier.height(36.dp))
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                            .background(Color.White.copy(alpha = 0.06f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
                             .clickable { onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Back to training", color = TextMuted, fontFamily = Body, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
@@ -289,8 +289,8 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
 @Composable
 private fun TestStep(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(58.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+        Modifier.size(58.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 23.sp, fontWeight = FontWeight.Bold) }

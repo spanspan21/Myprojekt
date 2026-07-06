@@ -48,45 +48,62 @@ import com.ascend.lifeos.ui.theme.*
 
 // ---- atmosphere -------------------------------------------------------------
 
-/** Obsidian room: depth gradient, warmed accent nebulae, grain, vignette.
- *  Alles statisch — Material darf nicht dauerhaft rechnen (Anti-Kitsch §9). */
+/** Der Raum der aktiven Welt: Tiefenverlauf, Nebel, Korn/Scanlines, Vignette —
+ *  voll spec-gesteuert (ATELIER Kap. 21), alles statisch (Gesetz 8). */
 @Composable
 fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
-    // theme preset scales the atmosphere: stealth kills it, reactor turns it up
-    val glow = when (com.ascend.lifeos.ui.theme.themeState.value) {
-        "stealth" -> 0f
-        "reactor" -> 1.7f
-        else -> 1f
-    }
-    // Nebel v2: 12 % Champagne überblendet — Kaminlicht statt Neonröhre
-    val warm = androidx.compose.ui.graphics.lerp(accent, Champagne, 0.12f)
-    // Korn: einmalig erzeugtes 96×96-Rauschen als Repeat-Shader (Banding-Killer,
-    // Kap. 15) — deterministisch geseedet, nach dem ersten Draw gratis.
-    val grain = remember {
+    val spec = com.ascend.lifeos.ui.theme.themeSpec.value
+    // Nebel-Ton: Metall-Beimischung je Welt; warmth == 1 → modul-unabhängig (TERRA)
+    val nebulaTint =
+        if (spec.nebulaWarmth >= 1f) spec.metal
+        else androidx.compose.ui.graphics.lerp(accent, spec.metal, spec.nebulaWarmth)
+    // Korn: einmalig erzeugtes 96×96-Rauschen als Repeat-Shader (Banding-Killer) —
+    // deterministisch geseedet, pro Welt gecacht, nach dem ersten Draw gratis.
+    val grain = remember(spec.id) {
         val rnd = kotlin.random.Random(42)
         val px = IntArray(96 * 96) {
             val v = rnd.nextInt(256)
-            android.graphics.Color.argb(7, v, v, v)
+            android.graphics.Color.argb(spec.grainAlpha, v, v, v)
         }
         android.graphics.Bitmap.createBitmap(px, 96, 96, android.graphics.Bitmap.Config.ARGB_8888)
             .asImageBitmap()
     }
+    // Scanlines (NEON): 1×4-Zeilenraster, gleicher Mechanismus wie das Korn
+    val scan = if (spec.scanlines) remember(spec.id) {
+        val px = IntArray(4) { row ->
+            if (row < 2) android.graphics.Color.argb(10, 0, 0, 0) else android.graphics.Color.TRANSPARENT
+        }
+        android.graphics.Bitmap.createBitmap(px, 1, 4, android.graphics.Bitmap.Config.ARGB_8888)
+            .asImageBitmap()
+    } else null
     Box(
         modifier.fillMaxSize().background(
             // Tiefengefälle: oben eine Spur heller — der Raum hat eine Decke
-            Brush.verticalGradient(0f to Color(0xFF0D0B09), 1f to Void),
+            Brush.verticalGradient(0f to spec.bgTop, 1f to spec.void),
         ),
     ) {
-        if (glow > 0f) {
+        if (spec.nebulaAlpha > 0f) {
             Box(Modifier.fillMaxSize().blur(90.dp)) {
-                Box(
-                    Modifier.size(390.dp).offset(x = (-70).dp, y = (-50).dp)
-                        .background(Brush.radialGradient(listOf(warm.copy(alpha = 0.10f * glow), Color.Transparent)), CircleShape),
-                )
-                Box(
-                    Modifier.size(345.dp).offset(x = 200.dp, y = 340.dp)
-                        .background(Brush.radialGradient(listOf(warm.copy(alpha = 0.055f * glow), Color.Transparent)), CircleShape),
-                )
+                if (spec.nebulaDual) {
+                    // NEONs zwei Leitungen: Herz oben links, Verstand unten rechts
+                    Box(
+                        Modifier.size(390.dp).offset(x = (-70).dp, y = (-50).dp)
+                            .background(Brush.radialGradient(listOf(spec.accentDefault.copy(alpha = spec.nebulaAlpha), Color.Transparent)), CircleShape),
+                    )
+                    Box(
+                        Modifier.size(345.dp).offset(x = 200.dp, y = 340.dp)
+                            .background(Brush.radialGradient(listOf(spec.metal.copy(alpha = spec.nebulaAlpha * 0.7f), Color.Transparent)), CircleShape),
+                    )
+                } else {
+                    Box(
+                        Modifier.size(390.dp).offset(x = (-70).dp, y = (-50).dp)
+                            .background(Brush.radialGradient(listOf(nebulaTint.copy(alpha = spec.nebulaAlpha), Color.Transparent)), CircleShape),
+                    )
+                    Box(
+                        Modifier.size(345.dp).offset(x = 200.dp, y = 340.dp)
+                            .background(Brush.radialGradient(listOf(nebulaTint.copy(alpha = spec.nebulaAlpha * 0.55f), Color.Transparent)), CircleShape),
+                    )
+                }
             }
         }
         Box(
@@ -100,15 +117,30 @@ fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
                 ),
             ),
         )
-        // Vignette: Ränder dunkeln 22 % ab — der Blick fällt zur Mitte
-        Box(
-            Modifier.fillMaxSize().background(
-                Brush.radialGradient(
-                    0.55f to Color.Transparent,
-                    1f to Color.Black.copy(alpha = 0.22f),
+        if (scan != null) {
+            Box(
+                Modifier.fillMaxSize().background(
+                    androidx.compose.ui.graphics.ShaderBrush(
+                        androidx.compose.ui.graphics.ImageShader(
+                            scan,
+                            androidx.compose.ui.graphics.TileMode.Repeated,
+                            androidx.compose.ui.graphics.TileMode.Repeated,
+                        ),
+                    ),
                 ),
-            ),
-        )
+            )
+        }
+        // Vignette: der Blick fällt zur Mitte
+        if (spec.vignette > 0f) {
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.radialGradient(
+                        0.55f to Color.Transparent,
+                        1f to Color.Black.copy(alpha = spec.vignette),
+                    ),
+                ),
+            )
+        }
     }
 }
 
@@ -135,12 +167,13 @@ fun Panel(
         // Tiefengefälle: oben minimal heller — Licht von oben
         .background(Brush.verticalGradient(0f to Ivory.copy(alpha = 0.028f), 0.55f to Color.Transparent))
         .border(0.5.dp, if (lux) ChampagneLine else line, shape)
-        // Specular-Oberkante: der 1-px-Lichtfaden der polierten Gehäusekante
+        // Specular-Oberkante: der 1-px-Lichtfaden — Stärke aus der Welt (MONO: 0)
         .drawWithContent {
             drawContent()
+            val spec = com.ascend.lifeos.ui.theme.themeSpec.value.specular
             val inset = corner.toPx() * 0.9f
-            if (size.width > inset * 2.5f) {
-                val glint = if (lux) Champagne.copy(alpha = 0.30f) else Ivory.copy(alpha = 0.16f)
+            if (spec > 0f && size.width > inset * 2.5f) {
+                val glint = if (lux) Champagne.copy(alpha = spec * 1.9f) else Ivory.copy(alpha = spec)
                 drawLine(
                     Brush.horizontalGradient(listOf(Color.Transparent, glint, Color.Transparent)),
                     Offset(inset, 0.75f), Offset(size.width - inset, 0.75f),
@@ -225,7 +258,7 @@ fun Ring(
     color: Color,
     modifier: Modifier = Modifier,
     stroke: Dp = 5.dp,
-    track: Color = Color.White.copy(alpha = 0.06f),
+    track: Color = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f),
     animate: Boolean = true,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -276,7 +309,7 @@ fun Spark(
         baseline?.let {
             val by = y(it)
             drawLine(
-                Color.White.copy(alpha = 0.15f), Offset(0f, by), Offset(size.width, by),
+                com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f), Offset(0f, by), Offset(size.width, by),
                 strokeWidth = 1.dp.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f)),
             )
@@ -294,8 +327,9 @@ fun Spark(
             }
             drawPath(area, Brush.verticalGradient(listOf(color.copy(alpha = 0.18f * p), Color.Transparent)))
         }
-        // glow first, line on top
-        drawPath(shown, color.copy(alpha = 0.22f), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
+        // glow first (Faktor der Welt — MONO: 0), line on top
+        val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+        if (glowF > 0f) drawPath(shown, color.copy(alpha = 0.22f * glowF), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
         drawPath(shown, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
         if (p >= 1f) drawCircle(color, 3.dp.toPx(), Offset(size.width, y(values.last())))
     }
@@ -310,7 +344,7 @@ fun ProgressDots(total: Int, reached: Int, color: Color, modifier: Modifier = Mo
             val current = i == reached - 1
             Box(
                 Modifier.size(if (current) dot + 3.dp else dot).clip(CircleShape)
-                    .background(if (filled) color else Color.White.copy(alpha = 0.08f))
+                    .background(if (filled) color else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f))
                     .then(if (current) Modifier.border(1.dp, color.copy(alpha = 0.5f), CircleShape) else Modifier),
             )
         }
@@ -464,15 +498,15 @@ fun ShimmerPanel(modifier: Modifier = Modifier, height: Dp = 96.dp, corner: Dp =
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(corner))
-            .background(Color.White.copy(alpha = 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(corner))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), RoundedCornerShape(corner))
             .drawBehind {
                 val band = size.width * 0.32f
                 val start = -band + (size.width + 2f * band) * x
                 drawRect(
                     Brush.linearGradient(
                         0f to Color.Transparent,
-                        0.5f to Color.White.copy(alpha = 0.07f),
+                        0.5f to com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f),
                         1f to Color.Transparent,
                         start = Offset(start, 0f),
                         end = Offset(start + band, size.height),

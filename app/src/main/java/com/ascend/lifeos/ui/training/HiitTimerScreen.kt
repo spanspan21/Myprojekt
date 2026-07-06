@@ -137,7 +137,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
 
                 Canvas(Modifier.size(220.dp)) {
                     val stroke = Stroke(8.dp.toPx(), cap = StrokeCap.Round)
-                    drawArc(Color.White.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
+                    drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
                     drawArc(arcColor, -90f, fraction * 360f, false, style = stroke)
 
                     val angle = (-90 + fraction * 360) * PI / 180
@@ -158,7 +158,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
                 Box(
-                    Modifier.size(56.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))
+                    Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, HudLine, CircleShape).clickable { paused = !paused },
                     contentAlignment = Alignment.Center,
                 ) { Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, tint = TextPrimary, modifier = Modifier.size(24.dp)) }

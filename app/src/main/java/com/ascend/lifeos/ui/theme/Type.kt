@@ -8,25 +8,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.R
 
-// ─── IRON HUD type system ────────────────────────────────────────────────────
-// Chakra Petch: squared, technical — display, numbers, module titles.
-// Manrope: humanist grotesque — body, labels, anything long.
-// Tabular figures on every metric so numbers never jitter.
+// ─── ATELIER type system: zwei Familien, fünf Stimmen (Kap. 20) ──────────────
+// Chakra Petch: squared, technical. Manrope: humanist grotesque.
+// Die ZUORDNUNG der Display-Rolle ist Theme-Parameter; Body bleibt IMMER
+// Manrope (Lesbarkeit ist theme-invariant). Tabular figures überall.
 
-val Display = FontFamily(
+private val ChakraFamily = FontFamily(
     Font(R.font.chakra_medium, FontWeight.Medium),
     Font(R.font.chakra_semibold, FontWeight.SemiBold),
     Font(R.font.chakra_bold, FontWeight.Bold),
     Font(R.font.chakra_bold, FontWeight.ExtraBold),
 )
 
-val Body = FontFamily(
+private val ManropeFamily = FontFamily(
     Font(R.font.manrope_regular, FontWeight.Normal),
     Font(R.font.manrope_medium, FontWeight.Medium),
     Font(R.font.manrope_medium, FontWeight.SemiBold),
     Font(R.font.manrope_bold, FontWeight.Bold),
     Font(R.font.manrope_extrabold, FontWeight.ExtraBold),
 )
+
+/** Display-Stimme der aktiven Welt (Titel, Zahlen, Overlines). */
+val Display: FontFamily get() = if (themeSpec.value.displayChakra) ChakraFamily else ManropeFamily
+
+/** Display-Familie EINER Welt — für die Salon-Vorschaukarten (Kap. 24). */
+fun displayFamilyOf(spec: ThemeSpec): FontFamily = if (spec.displayChakra) ChakraFamily else ManropeFamily
+
+/** Body bleibt in jeder Welt Manrope — Fließtext ist theme-invariant. */
+val Body: FontFamily get() = ManropeFamily
+
+/** Gewicht großer Ziffern (≥ 30 sp) — Flüstern, Gleichmaß oder Arcade (Kap. 20). */
+val BigNumberWeight: FontWeight get() = FontWeight(themeSpec.value.bigNumberWeight)
 
 /** Feature string that locks numerals to equal widths. */
 const val TNUM = "tnum"
@@ -37,16 +49,21 @@ fun metricStyle(size: Int, weight: FontWeight = FontWeight.Bold) = TextStyle(
     fontFeatureSettings = TNUM, letterSpacing = (-0.5).sp,
 )
 
-val AscendType = Typography(
-    displayLarge = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 40.sp, lineHeight = 44.sp, letterSpacing = (-1).sp, fontFeatureSettings = TNUM),
-    displayMedium = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 34.sp, letterSpacing = (-0.5).sp, fontFeatureSettings = TNUM),
-    headlineLarge = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 30.sp, letterSpacing = (-0.4).sp),
-    headlineMedium = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 26.sp, letterSpacing = (-0.3).sp),
-    titleLarge = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 22.sp),
-    titleMedium = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 20.sp),
-    bodyLarge = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp),
-    bodyMedium = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 20.sp),
-    labelLarge = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 16.sp),
-    labelMedium = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 0.4.sp),
-    labelSmall = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 10.sp, lineHeight = 13.sp, letterSpacing = 1.8.sp),
-)
+/** Material-Typography der aktiven Welt — in AscendTheme pro Spec neu gebaut. */
+fun ascendTypography(): Typography {
+    val d = Display
+    val b = Body
+    return Typography(
+        displayLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = 40.sp, lineHeight = 44.sp, letterSpacing = (-1).sp, fontFeatureSettings = TNUM),
+        displayMedium = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 34.sp, letterSpacing = (-0.5).sp, fontFeatureSettings = TNUM),
+        headlineLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 30.sp, letterSpacing = (-0.4).sp),
+        headlineMedium = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 26.sp, letterSpacing = (-0.3).sp),
+        titleLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 22.sp),
+        titleMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 20.sp),
+        bodyLarge = TextStyle(fontFamily = b, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp),
+        bodyMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 20.sp),
+        labelLarge = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 16.sp),
+        labelMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 0.4.sp),
+        labelSmall = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = 10.sp, lineHeight = 13.sp, letterSpacing = 1.8.sp),
+    )
+}

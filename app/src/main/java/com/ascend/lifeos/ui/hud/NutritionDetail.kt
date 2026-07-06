@@ -73,7 +73,7 @@ private val RADAR_6 = listOf("vitaminC", "iron", "calcium", "magnesium", "potass
 @Composable
 private fun SubHeader(title: String, onBack: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-        Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Color.White.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
             Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
@@ -260,9 +260,9 @@ private fun RadarChart(data: List<Pair<String, Float>>, modifier: Modifier) {
             val path = Path()
             for (i in 0 until n) { val pt = axis(i, R * ring); if (i == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y) }
             path.close()
-            drawPath(path, Color.White.copy(alpha = 0.07f), style = Stroke(1f))
+            drawPath(path, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f), style = Stroke(1f))
         }
-        for (i in 0 until n) drawLine(Color.White.copy(alpha = 0.06f), c, axis(i, R), 1f)
+        for (i in 0 until n) drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), c, axis(i, R), 1f)
         // data polygon
         val dp = Path()
         for (i in 0 until n) { val pt = axis(i, R * (data[i].second / 1.2f).coerceIn(0f, 1f)); if (i == 0) dp.moveTo(pt.x, pt.y) else dp.lineTo(pt.x, pt.y) }
@@ -435,7 +435,7 @@ private fun CorrRow(label: String, r: Double?) {
 }
 
 private fun heatColor(kcal: Int?, goal: Int): Color = when {
-    kcal == null || kcal == 0 -> Color.White.copy(alpha = 0.05f)
+    kcal == null || kcal == 0 -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)
     kcal in (goal * 0.9).toInt()..(goal * 1.1).toInt() -> Accent.copy(alpha = 0.85f)
     kcal > goal * 1.1 -> Red.copy(alpha = 0.7f)
     else -> Amber.copy(alpha = 0.6f)
@@ -463,7 +463,7 @@ private fun WeekBars(days: List<Pair<String, Int>>, goal: Int, modifier: Modifie
             val bh = (v.toFloat() / maxV) * size.height
             val x = i * (bw + gap)
             val over = v > goal * 1.05
-            val col = if (v == 0) Color.White.copy(alpha = 0.06f) else if (over) Red else Accent
+            val col = if (v == 0) com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f) else if (over) Red else Accent
             drawRoundRect(
                 col, topLeft = Offset(x, size.height - bh), size = androidx.compose.ui.geometry.Size(bw, bh),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f, 6f),

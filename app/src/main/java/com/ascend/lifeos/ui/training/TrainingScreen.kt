@@ -213,7 +213,7 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
 internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = null, onDismiss: () -> Unit) {
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = androidx.compose.ui.graphics.Color(0xFF0B0D10),
+        containerColor = com.ascend.lifeos.ui.theme.BgElevated,
         dragHandle = null,
     ) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {

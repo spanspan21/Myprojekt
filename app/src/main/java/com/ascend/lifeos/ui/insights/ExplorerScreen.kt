@@ -325,16 +325,16 @@ fun ExplorerScreen(onClose: () -> Unit) {
                             fun py(y: Float) = size.height - inset - (y - minY) / spanY * h
 
                             // frame + mid gridlines
-                            drawLine(Color.White.copy(alpha = 0.12f), Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
-                            drawLine(Color.White.copy(alpha = 0.12f), Offset(0f, 0f), Offset(0f, size.height), 1.dp.toPx())
+                            drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
+                            drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), Offset(0f, 0f), Offset(0f, size.height), 1.dp.toPx())
                             val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 8f))
                             drawLine(
-                                Color.White.copy(alpha = 0.05f),
+                                com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f),
                                 Offset(size.width / 2, 0f), Offset(size.width / 2, size.height),
                                 1.dp.toPx(), pathEffect = dash,
                             )
                             drawLine(
-                                Color.White.copy(alpha = 0.05f),
+                                com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f),
                                 Offset(0f, size.height / 2), Offset(size.width, size.height / 2),
                                 1.dp.toPx(), pathEffect = dash,
                             )
@@ -414,10 +414,10 @@ private fun AxisPicker(
                         val sel = mt.id == metric.id
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
-                                .background(if (sel) mt.tint.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
+                                .background(if (sel) mt.tint.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                                 .border(
                                     0.5.dp,
-                                    if (sel) mt.tint.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f),
+                                    if (sel) mt.tint.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                                     RoundedCornerShape(10.dp),
                                 )
                                 .clickable { onPick(mt) }
@@ -445,8 +445,8 @@ private fun BoxScope.CloseOrb(onClose: () -> Unit) {
     Box(
         Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
             .size(40.dp).clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
             .clickable(onClick = onClose),
         contentAlignment = Alignment.Center,
     ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }
