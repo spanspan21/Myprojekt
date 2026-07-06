@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
         }
         com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
         com.ascend.lifeos.ui.theme.themeState.value =
-            com.ascend.lifeos.data.Prefs.string(applicationContext, com.ascend.lifeos.data.Prefs.THEME, "stark")
+            com.ascend.lifeos.data.Prefs.string(applicationContext, com.ascend.lifeos.data.Prefs.THEME, "sovereign")
         intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
         // NFC tag (jarvis://train/start) → straight into today's session
         intent?.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }

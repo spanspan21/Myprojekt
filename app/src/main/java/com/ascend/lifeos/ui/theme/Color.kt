@@ -4,80 +4,93 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 
-// ---- Ascend design tokens ---------------------------------------------------
-// One accent, disciplined neutral steps. Premium = restraint.
+// ---- SOVEREIGN design tokens ------------------------------------------------
+// Obsidian & Champagne (JARVIS_SOVEREIGN_THEME.pdf, Kap. 10–12).
+// Warme Neutrale tragen die Temperatur, EIN Edelmetall trägt den Wert,
+// Module sind Juwelen im selben Gehäuse. Premium = restraint — geerbt.
 
-val Void = Color(0xFF050505)         // deepest HUD background (Jarvis heads-up display)
-val Bg = Color(0xFF0A0A0C)          // app background (cyber-dark, OLED friendly)
-val BgElevated = Color(0xFF0E1116)
-val Surface = Color(0xFF13171E)      // cards
-val SurfaceHi = Color(0xFF1A1F27)    // elevated / inputs
-val Line = Color(0x12FFFFFF)         // hairline borders
-val Line2 = Color(0x22FFFFFF)
+val Void = Color(0xFF060504)         // tiefste Bühne (Boot, Intercept, Wrapped)
+val Bg = Color(0xFF0B0A08)          // App-Grund — warmes Obsidian
+val BgElevated = Color(0xFF12100C)   // Sheets, erhöhte Zonen
+val Surface = Color(0xFF171411)      // Karten-Basiston
+val SurfaceHi = Color(0xFF1E1A15)    // Inputs / erhöhte Karten
 
-val TextPrimary = Color(0xFFEEF1F6)
-val TextMuted = Color(0xFF8B93A1)
-val TextDim = Color(0xFF565E6B)
+// Elfenbein-Hairlines: Weiß-Alpha wirkt auf warmem Grund schmutzig —
+// Ivory bleibt „Metallkante" (Kap. 10).
+val Ivory = Color(0xFFF3E9D8)
+val Line = Ivory.copy(alpha = 0.08f)
+val Line2 = Ivory.copy(alpha = 0.14f)
+
+val TextPrimary = Color(0xFFF2EFE8)  // Elfenbein statt Papierweiß
+val TextMuted = Color(0xFF9B9487)
+val TextDim = Color(0xFF615B51)
+
+// ---- Champagne: das eine Edelmetall (Kap. 11) --------------------------------
+// KEIN Modul, KEINE Semantik. Budget ≤ 5 % pro Screen, nie Fläche, nie Loop.
+val Champagne = Color(0xFFE6C888)
+val ChampagneDeep = Color(0xFFB99154)
+val ChampagneSoft = Color(0xFFE6C888).copy(alpha = 0.14f)
+val ChampagneLine = Color(0xFFE6C888).copy(alpha = 0.45f)
 
 // Live accent: backed by snapshot state so every `Accent` read recomposes
 // when the user picks a new colour — no per-call-site changes needed.
-val accentState = mutableStateOf(Color(0xFF34E0A1)) // signature mint-green default
+val accentState = mutableStateOf(Color(0xFF35D19A)) // Jade — die Signatur
 val Accent: Color get() = accentState.value
 val AccentSoft: Color get() = accentState.value.copy(alpha = 0.15f)
 val AccentDim: Color get() = lerp(accentState.value, Color.Black, 0.45f)
 
 fun applyAccent(color: Long) { accentState.value = Color(color) }
 
-/** Selectable accent presets (ARGB longs). */
+/** Selectable accent presets (ARGB longs) — die Juwelen-Reihe. */
 val ACCENT_PRESETS: List<Long> = listOf(
-    0xFF34E0A1, // mint
-    0xFF5B9DFF, // blue
-    0xFFB794FF, // purple
-    0xFFF5C451, // amber
-    0xFFFF8A4C, // orange
-    0xFFFF6169, // red
-    0xFF4CD4C4, // teal
-    0xFFEC7FB4, // pink
-    0xFFFF6F61, // coral
+    0xFF35D19A, // jade
+    0xFF5893F0, // saphir
+    0xFFA98BF2, // amethyst
+    0xFFE6C888, // champagne
+    0xFFF0663A, // karneol
+    0xFFF25F68, // rubin
+    0xFF4AC3E8, // aquamarin
+    0xFFEC7FB4, // rosenquarz
+    0xFF9DCB55, // peridot
 )
 
 // Status / data colours (used sparingly, never as decoration)
-val Amber = Color(0xFFF5C451)
-val Orange = Color(0xFFFF8A4C)
-val Blue = Color(0xFF5B9DFF)
-val Purple = Color(0xFFB794FF)
-val Red = Color(0xFFFF6169)
-val Cyan = Color(0xFF4CD4C4)         // secondary neon for HUD glows / gradients
+val Amber = Color(0xFFF0B94F)
+val Orange = Color(0xFFF0854C)
+val Blue = Color(0xFF5893F0)
+val Purple = Color(0xFFA98BF2)
+val Red = Color(0xFFF25F68)
+val Cyan = Color(0xFF4AC3E8)         // secondary glow for HUD gradients
 
-// ---- IRON HUD module identities --------------------------------------------
-// One foundation, seven signatures. Each tab owns exactly one accent; the
-// shared shell tints its background glow with it so switching tabs feels like
-// switching rooms of the same ship.
+// ---- SOVEREIGN module jewels (Kap. 12) ---------------------------------------
+// One foundation, ten signatures. Jeder Tab behält seine Farbfamilie —
+// vom Neonröhren-Leuchten zum geschliffenen Stein.
 
 object Mod {
-    val Home = Color(0xFF34E0A1)      // arc mint — command center
-    val Calendar = Color(0xFFB794FF)  // ion violet — timeline
-    val Train = Color(0xFFFF6B35)     // ember — power
-    val Fuel = Color(0xFFA8E05F)      // lime — nutrition
-    val Body = Color(0xFF4CD4FF)      // pulse cyan — vitals
-    val Guard = Color(0xFFF5C451)     // gold — shield
-    val Skills = Color(0xFF8B7CFF)    // nova purple — constellation
-    val Mind = Color(0xFF7C8CF8)      // indigo — journal & mood
-    val Finance = Color(0xFF9CC24A)   // moss — money
-    val School = Color(0xFF5B9DFF)    // sky — grades & homework
+    val Home = Color(0xFF35D19A)      // Jade — command center
+    val Calendar = Color(0xFFA98BF2)  // Amethyst — timeline
+    val Train = Color(0xFFF0663A)     // Karneol — power
+    val Fuel = Color(0xFF9DCB55)      // Peridot — nutrition
+    val Body = Color(0xFF4AC3E8)      // Aquamarin — vitals
+    val Guard = Color(0xFFD9AF6B)     // Messing — der Schild ist das Wappen
+    val Skills = Color(0xFF8579EF)    // Iolith — constellation
+    val Mind = Color(0xFF7887EA)      // Tansanit — journal & mood
+    val Finance = Color(0xFF93B54B)   // Moos-Achat — money
+    val School = Color(0xFF5893F0)    // Saphir — grades & homework
 }
 
 /**
  * The accent of the module currently on screen. The shell provides it per tab
  * and per overlay, so shared HUD components (buttons, chips, meters) render in
- * the module's identity instead of a hardcoded global mint.
+ * the module's identity instead of a hardcoded global jade.
  */
-val LocalModuleAccent = androidx.compose.runtime.staticCompositionLocalOf { Color(0xFF34E0A1) }
+val LocalModuleAccent = androidx.compose.runtime.staticCompositionLocalOf { Color(0xFF35D19A) }
 
 // Semantic verdicts — identical in every module, never used as decoration.
-val Good = Color(0xFF34E0A1)
-val Warn = Color(0xFFF5C451)
-val Crit = Color(0xFFFF6169)
+// Gold ist nie Warnung, Warnung nie Feier (Kap. 11).
+val Good = Color(0xFF3BD693)
+val Warn = Color(0xFFF0B94F)
+val Crit = Color(0xFFF25F68)
 
-/** Theme preset: "stark" (signature) · "stealth" (no glow) · "reactor" (more energy). */
-val themeState = mutableStateOf("stark")
+/** Theme preset: "sovereign" (default) · "stark" (IRON legacy) · "stealth" (no glow) · "reactor" (more energy). */
+val themeState = mutableStateOf("sovereign")

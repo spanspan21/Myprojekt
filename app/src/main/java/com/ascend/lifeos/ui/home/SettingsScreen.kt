@@ -201,14 +201,14 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── EXPERIENCE ───────────────────────────────────────────────
         SettingsSection("Experience") {
-            var theme by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "stark")) }
+            var theme by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "sovereign")) }
             Text(
                 "THEME", color = TextDim, fontFamily = Display,
                 fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
             Spacer(Modifier.height(7.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf("stark" to "Stark", "stealth" to "Stealth", "reactor" to "Reactor").forEach { (v, label) ->
+                listOf("sovereign" to "Sovereign", "stark" to "Stark", "stealth" to "Stealth", "reactor" to "Reactor").forEach { (v, label) ->
                     val on = theme == v
                     Box(
                         Modifier.clip(RoundedCornerShape(9.dp))
@@ -221,7 +221,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                "Stark = signature glow · Stealth = pure black, no nebula · Reactor = more energy",
+                "Sovereign = obsidian & champagne · Stark = signature glow · Stealth = no nebula · Reactor = more energy",
                 color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
             )
             Spacer(Modifier.height(12.dp))

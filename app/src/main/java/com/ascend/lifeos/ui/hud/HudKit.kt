@@ -36,16 +36,19 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Cyan
+import com.ascend.lifeos.ui.theme.Ivory
 import com.ascend.lifeos.ui.theme.LocalModuleAccent
 import com.ascend.lifeos.ui.theme.Void
 
 // The single HUD design language: deepest void, hairline neon edges, glassmorphism,
 // glowing meters. Every rebuilt screen composes from these — no grey Material cards.
 
-val HudFill = Color.White.copy(alpha = 0.04f)
-val HudLine = Color.White.copy(alpha = 0.09f)
+val HudFill = Ivory.copy(alpha = 0.038f)
+val HudLine = Ivory.copy(alpha = 0.09f)
 
 /** Void #050505 with two soft, blurred neon nebulae — the light the glass frosts. */
 @Composable
@@ -68,7 +71,8 @@ fun HudBackground(modifier: Modifier = Modifier) {
     }
 }
 
-/** Frosted glass surface: translucent fill, 0.5dp hairline, zero shadow. */
+/** Dual-Glas surface: Tiefengefälle, Elfenbein-Hairline, Specular-Oberkante —
+ *  identisches Material wie kit.Panel (SOVEREIGN Kap. 14), zero shadow. */
 @Composable
 fun GlassPanel(
     modifier: Modifier = Modifier,
@@ -81,7 +85,19 @@ fun GlassPanel(
         modifier
             .clip(RoundedCornerShape(corner))
             .background(fill)
-            .border(0.5.dp, line, RoundedCornerShape(corner)),
+            .background(Brush.verticalGradient(0f to Ivory.copy(alpha = 0.028f), 0.55f to Color.Transparent))
+            .border(0.5.dp, line, RoundedCornerShape(corner))
+            .drawWithContent {
+                drawContent()
+                val inset = corner.toPx() * 0.9f
+                if (size.width > inset * 2.5f) {
+                    drawLine(
+                        Brush.horizontalGradient(listOf(Color.Transparent, Ivory.copy(alpha = 0.16f), Color.Transparent)),
+                        Offset(inset, 0.75f), Offset(size.width - inset, 0.75f),
+                        strokeWidth = 1.2f,
+                    )
+                }
+            },
     ) { content() }
 }
 

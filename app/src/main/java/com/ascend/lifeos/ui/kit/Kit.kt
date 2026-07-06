@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -46,7 +48,8 @@ import com.ascend.lifeos.ui.theme.*
 
 // ---- atmosphere -------------------------------------------------------------
 
-/** Void background whose nebulae glow in the active module's accent. */
+/** Obsidian room: depth gradient, warmed accent nebulae, grain, vignette.
+ *  Alles statisch — Material darf nicht dauerhaft rechnen (Anti-Kitsch §9). */
 @Composable
 fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
     // theme preset scales the atmosphere: stealth kills it, reactor turns it up
@@ -55,38 +58,96 @@ fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
         "reactor" -> 1.7f
         else -> 1f
     }
-    Box(modifier.fillMaxSize().background(Void)) {
+    // Nebel v2: 12 % Champagne überblendet — Kaminlicht statt Neonröhre
+    val warm = androidx.compose.ui.graphics.lerp(accent, Champagne, 0.12f)
+    // Korn: einmalig erzeugtes 96×96-Rauschen als Repeat-Shader (Banding-Killer,
+    // Kap. 15) — deterministisch geseedet, nach dem ersten Draw gratis.
+    val grain = remember {
+        val rnd = kotlin.random.Random(42)
+        val px = IntArray(96 * 96) {
+            val v = rnd.nextInt(256)
+            android.graphics.Color.argb(7, v, v, v)
+        }
+        android.graphics.Bitmap.createBitmap(px, 96, 96, android.graphics.Bitmap.Config.ARGB_8888)
+            .asImageBitmap()
+    }
+    Box(
+        modifier.fillMaxSize().background(
+            // Tiefengefälle: oben eine Spur heller — der Raum hat eine Decke
+            Brush.verticalGradient(0f to Color(0xFF0D0B09), 1f to Void),
+        ),
+    ) {
         if (glow > 0f) {
             Box(Modifier.fillMaxSize().blur(90.dp)) {
                 Box(
-                    Modifier.size(340.dp).offset(x = (-60).dp, y = (-40).dp)
-                        .background(Brush.radialGradient(listOf(accent.copy(alpha = 0.13f * glow), Color.Transparent)), CircleShape),
+                    Modifier.size(390.dp).offset(x = (-70).dp, y = (-50).dp)
+                        .background(Brush.radialGradient(listOf(warm.copy(alpha = 0.10f * glow), Color.Transparent)), CircleShape),
                 )
                 Box(
-                    Modifier.size(300.dp).offset(x = 210.dp, y = 340.dp)
-                        .background(Brush.radialGradient(listOf(accent.copy(alpha = 0.07f * glow), Color.Transparent)), CircleShape),
+                    Modifier.size(345.dp).offset(x = 200.dp, y = 340.dp)
+                        .background(Brush.radialGradient(listOf(warm.copy(alpha = 0.055f * glow), Color.Transparent)), CircleShape),
                 )
             }
         }
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.ShaderBrush(
+                    androidx.compose.ui.graphics.ImageShader(
+                        grain,
+                        androidx.compose.ui.graphics.TileMode.Repeated,
+                        androidx.compose.ui.graphics.TileMode.Repeated,
+                    ),
+                ),
+            ),
+        )
+        // Vignette: Ränder dunkeln 22 % ab — der Blick fällt zur Mitte
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.radialGradient(
+                    0.55f to Color.Transparent,
+                    1f to Color.Black.copy(alpha = 0.22f),
+                ),
+            ),
+        )
     }
 }
 
 // ---- structure ----------------------------------------------------------------
 
-/** Frosted glass surface — the one card of the app. */
+/** Dual-Glas surface — the one card of the app (SOVEREIGN, Kap. 14):
+ *  Fläche mit Tiefengefälle, Elfenbein-Hairline, Specular-Oberkante.
+ *  lux = true vergoldet die Kante — erlaubt auf MAX. EINER Karte pro Screen. */
 @Composable
 fun Panel(
     modifier: Modifier = Modifier,
     corner: Dp = 20.dp,
-    fill: Color = Color.White.copy(alpha = 0.03f),
-    line: Color = Color.White.copy(alpha = 0.10f),
+    fill: Color = Ivory.copy(alpha = 0.030f),
+    line: Color = Line,
     onClick: (() -> Unit)? = null,
+    lux: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     // tappable panels press down under the finger and spring back (IRON MOTION)
     var m = if (onClick != null) modifier.pressScale(onClick) else modifier
-    m = m.clip(RoundedCornerShape(corner)).background(fill)
-        .border(0.5.dp, line, RoundedCornerShape(corner))
+    val shape = RoundedCornerShape(corner)
+    m = m.clip(shape)
+        .background(fill)
+        // Tiefengefälle: oben minimal heller — Licht von oben
+        .background(Brush.verticalGradient(0f to Ivory.copy(alpha = 0.028f), 0.55f to Color.Transparent))
+        .border(0.5.dp, if (lux) ChampagneLine else line, shape)
+        // Specular-Oberkante: der 1-px-Lichtfaden der polierten Gehäusekante
+        .drawWithContent {
+            drawContent()
+            val inset = corner.toPx() * 0.9f
+            if (size.width > inset * 2.5f) {
+                val glint = if (lux) Champagne.copy(alpha = 0.30f) else Ivory.copy(alpha = 0.16f)
+                drawLine(
+                    Brush.horizontalGradient(listOf(Color.Transparent, glint, Color.Transparent)),
+                    Offset(inset, 0.75f), Offset(size.width - inset, 0.75f),
+                    strokeWidth = 1.2f,
+                )
+            }
+        }
     Box(m, content = content)
 }
 
@@ -120,8 +181,10 @@ fun IconOrb(icon: ImageVector, tint: Color = TextMuted, size: Dp = 38.dp, onClic
         Modifier.size(size)
             .pressScale(onClick)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), CircleShape),
+            .background(Ivory.copy(alpha = 0.05f))
+            // kleines Uhrengehäuse: Gefälle + Elfenbein-Kante
+            .background(Brush.verticalGradient(0f to Ivory.copy(alpha = 0.03f), 0.6f to Color.Transparent))
+            .border(0.5.dp, Line, CircleShape),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.45f)) }
 }
@@ -425,7 +488,7 @@ fun JarvisSheet(
 ) {
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF0B0D10),
+        containerColor = BgElevated,
         dragHandle = null,
     ) {
         val reduced = com.ascend.lifeos.ui.motion.Motion.reduced(androidx.compose.ui.platform.LocalContext.current)
@@ -443,7 +506,7 @@ fun JarvisSheet(
         ) {
             Box(
                 Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp)
-                    .size(36.dp, 4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.12f)),
+                    .size(36.dp, 4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.14f)),
             )
             content()
         }
