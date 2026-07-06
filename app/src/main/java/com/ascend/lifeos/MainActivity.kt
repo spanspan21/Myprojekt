@@ -41,9 +41,7 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
-        intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
-        // NFC tag (jarvis://train/start) → straight into today's session
-        intent?.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }
+        handleJarvisIntent(intent)
         setContent {
             AscendTheme {
                 AscendApp()
@@ -53,8 +51,21 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
-        intent.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
-        intent.dataString?.let { if (it.startsWith("jarvis://")) com.ascend.lifeos.data.DeepLink.pending.value = it.removePrefix("jarvis://").substringBefore("/") }
+        handleJarvisIntent(intent)
+    }
+
+    /** Routes "open"-Extras, NFC-Deep-Links und den Bank-SCA-Rücksprung. */
+    private fun handleJarvisIntent(intent: android.content.Intent?) {
+        intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
+        val uri = intent?.data ?: return
+        if (uri.scheme != "jarvis") return
+        if (uri.host == "bank-callback") {
+            // Browser-Rücksprung nach der TAN-Freigabe — NICHT in den DeepLink-Router
+            com.ascend.lifeos.data.finance.BankLink.handleCallback(applicationContext, uri)
+        } else {
+            // NFC tag (jarvis://train/start) → straight into today's session
+            com.ascend.lifeos.data.DeepLink.pending.value = uri.toString().removePrefix("jarvis://").substringBefore("/")
+        }
     }
 
     override fun onPause() {

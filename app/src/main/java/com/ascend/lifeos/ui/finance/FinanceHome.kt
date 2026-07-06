@@ -101,6 +101,11 @@ fun FinanceHome(onClose: () -> Unit) {
     val frev = FinanceStore.rev // subscribe to finance writes
     val lrev = LifeStores.rev // subscribe to txn/savings writes
 
+    // Bank-Sync beim Öffnen, gedrosselt (BankLink drosselt selbst auf 6 h)
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.ascend.lifeos.data.finance.BankLink.maybeAutoSync(ctx)
+    }
+
     // ── data (recomputed only when a store bumps its rev) ──
     val accounts = remember(frev) { FinanceStore.accounts(ctx) }
     val totalBal = remember(accounts) { accounts.sumOf { it.balanceCents } }
@@ -181,6 +186,12 @@ fun FinanceHome(onClose: () -> Unit) {
                     QuickAction(Icons.Rounded.SwapHoriz, "Move") { showMove = true }
                     QuickAction(Icons.Rounded.Radar, "Scan") { showScan = true }
                 }
+                Spacer(Modifier.height(26.dp))
+            }
+
+            // ── 2b · bank link: echte Umsätze, read-only (Enable Banking) ───
+            item(key = "bank") {
+                BankPanel()
                 Spacer(Modifier.height(26.dp))
             }
 
