@@ -1,6 +1,8 @@
 package com.ascend.lifeos.ui.hud
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,6 +60,7 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.WaterCalc
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.TickerNumber
+import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Blue
 import com.ascend.lifeos.ui.theme.Cyan
@@ -91,19 +94,33 @@ fun NutritionScreen() {
     var view by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(NView.DASH) }
     BackHandler(enabled = view != NView.DASH) { view = NView.DASH }
 
-    when (view) {
-        NView.MICROS -> MicrosView(onBack = { view = NView.DASH })
-        NView.STATS -> StatsView(onBack = { view = NView.DASH })
-        NView.FASTING -> FastingScreen(onBack = { view = NView.DASH })
-        NView.RECIPES -> RecipesView(onBack = { view = NView.DASH }, onShopping = { view = NView.SHOPPING })
-        NView.SHOPPING -> ShoppingView(onBack = { view = NView.DASH })
-        NView.DASH -> Dashboard(
-            onMicros = { view = NView.MICROS },
-            onStats = { view = NView.STATS },
-            onFasting = { view = NView.FASTING },
-            onRecipes = { view = NView.RECIPES },
-            onShopping = { view = NView.SHOPPING },
-        )
+    // Same glide language as Training: forward pushes left, back slides home.
+    androidx.compose.animation.AnimatedContent(
+        view, label = "nView",
+        transitionSpec = {
+            if (targetState == NView.DASH) {
+                (androidx.compose.animation.slideInHorizontally { -it } + androidx.compose.animation.fadeIn()) togetherWith
+                    (androidx.compose.animation.slideOutHorizontally { it } + androidx.compose.animation.fadeOut())
+            } else {
+                (androidx.compose.animation.slideInHorizontally { it } + androidx.compose.animation.fadeIn()) togetherWith
+                    (androidx.compose.animation.slideOutHorizontally { -it } + androidx.compose.animation.fadeOut())
+            }
+        },
+    ) { current ->
+        when (current) {
+            NView.MICROS -> MicrosView(onBack = { view = NView.DASH })
+            NView.STATS -> StatsView(onBack = { view = NView.DASH })
+            NView.FASTING -> FastingScreen(onBack = { view = NView.DASH })
+            NView.RECIPES -> RecipesView(onBack = { view = NView.DASH }, onShopping = { view = NView.SHOPPING })
+            NView.SHOPPING -> ShoppingView(onBack = { view = NView.DASH })
+            NView.DASH -> Dashboard(
+                onMicros = { view = NView.MICROS },
+                onStats = { view = NView.STATS },
+                onFasting = { view = NView.FASTING },
+                onRecipes = { view = NView.RECIPES },
+                onShopping = { view = NView.SHOPPING },
+            )
+        }
     }
 }
 
@@ -507,7 +524,9 @@ private fun FastingModule(onOpen: () -> Unit, modifier: Modifier) {
 private fun MealSlot(name: String, meals: List<com.ascend.lifeos.data.FoodEntry>, expanded: Boolean, dayKey: String, onToggle: () -> Unit) {
     val kcal = meals.sumOf { it.kcal }
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
-        Column(Modifier.fillMaxWidth()) {
+        Column(
+            Modifier.fillMaxWidth().animateContentSize(Motion.springSmoothOf()),
+        ) {
             Row(
                 Modifier.fillMaxWidth().clickable { if (meals.isNotEmpty()) onToggle() }.padding(horizontal = 15.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,

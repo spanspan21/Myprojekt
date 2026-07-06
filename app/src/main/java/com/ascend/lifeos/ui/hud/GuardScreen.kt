@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.hud
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -701,7 +702,12 @@ private fun AppRow(
     val over = limit != null && app.ms >= limit * 60_000L
     val opensOver = budget != null && opens > budget.first
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
-        Column(Modifier.fillMaxWidth().clickable { onToggle() }.padding(14.dp)) {
+        Column(
+            Modifier.fillMaxWidth()
+                .animateContentSize(Motion.springSmoothOf())
+                .clickable { onToggle() }
+                .padding(14.dp),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(Color.White.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
                     if (icon != null) Image(icon, null, modifier = Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)))

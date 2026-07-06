@@ -141,7 +141,12 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
             )
         }
-        if (refineOpen) {
+        androidx.compose.animation.AnimatedVisibility(
+            refineOpen,
+            enter = androidx.compose.animation.expandVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeIn(),
+            exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut(),
+        ) {
+        androidx.compose.foundation.layout.Column {
         Spacer(Modifier.height(10.dp))
         val seed = remember { SleepStore.logs(ctx).lastOrNull() }
         var bed by remember { mutableIntStateOf(seed?.bedMin ?: 23 * 60) }
@@ -185,6 +190,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                     )
                 }
             }
+        }
         }
         }
         Spacer(Modifier.height(20.dp))

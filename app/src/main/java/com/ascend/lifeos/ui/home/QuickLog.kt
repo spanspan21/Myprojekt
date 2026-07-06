@@ -73,11 +73,7 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
     val ctx = LocalContext.current
     var mode by remember { mutableStateOf(QlMode.ACTIONS) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF0B0D10),
-        dragHandle = null,
-    ) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth()
                 .padding(horizontal = 20.dp)

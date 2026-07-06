@@ -207,7 +207,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "COMMAND", color = Mod.Home, fontFamily = Display,

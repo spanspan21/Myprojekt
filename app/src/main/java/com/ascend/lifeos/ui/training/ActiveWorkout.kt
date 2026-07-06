@@ -146,7 +146,11 @@ fun ActiveWorkoutScreen(
                 }
                 if (items.isNotEmpty()) {
                     GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
-                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                        Column(
+                            Modifier
+                                .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                        ) {
                             Row(
                                 Modifier.fillMaxWidth().clickable { warmupOpen = !warmupOpen },
                                 verticalAlignment = Alignment.CenterVertically,
@@ -191,9 +195,11 @@ fun ActiveWorkoutScreen(
                 item { ExerciseSetLogger(vm, ex, ctx) }
 
                 // ── Logged sets list ────────────────────────────────────
-                itemsIndexed(ex.loggedSets) { idx, set ->
-                    SetRow(set, idx) { vm.deleteSet(ex.exerciseId, idx) }
-                    Spacer(Modifier.height(6.dp))
+                itemsIndexed(ex.loggedSets, key = { _, set -> set.id }) { idx, set ->
+                    Column(Modifier.animateItem()) {
+                        SetRow(set, idx) { vm.deleteSet(ex.exerciseId, idx) }
+                        Spacer(Modifier.height(6.dp))
+                    }
                 }
             }
         }

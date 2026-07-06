@@ -324,7 +324,7 @@ internal fun StepperOrb(label: String, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SheetShell(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding().imePadding()) {
             Text(
                 title.uppercase(), color = FinAccent, fontFamily = Display,

@@ -235,7 +235,9 @@ fun HeatmapScreen(onClose: () -> Unit) {
 
             val m = model
             if (m == null) {
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(16.dp))
+                com.ascend.lifeos.ui.kit.ShimmerPanel(height = 180.dp)
+                Spacer(Modifier.height(10.dp))
                 Text("Painting the year…", color = TextDim, fontSize = 13.sp, fontFamily = Body)
                 return@Column
             }

@@ -346,7 +346,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
 
         LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
             items(filtered, key = { it.id }) { ex ->
-                GlassPanel(Modifier.fillMaxWidth().clickable { onPicked(ex) }, corner = 14.dp) {
+                GlassPanel(Modifier.fillMaxWidth().animateItem().clickable { onPicked(ex) }, corner = 14.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(catIcon(ex.category), null, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))

@@ -327,8 +327,10 @@ fun TrainingHub(
                 Spacer(Modifier.height(10.dp))
             }
             items(sessions.take(3), key = { it.session.id }) { sws ->
-                SessionRow(sws)
-                Spacer(Modifier.height(8.dp))
+                Column(Modifier.animateItem()) {
+                    SessionRow(sws)
+                    Spacer(Modifier.height(8.dp))
+                }
             }
             item { Spacer(Modifier.height(14.dp)) }
         }

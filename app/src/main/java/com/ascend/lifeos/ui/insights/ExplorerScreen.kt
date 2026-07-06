@@ -244,6 +244,8 @@ fun ExplorerScreen(onClose: () -> Unit) {
 
             val b = bundle
             if (b == null) {
+                com.ascend.lifeos.ui.kit.ShimmerPanel(height = 220.dp)
+                Spacer(Modifier.height(10.dp))
                 Text("Aligning days…", color = TextDim, fontSize = 13.sp, fontFamily = Body)
                 return@Column
             }

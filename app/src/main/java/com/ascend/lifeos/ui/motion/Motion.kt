@@ -44,6 +44,9 @@ object Motion {
     val easeOut: Easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)    // emphasized decelerate
     val easeIn: Easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)     // emphasized accelerate
 
+    /** springSmooth for non-Float targets (IntSize for animateContentSize, Dp, …). */
+    fun <T> springSmoothOf(): SpringSpec<T> = spring(dampingRatio = 0.85f, stiffness = 380f)
+
     /** Honors the system "remove animations" setting — heroes show final state. */
     fun reduced(ctx: Context): Boolean = runCatching {
         Settings.Global.getFloat(ctx.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f

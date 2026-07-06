@@ -818,7 +818,7 @@ private fun QuickAddSheet(
 
     val isHoliday = type == EventType.HOLIDAY
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "NEW BLOCK", color = Mod.Calendar, fontFamily = Display,
@@ -980,7 +980,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             val c = eventColor(b.type)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1179,7 +1179,7 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
     val calPermission = remember(tick) { CalendarSync.granted(ctx) }
     val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { tick++ }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 22.dp)
                 .navigationBarsPadding().verticalScroll(rememberScrollState()),
@@ -1252,7 +1252,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
     var deadlineDays by remember { mutableIntStateOf(3) }
     var planNote by remember { mutableStateOf<String?>(null) }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding()
                 .verticalScroll(rememberScrollState())

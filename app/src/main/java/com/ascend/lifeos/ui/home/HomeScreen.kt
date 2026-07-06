@@ -579,6 +579,8 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
         .map { s -> if (s.startMin < nowMin) s.copy(startMin = nowMin) else s }
         .firstOrNull { it.endMin > nowMin && it.durationMin >= 45 }
 
+    // no flash of wrong advice: shimmer until the timeline actually loaded
+    if (timeline == null) { ShimmerPanel(height = 74.dp, corner = 20.dp); return }
     Panel(Modifier.fillMaxWidth(), corner = 20.dp, onClick = onOpenTrain) {
         Column(Modifier.padding(18.dp)) {
             when {
@@ -698,11 +700,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
         onChanged()
     }
 
-    androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF0B0D10),
-        dragHandle = null,
-    ) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(22.dp)) {
             Text(
                 "DASHBOARD", color = Mod.Home, fontFamily = Display,

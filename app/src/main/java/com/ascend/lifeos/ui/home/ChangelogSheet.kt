@@ -71,7 +71,7 @@ object Changelog {
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogSheet(onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()
                 .verticalScroll(rememberScrollState()),

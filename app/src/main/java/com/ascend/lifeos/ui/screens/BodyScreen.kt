@@ -323,6 +323,11 @@ fun BodyScreen() {
                 }.getOrNull()
             }
         }
+        if (loadInfo == null) {
+            SectionLabel("Training load")
+            Spacer(Modifier.height(10.dp))
+            ShimmerPanel(height = 108.dp)
+        }
         loadInfo?.let { (st, v, last14) ->
             SectionLabel("Training load")
             Spacer(Modifier.height(10.dp))

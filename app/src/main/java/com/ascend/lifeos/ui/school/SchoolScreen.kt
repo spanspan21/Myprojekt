@@ -826,7 +826,7 @@ private fun AddGradeSheet(
     var weight by remember { mutableIntStateOf(SchoolStore.WEIGHT_SA) }
     var note by remember { mutableStateOf("") }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding().imePadding()) {
             Text(
                 "ADD GRADE", color = SchoolAccent, fontFamily = Display,
@@ -902,7 +902,7 @@ private fun ImportDeckSheet(onImported: () -> Unit, onDismiss: () -> Unit) {
     var raw by remember { mutableStateOf("") }
     val pairs = remember(raw) { parsePairs(raw) }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF0B0D10), dragHandle = null) {
+    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding().imePadding()) {
             Text(
                 "IMPORT DECK", color = SchoolAccent, fontFamily = Display,

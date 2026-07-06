@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.life
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -93,7 +94,11 @@ private fun DecisionCard(d: Decision, expanded: Boolean, onToggle: () -> Unit) {
     val rec = Decisions.recommendation(d)
 
     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.padding(14.dp)) {
+        Column(
+            Modifier
+                .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
+                .padding(14.dp),
+        ) {
             Row(
                 Modifier.fillMaxWidth().clickable(onClick = onToggle),
                 verticalAlignment = Alignment.CenterVertically,
