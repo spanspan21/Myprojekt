@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 
 // ─── SETTINGS — every dial of the system, one screen ─────────────────────────
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     val ctx = LocalContext.current
@@ -73,6 +74,22 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
         Spacer(Modifier.height(18.dp))
+
+        // ── PROFILE — the numbers every target is computed from ──────
+        var profileOpen by remember { mutableStateOf(false) }
+        SettingsSection("Profile") {
+            val p = com.ascend.lifeos.data.Repo.profile()
+            ActionRow(
+                "Body profile & targets",
+                "${if (p.sex == "m") "M" else "F"} · ${p.age} y · ${p.heightCm} cm · ${p.weightKg} kg · ${p.kcalGoal} kcal",
+            ) { profileOpen = true }
+        }
+        if (profileOpen) {
+            com.ascend.lifeos.ui.hud.GoalsSheet(
+                sheetState = androidx.compose.material3.rememberModalBottomSheetState(),
+                onDismiss = { profileOpen = false },
+            )
+        }
 
         // ── JARVIS ───────────────────────────────────────────────────
         SettingsSection("Jarvis") {
