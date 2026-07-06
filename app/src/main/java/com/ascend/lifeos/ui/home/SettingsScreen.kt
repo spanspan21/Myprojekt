@@ -91,6 +91,39 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             )
         }
 
+        // ── CONTEXT MODE — a life phase hides what it doesn't need ───
+        SettingsSection("Context mode") {
+            val mode by com.ascend.lifeos.ui.ShellMode.current
+            Row(
+                Modifier.padding(vertical = 6.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                listOf("normal" to "Normal", "exam" to "Exam phase", "holiday" to "Holidays").forEach { (id, label) ->
+                    val sel = mode == id
+                    Text(
+                        label,
+                        color = if (sel) Mod.Home else TextMuted,
+                        fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(if (sel) Mod.Home.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.04f))
+                            .border(
+                                0.5.dp,
+                                if (sel) Mod.Home.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.1f),
+                                RoundedCornerShape(11.dp),
+                            )
+                            .clickable { com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
+                            .padding(horizontal = 13.dp, vertical = 8.dp),
+                    )
+                }
+            }
+            Text(
+                "Exam phase hides Finance, Mind, Skills & Explorer · Holidays hide School.",
+                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+        }
+
         // ── JARVIS ───────────────────────────────────────────────────
         SettingsSection("Jarvis") {
             ToggleRow("Voice briefing", "Jarvis reads the morning status out loud", Prefs.TTS_BRIEFING, false)

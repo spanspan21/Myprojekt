@@ -12,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,7 +24,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Hexagon
 import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material.icons.rounded.Restaurant
@@ -38,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -148,8 +150,7 @@ fun HomeScreen(
         ),
     )
 
-    // JARVIS access layer — hub drawer + quick-log sheet, hoisted here
-    var hubOpen by remember { mutableStateOf(false) }
+    // quick-log sheet, hoisted here
     var quickLogOpen by remember { mutableStateOf(false) }
 
     // widget "€ Log" deep link lands here
@@ -185,40 +186,45 @@ fun HomeScreen(
                     fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.width(12.dp))
-                IconOrb(Icons.Rounded.GridView, size = 34.dp, onClick = { hubOpen = true })
-                Spacer(Modifier.width(8.dp))
                 IconOrb(Icons.Rounded.Shield, tint = Mod.Guard, size = 34.dp, onClick = onOpenGuard)
                 Spacer(Modifier.width(8.dp))
                 IconOrb(Icons.Rounded.Tune, size = 34.dp, onClick = onOpenSystem)
             }
 
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(22.dp))
 
-            // ── greeting + readiness mini ────────────────────────────────
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        JarvisVoice.greeting(profile.name), color = TextPrimary, fontFamily = Display,
-                        fontSize = 27.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp, lineHeight = 32.sp,
-                    )
+            // ── greeting: Jarvis types it, every open ────────────────────
+            Reveal(0) {
+                Column {
+                    TypedGreeting(JarvisVoice.greeting(profile.name))
                     Spacer(Modifier.height(7.dp))
                     Text(
                         voice, color = TextMuted, fontFamily = Body,
                         fontSize = 13.5.sp, fontWeight = FontWeight.Medium, lineHeight = 19.sp,
                     )
                 }
-                Spacer(Modifier.width(16.dp))
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            // ── ARC REACTOR — the readiness hero, powers up on open ──────
+            Reveal(1) {
                 val rColor = when {
                     readiness == null -> TextDim
                     readiness >= 75 -> Good
                     readiness >= 50 -> Warn
                     else -> Crit
                 }
-                Ring(
-                    progress = (readiness ?: 0) / 100f, color = rColor,
-                    modifier = Modifier.size(54.dp).clickable(onClick = onOpenBody), stroke = 4.dp,
-                ) {
-                    Text(readiness?.toString() ?: "—", color = rColor, style = metricStyle(16))
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    ArcReactor(
+                        value = readiness,
+                        color = rColor,
+                        modifier = Modifier.size(168.dp).clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onOpenBody,
+                        ),
+                    )
                 }
             }
 
@@ -473,10 +479,30 @@ fun HomeScreen(
             }
             }
 
-            // render in the saved order; key() keeps each card's state stable
-            // even when the user reorders
-            cardOrder.forEach { k ->
-                androidx.compose.runtime.key(k) { homeCards[k]?.invoke() }
+            // ── SYSTEMS — rituals & archives as an orb row (the hub, distilled)
+            homeCards["systems"] = {
+                Spacer(Modifier.height(24.dp))
+                SectionLabel("Systems")
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") }
+                    SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") }
+                    SystemOrb("Rules", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") }
+                    SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") }
+                    SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") }
+                    SystemOrb("Wrapped", Icons.Rounded.Bolt, Mod.Skills) { onOpenModule("wrapped") }
+                }
+            }
+
+            // render in the saved order with a choreographed entrance;
+            // key() keeps each card's state stable even when reordered
+            cardOrder.forEachIndexed { i, k ->
+                androidx.compose.runtime.key(k) {
+                    Reveal(2 + i) { homeCards[k]?.invoke() }
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -494,30 +520,6 @@ fun HomeScreen(
             if (editCards) {
                 EditDashboardSheet(onDismiss = { editCards = false }, onChanged = { cardsRev++ })
             }
-
-            // ── JARVIS HUB bar — thumb-reachable gateway to the whole OS ─
-            Spacer(Modifier.height(14.dp))
-            Row(
-                Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .border(0.5.dp, Mod.Home.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
-                    .clickable { hubOpen = true }
-                    .padding(horizontal = 16.dp, vertical = 15.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Rounded.Hexagon, null, tint = Mod.Home, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(13.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "JARVIS HUB", color = TextPrimary, fontFamily = Display,
-                        fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text("Every module · one tap", color = TextDim, fontSize = 11.sp, fontFamily = Body)
-                }
-                Icon(Icons.Rounded.ChevronRight, null, tint = TextDim, modifier = Modifier.size(18.dp))
-            }
         }
 
         // ── QUICK LOG orb — log a purchase before the receipt is pocketed ─
@@ -530,13 +532,6 @@ fun HomeScreen(
             QuickLogSheet(
                 onDismiss = { quickLogOpen = false },
                 onOpenModule = { quickLogOpen = false; onOpenModule(it) },
-            )
-        }
-
-        AnimatedVisibility(visible = hubOpen, enter = fadeIn(tween(200)), exit = fadeOut(tween(150))) {
-            JarvisHub(
-                onClose = { hubOpen = false },
-                onOpen = { hubOpen = false; onOpenModule(it) },
             )
         }
     }
@@ -683,21 +678,31 @@ internal object HomeCards {
         "exam" to "Exam countdown",
         "nextup" to "Next up",
         "missions" to "Today's missions",
+        "systems" to "Systems row",
     )
     private val DEFAULT = ALL.map { it.first }
 
+    // Format: visible keys in order, hidden keys prefixed with "-". Keys the
+    // pref has never mentioned are new ships → they appear (at the end) instead
+    // of being invisible forever; deliberately hidden ones stay hidden.
     fun order(ctx: android.content.Context): List<String> {
         val raw = com.ascend.lifeos.data.Prefs.string(
             ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS, DEFAULT.joinToString(","),
         )
         val known = DEFAULT.toSet()
-        return raw.split(",").filter { it in known }
+        val tokens = raw.split(",")
+        val visible = tokens.filter { !it.startsWith("-") && it in known }
+        val mentioned = tokens.map { it.removePrefix("-") }.toSet()
+        return visible + DEFAULT.filter { it !in mentioned }
     }
 
-    fun save(ctx: android.content.Context, order: List<String>) =
+    fun save(ctx: android.content.Context, order: List<String>) {
+        val hidden = DEFAULT.filter { it !in order }
         com.ascend.lifeos.data.Prefs.setString(
-            ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS, order.joinToString(","),
+            ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS,
+            (order + hidden.map { "-$it" }).joinToString(","),
         )
+    }
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -783,5 +788,198 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
             )
             Spacer(Modifier.height(10.dp))
         }
+    }
+}
+
+// ─── The WOW layer: entrance choreography, typed greeting, arc reactor ───────
+
+/** Staggered entrance: each section rises 14dp and fades in, 55 ms apart. */
+@Composable
+internal fun Reveal(index: Int, content: @Composable () -> Unit) {
+    val state = remember {
+        androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true }
+    }
+    androidx.compose.animation.AnimatedVisibility(
+        visibleState = state,
+        enter = fadeIn(
+            tween(340, delayMillis = 80 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+        ) + androidx.compose.animation.slideInVertically(
+            initialOffsetY = { it / 5 },
+            animationSpec = tween(420, delayMillis = 80 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+        ),
+        exit = fadeOut(tween(120)),
+    ) { content() }
+}
+
+/** Jarvis types the greeting, one glyph at a time, with a breathing cursor. */
+@Composable
+private fun TypedGreeting(full: String) {
+    var shown by remember(full) { mutableStateOf(0) }
+    LaunchedEffect(full) {
+        shown = 0
+        kotlinx.coroutines.delay(260)
+        while (shown < full.length) {
+            shown++
+            kotlinx.coroutines.delay(22)
+        }
+    }
+    val cursor by rememberInfiniteTransition(label = "cur").animateFloat(
+        0.15f, 1f, infiniteRepeatable(tween(550, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "curA",
+    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            full.take(shown), color = TextPrimary, fontFamily = Display,
+            fontSize = 27.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp, lineHeight = 32.sp,
+        )
+        if (shown < full.length) {
+            Box(
+                Modifier.padding(start = 3.dp).size(11.dp, 24.dp)
+                    .background(Mod.Home.copy(alpha = cursor)),
+            )
+        }
+    }
+}
+
+/**
+ * The readiness hero: a triple-layer arc reactor. Outer tick ring rotates
+ * perpetually, the progress arc sweeps in with a spring on every open, the
+ * core number counts up, and a soft glow breathes behind it all.
+ */
+@Composable
+private fun ArcReactor(value: Int?, color: Color, modifier: Modifier = Modifier) {
+    val target = (value ?: 0).coerceIn(0, 100)
+
+    // sweep powers up from zero on each composition of Home
+    val sweep = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(target) {
+        sweep.animateTo(
+            target / 100f,
+            androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = 28f),
+        )
+    }
+    val shownNumber = (sweep.value * 100).toInt().coerceAtMost(target)
+
+    val spin by rememberInfiniteTransition(label = "spin").animateFloat(
+        0f, 360f,
+        infiniteRepeatable(tween(24_000, easing = androidx.compose.animation.core.LinearEasing)),
+        label = "spinA",
+    )
+    val breath by rememberInfiniteTransition(label = "glow").animateFloat(
+        0.55f, 1f,
+        infiniteRepeatable(tween(2100, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "glowA",
+    )
+
+    Box(modifier, contentAlignment = Alignment.Center) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val cx = size.width / 2f
+            val cy = size.height / 2f
+            val r = size.minDimension / 2f
+
+            // breathing core glow
+            drawCircle(
+                brush = Brush.radialGradient(
+                    listOf(color.copy(alpha = 0.16f * breath), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(cx, cy), radius = r * 0.95f,
+                ),
+                radius = r * 0.95f, center = androidx.compose.ui.geometry.Offset(cx, cy),
+            )
+
+            // outer tick ring — 60 marks, rotating like idling machinery
+            rotate(spin, pivot = androidx.compose.ui.geometry.Offset(cx, cy)) {
+                repeat(60) { i ->
+                    val a = Math.toRadians(i * 6.0)
+                    val long = i % 5 == 0
+                    val r1 = r * if (long) 0.93f else 0.965f
+                    val r2 = r * 1.0f
+                    drawLine(
+                        color = Color.White.copy(alpha = if (long) 0.22f else 0.10f),
+                        start = androidx.compose.ui.geometry.Offset(
+                            cx + (r1 * kotlin.math.cos(a)).toFloat(), cy + (r1 * kotlin.math.sin(a)).toFloat(),
+                        ),
+                        end = androidx.compose.ui.geometry.Offset(
+                            cx + (r2 * kotlin.math.cos(a)).toFloat(), cy + (r2 * kotlin.math.sin(a)).toFloat(),
+                        ),
+                        strokeWidth = if (long) 2.2f else 1.2f,
+                    )
+                }
+            }
+
+            // track + progress arc (with a faint wide halo underneath)
+            val stroke = 10f
+            val inset = r * 0.16f
+            val arcSize = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
+            val arcTL = androidx.compose.ui.geometry.Offset(inset, inset)
+            drawArc(
+                color = Color.White.copy(alpha = 0.06f),
+                startAngle = -90f, sweepAngle = 360f, useCenter = false,
+                topLeft = arcTL, size = arcSize,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+            )
+            if (sweep.value > 0.01f) {
+                drawArc(
+                    color = color.copy(alpha = 0.22f),
+                    startAngle = -90f, sweepAngle = sweep.value * 360f, useCenter = false,
+                    topLeft = arcTL, size = arcSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke * 2.6f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                )
+                drawArc(
+                    brush = Brush.sweepGradient(
+                        0f to color.copy(alpha = 0.35f), 0.8f to color, 1f to color,
+                        center = androidx.compose.ui.geometry.Offset(cx, cy),
+                    ),
+                    startAngle = -90f, sweepAngle = sweep.value * 360f, useCenter = false,
+                    topLeft = arcTL, size = arcSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                )
+            }
+
+            // inner hairline
+            drawCircle(
+                color = Color.White.copy(alpha = 0.08f),
+                radius = r * 0.58f, center = androidx.compose.ui.geometry.Offset(cx, cy),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f),
+            )
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                if (value == null) "—" else "$shownNumber",
+                color = color, fontFamily = Display, fontSize = 44.sp,
+                fontWeight = FontWeight.ExtraBold, letterSpacing = (-1).sp,
+            )
+            Text(
+                if (value == null) "CONNECT WATCH" else "READINESS",
+                color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            )
+        }
+    }
+}
+
+/** One orb of the systems row — icon bubble + tiny label. */
+@Composable
+private fun SystemOrb(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tint: Color, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(4.dp),
+    ) {
+        Box(
+            Modifier.size(52.dp).clip(CircleShape)
+                .background(tint.copy(alpha = 0.10f))
+                .border(0.5.dp, tint.copy(alpha = 0.35f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(21.dp))
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            label, color = TextMuted, fontFamily = Body,
+            fontSize = 10.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+        )
     }
 }
