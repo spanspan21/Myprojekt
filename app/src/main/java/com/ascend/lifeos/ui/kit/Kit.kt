@@ -192,11 +192,15 @@ fun IconOrb(icon: ImageVector, tint: Color = TextMuted, size: Dp = 38.dp, onClic
 /** Uppercase Chakra section label with tracking. */
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(), color = TextDim, fontFamily = Display,
-        fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
-        modifier = modifier,
-    )
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        // der Champagne-Punkt: kleinstes Gold der Seite (2 dp, Budget-konform)
+        Box(Modifier.size(4.dp).clip(CircleShape).background(Champagne.copy(alpha = 0.75f)))
+        Spacer(Modifier.width(7.dp))
+        Text(
+            text.uppercase(), color = TextDim, fontFamily = Display,
+            fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+        )
+    }
 }
 
 // ---- data display -------------------------------------------------------------

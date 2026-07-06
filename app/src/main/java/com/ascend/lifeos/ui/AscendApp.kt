@@ -312,8 +312,16 @@ private fun MorphingDock(
         Box(
             Modifier
                 .clip(RoundedCornerShape(28.dp))
-                .background(Color(0xFF0B0D10).copy(alpha = 0.88f))
-                .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(28.dp))
+                // Cockpit-Konsole: warmes Obsidian + Elfenbein-Kante mit
+                // Specular oben — die höchste ständige Ebene (Kap. 16)
+                .background(com.ascend.lifeos.ui.theme.BgElevated.copy(alpha = 0.92f))
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        0f to com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.045f),
+                        0.5f to Color.Transparent,
+                    ),
+                )
+                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(28.dp))
                 .padding(horizontal = 8.dp, vertical = 6.dp),
         ) {
             // The clean morph: outgoing state snaps away fast, incoming state

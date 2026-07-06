@@ -425,7 +425,8 @@ private fun placementLabel(p: Placement): String {
 
 @Composable
 private fun NextSessionHero(session: PlannedSession, placement: Placement?, onStart: () -> Unit) {
-    GlassPanel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    // der lux-Moment des Screens: die eine Champagne-Hairline (Kap. 14)
+    GlassPanel(Modifier.fillMaxWidth(), corner = 20.dp, line = ChampagneLine) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(Mod.Train))
             Column(Modifier.padding(16.dp)) {
@@ -439,7 +440,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, onSt
                         }
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("~${session.estMin}", color = Mod.Train, style = metricStyle(30))
+                        Text("~${session.estMin}", color = Mod.Train, style = metricStyle(30, FontWeight.Medium))
                         Text("MIN", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
                     }
                 }

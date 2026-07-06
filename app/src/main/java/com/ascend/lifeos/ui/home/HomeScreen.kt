@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Hexagon
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Shield
@@ -247,11 +248,10 @@ fun HomeScreen(
                         androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = 26f),
                     )
                 }
+                // Hero = das lux-Panel des Screens: die eine Gold-Hairline (Kap. 23)
+                Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true, onClick = onOpenBody) {
                 Row(
-                    Modifier.fillMaxWidth()
-                        .pressScale(onOpenBody)
-                        .clip(RoundedCornerShape(22.dp))
-                        .padding(vertical = 6.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     com.ascend.lifeos.ui.training.ScanBodyFigure(
@@ -263,9 +263,10 @@ fun HomeScreen(
                     // rows below give it the same visual mass as the figure
                     Column(Modifier.weight(1f).padding(end = 6.dp)) {
                         Text(
+                            // große Ziffern flüstern: Medium statt ExtraBold (Kap. 13)
                             if (readiness == null) "—" else "${(rise.value * 100).toInt().coerceAtMost(readiness)}",
                             color = rColor, fontFamily = Display, fontSize = 46.sp,
-                            fontWeight = FontWeight.ExtraBold, letterSpacing = (-1).sp,
+                            fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp,
                         )
                         Text(
                             if (readiness == null) "CONNECT WATCH" else "READINESS",
@@ -296,8 +297,34 @@ fun HomeScreen(
                         val sleepMin = Repo.data.health?.sleepMin
                         HeroStatRow("SLEEP", if (sleepMin != null) "${sleepMin / 60}h %02dm".format(sleepMin % 60) else "—")
                         Spacer(Modifier.height(5.dp))
-                        HeroStatRow("STREAK", if (profile.streak > 0) "${profile.streak} days" else "day one")
+                        // die Flamme: das einzige Dauer-Gold der App (Kap. 20);
+                        // Elfenbein-Punkte = verfügbare Freezes (Sicherheitsnetz sichtbar)
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "STREAK", color = TextDim, fontFamily = Display,
+                                fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            repeat(profile.freezeAvail.coerceIn(0, 3)) {
+                                Box(Modifier.size(3.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.35f)))
+                                Spacer(Modifier.width(3.dp))
+                            }
+                            Spacer(Modifier.weight(1f))
+                            if (profile.streak > 0) {
+                                Icon(
+                                    Icons.Rounded.LocalFireDepartment, null,
+                                    tint = Champagne, modifier = Modifier.size(12.dp),
+                                )
+                                Spacer(Modifier.width(4.dp))
+                            }
+                            Text(
+                                if (profile.streak > 0) "${profile.streak} days" else "day one",
+                                color = if (profile.streak > 0) Champagne else TextMuted,
+                                fontFamily = Display, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
+                }
                 }
             }
 

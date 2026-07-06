@@ -71,16 +71,16 @@ private fun DrawScope.drawBody(front: Boolean, fillFor: (Muscle) -> Color?) {
                         drawPath(p, fill.copy(alpha = (fill.alpha + 0.25f).coerceAtMost(1f)), style = Stroke(regionW))
                     } else {
                         // resting region — barely-there interior line work
-                        drawPath(p, Color.White.copy(alpha = 0.16f), style = Stroke(regionW))
+                        drawPath(p, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f), style = Stroke(regionW))
                     }
                 }
             }
             // head + neck structure, same line language as the outline
             structure.forEach { p ->
-                drawPath(p, Color.White.copy(alpha = 0.50f), style = Stroke(outlineW * 0.75f))
+                drawPath(p, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.48f), style = Stroke(outlineW * 0.75f))
             }
-            // the clean white body line
-            drawPath(outline, Color.White.copy(alpha = 0.62f), style = Stroke(outlineW))
+            // the clean ivory body line — Line-Art im Uhrensalon (Kap. 17)
+            drawPath(outline, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.60f), style = Stroke(outlineW))
         }
     }
 }
@@ -171,10 +171,11 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
             drawBody(front = true, fillFor = ::tint)
         }
         if (scan.value > 0.01f && scan.value < 0.985f) {
+            // der Goldfaden vermisst den Körper (Kap. 17)
             drawRect(
                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     0f to Color.Transparent,
-                    1f to Color(0xFF34E0A1).copy(alpha = 0.10f),
+                    1f to com.ascend.lifeos.ui.theme.Champagne.copy(alpha = 0.10f),
                     startY = (y - size.height * 0.10f).coerceAtLeast(0f),
                     endY = y,
                 ),
@@ -182,7 +183,7 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
                 size = androidx.compose.ui.geometry.Size(size.width, (size.height * 0.10f).coerceAtMost(y)),
             )
             drawLine(
-                color = Color(0xFF34E0A1).copy(alpha = 0.55f),
+                color = com.ascend.lifeos.ui.theme.Champagne.copy(alpha = 0.60f),
                 start = androidx.compose.ui.geometry.Offset(0f, y),
                 end = androidx.compose.ui.geometry.Offset(size.width, y),
                 strokeWidth = 2f,

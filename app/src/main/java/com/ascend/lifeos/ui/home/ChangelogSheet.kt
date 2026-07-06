@@ -28,6 +28,16 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "SOVEREIGN — a completely new theme: warm obsidian, ivory hairlines, one champagne-gold thread",
+        "Every card is dual-glass now: depth in the surface, a polished light edge on top",
+        "The room is lit: subtle grain kills gradient banding, a vignette draws your eye to the center",
+        "Module colors became jewels — jade, amethyst, karneol, peridot, aquamarin, messing, saphir",
+        "Gold is earned, not decoration: streak flame, PR moments and hero cards carry the only gold",
+        "Your streak shows its safety net — small ivory dots are the freezes you have banked",
+        "Big numbers whisper now (light weights) — precision over loudness, like a good watch dial",
+        "The body scan sweeps in champagne and draws your figure in ivory line art",
+        "Theme salon in Settings: Sovereign (new default) · Stark · Stealth · Reactor",
+        // ── v2.3 ──
         "IRON MOTION — every tap presses down and springs back; every chip glides instead of snapping",
         "Numbers roll like a slot machine: kcal, focus score, sets & reps tick digit by digit",
         "Charts draw themselves on first look — sparklines, trends and curves sweep in once, then rest",

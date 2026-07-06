@@ -177,8 +177,8 @@ fun GuardScreen() {
         if (usageOk) {
             val d = data
 
-            // ── focus score hero ─────────────────────────────────────
-            Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
+            // ── focus score hero — das Wappen trägt den Goldfaden ────
+            Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Ring(
                         progress = (focusScore ?: 0) / 100f, color = scoreColor,

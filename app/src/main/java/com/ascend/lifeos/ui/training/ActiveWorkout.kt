@@ -425,7 +425,7 @@ private fun SetRow(set: WorkoutSetEntity, index: Int, onDelete: () -> Unit) {
                     Text(meta.joinToString(" · "), color = TextDim, fontSize = 10.sp)
                 }
                 if (set.isPersonalRecord) {
-                    Text("PR", color = Amber, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(end = 8.dp))
+                    Text("PR", color = ChampagneDeep, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
                 }
                 Icon(Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
                     modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
@@ -512,10 +512,12 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
                 scaleX = pop.value; scaleY = pop.value
                 this.alpha = ((pop.value - 0.6f) / 0.4f).coerceIn(0f, 1f)
             },
-            corner = 24.dp, fill = Amber.copy(alpha = 0.08f * alpha), line = Amber.copy(alpha = 0.4f * alpha),
+            corner = 24.dp,
+            fill = Champagne.copy(alpha = 0.08f * alpha),
+            line = Champagne.copy(alpha = 0.4f * alpha),
         ) {
             Column(Modifier.padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("NEW PR", color = Amber, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                Text("NEW PR", color = Champagne, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
                 Spacer(Modifier.height(8.dp))
                 Text(pr.exerciseName, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(4.dp))
@@ -526,7 +528,8 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
                     PrType.EST_1RM -> "${"%.1f".format(pr.value)} kg (est 1RM)"
                     PrType.LONGEST_HOLD -> "${pr.value.toInt()}s Hold"
                 }
-                Text(valueStr, color = Amber, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                // die Leistung steht größer als das Etikett (Kap. 20)
+                Text(valueStr, color = Champagne, fontSize = 30.sp, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(6.dp))
                 Text(prTypeLabel(pr.type), color = TextDim, fontSize = 12.sp)
             }
