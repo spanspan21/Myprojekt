@@ -131,6 +131,36 @@ fun MicrosView(onBack: () -> Unit) {
             }
         }
 
+        // Chronic gaps: nutrients under half target across the whole week. The
+        // masterplan line — "Vitamin D low all week" — with the fix one tap away.
+        if (range == 1) {
+            val gaps = MICRO_16.mapNotNull { id ->
+                val nd = NUTRIENTS_BY_ID[id] ?: return@mapNotNull null
+                if (nd.limit) return@mapNotNull null
+                val p = pct(id)
+                if (p < 0.5f) Triple(id, nd.label, p) else null
+            }.sortedBy { it.third }.take(3)
+            if (gaps.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                GlassPanel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.06f), line = Amber.copy(alpha = 0.3f)) {
+                    Column(Modifier.padding(14.dp)) {
+                        Text("LOW ALL WEEK", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                        Spacer(Modifier.height(6.dp))
+                        gaps.forEach { (id, label, p) ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                                    .clickable { sourceFor = id }.padding(vertical = 3.dp),
+                            ) {
+                                Text(label, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                Text("${(p * 100).toInt()}% · fix it →", color = Amber, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
         Text("ALL 16 · % OF DAILY TARGET · TAP FOR SOURCES", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Spacer(Modifier.height(10.dp))
