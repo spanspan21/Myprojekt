@@ -153,6 +153,22 @@ fun HomeScreen(
         ),
     )
 
+    // mission edge detection: crossing a goal WHILE here earns its moment —
+    // opening the app with goals already met stays silent (edges, not states)
+    val missionsDone = (if (trainedToday) 1 else 0) +
+        (if (kcalToday >= profile.kcalGoal) 1 else 0) +
+        (if (water >= profile.waterGoal) 1 else 0)
+    var seenDone by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(missionsDone) {
+        if (seenDone in 0 until missionsDone) {
+            if (missionsDone == 3) {   // the #1 moment: all missions complete
+                com.ascend.lifeos.data.Haptics.epic(ctx)
+                runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
+            } else com.ascend.lifeos.data.Haptics.success(ctx)
+        }
+        seenDone = missionsDone
+    }
+
     // quick-log sheet, hoisted here
     var quickLogOpen by remember { mutableStateOf(false) }
 

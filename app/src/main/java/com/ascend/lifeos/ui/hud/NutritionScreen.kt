@@ -462,8 +462,9 @@ private fun WaterModule(glasses: Int, targetGlasses: Int, hot: Boolean, showHeat
             Spacer(Modifier.height(10.dp))
             Row(Modifier.height(30.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (canEdit) {
-                    RoundIcon(Icons.Rounded.Remove) { Repo.addWater(-1) }
-                    RoundIcon(Icons.Rounded.Add) { Repo.addWater(1) }
+                    val hCtx = androidx.compose.ui.platform.LocalContext.current
+                    RoundIcon(Icons.Rounded.Remove) { com.ascend.lifeos.data.Haptics.tick(hCtx); Repo.addWater(-1) }
+                    RoundIcon(Icons.Rounded.Add) { com.ascend.lifeos.data.Haptics.tick(hCtx); Repo.addWater(1) }
                     if (showHeat) {
                         Spacer(Modifier.weight(1f))
                         Text("+ Heat", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onEnableHeat() })

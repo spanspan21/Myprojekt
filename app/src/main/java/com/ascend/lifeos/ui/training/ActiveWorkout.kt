@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,7 +69,9 @@ fun ActiveWorkoutScreen(
             delay(200)
             vm.tickRestTimer()
             val rem = vm.restTimerRemaining
-            if (rem in listOf(10, 5, 0)) haptic(ctx, if (rem == 0) 200L else 80L)
+            // countdown warns, the finish rewards — two different textures
+            if (rem in listOf(10, 5)) com.ascend.lifeos.data.Haptics.warn(ctx)
+            if (rem == 0) com.ascend.lifeos.data.Haptics.success(ctx)
             if (rem < -5) vm.skipRestTimer()
         }
     }
@@ -368,7 +371,7 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             val setNum = ex.loggedSets.size + 1
             val btnText = "Log set $setNum"
             HudButton(btnText, Modifier.fillMaxWidth()) {
-                haptic(ctx, 40L)
+                com.ascend.lifeos.data.Haptics.confirm(ctx)
                 vm.logSet(
                     exerciseId = ex.exerciseId,
                     reps = reps.toIntOrNull() ?: 0,
@@ -480,16 +483,33 @@ private fun MiniBtn(label: String, onClick: () -> Unit) {
 
 @Composable
 fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
     val alpha by rememberInfiniteTransition(label = "prGlow").animateFloat(
         0.6f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "a",
     )
-    LaunchedEffect(pr) { delay(8000); onDismiss() }
+    // the Apple-Pay triple: visual + haptic + sound land on the same keyframe
+    LaunchedEffect(pr) {
+        com.ascend.lifeos.data.Haptics.epic(ctx)
+        runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
+        delay(8000); onDismiss()
+    }
+    // card lands with a bounce (spatial spring MAY overshoot — this is the one place it should)
+    val pop = remember { androidx.compose.animation.core.Animatable(0.6f) }
+    LaunchedEffect(pr) {
+        pop.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.55f, stiffness = 380f))
+    }
 
     Box(
         Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)).clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
-        GlassPanel(Modifier.width(280.dp), corner = 24.dp, fill = Amber.copy(alpha = 0.08f * alpha), line = Amber.copy(alpha = 0.4f * alpha)) {
+        GlassPanel(
+            Modifier.width(280.dp).graphicsLayer {
+                scaleX = pop.value; scaleY = pop.value
+                this.alpha = ((pop.value - 0.6f) / 0.4f).coerceIn(0f, 1f)
+            },
+            corner = 24.dp, fill = Amber.copy(alpha = 0.08f * alpha), line = Amber.copy(alpha = 0.4f * alpha),
+        ) {
             Column(Modifier.padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("NEW PR", color = Amber, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
                 Spacer(Modifier.height(8.dp))

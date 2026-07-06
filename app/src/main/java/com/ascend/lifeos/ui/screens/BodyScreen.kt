@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -637,11 +638,37 @@ private fun CheckInCard() {
 
     val morningDone = d?.morningEnergy != null && d.soreness != null
     val eveningDone = d?.eveningStress != null
-    if (morning && morningDone) return
-    if (!morning && eveningDone) return
+    val done = if (morning) morningDone else eveningDone
 
+    // finish → card thanks you, then folds itself away (M3.6). Already-done
+    // on open stays silent: the moment belongs to the action, not the state.
+    val vis = remember { androidx.compose.animation.core.MutableTransitionState(!done) }
+    LaunchedEffect(done) {
+        if (done && vis.currentState) {
+            kotlinx.coroutines.delay(1500)
+            vis.targetState = false
+        }
+    }
+    if (!vis.currentState && !vis.targetState) return
+
+    androidx.compose.animation.AnimatedVisibility(
+        visibleState = vis,
+        exit = androidx.compose.animation.shrinkVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) +
+            androidx.compose.animation.fadeOut(),
+    ) {
+    Column {
     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(16.dp).animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
+            if (done) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("✓", color = Good, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (morning) "Logged. Attack the day." else "Logged. Sleep well.",
+                        color = TextMuted, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
             Text(
                 if (morning) "MORNING CHECK-IN" else "EVENING CHECK-IN",
                 color = Mod.Body, fontFamily = Display, fontSize = 9.5.sp,
@@ -687,9 +714,12 @@ private fun CheckInCard() {
                     FactorChip("Screen in bed", d?.fScreenLate == true) { on -> Repo.setJournalFactor(screenLate = on) }
                 }
             }
+            }
         }
     }
     Spacer(Modifier.height(12.dp))
+    }
+    }
 }
 
 @Composable
