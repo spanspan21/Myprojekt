@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,7 +55,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.BasicFoods
 import com.ascend.lifeos.data.DayData
+import com.ascend.lifeos.data.FoodEntry
+import com.ascend.lifeos.data.NutTotals
+import com.ascend.lifeos.data.OwnRecipes
+import com.ascend.lifeos.data.Profile
 import com.ascend.lifeos.data.FastingCalc
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.WaterCalc
@@ -153,12 +159,26 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
     val hot = com.ascend.lifeos.data.WeatherRepo.hot && isToday
     val hasLoc = com.ascend.lifeos.data.WeatherRepo.hasLocationPermission(ctx)
 
+    // Kap. 45: Fuel kennt den Kalender — Spieltag-Zeile aus dem bestehenden Protokoll
+    val gameDay by androidx.compose.runtime.produceState<String?>(null) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val today = java.time.LocalDate.now().toEpochDay()
+                com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                    .eventsInRangeOnce(today, today)
+                    .filter { it.type == "HOCKEY" && !it.allDay }
+                    .minByOrNull { it.startMin }
+                    ?.let { "Game Day %02d:%02d — Carbs bis 15 Uhr, danach leicht".format(it.startMin / 60, it.startMin % 60) }
+            }.getOrNull()
+        }
+    }
+
     Box(Modifier.fillMaxSize()) {
         Column(
             Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
         ) {
-            JarvisHeader("Fuel", contextLine(totals.kcal, p.kcalGoal, isToday), Mod.Fuel)
+            JarvisHeader("Fuel", gameDay ?: contextLine(totals.kcal, p.kcalGoal, isToday), Mod.Fuel)
 
             Spacer(Modifier.height(12.dp))
             DayCursor(
@@ -191,6 +211,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 }
             }
 
+            // Kap. 39/44: die handlungsleitende Zeile + der Lücken-Füller
+            GapFiller(totals = totals, p = p, isToday = isToday, dayKey = dayKey)
+
             // Kap. 39: Wasser wird eine leise Leiste — Getränke (volumeMl) zählen mit
             Spacer(Modifier.height(12.dp))
             HydrationBar(
@@ -207,6 +230,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
 
             // adaptive TDEE: the weekly recalibration ritual (MacroFactor-style)
             TdeeSuggestCard()
+
+            // Kap. 43: die abgeschlossene Woche als ehrliches Zeugnis (So-Abend + Mo)
+            WeeklyFuelReview(isToday)
 
             Spacer(Modifier.height(14.dp))
             FastingModule(onFasting, Modifier.fillMaxWidth())
@@ -230,7 +256,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             Spacer(Modifier.height(10.dp))
             MEAL_SLOTS.forEach { (code, name) ->
                 val slotMeals = day.meals.filter { it.meal == code }
-                MealSlot(name, slotMeals, expanded == code, dayKey = dayKey, onToggle = { expanded = if (expanded == code) null else code })
+                MealSlot(name, code, slotMeals, expanded == code, dayKey = dayKey, onToggle = { expanded = if (expanded == code) null else code })
                 Spacer(Modifier.height(9.dp))
             }
         }
@@ -317,36 +343,43 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
         fPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrF",
     )
     val left = kcalGoal - kcal
-    Box(Modifier.size(118.dp), contentAlignment = Alignment.Center) {
+    // User-Feedback: Schrift muss IN den Kreis passen — kompaktere Ringe,
+    // größere Mitte, Ziffern skalieren mit der Stellenzahl.
+    Box(Modifier.size(124.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             fun ring(inset: Float, pct: Float, color: Color, sw: Float) {
                 drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw, cap = StrokeCap.Round))
                 if (pct > 0f) {
                     // Endspurt-Glow (Kap. 22-Erbe) am kcal-Ring
-                    if (sw > 9.dp.toPx() && pct >= 0.8f && pct < 1f) {
+                    if (sw > 8.dp.toPx() && pct >= 0.8f && pct < 1f) {
                         drawArc(color.copy(alpha = 0.22f), -90f, 360f * pct, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw * 1.8f, cap = StrokeCap.Round))
                     }
                     drawArc(color, -90f, 360f * pct, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw, cap = StrokeCap.Round))
                 }
             }
-            val kw = 10.dp.toPx()
-            val mw = 4.5.dp.toPx()
-            ring(kw / 2, kA, Mod.Fuel, kw)                          // außen: KALORIE
-            ring(kw + 6.dp.toPx(), pA, Cyan, mw)                    // innen: Protein
-            ring(kw + 6.dp.toPx() + mw + 4.dp.toPx(), cA, Blue, mw) // Carbs
-            ring(kw + 6.dp.toPx() + 2 * (mw + 4.dp.toPx()), fA, Purple, mw) // Fat
+            val kw = 9.dp.toPx()
+            val mw = 3.5.dp.toPx()
+            val g1 = 5.dp.toPx()
+            val g2 = 3.dp.toPx()
+            ring(kw / 2, kA, Mod.Fuel, kw)                       // außen: KALORIE
+            ring(kw + g1, pA, Cyan, mw)                          // innen: Protein
+            ring(kw + g1 + mw + g2, cA, Blue, mw)                // Carbs
+            ring(kw + g1 + 2 * (mw + g2), fA, Purple, mw)        // Fat
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val shown = if (kcal == 0) kcalGoal else kcal
+            // 4-stellig → kleiner, damit die Zahl den Innenkreis nie berührt
+            val numSize = if (shown >= 1000) 15 else 18
             if (kcal == 0) {
                 // der Tag beginnt mit Budget, nicht mit Null (Kap. 39)
-                TickerNumber(kcalGoal, fontSize = 20)
-                Text("kcal frei", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                TickerNumber(kcalGoal, fontSize = numSize)
+                Text("kcal frei", color = TextDim, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             } else {
-                TickerNumber(kcal, fontSize = 20)
+                TickerNumber(kcal, fontSize = numSize)
                 Text(
                     if (left >= 0) "übrig $left" else "+${-left} über",
                     color = if (left >= 0) TextDim else Warn,
-                    fontSize = 9.sp, fontWeight = FontWeight.Bold,
+                    fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1,
                 )
             }
         }
@@ -568,8 +601,9 @@ private fun FastingModule(onOpen: () -> Unit, modifier: Modifier) {
 // ---- meal slots ----------------------------------------------------------------
 
 @Composable
-private fun MealSlot(name: String, meals: List<com.ascend.lifeos.data.FoodEntry>, expanded: Boolean, dayKey: String, onToggle: () -> Unit) {
+private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.data.FoodEntry>, expanded: Boolean, dayKey: String, onToggle: () -> Unit) {
     val kcal = meals.sumOf { it.kcal }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Column(
             Modifier.fillMaxWidth().animateContentSize(Motion.springSmoothOf()),
@@ -583,7 +617,20 @@ private fun MealSlot(name: String, meals: List<com.ascend.lifeos.data.FoodEntry>
                     Text("${meals.size} · ", color = TextDim, fontSize = 11.sp)
                     Text("$kcal kcal", color = Mod.Fuel, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 } else {
-                    Text("empty", color = TextDim, fontSize = 12.sp)
+                    // Kap. 40: der leere Slot bietet gestern an — ein Tipp, fertig.
+                    val y = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == code }.orEmpty()
+                    if (y.isNotEmpty()) {
+                        Text(
+                            "⟳ wie gestern · ${y.sumOf { it.kcal }} kcal",
+                            color = Mod.Fuel.copy(alpha = 0.85f), fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable {
+                                y.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
+                                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            },
+                        )
+                    } else {
+                        Text("empty", color = TextDim, fontSize = 12.sp)
+                    }
                 }
             }
             if (expanded) {
@@ -593,8 +640,9 @@ private fun MealSlot(name: String, meals: List<com.ascend.lifeos.data.FoodEntry>
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text(e.name, color = TextMuted, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-                            Text((if (e.grams > 0) "${e.grams}g · " else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = 10.5.sp)
+                            // ◌ = Quick-Add ohne volle Makros, ≈ = ehrliche Teller-Schätzung (Kap. 37/42)
+                            Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                            Text((if (e.grams > 0) "${e.grams}g · " else "") + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = 10.5.sp)
                         }
                         Box(Modifier.size(30.dp).clip(CircleShape).clickable { Repo.removeFood(e.id, dayKey) }, contentAlignment = Alignment.Center) {
                             Icon(Icons.Rounded.Close, null, tint = TextDim, modifier = Modifier.size(15.dp))
@@ -607,4 +655,94 @@ private fun MealSlot(name: String, meals: List<com.ascend.lifeos.data.FoodEntry>
             }
         }
     }
+}
+
+// ─── Der Lücken-Füller (FUEL-Masterplan Kap. 44) ─────────────────────────────
+// „Noch 48 g Protein · 535 kcal frei" → drei portionierte Chips aus dem
+// EIGENEN Essensuniversum (Favoriten → eigene Rezepte → Protein-Klassiker).
+// Erscheint nur abends bei echter Lücke — Stille ist auch Information.
+
+private data class GapPick(val label: String, val entry: FoodEntry, val score: Double)
+
+@Composable
+private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: String) {
+    val kcalLeft = p.kcalGoal - totals.kcal
+    val protLeft = p.proteinGoal - totals.protein
+    val hour = java.time.LocalTime.now().hour
+    val show = isToday && hour >= 17 && (protLeft >= 25 || kcalLeft >= 300) && kcalLeft > 120
+    if (!show) return
+
+    val hCtx = androidx.compose.ui.platform.LocalContext.current
+    val picks = remember(kcalLeft, protLeft) { gapPicks(kcalLeft, protLeft) }
+    if (picks.isEmpty()) return
+
+    Spacer(Modifier.height(12.dp))
+    Text(
+        "Übrig: $kcalLeft kcal · ${protLeft.coerceAtLeast(0)} g Protein",
+        color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        picks.forEach { pick ->
+            Box(
+                Modifier.clip(RoundedCornerShape(12.dp))
+                    .background(Mod.Fuel.copy(alpha = 0.12f))
+                    .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                    .clickable {
+                        Repo.addFood(pick.entry, dayKey)
+                        com.ascend.lifeos.data.Haptics.confirm(hCtx)
+                    }
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
+            ) {
+                Column {
+                    Text(pick.label, color = TextPrimary, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text("${pick.entry.protein} P · ${pick.entry.kcal} kcal", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+/** Kap.-44-Formel: fit = 2·P-Deckung + 1·kcal-Deckung − Überschuss-Strafe + Boni. */
+private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
+    val cands = ArrayList<GapPick>()
+    fun consider(name: String, kcal: Int, prot: Int, carbs: Int, fat: Int, grams: Int, favorite: Boolean, slotBias: Double) {
+        if (kcal <= 0) return
+        val pFit = if (protLeft > 0) (prot.toDouble() / protLeft).coerceAtMost(1.0) else 0.5
+        val kFit = if (kcalLeft > 0) (kcal.toDouble() / kcalLeft).coerceAtMost(1.0) else 0.0
+        val overshoot = ((kcal - kcalLeft).coerceAtLeast(0)) / 200.0
+        val score = 2 * pFit + kFit - 2 * overshoot + (if (favorite) 0.5 else 0.0) + slotBias
+        if (kcal <= kcalLeft + 100) {
+            cands += GapPick(
+                name,
+                FoodEntry(id = "", name = name, meal = "s", kcal = kcal, protein = prot, carbs = carbs, fat = fat, grams = grams),
+                score,
+            )
+        }
+    }
+    // 1) Favoriten (eigene Foods mit Stern) — Portion wie definiert
+    Repo.customFoods().filter { it.favorite }.forEach { cf ->
+        consider(cf.name, cf.kcal, cf.protein, cf.carbs, cf.fat, cf.servingG, favorite = true, slotBias = 0.3)
+    }
+    // 2) eigene Rezepte — 1 Portion (Reste!)
+    OwnRecipes.asRecipes().forEach { r ->
+        consider("${r.title} (1 Port.)", r.kcal, r.protein, r.carbs, r.fat, 0, favorite = false, slotBias = 0.2)
+    }
+    // 3) Protein-Klassiker aus der Kern-DB, Portion auf die Lücke gerechnet
+    val classics = listOf("Quark (low-fat)", "Skyr", "Cottage cheese", "Egg", "Whey protein", "Greek yogurt (10%)")
+    classics.forEach { name ->
+        val prod = BasicFoods.search(name).firstOrNull { it.name == name } ?: return@forEach
+        if (prod.protein100 <= 1.0) return@forEach
+        val targetP = protLeft.coerceIn(20, 50)
+        var grams = (targetP * 100.0 / prod.protein100).toInt()
+        grams = (grams / 50 * 50).coerceIn(100, 400)
+        val f = grams / 100.0
+        consider(
+            "${prod.name} $grams g",
+            (prod.kcal100 * f).toInt(), (prod.protein100 * f).toInt(),
+            (prod.carbs100 * f).toInt(), (prod.fat100 * f).toInt(),
+            grams, favorite = false, slotBias = 0.0,
+        )
+    }
+    return cands.sortedWith(compareByDescending<GapPick> { it.score }.thenBy { it.entry.kcal }).take(3)
 }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -47,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -55,9 +57,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.BasicFoods
 import com.ascend.lifeos.data.CustomFood
 import com.ascend.lifeos.data.FoodApi
 import com.ascend.lifeos.data.FoodEntry
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.FoodScore
 import com.ascend.lifeos.data.MACRO_IDS
 import com.ascend.lifeos.data.Repo
@@ -147,6 +151,10 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
     }
 
     var drinkBuilder by remember { mutableStateOf(false) }
+    // Kap. 40: der Multi-Add-Korb — Mensa-Teller in einem Rutsch loggen.
+    var basket by remember { mutableStateOf(listOf<FoodEntry>()) }
+    // Autofokus nur beim ersten Aufbau des Sheets, nicht nach jedem Zurück.
+    var autoFocus by remember { mutableStateOf(true) }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = BgElevated) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 20.dp)) {
@@ -156,7 +164,12 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
                     meal = meal, onMeal = { meal = it }, dayKey = dayKey,
                     onBack = { drinkBuilder = false }, onAdded = onDismiss,
                 )
-                selected != null -> PortionPane(selected!!, meal, { meal = it }, dayKey = dayKey, fromCache = selectedFromCache, onBack = { selected = null; selectedFromCache = false }, onAdded = onDismiss)
+                selected != null -> PortionPane(
+                    selected!!, meal, { meal = it }, dayKey = dayKey, fromCache = selectedFromCache,
+                    onBack = { selected = null; selectedFromCache = false },
+                    // Korb nicht wegwerfen: solange er voll ist, zurück zur Liste statt schließen.
+                    onAdded = { if (basket.isEmpty()) onDismiss() else { selected = null; selectedFromCache = false } },
+                )
                 else -> SearchPane(
                     query = query, onQuery = { query = it }, results = results, loading = loading,
                     meal = meal, onMeal = { meal = it }, dayKey = dayKey, onScan = { scan() },
@@ -165,6 +178,8 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
                     onEditCustom = { editExisting = it; editBarcode = ""; editing = true },
                     onOpenDrinks = { drinkBuilder = true },
                     onDismiss = onDismiss,
+                    basket = basket, onBasket = { basket = it },
+                    autoFocus = autoFocus, onAutoFocused = { autoFocus = false },
                 )
             }
         }
@@ -187,15 +202,23 @@ private fun SearchPane(
     onPick: (FoodApi.Product) -> Unit, onPickCustom: (CustomFood) -> Unit,
     onCreate: () -> Unit, onEditCustom: (CustomFood) -> Unit,
     onOpenDrinks: () -> Unit, onDismiss: () -> Unit,
+    basket: List<FoodEntry>, onBasket: (List<FoodEntry>) -> Unit,
+    autoFocus: Boolean, onAutoFocused: () -> Unit,
 ) {
+    val ctx = LocalContext.current
     Text("Add food", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
     backdateLabel(dayKey)?.let {
         Text("Logging to $it", color = Mod.Fuel, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
     }
     Spacer(Modifier.height(14.dp))
 
+    // Kap. 40: Suche ist immer oben und sofort tippbereit (Autofokus einmalig).
+    val focusReq = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        if (autoFocus) { onAutoFocused(); runCatching { focusReq.requestFocus() } }
+    }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f)) { GlassField("Search — e.g. chicken breast", query, KeyboardType.Text) { onQuery(it) } }
+        Box(Modifier.weight(1f)) { GlassField("Suche — Latte, Döner oder 450", query, KeyboardType.Text, focus = focusReq) { onQuery(it) } }
         Spacer(Modifier.width(10.dp))
         SquareIcon(Icons.Rounded.QrCodeScanner, onScan)
     }
@@ -205,60 +228,116 @@ private fun SearchPane(
         MEAL_SLOTS.forEach { (code, label) -> HudChip(label, meal == code) { onMeal(code) } }
     }
 
-    Spacer(Modifier.height(14.dp))
+    // Kap. 40: Reiter statt Endlos-Liste — Zuletzt ist der Landeplatz.
+    var tab by remember { mutableStateOf(0) }
+    if (query.trim().length < 2) {
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            HudChip("Zuletzt", tab == 0, Modifier.weight(1f)) { tab = 0 }
+            HudChip("Favoriten", tab == 1, Modifier.weight(1f)) { tab = 1 }
+            HudChip("Getränke", false, Modifier.weight(1f)) { onOpenDrinks() }
+            HudChip("Teller", tab == 2, Modifier.weight(1f)) { tab = 2 }
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
     Column(Modifier.fillMaxWidth().heightIn(max = 380.dp).verticalScroll(rememberScrollState())) {
         if (query.trim().length < 2) {
-            // Quick actions
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                WideGhost(Icons.Rounded.ContentCopy, "Same as yesterday", Modifier.weight(1f)) {
-                    val prev = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == meal }.orEmpty()
-                    prev.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
-                    onDismiss()
-                }
-                WideGhost(Icons.Rounded.Add, "Create custom", Modifier.weight(1f)) { onCreate() }
-            }
-            Spacer(Modifier.height(10.dp))
-            // Kap. 36: der Königsweg für Latte, Schorle & Co. — immer sichtbar
-            WideGhost(Icons.Rounded.WaterDrop, "Getränk bauen — Latte, Kakao, Schorle …", Modifier.fillMaxWidth()) { onOpenDrinks() }
-
-            val favorites = Repo.customFoods().filter { it.favorite }
-            val savedMeals = Repo.savedMeals()
-            val recents = Repo.profile().recentFoods
-
-            if (savedMeals.isNotEmpty()) {
-                Section("SAVED MEALS")
-                savedMeals.forEach { m ->
-                    val kcal = m.entries.sumOf { it.kcal }
-                    ResultRow(m.name, "${m.entries.size} items · $kcal kcal", "★") { addAll(m.entries, meal, dayKey); onDismiss() }
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-            if (favorites.isNotEmpty()) {
-                Section("FAVORITES")
-                favorites.forEach { cf ->
-                    ResultRow(cf.name, customSub(cf), "", onLong = { onEditCustom(cf) }) { onPickCustom(cf) }
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-            if (recents.isNotEmpty()) {
-                Section("RECENT")
-                recents.take(8).forEach { e ->
-                    ResultRow(e.name, "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", "") {
-                        Repo.addFood(e.copy(id = "", ts = 0, meal = meal), dayKey); onDismiss()
+            when (tab) {
+                // ── Zuletzt: slot-affin sortiert, Tipp = sofort geloggt ──
+                0 -> {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        WideGhost(Icons.Rounded.ContentCopy, "Slot wie gestern", Modifier.weight(1f)) {
+                            val prev = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == meal }.orEmpty()
+                            prev.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
+                            if (prev.isNotEmpty()) Haptics.confirm(ctx)
+                            onDismiss()
+                        }
+                        WideGhost(Icons.Rounded.ContentCopy, "Ganzer Tag", Modifier.weight(1f)) {
+                            val prev = Repo.dayFor(prevKey(dayKey))?.meals.orEmpty()
+                            prev.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
+                            if (prev.isNotEmpty()) Haptics.confirm(ctx)
+                            onDismiss()
+                        }
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
+                    val recents = remember(meal) {
+                        Repo.profile().recentFoods.sortedByDescending { if (it.meal == meal) 1 else 0 }
+                    }
+                    if (recents.isEmpty()) {
+                        Text("Noch nichts geloggt — tippe oben in die Suche oder scanne.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                    } else {
+                        Section("ZULETZT — 1 TIPP LOGGT, ＋ SAMMELT")
+                        recents.take(12).forEach { e ->
+                            ResultRow(
+                                e.name, "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", "",
+                                onLong = { pseudoProduct(e)?.let(onPick) },
+                                onPlus = { onBasket(basket + e.copy(id = "", ts = 0)); Haptics.tick(ctx) },
+                            ) {
+                                Repo.addFood(e.copy(id = "", ts = 0, meal = meal), dayKey)
+                                Haptics.confirm(ctx); onDismiss()
+                            }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
                 }
-            }
-            if (favorites.isEmpty() && savedMeals.isEmpty() && recents.isEmpty()) {
-                Text("Type to search, scan a barcode, or create a custom food.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                // ── Favoriten: Sterne + gespeicherte Mahlzeiten ──
+                1 -> {
+                    val favorites = Repo.customFoods().filter { it.favorite }
+                    val savedMeals = Repo.savedMeals()
+                    WideGhost(Icons.Rounded.Add, "Eigenes Food anlegen", Modifier.fillMaxWidth()) { onCreate() }
+                    Spacer(Modifier.height(10.dp))
+                    if (savedMeals.isNotEmpty()) {
+                        Section("GESPEICHERTE MAHLZEITEN")
+                        savedMeals.forEach { m ->
+                            val kcal = m.entries.sumOf { it.kcal }
+                            ResultRow(m.name, "${m.entries.size} Einträge · $kcal kcal", "★") { addAll(m.entries, meal, dayKey); Haptics.confirm(ctx); onDismiss() }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    if (favorites.isNotEmpty()) {
+                        Section("FAVORITEN")
+                        favorites.forEach { cf ->
+                            ResultRow(
+                                cf.name, customSub(cf), "★", onLong = { onEditCustom(cf) },
+                                onPlus = { onBasket(basket + defaultEntry(cf.toProduct(), meal)); Haptics.tick(ctx) },
+                            ) { onPickCustom(cf) }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    if (favorites.isEmpty() && savedMeals.isEmpty()) {
+                        Text("Markiere Foods mit ★ oder speichere einen Slot als Mahlzeit — dann wohnen sie hier.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                    }
+                }
+                // ── Teller: die ~geschätzten Alltagsgerichte (Kap. 37) ──
+                else -> {
+                    Text("~ heißt ehrlich geschätzt. Antippen für S / M / L.", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+                    Spacer(Modifier.height(10.dp))
+                    BasicFoods.ALL.filter { it.approx }.forEach { p ->
+                        ResultRow(
+                            p.name, portionSub(p), "", verified = true,
+                            onPlus = { onBasket(basket + defaultEntry(p, meal)); Haptics.tick(ctx) },
+                        ) { onPick(p) }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
             }
         } else {
-            // ---- quick-kcal: a bare number logs straight away ----
+            // ---- Quick-Add (Kap. 37): nackte Zahl = kcal, optional + Protein, immer ◌ ----
             val quickKcal = query.trim().toIntOrNull()?.takeIf { it in 1..3000 }
             if (quickKcal != null) {
-                WideGhost(Icons.Rounded.Bolt, "Log $quickKcal kcal now", Modifier.fillMaxWidth()) {
-                    Repo.addFood(FoodEntry(id = "", name = "Quick entry", meal = meal, kcal = quickKcal), dayKey)
-                    onDismiss()
+                var qProt by remember(quickKcal) { mutableStateOf("") }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.weight(1f)) {
+                        WideGhost(Icons.Rounded.Bolt, "◌ $quickKcal kcal loggen", Modifier.fillMaxWidth()) {
+                            Repo.addFood(
+                                FoodEntry(id = "", name = "Quick entry", meal = meal, kcal = quickKcal, protein = qProt.toIntOrNull() ?: 0, incomplete = true),
+                                dayKey,
+                            )
+                            Haptics.confirm(ctx); onDismiss()
+                        }
+                    }
+                    Box(Modifier.width(92.dp)) { GlassField("P (g)", qProt, KeyboardType.Number) { qProt = it.filter(Char::isDigit).take(3) } }
                 }
                 Spacer(Modifier.height(10.dp))
             }
@@ -288,7 +367,10 @@ private fun SearchPane(
             // ---- 2) verified offline staples (relevanz-sortiert, Kap. 34) ----
             val verified = results.filter { it.brand == VERIFIED_BRAND }
             verified.forEach { p ->
-                ResultRow(p.name, portionSub(p), "", verified = true) { onPick(p) }
+                ResultRow(
+                    p.name, portionSub(p), "", verified = true,
+                    onPlus = { onBasket(basket + defaultEntry(p, meal)); Haptics.tick(ctx) },
+                ) { onPick(p) }
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -324,8 +406,33 @@ private fun SearchPane(
                         title = p.name + (p.brand?.let { " · $it" } ?: ""),
                         sub = per100Sub(p),
                         score = p.nutriScore.uppercase(),
+                        onPlus = { onBasket(basket + defaultEntry(p, meal)); Haptics.tick(ctx) },
                     ) { onPick(p) }
                     Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+
+    // ── Der Korb (Kap. 40): sammeln mit ＋, einmal loggen — Mensa in ≤5 Taps ──
+    if (basket.isNotEmpty()) {
+        Spacer(Modifier.height(10.dp))
+        GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${basket.size} im Korb", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g Protein", color = TextDim, fontSize = 10.5.sp)
+                }
+                Text(
+                    "Leeren", color = TextDim, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onBasket(emptyList()) }.padding(8.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                HudButton("Loggen", Modifier.width(110.dp)) {
+                    basket.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
+                    Haptics.success(ctx)
+                    onBasket(emptyList())
+                    onDismiss()
                 }
             }
         }
@@ -374,6 +481,36 @@ private fun addAll(entries: List<FoodEntry>, meal: String, dayKey: String) {
     entries.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
 }
 
+/** Korb-Eintrag mit der Standardportion des Produkts (erste Preset > serving > 100 g). */
+private fun defaultEntry(p: FoodApi.Product, meal: String): FoodEntry {
+    val po = p.portions.firstOrNull()
+    val grams = po?.grams ?: p.servingG ?: 100
+    val f = grams / 100.0
+    return FoodEntry(
+        id = "", name = p.name, meal = meal, kcal = (p.kcal100 * f).roundToInt(),
+        protein = (p.protein100 * f).roundToInt(), carbs = (p.carbs100 * f).roundToInt(), fat = (p.fat100 * f).roundToInt(),
+        grams = grams, nutriScore = p.nutriScore, barcode = p.barcode,
+        nutrients = p.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
+        volumeMl = if (po?.ml == true) grams else 0,
+        approx = p.approx,
+    )
+}
+
+/** Kap. 40: Long-Press auf „Zuletzt" — derselbe Eintrag, aber mit Portions-Editor. */
+private fun pseudoProduct(e: FoodEntry): FoodApi.Product? {
+    val g = e.grams.takeIf { it > 0 } ?: return null
+    val f = 100.0 / g
+    return FoodApi.Product(
+        barcode = e.barcode, name = e.name, brand = null,
+        kcal100 = (e.kcal * f).roundToInt(), protein100 = e.protein * f, carbs100 = e.carbs * f, fat100 = e.fat * f,
+        sugars100 = 0.0, fiber100 = 0.0, satFat100 = 0.0, salt100 = 0.0,
+        nutriScore = e.nutriScore, nova = null, ingredients = "", servingG = g,
+        per100 = e.nutrients.mapValues { it.value * f },
+        portions = if (e.volumeMl > 0) listOf(FoodApi.Portion("wie zuletzt", g, ml = true)) else emptyList(),
+        approx = e.approx,
+    )
+}
+
 @Composable
 private fun Section(title: String) {
     Text(title, color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
@@ -402,7 +539,7 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ResultRow(title: String, sub: String, score: String = "", verified: Boolean = false, onLong: (() -> Unit)? = null, onClick: () -> Unit) {
+private fun ResultRow(title: String, sub: String, score: String = "", verified: Boolean = false, onLong: (() -> Unit)? = null, onPlus: (() -> Unit)? = null, onClick: () -> Unit) {
     GlassPanel(
         Modifier.fillMaxWidth().combinedClickable(onClick = onClick, onLongClick = onLong),
         corner = 14.dp,
@@ -425,6 +562,15 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
                         Text(score, color = c, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+            }
+            // Kap. 40: ＋ sammelt in den Korb, ohne die Liste zu verlassen.
+            if (onPlus != null) {
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    Modifier.size(30.dp).clip(CircleShape).background(Mod.Fuel.copy(alpha = 0.14f))
+                        .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), CircleShape).clickable { onPlus() },
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Rounded.Add, null, tint = Mod.Fuel, modifier = Modifier.size(16.dp)) }
             }
         }
     }

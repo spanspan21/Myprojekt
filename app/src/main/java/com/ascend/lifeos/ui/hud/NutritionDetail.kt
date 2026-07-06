@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -297,6 +298,41 @@ fun StatsView(onBack: () -> Unit) {
     val corr = remember(allDays) { correlations() }
     var weight by remember { mutableStateOf("") }
 
+    // ── F4.1: Protein-Trend (14 Tage), Konstanz, Wochen-Lücken ──
+    val protGoal = Repo.profile().proteinGoal
+    val prot14 = remember(allDays) {
+        var k = todayKey(); val out = ArrayList<Int>(14)
+        repeat(14) { out.add(Repo.dayFor(k)?.let { d -> Repo.nutritionTotals(d).protein } ?: 0); k = prevKey(k) }
+        out.reversed()
+    }
+    val streak = remember(allDays) {
+        var k = todayKey()
+        if (Repo.dayFor(k)?.meals.isNullOrEmpty()) k = prevKey(k) // heute Morgen zählt noch nicht gegen dich
+        var s = 0
+        while (Repo.dayFor(k)?.meals?.isNotEmpty() == true) { s++; k = prevKey(k) }
+        s
+    }
+    val logged30 = remember(allDays) {
+        var k = todayKey(); var c = 0
+        repeat(30) { if (Repo.dayFor(k)?.meals?.isNotEmpty() == true) c++; k = prevKey(k) }
+        c
+    }
+    val microGaps = remember(allDays) {
+        val keys = ArrayList<String>(7).apply { var k = todayKey(); repeat(7) { add(k); k = prevKey(k) } }
+        val daysWithFood = keys.count { Repo.dayFor(it)?.meals?.isNotEmpty() == true }
+        if (daysWithFood == 0) emptyList() else {
+            val avgN = Repo.nutrientTotals(keys).mapValues { it.value / daysWithFood }
+            val prof = Repo.profile(); val athlete = prof.trainFreq >= 4
+            MICRO_16.mapNotNull { id ->
+                val nd = NUTRIENTS_BY_ID[id] ?: return@mapNotNull null
+                if (nd.limit) return@mapNotNull null
+                val t = targetFor(nd, prof.sex, prof.age, athlete) ?: return@mapNotNull null
+                val p = ((avgN[id] ?: 0.0) * nd.gToUnit / t).toFloat()
+                if (p < 0.5f) nd.label to p else null
+            }.sortedBy { it.second }.take(5)
+        }
+    }
+
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
@@ -317,6 +353,61 @@ fun StatsView(onBack: () -> Unit) {
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     week.forEach { (k, _) -> Text(dayShort(k), color = TextDim, fontSize = 10.sp) }
+                }
+            }
+        }
+
+        // ── Protein-Trend: 14 Tage gegen das Ziel (F4.1) ──
+        Spacer(Modifier.height(16.dp))
+        Text("PROTEIN · 14 TAGE", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        Spacer(Modifier.height(10.dp))
+        GlassPanel(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    val avgProt = prot14.filter { it > 0 }.average().let { if (it.isNaN()) 0 else it.roundToInt() }
+                    Text("$avgProt g", color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(" Ø / Tag", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
+                    Spacer(Modifier.weight(1f))
+                    Text("Ziel $protGoal g", color = Cyan, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
+                }
+                Spacer(Modifier.height(14.dp))
+                ProteinTrend(prot14, protGoal, Modifier.fillMaxWidth().height(90.dp))
+            }
+        }
+
+        // ── Konstanz: die eigentliche Superkraft (F4.1) ──
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            GlassPanel(Modifier.weight(1f)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                    Text("$streak", color = Accent, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("TAGE LOG-STREAK", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                }
+            }
+            GlassPanel(Modifier.weight(1f)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                    Text("$logged30/30", color = if (logged30 >= 24) Accent else Amber, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("TAGE GELOGGT", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                }
+            }
+        }
+
+        // ── Wochen-Lücken: Mikros unter 50 % im 7-Tage-Schnitt (F4.1) ──
+        if (microGaps.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text("WOCHEN-LÜCKEN · Ø < 50 % DES ZIELS", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Spacer(Modifier.height(10.dp))
+            GlassPanel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                    microGaps.forEachIndexed { i, (label, p) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text("${(p * 100).toInt()} %", color = Amber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                        }
+                        if (i != microGaps.lastIndex) Spacer(Modifier.height(6.dp))
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Quellen & Fixes: Micros → Weekly average", color = TextDim, fontSize = 10.5.sp)
                 }
             }
         }
@@ -378,6 +469,33 @@ fun StatsView(onBack: () -> Unit) {
             Box(Modifier.weight(1f)) { GlassField("kg", weight, KeyboardType.Number) { weight = it.filter { c -> c.isDigit() || c == '.' }.take(5) } }
             Spacer(Modifier.width(10.dp))
             HudButton("Save", Modifier.width(120.dp)) { weight.toDoubleOrNull()?.let { Repo.logWeight(it); weight = "" } }
+        }
+    }
+}
+
+/** 14-Tage-Proteinlinie mit gestrichelter Ziellinie — Lücken (0-Tage) bleiben Lücken. */
+@Composable
+private fun ProteinTrend(data: List<Int>, goal: Int, modifier: Modifier) {
+    Canvas(modifier) {
+        val maxV = maxOf(goal * 1.25f, data.maxOrNull()?.toFloat() ?: 1f, 1f)
+        fun y(v: Float) = size.height - (v / maxV) * size.height * 0.92f
+        if (goal > 0) {
+            drawLine(
+                Cyan.copy(alpha = 0.45f), Offset(0f, y(goal.toFloat())), Offset(size.width, y(goal.toFloat())),
+                strokeWidth = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(9f, 9f)),
+            )
+        }
+        val step = size.width / (data.size - 1).coerceAtLeast(1)
+        val path = Path()
+        var started = false
+        data.forEachIndexed { i, v ->
+            if (v <= 0) { started = false; return@forEachIndexed }
+            val pt = Offset(i * step, y(v.toFloat()))
+            if (!started) { path.moveTo(pt.x, pt.y); started = true } else path.lineTo(pt.x, pt.y)
+        }
+        drawPath(path, Accent, style = Stroke(2.5f))
+        data.forEachIndexed { i, v ->
+            if (v > 0) drawCircle(if (v >= goal) Accent else Amber, 3.5f, Offset(i * step, y(v.toFloat())))
         }
     }
 }

@@ -24,6 +24,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Repo.init(applicationContext)
+        com.ascend.lifeos.data.OwnRecipes.init(applicationContext)
         // ATELIER: Welt zuerst (setzt Welt-Default-Akzent), dann gewinnt der
         // gespeicherte Nutzer-Akzent
         run {

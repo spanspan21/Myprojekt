@@ -79,6 +79,9 @@ import java.net.URL
 
 private val FILTERS = listOf("all" to "Suggested", "fit" to "Fits today", "protein" to "High protein", "lowcarb" to "Low carb", "b" to "Breakfast")
 
+/** Cooking-Mode-Ziel (Kap. 41) — Datei-Level, damit RecipeCard ihn setzen kann. */
+private val cookingRecipe = androidx.compose.runtime.mutableStateOf<RecipeDb.Recipe?>(null)
+
 @Composable
 fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     val p = Repo.profile()
@@ -89,7 +92,9 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     var filter by remember { mutableStateOf("all") }
     val seed by remember { mutableIntStateOf((System.currentTimeMillis() / 3_600_000L).toInt()) }
     var expanded by remember { mutableStateOf<Long?>(null) }
-    val recipes = remember(filter, seed) { RecipeDb.suggest(seed, filter, remainKcal, 18) }
+    @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.OwnRecipes.rev
+    var editorOpen by remember { mutableStateOf(false) }
+    val recipes = remember(filter, seed, com.ascend.lifeos.data.OwnRecipes.rev) { RecipeDb.suggest(seed, filter, remainKcal, 18) }
 
     // ---- pantry: "cook with what I have" ----
     var pantry by remember { mutableStateOf(listOf<String>()) }
@@ -161,10 +166,17 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             BackBox(onBack)
             Spacer(Modifier.width(14.dp))
             Text("Recipes", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            // Kap. 41 (P19-Fix): eigene Rezepte anlegen
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).clickable { editorOpen = true }, contentAlignment = Alignment.Center) {
+                Icon(Icons.Rounded.Add, null, tint = Mod.Fuel, modifier = Modifier.size(20.dp))
+            }
+            Spacer(Modifier.width(8.dp))
             Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).clickable { onShopping() }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.ShoppingCart, null, tint = Mod.Fuel, modifier = Modifier.size(20.dp))
             }
         }
+        if (editorOpen) RecipeEditorDialog(onClose = { editorOpen = false })
+        cookingRecipe.value?.let { CookingModeDialog(it) { cookingRecipe.value = null } }
 
         // ---- import from URL ----
         SectionLabel("Import from URL")
@@ -365,8 +377,18 @@ private fun RecipeCard(
         Column(Modifier.fillMaxWidth().clickable { onToggle() }.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(r.title, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2)
-                    Text("${r.kcal} kcal · P${r.protein} C${r.carbs} F${r.fat}", color = TextDim, fontSize = 11.5.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (r.own) {
+                            Text("★ ", color = Amber, fontSize = 13.sp)
+                        }
+                        Text(r.title, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2)
+                    }
+                    // Kap. 41: pro Portion + Portionenzahl + Zeit — kochbare Wahrheit
+                    Text(
+                        "${r.kcal} kcal/Portion · P${r.protein} C${r.carbs} F${r.fat}" +
+                            " · ${r.servings} Port." + (r.minutes?.let { " · $it min" } ?: ""),
+                        color = TextDim, fontSize = 11.5.sp,
+                    )
                     if (pantryActive) {
                         Text("$matched/${r.parts.size} ingredients", color = Mod.Fuel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
@@ -388,25 +410,52 @@ private fun RecipeCard(
             }
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
-                Text("INGREDIENTS", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                Text(
+                    "ZUTATEN — für ${r.servings} Portion${if (r.servings > 1) "en" else ""}",
+                    color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+                )
                 Spacer(Modifier.height(6.dp))
                 r.parts.forEach { ing ->
                     val have = pantryActive && matchesPantry(ing.name, pantry)
                     Text(
-                        (if (have) "✓ " else "· ") + "${ing.name} (${ing.grams}g)",
+                        (if (have) "✓ " else "· ") + "${ing.name} — ${ing.grams} g",
                         color = if (have) Mod.Fuel else TextMuted, fontSize = 12.sp,
                         modifier = Modifier.padding(vertical = 1.dp),
                     )
                 }
+                // Kap. 41: die Zubereitung — vorher gab es nur Namen (P10-Fix)
+                if (r.steps.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Text("ZUBEREITUNG", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                    Spacer(Modifier.height(6.dp))
+                    r.steps.forEachIndexed { i, step ->
+                        Row(Modifier.padding(vertical = 2.dp)) {
+                            Text("${i + 1}.", color = Mod.Fuel, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp))
+                            Text(step, color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+                        }
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    HudButton("Log today", Modifier.weight(1f)) {
+                    HudButton("1 Portion loggen", Modifier.weight(1f)) {
                         Repo.addFood(FoodEntry(id = "", name = r.title, meal = if (r.meal == "b") "b" else "d", kcal = r.kcal, protein = r.protein, carbs = r.carbs, fat = r.fat))
                     }
-                    HudButton("+ Shopping list", Modifier.weight(1f), primary = false) {
+                    HudButton("+ Einkauf", Modifier.weight(1f), primary = false) {
                         // Kap. 41: Mengen überleben den Übertrag (P3-Fix)
                         Repo.addToShoppingQty(r.parts.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
                     }
+                }
+                if (r.steps.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    HudButton("🍳 Kochen (Schritt-Modus)", Modifier.fillMaxWidth(), primary = false) { cookingRecipe.value = r }
+                }
+                if (r.own) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Rezept löschen",
+                        color = Red, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { com.ascend.lifeos.data.OwnRecipes.delete(r.id) },
+                    )
                 }
                 if (pantryActive) {
                     val missing = r.parts.filter { !matchesPantry(it.name, pantry) }
@@ -681,18 +730,10 @@ private fun currentWeekDays(): List<Pair<String, String>> {
     return (0..6).map { i -> monday.plusDays(i.toLong()).toString() to DAY_LABELS[i] }
 }
 
-/** Rebuild a RecipeDb recipe from its deterministic combinatorial id. */
+/** Rezepte v2: Plan-Slots referenzieren kuratierte + eigene Rezepte per id. */
 private fun recipeFromPlanId(id: Long): RecipeDb.Recipe? {
     if (id < 0) return null
-    return runCatching {
-        if (id >= 100_000_000L) {
-            val b = (id - 100_000_000L).toInt()
-            RecipeDb.breakfastRecipe(b / 10_000, (b / 100) % 100, b % 100)
-        } else {
-            val i = id.toInt()
-            RecipeDb.mainRecipe(i / 1_000_000, (i / 10_000) % 100, (i / 100) % 100, i % 100)
-        }
-    }.getOrNull()
+    return RecipeDb.byId(id)
 }
 
 @Composable
@@ -724,4 +765,175 @@ private fun shopQtyLabel(s: ShopItem): String {
     val q = s.qty ?: return ""
     val n = if (q % 1.0 == 0.0) q.toInt().toString() else String.format(java.util.Locale.US, "%.1f", q)
     return " — $n ${s.unit ?: ""}".trimEnd()
+}
+
+// ─── Cooking-Mode (Kap. 41): Schritt-Karten, Bildschirm bleibt an ────────────
+
+@Composable
+private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
+    var step by remember(r.id) { mutableIntStateOf(0) }
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = false }
+    }
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onClose,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(Void).padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(r.title, color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2)
+                Icon(
+                    Icons.Rounded.Close, null, tint = TextMuted,
+                    modifier = Modifier.size(26.dp).clickable { onClose() },
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Schritt ${step + 1} von ${r.steps.size}",
+                color = Mod.Fuel, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            )
+            Spacer(Modifier.height(20.dp))
+            Box(
+                Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(22.dp))
+                    .background(com.ascend.lifeos.ui.theme.Surface)
+                    .border(0.5.dp, HudLine, RoundedCornerShape(22.dp))
+                    .padding(26.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    r.steps.getOrElse(step) { "" },
+                    color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp,
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            // Zutaten-Spickzettel — immer sichtbar
+            Text(
+                r.parts.joinToString("  ·  ") { "${it.name} ${it.grams}g" },
+                color = TextDim, fontSize = 11.sp, lineHeight = 16.sp, maxLines = 3,
+            )
+            Spacer(Modifier.height(18.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                HudButton("Zurück", Modifier.weight(1f), primary = false, enabled = step > 0) { step-- }
+                if (step < r.steps.size - 1) {
+                    HudButton("Weiter", Modifier.weight(1f)) { step++ }
+                } else {
+                    HudButton("Fertig", Modifier.weight(1f)) { onClose() }
+                }
+            }
+        }
+    }
+}
+
+// ─── Eigener-Rezept-Editor (Kap. 41, P19-Fix) ────────────────────────────────
+// Zutaten kommen aus der Kern-DB (Suche v2) — Makros rechnen sich selbst.
+
+@Composable
+private fun RecipeEditorDialog(onClose: () -> Unit) {
+    var title by remember { mutableStateOf("") }
+    var isBreakfast by remember { mutableStateOf(false) }
+    var servings by remember { mutableIntStateOf(2) }
+    var minutes by remember { mutableStateOf("25") }
+    var parts by remember { mutableStateOf(listOf<RecipeDb.Ing>()) }
+    var steps by remember { mutableStateOf(listOf<String>()) }
+    var stepInput by remember { mutableStateOf("") }
+    var ingQuery by remember { mutableStateOf("") }
+    var ingGrams by remember { mutableStateOf("100") }
+    val ingHits = remember(ingQuery) {
+        if (ingQuery.trim().length < 2) emptyList()
+        else com.ascend.lifeos.data.BasicFoods.search(ingQuery).take(4)
+    }
+
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onClose,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Column(
+            Modifier.fillMaxSize().background(Void).verticalScroll(rememberScrollState()).padding(22.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Eigenes Rezept", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                Icon(Icons.Rounded.Close, null, tint = TextMuted, modifier = Modifier.size(24.dp).clickable { onClose() })
+            }
+            Spacer(Modifier.height(14.dp))
+            GlassField("Titel", title, KeyboardType.Text, Modifier.fillMaxWidth()) { title = it.take(48) }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                HudChip("Hauptgericht", !isBreakfast) { isBreakfast = false }
+                HudChip("Frühstück", isBreakfast) { isBreakfast = true }
+                Spacer(Modifier.weight(1f))
+                HudChip("-", false) { servings = (servings - 1).coerceAtLeast(1) }
+                Text("$servings Port.", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                HudChip("+", false) { servings = (servings + 1).coerceAtMost(12) }
+            }
+            Spacer(Modifier.height(10.dp))
+            Box(Modifier.width(140.dp)) { GlassField("Minuten", minutes, KeyboardType.Number) { minutes = it.filter(Char::isDigit).take(3) } }
+
+            Spacer(Modifier.height(16.dp))
+            Text("ZUTATEN (gesamt)", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Spacer(Modifier.height(6.dp))
+            parts.forEachIndexed { i, ing ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
+                    Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = 12.5.sp, modifier = Modifier.weight(1f))
+                    Icon(
+                        Icons.Rounded.Close, null, tint = TextDim,
+                        modifier = Modifier.size(16.dp).clickable { parts = parts.filterIndexed { j, _ -> j != i } },
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) { GlassField("Zutat suchen", ingQuery, KeyboardType.Text) { ingQuery = it } }
+                Box(Modifier.width(84.dp)) { GlassField("g", ingGrams, KeyboardType.Number) { ingGrams = it.filter(Char::isDigit).take(4) } }
+            }
+            ingHits.forEach { p ->
+                Text(
+                    "+ ${p.name}",
+                    color = Mod.Fuel, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        val g = ingGrams.toIntOrNull() ?: 100
+                        parts = parts + RecipeDb.Ing(p.name, p.kcal100, p.protein100, p.carbs100, p.fat100, g)
+                        ingQuery = ""
+                    }.padding(vertical = 5.dp),
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Text("ZUBEREITUNG", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Spacer(Modifier.height(6.dp))
+            steps.forEachIndexed { i, s ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
+                    Text("${i + 1}. $s", color = TextMuted, fontSize = 12.5.sp, modifier = Modifier.weight(1f))
+                    Icon(
+                        Icons.Rounded.Close, null, tint = TextDim,
+                        modifier = Modifier.size(16.dp).clickable { steps = steps.filterIndexed { j, _ -> j != i } },
+                    )
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) { GlassField("Schritt ${steps.size + 1}", stepInput, KeyboardType.Text) { stepInput = it.take(120) } }
+                HudChip("+", false) {
+                    if (stepInput.isNotBlank()) { steps = steps + stepInput.trim(); stepInput = "" }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            val valid = title.isNotBlank() && parts.isNotEmpty()
+            HudButton("Rezept speichern", Modifier.fillMaxWidth(), enabled = valid) {
+                com.ascend.lifeos.data.OwnRecipes.save(
+                    RecipeDb.Recipe(
+                        id = 0L, title = title.trim(), meal = if (isBreakfast) "b" else "main",
+                        parts = parts, kcal = 0, protein = 0, carbs = 0, fat = 0,
+                        steps = steps, servings = servings, minutes = minutes.toIntOrNull(), own = true,
+                    ),
+                )
+                onClose()
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+    }
 }

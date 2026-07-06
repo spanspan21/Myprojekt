@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -156,7 +158,7 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
 
 /** Dark glass input field with placeholder. */
 @Composable
-fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modifier: Modifier = Modifier, onValue: (String) -> Unit) {
+fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modifier: Modifier = Modifier, focus: FocusRequester? = null, onValue: (String) -> Unit) {
     Box(
         modifier
             .clip(RoundedCornerShape(13.dp))
@@ -170,7 +172,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
             textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(LocalModuleAccent.current),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = if (focus != null) Modifier.fillMaxWidth().focusRequester(focus) else Modifier.fillMaxWidth(),
         )
     }
 }
