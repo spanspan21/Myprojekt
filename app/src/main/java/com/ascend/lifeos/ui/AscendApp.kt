@@ -345,7 +345,7 @@ private fun MorphingDock(
             ) { inSub ->
                 if (inSub) {
                     Row(
-                        Modifier.height(52.dp).horizontalScroll(rememberScrollState()),
+                        Modifier.height(56.dp).horizontalScroll(rememberScrollState()),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         // anchor: the group glyph — tap to zoom back to the 4 areas
@@ -408,7 +408,7 @@ private fun MorphingDock(
                         }
                     }
                 } else {
-                    Row(Modifier.height(52.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.height(56.dp), verticalAlignment = Alignment.CenterVertically) {
                         Group.entries.forEach { g ->
                             val selected = g == group
                             val accent = accentOf(g)
@@ -430,7 +430,7 @@ private fun MorphingDock(
                                         if (g == group && g != Group.TODAY) zoomedOut = false
                                         else onSelectGroup(g)
                                     }
-                                    .padding(horizontal = 15.dp, vertical = 9.dp),
+                                    .padding(horizontal = 15.dp, vertical = 6.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Icon(
@@ -443,7 +443,8 @@ private fun MorphingDock(
                                     g.label,
                                     color = fg,
                                     fontFamily = Body, fontSize = 8.5.sp, fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp,
+                                    letterSpacing = 0.5.sp, maxLines = 1, softWrap = false,
+                                    lineHeight = 11.sp,
                                 )
                             }
                         }
