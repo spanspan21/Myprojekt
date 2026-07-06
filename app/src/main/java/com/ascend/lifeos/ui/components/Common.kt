@@ -84,6 +84,10 @@ fun RingProgress(
             val tl = Offset(sw / 2f, sw / 2f)
             val arc = Size(d, d)
             drawArc(track, 0f, 360f, false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
+            // Endspurt (Kap. 22): ab 80 % legt sich ein leiser Glow unter den Bogen
+            if (p >= 0.8f && p < 1f) {
+                drawArc(color.copy(alpha = 0.22f), -90f, p * 360f, false, tl, arc, style = Stroke(sw * 1.9f, cap = StrokeCap.Round))
+            }
             drawArc(color, -90f, p * 360f, false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
         }
         content()

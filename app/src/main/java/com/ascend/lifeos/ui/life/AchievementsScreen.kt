@@ -11,6 +11,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.MonitorWeight
+import androidx.compose.material.icons.rounded.Savings
+import androidx.compose.material.icons.rounded.School
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -54,6 +60,15 @@ private fun moduleColor(module: String): Color = when (module) {
     else -> Mod.Home
 }
 
+private fun moduleIcon(module: String): ImageVector = when (module) {
+    "train" -> Icons.Rounded.FitnessCenter
+    "streak" -> Icons.Rounded.LocalFireDepartment
+    "money" -> Icons.Rounded.Savings
+    "body" -> Icons.Rounded.MonitorWeight
+    "school" -> Icons.Rounded.School
+    else -> Icons.Rounded.EmojiEvents
+}
+
 @Composable
 fun AchievementsScreen(onClose: () -> Unit) {
     val ctx = LocalContext.current
@@ -74,6 +89,27 @@ fun AchievementsScreen(onClose: () -> Unit) {
                 accent = Mod.Home,
             )
         } else {
+            // ── Münzkabinett (Kap. 20): die jüngsten Prägungen + der nächste Rohling ──
+            SectionLabel("Kabinett")
+            Spacer(Modifier.height(12.dp))
+            val minted = entries.take(5)
+            val streakReached = entries.filter { it.module == "streak" }
+                .mapNotNull { it.id.removePrefix("streak_").toIntOrNull() }.maxOrNull() ?: 0
+            val nextMark = intArrayOf(7, 30, 60, 100, 180, 365).firstOrNull { it > streakReached }
+            val cells: List<Achievement?> = minted + listOf(null)   // null = Rohling
+            cells.chunked(3).forEach { row ->
+                Row(Modifier.fillMaxWidth()) {
+                    row.forEach { a ->
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            if (a != null) Plaque(a) else BlankPlaque(nextMark)
+                        }
+                    }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+                Spacer(Modifier.height(14.dp))
+            }
+            Spacer(Modifier.height(8.dp))
+
             entries.groupBy { MONTH_FMT.format(localDate(it.ts)) }.forEach { (month, list) ->
                 SectionLabel(month)
                 Spacer(Modifier.height(10.dp))
@@ -81,6 +117,52 @@ fun AchievementsScreen(onClose: () -> Unit) {
                 Spacer(Modifier.height(10.dp))
             }
         }
+    }
+}
+
+/** Geprägte Plakette: Obsidian-Scheibe, ChampagneDeep-Rand, Modul-Prägung (Kap. 20). */
+@Composable
+private fun Plaque(a: Achievement) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(96.dp)) {
+        Box(
+            Modifier.size(56.dp).clip(CircleShape)
+                .background(Surface)
+                .border(0.5.dp, ChampagneDeep.copy(alpha = 0.55f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(moduleIcon(a.module), null, tint = moduleColor(a.module).copy(alpha = 0.85f), modifier = Modifier.size(22.dp))
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            a.title, color = TextMuted, fontSize = 10.5.sp, fontFamily = Body,
+            fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = 13.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Text(DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = 9.sp, fontFamily = Body)
+    }
+}
+
+/** Rohling: die sichtbare Leerstelle — Bedingung transparent, kein Countdown-Druck. */
+@Composable
+private fun BlankPlaque(nextStreakMark: Int?) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(96.dp)) {
+        Box(
+            Modifier.size(56.dp).clip(CircleShape)
+                .border(0.5.dp, Line2, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                nextStreakMark?.toString() ?: "—", color = TextDim,
+                fontFamily = Display, fontSize = 16.sp, fontWeight = FontWeight.Medium,
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            if (nextStreakMark != null) "next: $nextStreakMark-day streak" else "all marks minted",
+            color = TextDim, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+            maxLines = 2, lineHeight = 13.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
     }
 }
 

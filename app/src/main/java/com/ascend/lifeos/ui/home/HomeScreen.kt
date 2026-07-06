@@ -38,7 +38,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -160,11 +163,13 @@ fun HomeScreen(
         (if (kcalToday >= profile.kcalGoal) 1 else 0) +
         (if (water >= profile.waterGoal) 1 else 0)
     var seenDone by remember { mutableIntStateOf(-1) }
+    var goldSweepTick by remember { mutableIntStateOf(0) }
     LaunchedEffect(missionsDone) {
         if (seenDone in 0 until missionsDone) {
             if (missionsDone == 3) {   // the #1 moment: all missions complete
                 com.ascend.lifeos.data.Haptics.epic(ctx)
                 runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
+                goldSweepTick++        // Gold-Sweep über die Missions-Sektion (Kap. 20)
             } else com.ascend.lifeos.data.Haptics.success(ctx)
         }
         seenDone = missionsDone
@@ -311,10 +316,36 @@ fun HomeScreen(
                             }
                             Spacer(Modifier.weight(1f))
                             if (profile.streak > 0) {
-                                Icon(
-                                    Icons.Rounded.LocalFireDepartment, null,
-                                    tint = Champagne, modifier = Modifier.size(12.dp),
-                                )
+                                // Meilenstein-Aura: 7/30/60/100/180/365 — einmalig
+                                // pro Marke, nach dem Scan (Kap. 20)
+                                val isMark = profile.streak in intArrayOf(7, 30, 60, 100, 180, 365)
+                                val aura = remember { androidx.compose.animation.core.Animatable(0f) }
+                                LaunchedEffect(Unit) {
+                                    if (isMark && !Motion.reduced(ctx) &&
+                                        com.ascend.lifeos.data.Prefs.string(ctx, "streak_aura_seen", "") != "${profile.streak}"
+                                    ) {
+                                        kotlinx.coroutines.delay(1900)
+                                        aura.animateTo(1f, tween(900, easing = Motion.easeOut))
+                                        com.ascend.lifeos.data.Prefs.setString(ctx, "streak_aura_seen", "${profile.streak}")
+                                        aura.snapTo(0f)
+                                    }
+                                }
+                                Box(contentAlignment = Alignment.Center) {
+                                    if (aura.value > 0.01f && aura.value < 1f) {
+                                        Box(
+                                            Modifier.size(12.dp).drawBehind {
+                                                drawCircle(
+                                                    Champagne.copy(alpha = (1f - aura.value) * 0.45f),
+                                                    radius = size.minDimension * (0.5f + aura.value * 1.7f),
+                                                )
+                                            },
+                                        )
+                                    }
+                                    Icon(
+                                        Icons.Rounded.LocalFireDepartment, null,
+                                        tint = Champagne, modifier = Modifier.size(12.dp),
+                                    )
+                                }
                                 Spacer(Modifier.width(4.dp))
                             }
                             Text(
@@ -446,8 +477,54 @@ fun HomeScreen(
             homeCards["missions"] = {
             // ── MISSIONS ─────────────────────────────────────────────────
             Spacer(Modifier.height(24.dp))
-            SectionLabel("Today's missions")
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                SectionLabel("Today's missions")
+                Spacer(Modifier.weight(1f))
+                // Fast-fertig-Zeile (Kap. 22): der Tag zählt sichtbar herunter
+                val left = 3 - missionsDone
+                Text(
+                    when {
+                        left <= 0 -> "all clear"
+                        left == 1 -> "1 left"
+                        else -> "$left left"
+                    },
+                    color = when {
+                        left <= 0 -> Good
+                        left == 1 -> Champagne
+                        else -> TextDim
+                    },
+                    fontFamily = Display, fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                )
+            }
             Spacer(Modifier.height(10.dp))
+            // Gold-Sweep-Bühne: läuft einmal über die Karten, wenn alle drei fallen
+            val sweep = remember { androidx.compose.animation.core.Animatable(0f) }
+            LaunchedEffect(goldSweepTick) {
+                if (goldSweepTick > 0 && !Motion.reduced(ctx)) {
+                    sweep.snapTo(0f)
+                    sweep.animateTo(1f, tween(1100, easing = Motion.easeOut))
+                    sweep.snapTo(0f)
+                }
+            }
+            Column(
+                Modifier.fillMaxWidth().clipToBounds().drawWithContent {
+                    drawContent()
+                    if (sweep.value > 0.01f && sweep.value < 1f) {
+                        val band = size.width * 0.30f
+                        val x = -band + (size.width + 2f * band) * sweep.value
+                        drawRect(
+                            Brush.linearGradient(
+                                0f to Color.Transparent,
+                                0.5f to Champagne.copy(alpha = 0.10f),
+                                1f to Color.Transparent,
+                                start = Offset(x, 0f),
+                                end = Offset(x + band, size.height),
+                            ),
+                        )
+                    }
+                },
+            ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MissionChip(
                     Icons.Rounded.FitnessCenter, if (trainedToday) "Trained" else "Train",
@@ -508,6 +585,7 @@ fun HomeScreen(
                     progress = progress, color = Mod.Skills,
                     modifier = Modifier.fillMaxWidth(), onClick = onOpenSkills,
                 )
+            }
             }
             }
 

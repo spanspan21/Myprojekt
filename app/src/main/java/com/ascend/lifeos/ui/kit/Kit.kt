@@ -430,7 +430,12 @@ fun MissionChip(
                 progress.coerceIn(0f, 1f),
                 com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "mission",
             )
-            Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.06f))) {
+            // Endspurt: die letzten 20 % ziehen sichtbar — die Restlücke glimmt (Kap. 22)
+            val sprint = p >= 0.8f && p < 1f
+            Box(
+                Modifier.fillMaxWidth().height(3.dp).clip(CircleShape)
+                    .background(if (sprint) color.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.06f)),
+            ) {
                 Box(
                     Modifier.fillMaxWidth(p).fillMaxHeight()
                         .clip(CircleShape).background(color),

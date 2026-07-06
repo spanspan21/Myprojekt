@@ -213,10 +213,24 @@ fun ActiveWorkoutScreen(
 
         // ── Finish button ───────────────────────────────────────────────
         if (!vm.restTimerRunning) {
-            Box(
+            Column(
                 Modifier.align(Alignment.BottomCenter).padding(horizontal = 20.dp, vertical = 24.dp).navigationBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val totalSets = vm.activeExercises.sumOf { it.loggedSets.size }
+                // der teuerste Moment im Kraftsport: der letzte Satz (Kap. 22) —
+                // eine Information, kein Nag
+                val toTarget = com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
+                    val lo = when { rec >= 75 -> 14; rec >= 50 -> 10; else -> 4 }
+                    lo - vm.todaySets
+                }
+                if (toTarget != null && toTarget in 1..2) {
+                    Text(
+                        if (toTarget == 1) "1 set to today's target" else "$toTarget sets to today's target",
+                        color = TextDim, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
                 val btnText = if (totalSets > 0) "Finish workout ($totalSets sets)" else "Finish workout"
                 HudButton(btnText, Modifier.fillMaxWidth(), enabled = totalSets > 0) {
                     vm.finishWorkout(); onFinish()

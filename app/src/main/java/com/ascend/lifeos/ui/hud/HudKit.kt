@@ -185,18 +185,33 @@ fun NeonBar(
     val p by animateFloatAsState(
         progress.coerceIn(0f, 1f), Motion.springSmooth, label = "neon",
     )
+    // Endspurt (Kap. 22): ab 80 % glüht der Balken leise — ehrlich, weil echt fast voll
+    val sprint = p >= 0.8f && p < 1f
     Box(
         modifier
             .height(height)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.05f)),
+            .background(Ivory.copy(alpha = 0.05f)),
     ) {
+        if (sprint) {
+            Box(
+                Modifier.fillMaxHeight().fillMaxWidth(p.coerceIn(0f, 1f))
+                    .clip(CircleShape).background(color.copy(alpha = 0.20f)),
+            )
+        }
         Box(
             Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(p.coerceIn(0f, 1f))
                 .clip(CircleShape)
-                .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.55f), color))),
+                .background(Brush.horizontalGradient(listOf(color.copy(alpha = if (sprint) 0.70f else 0.55f), color))),
         )
+        // Rest-Kerbe: der Zielpunkt als Elfenbein-Tick
+        if (sprint) {
+            Box(
+                Modifier.fillMaxHeight().fillMaxWidth()
+                    .drawWithContent { drawContent(); drawLine(Ivory.copy(alpha = 0.45f), Offset(size.width - 1.5f, 0f), Offset(size.width - 1.5f, size.height), 2f) },
+            )
+        }
     }
 }
