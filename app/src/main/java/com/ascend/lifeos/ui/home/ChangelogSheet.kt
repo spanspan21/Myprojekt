@@ -28,15 +28,15 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
-        "Crash black box — if JARVIS ever crashes, Settings → Diagnostics holds the report, ready to share",
-        "Settings hub — every module, notification and experiment is a toggle now",
-        "Protocols — WHEN→THEN directives on Home (game day, exams, low recovery)",
-        "School OS — grades in points, homework with Untis deadlines, vocab decks",
-        "Mind · Finance · Goals — journal & breathing, pocket-money ledger, quarter goals",
-        "Year heatmap, correlation explorer and your training Wrapped",
-        "Season phases for hockey — plan volume adapts to off/pre/in-season",
-        "Form check videos + experimental camera rep counter",
-        "Optional spoken briefing (off by default — Settings → Jarvis)",
+        "No more debug warning at unlock — JARVIS ships as a proper release build now",
+        "This sheet stopped popping up — it lives here in Settings, on demand",
+        "JARVIS Hub — every module on big tiles, one tap from Home",
+        "Quick Log orb — purchase, water, meal, weight in seconds",
+        "Training rebuilt — 60–120 min sessions in blocks: warm-up, skill, strength, finisher, mobility",
+        "Finance v2 — accounts, budgets, recurring costs, trends, savings goals, search & CSV",
+        "Boot sequence is pure cinema now — zero questions",
+        "Muscle map — real anatomical line art",
+        "Jarvis knows game days, exams and your streak",
     )
 
     private fun stamp(ctx: Context): Long =

@@ -295,6 +295,9 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── ABOUT ────────────────────────────────────────────────────
         SettingsSection("About") {
+            var whatsNew by remember { mutableStateOf(false) }
+            ActionRow("What's new", "The latest changes, on demand — no popups") { whatsNew = true }
+            if (whatsNew) ChangelogSheet(onDismiss = { whatsNew = false })
             val buildStamp = remember {
                 runCatching {
                     val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)

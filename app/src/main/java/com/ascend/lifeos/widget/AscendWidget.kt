@@ -57,6 +57,15 @@ class AscendWidget : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_water, actionPi(7101, "water"))
             views.setOnClickPendingIntent(R.id.widget_focus, actionPi(7102, "focus"))
 
+            // "€ Log" — straight into the quick-log sheet (jarvis://quicklog)
+            runCatching {
+                val buy = Intent(ctx, Class.forName("com.ascend.lifeos.MainActivity"))
+                    .setAction(Intent.ACTION_VIEW)
+                    .setData(android.net.Uri.parse("jarvis://quicklog"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                views.setOnClickPendingIntent(R.id.widget_buy, PendingIntent.getActivity(ctx, 7103, buy, flags))
+            }
+
             mgr.updateAppWidget(id, views)
         }
     }

@@ -20,6 +20,10 @@ android {
 
     buildTypes {
         release {
+            // Personal device build: non-debuggable (kills Samsung's unlock-time
+            // "debuggable app" compatibility warning) but signed with the debug
+            // key so `adb install -r` updates the existing install in place.
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

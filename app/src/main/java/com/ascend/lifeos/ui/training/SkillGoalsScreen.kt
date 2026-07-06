@@ -27,8 +27,9 @@ import com.ascend.lifeos.ui.kit.VerdictPill
 import com.ascend.lifeos.ui.theme.*
 
 // ─── SKILL TARGETS ───────────────────────────────────────────────────────────
-// The selectable goal catalog. Each pick steers the plan generator; the ETA
-// is computed honestly from the gap between profile levels and requirements.
+// The selectable goal catalog that steers the SKILL block of every generated
+// session (15–25 min, right after the warm-up while you're fresh). The ETA is
+// computed honestly from the gap between profile levels and requirements.
 
 @Composable
 fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
@@ -54,8 +55,8 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             Column {
                 Text("Skill targets", color = TextPrimary, fontFamily = Display, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    if (selected.isEmpty()) "Pick the skills you want — the plan adapts"
-                    else "${selected.size} selected · steering your plan",
+                    if (selected.isEmpty()) "Pick skills — each earns time in every session's skill block"
+                    else "${selected.size} selected · steering your skill blocks",
                     color = Mod.Train, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
@@ -64,6 +65,11 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         if (profile == null) {
             Text(
                 "No calibration yet — ETAs appear after you run the protocol.",
+                color = TextDim, fontSize = 12.sp, fontFamily = Body,
+            )
+        } else {
+            Text(
+                "In-reach picks get drilled fresh, right after the warm-up.",
                 color = TextDim, fontSize = 12.sp, fontFamily = Body,
             )
         }
@@ -160,6 +166,16 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, selected: Boole
                         }
                     }
                 }
+            }
+
+            // selected → show the drills this pick puts into sessions
+            if (selected && skill.feeders.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "In your sessions: " + skill.feeders.take(2).joinToString(" · "),
+                    color = Mod.Train.copy(alpha = 0.85f), fontSize = 10.5.sp,
+                    fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }

@@ -77,6 +77,13 @@ object MuscleRecovery {
                     add(Muscle.CALVES, durH * 1.4, ageH)
                     add(Muscle.ABS, durH * 1.0, ageH)
                     add(Muscle.LOWER_BACK, durH * 0.8, ageH)
+                    add(Muscle.HIP_FLEXORS, durH * 1.0, ageH)
+                    // light upper body: stick handling, shooting, checking
+                    add(Muscle.OBLIQUES, durH * 0.7, ageH)   // shot rotation
+                    add(Muscle.FOREARMS, durH * 0.6, ageH)   // grip on the stick
+                    add(Muscle.SHOULDERS, durH * 0.5, ageH)
+                    add(Muscle.LATS, durH * 0.3, ageH)
+                    add(Muscle.TRAPS, durH * 0.25, ageH)
                 }
             }
         }

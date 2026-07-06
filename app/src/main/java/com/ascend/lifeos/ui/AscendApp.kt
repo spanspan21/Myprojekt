@@ -98,6 +98,7 @@ fun AscendApp() {
             "guard" -> guardOpen = true
             "report" -> reportOpen = true
             "settings", "mind", "finance", "goals", "school", "heatmap", "explorer", "wrapped" -> overlay = target
+            "quicklog" -> { tab = Tab.HOME; com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
         }
     }
 
@@ -105,12 +106,6 @@ fun AscendApp() {
     val pendingLink by com.ascend.lifeos.data.DeepLink.pending
     LaunchedEffect(pendingLink) {
         com.ascend.lifeos.data.DeepLink.consume()?.let { navigate(it) }
-    }
-
-    // "System Updates" — once per fresh build
-    val appCtx = androidx.compose.ui.platform.LocalContext.current
-    var changelogOpen by remember {
-        mutableStateOf(com.ascend.lifeos.ui.home.Changelog.shouldShow(appCtx))
     }
 
     val accent by animateColorAsState(tab.accent(), tween(400), label = "accent")
@@ -143,7 +138,8 @@ fun AscendApp() {
             enter = fadeIn(), exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
-            JarvisDock(current = tab, onSelect = { tab = it })
+            // re-tapping HOME while already there summons the command palette
+            JarvisDock(current = tab, onSelect = { if (it == Tab.HOME && tab == Tab.HOME) paletteOpen = true else tab = it })
         }
 
         // ---- Guard overlay (shield orb on Home) ----
@@ -197,7 +193,7 @@ fun AscendApp() {
                         onOpenReport = { overlay = null; reportOpen = true },
                     )
                     "mind" -> com.ascend.lifeos.ui.life.MindScreen(onClose = { overlay = null })
-                    "finance" -> com.ascend.lifeos.ui.life.FinanceScreen(onClose = { overlay = null })
+                    "finance" -> com.ascend.lifeos.ui.finance.FinanceHome(onClose = { overlay = null })
                     "goals" -> com.ascend.lifeos.ui.life.GoalsScreen(onClose = { overlay = null })
                     "school" -> com.ascend.lifeos.ui.school.SchoolScreen(onClose = { overlay = null })
                     "heatmap" -> com.ascend.lifeos.ui.insights.HeatmapScreen(onClose = { overlay = null })
@@ -207,12 +203,6 @@ fun AscendApp() {
             }
         }
 
-        if (changelogOpen) com.ascend.lifeos.ui.home.ChangelogSheet(
-            onDismiss = {
-                com.ascend.lifeos.ui.home.Changelog.markSeen(appCtx)
-                changelogOpen = false
-            },
-        )
     }
 }
 

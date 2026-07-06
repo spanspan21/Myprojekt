@@ -85,7 +85,18 @@
             android:layout_width="0dp"
             android:layout_height="34dp"
             android:layout_weight="1"
+            android:layout_marginEnd="6dp"
             android:text="Focus 25"
+            android:textSize="11sp"
+            android:textColor="#EEF1F6"
+            android:background="@drawable/widget_progress" />
+
+        <Button
+            android:id="@+id/widget_buy"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:text="€ Log"
             android:textSize="11sp"
             android:textColor="#EEF1F6"
             android:background="@drawable/widget_progress" />
