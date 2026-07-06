@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.RecipeDb
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.ShopItem
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Amber
@@ -248,7 +249,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                                             "Missing → shopping", color = Mod.Fuel, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
                                             modifier = Modifier.clickable {
                                                 val missing = rec.parts.filter { !matchesPantry(it.name, pantry) }
-                                                Repo.addToShopping(missing.map { it.name })
+                                                Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = rec.title) })
                                             }.padding(top = 2.dp),
                                         )
                                     }
@@ -403,7 +404,8 @@ private fun RecipeCard(
                         Repo.addFood(FoodEntry(id = "", name = r.title, meal = if (r.meal == "b") "b" else "d", kcal = r.kcal, protein = r.protein, carbs = r.carbs, fat = r.fat))
                     }
                     HudButton("+ Shopping list", Modifier.weight(1f), primary = false) {
-                        Repo.addToShopping(r.parts.map { it.name })
+                        // Kap. 41: Mengen überleben den Übertrag (P3-Fix)
+                        Repo.addToShoppingQty(r.parts.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
                     }
                 }
                 if (pantryActive) {
@@ -413,7 +415,9 @@ private fun RecipeCard(
                         Text(
                             "Add ${missing.size} missing → shopping list",
                             color = Mod.Fuel, fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { Repo.addToShopping(missing.map { it.name }) },
+                            modifier = Modifier.clickable {
+                                Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
+                            },
                         )
                     }
                 }
@@ -483,7 +487,8 @@ fun ShoppingView(onBack: () -> Unit) {
             }
             if (items.isNotEmpty()) {
                 Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).clickable {
-                    val text = items.joinToString("\n") { "• ${it.name}" }
+                    val text = items.joinToString("\n") { "• ${it.name}${shopQtyLabel(it)}" }
+                    // (Mengen-Suffix via shopQtyLabel — Kap. 41)
                     runCatching { ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "Shopping list\n$text"), "Share")) }
                 }, contentAlignment = Alignment.Center) {
                     Icon(Icons.Rounded.Share, null, tint = Mod.Fuel, modifier = Modifier.size(18.dp))
@@ -538,7 +543,11 @@ fun ShoppingView(onBack: () -> Unit) {
                             ) {
                                 Icon(if (it.checked) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked, null, tint = if (it.checked) Mod.Fuel else TextDim, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(12.dp))
-                                Text(it.name, color = if (it.checked) TextDim else TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium, textDecoration = if (it.checked) TextDecoration.LineThrough else TextDecoration.None)
+                                Text(
+                                    it.name + shopQtyLabel(it),
+                                    color = if (it.checked) TextDim else TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium,
+                                    textDecoration = if (it.checked) TextDecoration.LineThrough else TextDecoration.None,
+                                )
                             }
                         }
                     }
@@ -708,4 +717,11 @@ private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planne
         Spacer(Modifier.height(3.dp))
         Box(Modifier.size(3.dp).clip(RoundedCornerShape(2.dp)).background(if (planned) Mod.Fuel else Color.Transparent))
     }
+}
+
+/** „ — 400 g" Suffix, wenn die Zeile Mengen trägt (Kap. 41). */
+private fun shopQtyLabel(s: ShopItem): String {
+    val q = s.qty ?: return ""
+    val n = if (q % 1.0 == 0.0) q.toInt().toString() else String.format(java.util.Locale.US, "%.1f", q)
+    return " — $n ${s.unit ?: ""}".trimEnd()
 }

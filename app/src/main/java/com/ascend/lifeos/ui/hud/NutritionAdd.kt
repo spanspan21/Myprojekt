@@ -29,7 +29,9 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.QrCodeScanner
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -144,10 +146,16 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
         )
     }
 
+    var drinkBuilder by remember { mutableStateOf(false) }
+
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = BgElevated) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 20.dp)) {
             when {
                 editing -> CustomFoodEditor(editExisting, editBarcode) { editing = false; editBarcode = ""; editExisting = null }
+                drinkBuilder -> DrinkBuilderPane(
+                    meal = meal, onMeal = { meal = it }, dayKey = dayKey,
+                    onBack = { drinkBuilder = false }, onAdded = onDismiss,
+                )
                 selected != null -> PortionPane(selected!!, meal, { meal = it }, dayKey = dayKey, fromCache = selectedFromCache, onBack = { selected = null; selectedFromCache = false }, onAdded = onDismiss)
                 else -> SearchPane(
                     query = query, onQuery = { query = it }, results = results, loading = loading,
@@ -155,6 +163,7 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
                     onPick = { selectedFromCache = false; selected = it }, onPickCustom = { selectedFromCache = false; selected = it.toProduct() },
                     onCreate = { editExisting = null; editBarcode = ""; editing = true },
                     onEditCustom = { editExisting = it; editBarcode = ""; editing = true },
+                    onOpenDrinks = { drinkBuilder = true },
                     onDismiss = onDismiss,
                 )
             }
@@ -176,7 +185,8 @@ private fun SearchPane(
     results: List<FoodApi.Product>, loading: Boolean,
     meal: String, onMeal: (String) -> Unit, dayKey: String, onScan: () -> Unit,
     onPick: (FoodApi.Product) -> Unit, onPickCustom: (CustomFood) -> Unit,
-    onCreate: () -> Unit, onEditCustom: (CustomFood) -> Unit, onDismiss: () -> Unit,
+    onCreate: () -> Unit, onEditCustom: (CustomFood) -> Unit,
+    onOpenDrinks: () -> Unit, onDismiss: () -> Unit,
 ) {
     Text("Add food", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
     backdateLabel(dayKey)?.let {
@@ -207,6 +217,9 @@ private fun SearchPane(
                 }
                 WideGhost(Icons.Rounded.Add, "Create custom", Modifier.weight(1f)) { onCreate() }
             }
+            Spacer(Modifier.height(10.dp))
+            // Kap. 36: der Königsweg für Latte, Schorle & Co. — immer sichtbar
+            WideGhost(Icons.Rounded.WaterDrop, "Getränk bauen — Latte, Kakao, Schorle …", Modifier.fillMaxWidth()) { onOpenDrinks() }
 
             val favorites = Repo.customFoods().filter { it.favorite }
             val savedMeals = Repo.savedMeals()
@@ -266,10 +279,16 @@ private fun SearchPane(
                 }
             }
 
-            // ---- 2) verified offline staples ----
+            // ---- Getränke-Wort erkannt → Builder als Treffer #1 (Kap. 36) ----
+            if (isDrinkQuery(query)) {
+                WideGhost(Icons.Rounded.WaterDrop, "Als Getränk bauen — Latte, Schorle & Co.", Modifier.fillMaxWidth()) { onOpenDrinks() }
+                Spacer(Modifier.height(10.dp))
+            }
+
+            // ---- 2) verified offline staples (relevanz-sortiert, Kap. 34) ----
             val verified = results.filter { it.brand == VERIFIED_BRAND }
             verified.forEach { p ->
-                ResultRow(p.name, per100Sub(p), "", verified = true) { onPick(p) }
+                ResultRow(p.name, portionSub(p), "", verified = true) { onPick(p) }
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -285,6 +304,16 @@ private fun SearchPane(
             } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
                 Column {
                     Text("No results.", color = TextMuted, fontSize = 13.sp)
+                    // Kap. 35: drei Wege statt Sackgasse
+                    val dym = remember(query) { com.ascend.lifeos.data.BasicFoods.didYouMean(query) }
+                    if (dym != null) {
+                        Spacer(Modifier.height(10.dp))
+                        WideGhost(Icons.Rounded.Search, "Meintest du „${dym.name}“?", Modifier.fillMaxWidth()) { onPick(dym) }
+                    }
+                    if (!isDrinkQuery(query)) {
+                        Spacer(Modifier.height(10.dp))
+                        WideGhost(Icons.Rounded.WaterDrop, "Als Getränk bauen", Modifier.fillMaxWidth()) { onOpenDrinks() }
+                    }
                     Spacer(Modifier.height(10.dp))
                     WideGhost(Icons.Rounded.Add, "Create \"$query\"", Modifier.fillMaxWidth()) { onCreate() }
                 }
@@ -306,6 +335,33 @@ private fun SearchPane(
 /** Comparable per-100g line shown on every product row. */
 private fun per100Sub(p: FoodApi.Product): String =
     "${p.kcal100} kcal/100g · P${p.protein100.roundToInt()} C${p.carbs100.roundToInt()} F${p.fat100.roundToInt()}"
+
+/**
+ * Kap. 34/38: Die Treffer-Zeile spricht Alltagsportion — „1 Glas (200 ml) ·
+ * 92 kcal · 7 P". Bewertung passiert in der Liste, nicht im Kopf.
+ */
+private fun portionSub(p: FoodApi.Product): String {
+    val po = p.portions.firstOrNull()
+    val grams = po?.grams ?: p.servingG
+    if (grams == null) return per100Sub(p)
+    val f = grams / 100.0
+    val label = po?.label ?: "1 Portion"
+    val unit = if (po?.ml == true) "ml" else "g"
+    val tilde = if (p.approx) "~" else ""
+    return "$label ($grams $unit) · $tilde${(p.kcal100 * f).roundToInt()} kcal · ${(p.protein100 * f).roundToInt()} P"
+}
+
+/** Getränke-Wortliste (Kap. 35) — pinnt den Builder als Treffer #1. */
+private val DRINK_WORDS = listOf(
+    "latte", "cappu", "kaffee", "coffee", "espresso", "macchiato", "kakao",
+    "tee", "tea", "schorle", "saft", "juice", "limo", "cola", "energy",
+    "shake", "smoothie", "milch", "milk", "drink", "bier", "wein",
+)
+
+private fun isDrinkQuery(q: String): Boolean {
+    val n = com.ascend.lifeos.data.FoodRank.normalize(q)
+    return n.length >= 3 && DRINK_WORDS.any { n.contains(it) || it.startsWith(n) }
+}
 
 /** Per-100g line for a custom food (stored per serving). */
 private fun customSub(cf: CustomFood): String {
@@ -418,19 +474,30 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     }
 
     Spacer(Modifier.height(14.dp))
+    // Kap. 38: Getränke sprechen ml, Essen spricht Portionen — Gramm ist Fallback
+    val isMl = product.portions.any { it.ml }
     Text("AMOUNT", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(96.dp)) { GlassField("g", grams, KeyboardType.Number) { grams = it.filter(Char::isDigit).take(4) } }
+        Box(Modifier.width(96.dp)) {
+            GlassField(if (isMl) "ml" else "g", grams, KeyboardType.Number) { grams = it.filter(Char::isDigit).take(4) }
+        }
         Spacer(Modifier.width(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            val base = product.servingG ?: 100
-            listOf(0.5 to "½×", 1.0 to "1×", 1.5 to "1½×", 2.0 to "2×").forEach { (m, lbl) -> HudChip(lbl, false) { grams = (base * m).roundToInt().toString() } }
+        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            if (product.portions.isNotEmpty()) {
+                // benannte Alltags-Presets („1 Glas", „1 Scheibe") statt ×-Mathe
+                product.portions.forEach { po ->
+                    HudChip(po.label, grams.toIntOrNull() == po.grams) { grams = po.grams.toString() }
+                }
+            } else {
+                val base = product.servingG ?: 100
+                listOf(0.5 to "½×", 1.0 to "1×", 1.5 to "1½×", 2.0 to "2×").forEach { (m, lbl) -> HudChip(lbl, false) { grams = (base * m).roundToInt().toString() } }
+            }
         }
     }
     if (lastGrams != null) {
         Spacer(Modifier.height(6.dp))
-        Text("last time: $lastGrams g", color = TextDim, fontSize = 10.sp)
+        Text("last time: $lastGrams ${if (isMl) "ml" else "g"}", color = TextDim, fontSize = 10.sp)
     }
 
     Spacer(Modifier.height(14.dp))
@@ -447,6 +514,8 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
                 protein = (product.protein100 * f).roundToInt(), carbs = (product.carbs100 * f).roundToInt(), fat = (product.fat100 * f).roundToInt(),
                 grams = g, nutriScore = product.nutriScore, barcode = product.barcode,
                 nutrients = product.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
+                volumeMl = if (isMl) g else 0,      // Kap. 39: Getränke zählen zur Hydration
+                approx = product.approx,
             ),
             dayKey,
         )

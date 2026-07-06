@@ -20,6 +20,8 @@ object BasicFoods {
         serving: Int? = null,
         micros: Map<String, Double> = emptyMap(),
         alcohol: Double = 0.0,   // g / 100g
+        portions: List<FoodApi.Portion> = emptyList(),  // Kap. 38: benannte Presets
+        approx: Boolean = false,                        // Kap. 37: ~Teller-Schätzung
     ) = FoodApi.Product(
         barcode = "", name = name, brand = "Verified staple",
         kcal100 = kcal, protein100 = protein, carbs100 = carbs, fat100 = fat,
@@ -32,7 +34,13 @@ object BasicFoods {
             if (alcohol > 0) put("alcohol", alcohol)
             putAll(micros)
         },
+        portions = portions,
+        approx = approx,
     )
+
+    /** Kurzform für ml-Portionen. */
+    private fun ml(label: String, ml: Int) = FoodApi.Portion(label, ml, ml = true)
+    private fun g(label: String, g: Int) = FoodApi.Portion(label, g)
 
     val ALL: List<FoodApi.Product> = listOf(
         // ── Fruit ───────────────────────────────────────────────────
@@ -282,13 +290,7 @@ object BasicFoods {
                 "potassium" to mg(155.0), "phosphorus" to mg(95.0),
             ),
         ),
-        bf(
-            "Milk (3.5%)", 64, 3.4, 4.8, 3.5, sugar = 4.8, sat = 2.3, serving = 200,
-            micros = m(
-                "calcium" to mg(120.0), "vitaminB12" to ug(0.45), "vitaminB2" to mg(0.18),
-                "potassium" to mg(150.0), "phosphorus" to mg(93.0), "vitaminD" to ug(0.1),
-            ),
-        ),
+        // („Milk (3.5%)" ist in die Drinks-Sektion umgezogen — ein Eintrag pro Ding, Kap. 37)
         bf(
             "Gouda", 356, 25.0, 0.0, 28.0, sat = 18.0, salt = 2.0, serving = 30,
             micros = m(
@@ -404,31 +406,98 @@ object BasicFoods {
             "Trail mix", 485, 14.0, 33.0, 32.0, sugar = 25.0, sat = 4.0, fiber = 6.0, serving = 40,
             micros = m("vitaminE" to mg(6.0), "magnesium" to mg(120.0), "iron" to mg(2.5)),
         ),
-        // ── Drinks ──────────────────────────────────────────────────
-        bf("Cola", 42, 0.0, 10.6, 0.0, sugar = 10.6, serving = 330),
+        // ── Drinks (alle in ml-Portionen — Kap. 38: Cola nie wieder in Gramm) ──
+        bf("Cola", 42, 0.0, 10.6, 0.0, sugar = 10.6, serving = 330,
+            portions = listOf(ml("1 Dose", 330), ml("1 Glas", 250), ml("0,5 l", 500))),
+        bf("Cola Zero", 1, 0.0, 0.0, 0.0, serving = 330,
+            portions = listOf(ml("1 Dose", 330), ml("1 Glas", 250), ml("0,5 l", 500))),
         bf(
             "Apple juice", 46, 0.1, 11.3, 0.1, sugar = 9.6, serving = 200,
             micros = m("vitaminC" to mg(38.5), "potassium" to mg(101.0)),
+            portions = listOf(ml("1 Glas", 200), ml("1 gr. Glas", 300)),
+        ),
+        bf(
+            "Apple spritzer", 25, 0.1, 6.0, 0.0, sugar = 5.2, serving = 300,
+            micros = m("vitaminC" to mg(20.0), "potassium" to mg(55.0)),
+            portions = listOf(ml("1 Glas", 300), ml("0,5 l", 500)),
         ),
         bf(
             "Orange juice", 45, 0.7, 10.4, 0.2, sugar = 8.4, serving = 200,
             micros = m("vitaminC" to mg(50.0), "vitaminB9" to ug(30.0), "potassium" to mg(200.0)),
+            portions = listOf(ml("1 Glas", 200), ml("1 gr. Glas", 300)),
         ),
         bf("Coffee (black)", 2, 0.1, 0.0, 0.0, serving = 200,
-            micros = m("potassium" to mg(49.0), "vitaminB3" to mg(0.7))),
+            micros = m("potassium" to mg(49.0), "vitaminB3" to mg(0.7)),
+            portions = listOf(ml("1 Tasse", 200), ml("1 Becher", 300), ml("1 Espresso", 30))),
+        bf(
+            "Tea (unsweetened)", 1, 0.0, 0.2, 0.0, serving = 250,
+            portions = listOf(ml("1 Tasse", 250), ml("1 Kanne", 750)),
+        ),
+        bf(
+            "Cocoa (whole milk)", 78, 3.2, 10.0, 2.8, sugar = 9.6, sat = 1.7, serving = 250,
+            micros = m("calcium" to mg(110.0), "potassium" to mg(180.0)),
+            portions = listOf(ml("1 Tasse", 250), ml("1 Becher", 300)),
+        ),
+        bf(
+            "Energy drink", 45, 0.0, 11.0, 0.0, sugar = 11.0, serving = 250,
+            portions = listOf(ml("1 Dose", 250), ml("gr. Dose", 500)),
+        ),
+        // Milchsorten einzeln — Basis des Getränke-Builders (Kap. 36)
+        bf(
+            "Milk (whole 3.5%)", 64, 3.4, 4.8, 3.5, sugar = 4.8, sat = 2.3, serving = 200,
+            micros = m(
+                "calcium" to mg(120.0), "vitaminB12" to ug(0.45), "vitaminB2" to mg(0.18),
+                "potassium" to mg(150.0), "phosphorus" to mg(93.0), "vitaminD" to ug(0.1),
+            ),
+            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+        ),
+        bf(
+            "Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, sugar = 4.9, sat = 1.0, serving = 200,
+            micros = m("calcium" to mg(122.0), "vitaminB12" to ug(0.4), "potassium" to mg(155.0)),
+            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+        ),
+        bf(
+            "Oat drink", 46, 0.8, 6.6, 1.5, sugar = 4.0, serving = 200,
+            micros = m("calcium" to mg(120.0)),
+            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+        ),
+        bf(
+            "Almond drink (unsweetened)", 13, 0.4, 0.1, 1.1, serving = 200,
+            micros = m("calcium" to mg(120.0), "vitaminE" to mg(2.2)),
+            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+        ),
+        bf(
+            "Soy drink", 39, 3.0, 2.5, 1.8, sugar = 2.0, serving = 200,
+            micros = m("calcium" to mg(120.0), "potassium" to mg(120.0)),
+            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+        ),
         bf(
             "Beer (4.9%)", 43, 0.5, 3.6, 0.0, serving = 500,
             micros = m("potassium" to mg(27.0), "vitaminB3" to mg(0.5)),
             alcohol = 3.9,
+            portions = listOf(ml("0,33 l", 330), ml("0,5 l", 500)),
+        ),
+        bf(
+            "Beer (alcohol-free)", 25, 0.4, 5.3, 0.0, sugar = 2.9, serving = 500,
+            micros = m("potassium" to mg(30.0)),
+            portions = listOf(ml("0,33 l", 330), ml("0,5 l", 500)),
         ),
         bf(
             "Wine (red)", 85, 0.1, 2.6, 0.0, sugar = 0.6, serving = 200,
             micros = m("potassium" to mg(127.0), "iron" to mg(0.5)),
             alcohol = 10.6,
+            portions = listOf(ml("1 Glas", 200), ml("1 kl. Glas", 125)),
+        ),
+        bf(
+            "Wine (white)", 82, 0.1, 2.6, 0.0, sugar = 1.0, serving = 200,
+            micros = m("potassium" to mg(71.0)),
+            alcohol = 10.3,
+            portions = listOf(ml("1 Glas", 200), ml("1 kl. Glas", 125)),
         ),
         bf(
             "Vodka (40%)", 231, 0.0, 0.0, 0.0, serving = 40,
             alcohol = 33.4,
+            portions = listOf(ml("1 Shot", 40), ml("Doppelter", 80)),
         ),
     )
 
@@ -470,7 +539,6 @@ object BasicFoods {
         "Quark (low-fat)" to listOf("quark", "magerquark"),
         "Skyr" to listOf("skyr"),
         "Yogurt (natural, 3.5%)" to listOf("joghurt", "naturjoghurt"),
-        "Milk (3.5%)" to listOf("milch"),
         "Gouda" to listOf("gouda", "käse"),
         "Feta" to listOf("feta", "schafskäse"),
         "Mozzarella" to listOf("mozzarella"),
@@ -498,19 +566,50 @@ object BasicFoods {
         "Cola" to listOf("cola", "limo"),
         "Apple juice" to listOf("apfelsaft", "saft"),
         "Orange juice" to listOf("orangensaft", "o-saft"),
-        "Coffee (black)" to listOf("kaffee"),
+        "Coffee (black)" to listOf("kaffee", "espresso"),
         "Beer (4.9%)" to listOf("bier"),
         "Wine (red)" to listOf("wein", "rotwein"),
         "Vodka (40%)" to listOf("vodka", "wodka", "schnaps"),
+        "Cola Zero" to listOf("cola zero", "zero"),
+        "Apple spritzer" to listOf("apfelschorle", "schorle"),
+        "Tea (unsweetened)" to listOf("tee"),
+        "Cocoa (whole milk)" to listOf("kakao", "heisse schokolade"),
+        "Energy drink" to listOf("energy", "energydrink"),
+        "Milk (whole 3.5%)" to listOf("milch", "vollmilch"),
+        "Milk (low-fat 1.5%)" to listOf("milch fettarm", "fettarme milch"),
+        "Oat drink" to listOf("hafermilch", "haferdrink"),
+        "Almond drink (unsweetened)" to listOf("mandelmilch", "mandeldrink"),
+        "Soy drink" to listOf("sojamilch", "sojadrink"),
+        "Beer (alcohol-free)" to listOf("alkoholfreies bier", "bier alkoholfrei"),
+        "Wine (white)" to listOf("weisswein", "weißwein"),
     )
 
-    /** Search across names + German aliases; verified staples always rank first. */
+    fun aliasesOf(name: String): List<String> = ALIASES[name] ?: emptyList()
+
+    /**
+     * Suche v2 (Kap. 34): Match-Qualität + Kürze, sortiert — nie mehr
+     * Deklarationsreihenfolge (P1) oder Alias-Substring-Unfälle (P2).
+     */
     fun search(query: String): List<FoodApi.Product> {
-        val q = query.trim().lowercase()
+        val q = FoodRank.normalize(query)
         if (q.isBlank()) return emptyList()
-        return ALL.filter { p ->
-            p.name.lowercase().contains(q) ||
-                (ALIASES[p.name]?.any { it.contains(q) || q.contains(it) } == true)
+        return ALL.mapNotNull { p ->
+            val mq = FoodRank.matchQuality(p.name, aliasesOf(p.name), q)
+            if (mq == 0) null else Triple(p, mq, FoodRank.brevity(p.name))
+        }
+            .sortedWith(compareByDescending<Triple<FoodApi.Product, Int, Int>> { it.second }
+                .thenByDescending { it.third }
+                .thenBy { it.first.name })
+            .map { it.first }
+    }
+
+    /** „Meintest du …?" bei 0 Treffern (Kap. 35) — Levenshtein ≤ 1 gegen Namen+Aliase. */
+    fun didYouMean(query: String): FoodApi.Product? {
+        val q = FoodRank.normalize(query)
+        if (q.length < 4) return null
+        return ALL.firstOrNull { p ->
+            FoodRank.oneEditAway(FoodRank.normalize(p.name), q) ||
+                aliasesOf(p.name).any { FoodRank.oneEditAway(FoodRank.normalize(it), q) }
         }
     }
 }

@@ -191,6 +191,17 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 }
             }
 
+            // Kap. 39: Wasser wird eine leise Leiste — Getränke (volumeMl) zählen mit
+            Spacer(Modifier.height(12.dp))
+            HydrationBar(
+                glasses = day.water,
+                drinkMl = day.meals.sumOf { it.volumeMl },
+                targetGlasses = WaterCalc.targetGlasses(p.weightKg, day.workoutDone, hot),
+                hot = hot, canEdit = isToday,
+                showHeat = isToday && !hasLoc,
+                onEnableHeat = { locPermLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION) },
+            )
+
             Spacer(Modifier.height(14.dp))
             ProteinSpread(day)
 
@@ -198,16 +209,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             TdeeSuggestCard()
 
             Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                WaterModule(
-                    glasses = day.water,
-                    targetGlasses = WaterCalc.targetGlasses(p.weightKg, day.workoutDone, hot),
-                    hot = hot, showHeat = isToday && !hasLoc, canEdit = isToday,
-                    onEnableHeat = { locPermLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION) },
-                    modifier = Modifier.weight(1f),
-                )
-                FastingModule(onFasting, Modifier.weight(1f))
-            }
+            FastingModule(onFasting, Modifier.fillMaxWidth())
 
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -293,11 +295,18 @@ private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, e
     ) { Icon(icon, null, tint = if (enabled) TextPrimary else TextDim.copy(alpha = 0.35f), modifier = Modifier.size(18.dp)) }
 }
 
-// ---- macro reactor -------------------------------------------------------------
+// ---- macro reactor v2 (Kap. 39): eine Metapher, echte Mitte ---------------------
+// Der ÄUSSERE Ring IST die Kalorie (dick, Modulfarbe) — das Zentrum zeigt ihre
+// Zahl. Die Makros rücken als drei dünne innere Ringe zusammen. Morgens sagt
+// die Mitte „2515 frei" statt einer traurigen 0; über Ziel wird informiert,
+// nie alarmiert (P8-Fix — die Asymmetrie des Users ist damit strukturell weg).
 
 @Composable
 private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalGoal: Int) {
-    // the three rings sweep to their values — grand spring, IRON MOTION
+    val kA by androidx.compose.animation.core.animateFloatAsState(
+        (kcal.toFloat() / kcalGoal.coerceAtLeast(1)).coerceIn(0f, 1f),
+        com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrK",
+    )
     val pA by androidx.compose.animation.core.animateFloatAsState(
         pPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrP",
     )
@@ -307,21 +316,39 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
     val fA by androidx.compose.animation.core.animateFloatAsState(
         fPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrF",
     )
-    Box(Modifier.size(112.dp), contentAlignment = Alignment.Center) {
+    val left = kcalGoal - kcal
+    Box(Modifier.size(118.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            val sw = 8.dp.toPx()
-            fun ring(inset: Float, pct: Float, color: Color) {
-                val d = inset
-                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
-                if (pct > 0f) drawArc(color, -90f, 360f * pct, false, topLeft = Offset(d, d), size = Size(size.width - 2 * d, size.height - 2 * d), style = Stroke(sw, cap = StrokeCap.Round))
+            fun ring(inset: Float, pct: Float, color: Color, sw: Float) {
+                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw, cap = StrokeCap.Round))
+                if (pct > 0f) {
+                    // Endspurt-Glow (Kap. 22-Erbe) am kcal-Ring
+                    if (sw > 9.dp.toPx() && pct >= 0.8f && pct < 1f) {
+                        drawArc(color.copy(alpha = 0.22f), -90f, 360f * pct, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw * 1.8f, cap = StrokeCap.Round))
+                    }
+                    drawArc(color, -90f, 360f * pct, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw, cap = StrokeCap.Round))
+                }
             }
-            ring(sw / 2, pA, Cyan)                 // outer = protein
-            ring(sw / 2 + sw + 5.dp.toPx(), cA, Blue)   // mid = carbs
-            ring(sw / 2 + 2 * (sw + 5.dp.toPx()), fA, Purple) // inner = fat
+            val kw = 10.dp.toPx()
+            val mw = 4.5.dp.toPx()
+            ring(kw / 2, kA, Mod.Fuel, kw)                          // außen: KALORIE
+            ring(kw + 6.dp.toPx(), pA, Cyan, mw)                    // innen: Protein
+            ring(kw + 6.dp.toPx() + mw + 4.dp.toPx(), cA, Blue, mw) // Carbs
+            ring(kw + 6.dp.toPx() + 2 * (mw + 4.dp.toPx()), fA, Purple, mw) // Fat
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            TickerNumber(kcal, fontSize = 20)
-            Text("/$kcalGoal", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            if (kcal == 0) {
+                // der Tag beginnt mit Budget, nicht mit Null (Kap. 39)
+                TickerNumber(kcalGoal, fontSize = 20)
+                Text("kcal frei", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            } else {
+                TickerNumber(kcal, fontSize = 20)
+                Text(
+                    if (left >= 0) "übrig $left" else "+${-left} über",
+                    color = if (left >= 0) TextDim else Warn,
+                    fontSize = 9.sp, fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
@@ -443,35 +470,54 @@ private fun ProteinSpread(day: DayData) {
 /** Fixed height shared by the water and fasting cards so the row stays symmetric. */
 private val TWIN_CARD_HEIGHT = 156.dp
 
+/**
+ * Kap. 39 (User-Wunsch + P17): Wasser als leise Tropfen-Leiste statt lauter
+ * Karte. Gefüllt aus Gläsern UND geloggten Getränken (volumeMl). Tap = +1 Glas.
+ */
 @Composable
-private fun WaterModule(glasses: Int, targetGlasses: Int, hot: Boolean, showHeat: Boolean, canEdit: Boolean, onEnableHeat: () -> Unit, modifier: Modifier) {
-    GlassPanel(modifier.height(TWIN_CARD_HEIGHT)) {
-        Column(Modifier.fillMaxSize().padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.WaterDrop, null, tint = Cyan, modifier = Modifier.size(15.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("WATER", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                Spacer(Modifier.weight(1f))
-                if (hot) Text("🔥 +0.3L", color = Amber, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(8.dp))
-            Text("${"%.1f".format(Locale.US, glasses * WaterCalc.GLASS_ML / 1000.0)} L", color = TextPrimary, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
-            Text("Target ${"%.1f".format(Locale.US, targetGlasses * WaterCalc.GLASS_ML / 1000.0)} L", color = TextDim, fontSize = 10.5.sp)
-            Spacer(Modifier.weight(1f))
-            NeonBar(if (targetGlasses > 0) glasses.toFloat() / targetGlasses else 0f, Cyan, Modifier.fillMaxWidth(), height = 5.dp)
-            Spacer(Modifier.height(10.dp))
-            Row(Modifier.height(30.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (canEdit) {
-                    val hCtx = androidx.compose.ui.platform.LocalContext.current
-                    RoundIcon(Icons.Rounded.Remove) { com.ascend.lifeos.data.Haptics.tick(hCtx); Repo.addWater(-1) }
-                    RoundIcon(Icons.Rounded.Add) { com.ascend.lifeos.data.Haptics.tick(hCtx); Repo.addWater(1) }
-                    if (showHeat) {
-                        Spacer(Modifier.weight(1f))
-                        Text("+ Heat", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onEnableHeat() })
-                    }
-                } else {
-                    Text("$glasses glasses logged", color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold)
+private fun HydrationBar(
+    glasses: Int, drinkMl: Int, targetGlasses: Int,
+    hot: Boolean, canEdit: Boolean, showHeat: Boolean, onEnableHeat: () -> Unit,
+) {
+    val hCtx = androidx.compose.ui.platform.LocalContext.current
+    val totalMl = glasses * WaterCalc.GLASS_ML + drinkMl
+    val targetMl = (targetGlasses * WaterCalc.GLASS_ML).coerceAtLeast(1)
+    val filled = (totalMl.toFloat() / WaterCalc.GLASS_ML).toInt()
+    val segments = targetGlasses.coerceIn(4, 12)
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(enabled = canEdit) { com.ascend.lifeos.data.Haptics.tick(hCtx); Repo.addWater(1) }
+            .padding(vertical = 6.dp, horizontal = 2.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Rounded.WaterDrop, null, tint = Cyan.copy(alpha = 0.8f), modifier = Modifier.size(13.dp))
+            Spacer(Modifier.width(6.dp))
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                repeat(segments) { i ->
+                    val on = i < (filled * segments / targetGlasses.coerceAtLeast(1)).coerceAtMost(segments)
+                    Box(
+                        Modifier.weight(1f).height(6.dp).clip(CircleShape)
+                            .background(if (on) Cyan.copy(alpha = 0.85f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)),
+                    )
                 }
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "${"%.1f".format(Locale.US, totalMl / 1000.0)} / ${"%.1f".format(Locale.US, targetMl / 1000.0)} L",
+                color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+            )
+        }
+        Spacer(Modifier.height(3.dp))
+        Row {
+            Text(
+                if (canEdit) "Tap = +1 Glas · Getränke zählen mit" else "$glasses Gläser + Getränke",
+                color = TextDim.copy(alpha = 0.75f), fontSize = 9.sp,
+            )
+            if (hot) { Spacer(Modifier.width(6.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 9.sp, fontWeight = FontWeight.Bold) }
+            if (showHeat) {
+                Spacer(Modifier.weight(1f))
+                Text("+ Heat", color = Mod.Fuel, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onEnableHeat() })
             }
         }
     }

@@ -329,6 +329,30 @@ object Repo {
         it.copy(shopping = it.shopping + names.map { n -> n.trim() }.filter { n -> n.isNotBlank() && n.lowercase() !in existing }.distinct().map { n -> ShopItem(n) })
     }
 
+    /**
+     * Kap. 41 (P3-Fix): Zutaten MIT Mengen in die Liste — gleicher Name+Einheit
+     * wird AGGREGIERT statt verworfen („Reis 400 g" aus zwei Rezepten).
+     */
+    fun addToShoppingQty(items: List<ShopItem>) = updateProfile { p ->
+        val merged = p.shopping.toMutableList()
+        items.forEach { new ->
+            val n = new.name.trim()
+            if (n.isBlank()) return@forEach
+            val i = merged.indexOfFirst {
+                it.name.equals(n, ignoreCase = true) && it.unit == new.unit && !it.checked
+            }
+            if (i >= 0) {
+                val old = merged[i]
+                merged[i] = if (old.qty != null && new.qty != null) {
+                    old.copy(qty = old.qty + new.qty)
+                } else old.copy(qty = old.qty ?: new.qty)
+            } else {
+                merged += new.copy(name = n)
+            }
+        }
+        p.copy(shopping = merged)
+    }
+
     fun toggleShop(name: String) = updateProfile {
         it.copy(shopping = it.shopping.map { s -> if (s.name == name) s.copy(checked = !s.checked) else s })
     }

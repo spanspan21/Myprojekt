@@ -107,6 +107,10 @@ data class FoodEntry(
     val barcode: String = "",
     val nutrients: Map<String, Double> = emptyMap(), // detailed nutrients for the eaten portion, in grams
     val ts: Long = 0,
+    // FUEL-Masterplan Kap. 48 — additiv & tolerant (Defaults = Alt-JSON lädt):
+    val volumeMl: Int = 0,           // Getränke: ml zählen zur Hydration (Kap. 36/39)
+    val approx: Boolean = false,     // ~Teller-Schätzung, sichtbar ehrlich (Kap. 37)
+    val incomplete: Boolean = false, // ◌ Quick-Add ohne volle Makros (Kap. 42)
 )
 
 @Serializable
@@ -272,9 +276,17 @@ data class SavedMeal(
 @Serializable
 data class WeightPoint(val ts: Long, val kg: Double)
 
-/** A shopping-list line derived from recipe ingredients. */
+/** A shopping-list line derived from recipe ingredients.
+ *  Kap. 41 (P3-Fix): Mengen ÜBERLEBEN den Übertrag — qty/unit additiv,
+ *  Alt-Einträge laden als (name, null). */
 @Serializable
-data class ShopItem(val name: String, val checked: Boolean = false)
+data class ShopItem(
+    val name: String,
+    val checked: Boolean = false,
+    val qty: Double? = null,      // z. B. 400.0
+    val unit: String? = null,     // "g" | "ml" | "Stk."
+    val fromRecipe: String? = null,
+)
 
 /** Active intermittent-fasting session. startEpoch == 0 -> not fasting. */
 @Serializable

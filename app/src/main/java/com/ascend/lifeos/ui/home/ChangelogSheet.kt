@@ -28,6 +28,15 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "FUEL v2 — your latte is now 4 taps: the new drink builder mixes coffee, cocoa, spritzers & shakes with live macros",
+        "Food search finally ranks: your history first, exact names before fragments — and \"protein\" never finds an egg again",
+        "Portions speak human: \"1 Glas (200 ml)\", \"1 Tasse\" — drinks log in ml and count toward hydration automatically",
+        "The macro reactor got its symmetry back: the outer ring IS the calorie, the center shows what's left",
+        "Water is a quiet drop bar now — tap for a glass, logged drinks fill it too",
+        "Shopping lists carry amounts: two recipes wanting rice become \"Rice — 400 g\"",
+        "New in the pantry: teas, spritzers, plant milks, cocoa, alcohol-free beer — every drink with real ml portions",
+        "Typo? Search suggests \"Meintest du Banane?\" instead of a dead end",
+        // ── v2.6 ──
         "ATELIER — five complete worlds in Settings › Design: Sovereign, Glacier, Neon, Terra, Mono",
         "Each theme changes everything: colors, typography voice, room light, grain, corner radii, its own metal",
         "Total uniformity: 360 hardcoded colors were replaced by live tokens — no more cold spots, in any theme",

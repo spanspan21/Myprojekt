@@ -11,8 +11,23 @@ import kotlin.math.roundToInt
  * Looks up product nutrition by barcode from Open Food Facts — free, no API key.
  * Host-whitelisted. Returns per-100g values plus Nutri-Score when available.
  */
+/** Session-LRU für Textsuchen (Kap. 35, P12): Wiederholungs-Suchen sofort & netzfrei. */
+private object SearchCache {
+    private const val MAX = 50
+    private val map = object : LinkedHashMap<String, List<FoodApi.Product>>(MAX, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<FoodApi.Product>>?) = size > MAX
+    }
+
+    @Synchronized fun get(term: String): List<FoodApi.Product>? = map[FoodRank.normalize(term)]
+
+    @Synchronized fun put(term: String, v: List<FoodApi.Product>) { map[FoodRank.normalize(term)] = v }
+}
+
 object FoodApi {
     private val allowedHosts = setOf("world.openfoodfacts.org", "world.openfoodfacts.net")
+
+    /** Benannte Alltagsportion (FUEL-Masterplan Kap. 38): „1 Glas", 200, ml. */
+    data class Portion(val label: String, val grams: Int, val ml: Boolean = false)
 
     data class Product(
         val barcode: String,
@@ -33,6 +48,8 @@ object FoodApi {
         val per100: Map<String, Double>, // nutrient id -> grams per 100g (all tracked nutrients present in data)
         val allergens: List<String> = emptyList(),
         val additives: List<String> = emptyList(), // E-numbers
+        val portions: List<Portion> = emptyList(), // benannte Presets (Kap. 38); leer → UI fällt auf serving/100g zurück
+        val approx: Boolean = false,               // ~Teller-Schätzung (Kap. 37) — sichtbar ehrlich
     )
 
     private val ALLERGEN_DE = mapOf(
@@ -144,8 +161,11 @@ object FoodApi {
         runCatching {
             val term = termRaw.trim()
             if (term.length < 2) return@runCatching emptyList()
-            val local = BasicFoods.search(term)
-            val remote = runCatching {
+            // Suche v2 (Kap. 34/35): lokal bereits relevanz-sortiert; OFF bleibt
+            // strikt NACH den lokalen Treffern (nie dazwischen), Cache 7 Tage.
+            val local = BasicFoods.search(term).take(10)
+            val cached = SearchCache.get(term)
+            val remote = cached ?: runCatching {
                 val enc = java.net.URLEncoder.encode(term, "UTF-8")
                 val body = get(
                     "https://world.openfoodfacts.org/cgi/search.pl?search_terms=$enc" +
@@ -153,8 +173,8 @@ object FoodApi {
                 ) ?: return@runCatching emptyList()
                 val arr = JSONObject(body).optJSONArray("products") ?: return@runCatching emptyList()
                 (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let { parseProduct(it, "") } }
-            }.getOrDefault(emptyList())
-            (local + remote).take(18)
+            }.getOrDefault(emptyList()).also { if (it.isNotEmpty()) SearchCache.put(term, it) }
+            (local + remote).take(22)
         }
     }
 }
