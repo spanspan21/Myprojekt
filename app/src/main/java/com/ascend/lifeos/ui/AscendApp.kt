@@ -4,10 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -313,13 +313,39 @@ private fun MorphingDock(
                 .clip(RoundedCornerShape(28.dp))
                 .background(Color(0xFF0B0D10).copy(alpha = 0.88f))
                 .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(28.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp)
-                .animateContentSize(tween(260)),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
         ) {
-            Crossfade(targetState = subMode, animationSpec = tween(200), label = "dockMorph") { inSub ->
+            // The clean morph: outgoing state snaps away fast, incoming state
+            // zooms in slightly delayed (no double-image mush), while ONE
+            // spring drives the bar's width. Height is fixed — only width moves.
+            androidx.compose.animation.AnimatedContent(
+                targetState = subMode,
+                label = "dockMorph",
+                transitionSpec = {
+                    val enter = fadeIn(tween(170, delayMillis = 70, easing = androidx.compose.animation.core.LinearOutSlowInEasing)) +
+                        androidx.compose.animation.scaleIn(
+                            initialScale = 0.92f,
+                            animationSpec = tween(260, delayMillis = 70, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+                        )
+                    val exit = fadeOut(tween(80, easing = androidx.compose.animation.core.FastOutLinearInEasing)) +
+                        androidx.compose.animation.scaleOut(
+                            targetScale = 0.96f,
+                            animationSpec = tween(80, easing = androidx.compose.animation.core.FastOutLinearInEasing),
+                        )
+                    (enter togetherWith exit).using(
+                        androidx.compose.animation.SizeTransform(clip = false) { _, _ ->
+                            androidx.compose.animation.core.spring(
+                                dampingRatio = 0.85f,
+                                stiffness = 420f,
+                                visibilityThreshold = androidx.compose.ui.unit.IntSize(1, 1),
+                            )
+                        },
+                    )
+                },
+            ) { inSub ->
                 if (inSub) {
                     Row(
-                        Modifier.horizontalScroll(rememberScrollState()),
+                        Modifier.height(52.dp).horizontalScroll(rememberScrollState()),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         // anchor: the group glyph — tap to zoom back to the 4 areas
@@ -350,10 +376,20 @@ private fun MorphingDock(
                         subs.forEach { s ->
                             val selected = s == current
                             val accent = s.accent()
+                            val bg by animateColorAsState(
+                                if (selected) accent.copy(alpha = 0.14f) else Color.Transparent,
+                                tween(220), label = "subBg",
+                            )
+                            val fg by animateColorAsState(
+                                if (selected) accent else TextMuted, tween(220), label = "subFg",
+                            )
+                            val dot by animateColorAsState(
+                                if (selected) accent else Color.Transparent, tween(220), label = "subDot",
+                            )
                             Column(
                                 Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(if (selected) accent.copy(alpha = 0.14f) else Color.Transparent)
+                                    .background(bg)
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null,
@@ -363,26 +399,30 @@ private fun MorphingDock(
                             ) {
                                 Text(
                                     s.label,
-                                    color = if (selected) accent else TextMuted,
+                                    color = fg,
                                     fontFamily = Body, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
                                 )
                                 Spacer(Modifier.height(4.dp))
-                                Box(
-                                    Modifier.size(3.5.dp).clip(CircleShape)
-                                        .background(if (selected) accent else Color.Transparent),
-                                )
+                                Box(Modifier.size(3.5.dp).clip(CircleShape).background(dot))
                             }
                         }
                     }
                 } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.height(52.dp), verticalAlignment = Alignment.CenterVertically) {
                         Group.entries.forEach { g ->
                             val selected = g == group
                             val accent = accentOf(g)
+                            val bg by animateColorAsState(
+                                if (selected) accent.copy(alpha = 0.13f) else Color.Transparent,
+                                tween(220), label = "grpBg",
+                            )
+                            val fg by animateColorAsState(
+                                if (selected) accent else TextDim, tween(220), label = "grpFg",
+                            )
                             Column(
                                 Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(if (selected) accent.copy(alpha = 0.13f) else Color.Transparent)
+                                    .background(bg)
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null,
@@ -395,13 +435,13 @@ private fun MorphingDock(
                             ) {
                                 Icon(
                                     g.icon, contentDescription = g.label,
-                                    tint = if (selected) accent else TextDim,
+                                    tint = fg,
                                     modifier = Modifier.size(21.dp),
                                 )
                                 Spacer(Modifier.height(3.dp))
                                 Text(
                                     g.label,
-                                    color = if (selected) accent else TextDim,
+                                    color = fg,
                                     fontFamily = Body, fontSize = 8.5.sp, fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp,
                                 )
