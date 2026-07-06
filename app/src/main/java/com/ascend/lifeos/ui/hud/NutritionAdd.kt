@@ -242,7 +242,7 @@ private fun SearchPane(
             }
             if (recents.isNotEmpty()) {
                 Section("RECENT")
-                recents.take(6).forEach { e ->
+                recents.take(8).forEach { e ->
                     ResultRow(e.name, "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", "") {
                         Repo.addFood(e.copy(id = "", ts = 0, meal = meal), dayKey); onDismiss()
                     }

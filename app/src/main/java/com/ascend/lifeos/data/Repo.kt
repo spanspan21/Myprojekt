@@ -262,7 +262,7 @@ object Repo {
     fun addFood(entry: FoodEntry, dayKey: String = todayKey()) {
         val e = if (entry.id.isBlank()) entry.copy(id = newId("f"), ts = System.currentTimeMillis()) else entry
         val cur = data.days[dayKey] ?: DayData()
-        val recents = (listOf(e.copy(meal = "b")) + data.profile.recentFoods.filter { it.name != e.name }).take(12)
+        val recents = (listOf(e.copy(meal = "b")) + data.profile.recentFoods.filter { it.name != e.name }).take(20)
         commit(
             data.copy(
                 days = data.days + (dayKey to cur.copy(meals = cur.meals + e)),

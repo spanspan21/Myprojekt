@@ -153,10 +153,19 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
 private fun fmtInput(v: Double): String = if (v == v.toInt().toDouble()) v.toInt().toString() else ((v * 100).roundToInt() / 100.0).toString()
 
 /** Convert a custom food to the per-100g [FoodApi.Product] shape so it flows
- *  through the same portion editor as scanned/searched foods. */
+ *  through the same portion editor as scanned/searched foods.
+ *  P6-Fix (Kap. 42): die Einheit ÜBERLEBT — ml-Customs (Builder-Favoriten,
+ *  eigene Drinks) loggen in ml und zählen zur Hydration. */
 fun CustomFood.toProduct(): FoodApi.Product {
     val s = servingG.coerceAtLeast(1)
     fun p100(v: Double) = v / s * 100.0
+    val isMl = unit == "ml"
+    val portionLabel = when (unit) {
+        "ml" -> "1 Portion"
+        "Stück" -> "1 Stück"
+        "Portion" -> "1 Portion"
+        else -> "1 Portion"
+    }
     return FoodApi.Product(
         barcode = barcode, name = name, brand = "Custom",
         kcal100 = p100(kcal.toDouble()).roundToInt(),
@@ -165,5 +174,10 @@ fun CustomFood.toProduct(): FoodApi.Product {
         satFat100 = p100(micros["saturated"] ?: 0.0), salt100 = 0.0,
         nutriScore = "", nova = null, ingredients = "", servingG = servingG,
         per100 = micros.mapValues { p100(it.value) },
+        portions = listOf(
+            FoodApi.Portion(portionLabel, servingG, ml = isMl),
+            FoodApi.Portion(if (isMl) "½" else "½ Portion", (servingG / 2).coerceAtLeast(1), ml = isMl),
+            FoodApi.Portion("2×", servingG * 2, ml = isMl),
+        ),
     )
 }
