@@ -308,8 +308,9 @@ private fun MorphingDock(
     modifier: Modifier = Modifier,
 ) {
     // Zoomed in whenever the group has real sub-navigation; the anchor zooms out.
+    // Seit PRIME gilt das auch für TODAY — die alte Ausnahme versteckte die Pills.
     var zoomedOut by remember(group) { mutableStateOf(false) }
-    val subMode = group != Group.TODAY && subs.size > 1 && !zoomedOut
+    val subMode = subs.size > 1 && !zoomedOut
 
     Box(modifier.navigationBarsPadding().padding(bottom = 14.dp)) {
         Box(
@@ -428,7 +429,7 @@ private fun MorphingDock(
                             Column(
                                 Modifier
                                     .pressScale {
-                                        if (g == group && g != Group.TODAY) zoomedOut = false
+                                        if (g == group) zoomedOut = false
                                         else onSelectGroup(g)
                                     }
                                     .clip(RoundedCornerShape(20.dp))

@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.FitnessCenter
@@ -594,17 +595,23 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
                 SectionLabel("Systems")
                 Spacer(Modifier.height(12.dp))
-                // 3×2 grid — every orb fully visible, evenly spread (no clipped scroll row)
+                // 3×3 grid — every orb fully visible, evenly spread (no clipped scroll row)
                 Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Prime", Icons.Rounded.AutoAwesome, Mod.Home) { onOpenModule("prime") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Rules", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Rules", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") } }
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth()) {
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Wrapped", Icons.Rounded.Bolt, Mod.Skills) { onOpenModule("wrapped") } }
+                    Box(Modifier.weight(1f)) {}
+                    Box(Modifier.weight(1f)) {}
                 }
             }
 
