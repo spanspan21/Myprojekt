@@ -28,15 +28,19 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
-        "No more debug warning at unlock — JARVIS ships as a proper release build now",
-        "This sheet stopped popping up — it lives here in Settings, on demand",
-        "JARVIS Hub — every module on big tiles, one tap from Home",
-        "Quick Log orb — purchase, water, meal, weight in seconds",
-        "Training rebuilt — 60–120 min sessions in blocks: warm-up, skill, strength, finisher, mobility",
-        "Finance v2 — accounts, budgets, recurring costs, trends, savings goals, search & CSV",
-        "Boot sequence is pure cinema now — zero questions",
-        "Muscle map — real anatomical line art",
-        "Jarvis knows game days, exams and your streak",
+        "Notifications actually fire now — briefings, nudges and check-ins were silently blocked on Android 13+",
+        "Training load: ATL/CTL with acute:chronic verdict in Body — push, maintain or back off (ice time counts)",
+        "The plan listens to your log — a ground-out session (RPE ≥ 9.3) trims next week's volume automatically",
+        "Streak v2 — sick days never break the chain, freezes announce their saves, habit strength dips instead of resetting",
+        "Focus score v2 — doomscroll snoozes and schedule violations finally count; friction ladder survives restarts",
+        "Guard sips battery now (screen-off = zero polling) and revives itself after a reboot",
+        "Backups cover EVERYTHING — all stores and databases in one zip, one-tap full restore",
+        "Corrupt-data self-rescue: a bad byte can no longer wipe your history",
+        "Back button behaves — tab roots return Home instead of quitting",
+        "Train is ember, Fuel is lime — modules wear their own colors on every control",
+        "Resume an interrupted workout — logged sets survive anything",
+        "Alcohol and late meals auto-tag your recovery factors straight from the diary",
+        "New heads-ups: training in 30 minutes · screen budget at 80%",
     )
 
     private fun stamp(ctx: Context): Long =

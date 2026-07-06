@@ -239,6 +239,25 @@ fun HomeScreen(
                 }
             }
 
+            // ── streak saved: the freeze did its job — say so, once ──────
+            if (Repo.streakSavedYesterday()) {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                        .background(Mod.Home.copy(alpha = 0.08f))
+                        .border(0.5.dp, Mod.Home.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 13.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Rounded.Bolt, null, tint = Mod.Home, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Streak saved — a freeze covered yesterday. ${profile.streak} days stand. (${profile.freezeAvail} left this week)",
+                        color = TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+
             // ── PROTOCOL DIRECTIVES — WHEN→THEN, max two, dismissible ────
             var protoTick by remember { mutableIntStateOf(0) }
             val directives by produceState<List<Pair<com.ascend.lifeos.data.Protocol, String>>>(emptyList(), protoTick) {
