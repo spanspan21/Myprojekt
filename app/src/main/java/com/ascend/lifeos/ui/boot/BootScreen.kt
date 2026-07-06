@@ -159,13 +159,16 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 26.dp).padding(top = 40.dp, bottom = 30.dp),
     ) {
+        com.ascend.lifeos.ui.home.Reveal(0) {
         Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
         Spacer(Modifier.height(6.dp))
         Text("The numbers everything is computed from", color = TextPrimary,
             fontFamily = Display, fontSize = 21.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
+        }
         Spacer(Modifier.height(18.dp))
 
+        com.ascend.lifeos.ui.home.Reveal(1) {
         BootPanel {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BootChip("Male", sex == "m") { sex = "m" }
@@ -176,8 +179,10 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
             TuneStepper("Height", height, "cm") { height = (height + it).coerceIn(120, 230) }
             TuneStepper("Weight", weight, "kg") { weight = (weight + it).coerceIn(30, 250) }
         }
+        }
 
         Spacer(Modifier.height(14.dp))
+        com.ascend.lifeos.ui.home.Reveal(2) {
         Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
@@ -196,8 +201,10 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
                 }
             }
         }
+        }
 
         Spacer(Modifier.height(14.dp))
+        com.ascend.lifeos.ui.home.Reveal(3) {
         Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
@@ -221,16 +228,20 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
             color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
             modifier = Modifier.padding(top = 8.dp),
         )
+        }
 
         Spacer(Modifier.height(22.dp))
+        com.ascend.lifeos.ui.home.Reveal(4) {
         Box(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Home)
-                .clickable { onFinish(sex, age, height, weight, objectives.toList()) }
+            Modifier.fillMaxWidth()
+                .pressScale { onFinish(sex, age, height, weight, objectives.toList()) }
+                .clip(RoundedCornerShape(15.dp)).background(Mod.Home)
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        }
         }
     }
 }

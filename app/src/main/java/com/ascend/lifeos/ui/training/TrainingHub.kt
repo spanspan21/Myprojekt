@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.NeonBar
+import com.ascend.lifeos.ui.motion.sharedHero
 import com.ascend.lifeos.ui.theme.*
 
 @Composable
@@ -711,6 +712,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
     )
     Box(
         Modifier.fillMaxWidth().height(76.dp)
+            .sharedHero("workout-hero")
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.horizontalGradient(listOf(Accent.copy(alpha = glow), Cyan.copy(alpha = glow * 0.7f))))
             .border(1.dp, Accent.copy(alpha = 0.5f), RoundedCornerShape(20.dp))

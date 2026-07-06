@@ -33,6 +33,7 @@ import com.ascend.lifeos.ui.theme.*
 
 private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
     val vm: TrainingViewModel = viewModel()
@@ -50,6 +51,10 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
         }
     }
 
+    // ONE SharedTransitionLayout around ONE AnimatedContent (M4.1). The card
+    // and the workout header carry the same sharedHero key; every other route
+    // simply keeps the directional slide.
+    SharedTransitionLayout {
     AnimatedContent(
         route, label = "trainRoute",
         transitionSpec = {
@@ -60,6 +65,10 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
             }
         },
     ) { current ->
+        CompositionLocalProvider(
+            com.ascend.lifeos.ui.motion.LocalSharedScopes provides
+                com.ascend.lifeos.ui.motion.SharedScopes(this@SharedTransitionLayout, this@AnimatedContent),
+        ) {
         when (current) {
             TrainRoute.HUB -> TrainingHub(
                 vm = vm,
@@ -106,6 +115,8 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
                 onBack = { vm.regeneratePlan(); route = TrainRoute.HUB },
             )
         }
+        }
+    }
     }
 }
 

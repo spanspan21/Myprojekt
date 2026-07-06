@@ -40,6 +40,20 @@ fun HudCurve(
     color: Color = Accent,
 ) {
     if (values.isEmpty()) return
+    // the curve draws itself on once per entry, then rests
+    val reduced = com.ascend.lifeos.ui.motion.Motion.reduced(androidx.compose.ui.platform.LocalContext.current)
+    val draw = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(if (reduced) 1f else 0f) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!reduced && draw.value < 1f) {
+            draw.animateTo(
+                1f,
+                androidx.compose.animation.core.tween(
+                    com.ascend.lifeos.ui.motion.Motion.hero,
+                    easing = com.ascend.lifeos.ui.motion.Motion.easeOut,
+                ),
+            )
+        }
+    }
     Canvas(modifier.fillMaxWidth().height(height)) {
         val w = size.width
         val h = size.height
@@ -70,24 +84,34 @@ fun HudCurve(
             path.cubicTo(mx, y0, mx, y1, x1, y1)
         }
 
+        // Partial segment while drawing on (PathMeasure), full path at rest.
+        val p = draw.value
+        val shown = if (p >= 1f) path else Path().also { seg ->
+            val pm = androidx.compose.ui.graphics.PathMeasure()
+            pm.setPath(path, false)
+            pm.getSegment(0f, pm.length * p, seg, true)
+        }
+
         // Fading fill under the curve.
         val fill = Path().apply {
-            addPath(path)
-            lineTo(xOf(values.size - 1), h)
+            addPath(shown)
+            lineTo(xOf(values.size - 1) * p, h)
             lineTo(xOf(0), h)
             close()
         }
-        drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.14f), Color.Transparent), endY = h))
+        drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.14f * p), Color.Transparent), endY = h))
 
         // Neon glow pass + thin core stroke.
-        drawPath(path, color.copy(alpha = 0.16f), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
-        drawPath(path, color, style = Stroke(1.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(shown, color.copy(alpha = 0.16f), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(shown, color, style = Stroke(1.dp.toPx(), cap = StrokeCap.Round))
 
-        // Endpoint marker.
-        val ex = xOf(values.size - 1)
-        val ey = yOf(values.last())
-        drawCircle(color.copy(alpha = 0.22f), radius = 7.dp.toPx(), center = Offset(ex, ey))
-        drawCircle(color, radius = 2.5.dp.toPx(), center = Offset(ex, ey))
+        // Endpoint marker appears when the line arrives.
+        if (p >= 1f) {
+            val ex = xOf(values.size - 1)
+            val ey = yOf(values.last())
+            drawCircle(color.copy(alpha = 0.22f), radius = 7.dp.toPx(), center = Offset(ex, ey))
+            drawCircle(color, radius = 2.5.dp.toPx(), center = Offset(ex, ey))
+        }
     }
 }
 

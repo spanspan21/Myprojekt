@@ -28,6 +28,19 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
+        "IRON MOTION — every tap presses down and springs back; every chip glides instead of snapping",
+        "Numbers roll like a slot machine: kcal, focus score, sets & reps tick digit by digit",
+        "Charts draw themselves on first look — sparklines, trends and curves sweep in once, then rest",
+        "Haptics grew textures: set logs thunk, rest timers warn then reward, water ticks under the finger",
+        "PR celebration v2 — the card lands with a bounce, a chime and the big haptic",
+        "Complete a mission while you're here and feel it; all three at once earns the full moment",
+        "Sheets settle in two stages; lists animate adds, removes and reorders; cards expand on springs",
+        "Loading got honest: a quiet shimmer instead of blank panels popping into place",
+        "Hub session card morphs into the live workout header (one continuous cut)",
+        "Guard's breathing gate now pulses with the circle — breathe with it, eyes closed",
+        "Wrapped is cinema: every slide staggers in and its hero number counts up",
+        "System setting \"remove animations\" is honored everywhere — heroes show their final state",
+        // ── v2.2 ──
         "New shell: four groups (Today · Body · Life · System) with pill navigation — everything two taps away",
         "Your dashboard, your order — show, hide and reorder the Today cards",
         "Context modes: Exam phase and Holidays hide what that week doesn't need",

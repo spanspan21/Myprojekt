@@ -22,6 +22,20 @@ fun LineChart(
     color: Color = Amber,
     height: Dp = 140.dp,
 ) {
+    // one draw-on per entry, then static
+    val reduced = com.ascend.lifeos.ui.motion.Motion.reduced(androidx.compose.ui.platform.LocalContext.current)
+    val draw = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(if (reduced) 1f else 0f) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!reduced && draw.value < 1f) {
+            draw.animateTo(
+                1f,
+                androidx.compose.animation.core.tween(
+                    com.ascend.lifeos.ui.motion.Motion.hero,
+                    easing = com.ascend.lifeos.ui.motion.Motion.easeOut,
+                ),
+            )
+        }
+    }
     Canvas(modifier.fillMaxWidth().height(height)) {
         if (values.isEmpty()) return@Canvas
         val lo = (values.min() - 15).toFloat()
@@ -38,21 +52,27 @@ fun LineChart(
             val y = 14f + g * ((h - 28f) / 3f)
             drawLine(Color.White.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 1f)
         }
-        // area
-        val area = Path().apply {
-            moveTo(px(0), py(values[0]))
-            for (i in 1 until n) lineTo(px(i), py(values[i]))
-            lineTo(px(n - 1), h); lineTo(px(0), h); close()
-        }
-        drawPath(area, color.copy(alpha = 0.14f))
-        // line
+        val p = draw.value
+        // line (partial while drawing on)
         val line = Path().apply {
             moveTo(px(0), py(values[0]))
             for (i in 1 until n) lineTo(px(i), py(values[i]))
         }
-        drawPath(line, color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-        // dots
+        val shown = if (p >= 1f) line else Path().also { seg ->
+            val pm = androidx.compose.ui.graphics.PathMeasure()
+            pm.setPath(line, false)
+            pm.getSegment(0f, pm.length * p, seg, true)
+        }
+        // area under the drawn part
+        val area = Path().apply {
+            addPath(shown)
+            lineTo(px(n - 1) * p, h); lineTo(px(0), h); close()
+        }
+        drawPath(area, color.copy(alpha = 0.14f * p))
+        drawPath(shown, color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        // dots pop with the line front
         val r = if (n <= 24) 3.dp.toPx() else 1.5.dp.toPx()
-        for (i in 0 until n) drawCircle(color, r, Offset(px(i), py(values[i])))
+        val front = px(0) + (px(n - 1) - px(0)) * p
+        for (i in 0 until n) if (px(i) <= front + 1f) drawCircle(color, r, Offset(px(i), py(values[i])))
     }
 }

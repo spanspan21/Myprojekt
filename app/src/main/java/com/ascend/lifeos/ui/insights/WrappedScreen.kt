@@ -2,7 +2,14 @@ package com.ascend.lifeos.ui.insights
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,8 +36,10 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -241,7 +250,7 @@ fun WrappedScreen(onClose: () -> Unit) {
         } else {
             val pagerState = rememberPagerState(pageCount = { m.slides.size })
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-                SlidePage(m.slides[page], page)
+                SlidePage(m.slides[page], page, active = pagerState.currentPage == page)
             }
             if (m.slides.size > 1) {
                 Row(
@@ -269,7 +278,16 @@ fun WrappedScreen(onClose: () -> Unit) {
 // ─── slide ───────────────────────────────────────────────────────────────────
 
 @Composable
-private fun SlidePage(s: WrapSlide, seed: Int) {
+private fun SlidePage(s: WrapSlide, seed: Int, active: Boolean) {
+    // hero count-up: plain-digit values count to their number while the slide is on stage
+    val hugeInt = remember(s.huge) { s.huge.toIntOrNull() }
+    val count = remember { Animatable(0f) }
+    LaunchedEffect(active) {
+        if (active && hugeInt != null) {
+            count.snapTo(0f)
+            count.animateTo(1f, tween(900, delayMillis = 240, easing = LinearOutSlowInEasing))
+        }
+    }
     Box(Modifier.fillMaxSize()) {
         SlideDecor(s.accent, seed)
         Column(
@@ -277,47 +295,79 @@ private fun SlidePage(s: WrapSlide, seed: Int) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                s.tag, color = s.accent, fontFamily = Display,
-                fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp,
-            )
-            s.title?.let {
-                Spacer(Modifier.height(10.dp))
+            WrapReveal(active, 0) {
                 Text(
-                    it, color = TextPrimary, fontFamily = Display, fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, lineHeight = 30.sp,
+                    s.tag, color = s.accent, fontFamily = Display,
+                    fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp,
                 )
             }
+            s.title?.let {
+                Spacer(Modifier.height(10.dp))
+                WrapReveal(active, 1) {
+                    Text(
+                        it, color = TextPrimary, fontFamily = Display, fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, lineHeight = 30.sp,
+                    )
+                }
+            }
             Spacer(Modifier.height(30.dp))
-            Text(s.huge, style = metricStyle(60), color = s.accent)
+            WrapReveal(active, 2) {
+                Text(
+                    if (hugeInt != null) "${(hugeInt * count.value).toInt()}" else s.huge,
+                    style = metricStyle(60), color = s.accent,
+                )
+            }
             Spacer(Modifier.height(6.dp))
-            Text(
-                s.hugeLabel, color = TextDim, fontFamily = Display,
-                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
-            )
+            WrapReveal(active, 3) {
+                Text(
+                    s.hugeLabel, color = TextDim, fontFamily = Display,
+                    fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                )
+            }
             if (s.subs.isNotEmpty()) {
                 Spacer(Modifier.height(34.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(40.dp)) {
-                    s.subs.forEach { sub ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(sub.value, style = metricStyle(20), color = TextPrimary)
-                            Spacer(Modifier.height(3.dp))
-                            Text(
-                                sub.label, color = TextDim, fontFamily = Display,
-                                fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
-                            )
+                WrapReveal(active, 4) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                        s.subs.forEach { sub ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(sub.value, style = metricStyle(20), color = TextPrimary)
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    sub.label, color = TextDim, fontFamily = Display,
+                                    fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
+                                )
+                            }
                         }
                     }
                 }
             }
             s.footer?.let {
                 Spacer(Modifier.height(30.dp))
-                Text(
-                    it, color = TextMuted, fontFamily = Body, fontSize = 13.sp,
-                    lineHeight = 19.sp, textAlign = TextAlign.Center,
-                )
+                WrapReveal(active, 5) {
+                    Text(
+                        it, color = TextMuted, fontFamily = Body, fontSize = 13.sp,
+                        lineHeight = 19.sp, textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
+    }
+}
+
+/** One staged entrance per slide element — fade + third-height rise, 80 ms apart. */
+@Composable
+private fun WrapReveal(active: Boolean, index: Int, content: @Composable () -> Unit) {
+    AnimatedVisibility(
+        visible = active,
+        enter = fadeIn(tween(300, delayMillis = 90 + index * 80, easing = LinearOutSlowInEasing)) +
+            slideInVertically(
+                initialOffsetY = { it / 3 },
+                animationSpec = tween(420, delayMillis = 90 + index * 80, easing = LinearOutSlowInEasing),
+            ),
+        exit = fadeOut(tween(120)),
+    ) {
+        // sibling trap: content lambdas may emit several nodes
+        Column(horizontalAlignment = Alignment.CenterHorizontally) { content() }
     }
 }
 

@@ -312,6 +312,15 @@ private fun GateCard(
         animationSpec = infiniteRepeatable(tween(3_000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "scale",
     )
+    // haptic guidance in phase with the circle: one soft pulse as each inhale
+    // begins (3s in, 3s out) — you can breathe with it eyes closed
+    val hCtx = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) {
+        while (true) {
+            com.ascend.lifeos.data.Haptics.tick(hCtx)
+            delay(6_000)
+        }
+    }
     val buttonsAlpha by animateFloatAsState(if (ready) 1f else 0f, tween(700), label = "btns")
 
     Column(

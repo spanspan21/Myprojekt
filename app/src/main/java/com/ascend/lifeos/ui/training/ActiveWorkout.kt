@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.*
+import com.ascend.lifeos.ui.motion.sharedHero
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.math.PI
@@ -84,9 +85,12 @@ fun ActiveWorkoutScreen(
             Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
             contentPadding = PaddingValues(top = 12.dp, bottom = 130.dp),
         ) {
-            // ── Header ──────────────────────────────────────────────────
+            // ── Header (the Hub's session card morphs into this row) ────
             item {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.fillMaxWidth().sharedHero("workout-hero"),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Column(Modifier.weight(1f)) {
                         Text(vm.activeTemplateName, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
                         Text("$elapsedMin min", color = TextDim, fontSize = 12.sp)

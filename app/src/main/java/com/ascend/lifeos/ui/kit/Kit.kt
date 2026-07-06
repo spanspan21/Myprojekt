@@ -177,7 +177,9 @@ fun Ring(
     }
 }
 
-/** Mini sparkline; pass raw values, it normalizes. Optional dashed baseline. */
+/** Mini sparkline; pass raw values, it normalizes. Optional dashed baseline.
+ *  Draws itself on ONCE per entry (PathMeasure segment + soft glow — the
+ *  BootScreen hex trick), then rests. */
 @Composable
 fun Spark(
     values: List<Float>,
@@ -186,6 +188,13 @@ fun Spark(
     fill: Boolean = true,
     baseline: Float? = null,
 ) {
+    val reduced = com.ascend.lifeos.ui.motion.Motion.reduced(androidx.compose.ui.platform.LocalContext.current)
+    val draw = remember { androidx.compose.animation.core.Animatable(if (reduced) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (!reduced && draw.value < 1f) {
+            draw.animateTo(1f, tween(com.ascend.lifeos.ui.motion.Motion.hero, easing = com.ascend.lifeos.ui.motion.Motion.easeOut))
+        }
+    }
     Canvas(modifier) {
         if (values.size < 2) return@Canvas
         val min = values.min(); val max = values.max()
@@ -197,12 +206,6 @@ fun Spark(
         values.forEachIndexed { i, v ->
             if (i == 0) path.moveTo(0f, y(v)) else path.lineTo(i * stepX, y(v))
         }
-        if (fill) {
-            val area = Path().apply {
-                addPath(path); lineTo(size.width, size.height); lineTo(0f, size.height); close()
-            }
-            drawPath(area, Brush.verticalGradient(listOf(color.copy(alpha = 0.18f), Color.Transparent)))
-        }
         baseline?.let {
             val by = y(it)
             drawLine(
@@ -211,9 +214,23 @@ fun Spark(
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f)),
             )
         }
-        drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-        // emphasize endpoint
-        drawCircle(color, 3.dp.toPx(), Offset(size.width, y(values.last())))
+        val p = draw.value
+        val shown = if (p >= 1f) path else Path().also { seg ->
+            val pm = androidx.compose.ui.graphics.PathMeasure()
+            pm.setPath(path, false)
+            pm.getSegment(0f, pm.length * p, seg, true)
+        }
+        if (fill) {
+            val area = Path().apply {
+                addPath(shown)
+                lineTo(size.width * p, size.height); lineTo(0f, size.height); close()
+            }
+            drawPath(area, Brush.verticalGradient(listOf(color.copy(alpha = 0.18f * p), Color.Transparent)))
+        }
+        // glow first, line on top
+        drawPath(shown, color.copy(alpha = 0.22f), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(shown, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+        if (p >= 1f) drawCircle(color, 3.dp.toPx(), Offset(size.width, y(values.last())))
     }
 }
 
