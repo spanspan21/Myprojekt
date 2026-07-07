@@ -53,7 +53,7 @@ data class ThemeSpec(
 object Themes {
 
     val SOVEREIGN = ThemeSpec(
-        id = "sovereign", label = "Sovereign", tagline = "Obsidian & Champagne — der Uhrensalon",
+        id = "sovereign", label = "Sovereign", tagline = "Obsidian & champagne — the watch salon",
         void = Color(0xFF060504), bg = Color(0xFF0B0A08), bgElevated = Color(0xFF12100C),
         surface = Color(0xFF171411), surfaceHi = Color(0xFF1E1A15), bgTop = Color(0xFF0D0B09),
         ivory = Color(0xFFF3E9D8), lineAlpha = 0.08f, line2Alpha = 0.14f,
@@ -75,7 +75,7 @@ object Themes {
     )
 
     val GLACIER = ThemeSpec(
-        id = "glacier", label = "Glacier", tagline = "Eis & Präzision — das Instrument",
+        id = "glacier", label = "Glacier", tagline = "Ice & precision — the instrument",
         void = Color(0xFF04060A), bg = Color(0xFF080C14), bgElevated = Color(0xFF0D1220),
         surface = Color(0xFF111827), surfaceHi = Color(0xFF182032), bgTop = Color(0xFF0A0F1A),
         ivory = Color(0xFFE4EDF7), lineAlpha = 0.09f, line2Alpha = 0.15f,
@@ -97,7 +97,7 @@ object Themes {
     )
 
     val NEON = ThemeSpec(
-        id = "neon", label = "Neon", tagline = "Strom & Nacht — die Arcade",
+        id = "neon", label = "Neon", tagline = "Voltage & night — the arcade",
         void = Color(0xFF030308), bg = Color(0xFF07070E), bgElevated = Color(0xFF0C0A16),
         surface = Color(0xFF120E1E), surfaceHi = Color(0xFF181328), bgTop = Color(0xFF0A0714),
         ivory = Color(0xFFEAE6F2), lineAlpha = 0.08f, line2Alpha = 0.14f,
@@ -119,7 +119,7 @@ object Themes {
     )
 
     val TERRA = ThemeSpec(
-        id = "terra", label = "Terra", tagline = "Boden & Atem — der warme Ort",
+        id = "terra", label = "Terra", tagline = "Earth & breath — the warm place",
         void = Color(0xFF0C0906), bg = Color(0xFF120E09), bgElevated = Color(0xFF1A140D),
         surface = Color(0xFF201912), surfaceHi = Color(0xFF282017), bgTop = Color(0xFF150F09),
         ivory = Color(0xFFEFE3CE), lineAlpha = 0.10f, line2Alpha = 0.16f,
@@ -141,7 +141,7 @@ object Themes {
     )
 
     val MONO = ThemeSpec(
-        id = "mono", label = "Mono", tagline = "Papier & Tinte — der Fokus",
+        id = "mono", label = "Mono", tagline = "Paper & ink — the focus",
         void = Color(0xFF050505), bg = Color(0xFF0A0A0A), bgElevated = Color(0xFF101010),
         surface = Color(0xFF161616), surfaceHi = Color(0xFF1D1D1D), bgTop = Color(0xFF0C0C0C),
         ivory = Color(0xFFEDEAE3), lineAlpha = 0.12f, line2Alpha = 0.20f,

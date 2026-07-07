@@ -161,10 +161,10 @@ fun CustomFood.toProduct(): FoodApi.Product {
     fun p100(v: Double) = v / s * 100.0
     val isMl = unit == "ml"
     val portionLabel = when (unit) {
-        "ml" -> "1 Portion"
-        "Stück" -> "1 Stück"
-        "Portion" -> "1 Portion"
-        else -> "1 Portion"
+        "ml" -> "1 serving"
+        "Stück" -> "1 piece"
+        "Portion" -> "1 serving"
+        else -> "1 serving"
     }
     return FoodApi.Product(
         barcode = barcode, name = name, brand = "Custom",
@@ -176,7 +176,7 @@ fun CustomFood.toProduct(): FoodApi.Product {
         per100 = micros.mapValues { p100(it.value) },
         portions = listOf(
             FoodApi.Portion(portionLabel, servingG, ml = isMl),
-            FoodApi.Portion(if (isMl) "½" else "½ Portion", (servingG / 2).coerceAtLeast(1), ml = isMl),
+            FoodApi.Portion(if (isMl) "½" else "½ serving", (servingG / 2).coerceAtLeast(1), ml = isMl),
             FoodApi.Portion("2×", servingG * 2, ml = isMl),
         ),
     )

@@ -107,14 +107,14 @@ object BasicFoods {
                 "vitaminC" to mg(36.4), "vitaminA" to ug(54.0), "vitaminB9" to ug(43.0),
                 "vitaminE" to mg(0.9), "potassium" to mg(168.0),
             ),
-            portions = listOf(g("halbe Mango", 150), g("1 Mango", 300)),
+            portions = listOf(g("half mango", 150), g("1 mango", 300)),
         ),
         bf(
             "Pineapple", 50, 0.5, 11.0, 0.1, sugar = 9.9, fiber = 1.4, serving = 160,
             micros = m(
                 "vitaminC" to mg(47.8), "vitaminB6" to mg(0.11), "potassium" to mg(109.0),
             ),
-            portions = listOf(g("1 Scheibe", 80), g("2 Scheiben", 160)),
+            portions = listOf(g("1 slice", 80), g("2 slices", 160)),
         ),
         bf(
             "Raspberries", 52, 1.2, 5.4, 0.7, sugar = 4.4, fiber = 6.5, serving = 125,
@@ -122,14 +122,14 @@ object BasicFoods {
                 "vitaminC" to mg(26.2), "vitaminK" to ug(7.8), "vitaminB9" to ug(21.0),
                 "magnesium" to mg(22.0), "potassium" to mg(151.0),
             ),
-            portions = listOf(g("1 Handvoll", 60), g("1 Schale", 125)),
+            portions = listOf(g("1 handful", 60), g("1 bowl", 125)),
         ),
         bf(
             "Mixed berries (frozen)", 42, 0.9, 8.0, 0.4, sugar = 6.5, fiber = 3.5, serving = 125,
             micros = m(
                 "vitaminC" to mg(25.0), "vitaminK" to ug(10.0), "potassium" to mg(130.0),
             ),
-            portions = listOf(g("1 Handvoll", 60), g("1 Schale", 125), g("Smoothie-Portion", 150)),
+            portions = listOf(g("1 handful", 60), g("1 bowl", 125), g("smoothie portion", 150)),
         ),
         bf(
             "Dates (dried)", 282, 2.5, 64.0, 0.4, sugar = 63.0, fiber = 8.0, serving = 24,
@@ -137,7 +137,7 @@ object BasicFoods {
                 "potassium" to mg(656.0), "magnesium" to mg(43.0), "iron" to mg(1.0),
                 "vitaminB6" to mg(0.16),
             ),
-            portions = listOf(g("1 Dattel", 8), g("3 Datteln", 24), g("5 Datteln", 40)),
+            portions = listOf(g("1 date", 8), g("3 dates", 24), g("5 dates", 40)),
         ),
         // ── Vegetables ──────────────────────────────────────────────
         bf(
@@ -211,21 +211,21 @@ object BasicFoods {
                 "vitaminB9" to ug(311.0), "vitaminK" to ug(26.7), "vitaminC" to mg(6.1),
                 "magnesium" to mg(64.0), "iron" to mg(2.3), "potassium" to mg(436.0),
             ),
-            portions = listOf(g("kl. Schale", 60), g("1 Schale", 100), g("gr. Schale", 150)),
+            portions = listOf(g("small bowl", 60), g("1 bowl", 100), g("large bowl", 150)),
         ),
         bf(
             "Olives", 145, 1.0, 3.8, 15.0, sugar = 0.5, sat = 2.0, salt = 3.5, fiber = 3.3, serving = 40,
             micros = m(
                 "vitaminE" to mg(3.8), "calcium" to mg(52.0), "monounsaturated" to 11.0,
             ),
-            portions = listOf(g("5 Stück", 20), g("10 Stück", 40), g("kl. Schale", 60)),
+            portions = listOf(g("5 pieces", 20), g("10 pieces", 40), g("small bowl", 60)),
         ),
         bf(
             "Corn (canned)", 81, 2.9, 14.0, 1.2, sugar = 3.0, salt = 0.5, fiber = 2.8, serving = 140,
             micros = m(
                 "vitaminB9" to ug(42.0), "vitaminC" to mg(5.0), "potassium" to mg(200.0),
             ),
-            portions = listOf(g("2 EL", 40), g("halbe Dose", 70), g("1 Dose", 140)),
+            portions = listOf(g("2 tbsp", 40), g("half a can", 70), g("1 can", 140)),
         ),
         bf(
             "Peas (frozen)", 78, 5.2, 13.5, 0.4, sugar = 5.0, fiber = 4.5, serving = 150,
@@ -233,7 +233,7 @@ object BasicFoods {
                 "vitaminC" to mg(18.0), "vitaminB1" to mg(0.26), "vitaminB9" to ug(53.0),
                 "vitaminK" to ug(25.0), "iron" to mg(1.5),
             ),
-            portions = listOf(g("2 EL", 50), g("Beilage", 150)),
+            portions = listOf(g("2 tbsp", 50), g("side", 150)),
         ),
         // ── Staples & grains ────────────────────────────────────────
         bf(
@@ -305,58 +305,58 @@ object BasicFoods {
                 "iron" to mg(2.0), "magnesium" to mg(40.0), "zinc" to mg(1.2),
                 "vitaminB1" to mg(0.18),
             ),
-            portions = listOf(g("1 Scheibe", 45), g("2 Scheiben", 90)),
+            portions = listOf(g("1 slice", 45), g("2 slices", 90)),
         ),
         bf(
             "Multigrain sandwich bread", 250, 9.5, 42.0, 4.5, sugar = 4.5, sat = 0.7, salt = 1.1, fiber = 5.5, serving = 35,
             micros = m(
                 "iron" to mg(2.2), "magnesium" to mg(55.0), "zinc" to mg(1.3),
             ),
-            portions = listOf(g("1 Scheibe", 35), g("2 Scheiben", 70)),
+            portions = listOf(g("1 slice", 35), g("2 slices", 70)),
         ),
         bf(
             "Cheese roll", 300, 11.0, 44.0, 9.0, sugar = 2.5, sat = 4.5, salt = 1.4, fiber = 2.5, serving = 80,
             micros = m("calcium" to mg(180.0), "iron" to mg(1.1)),
-            portions = listOf(g("1 Stück", 80), g("halbes Stück", 40)),
+            portions = listOf(g("1 piece", 80), g("half piece", 40)),
         ),
         bf(
             "Pretzel stick (Laugenstange)", 245, 8.0, 48.0, 2.5, sugar = 1.5, sat = 0.5, salt = 2.2, fiber = 2.5, serving = 75,
             micros = m("iron" to mg(1.2), "vitaminB1" to mg(0.15)),
-            portions = listOf(g("1 Stück", 75), g("halbe Stange", 38)),
+            portions = listOf(g("1 piece", 75), g("half stick", 38)),
         ),
         bf(
             "Tortilla wrap", 300, 8.0, 50.0, 7.0, sugar = 2.5, sat = 3.0, salt = 1.3, fiber = 2.8, serving = 65,
             micros = m("iron" to mg(1.8), "vitaminB1" to mg(0.2)),
-            portions = listOf(g("1 Wrap groß", 65), g("1 Wrap klein", 40)),
+            portions = listOf(g("1 wrap (large)", 65), g("1 wrap (small)", 40)),
         ),
         bf(
             "Bagel", 260, 10.0, 50.0, 1.7, sugar = 6.0, sat = 0.4, salt = 1.2, fiber = 2.3, serving = 85,
             micros = m("iron" to mg(1.5), "vitaminB3" to mg(2.5)),
-            portions = listOf(g("1 Stück", 85), g("halber Bagel", 43)),
+            portions = listOf(g("1 piece", 85), g("half bagel", 43)),
         ),
         bf(
             "Crispbread (Knäcke)", 350, 10.0, 60.0, 1.5, sugar = 1.5, sat = 0.3, salt = 1.0, fiber = 16.0, serving = 20,
             micros = m(
                 "iron" to mg(3.5), "magnesium" to mg(100.0), "zinc" to mg(2.5),
             ),
-            portions = listOf(g("1 Scheibe", 10), g("2 Scheiben", 20), g("3 Scheiben", 30)),
+            portions = listOf(g("1 slice", 10), g("2 slices", 20), g("3 slices", 30)),
         ),
         bf(
             "Rice waffle", 390, 8.0, 80.0, 3.0, sugar = 0.8, sat = 0.6, salt = 0.4, fiber = 3.5, serving = 16,
             micros = m("magnesium" to mg(130.0), "phosphorus" to mg(360.0)),
-            portions = listOf(g("1 Stück", 8), g("2 Stück", 16), g("4 Stück", 32)),
+            portions = listOf(g("1 piece", 8), g("2 pieces", 16), g("4 pieces", 32)),
         ),
         bf(
             "Rusk (Zwieback)", 395, 10.0, 73.0, 5.5, sugar = 8.0, sat = 2.5, salt = 0.5, fiber = 3.0, serving = 20,
             micros = m("iron" to mg(1.0), "vitaminB1" to mg(0.15)),
-            portions = listOf(g("1 Scheibe", 10), g("2 Scheiben", 20)),
+            portions = listOf(g("1 slice", 10), g("2 slices", 20)),
         ),
         bf(
             "Couscous (cooked)", 112, 3.8, 23.0, 0.2, sugar = 0.1, fiber = 1.4, serving = 200,
             micros = m(
                 "magnesium" to mg(8.0), "potassium" to mg(58.0), "vitaminB3" to mg(1.0),
             ),
-            portions = listOf(g("kl. Teller", 150), g("Teller", 250)),
+            portions = listOf(g("small plate", 150), g("plate", 250)),
         ),
         bf(
             "Quinoa (cooked)", 120, 4.4, 21.3, 1.9, sugar = 0.9, sat = 0.2, fiber = 2.8, serving = 200,
@@ -364,28 +364,28 @@ object BasicFoods {
                 "magnesium" to mg(64.0), "iron" to mg(1.5), "vitaminB9" to ug(42.0),
                 "zinc" to mg(1.1), "potassium" to mg(172.0),
             ),
-            portions = listOf(g("kl. Teller", 150), g("Teller", 250)),
+            portions = listOf(g("small plate", 150), g("plate", 250)),
         ),
         bf(
             "Bulgur (cooked)", 83, 3.1, 18.6, 0.2, sugar = 0.1, fiber = 4.5, serving = 200,
             micros = m(
                 "magnesium" to mg(32.0), "iron" to mg(1.0), "potassium" to mg(68.0),
             ),
-            portions = listOf(g("kl. Teller", 150), g("Teller", 250)),
+            portions = listOf(g("small plate", 150), g("plate", 250)),
         ),
         bf(
-            "Müsli (crunchy)", 455, 9.0, 62.0, 17.0, sugar = 20.0, sat = 5.5, salt = 0.3, fiber = 6.5, serving = 60,
+            "Muesli (crunchy)", 455, 9.0, 62.0, 17.0, sugar = 20.0, sat = 5.5, salt = 0.3, fiber = 6.5, serving = 60,
             micros = m(
                 "magnesium" to mg(90.0), "iron" to mg(3.0), "vitaminB1" to mg(0.3),
             ),
-            portions = listOf(g("kl. Schale", 40), g("Schale", 60), g("gr. Schale", 80)),
+            portions = listOf(g("small bowl", 40), g("bowl", 60), g("large bowl", 80)),
         ),
         bf(
             "Cornflakes", 378, 7.5, 84.0, 0.9, sugar = 8.0, sat = 0.2, salt = 1.3, fiber = 3.0, serving = 40,
             micros = m(
                 "iron" to mg(8.0), "vitaminB3" to mg(10.0), "vitaminB6" to mg(1.0),
             ),
-            portions = listOf(g("kl. Schale", 30), g("Schale", 50)),
+            portions = listOf(g("small bowl", 30), g("bowl", 50)),
         ),
         // ── Protein ─────────────────────────────────────────────────
         bf(
@@ -485,14 +485,14 @@ object BasicFoods {
                 "calcium" to mg(83.0), "vitaminB12" to ug(0.4), "vitaminB2" to mg(0.16),
                 "phosphorus" to mg(159.0),
             ),
-            portions = listOf(g("1 EL", 30), g("halber Becher", 100), g("1 Becher", 200)),
+            portions = listOf(g("1 tbsp", 30), g("half tub", 100), g("1 tub", 200)),
         ),
         bf(
             "Greek yogurt (10%)", 121, 4.6, 3.9, 10.0, sugar = 3.9, sat = 6.7, salt = 0.1, serving = 150,
             micros = m(
                 "calcium" to mg(110.0), "vitaminB12" to ug(0.4), "vitaminB2" to mg(0.2),
             ),
-            portions = listOf(g("1 EL", 30), g("1 Becher", 150), g("Schale", 200)),
+            portions = listOf(g("1 tbsp", 30), g("1 tub", 150), g("bowl", 200)),
         ),
         bf(
             "Turkey breast", 147, 30.0, 0.0, 2.1, sat = 0.6, salt = 0.2, serving = 150,
@@ -500,7 +500,7 @@ object BasicFoods {
                 "vitaminB3" to mg(11.8), "vitaminB6" to mg(0.8), "vitaminB12" to ug(0.4),
                 "phosphorus" to mg(223.0), "zinc" to mg(1.7),
             ),
-            portions = listOf(g("kl. Portion", 100), g("1 Portion", 150), g("gr. Portion", 200)),
+            portions = listOf(g("small portion", 100), g("1 portion", 150), g("large portion", 200)),
         ),
         bf(
             "Beef (lean)", 175, 30.0, 0.0, 5.4, sat = 1.9, salt = 0.2, serving = 150,
@@ -508,7 +508,7 @@ object BasicFoods {
                 "vitaminB12" to ug(2.5), "zinc" to mg(4.7), "iron" to mg(2.5),
                 "vitaminB3" to mg(6.0), "phosphorus" to mg(210.0),
             ),
-            portions = listOf(g("kl. Steak", 130), g("1 Steak", 180), g("1 Portion", 150)),
+            portions = listOf(g("small steak", 130), g("1 steak", 180), g("1 portion", 150)),
         ),
         bf(
             "Shrimp", 99, 23.8, 0.2, 0.3, sat = 0.1, salt = 0.4, serving = 100,
@@ -516,24 +516,24 @@ object BasicFoods {
                 "vitaminB12" to ug(1.7), "zinc" to mg(1.6), "phosphorus" to mg(244.0),
                 "omega3" to 0.3,
             ),
-            portions = listOf(g("kl. Portion", 60), g("1 Portion", 100), g("gr. Portion", 150)),
+            portions = listOf(g("small portion", 60), g("1 portion", 100), g("large portion", 150)),
         ),
         bf(
             "Smoked salmon", 180, 21.0, 0.5, 10.5, sugar = 0.5, sat = 2.0, salt = 3.0, serving = 50,
             micros = m(
                 "vitaminD" to ug(8.0), "vitaminB12" to ug(3.0), "omega3" to 1.8,
             ),
-            portions = listOf(g("1 Scheibe", 25), g("2 Scheiben", 50), g("1 Packung", 100)),
+            portions = listOf(g("1 slice", 25), g("2 slices", 50), g("1 pack", 100)),
         ),
         bf(
             "Protein bar (generic)", 380, 32.0, 34.0, 12.0, sugar = 15.0, sat = 6.0, salt = 0.4, fiber = 4.0, serving = 55,
             micros = m("calcium" to mg(200.0), "magnesium" to mg(60.0)),
-            portions = listOf(g("1 Riegel", 55), g("kl. Riegel", 35)),
+            portions = listOf(g("1 bar", 55), g("small bar", 35)),
         ),
         bf(
             "Protein pudding", 68, 10.0, 4.5, 1.4, sugar = 3.9, sat = 0.9, salt = 0.2, serving = 200,
             micros = m("calcium" to mg(130.0), "vitaminB12" to ug(0.3)),
-            portions = listOf(g("1 Becher", 200), g("halber Becher", 100)),
+            portions = listOf(g("1 tub", 200), g("half tub", 100)),
         ),
         bf(
             "Tempeh", 192, 20.3, 7.6, 10.8, sat = 2.5, fiber = 6.0, serving = 100,
@@ -541,7 +541,7 @@ object BasicFoods {
                 "iron" to mg(2.7), "magnesium" to mg(81.0), "calcium" to mg(111.0),
                 "vitaminB2" to mg(0.36), "phosphorus" to mg(266.0),
             ),
-            portions = listOf(g("1 Scheibe", 30), g("halber Block", 100), g("1 Block", 200)),
+            portions = listOf(g("1 slice", 30), g("half block", 100), g("1 block", 200)),
         ),
         bf(
             "Cooked ham", 112, 20.0, 1.0, 3.3, sugar = 1.0, sat = 1.2, salt = 2.4, serving = 50,
@@ -549,7 +549,7 @@ object BasicFoods {
                 "vitaminB1" to mg(0.6), "vitaminB12" to ug(0.5), "zinc" to mg(1.6),
                 "phosphorus" to mg(230.0),
             ),
-            portions = listOf(g("1 Scheibe", 25), g("2 Scheiben", 50), g("4 Scheiben", 100)),
+            portions = listOf(g("1 slice", 25), g("2 slices", 50), g("4 slices", 100)),
         ),
         bf(
             "Salami", 375, 20.0, 1.0, 32.0, sugar = 0.5, sat = 12.5, salt = 3.8, serving = 40,
@@ -557,7 +557,7 @@ object BasicFoods {
                 "vitaminB12" to ug(1.5), "zinc" to mg(2.5), "vitaminB1" to mg(0.3),
                 "iron" to mg(1.3),
             ),
-            portions = listOf(g("1 Scheibe", 8), g("5 Scheiben", 40), g("10 Scheiben", 80)),
+            portions = listOf(g("1 slice", 8), g("5 slices", 40), g("10 slices", 80)),
         ),
         bf(
             "Tuna in oil (drained)", 198, 29.0, 0.0, 8.2, sat = 1.5, salt = 1.0, serving = 140,
@@ -565,7 +565,7 @@ object BasicFoods {
                 "vitaminB12" to ug(2.2), "vitaminB3" to mg(12.4), "vitaminD" to ug(2.0),
                 "phosphorus" to mg(264.0),
             ),
-            portions = listOf(g("halbe Dose", 70), g("1 Dose", 140)),
+            portions = listOf(g("half a can", 70), g("1 can", 140)),
         ),
         // ── Fats · nuts · spreads ───────────────────────────────────
         bf(
@@ -607,72 +607,72 @@ object BasicFoods {
         bf(
             "Ketchup", 102, 1.2, 23.0, 0.2, sugar = 22.0, salt = 1.8, serving = 15,
             micros = m("potassium" to mg(281.0)),
-            portions = listOf(g("1 TL", 5), g("1 EL", 15), g("2 EL", 30)),
+            portions = listOf(g("1 tsp", 5), g("1 tbsp", 15), g("2 tbsp", 30)),
         ),
         bf(
             "Mayonnaise", 710, 1.1, 1.5, 78.0, sugar = 1.5, sat = 6.5, salt = 1.0, serving = 15,
             micros = m("vitaminE" to mg(5.0), "vitaminK" to ug(40.0)),
-            portions = listOf(g("1 TL", 5), g("1 EL", 15), g("2 EL", 30)),
+            portions = listOf(g("1 tsp", 5), g("1 tbsp", 15), g("2 tbsp", 30)),
         ),
         bf(
             "Mustard", 88, 5.7, 5.8, 4.4, sugar = 2.9, sat = 0.3, salt = 2.5, serving = 10,
-            portions = listOf(g("1 TL", 5), g("1 EL", 15)),
+            portions = listOf(g("1 tsp", 5), g("1 tbsp", 15)),
         ),
         bf(
             "Tomato sauce (basic)", 55, 1.4, 7.0, 2.2, sugar = 5.5, sat = 0.3, salt = 0.9, fiber = 1.5, serving = 150,
             micros = m(
                 "vitaminC" to mg(7.0), "vitaminA" to ug(22.0), "potassium" to mg(300.0),
             ),
-            portions = listOf(g("2 EL", 40), g("Portion", 150), g("halbes Glas", 200)),
+            portions = listOf(g("2 tbsp", 40), g("serving", 150), g("half glass", 200)),
         ),
         bf(
             "Pesto (green)", 450, 5.0, 7.0, 44.0, sugar = 3.0, sat = 6.5, salt = 2.8, fiber = 1.5, serving = 30,
             micros = m("vitaminE" to mg(4.0), "calcium" to mg(120.0)),
-            portions = listOf(g("1 EL", 15), g("2 EL", 30), g("Portion Pasta", 50)),
+            portions = listOf(g("1 tbsp", 15), g("2 tbsp", 30), g("pasta portion", 50)),
         ),
         bf(
             "Soy sauce", 53, 8.0, 5.0, 0.0, sugar = 0.5, salt = 14.0, serving = 15,
-            portions = listOf(ml("1 TL", 5), ml("1 EL", 15)),
+            portions = listOf(ml("1 tsp", 5), ml("1 tbsp", 15)),
         ),
         bf(
             "Cream 30%", 292, 2.4, 3.2, 30.0, sugar = 3.2, sat = 19.5, salt = 0.1, serving = 30,
             micros = m("vitaminA" to ug(290.0), "calcium" to mg(80.0)),
-            portions = listOf(ml("1 EL", 15), ml("1 Schuss", 30), ml("1 Becher", 200)),
+            portions = listOf(ml("1 tbsp", 15), ml("1 splash", 30), ml("1 tub", 200)),
         ),
         bf(
             "Coconut milk", 185, 1.8, 3.0, 18.5, sugar = 2.5, sat = 16.5, salt = 0.1, serving = 100,
             micros = m(
                 "iron" to mg(1.6), "magnesium" to mg(37.0), "potassium" to mg(220.0),
             ),
-            portions = listOf(ml("2 EL", 30), ml("halbe Dose", 200), ml("1 Dose", 400)),
+            portions = listOf(ml("2 tbsp", 30), ml("half a can", 200), ml("1 can", 400)),
         ),
         bf(
             "Vegetable broth (prepared)", 4, 0.2, 0.5, 0.1, salt = 1.1, serving = 250,
-            portions = listOf(ml("1 Tasse", 250), ml("1 Teller", 300), ml("0,5 l", 500)),
+            portions = listOf(ml("1 cup", 250), ml("1 plate", 300), ml("0.5 l", 500)),
         ),
         bf(
             "Gravy", 60, 2.0, 5.0, 3.5, sugar = 1.0, sat = 1.5, salt = 1.2, serving = 80,
-            portions = listOf(ml("2 EL", 30), ml("1 Kelle", 80), ml("2 Kellen", 160)),
+            portions = listOf(ml("2 tbsp", 30), ml("1 ladle", 80), ml("2 ladles", 160)),
             approx = true,
         ),
         bf(
             "Tzatziki", 110, 3.5, 3.5, 9.0, sugar = 2.5, sat = 5.5, salt = 0.8, serving = 50,
             micros = m("calcium" to mg(90.0)),
-            portions = listOf(g("1 EL", 25), g("2 EL", 50), g("halber Becher", 100)),
+            portions = listOf(g("1 tbsp", 25), g("2 tbsp", 50), g("half tub", 100)),
         ),
         bf(
             "Hummus", 280, 7.0, 12.0, 22.0, sugar = 1.0, sat = 2.5, salt = 1.2, fiber = 5.5, serving = 50,
             micros = m(
                 "iron" to mg(2.4), "magnesium" to mg(70.0), "vitaminB9" to ug(80.0),
             ),
-            portions = listOf(g("1 EL", 25), g("2 EL", 50), g("halber Becher", 100)),
+            portions = listOf(g("1 tbsp", 25), g("2 tbsp", 50), g("half tub", 100)),
         ),
         bf(
             "Guacamole", 150, 1.8, 6.0, 13.5, sugar = 1.5, sat = 2.0, salt = 0.8, fiber = 4.5, serving = 50,
             micros = m(
                 "potassium" to mg(400.0), "vitaminE" to mg(1.7), "vitaminB9" to ug(60.0),
             ),
-            portions = listOf(g("1 EL", 25), g("2 EL", 50), g("halber Becher", 100)),
+            portions = listOf(g("1 tbsp", 25), g("2 tbsp", 50), g("half tub", 100)),
         ),
         // ── Canteen classics ────────────────────────────────────────
         bf(
@@ -727,7 +727,7 @@ object BasicFoods {
         bf(
             "Sushi set (8 pcs)", 150, 6.0, 28.0, 1.5, sugar = 4.5, sat = 0.3, salt = 1.4, fiber = 1.0, serving = 280,
             micros = m("vitaminB12" to ug(0.6), "omega3" to 0.3),
-            portions = listOf(g("6 Stk", 210), g("8 Stk", 280), g("12 Stk", 420)),
+            portions = listOf(g("6 pcs", 210), g("8 pcs", 280), g("12 pcs", 420)),
             approx = true,
         ),
         bf(
@@ -849,54 +849,54 @@ object BasicFoods {
             micros = m(
                 "magnesium" to mg(110.0), "iron" to mg(2.4), "zinc" to mg(2.6),
             ),
-            portions = listOf(g("1 Handvoll", 15), g("kl. Tüte", 50), g("gr. Tüte", 100)),
+            portions = listOf(g("1 handful", 15), g("small bag", 50), g("large bag", 100)),
         ),
         bf(
             "Ice cream scoop (vanilla)", 207, 3.5, 24.0, 11.0, sugar = 21.0, sat = 6.9, salt = 0.2, serving = 75,
             micros = m("calcium" to mg(128.0), "vitaminA" to ug(118.0)),
-            portions = listOf(g("1 Kugel", 75), g("2 Kugeln", 150), g("3 Kugeln", 225)),
+            portions = listOf(g("1 scoop", 75), g("2 scoops", 150), g("3 scoops", 225)),
             approx = true,
         ),
         bf(
             "Apple cake slice", 240, 3.5, 35.0, 9.5, sugar = 22.0, sat = 4.5, salt = 0.3, fiber = 1.8, serving = 120,
-            portions = listOf(g("kl. Stück", 90), g("1 Stück", 120), g("gr. Stück", 150)),
+            portions = listOf(g("small piece", 90), g("1 piece", 120), g("large piece", 150)),
             approx = true,
         ),
         // ── Drinks (alle in ml-Portionen — Kap. 38: Cola nie wieder in Gramm) ──
         bf("Cola", 42, 0.0, 10.6, 0.0, sugar = 10.6, serving = 330,
-            portions = listOf(ml("1 Dose", 330), ml("1 Glas", 250), ml("0,5 l", 500))),
+            portions = listOf(ml("1 can", 330), ml("1 glass", 250), ml("0.5 l", 500))),
         bf("Cola Zero", 1, 0.0, 0.0, 0.0, serving = 330,
-            portions = listOf(ml("1 Dose", 330), ml("1 Glas", 250), ml("0,5 l", 500))),
+            portions = listOf(ml("1 can", 330), ml("1 glass", 250), ml("0.5 l", 500))),
         bf(
             "Apple juice", 46, 0.1, 11.3, 0.1, sugar = 9.6, serving = 200,
             micros = m("vitaminC" to mg(38.5), "potassium" to mg(101.0)),
-            portions = listOf(ml("1 Glas", 200), ml("1 gr. Glas", 300)),
+            portions = listOf(ml("1 glass", 200), ml("1 large glass", 300)),
         ),
         bf(
             "Apple spritzer", 25, 0.1, 6.0, 0.0, sugar = 5.2, serving = 300,
             micros = m("vitaminC" to mg(20.0), "potassium" to mg(55.0)),
-            portions = listOf(ml("1 Glas", 300), ml("0,5 l", 500)),
+            portions = listOf(ml("1 glass", 300), ml("0.5 l", 500)),
         ),
         bf(
             "Orange juice", 45, 0.7, 10.4, 0.2, sugar = 8.4, serving = 200,
             micros = m("vitaminC" to mg(50.0), "vitaminB9" to ug(30.0), "potassium" to mg(200.0)),
-            portions = listOf(ml("1 Glas", 200), ml("1 gr. Glas", 300)),
+            portions = listOf(ml("1 glass", 200), ml("1 large glass", 300)),
         ),
         bf("Coffee (black)", 2, 0.1, 0.0, 0.0, serving = 200,
             micros = m("potassium" to mg(49.0), "vitaminB3" to mg(0.7)),
-            portions = listOf(ml("1 Tasse", 200), ml("1 Becher", 300), ml("1 Espresso", 30))),
+            portions = listOf(ml("1 cup", 200), ml("1 mug", 300), ml("1 espresso", 30))),
         bf(
             "Tea (unsweetened)", 1, 0.0, 0.2, 0.0, serving = 250,
-            portions = listOf(ml("1 Tasse", 250), ml("1 Kanne", 750)),
+            portions = listOf(ml("1 cup", 250), ml("1 pot", 750)),
         ),
         bf(
             "Cocoa (whole milk)", 78, 3.2, 10.0, 2.8, sugar = 9.6, sat = 1.7, serving = 250,
             micros = m("calcium" to mg(110.0), "potassium" to mg(180.0)),
-            portions = listOf(ml("1 Tasse", 250), ml("1 Becher", 300)),
+            portions = listOf(ml("1 cup", 250), ml("1 mug", 300)),
         ),
         bf(
             "Energy drink", 45, 0.0, 11.0, 0.0, sugar = 11.0, serving = 250,
-            portions = listOf(ml("1 Dose", 250), ml("gr. Dose", 500)),
+            portions = listOf(ml("1 can", 250), ml("large can", 500)),
         ),
         // Milchsorten einzeln — Basis des Getränke-Builders (Kap. 36)
         bf(
@@ -905,55 +905,55 @@ object BasicFoods {
                 "calcium" to mg(120.0), "vitaminB12" to ug(0.45), "vitaminB2" to mg(0.18),
                 "potassium" to mg(150.0), "phosphorus" to mg(93.0), "vitaminD" to ug(0.1),
             ),
-            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+            portions = listOf(ml("1 glass", 200), ml("1 cup", 250), ml("1 splash", 30)),
         ),
         bf(
             "Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, sugar = 4.9, sat = 1.0, serving = 200,
             micros = m("calcium" to mg(122.0), "vitaminB12" to ug(0.4), "potassium" to mg(155.0)),
-            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+            portions = listOf(ml("1 glass", 200), ml("1 cup", 250), ml("1 splash", 30)),
         ),
         bf(
             "Oat drink", 46, 0.8, 6.6, 1.5, sugar = 4.0, serving = 200,
             micros = m("calcium" to mg(120.0)),
-            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+            portions = listOf(ml("1 glass", 200), ml("1 cup", 250), ml("1 splash", 30)),
         ),
         bf(
             "Almond drink (unsweetened)", 13, 0.4, 0.1, 1.1, serving = 200,
             micros = m("calcium" to mg(120.0), "vitaminE" to mg(2.2)),
-            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+            portions = listOf(ml("1 glass", 200), ml("1 cup", 250), ml("1 splash", 30)),
         ),
         bf(
             "Soy drink", 39, 3.0, 2.5, 1.8, sugar = 2.0, serving = 200,
             micros = m("calcium" to mg(120.0), "potassium" to mg(120.0)),
-            portions = listOf(ml("1 Glas", 200), ml("1 Tasse", 250), ml("1 Schuss", 30)),
+            portions = listOf(ml("1 glass", 200), ml("1 cup", 250), ml("1 splash", 30)),
         ),
         bf(
             "Beer (4.9%)", 43, 0.5, 3.6, 0.0, serving = 500,
             micros = m("potassium" to mg(27.0), "vitaminB3" to mg(0.5)),
             alcohol = 3.9,
-            portions = listOf(ml("0,33 l", 330), ml("0,5 l", 500)),
+            portions = listOf(ml("0.33 l", 330), ml("0.5 l", 500)),
         ),
         bf(
             "Beer (alcohol-free)", 25, 0.4, 5.3, 0.0, sugar = 2.9, serving = 500,
             micros = m("potassium" to mg(30.0)),
-            portions = listOf(ml("0,33 l", 330), ml("0,5 l", 500)),
+            portions = listOf(ml("0.33 l", 330), ml("0.5 l", 500)),
         ),
         bf(
             "Wine (red)", 85, 0.1, 2.6, 0.0, sugar = 0.6, serving = 200,
             micros = m("potassium" to mg(127.0), "iron" to mg(0.5)),
             alcohol = 10.6,
-            portions = listOf(ml("1 Glas", 200), ml("1 kl. Glas", 125)),
+            portions = listOf(ml("1 glass", 200), ml("1 small glass", 125)),
         ),
         bf(
             "Wine (white)", 82, 0.1, 2.6, 0.0, sugar = 1.0, serving = 200,
             micros = m("potassium" to mg(71.0)),
             alcohol = 10.3,
-            portions = listOf(ml("1 Glas", 200), ml("1 kl. Glas", 125)),
+            portions = listOf(ml("1 glass", 200), ml("1 small glass", 125)),
         ),
         bf(
             "Vodka (40%)", 231, 0.0, 0.0, 0.0, serving = 40,
             alcohol = 33.4,
-            portions = listOf(ml("1 Shot", 40), ml("Doppelter", 80)),
+            portions = listOf(ml("1 shot", 40), ml("double", 80)),
         ),
     )
 
@@ -1059,7 +1059,7 @@ object BasicFoods {
         "Couscous (cooked)" to listOf("couscous", "cous cous"),
         "Quinoa (cooked)" to listOf("quinoa"),
         "Bulgur (cooked)" to listOf("bulgur"),
-        "Müsli (crunchy)" to listOf("müsli", "knuspermüsli"),
+        "Muesli (crunchy)" to listOf("müsli", "knuspermüsli"),
         "Cornflakes" to listOf("cornflakes", "frühstücksflocken"),
         "Cottage cheese" to listOf("hüttenkäse", "körniger frischkäse"),
         "Greek yogurt (10%)" to listOf("griechischer joghurt", "joghurt griechisch"),

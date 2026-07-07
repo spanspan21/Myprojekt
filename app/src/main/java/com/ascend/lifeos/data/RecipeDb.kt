@@ -53,11 +53,11 @@ object RecipeDb {
                 Ing("Vegetable broth", 4, 0.2, 0.6, 0.1, 400),
             ),
             steps = listOf(
-                "Zwiebel würfeln, in Öl 3 min glasig braten.",
-                "Linsen kurz mitrösten, mit Brühe ablöschen.",
-                "Tomaten, Bohnen, Mais dazu — 20 min köcheln.",
-                "Mit Chili, Kreuzkümmel, Salz kräftig abschmecken.",
-                "Ergibt 4 Portionen — 3 einfrieren, 1 genießen.",
+                "Dice onion, sauté in oil 3 min until translucent.",
+                "Toast lentils briefly, deglaze with broth.",
+                "Add tomatoes, beans, corn — simmer 20 min.",
+                "Season boldly with chili, cumin, salt.",
+                "Makes 4 servings — freeze 3, enjoy 1.",
             ),
         ),
         build(
@@ -70,14 +70,14 @@ object RecipeDb {
                 Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
             ),
             steps = listOf(
-                "Hack in Öl krümelig anbraten, Zwiebel dazu.",
-                "Tomaten + Bohnen zugeben, 25 min köcheln.",
-                "Chili, Paprika, Kakao (1 TL — trust me) abschmecken.",
-                "4 Portionen — perfekt fürs Meal-Prep.",
+                "Brown ground beef crumbly in oil, add onion.",
+                "Add tomatoes + beans, simmer 25 min.",
+                "Season with chili, paprika, cocoa (1 tsp — trust me).",
+                "4 servings — perfect for meal prep.",
             ),
         ),
         build(
-            3L, "Hähnchen-Reis-Brokkoli (Prep)", "main", servings = 4, minutes = 30,
+            3L, "Chicken, Rice & Broccoli (prep)", "main", servings = 4, minutes = 30,
             parts = listOf(
                 Ing("Chicken breast", 165, 31.0, 0.0, 3.6, 600),
                 Ing("Basmati rice (dry)", 350, 7.5, 78.0, 0.6, 300),
@@ -86,10 +86,10 @@ object RecipeDb {
                 Ing("Soy sauce", 53, 5.6, 6.7, 0.1, 40),
             ),
             steps = listOf(
-                "Reis nach Packung kochen.",
-                "Hähnchen würfeln, in Öl 6–8 min braten.",
-                "Brokkoli 5 min dämpfen (bissfest!).",
-                "Mit Sojasauce mischen, auf 4 Boxen verteilen.",
+                "Cook rice per package.",
+                "Dice chicken, fry in oil 6–8 min.",
+                "Steam broccoli 5 min (keep it crisp!).",
+                "Toss with soy sauce, split across 4 boxes.",
             ),
         ),
         build(
@@ -102,9 +102,9 @@ object RecipeDb {
                 Ing("Honey", 304, 0.3, 82.0, 0.0, 10),
             ),
             steps = listOf(
-                "Alles außer Beeren im Glas verrühren.",
-                "Über Nacht in den Kühlschrank.",
-                "Morgens Beeren drauf — fertig ohne Kochen.",
+                "Stir everything except berries in a jar.",
+                "Into the fridge overnight.",
+                "Berries on top in the morning — done, no cooking.",
             ),
         ),
         build(
@@ -116,13 +116,13 @@ object RecipeDb {
                 Ing("Whey protein", 380, 78.0, 8.0, 5.0, 30),
             ),
             steps = listOf(
-                "Alles glatt mixen (Standmixer oder Gabel + Geduld).",
-                "Kleine Pancakes bei mittlerer Hitze je 2 min pro Seite.",
-                "Mit Beeren oder Quark stapeln.",
+                "Blend everything smooth (blender or fork + patience).",
+                "Small pancakes over medium heat, 2 min per side.",
+                "Stack with berries or quark.",
             ),
         ),
         build(
-            6L, "Rührei auf Vollkornbrot", "b", servings = 1, minutes = 10,
+            6L, "Scrambled eggs on whole-grain bread", "b", servings = 1, minutes = 10,
             parts = listOf(
                 Ing("Eggs (3)", 155, 12.6, 1.1, 10.6, 180),
                 Ing("Whole-grain bread", 220, 8.0, 39.0, 2.5, 90),
@@ -130,13 +130,13 @@ object RecipeDb {
                 Ing("Chives", 27, 3.3, 1.6, 0.7, 10),
             ),
             steps = listOf(
-                "Eier verquirlen, salzen.",
-                "In Butter bei niedriger Hitze stocken lassen — langsam rühren.",
-                "Auf getoastetem Brot mit Schnittlauch servieren.",
+                "Whisk eggs, salt them.",
+                "Set in butter over low heat — stir slowly.",
+                "Serve on toasted bread with chives.",
             ),
         ),
         build(
-            7L, "Skyr-Beeren-Bowl", "b", servings = 1, minutes = 5,
+            7L, "Skyr & berry bowl", "b", servings = 1, minutes = 5,
             parts = listOf(
                 Ing("Skyr", 63, 11.0, 4.0, 0.2, 300),
                 Ing("Berries", 40, 0.9, 7.5, 0.3, 150),
@@ -144,12 +144,12 @@ object RecipeDb {
                 Ing("Honey", 304, 0.3, 82.0, 0.0, 10),
             ),
             steps = listOf(
-                "Skyr in die Schüssel, Beeren + Nüsse drauf.",
-                "Honig drüber. Fertig — 40 g Protein in 5 Minuten.",
+                "Skyr in the bowl, berries + nuts on top.",
+                "Honey over it. Done — 40 g protein in 5 minutes.",
             ),
         ),
         build(
-            8L, "Pasta Bolognese (mager)", "main", servings = 3, minutes = 30,
+            8L, "Pasta Bolognese (lean)", "main", servings = 3, minutes = 30,
             parts = listOf(
                 Ing("Whole-grain pasta (dry)", 350, 13.0, 66.0, 2.5, 300),
                 Ing("Lean ground beef", 214, 27.0, 0.0, 12.0, 400),
@@ -158,13 +158,13 @@ object RecipeDb {
                 Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
             ),
             steps = listOf(
-                "Hack + Zwiebel scharf anbraten.",
-                "Tomaten dazu, 15 min köcheln, kräftig würzen.",
-                "Pasta al dente kochen, mischen — 3 Portionen.",
+                "Sear ground beef + onion hard.",
+                "Add tomatoes, simmer 15 min, season well.",
+                "Cook pasta al dente, combine — 3 servings.",
             ),
         ),
         build(
-            9L, "Ofen-Lachs mit Süßkartoffel", "main", servings = 2, minutes = 35,
+            9L, "Oven salmon with sweet potato", "main", servings = 2, minutes = 35,
             parts = listOf(
                 Ing("Salmon fillet", 208, 20.0, 0.0, 13.0, 300),
                 Ing("Sweet potatoes", 86, 1.6, 20.0, 0.1, 500),
@@ -172,13 +172,13 @@ object RecipeDb {
                 Ing("Olive oil", 884, 0.0, 0.0, 100.0, 15),
             ),
             steps = listOf(
-                "Ofen 200 °C. Süßkartoffel-Spalten mit Öl 25 min rösten.",
-                "Lachs + Brokkoli nach 10 min aufs Blech.",
-                "Mit Zitrone und Salz servieren.",
+                "Oven 200 °C. Roast sweet-potato wedges with oil 25 min.",
+                "Salmon + broccoli onto the tray after 10 min.",
+                "Serve with lemon and salt.",
             ),
         ),
         build(
-            10L, "Puten-Curry mit Reis", "main", servings = 3, minutes = 30,
+            10L, "Turkey curry with rice", "main", servings = 3, minutes = 30,
             parts = listOf(
                 Ing("Turkey breast", 111, 24.0, 0.0, 1.0, 450),
                 Ing("Basmati rice (dry)", 350, 7.5, 78.0, 0.6, 225),
@@ -187,13 +187,13 @@ object RecipeDb {
                 Ing("Curry paste", 120, 2.0, 10.0, 8.0, 40),
             ),
             steps = listOf(
-                "Pute anbraten, Paprika dazu.",
-                "Currypaste kurz rösten, Kokosmilch angießen.",
-                "10 min köcheln; Reis separat kochen.",
+                "Sear turkey, add bell pepper.",
+                "Toast curry paste briefly, pour in coconut milk.",
+                "Simmer 10 min; cook rice separately.",
             ),
         ),
         build(
-            11L, "Gnocchi-Zucchini-Pfanne", "main", servings = 2, minutes = 20,
+            11L, "Gnocchi & zucchini pan", "main", servings = 2, minutes = 20,
             parts = listOf(
                 Ing("Gnocchi", 160, 4.0, 33.0, 0.5, 500),
                 Ing("Zucchini", 19, 1.6, 2.2, 0.4, 300),
@@ -202,13 +202,13 @@ object RecipeDb {
                 Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
             ),
             steps = listOf(
-                "Gnocchi in Öl goldbraun braten (kein Vorkochen!).",
-                "Zucchini + Tomaten 5 min mitbraten.",
-                "Frischkäse unterrühren, pfeffern.",
+                "Fry gnocchi golden in oil (no pre-boiling!).",
+                "Add zucchini + tomatoes, fry 5 min.",
+                "Stir in cream cheese, add pepper.",
             ),
         ),
         build(
-            12L, "Linsen-Dal", "main", servings = 3, minutes = 30,
+            12L, "Lentil dal", "main", servings = 3, minutes = 30,
             parts = listOf(
                 Ing("Red lentils (dry)", 352, 24.0, 56.0, 1.8, 250),
                 Ing("Coconut milk", 185, 1.7, 2.8, 19.0, 200),
@@ -217,13 +217,13 @@ object RecipeDb {
                 Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
             ),
             steps = listOf(
-                "Zwiebel mit Curry/Ingwer anschwitzen.",
-                "Linsen, Tomaten, Kokosmilch + 300 ml Wasser dazu.",
-                "15 min köcheln bis cremig; mit Salz + Limette abschmecken.",
+                "Sweat onion with curry/ginger.",
+                "Add lentils, tomatoes, coconut milk + 300 ml water.",
+                "Simmer 15 min until creamy; season with salt + lime.",
             ),
         ),
         build(
-            13L, "Thunfisch-Wrap", "main", servings = 1, minutes = 10,
+            13L, "Tuna wrap", "main", servings = 1, minutes = 10,
             parts = listOf(
                 Ing("Whole-grain wrap", 310, 9.0, 50.0, 8.0, 65),
                 Ing("Tuna (in water)", 116, 26.0, 0.0, 1.0, 140),
@@ -231,13 +231,13 @@ object RecipeDb {
                 Ing("Mixed salad", 17, 1.2, 2.2, 0.3, 80),
             ),
             steps = listOf(
-                "Thunfisch mit Dressing mischen.",
-                "Wrap belegen, Salat dazu, fest rollen.",
-                "Halbieren — fertig für unterwegs.",
+                "Mix tuna with dressing.",
+                "Fill the wrap, add salad, roll tight.",
+                "Halve — ready to go.",
             ),
         ),
         build(
-            14L, "Quark-Kartoffeln mit Leinöl", "main", servings = 1, minutes = 25,
+            14L, "Quark potatoes with linseed oil", "main", servings = 1, minutes = 25,
             parts = listOf(
                 Ing("Potatoes", 86, 1.9, 20.0, 0.1, 400),
                 Ing("Low-fat quark", 67, 12.0, 4.0, 0.3, 250),
@@ -245,9 +245,9 @@ object RecipeDb {
                 Ing("Chives", 27, 3.3, 1.6, 0.7, 10),
             ),
             steps = listOf(
-                "Kartoffeln als Pellkartoffeln 20 min kochen.",
-                "Quark mit Leinöl, Salz, Schnittlauch verrühren.",
-                "Omas Protein-Klassiker. Unschlagbar.",
+                "Boil potatoes in their skins 20 min.",
+                "Stir quark with linseed oil, salt, chives.",
+                "Grandma's protein classic. Unbeatable.",
             ),
         ),
     )

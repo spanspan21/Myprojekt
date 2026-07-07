@@ -100,9 +100,10 @@ object PlanGenerator {
             "PLAYOFF" -> 0.55   // playoffs: activation only
             else -> 1.0
         }
-        // RPE autoregulation (masterplan §3.4): a ground-out last session takes
-        // one notch of volume off the coming week — the log talks back to the plan.
-        val strainScale = if (highStrain) 0.85 else 1.0
+        // FIXED plan: a brutal last session does NOT shave the next one. You get
+        // drilled, not coddled — the log informs load tracking, it doesn't lower
+        // the bar. (highStrain stays in the signature for callers/telemetry.)
+        val strainScale = 1.0
         // Detraining re-entry (Ideensammlung): strength survives a break better
         // than skill/work capacity. 2-4 weeks off → 85%, ≥4 weeks → 70% — never
         // back at the old top, never back at zero.
@@ -167,30 +168,20 @@ object PlanGenerator {
                 .mapIndexed { i, s -> s.copy(index = i) }
         }
 
-        // Recovery tiers apply to the NEXT session (index 0) — the plan
-        // regenerates every day, so later cards stay shown at full volume.
-        val r = readiness
-        if (sessions.isNotEmpty()) {
-            val head = sessions.first()
-            val adapted = when {
-                r != null && r < 50 && !isDeload -> ctx.activeRecovery(0)
-                r != null && r < 75 -> ctx.trimForRecovery(head, r)
-                gameDayNextDay -> ctx.dropFinisher(head, "game tomorrow")
-                else -> null
-            }
-            if (adapted != null) sessions = listOf(adapted) + sessions.drop(1)
-        }
+        // FIXED plan: no daily readiness bail-outs. The program does not shrink
+        // because you feel tired — you show up and hit the prescribed work. The
+        // only planned reductions are the periodised deload and the hockey season
+        // phase, which exist to make you progress FASTER, not to hand you an easy
+        // day. Discipline over comfort.
 
         val note = when {
-            isDeload -> "Deload week (${trainWeek + 1}/5) — volume cut, keep everything crisp."
-            examWeek -> "Exam week — volume trimmed 30%, focus stays sharp for school."
-            season == "IN" -> "In-season — maintain strength, stay fresh for the ice."
+            isDeload -> "Deload week (${trainWeek + 1}/5) — the programmed step back that lets you push harder next block."
+            examWeek -> "Exam week — volume trimmed 30% so school gets your focus. Still show up."
+            season == "IN" -> "In-season — maintain strength, stay sharp for the ice."
             season == "PLAYOFF" -> "Playoffs — activation only. The games are the training."
             season == "PRE" -> "Pre-season — explosive quality over volume."
-            r != null && r < 50 -> "Recovery $r — active recovery today. The gains happen when you rest."
-            r != null && r < 75 -> "Recovery $r — finisher parked, one lift trimmed today."
-            trainWeek > 0 -> "Build week ${trainWeek + 1}/5 — volume ${if (volumeScale >= 1.0) "+" else ""}${Math.round(volumeScale * 100 - 100).toInt()}%."
-            else -> null
+            trainWeek > 0 -> "Build week ${trainWeek + 1}/5 — volume ${if (volumeScale >= 1.0) "+" else ""}${Math.round(volumeScale * 100 - 100).toInt()}%. Chase every rep."
+            else -> "Full send — hit every prescribed set at target effort."
         }
         return WeekPlan(sessions, note)
     }
@@ -206,7 +197,18 @@ object PlanGenerator {
         val dao = CalendarRepo.dao(ctx)
         val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.plusDays(6).toEpochDay())
 
-        data class DayInfo(val day: LocalDate, val hockey: Boolean, val slots: List<com.ascend.lifeos.data.calendar.FreeSlot>)
+        // Morning-first scheduling: the user trains before school. A morning
+        // session must finish early enough to shower + prep (~30 min) and make
+        // the ~30 min commute — so it ends PRE_SCHOOL_BUFFER before the first
+        // obligation, starting no earlier than EARLY_WAKE.
+        val earlyWake = 5 * 60 + 30            // 05:30 — up and at it
+        val preSchoolBuffer = 60               // 30 min shower/prep + 30 min commute
+
+        data class DayInfo(
+            val day: LocalDate, val hockey: Boolean,
+            val slots: List<com.ascend.lifeos.data.calendar.FreeSlot>,
+            val firstObligationMin: Int?,      // earliest non-training timed block (school/work/appt)
+        )
         val infos = days.map { d ->
             val tl = CalendarRepo.timelineFor(ctx, d, entities)
             val hockey = tl.blocks.any { it.type == EventType.HOCKEY } ||
@@ -215,7 +217,10 @@ object PlanGenerator {
             val nowMin = if (d == today) java.time.LocalTime.now().let { it.hour * 60 + it.minute } else 0
             val slots = tl.freeSlots
                 .map { s -> if (s.startMin < nowMin) com.ascend.lifeos.data.calendar.FreeSlot(nowMin, s.endMin) else s }
-            DayInfo(d, hockey, slots)
+            val firstObligation = tl.blocks
+                .filter { !it.allDay && it.type != EventType.TRAINING }
+                .minByOrNull { it.startMin }?.startMin
+            DayInfo(d, hockey, slots, firstObligation)
         }
         val hockeyDays = infos.filter { it.hockey }.map { it.day }.toSet()
 
@@ -234,10 +239,19 @@ object PlanGenerator {
             } ?: infos.firstOrNull { it.day !in used && !it.hockey && fits(it) }
             ?: continue
 
-            // prefer an afternoon slot (15:00+) when available
+            // Try the morning-before-school window first (before EARLY_WAKE is
+            // free by definition — firstObligation is the earliest booked block).
+            val nowMin = if (candidate.day == today) java.time.LocalTime.now().let { it.hour * 60 + it.minute } else 0
+            val morningStart = maxOf(earlyWake, nowMin)
+            val morningLatestEnd = candidate.firstObligationMin?.minus(preSchoolBuffer) ?: (11 * 60)
             val fitting = candidate.slots.filter { it.durationMin >= needMin }
-            val slot = fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.first()
-            out.add(Placement(session, candidate.day, slot.startMin))
+            val startMin = if (morningLatestEnd - morningStart >= needMin) {
+                morningStart                                    // train first thing, before school
+            } else {
+                // no morning room → earliest free slot of the day (evening after school)
+                (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.first()).startMin
+            }
+            out.add(Placement(session, candidate.day, startMin))
             used.add(candidate.day)
         }
         return out
@@ -851,43 +865,7 @@ object PlanGenerator {
 
         // ── recovery adaptations (applied to the next session) ───────────────
 
-        /** Recovery < 50: skill technique + mobility only. */
-        fun activeRecovery(index: Int): PlannedSession {
-            val used = HashSet<String>()
-            val technique = skillBlock(
-                setOf(SkillArea.BALANCE, SkillArea.PUSH, SkillArea.PULL, SkillArea.CORE),
-                minutes = 16, used = used,
-            ).take(2).map {
-                it.copy(
-                    sets = 2,
-                    holdSec = it.holdSec?.let { h -> (h * 0.7).toInt().coerceAtLeast(6) },
-                    restSec = 90,
-                    note = "Technique only — crisp, nowhere near failure",
-                )
-            }
-            val mobility = cooldownBlock(used, lower = true)
-                .map { m -> m.copy(holdSec = if (m.holdSec != null) 60 else null) }
-            return assemble(
-                index, "Active Recovery", "Technique + mobility",
-                technique + mobility,
-                whySuffix = "active recovery — the gains happen when you rest",
-            )
-        }
-
-        /** Recovery 50–74: finisher parked, one strength lift trimmed. */
-        fun trimForRecovery(s: PlannedSession, recovery: Int): PlannedSession {
-            val strength = s.exercises.filter { it.section == BlockType.STRENGTH }
-            val dropId = strength.lastOrNull()?.exerciseId
-            val trimmed = s.exercises.filter {
-                it.section != BlockType.FINISHER && !(it.section == BlockType.STRENGTH && it.exerciseId == dropId)
-            }
-            return assemble(s.index, s.name, s.focus, trimmed, whySuffix = "trimmed for recovery $recovery")
-        }
-
-        fun dropFinisher(s: PlannedSession, reason: String): PlannedSession {
-            val kept = s.exercises.filter { it.section != BlockType.FINISHER }
-            if (kept.size == s.exercises.size) return s
-            return assemble(s.index, s.name, s.focus, kept, whySuffix = "finisher parked — $reason")
-        }
+        // activeRecovery / trimForRecovery / dropFinisher removed — the plan is
+        // fixed and does not offer an easier day. Discipline over comfort.
     }
 }

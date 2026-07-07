@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.boot.BootScreen
 import com.ascend.lifeos.ui.calendar.CalendarScreen
@@ -199,7 +200,19 @@ fun AscendApp() {
             if (sub != first) open(first) else open(Sub.HOME)
         }
 
-        Crossfade(targetState = sub, animationSpec = tween(220), label = "sub") { s ->
+        androidx.compose.animation.AnimatedContent(
+            targetState = sub,
+            transitionSpec = {
+                // "arriving" feel: the new screen fades + rises a touch while the
+                // old one snaps away — a soft entrance instead of a hard cut.
+                (fadeIn(tween(Motion.standard, delayMillis = Motion.enterDelay, easing = Motion.easeOut)) +
+                    androidx.compose.animation.slideInVertically(
+                        tween(Motion.standard, delayMillis = Motion.enterDelay, easing = Motion.easeOut),
+                    ) { full -> full / 12 })
+                    .togetherWith(fadeOut(tween(Motion.instant)))
+            },
+            label = "sub",
+        ) { s ->
             CompositionLocalProvider(LocalModuleAccent provides s.accent()) {
                 when (s) {
                     Sub.HOME -> HomeScreen(

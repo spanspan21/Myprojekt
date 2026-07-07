@@ -385,8 +385,8 @@ private fun RecipeCard(
                     }
                     // Kap. 41: pro Portion + Portionenzahl + Zeit — kochbare Wahrheit
                     Text(
-                        "${r.kcal} kcal/Portion · P${r.protein} C${r.carbs} F${r.fat}" +
-                            " · ${r.servings} Port." + (r.minutes?.let { " · $it min" } ?: ""),
+                        "${r.kcal} kcal/serving · P${r.protein} C${r.carbs} F${r.fat}" +
+                            " · ${r.servings} serving${if (r.servings > 1) "s" else ""}" + (r.minutes?.let { " · $it min" } ?: ""),
                         color = TextDim, fontSize = 11.5.sp,
                     )
                     if (pantryActive) {
@@ -411,7 +411,7 @@ private fun RecipeCard(
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "ZUTATEN — für ${r.servings} Portion${if (r.servings > 1) "en" else ""}",
+                    "INGREDIENTS — for ${r.servings} serving${if (r.servings > 1) "s" else ""}",
                     color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.height(6.dp))
@@ -426,7 +426,7 @@ private fun RecipeCard(
                 // Kap. 41: die Zubereitung — vorher gab es nur Namen (P10-Fix)
                 if (r.steps.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
-                    Text("ZUBEREITUNG", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                    Text("METHOD", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                     Spacer(Modifier.height(6.dp))
                     r.steps.forEachIndexed { i, step ->
                         Row(Modifier.padding(vertical = 2.dp)) {
@@ -437,22 +437,22 @@ private fun RecipeCard(
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    HudButton("1 Portion loggen", Modifier.weight(1f)) {
+                    HudButton("Log 1 serving", Modifier.weight(1f)) {
                         Repo.addFood(FoodEntry(id = "", name = r.title, meal = if (r.meal == "b") "b" else "d", kcal = r.kcal, protein = r.protein, carbs = r.carbs, fat = r.fat))
                     }
-                    HudButton("+ Einkauf", Modifier.weight(1f), primary = false) {
+                    HudButton("+ Shopping", Modifier.weight(1f), primary = false) {
                         // Kap. 41: Mengen überleben den Übertrag (P3-Fix)
                         Repo.addToShoppingQty(r.parts.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
                     }
                 }
                 if (r.steps.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    HudButton("🍳 Kochen (Schritt-Modus)", Modifier.fillMaxWidth(), primary = false) { cookingRecipe.value = r }
+                    HudButton("🍳 Cook (step mode)", Modifier.fillMaxWidth(), primary = false) { cookingRecipe.value = r }
                 }
                 if (r.own) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Rezept löschen",
+                        "Delete recipe",
                         color = Red, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { com.ascend.lifeos.data.OwnRecipes.delete(r.id) },
                     )
@@ -794,7 +794,7 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                "Schritt ${step + 1} von ${r.steps.size}",
+                "Step ${step + 1} of ${r.steps.size}",
                 color = Mod.Fuel, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
             )
             Spacer(Modifier.height(20.dp))
@@ -818,11 +818,11 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             )
             Spacer(Modifier.height(18.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                HudButton("Zurück", Modifier.weight(1f), primary = false, enabled = step > 0) { step-- }
+                HudButton("Back", Modifier.weight(1f), primary = false, enabled = step > 0) { step-- }
                 if (step < r.steps.size - 1) {
-                    HudButton("Weiter", Modifier.weight(1f)) { step++ }
+                    HudButton("Next", Modifier.weight(1f)) { step++ }
                 } else {
-                    HudButton("Fertig", Modifier.weight(1f)) { onClose() }
+                    HudButton("Done", Modifier.weight(1f)) { onClose() }
                 }
             }
         }
@@ -856,25 +856,25 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             Modifier.fillMaxSize().background(Void).verticalScroll(rememberScrollState()).padding(22.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Eigenes Rezept", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                Text("Custom recipe", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
                 Icon(Icons.Rounded.Close, null, tint = TextMuted, modifier = Modifier.size(24.dp).clickable { onClose() })
             }
             Spacer(Modifier.height(14.dp))
-            GlassField("Titel", title, KeyboardType.Text, Modifier.fillMaxWidth()) { title = it.take(48) }
+            GlassField("Title", title, KeyboardType.Text, Modifier.fillMaxWidth()) { title = it.take(48) }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                HudChip("Hauptgericht", !isBreakfast) { isBreakfast = false }
-                HudChip("Frühstück", isBreakfast) { isBreakfast = true }
+                HudChip("Main dish", !isBreakfast) { isBreakfast = false }
+                HudChip("Breakfast", isBreakfast) { isBreakfast = true }
                 Spacer(Modifier.weight(1f))
                 HudChip("-", false) { servings = (servings - 1).coerceAtLeast(1) }
-                Text("$servings Port.", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("$servings serving${if (servings > 1) "s" else ""}", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 HudChip("+", false) { servings = (servings + 1).coerceAtMost(12) }
             }
             Spacer(Modifier.height(10.dp))
-            Box(Modifier.width(140.dp)) { GlassField("Minuten", minutes, KeyboardType.Number) { minutes = it.filter(Char::isDigit).take(3) } }
+            Box(Modifier.width(140.dp)) { GlassField("Minutes", minutes, KeyboardType.Number) { minutes = it.filter(Char::isDigit).take(3) } }
 
             Spacer(Modifier.height(16.dp))
-            Text("ZUTATEN (gesamt)", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text("INGREDIENTS (total)", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(6.dp))
             parts.forEachIndexed { i, ing ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
@@ -887,7 +887,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             }
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.weight(1f)) { GlassField("Zutat suchen", ingQuery, KeyboardType.Text) { ingQuery = it } }
+                Box(Modifier.weight(1f)) { GlassField("Search ingredient", ingQuery, KeyboardType.Text) { ingQuery = it } }
                 Box(Modifier.width(84.dp)) { GlassField("g", ingGrams, KeyboardType.Number) { ingGrams = it.filter(Char::isDigit).take(4) } }
             }
             ingHits.forEach { p ->
@@ -903,7 +903,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("ZUBEREITUNG", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text("METHOD", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(6.dp))
             steps.forEachIndexed { i, s ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
@@ -915,7 +915,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.weight(1f)) { GlassField("Schritt ${steps.size + 1}", stepInput, KeyboardType.Text) { stepInput = it.take(120) } }
+                Box(Modifier.weight(1f)) { GlassField("Step ${steps.size + 1}", stepInput, KeyboardType.Text) { stepInput = it.take(120) } }
                 HudChip("+", false) {
                     if (stepInput.isNotBlank()) { steps = steps + stepInput.trim(); stepInput = "" }
                 }
@@ -923,7 +923,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
 
             Spacer(Modifier.height(20.dp))
             val valid = title.isNotBlank() && parts.isNotEmpty()
-            HudButton("Rezept speichern", Modifier.fillMaxWidth(), enabled = valid) {
+            HudButton("Save recipe", Modifier.fillMaxWidth(), enabled = valid) {
                 com.ascend.lifeos.data.OwnRecipes.save(
                     RecipeDb.Recipe(
                         id = 0L, title = title.trim(), meal = if (isBreakfast) "b" else "main",

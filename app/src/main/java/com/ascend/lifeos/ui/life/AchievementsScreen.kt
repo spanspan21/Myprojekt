@@ -90,7 +90,7 @@ fun AchievementsScreen(onClose: () -> Unit) {
             )
         } else {
             // ── Münzkabinett (Kap. 20): die jüngsten Prägungen + der nächste Rohling ──
-            SectionLabel("Kabinett")
+            SectionLabel("Cabinet")
             Spacer(Modifier.height(12.dp))
             val minted = entries.take(5)
             val streakReached = entries.filter { it.module == "streak" }

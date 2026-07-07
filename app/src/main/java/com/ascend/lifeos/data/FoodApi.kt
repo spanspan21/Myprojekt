@@ -53,10 +53,10 @@ object FoodApi {
     )
 
     private val ALLERGEN_DE = mapOf(
-        "milk" to "Milch", "gluten" to "Gluten", "eggs" to "Eier", "nuts" to "Schalenfrüchte",
-        "peanuts" to "Erdnüsse", "soybeans" to "Soja", "fish" to "Fisch", "crustaceans" to "Krebstiere",
-        "molluscs" to "Weichtiere", "celery" to "Sellerie", "mustard" to "Senf", "sesame-seeds" to "Sesam",
-        "sulphur-dioxide-and-sulphites" to "Sulfite", "lupin" to "Lupinen",
+        "milk" to "Milk", "gluten" to "Gluten", "eggs" to "Eggs", "nuts" to "Nuts",
+        "peanuts" to "Peanuts", "soybeans" to "Soy", "fish" to "Fish", "crustaceans" to "Crustaceans",
+        "molluscs" to "Molluscs", "celery" to "Celery", "mustard" to "Mustard", "sesame-seeds" to "Sesame",
+        "sulphur-dioxide-and-sulphites" to "Sulfites", "lupin" to "Lupin",
     )
 
     class NotFound : Exception()
@@ -155,7 +155,7 @@ object FoodApi {
             val barcode = barcodeRaw.filter { it.isDigit() }
             if (barcode.length < 6) throw NotFound()
             val body = get("https://world.openfoodfacts.org/api/v2/product/$barcode.json?fields=$FIELDS")
-                ?: error("blockiert")
+                ?: error("blocked")
             val d = JSONObject(body)
             if (d.optInt("status", 0) != 1) throw NotFound()
             parseProduct(d.getJSONObject("product"), barcode) ?: throw NotFound()

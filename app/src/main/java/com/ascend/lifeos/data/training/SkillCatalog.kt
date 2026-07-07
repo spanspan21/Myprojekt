@@ -205,6 +205,168 @@ object SkillCatalog {
             listOf("Wall handstand (belly)", "Kick-up practice", "Heel pulls"),
             "Balance, not strength. Practice daily, fall well.",
         ),
+        // ── PULL (extended) ─────────────────────────────────────────
+        SkillDef(
+            "weighted_pullup", "Weighted Pull-up · +20kg", SkillArea.PULL, 3,
+            mapOf(Pattern.PULL to 4, Pattern.HANG to 3),
+            listOf("Weighted pull-ups (heavy, low reps)", "Dead hangs (loaded)"),
+            "Raw pulling strength. The fastest driver of every advanced pull skill.",
+        ),
+        SkillDef(
+            "explosive_pullup", "Explosive / Clap Pull-up", SkillArea.PULL, 3,
+            mapOf(Pattern.PULL to 4),
+            listOf("High pull-ups (chest to bar)", "Kip-free explosive pulls"),
+            "Pull so hard you leave the bar. Power that feeds the muscle-up.",
+        ),
+        SkillDef(
+            "skin_the_cat", "Skin the Cat", SkillArea.PULL, 2,
+            mapOf(Pattern.HANG to 2, Pattern.CORE to 3),
+            listOf("German hang", "Tuck skin the cat", "Shoulder dislocates"),
+            "Rotate through a full hang. Shoulder mobility + straight-arm prep.",
+        ),
+        SkillDef(
+            "ice_cream_maker", "Ice Cream Maker", SkillArea.PULL, 4,
+            mapOf(Pattern.PULL to 4, Pattern.CORE to 4),
+            listOf("Tuck front lever raises", "Straight-arm pull-downs"),
+            "Straight-arm pull from a lever. Where lever strength turns to control.",
+        ),
+        SkillDef(
+            "oac", "One-Arm Chin-up", SkillArea.PULL, 5,
+            mapOf(Pattern.PULL to 6, Pattern.HANG to 5),
+            listOf("One-arm negatives", "Archer chin-ups", "Weighted chin-ups (heavy)"),
+            "The one-arm holy grail's cousin. Supinated, brutal, achievable.",
+        ),
+        // ── PUSH (extended) ─────────────────────────────────────────
+        SkillDef(
+            "pseudo_planche_pushup", "Pseudo Planche Push-up", SkillArea.PUSH, 3,
+            mapOf(Pattern.PUSH to 3, Pattern.CORE to 3),
+            listOf("Planche leans", "Pseudo planche push-ups (deep lean)"),
+            "Hands at the hips, shoulders forward. Planche strength you can rep out.",
+        ),
+        SkillDef(
+            "ring_support", "Ring Support Hold (30s)", SkillArea.PUSH, 2,
+            mapOf(Pattern.DIP to 2),
+            listOf("Ring support holds", "Turned-out support holds"),
+            "Locked out on the rings, turned out. The base of every ring skill.",
+        ),
+        SkillDef(
+            "ring_muscleup", "Ring Muscle-up", SkillArea.PUSH, 4,
+            mapOf(Pattern.PULL to 4, Pattern.DIP to 4),
+            listOf("Ring pull-ups", "Ring dips", "Transition negatives"),
+            "The muscle-up on rings — deeper, meaner, more honest than the bar.",
+        ),
+        SkillDef(
+            "korean_dip", "Korean Dip", SkillArea.PUSH, 4,
+            mapOf(Pattern.DIP to 4, Pattern.CORE to 3),
+            listOf("Straight-bar dips", "Behind-bar dip negatives"),
+            "Dip with the bar behind you. Front-lever-friendly pressing.",
+        ),
+        SkillDef(
+            "full_planche", "Full Planche", SkillArea.PUSH, 5,
+            mapOf(Pattern.PUSH to 7, Pattern.CORE to 6, Pattern.DIP to 5),
+            listOf("Straddle planche", "Advanced tuck planche (long holds)", "Planche push-up negatives"),
+            "Body afloat, arms straight, legs together. The push-side summit.",
+        ),
+        // ── CORE (extended) ─────────────────────────────────────────
+        SkillDef(
+            "hollow_rocks", "Hollow Rocks (60s)", SkillArea.CORE, 1,
+            mapOf(Pattern.CORE to 2),
+            listOf("Hollow body holds", "Hollow rocks"),
+            "The position everything else is built on. Own it first.",
+        ),
+        SkillDef(
+            "ab_wheel", "Standing Ab Wheel", SkillArea.CORE, 3,
+            mapOf(Pattern.CORE to 4),
+            listOf("Kneeling ab wheel", "Eccentric rollouts"),
+            "From your feet to full extension. Anti-extension core armor.",
+        ),
+        SkillDef(
+            "windshield_wipers", "Hanging Windshield Wipers", SkillArea.CORE, 4,
+            mapOf(Pattern.CORE to 4, Pattern.PULL to 3, Pattern.HANG to 3),
+            listOf("Toes-to-bar", "Straight-leg rotations"),
+            "Legs to the bar, then wipe side to side. Rotational core control.",
+        ),
+        SkillDef(
+            "manna", "Manna", SkillArea.CORE, 5,
+            mapOf(Pattern.CORE to 6, Pattern.DIP to 4),
+            listOf("V-sit (long holds)", "Reverse compression drills", "German hang"),
+            "Beyond the V-sit — legs to your face, hands behind. Freak compression.",
+        ),
+        // ── LEGS (extended, incl. hockey power) ─────────────────────
+        SkillDef(
+            "cossack_squat", "Cossack Squat", SkillArea.LEGS, 2,
+            mapOf(Pattern.SQUAT to 2),
+            listOf("Assisted cossacks", "Adductor mobility"),
+            "Side-to-side deep squat. Hips and adductors that skate.",
+        ),
+        SkillDef(
+            "sissy_squat", "Sissy Squat", SkillArea.LEGS, 3,
+            mapOf(Pattern.SQUAT to 3, Pattern.CORE to 3),
+            listOf("Assisted sissy squats", "Slant-board quad work"),
+            "Knees forward, lean back. Brutal quad and knee-tendon strength.",
+        ),
+        SkillDef(
+            "box_jump", "Explosive Box Jump", SkillArea.LEGS, 2,
+            mapOf(Pattern.SQUAT to 2),
+            listOf("Depth drops", "Squat jumps", "Broad jumps"),
+            "Rate of force for the ice. Every stride starts as a jump.",
+        ),
+        SkillDef(
+            "broad_jump", "Broad Jump · Power", SkillArea.LEGS, 2,
+            mapOf(Pattern.SQUAT to 2),
+            listOf("Standing broad jumps", "Bounds", "Pogo hops"),
+            "Horizontal power — the exact vector of a skating push-off.",
+        ),
+        SkillDef(
+            "single_leg_calf", "Single-Leg Calf Raise (20)", SkillArea.LEGS, 1,
+            mapOf(Pattern.SQUAT to 1),
+            listOf("Deficit calf raises", "Slow eccentrics"),
+            "Ankles that survive 60 minutes of stops and starts.",
+        ),
+        // ── BALANCE (extended) ──────────────────────────────────────
+        SkillDef(
+            "handstand_walk", "Handstand Walk", SkillArea.BALANCE, 4,
+            mapOf(Pattern.PUSH to 3, Pattern.CORE to 4),
+            listOf("Freestanding handstand", "Wall walks", "Weight shifts"),
+            "Balance in motion. Own the handstand, then take it for a walk.",
+        ),
+        SkillDef(
+            "press_handstand", "Press to Handstand", SkillArea.BALANCE, 5,
+            mapOf(Pattern.PUSH to 4, Pattern.CORE to 5),
+            listOf("Pike compression", "Straddle press negatives", "Elevated pike presses"),
+            "Float up to a handstand with zero kick. Strength meets flexibility.",
+        ),
+        SkillDef(
+            "oah", "One-Arm Handstand", SkillArea.BALANCE, 5,
+            mapOf(Pattern.PUSH to 5, Pattern.CORE to 6),
+            listOf("One-arm handstand leans", "Fingertip balancing", "Two-arm holds (long)"),
+            "The pinnacle of balance. Years of daily practice — but named, it's real.",
+        ),
+        // ── MOBILITY (practice-based, no strength gate) ─────────────
+        SkillDef(
+            "bridge_wheel", "Full Bridge / Wheel", SkillArea.CORE, 2,
+            emptyMap(),
+            listOf("Glute bridge", "Wall walk-downs", "Thoracic openers"),
+            "A tall, even backbend. Spinal extension your desk stole from you.",
+        ),
+        SkillDef(
+            "pancake", "Pancake Fold", SkillArea.LEGS, 3,
+            emptyMap(),
+            listOf("Seated straddle leans", "Good-morning folds", "Adductor stretches"),
+            "Straddle sit, chest to the floor. Hips that open like a book.",
+        ),
+        SkillDef(
+            "front_split", "Front Split", SkillArea.LEGS, 3,
+            emptyMap(),
+            listOf("Half-split holds", "Couch stretch", "Hamstring PAILs/RAILs"),
+            "Full front split. Stride length and hip health for the ice.",
+        ),
+        SkillDef(
+            "pike_compression", "Deep Pike Fold", SkillArea.LEGS, 2,
+            emptyMap(),
+            listOf("Seated pike reaches", "Jefferson curls", "Compression lifts"),
+            "Fold flat over straight legs. Feeds the L-sit, V-sit and press.",
+        ),
     )
 
     fun byId(id: String): SkillDef? = ALL.find { it.id == id }

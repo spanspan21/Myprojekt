@@ -218,7 +218,7 @@ private fun SearchPane(
         if (autoFocus) { onAutoFocused(); runCatching { focusReq.requestFocus() } }
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f)) { GlassField("Suche — Latte, Döner oder 450", query, KeyboardType.Text, focus = focusReq) { onQuery(it) } }
+        Box(Modifier.weight(1f)) { GlassField("Search — Latte, Döner or 450", query, KeyboardType.Text, focus = focusReq) { onQuery(it) } }
         Spacer(Modifier.width(10.dp))
         SquareIcon(Icons.Rounded.QrCodeScanner, onScan)
     }
@@ -233,10 +233,10 @@ private fun SearchPane(
     if (query.trim().length < 2) {
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            HudChip("Zuletzt", tab == 0, Modifier.weight(1f)) { tab = 0 }
-            HudChip("Favoriten", tab == 1, Modifier.weight(1f)) { tab = 1 }
-            HudChip("Getränke", false, Modifier.weight(1f)) { onOpenDrinks() }
-            HudChip("Teller", tab == 2, Modifier.weight(1f)) { tab = 2 }
+            HudChip("Recent", tab == 0, Modifier.weight(1f)) { tab = 0 }
+            HudChip("Favorites", tab == 1, Modifier.weight(1f)) { tab = 1 }
+            HudChip("Drinks", false, Modifier.weight(1f)) { onOpenDrinks() }
+            HudChip("Plates", tab == 2, Modifier.weight(1f)) { tab = 2 }
         }
     }
 
@@ -247,13 +247,13 @@ private fun SearchPane(
                 // ── Zuletzt: slot-affin sortiert, Tipp = sofort geloggt ──
                 0 -> {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        WideGhost(Icons.Rounded.ContentCopy, "Slot wie gestern", Modifier.weight(1f)) {
+                        WideGhost(Icons.Rounded.ContentCopy, "Slot like yesterday", Modifier.weight(1f)) {
                             val prev = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == meal }.orEmpty()
                             prev.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
                             if (prev.isNotEmpty()) Haptics.confirm(ctx)
                             onDismiss()
                         }
-                        WideGhost(Icons.Rounded.ContentCopy, "Ganzer Tag", Modifier.weight(1f)) {
+                        WideGhost(Icons.Rounded.ContentCopy, "Whole day", Modifier.weight(1f)) {
                             val prev = Repo.dayFor(prevKey(dayKey))?.meals.orEmpty()
                             prev.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
                             if (prev.isNotEmpty()) Haptics.confirm(ctx)
@@ -265,9 +265,9 @@ private fun SearchPane(
                         Repo.profile().recentFoods.sortedByDescending { if (it.meal == meal) 1 else 0 }
                     }
                     if (recents.isEmpty()) {
-                        Text("Noch nichts geloggt — tippe oben in die Suche oder scanne.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                        Text("Nothing logged yet — type in the search above or scan.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
                     } else {
-                        Section("ZULETZT — 1 TIPP LOGGT, ＋ SAMMELT")
+                        Section("RECENT — 1 TAP LOGS, ＋ COLLECTS")
                         recents.take(12).forEach { e ->
                             ResultRow(
                                 e.name, "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", "",
@@ -285,18 +285,18 @@ private fun SearchPane(
                 1 -> {
                     val favorites = Repo.customFoods().filter { it.favorite }
                     val savedMeals = Repo.savedMeals()
-                    WideGhost(Icons.Rounded.Add, "Eigenes Food anlegen", Modifier.fillMaxWidth()) { onCreate() }
+                    WideGhost(Icons.Rounded.Add, "Create custom food", Modifier.fillMaxWidth()) { onCreate() }
                     Spacer(Modifier.height(10.dp))
                     if (savedMeals.isNotEmpty()) {
-                        Section("GESPEICHERTE MAHLZEITEN")
+                        Section("SAVED MEALS")
                         savedMeals.forEach { m ->
                             val kcal = m.entries.sumOf { it.kcal }
-                            ResultRow(m.name, "${m.entries.size} Einträge · $kcal kcal", "★") { addAll(m.entries, meal, dayKey); Haptics.confirm(ctx); onDismiss() }
+                            ResultRow(m.name, "${m.entries.size} items · $kcal kcal", "★") { addAll(m.entries, meal, dayKey); Haptics.confirm(ctx); onDismiss() }
                             Spacer(Modifier.height(8.dp))
                         }
                     }
                     if (favorites.isNotEmpty()) {
-                        Section("FAVORITEN")
+                        Section("FAVORITES")
                         favorites.forEach { cf ->
                             ResultRow(
                                 cf.name, customSub(cf), "★", onLong = { onEditCustom(cf) },
@@ -306,12 +306,12 @@ private fun SearchPane(
                         }
                     }
                     if (favorites.isEmpty() && savedMeals.isEmpty()) {
-                        Text("Markiere Foods mit ★ oder speichere einen Slot als Mahlzeit — dann wohnen sie hier.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                        Text("Mark foods with ★ or save a slot as a meal — then they live here.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
                     }
                 }
                 // ── Teller: die ~geschätzten Alltagsgerichte (Kap. 37) ──
                 else -> {
-                    Text("~ heißt ehrlich geschätzt. Antippen für S / M / L.", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
                     Spacer(Modifier.height(10.dp))
                     BasicFoods.ALL.filter { it.approx }.forEach { p ->
                         ResultRow(
@@ -329,7 +329,7 @@ private fun SearchPane(
                 var qProt by remember(quickKcal) { mutableStateOf("") }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(Modifier.weight(1f)) {
-                        WideGhost(Icons.Rounded.Bolt, "◌ $quickKcal kcal loggen", Modifier.fillMaxWidth()) {
+                        WideGhost(Icons.Rounded.Bolt, "◌ Log $quickKcal kcal", Modifier.fillMaxWidth()) {
                             Repo.addFood(
                                 FoodEntry(id = "", name = "Quick entry", meal = meal, kcal = quickKcal, protein = qProt.toIntOrNull() ?: 0, incomplete = true),
                                 dayKey,
@@ -360,7 +360,7 @@ private fun SearchPane(
 
             // ---- Getränke-Wort erkannt → Builder als Treffer #1 (Kap. 36) ----
             if (isDrinkQuery(query)) {
-                WideGhost(Icons.Rounded.WaterDrop, "Als Getränk bauen — Latte, Schorle & Co.", Modifier.fillMaxWidth()) { onOpenDrinks() }
+                WideGhost(Icons.Rounded.WaterDrop, "Build as a drink — latte, spritzer & co.", Modifier.fillMaxWidth()) { onOpenDrinks() }
                 Spacer(Modifier.height(10.dp))
             }
 
@@ -390,11 +390,11 @@ private fun SearchPane(
                     val dym = remember(query) { com.ascend.lifeos.data.BasicFoods.didYouMean(query) }
                     if (dym != null) {
                         Spacer(Modifier.height(10.dp))
-                        WideGhost(Icons.Rounded.Search, "Meintest du „${dym.name}“?", Modifier.fillMaxWidth()) { onPick(dym) }
+                        WideGhost(Icons.Rounded.Search, "Did you mean “${dym.name}”?", Modifier.fillMaxWidth()) { onPick(dym) }
                     }
                     if (!isDrinkQuery(query)) {
                         Spacer(Modifier.height(10.dp))
-                        WideGhost(Icons.Rounded.WaterDrop, "Als Getränk bauen", Modifier.fillMaxWidth()) { onOpenDrinks() }
+                        WideGhost(Icons.Rounded.WaterDrop, "Build as a drink", Modifier.fillMaxWidth()) { onOpenDrinks() }
                     }
                     Spacer(Modifier.height(10.dp))
                     WideGhost(Icons.Rounded.Add, "Create \"$query\"", Modifier.fillMaxWidth()) { onCreate() }
@@ -420,15 +420,15 @@ private fun SearchPane(
         GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("${basket.size} im Korb", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g Protein", color = TextDim, fontSize = 10.5.sp)
+                    Text("${basket.size} in basket", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g protein", color = TextDim, fontSize = 10.5.sp)
                 }
                 Text(
-                    "Leeren", color = TextDim, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                    "Clear", color = TextDim, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { onBasket(emptyList()) }.padding(8.dp),
                 )
                 Spacer(Modifier.width(6.dp))
-                HudButton("Loggen", Modifier.width(110.dp)) {
+                HudButton("Log", Modifier.width(110.dp)) {
                     basket.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
                     Haptics.success(ctx)
                     onBasket(emptyList())
@@ -452,7 +452,7 @@ private fun portionSub(p: FoodApi.Product): String {
     val grams = po?.grams ?: p.servingG
     if (grams == null) return per100Sub(p)
     val f = grams / 100.0
-    val label = po?.label ?: "1 Portion"
+    val label = po?.label ?: "1 serving"
     val unit = if (po?.ml == true) "ml" else "g"
     val tilde = if (p.approx) "~" else ""
     return "$label ($grams $unit) · $tilde${(p.kcal100 * f).roundToInt()} kcal · ${(p.protein100 * f).roundToInt()} P"
@@ -506,7 +506,7 @@ private fun pseudoProduct(e: FoodEntry): FoodApi.Product? {
         sugars100 = 0.0, fiber100 = 0.0, satFat100 = 0.0, salt100 = 0.0,
         nutriScore = e.nutriScore, nova = null, ingredients = "", servingG = g,
         per100 = e.nutrients.mapValues { it.value * f },
-        portions = if (e.volumeMl > 0) listOf(FoodApi.Portion("wie zuletzt", g, ml = true)) else emptyList(),
+        portions = if (e.volumeMl > 0) listOf(FoodApi.Portion("last used", g, ml = true)) else emptyList(),
         approx = e.approx,
     )
 }

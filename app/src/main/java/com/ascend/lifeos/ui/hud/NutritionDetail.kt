@@ -359,16 +359,16 @@ fun StatsView(onBack: () -> Unit) {
 
         // ── Protein-Trend: 14 Tage gegen das Ziel (F4.1) ──
         Spacer(Modifier.height(16.dp))
-        Text("PROTEIN · 14 TAGE", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        Text("PROTEIN · 14 DAYS", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(10.dp))
         GlassPanel(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     val avgProt = prot14.filter { it > 0 }.average().let { if (it.isNaN()) 0 else it.roundToInt() }
                     Text("$avgProt g", color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                    Text(" Ø / Tag", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
+                    Text(" Ø / day", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
                     Spacer(Modifier.weight(1f))
-                    Text("Ziel $protGoal g", color = Cyan, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
+                    Text("Target $protGoal g", color = Cyan, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
                 }
                 Spacer(Modifier.height(14.dp))
                 ProteinTrend(prot14, protGoal, Modifier.fillMaxWidth().height(90.dp))
@@ -381,13 +381,13 @@ fun StatsView(onBack: () -> Unit) {
             GlassPanel(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     Text("$streak", color = Accent, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("TAGE LOG-STREAK", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text("DAY LOG STREAK", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
             GlassPanel(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     Text("$logged30/30", color = if (logged30 >= 24) Accent else Amber, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("TAGE GELOGGT", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text("DAYS LOGGED", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
         }
@@ -395,19 +395,19 @@ fun StatsView(onBack: () -> Unit) {
         // ── Wochen-Lücken: Mikros unter 50 % im 7-Tage-Schnitt (F4.1) ──
         if (microGaps.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
-            Text("WOCHEN-LÜCKEN · Ø < 50 % DES ZIELS", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text("WEEKLY GAPS · Ø < 50% OF TARGET", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(10.dp))
             GlassPanel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     microGaps.forEachIndexed { i, (label, p) ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(label, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                            Text("${(p * 100).toInt()} %", color = Amber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                            Text("${(p * 100).toInt()}%", color = Amber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                         }
                         if (i != microGaps.lastIndex) Spacer(Modifier.height(6.dp))
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Quellen & Fixes: Micros → Weekly average", color = TextDim, fontSize = 10.5.sp)
+                    Text("Sources & fixes: Micros → Weekly average", color = TextDim, fontSize = 10.5.sp)
                 }
             }
         }

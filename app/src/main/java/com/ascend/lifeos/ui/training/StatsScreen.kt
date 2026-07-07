@@ -102,7 +102,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
     if (sessions.isEmpty()) {
         Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Noch keine Daten", color = TextDim, fontSize = 12.sp)
+            Text("No data yet", color = TextDim, fontSize = 12.sp)
         }
         return
     }

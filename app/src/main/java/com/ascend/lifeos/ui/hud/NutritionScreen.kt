@@ -187,7 +187,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                     .eventsInRangeOnce(today, today)
                     .filter { it.type == "HOCKEY" && !it.allDay }
                     .minByOrNull { it.startMin }
-                    ?.let { "Game Day %02d:%02d — Carbs bis 15 Uhr, danach leicht".format(it.startMin / 60, it.startMin % 60) }
+                    ?.let { "Game Day %02d:%02d — Carbs until 15:00, then light".format(it.startMin / 60, it.startMin % 60) }
             }.getOrNull()
         }
     }
@@ -245,8 +245,8 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 targetGlasses = WaterCalc.targetGlasses(p.weightKg, trainingDay, hot),
                 hot = hot, canEdit = isToday,
                 bonusReason = when {
-                    hockeyToday -> "🏒 Eishockey · +0,5 L"
-                    day.workoutDone -> "🏋 Training · +0,5 L"
+                    hockeyToday -> "🏒 Ice hockey · +0.5 L"
+                    day.workoutDone -> "🏋 Training · +0.5 L"
                     else -> null
                 },
                 showHeat = isToday && !hasLoc,
@@ -402,11 +402,11 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
             if (kcal == 0) {
                 // der Tag beginnt mit Budget, nicht mit Null (Kap. 39)
                 TickerNumber(kcalGoal, fontSize = numSize)
-                Text("kcal frei", color = TextDim, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text("kcal free", color = TextDim, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             } else {
                 TickerNumber(kcal, fontSize = numSize)
                 Text(
-                    if (left >= 0) "übrig $left" else "+${-left} über",
+                    if (left >= 0) "$left left" else "+${-left} over",
                     color = if (left >= 0) TextDim else Warn,
                     fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1,
                 )
@@ -626,7 +626,7 @@ private fun HydrationCard(
                     Text("HYDRATION", color = if (goalReached) Champagne else Ivory.copy(alpha = 0.75f), fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, style = shadow)
                     if (goalReached) {
                         Spacer(Modifier.width(7.dp))
-                        Text("✓ Ziel erreicht", color = Champagne, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, style = shadow)
+                        Text("✓ Goal reached", color = Champagne, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, style = shadow)
                     }
                 }
                 Spacer(Modifier.height(7.dp))
@@ -645,13 +645,13 @@ private fun HydrationCard(
                 Spacer(Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        bonusReason ?: "$glasses Gläser · Getränke zählen mit",
+                        bonusReason ?: "$glasses glasses · drinks count too",
                         color = if (bonusReason != null) Ivory.copy(alpha = 0.9f) else Ivory.copy(alpha = 0.62f),
                         fontSize = 10.sp, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
                         maxLines = 1, style = shadow,
                     )
                     if (hot) {
-                        Spacer(Modifier.width(7.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold, style = shadow)
+                        Spacer(Modifier.width(7.dp)); Text("🔥 +0.3 L", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold, style = shadow)
                     }
                     if (showHeat) {
                         Spacer(Modifier.width(7.dp))
@@ -720,7 +720,7 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
             Spacer(Modifier.width(10.dp))
             Text(zone.label, color = zone.color, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
         } else {
-            Text("${protocol.id} · bereit", color = TextDim, fontSize = 11.5.sp)
+            Text("${protocol.id} · ready", color = TextDim, fontSize = 11.5.sp)
             Spacer(Modifier.weight(1f))
         }
         Spacer(Modifier.width(8.dp))
@@ -751,7 +751,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                     val y = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == code }.orEmpty()
                     if (y.isNotEmpty()) {
                         Text(
-                            "⟳ wie gestern · ${y.sumOf { it.kcal }} kcal",
+                            "⟳ like yesterday · ${y.sumOf { it.kcal }} kcal",
                             color = Mod.Fuel.copy(alpha = 0.85f), fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable {
                                 y.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
@@ -808,7 +808,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
 
     Spacer(Modifier.height(12.dp))
     Text(
-        "Übrig: $kcalLeft kcal · ${protLeft.coerceAtLeast(0)} g Protein",
+        "Left: $kcalLeft kcal · ${protLeft.coerceAtLeast(0)} g protein",
         color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
     )
     Spacer(Modifier.height(8.dp))
@@ -856,7 +856,7 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
     }
     // 2) eigene Rezepte — 1 Portion (Reste!)
     OwnRecipes.asRecipes().forEach { r ->
-        consider("${r.title} (1 Port.)", r.kcal, r.protein, r.carbs, r.fat, 0, favorite = false, slotBias = 0.2)
+        consider("${r.title} (1 serving)", r.kcal, r.protein, r.carbs, r.fat, 0, favorite = false, slotBias = 0.2)
     }
     // 3) Protein-Klassiker aus der Kern-DB, Portion auf die Lücke gerechnet
     val classics = listOf("Quark (low-fat)", "Skyr", "Cottage cheese", "Egg", "Whey protein", "Greek yogurt (10%)")

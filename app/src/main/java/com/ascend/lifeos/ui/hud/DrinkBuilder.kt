@@ -50,29 +50,29 @@ import kotlin.math.roundToInt
 private data class Per100(val kcal: Double, val p: Double, val c: Double, val f: Double)
 
 private val MILKS = listOf(
-    "Vollmilch" to Per100(64.0, 3.4, 4.8, 3.5),
-    "1,5 %" to Per100(47.0, 3.4, 4.9, 1.5),
-    "Hafer" to Per100(46.0, 0.8, 6.6, 1.5),
-    "Mandel" to Per100(13.0, 0.4, 0.1, 1.1),
-    "Soja" to Per100(39.0, 3.0, 2.5, 1.8),
+    "Whole milk" to Per100(64.0, 3.4, 4.8, 3.5),
+    "1.5%" to Per100(47.0, 3.4, 4.9, 1.5),
+    "Oat" to Per100(46.0, 0.8, 6.6, 1.5),
+    "Almond" to Per100(13.0, 0.4, 0.1, 1.1),
+    "Soy" to Per100(39.0, 3.0, 2.5, 1.8),
 )
 
 /** (Anzeigename, Milchanteil 0..1, Espresso-Shots default, Wasser/Rest ist kalorienfrei) */
 private val COFFEE_BASES = listOf(
     DrinkBase("Latte Macchiato", milkShare = 0.9, shots = 1),
     DrinkBase("Cappuccino", milkShare = 0.6, shots = 1),
-    DrinkBase("Milchkaffee", milkShare = 0.5, shots = 1),
+    DrinkBase("Milk coffee", milkShare = 0.5, shots = 1),
     DrinkBase("Espresso", milkShare = 0.0, shots = 1),
-    DrinkBase("Filterkaffee", milkShare = 0.0, shots = 0, blackKcalPerMl = 0.01),
-    DrinkBase("Kakao", milkShare = 1.0, shots = 0, extraPer100 = Per100(14.0, 0.7, 2.4, 0.4)), // Kakaopulver-Anteil
+    DrinkBase("Filter coffee", milkShare = 0.0, shots = 0, blackKcalPerMl = 0.01),
+    DrinkBase("Cocoa", milkShare = 1.0, shots = 0, extraPer100 = Per100(14.0, 0.7, 2.4, 0.4)), // Kakaopulver-Anteil
 )
 
 private val COLD_BASES = listOf(
-    DrinkBase("Apfelschorle", milkShare = 0.0, shots = 0, juicePer100 = Per100(23.0, 0.05, 5.7, 0.05)),
-    DrinkBase("Saftschorle 1:1", milkShare = 0.0, shots = 0, juicePer100 = Per100(23.0, 0.35, 5.2, 0.1)),
-    DrinkBase("Eistee (gesüßt)", milkShare = 0.0, shots = 0, juicePer100 = Per100(28.0, 0.0, 6.9, 0.0)),
-    DrinkBase("Limo", milkShare = 0.0, shots = 0, juicePer100 = Per100(42.0, 0.0, 10.4, 0.0)),
-    DrinkBase("Protein-Shake (Wasser)", milkShare = 0.0, shots = 0, extraFixed = Per100(0.0, 0.0, 0.0, 0.0), scoop = true),
+    DrinkBase("Apple spritzer", milkShare = 0.0, shots = 0, juicePer100 = Per100(23.0, 0.05, 5.7, 0.05)),
+    DrinkBase("Juice spritzer 1:1", milkShare = 0.0, shots = 0, juicePer100 = Per100(23.0, 0.35, 5.2, 0.1)),
+    DrinkBase("Iced tea (sweetened)", milkShare = 0.0, shots = 0, juicePer100 = Per100(28.0, 0.0, 6.9, 0.0)),
+    DrinkBase("Soda", milkShare = 0.0, shots = 0, juicePer100 = Per100(42.0, 0.0, 10.4, 0.0)),
+    DrinkBase("Protein shake (water)", milkShare = 0.0, shots = 0, extraFixed = Per100(0.0, 0.0, 0.0, 0.0), scoop = true),
 )
 
 private data class DrinkBase(
@@ -142,24 +142,24 @@ fun DrinkBuilderPane(
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         Spacer(Modifier.width(12.dp))
-        Text("Getränk bauen", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+        Text("Build a drink", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
     }
 
     Spacer(Modifier.height(12.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        HudChip("Kaffee & warm", tab == 0) { tab = 0; baseIdx = 0 }
-        HudChip("Kalt & Saft", tab == 1) { tab = 1; baseIdx = 0 }
+        HudChip("Coffee & hot", tab == 0) { tab = 0; baseIdx = 0 }
+        HudChip("Cold & juice", tab == 1) { tab = 1; baseIdx = 0 }
     }
 
     Spacer(Modifier.height(12.dp))
-    Text("BASIS", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("BASE", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(7.dp))
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         bases.forEachIndexed { i, b -> HudChip(b.name, baseIdx == i) { baseIdx = i; shots = b.shots } }
     }
 
     Spacer(Modifier.height(10.dp))
-    Text("GRÖSSE", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("SIZE", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(7.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         SIZES.forEachIndexed { i, (label, _) -> HudChip("$label ml", sizeIdx == i) { sizeIdx = i } }
@@ -167,7 +167,7 @@ fun DrinkBuilderPane(
 
     if (base.milkShare > 0.0) {
         Spacer(Modifier.height(10.dp))
-        Text("MILCH", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        Text("MILK", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(7.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             MILKS.forEachIndexed { i, (label, _) -> HudChip(label, milkIdx == i) { milkIdx = i } }
@@ -179,17 +179,17 @@ fun DrinkBuilderPane(
     Spacer(Modifier.height(7.dp))
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         if (tab == 0 && !base.scoop) {
-            HudChip(if (shots > 0) "$shots Shot${if (shots > 1) "s" else ""}" else "kein Shot", shots > base.shots) {
+            HudChip(if (shots > 0) "$shots Shot${if (shots > 1) "s" else ""}" else "no shot", shots > base.shots) {
                 shots = if (shots >= 3) base.shots else shots + 1
             }
         }
         if (base.scoop) {
             HudChip("$scoops Scoop", false) { scoops = if (scoops >= 3) 1 else scoops + 1 }
         }
-        HudChip(if (sugarTsp > 0) "$sugarTsp TL Zucker" else "+ Zucker", sugarTsp > 0) {
+        HudChip(if (sugarTsp > 0) "$sugarTsp tsp sugar" else "+ Sugar", sugarTsp > 0) {
             sugarTsp = if (sugarTsp >= 3) 0 else sugarTsp + 1
         }
-        HudChip("+ Sirup", sirup) { sirup = !sirup }
+        HudChip("+ Syrup", sirup) { sirup = !sirup }
     }
 
     Spacer(Modifier.height(14.dp))
@@ -211,7 +211,7 @@ fun DrinkBuilderPane(
 
     Spacer(Modifier.height(14.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        HudButton("Loggen · $kcalI kcal", Modifier.weight(1f)) {
+        HudButton("Log · $kcalI kcal", Modifier.weight(1f)) {
             Repo.addFood(
                 FoodEntry(
                     id = "", name = name, meal = meal, kcal = kcalI,
@@ -242,7 +242,7 @@ fun DrinkBuilderPane(
     }
     Spacer(Modifier.height(4.dp))
     Text(
-        if (starred) "Gespeichert — ab jetzt unter Favoriten" else "★ speichert als Favorit — morgen in 2 Taps",
+        if (starred) "Saved — now under Favorites" else "★ saves as a favorite — tomorrow in 2 taps",
         color = TextMuted, fontSize = 10.5.sp,
     )
     Spacer(Modifier.height(6.dp))

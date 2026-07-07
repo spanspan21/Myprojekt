@@ -59,12 +59,12 @@ object Drinks {
         val out = LinkedHashMap<Int, FoodApi.Portion>()
         parseContainerMl(quantity)?.let { c ->
             val label = when (c) {
-                250 -> "Glas"; 330 -> "Dose"; 500 -> "Flasche"
-                else -> if (c >= 1000) "Flasche" else "$c ml"
+                250 -> "glass"; 330 -> "can"; 500 -> "bottle"
+                else -> if (c >= 1000) "bottle" else "$c ml"
             }
             out[c] = FoodApi.Portion(label, c, ml = true)
         }
-        listOf(250 to "Glas", 330 to "Dose", 500 to "Flasche").forEach { (ml, label) ->
+        listOf(250 to "glass", 330 to "can", 500 to "bottle").forEach { (ml, label) ->
             out.putIfAbsent(ml, FoodApi.Portion(label, ml, ml = true))
         }
         return out.values.toList()

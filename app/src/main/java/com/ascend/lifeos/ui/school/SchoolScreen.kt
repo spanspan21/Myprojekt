@@ -211,7 +211,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                         EmptyState(
                             Icons.Rounded.School,
                             "No grades yet",
-                            "Log Ex & Schulaufgaben — averages and targets appear here",
+                            "Log quizzes & exams — averages and targets appear here",
                             SchoolAccent,
                             actionLabel = "Add grade",
                             onAction = { addGradeFor = "" },
@@ -421,8 +421,8 @@ private fun SubjectRow(
                         "Top band — keep it above 13 pts."
                     } else {
                         val n = SchoolStore.neededFor(ctx, subject, target.toDouble(), SchoolStore.WEIGHT_SA)
-                        if (n == null) "Ø $target is out of reach in a single Schulaufgabe."
-                        else "Need $n pts in the next Schulaufgabe for Ø $target."
+                        if (n == null) "Ø $target is out of reach in a single exam."
+                        else "Need $n pts in the next exam for Ø $target."
                     }
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -482,7 +482,7 @@ private fun GradeLine(g: Grade, onDelete: (String) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         VerdictPill(
-            if (g.weight == SchoolStore.WEIGHT_SA) "SA" else "Ex",
+            if (g.weight == SchoolStore.WEIGHT_SA) "Exam" else "Quiz",
             if (g.weight == SchoolStore.WEIGHT_SA) SchoolAccent else TextMuted,
         )
         Spacer(Modifier.width(9.dp))
@@ -868,8 +868,8 @@ private fun AddGradeSheet(
             Overline("Weight")
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                WeightChip("Ex · ×1", weight == SchoolStore.WEIGHT_EX) { weight = SchoolStore.WEIGHT_EX }
-                WeightChip("Schulaufgabe · ×2", weight == SchoolStore.WEIGHT_SA) { weight = SchoolStore.WEIGHT_SA }
+                WeightChip("Quiz · ×1", weight == SchoolStore.WEIGHT_EX) { weight = SchoolStore.WEIGHT_EX }
+                WeightChip("Exam · ×2", weight == SchoolStore.WEIGHT_SA) { weight = SchoolStore.WEIGHT_SA }
             }
             Spacer(Modifier.height(14.dp))
 

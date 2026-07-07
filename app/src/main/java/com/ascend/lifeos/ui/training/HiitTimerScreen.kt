@@ -120,7 +120,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                 GlassField("Sets", cSets, KeyboardType.Number, Modifier.weight(1f)) { cSets = it }
             }
             Spacer(Modifier.height(14.dp))
-            HudButton("Starten", Modifier.fillMaxWidth()) {
+            HudButton("Start", Modifier.fillMaxWidth()) {
                 val p = HiitPreset("Custom", cWork.toIntOrNull() ?: 30, cRest.toIntOrNull() ?: 15, cRounds.toIntOrNull() ?: 8, cSets.toIntOrNull() ?: 3)
                 preset = p; currentRound = 1; currentSet = 1; isWork = true
                 remaining = p.workSec; totalPhase = p.workSec; running = true

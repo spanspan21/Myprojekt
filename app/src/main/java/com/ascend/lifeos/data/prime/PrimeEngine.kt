@@ -180,7 +180,7 @@ object PrimeEngine {
         val subScores = listOfNotNull(
             fuelScore?.let { "Fuel" to (it * 100).roundToInt() },
             trainScore?.let { "Training" to (it * 100).roundToInt() },
-            sleepScore?.let { "Schlaf" to (it * 100).roundToInt() },
+            sleepScore?.let { "Sleep" to (it * 100).roundToInt() },
             hydraScore?.let { "Hydration" to (it * 100).roundToInt() },
             screenScore?.let { "Focus" to (it * 100).roundToInt() },
             ("Logging" to (logScore * 100).roundToInt()),
@@ -189,11 +189,11 @@ object PrimeEngine {
         // ── Anzeigen ──
         fun mins(m: Int) = "${m / 60}h %02dm".format(m % 60)
         val gauges = listOf(
-            PrimeGauge("KALORIEN", "$kcalToday", if (p.kcalGoal > 0) (kcalToday.toFloat() / p.kcalGoal).coerceIn(0f, 1f) else null, "Ziel ${p.kcalGoal}"),
-            PrimeGauge("PROTEIN", "$protToday g", if (p.proteinGoal > 0) (protToday.toFloat() / p.proteinGoal).coerceIn(0f, 1f) else null, "Ziel ${p.proteinGoal} g"),
-            PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), if (p.waterGoal > 0) (hydrationMl.toFloat() / (p.waterGoal * 250)).coerceIn(0f, 1f) else null, "Ziel %.1f L".format(p.waterGoal * 0.25)),
-            PrimeGauge("TRAINING", if (setsToday > 0) "$setsToday Sätze" else "Ruhetag", trainScore?.toFloat(), "ACR %.2f · ${verdict.title}".format(load.acr)),
-            PrimeGauge("SCHLAF", lastNightMin?.let { mins(it) } ?: "—", lastNightMin?.let { (it / 480f).coerceIn(0f, 1f) }, "Ziel 8h"),
+            PrimeGauge("CALORIES", "$kcalToday", if (p.kcalGoal > 0) (kcalToday.toFloat() / p.kcalGoal).coerceIn(0f, 1f) else null, "Target ${p.kcalGoal}"),
+            PrimeGauge("PROTEIN", "$protToday g", if (p.proteinGoal > 0) (protToday.toFloat() / p.proteinGoal).coerceIn(0f, 1f) else null, "Target ${p.proteinGoal} g"),
+            PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), if (p.waterGoal > 0) (hydrationMl.toFloat() / (p.waterGoal * 250)).coerceIn(0f, 1f) else null, "Target %.1f L".format(p.waterGoal * 0.25)),
+            PrimeGauge("TRAINING", if (setsToday > 0) "$setsToday sets" else "Rest day", trainScore?.toFloat(), "ACR %.2f · ${verdict.title}".format(load.acr)),
+            PrimeGauge("SLEEP", lastNightMin?.let { mins(it) } ?: "—", lastNightMin?.let { (it / 480f).coerceIn(0f, 1f) }, "Target 8h"),
             PrimeGauge("SCREEN", screenMin?.let { mins(it) } ?: "—", screenScore?.toFloat(), "Budget ${mins(screenBudget)}"),
         )
 
@@ -203,61 +203,61 @@ object PrimeEngine {
         val kcalLeft = p.kcalGoal - kcalToday
         if (protLeft >= 25 && hour >= 16 && kcalLeft > 150) {
             directives += PrimeDirective(
-                "Protein schließen: noch $protLeft g offen",
-                "Magerquark 300 g ≈ 36 g — passt in $kcalLeft kcal Rest.",
+                "Close your protein: $protLeft g left",
+                "Low-fat quark 300 g ≈ 36 g — fits your $kcalLeft kcal left.",
                 2.0 + protLeft / 50.0 + hour / 24.0,
             )
         }
         val waterLeftGlasses = p.waterGoal - hydrationMl / 250
         if (waterLeftGlasses >= 3 && hour >= 14) {
             directives += PrimeDirective(
-                "Hydration aufholen: ~$waterLeftGlasses Gläser offen",
-                "Abends nachtrinken stört den Schlaf — jetzt ist das Fenster.",
+                "Catch up on hydration: ~$waterLeftGlasses glasses left",
+                "Topping up late disrupts sleep — now's your window.",
                 1.2 + waterLeftGlasses / 8.0,
             )
         }
         if (screenMin != null && screenMin > screenBudget * 0.8) {
             val over = screenMin - screenBudget
             directives += PrimeDirective(
-                if (over > 0) "Screen ${mins(over)} über Budget" else "Screen-Budget fast erreicht",
-                "Guard an — der Abend gehört dem Log-out.",
+                if (over > 0) "Screen ${mins(over)} over budget" else "Screen budget nearly hit",
+                "Guard on — the evening belongs to logging off.",
                 1.0 + (screenMin.toDouble() / screenBudget),
             )
         }
         if (tired != null) {
             directives += PrimeDirective(
-                "${muscleDe(tired.first)} braucht ~${com.ascend.lifeos.data.training.MuscleRecovery.hoursUntilFresh(tired.first, tired.second)} h Pause",
-                "Frische ${(tired.second * 100).toInt()} % — heute andere Muskelgruppe oder Ruhetag.",
+                "${muscleDe(tired.first)} needs ~${com.ascend.lifeos.data.training.MuscleRecovery.hoursUntilFresh(tired.first, tired.second)}h rest",
+                "Freshness ${(tired.second * 100).toInt()} % — different muscle group today, or a rest day.",
                 1.5 + (0.55 - tired.second),
             )
         }
         if (load.acr > 1.4 && load.ctl >= 0.35) {
             directives += PrimeDirective(
-                "Last fährt heiß: ACR %.2f".format(load.acr),
-                "Akut deutlich über chronisch — leichte Session oder Mobility statt Volumen.",
+                "Load running hot: ACR %.2f".format(load.acr),
+                "Acute well above chronic — light session or mobility instead of volume.",
                 1.8 + (load.acr - 1.4),
             )
         }
         if (sleepAvg7 != null && sleepAvg7 < 435) { // Ø unter 7h15
             directives += PrimeDirective(
-                "Schlafschuld: Ø ${mins(sleepAvg7.toInt())} über 7 Nächte",
-                "Heute 30 min früher — Recovery ist dein Multiplikator.",
+                "Sleep debt: avg ${mins(sleepAvg7.toInt())} over 7 nights",
+                "30 min earlier tonight — recovery is your multiplier.",
                 1.6 + (480 - sleepAvg7) / 240.0,
             )
         }
         if (examSoon != null && examSoon.dayEpoch - todayEpoch in 0..3) {
             val days = (examSoon.dayEpoch - todayEpoch).toInt()
             directives += PrimeDirective(
-                "${examSoon.title}: ${if (days == 0) "HEUTE" else "in $days Tag${if (days == 1) "" else "en"}"}",
-                "Lernblock in den Kalender — der Zeitblock-Solver findet freie Slots.",
+                "${examSoon.title}: ${if (days == 0) "TODAY" else "in $days day${if (days == 1) "" else "s"}"}",
+                "Study block in the calendar — the time-block solver finds free slots.",
                 2.2 - days * 0.4,
             )
         }
         // erst ab Monatstag ≥ 7 — davor ist die Hochrechnung aus 1–6 Tagen Kaffeesatz
         if (budget > 0 && projectedSpend > budget && LocalDate.now().dayOfMonth >= 7) {
             directives += PrimeDirective(
-                "Budget-Kurs: ${euro(projectedSpend)} zum Monatsende",
-                "Projektion über ${euro(budget)} — Tagesrate ${euro(FinanceStore.dailyAvgSpendCents(ctx))} senken.",
+                "Budget pace: ${euro(projectedSpend)} by month-end",
+                "Projection over ${euro(budget)} — cut the daily rate of ${euro(FinanceStore.dailyAvgSpendCents(ctx))}.",
                 1.0 + (projectedSpend.toDouble() / budget - 1.0),
             )
         }
@@ -268,8 +268,8 @@ object PrimeEngine {
         val risk = PrimeMath.streakRisk(openMissions, hour, habit)
         if (risk >= 45 && p.streak > 2) {
             directives += PrimeDirective(
-                "Streak-Risiko $risk % (Tag ${p.streak})",
-                "$openMissions Mission${if (openMissions == 1) "" else "en"} offen und der Abend läuft.",
+                "Streak risk $risk % (day ${p.streak})",
+                "$openMissions mission${if (openMissions == 1) "" else "s"} open and the evening's running out.",
                 1.4 + risk / 100.0 + p.streak / 60.0,
             )
         }
@@ -282,17 +282,17 @@ object PrimeEngine {
             val base = hist.filter { it > 0 }
             val z = PrimeMath.zScore(base, value) ?: return
             if (abs(z) >= 1.8 && value > 0) {
-                anomalies += "$label heute ${fmt(value)}$unit — ${if (z > 0) "deutlich über" else "deutlich unter"} deinem Üblich (${fmt(PrimeMath.mean(base))}$unit)"
+                anomalies += "$label today ${fmt(value)}$unit — ${if (z > 0) "well above" else "well below"} your usual (${fmt(PrimeMath.mean(base))}$unit)"
             }
         }
-        anomaly("Kalorien", histKcal, kcalToday.toDouble(), " kcal", onlyAfter = 18)
+        anomaly("Calories", histKcal, kcalToday.toDouble(), " kcal", onlyAfter = 18)
         anomaly("Protein", histProt, protToday.toDouble(), " g", onlyAfter = 18)
-        anomaly("Trainingsvolumen", loads.dropLast(1).takeLast(21), loads.last(), " Last")
+        anomaly("Training volume", loads.dropLast(1).takeLast(21), loads.last(), " load")
         if (lastNightMin != null && tst7.size >= 5) {
             // Wert UND Verteilung jetzt aus derselben Quelle (SleepStore) — kein
             // z-Score mehr über zwei Messsysteme mit systematischem Offset.
             PrimeMath.zScore(tst7.dropLast(1), lastNightMin.toDouble(), minN = 4)?.let { z ->
-                if (abs(z) >= 1.6) anomalies += "Schlaf ${mins(lastNightMin)} — ${if (z > 0) "klar mehr" else "klar weniger"} als deine Woche (Ø ${mins(sleepAvg7!!.toInt())})"
+                if (abs(z) >= 1.6) anomalies += "Sleep ${mins(lastNightMin)} — ${if (z > 0) "clearly more" else "clearly less"} than your week (avg ${mins(sleepAvg7!!.toInt())})"
             }
         }
 
@@ -309,15 +309,15 @@ object PrimeEngine {
             }
         }
         insight(setsHist, histProt) { r ->
-            if (r > 0) "Trainingstage ziehen dein Protein hoch (r=%.2f) — der Zusammenhang trägt.".format(r)
-            else "An Trainingstagen isst du WENIGER Protein (r=%.2f) — genau falsch herum.".format(r)
+            if (r > 0) "Training days pull your protein up (r=%.2f) — the link holds.".format(r)
+            else "On training days you eat LESS protein (r=%.2f) — exactly backwards.".format(r)
         }
         insight(setsHist, histKcal) { r ->
-            if (r > 0) "Mehr Training, mehr Kalorien (r=%.2f) — dein Körper fordert nach.".format(r)
-            else "Trainingstage sind deine kalorienärmsten (r=%.2f) — Unterfütterung droht.".format(r)
+            if (r > 0) "More training, more calories (r=%.2f) — your body demands it.".format(r)
+            else "Training days are your lowest-calorie days (r=%.2f) — underfueling looms.".format(r)
         }
         insight(histWater, histKcal) { r ->
-            if (r > 0) "Gute Trink-Tage sind auch gute Log-Tage (r=%.2f).".format(r) else "Viel getrunken heißt bei dir wenig geloggt (r=%.2f) — zwei Gewohnheiten, ein Anker?".format(r)
+            if (r > 0) "Good hydration days are good logging days too (r=%.2f).".format(r) else "More water means less logging for you (r=%.2f) — two habits, one anchor?".format(r)
         }
 
         // ── Prognosen ──
@@ -335,15 +335,15 @@ object PrimeEngine {
         if (shares.size >= 5 && kcalToday > 0) {
             PrimeMath.projectEndOfDay(kcalToday.toDouble(), PrimeMath.mean(shares))?.let { proj ->
                 val diff = proj - p.kcalGoal
-                forecasts += "Kalorien-Landung heute: ~${proj.toInt()} kcal (${if (diff >= 0) "+" else "−"}${abs(diff).toInt()} zum Ziel)"
+                forecasts += "Calorie landing today: ~${proj.toInt()} kcal (${if (diff >= 0) "+" else "−"}${abs(diff).toInt()} vs target)"
             }
         }
-        if (risk > 0 && p.streak > 0) forecasts += "Streak-Risiko heute Abend: $risk %"
+        if (risk > 0 && p.streak > 0) forecasts += "Streak risk tonight: $risk %"
         nextEvent?.let {
-            forecasts += "Nächster Termin: ${it.title} um %02d:%02d".format(it.startMin / 60, it.startMin % 60)
+            forecasts += "Next event: ${it.title} at %02d:%02d".format(it.startMin / 60, it.startMin % 60)
         }
         if (verdict.zone != TrainingLoad.Zone.BASE) {
-            forecasts += "Trainingszone: ${verdict.title} — ${verdict.detail.take(90)}"
+            forecasts += "Training zone: ${verdict.title} — ${verdict.detail.take(90)}"
         }
 
         PrimeReport(index, subScores, gauges, ranked, anomalies, insights, forecasts)
@@ -353,12 +353,12 @@ object PrimeEngine {
     private fun euro(cents: Long): String = "%.0f €".format(cents / 100.0)
 
     private fun muscleDe(m: Muscle): String = when (m) {
-        Muscle.CHEST -> "Brust"; Muscle.SHOULDERS -> "Schultern"; Muscle.TRICEPS -> "Trizeps"
-        Muscle.BICEPS -> "Bizeps"; Muscle.LATS -> "Lat"; Muscle.TRAPS -> "Trapez"
-        Muscle.QUADS -> "Quads"; Muscle.HAMSTRINGS -> "Hamstrings"; Muscle.GLUTES -> "Gluteus"
-        Muscle.CALVES -> "Waden"; Muscle.ABS -> "Core"; Muscle.OBLIQUES -> "Seitbauch"
-        Muscle.LOWER_BACK -> "Unterer Rücken"; Muscle.FOREARMS -> "Unterarme"
-        Muscle.REAR_DELTS -> "Hintere Schulter"; Muscle.HIP_FLEXORS -> "Hüftbeuger"
+        Muscle.CHEST -> "Chest"; Muscle.SHOULDERS -> "Shoulders"; Muscle.TRICEPS -> "Triceps"
+        Muscle.BICEPS -> "Biceps"; Muscle.LATS -> "Lats"; Muscle.TRAPS -> "Traps"
+        Muscle.QUADS -> "Quads"; Muscle.HAMSTRINGS -> "Hamstrings"; Muscle.GLUTES -> "Glutes"
+        Muscle.CALVES -> "Calves"; Muscle.ABS -> "Core"; Muscle.OBLIQUES -> "Obliques"
+        Muscle.LOWER_BACK -> "Lower back"; Muscle.FOREARMS -> "Forearms"
+        Muscle.REAR_DELTS -> "Rear delts"; Muscle.HIP_FLEXORS -> "Hip flexors"
         else -> m.name.lowercase().replaceFirstChar { it.uppercase() }
     }
 }

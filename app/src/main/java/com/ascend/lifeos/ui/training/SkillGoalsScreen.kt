@@ -124,6 +124,9 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // the skill, drawn — you see the shape of the goal
+                PoseFigure(poseFor(skill.id, skill.name), Modifier.size(52.dp), color = Mod.Train)
+                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(skill.name, color = TextPrimary, fontFamily = Body, fontSize = 14.5.sp, fontWeight = FontWeight.ExtraBold)

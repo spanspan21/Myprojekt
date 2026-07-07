@@ -75,7 +75,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
     GlassPanel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("WOCHEN-REVIEW", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
+                Text("WEEKLY REVIEW", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
                 Text("$score", color = scoreColor, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
                 Text(" / 100", color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
@@ -98,15 +98,15 @@ fun WeeklyFuelReview(isToday: Boolean) {
             }
             Spacer(Modifier.height(10.dp))
             Text(
-                "Ø $avgK kcal · Ø $avgP g Protein · $logged/7 Tage geloggt",
+                "Ø $avgK kcal · Ø $avgP g protein · $logged/7 days logged",
                 color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 when {
-                    score >= 80 -> "Messerscharfe Woche — Konstanz ist deine Superkraft."
-                    score >= 55 -> "Solide Basis. Protein an ${(logged - protHit).coerceAtLeast(0)} geloggten Tagen offen — der Lücken-Füller hilft abends."
-                    else -> "Neustart-Woche: heute zählt, nicht gestern. Ein geloggter Tag ist ein guter Tag."
+                    score >= 80 -> "Razor-sharp week — consistency is your superpower."
+                    score >= 55 -> "Solid base. Protein came up short on ${(logged - protHit).coerceAtLeast(0)} logged days — the gap filler helps in the evening."
+                    else -> "Reset week: today counts, not yesterday. One logged day is a good day."
                 },
                 color = TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp,
             )

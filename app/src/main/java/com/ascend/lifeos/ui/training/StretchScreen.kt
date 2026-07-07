@@ -112,8 +112,10 @@ fun StretchScreen(onBack: () -> Unit) {
                     drawArc(Cyan, -90f, fraction * 360f, false, style = stroke)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("$remaining", color = TextPrimary, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("seconds", color = TextDim, fontSize = 12.sp)
+                    // the pose sits inside the countdown ring — see the stretch, hold the stretch
+                    PoseFigure(poseFor("", ex.name), Modifier.size(94.dp), color = Cyan)
+                    Text("$remaining", color = TextPrimary, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("seconds", color = TextDim, fontSize = 11.sp)
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -124,7 +126,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 if (ex.hasSides) {
                     GlassPanel(corner = 10.dp, fill = if (isSecondSide) Purple.copy(alpha = 0.1f) else Cyan.copy(alpha = 0.1f)) {
                         Text(
-                            if (isSecondSide) "Rechte Seite" else "Linke Seite",
+                            if (isSecondSide) "Right side" else "Left side",
                             color = if (isSecondSide) Purple else Cyan,
                             fontSize = 13.sp, fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -153,7 +155,7 @@ fun StretchScreen(onBack: () -> Unit) {
                     Modifier.clip(RoundedCornerShape(16.dp)).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                         .clickable { running = false }.padding(horizontal = 20.dp, vertical = 16.dp),
-                ) { Text("Beenden", color = Red, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                ) { Text("End", color = Red, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.weight(0.3f))
         }

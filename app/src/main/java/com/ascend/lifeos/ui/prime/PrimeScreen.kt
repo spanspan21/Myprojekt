@@ -91,7 +91,7 @@ fun PrimeScreen(onClose: () -> Unit) {
         if (r == null) {
             Panel(Modifier.fillMaxWidth()) {
                 Text(
-                    "Denke nach — fusioniere Fuel, Training, Schlaf, Guard, Kalender …",
+                    "Thinking — fusing Fuel, Training, Sleep, Guard, Calendar …",
                     color = TextMuted, fontSize = 13.sp, fontFamily = Body,
                     modifier = Modifier.padding(18.dp),
                 )
@@ -105,7 +105,7 @@ fun PrimeScreen(onClose: () -> Unit) {
         // ── Jetzt: die drei wirksamsten Handgriffe ───────────────────────
         if (r.directives.isNotEmpty()) {
             Spacer(Modifier.height(22.dp))
-            SectionLabel("Jetzt")
+            SectionLabel("Now")
             Spacer(Modifier.height(8.dp))
             r.directives.forEachIndexed { i, d ->
                 Panel(Modifier.fillMaxWidth()) {
@@ -159,7 +159,7 @@ fun PrimeScreen(onClose: () -> Unit) {
         // ── Auffällig: Anomalien gegen die eigene Geschichte ─────────────
         if (r.anomalies.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            SectionLabel("Auffällig")
+            SectionLabel("Flagged")
             Spacer(Modifier.height(8.dp))
             Panel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -174,7 +174,7 @@ fun PrimeScreen(onClose: () -> Unit) {
         // ── Muster: Zusammenhänge, die deine Daten wirklich tragen ───────
         if (r.insights.isNotEmpty()) {
             Spacer(Modifier.height(22.dp))
-            SectionLabel("Muster")
+            SectionLabel("Patterns")
             Spacer(Modifier.height(8.dp))
             Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -192,7 +192,7 @@ fun PrimeScreen(onClose: () -> Unit) {
         // ── Prognose ─────────────────────────────────────────────────────
         if (r.forecasts.isNotEmpty()) {
             Spacer(Modifier.height(22.dp))
-            SectionLabel("Prognose")
+            SectionLabel("Forecast")
             Spacer(Modifier.height(8.dp))
             Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
@@ -206,7 +206,7 @@ fun PrimeScreen(onClose: () -> Unit) {
 
         Spacer(Modifier.height(14.dp))
         Text(
-            "PRIME rechnet nur mit deinen eigenen geloggten Daten — jede Zeile nennt ihren Grund.",
+            "PRIME runs only on your own logged data — every line names its reason.",
             color = TextDim.copy(alpha = 0.7f), fontSize = 10.sp, fontFamily = Body, lineHeight = 14.sp,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
@@ -227,9 +227,9 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
     val tierLabel = when {
         index == null -> ""
         index >= 80 -> "PRIME"
-        index >= 60 -> "STARK"
-        index >= 40 -> "SOLIDE"
-        else -> "AUFBAU"
+        index >= 60 -> "STRONG"
+        index >= 40 -> "SOLID"
+        else -> "BUILDING"
     }
     // Ring füllt sich beim Öffnen von 0 auf den Index (Sweep-up)
     val sweep by animateFloatAsState(
@@ -289,7 +289,7 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
                     } else {
                         Text("—", color = TextMuted, fontFamily = Display, fontSize = 46.sp, fontWeight = FontWeight.ExtraBold)
                         Text(
-                            "NOCH KEINE DATEN", color = TextDim, fontFamily = Display, fontSize = 8.sp,
+                            "NO DATA YET", color = TextDim, fontFamily = Display, fontSize = 8.sp,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                         )
                     }
@@ -302,7 +302,7 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
             if (index == null) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Ein paar geloggte Tage, dann steht er.",
+                    "A few logged days and it's set.",
                     color = TextMuted, fontSize = 12.sp, fontFamily = Body,
                 )
             }

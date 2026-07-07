@@ -308,7 +308,14 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                 Text(ex.exerciseName, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(10.dp))
+            // the movement, drawn — so you always know the shape of the rep
+            PoseFigure(
+                poseFor(ex.exerciseId, ex.exerciseName),
+                Modifier.fillMaxWidth().height(92.dp),
+                color = Accent,
+            )
+            Spacer(Modifier.height(14.dp))
 
             // ── Reps +/- (56dp stepper buttons) ────────────────────
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
