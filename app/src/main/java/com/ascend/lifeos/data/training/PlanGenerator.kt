@@ -134,7 +134,7 @@ object PlanGenerator {
             profile, skillGoals, chainLevels, bestReps,
             allExercises.ifEmpty { ExerciseSeed.ALL_EXERCISES },
             bodyweightKg, hasVest, vestMaxKg, isDeload, len, volumeScale,
-            readiness, freshness, season, seasonWord,
+            trainWeek.coerceIn(0, 4), readiness, freshness, season, seasonWord,
         )
 
         // sick mode: recovery is the program
@@ -153,10 +153,12 @@ object PlanGenerator {
                 ctx.fullBody(0, "Full Body A", pushBias = true),
                 ctx.fullBody(1, "Full Body B", pushBias = false),
             )
+            // ≥2×/week per muscle (Schoenfeld: 2× beats 1× at matched volume).
+            // Skill work is embedded in every session, so frequency also feeds skills.
             3 -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2))
-            4 -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2), ctx.skillDay(3))
-            5 -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2), ctx.skillDay(3), ctx.core(4))
-            else -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2), ctx.push(3, "Push B"), ctx.pull(4, "Pull B"), ctx.skillDay(5))
+            4 -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2), ctx.fullBody(3, "Full Body", pushBias = false))
+            5 -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2), ctx.fullBody(3, "Full Body A", pushBias = true), ctx.fullBody(4, "Full Body B", pushBias = false))
+            else -> listOf(ctx.push(0), ctx.pull(1), ctx.legsCore(2), ctx.push(3, "Push B"), ctx.pull(4, "Pull B"), ctx.legsCore(5))
         }
 
         // Fitbod rule: the freshest muscles train first — order the week so
@@ -175,13 +177,12 @@ object PlanGenerator {
         // day. Discipline over comfort.
 
         val note = when {
-            isDeload -> "Deload week (${trainWeek + 1}/5) — the programmed step back that lets you push harder next block."
             examWeek -> "Exam week — volume trimmed 30% so school gets your focus. Still show up."
             season == "IN" -> "In-season — maintain strength, stay sharp for the ice."
             season == "PLAYOFF" -> "Playoffs — activation only. The games are the training."
             season == "PRE" -> "Pre-season — explosive quality over volume."
-            trainWeek > 0 -> "Build week ${trainWeek + 1}/5 — volume ${if (volumeScale >= 1.0) "+" else ""}${Math.round(volumeScale * 100 - 100).toInt()}%. Chase every rep."
-            else -> "Full send — hit every prescribed set at target effort."
+            // MEV→MRV volume + the honest, calculated readiness note
+            else -> VolumeModel.rationale(trainWeek, readiness, isDeload)
         }
         return WeekPlan(sessions, note)
     }
@@ -361,6 +362,7 @@ object PlanGenerator {
         val deload: Boolean,
         val len: Int,                          // coerced 60..120
         val volumeScale: Double,
+        val trainWeek: Int,                    // mesocycle week 0..4 (drives MEV→MRV)
         val readiness: Int?,
         val freshness: MuscleRecovery.Freshness?,
         val season: String,
@@ -376,7 +378,10 @@ object PlanGenerator {
             return pe.sets * (workSec + pe.restSec) / 60.0
         }
 
-        val setsBase get() = if (deload) 2 else Math.round(4 * volumeScale).toInt().coerceIn(3, 5)
+        // Evidence-based volume: MEV→MRV ramp over the mesocycle, scaled by
+        // recovery (calculated fatigue, bounded — never below MEV). Season phases
+        // still cap it via seasonScale folded into the mesocycle week when needed.
+        val setsBase get() = VolumeModel.setsPerExercise(trainWeek, readiness, deload)
 
         // block minute budgets for a normal day
         val warmMin = 10
@@ -587,38 +592,36 @@ object PlanGenerator {
             val isHold = lv.unlockHoldSecs != null
             val target = lv.unlockReps ?: 10
             val best = bestReps[lv.exerciseId] ?: 0
-            val vest = if (!isHold && hasVest && !deload) {
+            // The PLAN owns the vest: only once you can do 15 clean bodyweight
+            // reps (earned), it loads a calculated %-BW and the range resets with
+            // load — double progression. No vest before then, none in a deload.
+            val vest = if (!isHold && hasVest && !deload && best >= 15) {
                 TrainBrain.vestSuggestion(best, bodyweightKg, vestMaxKg)
             } else null
+            val rir = if (deload) "RPE 6 · leave it in the tank" else "@ 2 RIR (RPE 8)"
 
+            // Study-based rep prescription: hypertrophy lives in 8–15 reps taken
+            // close to failure; double progression drives load once the top is hit.
             val (lo, hi, note) = when {
-                isHold -> Triple(0, 0, next?.let { "Pass ${lv.unlockHoldSecs}s ×3 sessions → ${it.exerciseName}" })
-                best == 0 -> Triple(
-                    (target * 0.6f).toInt().coerceAtLeast(3), target,
-                    "No logged history yet — find your honest baseline",
-                )
-                best >= target -> Triple(
-                    (best * 0.7f).toInt().coerceAtLeast(3), best + 1,
-                    if (vest != null) "Best $best beaten bodyweight — +${vest}kg vest, quality first"
-                    else "Last best $best — top of range hit, go for ${best + 1}",
-                )
+                isHold -> {
+                    val holdT = ((lv.unlockHoldSecs ?: 20) * if (deload) 0.6f else 0.85f).toInt().coerceAtLeast(8)
+                    Triple(0, 0, "Hold ${holdT}s × $setsBase" + (next?.let { " · ${lv.unlockHoldSecs}s ×3 sessions → ${it.exerciseName}" } ?: ""))
+                }
+                vest != null -> Triple(6, 10, "Vest ${vest}kg · 6–10 reps $rir — at 10 clean, add load (bodyweight best $best)")
+                best == 0 -> Triple(8, 15, "8–15 reps $rir — log an honest baseline first")
                 else -> Triple(
-                    (target * 0.6f).toInt().coerceAtLeast(3), target,
-                    next?.let { "Unlock at $target ×3 sessions → ${it.exerciseName}" },
+                    8, 15,
+                    "8–15 reps $rir" + (next?.let { " · 15 clean ×3 → ${it.exerciseName}" } ?: " · then load the vest"),
                 )
             }
 
-            // progressive Overload explizit: jeder Kraftsatz trägt ein Ziel nahe
-            // am Versagen (2 RIR / RPE 8, im Deload lockerer) — der Haupttreiber
-            // der Hypertrophie bei 5–30 Wdh ist die Nähe zum Muskelversagen.
-            val effort = if (isHold) note else listOfNotNull(note, "@ ${if (deload) "RPE 6 · locker" else "2 RIR (RPE 8)"}").joinToString(" · ")
             return PlannedExercise(
                 lv.exerciseId, lv.exerciseName,
                 sets = setsBase,
                 repsLow = lo, repsHigh = hi,
-                holdSec = lv.unlockHoldSecs?.let { (it * if (deload) 0.6f else 0.8f).toInt().coerceAtLeast(10) },
+                holdSec = lv.unlockHoldSecs?.let { (it * if (deload) 0.6f else 0.85f).toInt().coerceAtLeast(10) },
                 vestKg = vest, isSkillWork = false, restSec = 90,
-                section = BlockType.STRENGTH, note = effort,
+                section = BlockType.STRENGTH, note = note,
             )
         }
 

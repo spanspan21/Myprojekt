@@ -153,6 +153,7 @@ data class TemplateExercise(
     val targetReps: Int,
     val restSeconds: Int,
     val supersetGroup: Int?,
+    val prescription: String? = null,   // study-based rep/RIR/vest cue from the plan
 )
 
 data class HiitPreset(

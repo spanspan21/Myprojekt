@@ -11,6 +11,7 @@ import com.ascend.lifeos.data.sleep.SleepProtocol
 import com.ascend.lifeos.data.training.Muscle
 import com.ascend.lifeos.data.training.MuscleRecovery
 import com.ascend.lifeos.data.training.TrainBrain
+import com.ascend.lifeos.data.training.VolumeModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -134,6 +135,24 @@ class AuditFixesTest {
     }
 
     // ── L9: vest suggestion is honest whole kilos ────────────────────────────
+
+    // ── Volume model: MEV→MRV ramp + calculated fatigue ─────────────────────
+
+    @Test
+    fun `volume ramps MEV to MRV across the mesocycle`() {
+        assertEquals(3, VolumeModel.setsPerExercise(0, 80, false))   // week 1 — MEV
+        assertEquals(4, VolumeModel.setsPerExercise(1, 80, false))
+        assertEquals(5, VolumeModel.setsPerExercise(2, 80, false))
+        assertEquals(6, VolumeModel.setsPerExercise(3, 80, false))   // peak — MRV
+        assertEquals(2, VolumeModel.setsPerExercise(2, 80, true))    // deload
+    }
+
+    @Test
+    fun `low readiness shaves exactly one set, floored at MEV`() {
+        assertEquals(5, VolumeModel.setsPerExercise(3, 40, false))   // peak, tired → 6-1
+        assertEquals(3, VolumeModel.setsPerExercise(0, 40, false))   // week1 tired → floored at MEV 3
+        assertEquals(6, VolumeModel.setsPerExercise(3, 90, false))   // fresh → full send
+    }
 
     @Test
     fun `vest load progresses with strength, capped`() {

@@ -308,6 +308,11 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                 Text(ex.exerciseName, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
+            // study-based prescription: how many reps, at what effort, when to load
+            ex.prescription?.let {
+                Spacer(Modifier.height(6.dp))
+                Text(it, color = Accent.copy(alpha = 0.85f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
+            }
             Spacer(Modifier.height(10.dp))
             // the movement, drawn — so you always know the shape of the rep
             PoseFigure(

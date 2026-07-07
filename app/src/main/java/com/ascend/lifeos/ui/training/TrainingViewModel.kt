@@ -245,6 +245,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     targetReps = if (pe.holdSec != null) pe.holdSec else pe.repsHigh,
                     restSeconds = pe.restSec,
                     supersetGroup = null,
+                    prescription = pe.note,
                 )
             },
             estimatedMinutes = session.estMin,
@@ -294,6 +295,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 targetReps = te.targetReps,
                 restSeconds = te.restSeconds,
                 supersetGroup = te.supersetGroup,
+                prescription = te.prescription,
             ))
         }
 
@@ -714,6 +716,7 @@ class ActiveExercise(
     val targetReps: Int,
     val restSeconds: Int,
     val supersetGroup: Int?,
+    val prescription: String? = null,   // study-based rep/RIR/vest cue from the plan
 ) {
     val loggedSets = mutableStateListOf<WorkoutSetEntity>()
 }
