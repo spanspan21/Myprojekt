@@ -1,8 +1,8 @@
 package com.ascend.lifeos.data
 
 import android.content.Context
+import com.ascend.lifeos.data.prime.PrimeMath
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * The insight detective: scans every metric pair for real correlations and
@@ -57,7 +57,10 @@ object InsightMiner {
             val common = a.series.keys intersect b.series.keys
             if (common.size < 10) continue
             val pairs = common.map { a.series[it]!! to b.series[it]!! }
-            val r = pearson(pairs)
+            // common.size >= 10 is guaranteed above, so PrimeMath's minN=10 never trips;
+            // constant series: old fn returned 0.0 (→ skipped below), PrimeMath returns
+            // null (→ skipped here) — same outcome.
+            val r = PrimeMath.pearson(pairs.map { it.first }, pairs.map { it.second }) ?: continue
             if (abs(r) < 0.35) continue
             val key = "${a.id}|${b.id}|${if (r > 0) "+" else "-"}"
             if (key in seen) continue
@@ -72,17 +75,5 @@ object InsightMiner {
     fun markSeen(ctx: Context, key: String) {
         val seen = Prefs.string(ctx, "insights_seen", "")
         Prefs.setString(ctx, "insights_seen", ("$seen;$key").takeLast(2000))
-    }
-
-    private fun pearson(pairs: List<Pair<Double, Double>>): Double {
-        val n = pairs.size
-        val mx = pairs.sumOf { it.first } / n
-        val my = pairs.sumOf { it.second } / n
-        var num = 0.0; var dx = 0.0; var dy = 0.0
-        for ((x, y) in pairs) {
-            num += (x - mx) * (y - my); dx += (x - mx) * (x - mx); dy += (y - my) * (y - my)
-        }
-        val den = sqrt(dx * dy)
-        return if (den == 0.0) 0.0 else num / den
     }
 }

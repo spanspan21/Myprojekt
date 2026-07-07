@@ -308,7 +308,9 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                 .clip(RoundedCornerShape(15.dp))
                 .background(if (canSave) FinAccent else FinAccent.copy(alpha = 0.18f))
                 .clickable(enabled = canSave) {
-                    LifeStores.addTxn(ctx, -cents, cat ?: "Other", note)
+                    // one booking entry point: FinanceStore bumps its rev too,
+                    // so Finance UI refreshes without relying on double-subscribe
+                    com.ascend.lifeos.data.finance.FinanceStore.bookTxn(ctx, -cents, cat ?: "Other", note)
                     haptic(ctx, 24)
                     onSaved()
                 }

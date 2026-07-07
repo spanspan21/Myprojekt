@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -27,7 +26,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.rounded.Add
@@ -45,13 +43,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.calendar.CalendarRepo
@@ -61,6 +56,12 @@ import com.ascend.lifeos.data.school.Deck
 import com.ascend.lifeos.data.school.Grade
 import com.ascend.lifeos.data.school.Hw
 import com.ascend.lifeos.data.school.SchoolStore
+import com.ascend.lifeos.ui.finance.ActionButton
+import com.ascend.lifeos.ui.finance.AddRowButton
+import com.ascend.lifeos.ui.finance.FinChip
+import com.ascend.lifeos.ui.finance.GlassField
+import com.ascend.lifeos.ui.finance.Overline
+import com.ascend.lifeos.ui.finance.StepperOrb
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
@@ -235,7 +236,7 @@ fun SchoolScreen(onClose: () -> Unit) {
 
             item(key = "add_grade") {
                 Spacer(Modifier.height(4.dp))
-                AddRowButton("Add grade") { addGradeFor = "" }
+                AddRowButton("Add grade", accent = SchoolAccent) { addGradeFor = "" }
                 Spacer(Modifier.height(26.dp))
             }
 
@@ -278,7 +279,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                 }
                 item(key = "import_deck") {
                     Spacer(Modifier.height(4.dp))
-                    AddRowButton("Import deck") { showImport = true }
+                    AddRowButton("Import deck", accent = SchoolAccent) { showImport = true }
                 }
             }
         }
@@ -586,13 +587,13 @@ private fun HomeworkPanel(
                         Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
-                        subjects.forEach { s -> SchoolChip(s, hwSubject == s) { hwSubject = s } }
+                        subjects.forEach { s -> FinChip(s, hwSubject == s, accent = SchoolAccent) { hwSubject = s } }
                     }
                 } else {
-                    GlassField(hwSubject, { hwSubject = it }, "Subject")
+                    GlassField(hwSubject, { hwSubject = it }, "Subject", accent = SchoolAccent)
                 }
                 Spacer(Modifier.height(8.dp))
-                GlassField(hwText, { hwText = it }, "What needs doing?")
+                GlassField(hwText, { hwText = it }, "What needs doing?", accent = SchoolAccent)
                 Spacer(Modifier.height(8.dp))
 
                 // due picker: next lesson of this subject (from Untis) or +1..+7 days
@@ -606,7 +607,7 @@ private fun HomeworkPanel(
                     horizontalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
                     dueOptions.forEach { (label, day) ->
-                        SchoolChip(label, hwDue == day) { hwDue = day }
+                        FinChip(label, hwDue == day, accent = SchoolAccent) { hwDue = day }
                     }
                 }
 
@@ -614,6 +615,7 @@ private fun HomeworkPanel(
                 ActionButton(
                     "Add homework",
                     enabled = hwText.isNotBlank() && hwSubject.isNotBlank(),
+                    accent = SchoolAccent,
                 ) {
                     SchoolStore.addHomework(ctx, hwSubject, hwText, hwDue)
                     hwText = ""
@@ -754,7 +756,7 @@ private fun ReviewOverlay(deck: Deck, onClose: () -> Unit) {
                         color = TextDim, fontSize = 12.sp, fontFamily = Body,
                     )
                     Spacer(Modifier.height(20.dp))
-                    ActionButton("Done", onClick = onClose)
+                    ActionButton("Done", accent = SchoolAccent, onClick = onClose)
                 }
             } else {
                 val card: Card = queue[index]
@@ -841,11 +843,11 @@ private fun AddGradeSheet(
                     Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
-                    subjects.forEach { s -> SchoolChip(s, subject == s) { subject = s } }
+                    subjects.forEach { s -> FinChip(s, subject == s, accent = SchoolAccent) { subject = s } }
                 }
                 Spacer(Modifier.height(8.dp))
             }
-            GlassField(subject, { subject = it }, "or type a subject…")
+            GlassField(subject, { subject = it }, "or type a subject…", accent = SchoolAccent)
             Spacer(Modifier.height(14.dp))
 
             Overline("Points (0–15)")
@@ -871,10 +873,10 @@ private fun AddGradeSheet(
             }
             Spacer(Modifier.height(14.dp))
 
-            GlassField(note, { note = it }, "note (optional)")
+            GlassField(note, { note = it }, "note (optional)", accent = SchoolAccent)
             Spacer(Modifier.height(18.dp))
 
-            ActionButton("Save grade", enabled = subject.isNotBlank()) {
+            ActionButton("Save grade", enabled = subject.isNotBlank(), accent = SchoolAccent) {
                 SchoolStore.addGrade(ctx, subject, points, weight, note)
                 onSaved()
                 onDismiss()
@@ -910,11 +912,11 @@ private fun ImportDeckSheet(onImported: () -> Unit, onDismiss: () -> Unit) {
             )
             Spacer(Modifier.height(14.dp))
 
-            GlassField(name, { name = it }, "Deck name (e.g. English Unit 4)")
+            GlassField(name, { name = it }, "Deck name (e.g. English Unit 4)", accent = SchoolAccent)
             Spacer(Modifier.height(10.dp))
             GlassField(
                 raw, { raw = it }, "Paste cards — one per line: front;back",
-                singleLine = false, minHeight = 140.dp,
+                singleLine = false, minHeight = 140.dp, accent = SchoolAccent,
             )
             Spacer(Modifier.height(8.dp))
             Text(
@@ -928,6 +930,7 @@ private fun ImportDeckSheet(onImported: () -> Unit, onDismiss: () -> Unit) {
             ActionButton(
                 if (pairs.isEmpty()) "Import" else "Import ${pairs.size} cards",
                 enabled = name.isNotBlank() && pairs.isNotEmpty(),
+                accent = SchoolAccent,
             ) {
                 SchoolStore.importDeck(ctx, name, pairs)
                 onImported()
@@ -939,34 +942,8 @@ private fun ImportDeckSheet(onImported: () -> Unit, onDismiss: () -> Unit) {
 }
 
 // ─── Small shared pieces ─────────────────────────────────────────────────────
-
-@Composable
-private fun Overline(text: String) {
-    Text(
-        text.uppercase(), color = TextDim, fontFamily = Display,
-        fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-    )
-}
-
-@Composable
-private fun SchoolChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (selected) SchoolAccent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-            .border(
-                0.5.dp,
-                if (selected) SchoolAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
-                RoundedCornerShape(10.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 11.dp, vertical = 7.dp),
-    ) {
-        Text(
-            label, color = if (selected) SchoolAccent else TextMuted,
-            fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
-        )
-    }
-}
+// Overline / FinChip / StepperOrb / ActionButton / AddRowButton / GlassField
+// come from ui/finance/FinanceBits.kt (internal) with accent = SchoolAccent.
 
 @Composable
 private fun RowScope.WeightChip(label: String, selected: Boolean, onClick: () -> Unit) {
@@ -1006,81 +983,3 @@ private fun RowScope.GradeChipBtn(label: String, color: Color, onClick: () -> Un
     }
 }
 
-@Composable
-private fun StepperOrb(label: String, onClick: () -> Unit) {
-    Box(
-        Modifier.size(40.dp).clip(CircleShape)
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-}
-
-@Composable
-private fun ActionButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
-    Box(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-            .background(if (enabled) SchoolAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            label, color = if (enabled) Void else TextDim,
-            fontSize = 14.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
-        )
-    }
-}
-
-@Composable
-private fun AddRowButton(label: String, onClick: () -> Unit) {
-    Box(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(SchoolAccent.copy(alpha = 0.08f))
-            .border(0.5.dp, SchoolAccent.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Add, null, tint = SchoolAccent, modifier = Modifier.size(15.dp))
-            Spacer(Modifier.width(7.dp))
-            Text(
-                label, color = SchoolAccent,
-                fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
-            )
-        }
-    }
-}
-
-/** Quiet glass text field — same skin as the calendar sheets. */
-@Composable
-private fun GlassField(
-    value: String,
-    onChange: (String) -> Unit,
-    placeholder: String,
-    singleLine: Boolean = true,
-    minHeight: Dp = 0.dp,
-) {
-    Box(
-        Modifier.fillMaxWidth().heightIn(min = minHeight)
-            .clip(RoundedCornerShape(13.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-    ) {
-        if (value.isEmpty()) {
-            Text(placeholder, color = TextDim, fontSize = 13.5.sp, fontFamily = Body)
-        }
-        BasicTextField(
-            value, onChange, singleLine = singleLine,
-            textStyle = TextStyle(
-                color = TextPrimary, fontSize = 13.5.sp, fontFamily = Body,
-                fontWeight = FontWeight.SemiBold, lineHeight = 19.sp,
-            ),
-            cursorBrush = SolidColor(SchoolAccent),
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}

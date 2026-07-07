@@ -29,6 +29,7 @@ import com.ascend.lifeos.data.training.ExerciseEntity
 import com.ascend.lifeos.ui.hud.GlassField
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.HudChip
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.theme.*
 
 private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY }
@@ -208,14 +209,9 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
 
 // ─── Exercise detail sheet with muscle map ──────────────────────────────────
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = null, onDismiss: () -> Unit) {
-    androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = com.ascend.lifeos.ui.theme.BgElevated,
-        dragHandle = null,
-    ) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(catIcon(ex.category), null, tint = catColor(ex.category), modifier = Modifier.size(20.dp))

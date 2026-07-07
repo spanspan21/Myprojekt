@@ -139,30 +139,30 @@ internal fun Overline(text: String, color: Color = TextDim) {
 }
 
 @Composable
-internal fun FinChip(label: String, selected: Boolean, onClick: () -> Unit) {
+internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (selected) FinAccent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .background(if (selected) accent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) FinAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+                if (selected) accent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 11.dp, vertical = 7.dp),
     ) {
         Text(
-            label, color = if (selected) FinAccent else TextMuted,
+            label, color = if (selected) accent else TextMuted,
             fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
         )
     }
 }
 
 @Composable
-internal fun ActionButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun ActionButton(label: String, enabled: Boolean = true, accent: Color = FinAccent, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-            .background(if (enabled) FinAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .background(if (enabled) accent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
@@ -175,19 +175,19 @@ internal fun ActionButton(label: String, enabled: Boolean = true, onClick: () ->
 }
 
 @Composable
-internal fun AddRowButton(label: String, onClick: () -> Unit) {
+internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(FinAccent.copy(alpha = 0.08f))
-            .border(0.5.dp, FinAccent.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
+            .background(accent.copy(alpha = 0.08f))
+            .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Add, null, tint = FinAccent, modifier = Modifier.size(15.dp))
+            Icon(Icons.Rounded.Add, null, tint = accent, modifier = Modifier.size(15.dp))
             Spacer(Modifier.width(7.dp))
-            Text(label, color = FinAccent, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(label, color = accent, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -213,6 +213,7 @@ internal fun GlassField(
     singleLine: Boolean = true,
     minHeight: Dp = 0.dp,
     keyboard: KeyboardType = KeyboardType.Text,
+    accent: Color = FinAccent,
 ) {
     Box(
         Modifier.fillMaxWidth().heightIn(min = minHeight)
@@ -231,7 +232,7 @@ internal fun GlassField(
                 fontWeight = FontWeight.SemiBold, lineHeight = 19.sp,
             ),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard),
-            cursorBrush = SolidColor(FinAccent),
+            cursorBrush = SolidColor(accent),
             modifier = Modifier.fillMaxWidth(),
         )
     }

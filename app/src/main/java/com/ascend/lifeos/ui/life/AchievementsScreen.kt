@@ -207,28 +207,4 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
     }
 }
 
-// ─── shared scaffold (mirrors LifeScreens' private one) ──────────────────────
-
-@Composable
-private fun LifeScaffold(title: String, context: String, accent: Color, onClose: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 40.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(title, color = TextPrimary, fontFamily = Display, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text(context, color = accent, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-            }
-            Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = onClose),
-                contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
-        }
-        Spacer(Modifier.height(18.dp))
-        content()
-    }
-}
+// LifeScaffold lives in LifeScreens.kt (internal, same package).

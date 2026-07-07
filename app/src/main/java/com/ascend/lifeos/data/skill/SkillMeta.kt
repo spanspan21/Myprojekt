@@ -48,15 +48,14 @@ object SkillMeta {
 
     // ---- spaced repetition (SM-2-light) ----------------------------------------
 
-    const val GRADE_AGAIN = 0
-    const val GRADE_GOOD = 1
-    const val GRADE_EASY = 2
+    // scheduling itself lives in core/Sm2 — shared with SchoolStore's decks
+    const val GRADE_AGAIN = com.ascend.lifeos.core.Sm2.GRADE_AGAIN
+    const val GRADE_GOOD = com.ascend.lifeos.core.Sm2.GRADE_GOOD
+    const val GRADE_EASY = com.ascend.lifeos.core.Sm2.GRADE_EASY
 
-    private const val DAY_MS = 86_400_000L
+    private const val DAY_MS = com.ascend.lifeos.core.Sm2.DAY_MS
     private const val START_INTERVAL = 1.0
-    private const val START_EASE = 2.5
-    private const val MIN_INTERVAL = 1.0
-    private const val MAX_INTERVAL = 60.0
+    private const val START_EASE = com.ascend.lifeos.core.Sm2.START_EASE
 
     private data class Srs(val nextReviewAt: Long, val intervalDays: Double, val easeFactor: Double)
 
@@ -110,13 +109,8 @@ object SkillMeta {
         now: Long = System.currentTimeMillis(),
     ) {
         val s = readSrs(ctx, nodeId) ?: Srs(now, START_INTERVAL, START_EASE)
-        var ease = s.easeFactor
-        val interval = when (grade) {
-            GRADE_AGAIN -> MIN_INTERVAL
-            GRADE_EASY -> { ease += 0.05; s.intervalDays * s.easeFactor * 1.3 }
-            else -> s.intervalDays * s.easeFactor
-        }.coerceIn(MIN_INTERVAL, MAX_INTERVAL)
-        writeSrs(ctx, nodeId, Srs(now + (interval * DAY_MS).toLong(), interval, ease))
+        val next = com.ascend.lifeos.core.Sm2.next(grade, s.intervalDays, s.easeFactor)
+        writeSrs(ctx, nodeId, Srs(now + (next.intervalDays * DAY_MS).toLong(), next.intervalDays, next.ease))
         if (pathId != null) bumpMonthlyReviews(ctx, pathId, now)
     }
 

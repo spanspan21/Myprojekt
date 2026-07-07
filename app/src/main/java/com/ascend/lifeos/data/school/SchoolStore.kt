@@ -240,12 +240,11 @@ object SchoolStore {
     }
 
     // ═══ VOCAB DECKS ════════════════════════════════════════════════════════
-    // SM-2-light per card, mirroring SkillMeta's intervals:
-    // again → 1 day · good → interval × 2.5 · easy → interval × 3.2, clamp 1..60.
+    // SM-2-light per card via the shared core/Sm2 schedule (truly mirroring
+    // SkillMeta now — the old local copy had drifted to a fixed ×2.5/×3.2).
     // New cards start due immediately (next = 0, interval = 1 day).
 
-    private const val MIN_IV = 1.0
-    private const val MAX_IV = 60.0
+    private const val MIN_IV = com.ascend.lifeos.core.Sm2.MIN_INTERVAL
 
     /** Identity of a card's content. Length-prefixed so ("a b","c") ≠ ("a","b c"). */
     private fun cardKey(f: String, b: String) = "${f.length}:$f$b"
@@ -349,7 +348,7 @@ object SchoolStore {
         return out.sortedBy { it.first }.map { it.second }
     }
 
-    /** Grade a card: GRADE_AGAIN → 1 d, GRADE_GOOD → ×2.5, GRADE_EASY → ×3.2. */
+    /** Grade a card via the shared Sm2 schedule (ease persists per card). */
     fun gradeCard(ctx: Context, cardId: String, grade: Int, now: Long = System.currentTimeMillis()) {
         val decks = readArray(ctx, KEY_DECKS)
         for (i in 0 until decks.length()) {
@@ -357,12 +356,13 @@ object SchoolStore {
             for (j in 0 until cards.length()) {
                 val c = cards.optJSONObject(j) ?: continue
                 if (c.optString("id") != cardId) continue
-                val iv = when (grade) {
-                    GRADE_AGAIN -> MIN_IV
-                    GRADE_EASY -> c.optDouble("iv", MIN_IV) * 3.2
-                    else -> c.optDouble("iv", MIN_IV) * 2.5
-                }.coerceIn(MIN_IV, MAX_IV)
-                c.put("iv", iv).put("next", now + (iv * DAY_MS).toLong())
+                val next = com.ascend.lifeos.core.Sm2.next(
+                    grade,
+                    c.optDouble("iv", MIN_IV),
+                    c.optDouble("ease", com.ascend.lifeos.core.Sm2.START_EASE),
+                )
+                c.put("iv", next.intervalDays).put("ease", next.ease)
+                    .put("next", now + (next.intervalDays * DAY_MS).toLong())
                 writeArray(ctx, KEY_DECKS, decks)
                 return
             }

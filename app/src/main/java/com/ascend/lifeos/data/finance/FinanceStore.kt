@@ -234,27 +234,10 @@ object FinanceStore {
         touch()
     }
 
-    /**
-     * Edits category/note of an existing txn in place, keeping id/ts/amount.
-     * LifeStores has no update API, so this rewrites the same JSON fields in the
-     * "life" prefs directly (same schema LifeStores serializes), then republishes
-     * through a no-op LifeStores.deleteTxn("") so LifeStores.rev bumps too.
-     */
+    /** Edits category/note of an existing txn in place, keeping id/ts/amount. */
     fun updateTxn(ctx: Context, txnId: String, category: String, note: String) {
-        val lp = ctx.applicationContext.getSharedPreferences("life", Context.MODE_PRIVATE)
-        val arr = runCatching { JSONArray(lp.getString("txns", "[]") ?: "[]") }.getOrDefault(JSONArray())
-        var changed = false
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            if (o.optString("id") == txnId) {
-                o.put("cat", category)
-                o.put("note", note.trim())
-                changed = true
-            }
-        }
-        if (!changed) return
-        lp.edit().putString("txns", arr.toString()).apply()
-        LifeStores.deleteTxn(ctx, "") // "" never matches a real id — pure rev bump/republish
+        // real API now — no more rewriting LifeStores' private JSON schema here
+        LifeStores.updateTxn(ctx, txnId, category, note)
         touch()
     }
 
@@ -391,31 +374,23 @@ object FinanceStore {
     }
 
     /**
-     * Scans the txn history for repeat costs: same note + category with similar
-     * amounts (±15 % or ±1 €) in 2+ months, at least two of them consecutive.
-     * Patterns already saved as recurring are skipped.
+     * Repeat-cost suggestions, delegated to the ONE detector (AboRadar). Two
+     * competing engines used to scan the same txns with different rules — the
+     * radar panel and these suggestions could contradict each other. AboRadar
+     * needs 3 charges with monthly/weekly gaps (±15 %); saved patterns are
+     * skipped.
      */
     fun detectRecurring(ctx: Context): List<RecurringSuggestion> {
         val existing = recurrings(ctx).mapTo(HashSet()) { it.name.trim().lowercase(Locale.ENGLISH) }
-        val grouped = LifeStores.txns(ctx)
-            .filter { it.amountCents < 0 && it.note.isNotBlank() }
-            .groupBy { it.note.trim().lowercase(Locale.ENGLISH) + "|" + it.category }
-        val out = ArrayList<RecurringSuggestion>()
-        for ((_, list) in grouped) {
-            val name = list.first().note.trim()
-            if (name.lowercase(Locale.ENGLISH) in existing) continue
-            val byMonth = list.groupBy { ymOf(it.ts) }
-            if (byMonth.size < 2) continue
-            val months = byMonth.keys.sorted()
-            if (months.zipWithNext().none { (a, b) -> a.plusMonths(1) == b }) continue
-            val avgAbs = list.sumOf { -it.amountCents } / list.size
-            val similar = list.all { abs(-it.amountCents - avgAbs) <= maxOf(100L, avgAbs * 15 / 100) }
-            if (!similar) continue
-            val latest = list.maxBy { it.ts }
-            val day = Instant.ofEpochMilli(latest.ts).atZone(ZoneId.systemDefault()).toLocalDate().dayOfMonth
-            out.add(RecurringSuggestion(name, latest.amountCents, latest.category, day, byMonth.size))
-        }
-        return out.sortedWith(compareByDescending<RecurringSuggestion> { it.months }.thenBy { it.name })
+        val txns = LifeStores.txns(ctx)
+        return AboRadar.detect(txns, System.currentTimeMillis()).mapNotNull { sub ->
+            val name = sub.payee.trim()
+            if (name.lowercase(Locale.ENGLISH) in existing) return@mapNotNull null
+            val last = txns.filter { it.amountCents < 0 && it.note.trim().equals(name, ignoreCase = true) }
+                .maxByOrNull { it.ts } ?: return@mapNotNull null
+            val day = Instant.ofEpochMilli(last.ts).atZone(ZoneId.systemDefault()).toLocalDate().dayOfMonth
+            RecurringSuggestion(name, -sub.amountCents, last.category, day, sub.occurrences)
+        }.sortedWith(compareByDescending<RecurringSuggestion> { it.months }.thenBy { it.name })
     }
 
     // ─── Savings goals v2 ───────────────────────────────────────────────────

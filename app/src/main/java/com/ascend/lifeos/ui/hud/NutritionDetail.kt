@@ -27,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +50,9 @@ import com.ascend.lifeos.data.BasicFoods
 import com.ascend.lifeos.data.NUTRIENTS_BY_ID
 import com.ascend.lifeos.data.NutritionCalc
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.data.targetFor
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.BgElevated
@@ -198,7 +199,6 @@ fun MicrosView(onBack: () -> Unit) {
 
 // ---- Micro-gap coach: densest food sources per 100 kcal ---------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopSourcesSheet(nutrientId: String, onDismiss: () -> Unit) {
     val nd = NUTRIENTS_BY_ID[nutrientId] ?: return
@@ -209,7 +209,7 @@ private fun TopSourcesSheet(nutrientId: String, onDismiss: () -> Unit) {
             if (f.kcal100 <= 0 || c <= 0.0) null else Triple(f.name, c / f.kcal100 * 100.0, f.kcal100)
         }.sortedByDescending { it.second }.take(6)
     }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(), containerColor = BgElevated) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp).padding(bottom = 24.dp)) {
             Text("TOP SOURCES · ${nd.label.uppercase()}", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(4.dp))
@@ -514,7 +514,9 @@ private fun correlations(): Corr {
         }
         k = prevKey(k)
     }
-    val pt = pearson(prot, sets)
+    // minN = 4 mirrors the old local pearson's n<4 guard; both series are built
+    // pairwise (equal length), so PrimeMath's takeLast alignment is a no-op.
+    val pt = PrimeMath.pearson(prot, sets, minN = 4)
 
     // kcal vs weight: pair each weight measurement with that day's kcal.
     val wl = Repo.weightLog()
@@ -524,17 +526,7 @@ private fun correlations(): Corr {
         val kc = Repo.kcalForDay(key)
         if (kc != null) { kcalS.add(kc.toDouble()); wS.add(wp.kg) }
     }
-    return Corr(pt, pearson(kcalS, wS))
-}
-
-private fun pearson(a: List<Double>, b: List<Double>): Double? {
-    val n = minOf(a.size, b.size)
-    if (n < 4) return null
-    val ma = a.take(n).average(); val mb = b.take(n).average()
-    var num = 0.0; var da = 0.0; var db = 0.0
-    for (i in 0 until n) { val x = a[i] - ma; val y = b[i] - mb; num += x * y; da += x * x; db += y * y }
-    if (da == 0.0 || db == 0.0) return null
-    return num / Math.sqrt(da * db)
+    return Corr(pt, PrimeMath.pearson(kcalS, wS, minN = 4))
 }
 
 @Composable

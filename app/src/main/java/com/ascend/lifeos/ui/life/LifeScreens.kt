@@ -30,6 +30,7 @@ import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.life.Kr
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -38,10 +39,10 @@ import kotlinx.coroutines.delay
 
 private val MindAccent = Color(0xFF7C8CF8)
 
-// ─── shared scaffold ─────────────────────────────────────────────────────────
+// ─── shared scaffold (used by LifeScreens, DecisionScreen, AchievementsScreen) ─
 
 @Composable
-private fun LifeScaffold(title: String, context: String, accent: Color, onClose: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+internal fun LifeScaffold(title: String, context: String, accent: Color, onClose: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 40.dp),
@@ -65,7 +66,7 @@ private fun LifeScaffold(title: String, context: String, accent: Color, onClose:
 }
 
 @Composable
-private fun LifeField(placeholder: String, value: String, accent: Color, onValue: (String) -> Unit) {
+internal fun LifeField(placeholder: String, value: String, accent: Color, onValue: (String) -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
@@ -433,7 +434,6 @@ private fun HabitsBlock() {
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun AddGoalSheet(onDone: () -> Unit) {
     val ctx = LocalContext.current
@@ -443,9 +443,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
     var weightBind by remember { mutableStateOf(false) }
     var targetKg by remember { mutableStateOf("") }
 
-    androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDone, containerColor = com.ascend.lifeos.ui.theme.BgElevated, dragHandle = null,
-    ) {
+    JarvisSheet(onDismiss = onDone) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text("NEW GOAL", color = Mod.Home, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
             Spacer(Modifier.height(12.dp))

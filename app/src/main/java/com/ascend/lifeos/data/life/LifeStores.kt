@@ -115,6 +115,17 @@ object LifeStores {
         put(ctx, "txns", arr.toString())
     }
 
+    /** Edits category/note in place, keeping id/ts/amount. */
+    fun updateTxn(ctx: Context, id: String, category: String, note: String) {
+        val arr = JSONArray()
+        var changed = false
+        txns(ctx).forEach { t ->
+            val next = if (t.id == id) { changed = true; t.copy(category = category, note = note.trim()) } else t
+            arr.put(next.toJson())
+        }
+        if (changed) put(ctx, "txns", arr.toString())
+    }
+
     private fun monthStartMs(): Long =
         LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 

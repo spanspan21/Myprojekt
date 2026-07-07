@@ -407,15 +407,4 @@ private fun SlideDecor(accent: Color, seed: Int) {
     }
 }
 
-/** Guard-overlay close pattern: floating glass orb, top-right. */
-@Composable
-private fun BoxScope.CloseOrb(onClose: () -> Unit) {
-    Box(
-        Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
-            .size(40.dp).clip(RoundedCornerShape(13.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-            .clickable(onClick = onClose),
-        contentAlignment = Alignment.Center,
-    ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }
-}
+// CloseOrb lives in InsightsBits.kt (internal, same package).

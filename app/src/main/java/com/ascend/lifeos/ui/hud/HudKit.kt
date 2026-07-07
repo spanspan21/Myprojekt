@@ -36,6 +36,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
+import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.ui.draw.drawWithContent
@@ -74,7 +75,8 @@ fun HudBackground(modifier: Modifier = Modifier) {
 }
 
 /** Dual-Glas surface: Tiefengefälle, Elfenbein-Hairline, Specular-Oberkante —
- *  identisches Material wie kit.Panel (SOVEREIGN Kap. 14), zero shadow. */
+ *  identisches Material wie kit.Panel (SOVEREIGN Kap. 14), zero shadow.
+ *  Reine Delegation an [Panel] — nur die HUD-Defaults (fill/line) unterscheiden sich. */
 @Composable
 fun GlassPanel(
     modifier: Modifier = Modifier,
@@ -83,25 +85,7 @@ fun GlassPanel(
     line: Color = HudLine,
     content: @Composable () -> Unit,
 ) {
-    Box(
-        modifier
-            .clip(RoundedCornerShape(corner))
-            .background(fill)
-            .background(Brush.verticalGradient(0f to Ivory.copy(alpha = 0.028f), 0.55f to Color.Transparent))
-            .border(0.5.dp, line, RoundedCornerShape(corner))
-            .drawWithContent {
-                drawContent()
-                val spec = com.ascend.lifeos.ui.theme.themeSpec.value.specular
-                val inset = corner.toPx() * 0.9f
-                if (spec > 0f && size.width > inset * 2.5f) {
-                    drawLine(
-                        Brush.horizontalGradient(listOf(Color.Transparent, Ivory.copy(alpha = spec), Color.Transparent)),
-                        Offset(inset, 0.75f), Offset(size.width - inset, 0.75f),
-                        strokeWidth = 1.2f,
-                    )
-                }
-            },
-    ) { content() }
+    Panel(modifier = modifier, corner = corner, fill = fill, line = line) { content() }
 }
 
 /** Selectable neon pill chip — accent-tinted, colors glide, presses feel. */

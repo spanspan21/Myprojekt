@@ -57,6 +57,7 @@ import com.ascend.lifeos.data.training.TrainingDatabase
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.Panel
+import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Blue
@@ -79,7 +80,6 @@ import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 // ─── Data Explorer — any metric against any metric, last 60 days ─────────────
 
@@ -144,19 +144,13 @@ private suspend fun buildExploreBundle(ctx: Context): ExploreBundle {
 
 // ---- statistics -------------------------------------------------------------
 
-private fun pearson(pairs: List<Pair<Float, Float>>): Float? {
-    val n = pairs.size
-    if (n < 2) return null
-    val mx = pairs.sumOf { it.first.toDouble() } / n
-    val my = pairs.sumOf { it.second.toDouble() } / n
-    var sxy = 0.0; var sxx = 0.0; var syy = 0.0
-    for ((x, y) in pairs) {
-        val dx = x - mx; val dy = y - my
-        sxy += dx * dy; sxx += dx * dx; syy += dy * dy
-    }
-    if (sxx <= 1e-9 || syy <= 1e-9) return null
-    return (sxy / sqrt(sxx * syy)).toFloat()
-}
+/** [PrimeMath.pearson] on already-aligned pairs; minN = 2 matches the old local fn. */
+private fun pearson(pairs: List<Pair<Float, Float>>): Float? =
+    PrimeMath.pearson(
+        pairs.map { it.first.toDouble() },
+        pairs.map { it.second.toDouble() },
+        minN = 2,
+    )?.toFloat()
 
 /** Least squares: returns (intercept, slope) of y = a + b·x, or null if x is flat. */
 private fun trendLine(pairs: List<Pair<Float, Float>>): Pair<Float, Float>? {
@@ -439,15 +433,4 @@ private fun AxisPicker(
     }
 }
 
-/** Guard-overlay close pattern: floating glass orb, top-right. */
-@Composable
-private fun BoxScope.CloseOrb(onClose: () -> Unit) {
-    Box(
-        Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
-            .size(40.dp).clip(RoundedCornerShape(13.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-            .clickable(onClick = onClose),
-        contentAlignment = Alignment.Center,
-    ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }
-}
+// CloseOrb lives in InsightsBits.kt (internal, same package).

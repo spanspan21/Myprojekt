@@ -55,7 +55,7 @@ import com.ascend.lifeos.data.masterplan.TaskEntity
 import com.ascend.lifeos.data.masterplan.TaskStatus
 import com.ascend.lifeos.ui.components.CheckBox
 import com.ascend.lifeos.ui.components.ProgressBar
-import com.ascend.lifeos.ui.components.SectionLabel
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Bg
 import com.ascend.lifeos.ui.theme.BgElevated
 import com.ascend.lifeos.ui.theme.TextDim
@@ -174,13 +174,14 @@ fun NodeSheet(
                 Text("${node.doneCount}/${node.tasks.size}", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
 
-            SectionLabel("Tasks")
+            // keep the spacing the old components.SectionLabel carried built in
+            SectionLabel("Tasks", Modifier.padding(start = 3.dp, top = 24.dp, bottom = 12.dp))
             node.tasks.sortedBy { it.orderIndex }.forEach { task ->
                 TaskRow(task = task) { onToggleTask(task.id, it) }
             }
 
             if (node.resources.isNotEmpty()) {
-                SectionLabel("Free resources")
+                SectionLabel("Free resources", Modifier.padding(start = 3.dp, top = 24.dp, bottom = 12.dp))
                 node.resources.forEach { r ->
                     Spacer(Modifier.height(8.dp))
                     ResourceRow(r, accent)

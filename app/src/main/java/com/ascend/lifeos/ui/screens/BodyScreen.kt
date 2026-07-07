@@ -33,6 +33,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.ui.kit.*
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
@@ -526,7 +527,6 @@ private fun MeasurementsCard() {
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
     var cm by remember {
@@ -535,9 +535,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
                 ?: if (key == "height") Repo.data.profile.heightCm.toDouble().coerceAtLeast(150.0) else 35.0,
         )
     }
-    androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss, containerColor = com.ascend.lifeos.ui.theme.BgElevated, dragHandle = null,
-    ) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -882,7 +880,11 @@ private fun CorrelationCard() {
                 pairs.add(screen to sleep)
             }
             if (pairs.size < 7) return@runCatching null
-            val r = pearson(pairs)
+            // minN = 2: the size-7 guard above stays authoritative. PrimeMath returns
+            // null for constant series where the old local fn returned 0.0 — both end
+            // in "no insight", so behaviour is unchanged.
+            val r = PrimeMath.pearson(pairs.map { it.first }, pairs.map { it.second }, minN = 2)
+                ?: return@runCatching null
             when {
                 r <= -0.3 -> "High screen days are followed by shorter sleep (r=%.2f, n=${pairs.size}). The wind-down is worth it.".format(r)
                 r >= 0.3 -> "Screen time isn't cutting into your sleep so far (r=%.2f, n=${pairs.size}).".format(r)
@@ -903,29 +905,12 @@ private fun CorrelationCard() {
     }
 }
 
-private fun pearson(pairs: List<Pair<Double, Double>>): Double {
-    val n = pairs.size
-    val mx = pairs.sumOf { it.first } / n
-    val my = pairs.sumOf { it.second } / n
-    var num = 0.0; var dx = 0.0; var dy = 0.0
-    for ((x, y) in pairs) {
-        num += (x - mx) * (y - my)
-        dx += (x - mx) * (x - mx)
-        dy += (y - my) * (y - my)
-    }
-    val den = kotlin.math.sqrt(dx * dy)
-    return if (den == 0.0) 0.0 else num / den
-}
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun WeightSheet(onDismiss: () -> Unit) {
     var kg by remember {
         mutableStateOf(Repo.weightLog().lastOrNull()?.kg ?: Repo.data.profile.weightKg.toDouble())
     }
-    androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss, containerColor = com.ascend.lifeos.ui.theme.BgElevated, dragHandle = null,
-    ) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
