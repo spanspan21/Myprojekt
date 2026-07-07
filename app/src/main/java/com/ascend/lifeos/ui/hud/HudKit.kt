@@ -5,12 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -19,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -41,38 +37,14 @@ import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.Cyan
 import com.ascend.lifeos.ui.theme.Ivory
 import com.ascend.lifeos.ui.theme.LocalModuleAccent
-import com.ascend.lifeos.ui.theme.Void
 
 // The single HUD design language: deepest void, hairline neon edges, glassmorphism,
 // glowing meters. Every rebuilt screen composes from these — no grey Material cards.
 
 val HudFill = Ivory.copy(alpha = 0.038f)
 val HudLine = Ivory.copy(alpha = 0.09f)
-
-/** Void #050505 with two soft, blurred neon nebulae — the light the glass frosts. */
-@Composable
-fun HudBackground(modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize().background(Void)) {
-        Box(Modifier.fillMaxSize().blur(90.dp)) {
-            Box(
-                Modifier.size(340.dp).offset(x = (-60).dp, y = (-40).dp)
-                    .background(Brush.radialGradient(listOf(Accent.copy(alpha = 0.14f), Color.Transparent)), CircleShape),
-            )
-            Box(
-                Modifier.size(300.dp).offset(x = 210.dp, y = 300.dp)
-                    .background(Brush.radialGradient(listOf(Cyan.copy(alpha = 0.10f), Color.Transparent)), CircleShape),
-            )
-            Box(
-                Modifier.size(260.dp).offset(x = 30.dp, y = 620.dp)
-                    .background(Brush.radialGradient(listOf(Accent.copy(alpha = 0.08f), Color.Transparent)), CircleShape),
-            )
-        }
-    }
-}
 
 /** Dual-Glas surface: Tiefengefälle, Elfenbein-Hairline, Specular-Oberkante —
  *  identisches Material wie kit.Panel (SOVEREIGN Kap. 14), zero shadow.

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -116,25 +115,6 @@ fun MuscleMap(
     Row(modifier, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)) {
         BodyFigure(front = true, fillFor = ::tint, modifier = Modifier.weight(1f))
         BodyFigure(front = false, fillFor = ::tint, modifier = Modifier.weight(1f))
-    }
-}
-
-/** Compact one-figure variant for tight spots (session preview rows). */
-@Composable
-fun MuscleMapMini(
-    primary: Set<Muscle>,
-    secondary: Set<Muscle>,
-    color: Color,
-    front: Boolean = true,
-    modifier: Modifier = Modifier,
-) {
-    fun tint(m: Muscle): Color? = when {
-        m in primary || Muscle.FULL_BODY in primary -> color.copy(alpha = 0.55f)
-        m in secondary || Muscle.FULL_BODY in secondary -> color.copy(alpha = 0.22f)
-        else -> null
-    }
-    Canvas(modifier.width(46.dp).height(92.dp)) {
-        drawBody(front, ::tint)
     }
 }
 

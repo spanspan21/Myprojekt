@@ -166,7 +166,6 @@ object FinanceStore {
         put(ctx, "txn_acc", map.toString())
     }
 
-    fun totalBalanceCents(ctx: Context): Long = accounts(ctx).sumOf { it.balanceCents }
 
     /** Transfer between two own accounts — balances only, no Txn (not spend/income). */
     fun move(ctx: Context, fromId: String, toId: String, cents: Long) {

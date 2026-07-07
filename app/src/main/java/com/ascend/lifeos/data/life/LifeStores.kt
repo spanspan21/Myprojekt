@@ -152,22 +152,8 @@ object LifeStores {
         return out
     }
 
-    /** Average spend per week over the last 28 days, in cents. */
-    fun weeklySpendAvg(ctx: Context): Long {
-        val cutoff = System.currentTimeMillis() - 28L * 24 * 60 * 60 * 1000
-        val spend = txns(ctx).filter { it.ts >= cutoff && it.amountCents < 0 }.sumOf { -it.amountCents }
-        return spend / 4
-    }
-
-    // ─── Finance: savings goal ──────────────────────────────────────────────
-
-    /** Starts (or replaces) the savings goal; progress and pace history reset. */
-    fun setSavingsGoal(ctx: Context, title: String, targetCents: Long) {
-        if (title.isBlank() || targetCents <= 0) return
-        val o = JSONObject().put("title", title.trim()).put("target", targetCents).put("saved", 0L)
-        prefs(ctx).edit().putString("savings", o.toString()).putString("saved_events", "[]").apply()
-        touch()
-    }
+    // ─── Finance: savings goal (legacy read path — FinanceStore's goals2 is
+    // the live system; a still-existing legacy goal keeps syncing until gone) ──
 
     /** Adds to the savings pot and records the event timestamp (for pace/ETA). */
     fun addSaved(ctx: Context, cents: Long) {

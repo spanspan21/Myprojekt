@@ -97,7 +97,6 @@ class JarvisGuardService : Service() {
         startForegroundCompat()
         when (intent?.action) {
             ACTION_STOP -> { removeOverlay(); stopSelf(); return START_NOT_STICKY }
-            ACTION_TEST -> scope.launch { showOverlay("Instagram", "com.instagram.android", 62, 45) }
             else -> startLoop()
         }
         return START_STICKY
@@ -509,7 +508,6 @@ class JarvisGuardService : Service() {
         private const val NOTIF_ID = 4711
         private const val GATE_PASS_MS = 5 * 60_000L // "Continue · 5 min"
         const val ACTION_STOP = "com.ascend.lifeos.STOP_GUARD"
-        const val ACTION_TEST = "com.ascend.lifeos.TEST_GUARD"
 
         fun start(ctx: Context) {
             val i = Intent(ctx, JarvisGuardService::class.java)
@@ -518,11 +516,6 @@ class JarvisGuardService : Service() {
 
         fun stop(ctx: Context) {
             ctx.startService(Intent(ctx, JarvisGuardService::class.java).setAction(ACTION_STOP))
-        }
-
-        fun test(ctx: Context) {
-            val i = Intent(ctx, JarvisGuardService::class.java).setAction(ACTION_TEST)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(i) else ctx.startService(i)
         }
     }
 }

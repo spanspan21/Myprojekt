@@ -24,9 +24,6 @@ interface TrainingDao {
     """)
     fun allExercises(): Flow<List<ExerciseEntity>>
 
-    @Query("SELECT * FROM exercises WHERE category = :cat ORDER BY orderIndex")
-    fun exercisesByCategory(cat: ExCategory): Flow<List<ExerciseEntity>>
-
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun exercise(id: String): ExerciseEntity?
 
@@ -39,18 +36,7 @@ interface TrainingDao {
     @Query("DELETE FROM exercises WHERE id = :id")
     suspend fun deleteExercise(id: String)
 
-    @Query("SELECT COUNT(*) FROM exercises")
-    suspend fun exerciseCount(): Int
-
     // ── Workout Sessions ────────────────────────────────────────────────────
-
-    @Transaction
-    @Query("SELECT * FROM workout_sessions ORDER BY startedAt DESC")
-    fun allSessions(): Flow<List<SessionWithSets>>
-
-    @Transaction
-    @Query("SELECT * FROM workout_sessions WHERE id = :id")
-    fun session(id: String): Flow<SessionWithSets?>
 
     @Transaction
     @Query("SELECT * FROM workout_sessions ORDER BY startedAt DESC LIMIT :n")
@@ -79,17 +65,11 @@ interface TrainingDao {
 
     // ── Sets ────────────────────────────────────────────────────────────────
 
-    @Query("SELECT * FROM workout_sets WHERE sessionId = :sessionId ORDER BY setIndex")
-    fun setsForSession(sessionId: String): Flow<List<WorkoutSetEntity>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertSet(set: WorkoutSetEntity)
 
     @Query("DELETE FROM workout_sets WHERE id = :id")
     suspend fun deleteSet(id: String)
-
-    @Query("SELECT * FROM workout_sets WHERE exerciseId = :exId ORDER BY loggedAt DESC")
-    suspend fun setsForExercise(exId: String): List<WorkoutSetEntity>
 
     @Query("""
         SELECT * FROM workout_sets
@@ -102,9 +82,6 @@ interface TrainingDao {
 
     @Query("SELECT * FROM personal_records WHERE exerciseId = :exId ORDER BY date DESC")
     fun prsForExercise(exId: String): Flow<List<PersonalRecordEntity>>
-
-    @Query("SELECT * FROM personal_records ORDER BY date DESC")
-    fun allPrs(): Flow<List<PersonalRecordEntity>>
 
     @Query("SELECT * FROM personal_records ORDER BY date DESC LIMIT :n")
     fun recentPrs(n: Int): Flow<List<PersonalRecordEntity>>

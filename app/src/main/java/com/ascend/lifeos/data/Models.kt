@@ -2,95 +2,11 @@ package com.ascend.lifeos.data
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class Goal(val id: String, val text: String, val done: Boolean = false)
-
-@Serializable
-data class LongGoal(
-    val id: String,
-    val title: String,
-    val current: Int,
-    val target: Int,
-    val unit: String = "",
-)
-
-@Serializable
-data class ExerciseDef(val id: String, val name: String, val unit: String = "reps") // reps | sec
-
-@Serializable
-data class ChessAccount(val platform: String, val username: String, val syncedAt: Long = 0)
-
-@Serializable
-data class ChessDetail(val rating: Int = 0, val best: Int = 0, val games: Int = 0)
-
-@Serializable
-data class ChessRecord(val w: Int = 0, val l: Int = 0, val d: Int = 0)
-
-@Serializable
-data class ChessPoint(val t: Long, val rating: Int)
-
-@Serializable
-data class Chess(
-    val rating: Int = 1200,
-    val peak: Int = 1200,
-    val puzzle: Int = 1000,
-    val goal: Int = 1500,
-    val games: ChessRecord = ChessRecord(),
-    val history: List<ChessPoint> = emptyList(),
-    val rapid: ChessDetail? = null,
-    val blitz: ChessDetail? = null,
-    val bullet: ChessDetail? = null,
-    val account: ChessAccount? = null,
-)
-
-@Serializable
-data class Subscription(
-    val id: String,
-    val name: String,
-    val cost: Double,
-    val cycle: String = "monthly", // monthly | yearly
-    val category: String = "",
-)
-
-/**
- * One block in the local time-blocking planner. Times are minutes from 00:00.
- * [flexible] blocks may be moved by the planner; fixed ones anchor the day.
- */
-@Serializable
-data class TimeBlock(
-    val id: String,
-    val title: String,
-    val startMin: Int,
-    val durMin: Int,
-    val kind: String = "task",      // task | routine
-    val flexible: Boolean = true,
-    val done: Boolean = false,
-    val routineId: String? = null,  // set when materialized from a routine
-)
-
-/** A recurring routine, materialized into concrete TimeBlocks per day. */
-@Serializable
-data class Routine(
-    val id: String,
-    val title: String,
-    val startMin: Int,
-    val durMin: Int,
-    val days: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7), // ISO weekdays
-)
-
-/** A manual money transaction. [type] = "in" (Einnahme) | "out" (Ausgabe). */
-@Serializable
-data class Txn(
-    val id: String,
-    val name: String,
-    val amount: Double,
-    val category: String = "Sonstiges",
-    val type: String = "out",
-    val ts: Long = 0,
-)
-
-@Serializable
-data class CoachMsg(val who: String, val text: String) // who = "me" | "cx"
+// Dead model families (Goal/LongGoal, Chess, Subscription, TimeBlock/Routine,
+// Repo-Txn, CoachMsg, ExerciseDef) were removed in the 2026-07 audit — their
+// features live in LifeStores/FinanceStore/Room or were never rebuilt after
+// the v2 rework. Old JSON keys load fine (ignoreUnknownKeys) and disappear on
+// the next save.
 
 /** A single logged food item for a day. Values are the totals for the eaten portion. */
 @Serializable
@@ -115,20 +31,13 @@ data class FoodEntry(
 
 @Serializable
 data class DayData(
-    val waterLog: List<Long> = emptyList(),   // timestamps of each glass (hydration curve)
-    val supps: List<String> = emptyList(),    // supplements checked off today
     val journal: List<String> = emptyList(),  // 3 one-line answers (best/annoyed/grateful)
-    val goals: List<Goal> = emptyList(),
     val water: Int = 0,
-    val cali: Map<String, List<Int>> = emptyMap(),
+    val cali: Map<String, List<Int>> = emptyMap(),    // legacy calisthenics archive (read-only)
     val caliRpe: Map<String, List<Int>> = emptyMap(), // parallel to cali: RPE per set (0 = not rated)
     val workoutDone: Boolean = false,
     val trainSets: Int = 0,                   // sets finished in the Room training module today
-    val reflection: String = "",
-    val coachLog: List<CoachMsg> = emptyList(),
     val meals: List<FoodEntry> = emptyList(),
-    val blocks: List<TimeBlock> = emptyList(),
-    val seeded: Boolean = false,
 )
 
 @Serializable
@@ -158,7 +67,6 @@ data class Profile(
 
     // ---- train brain (assessment · goals · equipment) ----
     val assessResults: Map<String, Int> = emptyMap(), // testId -> reps/seconds
-    val assessDate: Long? = null,
     val skillGoals: List<String> = emptyList(),       // SkillCatalog ids
     val trainFreq: Int = 3,                            // sessions per week 2..6
     val sessionLen: Int = 45,                          // minutes
@@ -173,21 +81,11 @@ data class Profile(
     val measurements: Map<String, List<MeasurePoint>> = emptyMap(), // "arm"/"chest"/… -> history
     val kcalGoalAuto: Boolean = true,                  // adaptive TDEE may adjust kcalGoal weekly
     val tdeeLastSuggest: String? = null,               // dayKey of last accepted/shown suggestion
-    val supplements: List<String> = listOf("Creatine 5g", "Vitamin D3", "Omega-3"),
     val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
     val customFoods: List<CustomFood> = emptyList(), // user-created foods
     val savedMeals: List<SavedMeal> = emptyList(),   // saved meal combinations
     val shopping: List<ShopItem> = emptyList(),      // recipe-derived shopping list
-    val caliDefs: List<ExerciseDef> = DEFAULT_EXERCISES,
-    val caliBest: Map<String, Int> = emptyMap(),
-    val exLevel: Map<String, Int> = emptyMap(), // progression level per exercise id
-
-    val exHist: Map<String, List<Int>> = emptyMap(),
-    val workoutDays: Map<String, Boolean> = emptyMap(),
-    val longGoals: List<LongGoal> = DEFAULT_LONG_GOALS,
-    val chess: Chess = Chess(),
-    val subs: List<Subscription> = emptyList(),
-    val routines: List<Routine> = emptyList(),
+    val workoutDays: Map<String, Boolean> = emptyMap(), // heatmap archive + markTrained
 )
 
 @Serializable
@@ -206,8 +104,6 @@ data class HealthSnapshot(
     val steps: Int? = null,
     val sleepStartMin: Int? = null, // minute-of-day the main sleep began
     val hrSeries: List<HrPoint> = emptyList(),
-    val hrMin: Int? = null,
-    val hrMax: Int? = null,
     val hrAvg: Int? = null,
     val diag: String = "", // record counts from the last sync, for troubleshooting
 )
@@ -217,7 +113,6 @@ data class AppData(
     val profile: Profile = Profile(),
     val days: Map<String, DayData> = emptyMap(),
     val health: HealthSnapshot? = null,
-    val txns: List<Txn> = emptyList(),
     val fasting: FastingState = FastingState(),
     val fastLog: List<FastLog> = emptyList(),
     val weightLog: List<WeightPoint> = emptyList(),
@@ -308,22 +203,3 @@ data class FastLog(
     val hours: Double get() = (end - start) / 3_600_000.0
 }
 
-val DEFAULT_EXERCISES = listOf(
-    ExerciseDef("pullups", "Klimmzüge", "reps"),
-    ExerciseDef("pushups", "Liegestütze", "reps"),
-    ExerciseDef("dips", "Dips", "reps"),
-    ExerciseDef("squats", "Kniebeugen", "reps"),
-    ExerciseDef("plank", "Plank", "sec"),
-)
-
-val DEFAULT_LONG_GOALS = listOf(
-    LongGoal("lg1", "Klimmzüge am Stück", 5, 15, "Wdh"),
-    LongGoal("lg2", "Liegestütze am Stück", 20, 50, "Wdh"),
-)
-
-val DEFAULT_GOAL_TEXTS = listOf(
-    "📖 20 Min lesen",
-    "🧘 10 Min Fokus",
-    "🥗 Sauber gegessen",
-    "😴 Vor 23:00 ins Bett",
-)

@@ -76,7 +76,7 @@ private const val DEFAULT_NAME = "Max"
 private val DEFAULT_OBJECTIVES = listOf("train", "learn", "sleep", "focus", "fuel")
 
 @Composable
-fun BootScreen(onDone: () -> Unit) {
+fun BootScreen() {
     var phase by remember { mutableStateOf(Phase.MATERIALIZE) }
     var name by remember { mutableStateOf(Repo.profile().name.ifBlank { DEFAULT_NAME }) }
 
@@ -97,7 +97,6 @@ fun BootScreen(onDone: () -> Unit) {
             sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
             objectives = objectives.ifEmpty { DEFAULT_OBJECTIVES },
         )
-        onDone()
     }
 
     Box(Modifier.fillMaxSize().background(Void)) {

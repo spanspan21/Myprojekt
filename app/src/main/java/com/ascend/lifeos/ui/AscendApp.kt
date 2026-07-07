@@ -10,9 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -126,7 +124,7 @@ object ShellMode {
 @Composable
 fun AscendApp() {
     if (!Repo.data.profile.onboarded) {
-        BootScreen(onDone = {})
+        BootScreen()
         return
     }
 
@@ -248,11 +246,8 @@ fun AscendApp() {
                 group = group,
                 current = sub,
                 subs = visibleSubs(group),
-                accentOf = { g -> (lastSub[g] ?: g.subs.first()).accent() },
-                onSelectGroup = { g ->
-                    if (g == Group.TODAY && group == Group.TODAY) paletteOpen = true
-                    else openGroup(g)
-                },
+                accentOf = { g -> (lastSub[g] ?: visibleSubs(g).firstOrNull() ?: g.subs.first()).accent() },
+                onSelectGroup = { g -> openGroup(g) },
                 onSelectSub = { open(it) },
             )
         }

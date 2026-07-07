@@ -567,15 +567,6 @@ private fun HydrationBar(
 }
 
 @Composable
-private fun RoundIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Box(
-        Modifier.size(30.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, HudLine, CircleShape).clickable { onClick() },
-        contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, tint = TextPrimary, modifier = Modifier.size(16.dp)) }
-}
-
-@Composable
 private fun FastingModule(onOpen: () -> Unit, modifier: Modifier) {
     val f = Repo.data.fasting
     val protocol = FastingCalc.protocol(f.protocol)

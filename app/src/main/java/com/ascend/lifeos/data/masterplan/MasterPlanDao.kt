@@ -22,10 +22,6 @@ interface MasterPlanDao {
     fun observeDomains(): Flow<List<DomainWithGraph>>
 
     @Transaction
-    @Query("SELECT * FROM mp_domain WHERE id = :domainId")
-    fun observeDomain(domainId: String): Flow<DomainWithGraph?>
-
-    @Transaction
     @Query("SELECT * FROM mp_node WHERE id = :nodeId")
     fun observeNode(nodeId: String): Flow<NodeWithChildren?>
 

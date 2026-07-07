@@ -82,7 +82,6 @@ object Repo {
         }
         ensureToday()
         refreshStreak()
-        materializeRoutines()
     }
 
     private fun archiveCorrupt(slot: String, blob: String) {
@@ -147,8 +146,6 @@ object Repo {
     }
 
     fun workoutSets(day: DayData = today()): Int = day.cali.values.sumOf { it.size } + day.trainSets
-    fun workoutReps(day: DayData = today()): Int = day.cali.values.sumOf { it.sum() }
-    fun trainedToday(day: DayData = today()): Boolean = day.workoutDone || workoutSets(day) > 0
 
     // ---- mutations ----
     private fun updateDay(block: (DayData) -> DayData) {
@@ -165,16 +162,7 @@ object Repo {
 
     fun addWater(n: Int, dayKey: String = todayKey()) {
         val cur = data.days[dayKey] ?: DayData()
-        val stamps = if (n > 0) cur.waterLog + List(n) { System.currentTimeMillis() }
-        else cur.waterLog.dropLast(-n)
-        commit(
-            data.copy(
-                days = data.days + (dayKey to cur.copy(
-                    water = (cur.water + n).coerceAtLeast(0),
-                    waterLog = stamps.takeLast(40),
-                )),
-            ),
-        )
+        commit(data.copy(days = data.days + (dayKey to cur.copy(water = (cur.water + n).coerceAtLeast(0)))))
         refreshStreak()
     }
 
@@ -195,24 +183,6 @@ object Repo {
         refreshStreak()
     }
 
-    /** Supplement check-off (creatine streak lives on these). */
-    fun toggleSupp(name: String, dayKey: String = todayKey()) {
-        val cur = data.days[dayKey] ?: DayData()
-        val next = if (name in cur.supps) cur.supps - name else cur.supps + name
-        commit(data.copy(days = data.days + (dayKey to cur.copy(supps = next))))
-    }
-
-    /** Days in a row (ending today/yesterday) this supplement was taken. */
-    fun suppStreak(name: String): Int {
-        var streak = 0
-        for (k in lastDayKeys(120).reversed()) {
-            val taken = data.days[k]?.supps?.contains(name) == true
-            if (taken) streak++
-            else if (k != todayKey()) break   // today still open — don't break the chain yet
-        }
-        return streak
-    }
-
     /** One-minute journal: three lines + a mood tap. */
     fun setJournal(answers: List<String>, mood: Int?) {
         val k = todayKey()
@@ -222,39 +192,6 @@ object Repo {
             val prev = data.bodyDays[k] ?: BodyDay()
             commit(data.copy(bodyDays = data.bodyDays + (k to prev.copy(mood = it))))
         }
-    }
-
-    fun addGoal(text: String) {
-        if (text.isBlank()) return
-        updateDay { it.copy(goals = it.goals + Goal(newId("g"), text.trim())) }
-    }
-
-    fun toggleGoal(id: String) = updateDay { d ->
-        d.copy(goals = d.goals.map { if (it.id == id) it.copy(done = !it.done) else it })
-    }
-
-    fun deleteGoal(id: String) = updateDay { d -> d.copy(goals = d.goals.filter { it.id != id }) }
-
-    fun setReflection(text: String) = updateDay { it.copy(reflection = text) }
-
-    fun addLongGoal(title: String, current: Int, target: Int) {
-        if (title.isBlank()) return
-        updateProfile {
-            it.copy(longGoals = it.longGoals + LongGoal(newId("lg"), title.trim(), current, maxOf(target, current + 1), "Wdh"))
-        }
-    }
-
-    fun longGoalDelta(id: String, delta: Int) = updateProfile { p ->
-        p.copy(longGoals = p.longGoals.map { if (it.id == id) it.copy(current = (it.current + delta).coerceAtLeast(0)) else it })
-    }
-
-    fun deleteLongGoal(id: String) = updateProfile { p -> p.copy(longGoals = p.longGoals.filter { it.id != id }) }
-
-    fun setName(name: String) = updateProfile { it.copy(name = name) }
-    fun setWaterGoal(n: Int) = updateProfile { it.copy(waterGoal = n.coerceIn(1, 20)) }
-
-    fun completeOnboarding(name: String, waterGoal: Int) = updateProfile {
-        it.copy(name = name.trim(), waterGoal = waterGoal.coerceIn(1, 20), onboarded = true)
     }
 
     /** System-boot onboarding: identity + calibration + objectives in one commit. */
@@ -270,14 +207,12 @@ object Repo {
         }
     }
 
-    fun setReminders(on: Boolean) = updateProfile { it.copy(reminders = on) }
-
     /** Re-enter the boot sequence without touching any logged data. */
     fun rebootOnboarding() = updateProfile { it.copy(onboarded = false) }
 
     // ---- train brain ----
     fun saveAssessment(results: Map<String, Int>) = updateProfile {
-        it.copy(assessResults = results, assessDate = System.currentTimeMillis())
+        it.copy(assessResults = results)
     }
 
     fun toggleSkillGoal(id: String) = updateProfile { p ->
@@ -336,19 +271,6 @@ object Repo {
 
     fun saveMeal(name: String, entries: List<FoodEntry>) = updateProfile {
         it.copy(savedMeals = it.savedMeals + SavedMeal(newId("m"), name.trim(), entries))
-    }
-
-    fun deleteSavedMeal(id: String) = updateProfile { it.copy(savedMeals = it.savedMeals.filter { m -> m.id != id }) }
-
-    /** Add all entries of a saved meal / copied slot into today under [slot]. */
-    fun addEntries(entries: List<FoodEntry>, slot: String) {
-        entries.forEach { addFood(it.copy(id = "", ts = 0, meal = slot)) }
-    }
-
-    /** "Gestern gleich": copy yesterday's entries for a given slot into today. */
-    fun copyYesterday(slot: String) {
-        val y = data.days[prevKey(todayKey())] ?: return
-        addEntries(y.meals.filter { it.meal == slot }, slot)
     }
 
     // ---- shopping list ----
@@ -457,159 +379,10 @@ object Repo {
         )
     }
 
-    // ---- subscriptions ----
-    fun addSub(name: String, cost: Double, cycle: String) {
-        if (name.isBlank() || cost <= 0) return
-        updateProfile { it.copy(subs = it.subs + Subscription(newId("s"), name.trim(), cost, cycle)) }
-    }
-
-    fun deleteSub(id: String) = updateProfile { p -> p.copy(subs = p.subs.filter { it.id != id }) }
-
-    fun subsMonthly(): Double = data.profile.subs.sumOf { if (it.cycle == "yearly") it.cost / 12.0 else it.cost }
-    fun subsYearly(): Double = data.profile.subs.sumOf { if (it.cycle == "yearly") it.cost else it.cost * 12.0 }
-
-    // ---- finance (manual transactions) ----
-    fun addTxn(name: String, amount: Double, category: String, type: String) {
-        if (name.isBlank() || amount <= 0) return
-        val t = Txn(newId("t"), name.trim(), amount, category, type, System.currentTimeMillis())
-        commit(data.copy(txns = (data.txns + t).takeLast(2000)))
-    }
-
-    fun deleteTxn(id: String) = commit(data.copy(txns = data.txns.filter { it.id != id }))
-
-    // ---- time blocking ----
-    fun materializeRoutines() {
-        val k = todayKey()
-        val cur = data.days[k] ?: DayData()
-        val dow = java.time.LocalDate.parse(k).dayOfWeek.value
-        val missing = data.profile.routines.filter { r -> dow in r.days && cur.blocks.none { it.routineId == r.id } }
-        if (missing.isEmpty()) return
-        val blocks = (cur.blocks + missing.map {
-            TimeBlock("rb${it.id}$k", it.title, it.startMin, it.durMin, kind = "routine", flexible = false, routineId = it.id)
-        }).sortedBy { it.startMin }
-        commit(data.copy(days = data.days + (k to cur.copy(blocks = blocks))))
-    }
-
-    fun addBlock(title: String, startMin: Int, durMin: Int, flexible: Boolean) {
-        if (title.isBlank() || durMin <= 0) return
-        updateDay {
-            it.copy(blocks = (it.blocks + TimeBlock(newId("b"), title.trim(), startMin, durMin, flexible = flexible)).sortedBy { b -> b.startMin })
-        }
-    }
-
-    fun addRoutine(title: String, startMin: Int, durMin: Int) {
-        if (title.isBlank() || durMin <= 0) return
-        updateProfile { it.copy(routines = it.routines + Routine(newId("r"), title.trim(), startMin, durMin)) }
-        materializeRoutines()
-    }
-
-    fun toggleBlock(id: String) = updateDay { d ->
-        d.copy(blocks = d.blocks.map { if (it.id == id) it.copy(done = !it.done) else it })
-    }
-
-    /** Deletes a block; a routine instance also removes its recurring routine. */
-    fun deleteBlock(id: String) {
-        val k = todayKey()
-        val cur = data.days[k] ?: return
-        val blk = cur.blocks.find { it.id == id } ?: return
-        var nd = data.copy(days = data.days + (k to cur.copy(blocks = cur.blocks.filter { it.id != id })))
-        if (blk.routineId != null) {
-            nd = nd.copy(profile = nd.profile.copy(routines = nd.profile.routines.filter { it.id != blk.routineId }))
-        }
-        commit(nd)
-    }
-
-    fun autoPlan() = updateDay { it.copy(blocks = com.ascend.lifeos.core.PlannerEngine.resolve(it.blocks)) }
-
-    fun txnsForMonth(year: Int, month: Int): List<Txn> {
-        val zone = java.time.ZoneId.systemDefault()
-        return data.txns.filter {
-            val d = java.time.Instant.ofEpochMilli(it.ts).atZone(zone).toLocalDate()
-            d.year == year && d.monthValue == month
-        }.sortedByDescending { it.ts }
-    }
-
-    // ---- training ----
-    fun logSet(exId: String, value: Int, rpe: Int = 0) {
-        val k = todayKey()
-        val cur = data.days[k] ?: DayData()
-        val sets = (cur.cali[exId] ?: emptyList()) + value
-        val rpes = (cur.caliRpe[exId] ?: List(sets.size - 1) { 0 }) + rpe.coerceIn(0, 10)
-        val newDay = cur.copy(cali = cur.cali + (exId to sets), caliRpe = cur.caliRpe + (exId to rpes), workoutDone = true)
-        val dayBest = sets.max()
-        val p = data.profile
-        val newBest = if ((p.caliBest[exId] ?: 0) < value) p.caliBest + (exId to value) else p.caliBest
-        val hist = (p.exHist[exId] ?: emptyList()).toMutableList()
-        // store today's best as the last point (replace if already logged today)
-        val newHist = p.exHist + (exId to (hist + dayBest).takeLast(40))
-        val newProfile = p.copy(caliBest = newBest, exHist = newHist, workoutDays = p.workoutDays + (k to true))
-        commit(data.copy(days = data.days + (k to newDay), profile = newProfile))
-        refreshStreak()
-    }
-
-    fun removeSet(exId: String, index: Int) = updateDay { d ->
-        val list = (d.cali[exId] ?: return@updateDay d).toMutableList()
-        if (index in list.indices) list.removeAt(index)
-        val rpes = (d.caliRpe[exId] ?: emptyList()).toMutableList()
-        if (index in rpes.indices) rpes.removeAt(index)
-        if (list.isEmpty()) d.copy(cali = d.cali - exId, caliRpe = d.caliRpe - exId)
-        else d.copy(cali = d.cali + (exId to list), caliRpe = d.caliRpe + (exId to rpes))
-    }
-
-    fun setExLevel(exId: String, delta: Int) = updateProfile { p ->
-        val max = (PROGRESSIONS[exId]?.size ?: 1) - 1
-        p.copy(exLevel = p.exLevel + (exId to ((p.exLevel[exId] ?: baseLevel(exId)) + delta).coerceIn(0, max)))
-    }
-
-    /** Sets + RPEs of the most recent day (within 14 days, incl. today) on which [exId] was trained. */
-    fun lastWorkoutFor(exId: String): Pair<List<Int>, List<Int>>? {
-        var key = todayKey()
-        repeat(14) {
-            val d = data.days[key]
-            val sets = d?.cali?.get(exId)
-            if (!sets.isNullOrEmpty()) return sets to (d.caliRpe[exId] ?: emptyList())
-            key = prevKey(key)
-        }
-        return null
-    }
-
-    fun addExercise(name: String) {
-        if (name.isBlank()) return
-        val isTime = Regex("plank|halten|hang|sek|sec|hold", RegexOption.IGNORE_CASE).containsMatchIn(name)
-        updateProfile {
-            it.copy(caliDefs = it.caliDefs + ExerciseDef(newId("ex"), name.trim(), if (isTime) "sec" else "reps"))
-        }
-    }
-
-    fun deleteExercise(id: String) {
-        updateProfile { it.copy(caliDefs = it.caliDefs.filter { e -> e.id != id }) }
-        updateDay { it.copy(cali = it.cali - id) }
-    }
-
-    fun finishWorkout() {
-        val k = todayKey()
-        val cur = data.days[k] ?: DayData()
-        commit(
-            data.copy(
-                days = data.days + (k to cur.copy(workoutDone = true)),
-                profile = data.profile.copy(workoutDays = data.profile.workoutDays + (k to true)),
-            )
-        )
-        refreshStreak()
-    }
-
-    fun weekWorkouts(): Int {
-        val today = java.time.LocalDate.now()
-        var n = 0
-        for (i in 0 until 7) {
-            val d = today.minusDays(i.toLong())
-            val key = "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
-            if (data.profile.workoutDays[key] == true) n++
-        }
-        return n
-    }
-
-    fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
+    // Legacy calisthenics logging, the Repo txn/subs stores and day time-blocking
+    // were removed in the 2026-07 audit (Welle 3): training lives in Room
+    // (data/training), money in LifeStores/FinanceStore, scheduling in the
+    // calendar. day.cali/caliRpe stay readable as the archive of old days.
 
     fun setHealth(h: HealthSnapshot) {
         // persist a daily snapshot so trends & baselines survive past the live read
@@ -893,11 +666,6 @@ object Repo {
     fun importJson(s: String): Boolean = try {
         commit(json.decodeFromString<AppData>(s)); ensureToday(); true
     } catch (e: Exception) { false }
-
-    fun resetAll() {
-        commit(AppData())
-        ensureToday()
-    }
 
     // ---- streak v2 (weekly freeze · sick-mode pause · strength fallback) ----
     private fun refreshStreak() {

@@ -68,9 +68,6 @@ dependencies {
     // element fixes) with zero Kotlin/AGP/compileSdk impact — verified vs POM.
     implementation platform('androidx.compose:compose-bom:2025.03.01')
 
-    // RoundedPolygon + Morph (the M3-expressive shape engine, standalone).
-    // 1.0.1 is the last version that runs on Kotlin 1.9 — do not bump to 1.1.
-    implementation 'androidx.graphics:graphics-shapes:1.0.1'
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.foundation:foundation'

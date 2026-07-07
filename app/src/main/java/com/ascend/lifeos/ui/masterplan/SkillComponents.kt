@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.masterplan.EnergyLevel
@@ -68,23 +67,6 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 val GlassFill = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)
 val GlassLine = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f)
 val GlassLineSoft = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)
-
-/** A frosted glass surface: translucent fill + 0.5dp hairline, no shadow. */
-@Composable
-fun GlassCard(
-    modifier: Modifier = Modifier,
-    corner: Dp = 24.dp,
-    fill: Color = GlassFill,
-    line: Color = GlassLine,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier
-            .clip(RoundedCornerShape(corner))
-            .background(fill)
-            .border(0.5.dp, line, RoundedCornerShape(corner)),
-    ) { content() }
-}
 
 /**
  * The void: pure OLED black with a few blurred accent nebulae. This is the light

@@ -53,10 +53,8 @@ object Prefs {
     const val AUTO_COUNT = "auto_count"                // false (experiment)
     const val STRAIN_TARGET_ON = "strain_target_on"    // true
     const val SEASON_PHASE = "season_phase"            // "OFF" | "PRE" | "IN" | "PLAYOFF" | "" (auto/none)
-    // Fuel
+    // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true
-    const val SUPPLEMENTS_ON = "supplements_on"        // true
-    const val TDEE_AUTO = "tdee_auto"                  // true (mirrors profile flag)
     // Body
     const val SICKNESS_ALERT = "sickness_alert"        // true
     const val SLEEP_NEED_AUTO = "sleep_need_auto"      // true
@@ -68,10 +66,4 @@ object Prefs {
     // School
     const val HOMEWORK_PROMPT = "homework_prompt"      // true
     const val EXAM_COUNTDOWN = "exam_countdown"        // true
-    // Skills
-    const val REVIEWS_ON = "reviews_on"                // true
-    // Modules visibility
-    const val MOD_MIND = "mod_mind"                    // true
-    const val MOD_FINANCE = "mod_finance"              // true
-    const val MOD_GOALS = "mod_goals"                  // true
 }

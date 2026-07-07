@@ -149,8 +149,6 @@ object HealthConnect {
             restingHr = rhr, steps = if (steps > 0) steps else null,
             sleepStartMin = sleepStartMin,
             hrSeries = series,
-            hrMin = if (cnt > 0) minB.toInt() else null,
-            hrMax = if (cnt > 0) maxB.toInt() else null,
             hrAvg = if (cnt > 0) (sum.toDouble() / cnt).roundToInt() else null,
             diag = "Found: $cnt heart-rate samples · ${sleepRecords.size} sleep sessions " +
                 "(${todaysSleep.size} counted today) · ${rhrRecords.size} resting HR · $steps steps",

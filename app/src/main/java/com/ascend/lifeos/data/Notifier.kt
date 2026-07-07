@@ -100,14 +100,6 @@ object Notifier {
         runCatching { am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 90L * 60_000, pi) }
     }
 
-    fun cancel(ctx: Context) {
-        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        am.cancel(pending(ctx, REQ_MORNING, "morning"))
-        am.cancel(pending(ctx, REQ_FUEL, "fuel"))
-        am.cancel(pending(ctx, REQ_EVENING, "evening"))
-        am.cancel(pending(ctx, REQ_WEEKLY, "weekly"))
-    }
-
     private fun pending(ctx: Context, req: Int, kind: String): PendingIntent {
         val intent = Intent(ctx, ReminderReceiver::class.java).apply { putExtra("kind", kind) }
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
