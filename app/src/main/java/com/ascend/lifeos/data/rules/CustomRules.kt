@@ -161,8 +161,12 @@ object CustomRules {
     /** Live value of [m], or null when the metric has no data (yet). */
     suspend fun metricValue(ctx: Context, m: RMetric): Int? = when (m) {
         RMetric.RECOVERY -> Repo.recoveryScore()
-        RMetric.SLEEP_MIN -> Repo.bodyDay(prevKey(todayKey()))?.sleepMin
-        RMetric.SCREEN_MIN -> WellbeingStore.history(ctx)[LocalDate.now().toString()]?.first
+        // last night lives under todayKey() (written by the morning sync);
+        // prevKey is only the fallback before that sync has run
+        RMetric.SLEEP_MIN -> Repo.bodyDay(todayKey())?.sleepMin ?: Repo.bodyDay(prevKey(todayKey()))?.sleepMin
+        // history is keyed by todayKey() (06:00 rollover) — LocalDate.now()
+        // made screen rules structurally dead between midnight and 06:00
+        RMetric.SCREEN_MIN -> WellbeingStore.history(ctx)[todayKey()]?.first
         RMetric.KCAL -> Repo.today().meals.sumOf { it.kcal }
         RMetric.WATER -> Repo.today().water
         RMetric.STREAK -> Repo.profile().streak

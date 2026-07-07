@@ -109,7 +109,7 @@ object CommandEngine {
         val navTargets = mapOf(
             "train" to "train", "training" to "train", "workout" to "train",
             "fuel" to "fuel", "food" to "fuel", "essen" to "fuel",
-            "body" to "body", "sleep" to "body", "schlaf" to "body",
+            "body" to "body", "sleep" to "sleep", "schlaf" to "sleep",
             "skills" to "skills", "learn" to "skills",
             "calendar" to "calendar", "kalender" to "calendar",
             "guard" to "guard", "report" to "report", "week" to "report",

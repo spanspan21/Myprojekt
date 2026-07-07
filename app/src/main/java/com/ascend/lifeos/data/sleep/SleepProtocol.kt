@@ -39,7 +39,10 @@ object SleepProtocol {
 
     /** Time in bed minus onset, night wake and morning lounging; never negative. */
     fun actualSleep(log: NightLog): Int {
-        val lounging = (log.outOfBedMin - log.finalWakeMin).coerceAtLeast(0)
+        // wrap midnight like timeInBed does (23:50 wake → 00:20 out = 30 min);
+        // anything past 4 h is treated as bad input, not a real lie-in
+        val rawLounge = ((log.outOfBedMin - log.finalWakeMin) % 1440 + 1440) % 1440
+        val lounging = if (rawLounge > 240) 0 else rawLounge
         return (timeInBed(log) - log.sleepOnsetMin - log.nightWakeMin - lounging).coerceAtLeast(0)
     }
 

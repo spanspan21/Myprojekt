@@ -146,13 +146,18 @@ class MasterPlanImporter(
         val assets = context.assets
         val files = assets.list(dir)?.filter { it.endsWith(".json") }.orEmpty()
         var count = 0
+        var firstError: Throwable? = null
         for (file in files) {
-            val text = assets.open("$dir/$file").bufferedReader().use { it.readText() }
-            val plan = json.decodeFromString<DomainPlanDto>(text)
-            val rows = plan.toRows()
-            dao.importDomain(rows.domain, rows.nodes, rows.tasks, rows.resources)
-            count++
+            // per-file: one broken plan must not sink the remaining imports
+            runCatching {
+                val text = assets.open("$dir/$file").bufferedReader().use { it.readText() }
+                val plan = json.decodeFromString<DomainPlanDto>(text)
+                val rows = plan.toRows()
+                dao.importDomain(rows.domain, rows.nodes, rows.tasks, rows.resources)
+                count++
+            }.onFailure { if (firstError == null) firstError = it }
         }
+        firstError?.let { throw it }   // Result stays a failure → version not persisted
         count
     }
 

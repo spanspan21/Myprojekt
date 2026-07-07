@@ -217,7 +217,7 @@ object PrimeEngine {
         }
         if (tired != null) {
             directives += PrimeDirective(
-                "${muscleDe(tired.first)} braucht ~${((0.85f - tired.second) * 40).toInt()} h Pause",
+                "${muscleDe(tired.first)} braucht ~${com.ascend.lifeos.data.training.MuscleRecovery.hoursUntilFresh(tired.first, tired.second)} h Pause",
                 "Frische ${(tired.second * 100).toInt()} % — heute andere Muskelgruppe oder Ruhetag.",
                 1.5 + (0.55 - tired.second),
             )

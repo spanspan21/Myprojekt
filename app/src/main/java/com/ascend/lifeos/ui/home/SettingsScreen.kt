@@ -179,8 +179,13 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── FUEL ─────────────────────────────────────────────────────
         SettingsSection("Fuel") {
-            ToggleRow("Adaptive calorie goal", "Weekly recalibration from your real expenditure", Prefs.TDEE_AUTO, true)
-            ToggleRow("Supplement tracking", "Creatine & co. with streaks", Prefs.SUPPLEMENTS_ON, true)
+            // wired to the profile flag AdaptiveTdee actually reads — the old
+            // Prefs.TDEE_AUTO key was written here but read nowhere
+            ToggleRow(
+                "Adaptive calorie goal", "Weekly recalibration from your real expenditure",
+                on = Repo.data.profile.kcalGoalAuto,
+                onToggle = { Repo.setKcalGoalAuto(it) },
+            )
             ToggleRow("Protein window nudge", "90 min after training, with 1-tap log", Prefs.PROTEIN_NUDGE, true)
         }
 
@@ -368,6 +373,10 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             if (hasFolder) {
                 ActionRow("Restore latest backup", "Replaces current data") {
+                    if (backupState == "Restoring…") return@ActionRow
+                    backupState = "Restoring…"
+                    // SAF I/O + ZIP + db swaps — off the main thread (ANR risk)
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     val r = Backup.restoreLatest(ctx)
                     backupState = when {
                         r.ok && r.needsRestart -> "Restored ✓ — restarting…"
@@ -387,6 +396,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             launch?.let { ctx.startActivity(it) }
                             Runtime.getRuntime().exit(0)
                         }
+                    }
                     }
                 }
             }
@@ -474,8 +484,13 @@ private fun SettingsSection(title: String, content: @Composable ColumnScope.() -
 private fun ToggleRow(title: String, sub: String, key: String, default: Boolean) {
     val ctx = LocalContext.current
     val on = Prefs.bool(ctx, key, default)
+    ToggleRow(title, sub, on = on, onToggle = { Prefs.setBool(ctx, key, it) })
+}
+
+@Composable
+private fun ToggleRow(title: String, sub: String, on: Boolean, onToggle: (Boolean) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable { Prefs.setBool(ctx, key, !on) }.padding(vertical = 7.dp),
+        Modifier.fillMaxWidth().clickable { onToggle(!on) }.padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {

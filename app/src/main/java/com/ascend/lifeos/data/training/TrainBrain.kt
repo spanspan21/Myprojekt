@@ -79,9 +79,9 @@ object TrainBrain {
     /** Vest recommendation: once a basic hits ~15+ clean reps, load ~10% BW. */
     fun vestSuggestion(bestReps: Int, bodyweightKg: Int, vestMaxKg: Int): Int? {
         if (bestReps < 15) return null
-        val base = (bodyweightKg * 0.10f)
-        val stepped = (base / 2.5f).toInt() * 2.5f
-        return stepped.toInt().coerceIn(5, vestMaxKg)
+        // whole kilos, honestly rounded — the old 2.5-step floor + toInt()
+        // collapsed every bodyweight from 75 to 99 kg to a flat 7 kg
+        return Math.round(bodyweightKg * 0.10f).coerceIn(5, vestMaxKg)
     }
 
     /**

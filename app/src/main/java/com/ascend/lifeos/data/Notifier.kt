@@ -139,7 +139,7 @@ object Notifier {
     fun show(ctx: Context, kind: String) {
         if (!hasPermission(ctx)) return
         ensureChannel(ctx)
-        runCatching { Repo.init(ctx) }
+        runCatching { Repo.initIfNeeded(ctx) }
         if (Repo.profile().sickMode && kind != "morning") return  // rest means rest
         // per-kind settings toggles
         val allowed = when (kind) {
@@ -152,7 +152,9 @@ object Notifier {
         }
         if (!allowed) return
         val msg = message(ctx, kind) ?: return   // nothing worth saying → stay silent
-        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; else -> 4 }
+        // every kind gets its own id — protein sharing 4 with weekly used to
+        // overwrite the Sunday report
+        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; else -> 4 }
 
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -175,7 +177,17 @@ object Notifier {
 
         // 1-tap dialogue: answer without opening the app
         when (kind) {
-            "morning" -> builder.addAction(0, "Open training", openApp("train"))
+            "morning" -> {
+                // 1-tap morning energy (tapping the body opens the app anyway)
+                fun energyPi(value: Int): PendingIntent {
+                    val i = Intent(ctx, CheckInReceiver::class.java)
+                        .putExtra("what", "energy").putExtra("value", value).putExtra("notifId", id)
+                    return PendingIntent.getBroadcast(ctx, 4310 + value, i, flags)
+                }
+                builder.addAction(0, "Low", energyPi(1))
+                builder.addAction(0, "OK", energyPi(2))
+                builder.addAction(0, "High", energyPi(3))
+            }
             "evening" -> {
                 fun checkPi(value: Int): PendingIntent {
                     val i = Intent(ctx, CheckInReceiver::class.java)

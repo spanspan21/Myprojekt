@@ -39,8 +39,12 @@ class MasterPlanViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val seeded = prefs.getInt(KEY_PLAN_VERSION, 0)
             if (dao.domainCount() == 0 || seeded != PLAN_VERSION) {
-                importer.importBundledPlans()
-                prefs.edit().putInt(KEY_PLAN_VERSION, PLAN_VERSION).apply()
+                // only persist the version on success — a failed import used to
+                // leave an empty vault locked in until the next version bump
+                val result = importer.importBundledPlans()
+                if (result.isSuccess) {
+                    prefs.edit().putInt(KEY_PLAN_VERSION, PLAN_VERSION).apply()
+                }
             }
         }
     }

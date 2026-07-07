@@ -17,6 +17,9 @@ fun prevKey(key: String): String {
 
 fun isoWeek(now: LocalDateTime = LocalDateTime.now()): String {
     val d = now.toLocalDate()
+    // week-based year, NOT calendar year: around New Year they differ, and mixing
+    // them made the stamp flip mid-week (double freeze refill, mesocycle jumps)
+    val year = d.get(java.time.temporal.IsoFields.WEEK_BASED_YEAR)
     val week = d.get(java.time.temporal.WeekFields.ISO.weekOfWeekBasedYear())
-    return "${d.year}-W$week"
+    return "$year-W$week"
 }

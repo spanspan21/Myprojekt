@@ -105,7 +105,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
             Text(
                 when {
                     score >= 80 -> "Messerscharfe Woche — Konstanz ist deine Superkraft."
-                    score >= 55 -> "Solide Basis. Protein an ${7 - protHit} Tagen offen — der Lücken-Füller hilft abends."
+                    score >= 55 -> "Solide Basis. Protein an ${(logged - protHit).coerceAtLeast(0)} geloggten Tagen offen — der Lücken-Füller hilft abends."
                     else -> "Neustart-Woche: heute zählt, nicht gestern. Ein geloggter Tag ist ein guter Tag."
                 },
                 color = TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp,

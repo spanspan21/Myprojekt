@@ -168,12 +168,14 @@ interface TrainingDao {
     @Query("SELECT * FROM workout_sessions WHERE startedAt >= :since")
     suspend fun plainSessionsSince(since: Long): List<WorkoutSessionEntity>
 
+    // single row = the most recent session; an aggregate here would silently
+    // collapse ALL past sessions into one lifetime sum (the old "-40%" bug)
     @Query("""
-        SELECT COALESCE(SUM(totalReps), 0) FROM workout_sessions
+        SELECT totalReps FROM workout_sessions
         WHERE templateName = :name AND isComplete = 1 AND id != :excludeId
         ORDER BY startedAt DESC LIMIT 1
     """)
-    suspend fun lastRepsForTemplate(name: String, excludeId: String): Int
+    suspend fun lastRepsForTemplate(name: String, excludeId: String): Int?
 }
 
 data class BestRep(val exerciseId: String, val best: Int)

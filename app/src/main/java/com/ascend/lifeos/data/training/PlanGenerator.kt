@@ -189,7 +189,7 @@ object PlanGenerator {
             season == "PRE" -> "Pre-season — explosive quality over volume."
             r != null && r < 50 -> "Recovery $r — active recovery today. The gains happen when you rest."
             r != null && r < 75 -> "Recovery $r — finisher parked, one lift trimmed today."
-            trainWeek > 0 -> "Build week ${trainWeek + 1}/5 — volume ${if (volumeScale >= 1.0) "+" else ""}${(volumeScale * 100 - 100).toInt()}%."
+            trainWeek > 0 -> "Build week ${trainWeek + 1}/5 — volume ${if (volumeScale >= 1.0) "+" else ""}${Math.round(volumeScale * 100 - 100).toInt()}%."
             else -> null
         }
         return WeekPlan(sessions, note)
@@ -275,6 +275,9 @@ object PlanGenerator {
 
         val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
         val moved = ArrayList<String>()
+        // slots claimed by earlier moves in THIS run — `entities` is a stale
+        // snapshot, so without this two sessions could land on the same slot
+        val claimed = HashMap<LocalDate, MutableList<IntRange>>()
 
         for (t in trainings) {
             val day = LocalDate.ofEpochDay(t.dayEpoch)
@@ -300,7 +303,11 @@ object PlanGenerator {
                 if (hockeyDay) continue
                 val minStart = if (d == today) nowMin + 15 else CalendarRepo.WAKE_START
                 for (s in dayTl.freeSlots) {
-                    val start = maxOf(s.startMin, minStart)
+                    var start = maxOf(s.startMin, minStart)
+                    // shift past ranges claimed earlier in this run (sorted → one pass)
+                    for (r in claimed[d].orEmpty().sortedBy { it.first }) {
+                        if (start < r.last + 1 && start + blockLen > r.first) start = r.last + 1
+                    }
                     if (s.endMin - start >= blockLen) {
                         placedAt = d to start
                         break@outer
@@ -310,6 +317,8 @@ object PlanGenerator {
 
             dao.delete(t.id)
             if (placedAt != null) {
+                claimed.getOrPut(placedAt.first) { mutableListOf() }
+                    .add(placedAt.second until placedAt.second + blockLen)
                 CalendarRepo.upsert(
                     ctx, title = t.title, type = EventType.TRAINING,
                     day = placedAt.first, startMin = placedAt.second,

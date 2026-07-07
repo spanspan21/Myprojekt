@@ -35,7 +35,9 @@ object SoundFx {
     }
 
     private fun play(ctx: Context, pcm: ShortArray) {
-        if (!Prefs.bool(ctx, Prefs.SOUNDS_ON, false)) return
+        // default TRUE — must match SettingsScreen's declared default, else the
+        // first-read-wins Prefs cache makes a fresh install randomly silent
+        if (!Prefs.bool(ctx, Prefs.SOUNDS_ON, true)) return
         Thread {
             runCatching {
                 val track = AudioTrack.Builder()

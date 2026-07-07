@@ -28,6 +28,18 @@ object MuscleRecovery {
         else -> 32.0
     }
 
+    /**
+     * Hours until [freshness] decays back up to [target], following the same
+     * exponential model as the heatmap. A linear estimate here used to promise
+     * "14 h" where the model needed ~56 h.
+     */
+    fun hoursUntilFresh(m: Muscle, freshness: Float, target: Float = 0.85f): Int {
+        val f0 = (1f - freshness) * 10.0          // current fatigue units
+        val fT = (1f - target) * 10.0             // fatigue units at target
+        if (f0 <= fT || fT <= 0.0) return 0
+        return Math.round(halfLifeHours(m) * (Math.log(f0 / fT) / Math.log(2.0))).toInt()
+    }
+
     /** Fatigue units that push a muscle from fresh to fried. */
     private const val CAPACITY = 10.0
 

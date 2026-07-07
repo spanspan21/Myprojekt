@@ -133,6 +133,11 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
         }
     }
 
+    // "imports itself": throttled feed refresh on open (Room flows update the UI)
+    LaunchedEffect(Unit) {
+        runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(ctx) }
+    }
+
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
             Spacer(Modifier.height(14.dp))

@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.AscendApp
@@ -41,6 +43,11 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
+        // Untis/ICS keep themselves fresh (6h throttle) — the cancellation
+        // alarm only ever fires from a sync, so a sync has to actually happen
+        lifecycleScope.launch {
+            runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(applicationContext) }
+        }
         handleJarvisIntent(intent)
         setContent {
             AscendTheme {
@@ -54,7 +61,11 @@ class MainActivity : ComponentActivity() {
         handleJarvisIntent(intent)
     }
 
-    /** Routes "open"-Extras und NFC-Deep-Links (jarvis://train/start → Session). */
+    /**
+     * Routes "open" extras and jarvis:// deep links to a navigation target.
+     * Only the host is routed (jarvis://train opens the Train tab) — path
+     * suffixes like /start are ignored, there is no per-action routing.
+     */
     private fun handleJarvisIntent(intent: android.content.Intent?) {
         intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
         val uri = intent?.data ?: return

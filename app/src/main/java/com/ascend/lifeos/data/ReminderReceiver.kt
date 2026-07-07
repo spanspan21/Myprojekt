@@ -20,11 +20,13 @@ class ReminderReceiver : BroadcastReceiver() {
 /** 1-tap answers from notification action buttons — no app open needed. */
 class CheckInReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
-        runCatching { Repo.init(ctx) }
+        runCatching { Repo.initIfNeeded(ctx) }
         when (intent.getStringExtra("what")) {
             "stress" -> Repo.setCheckIn(eveningStress = intent.getIntExtra("value", 2))
             "energy" -> Repo.setCheckIn(morningEnergy = intent.getIntExtra("value", 2))
         }
+        // survive an immediate process kill: don't leave the answer in the debounce
+        runCatching { Repo.flush() }
         // collapse the notification after answering
         runCatching {
             androidx.core.app.NotificationManagerCompat.from(ctx)
@@ -36,7 +38,7 @@ class CheckInReceiver : BroadcastReceiver() {
 /** Reschedules reminders + revives the Guard after a device reboot. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
-        runCatching { Repo.init(ctx) }
+        runCatching { Repo.initIfNeeded(ctx) }
         if (Repo.profile().reminders && Notifier.hasPermission(ctx)) {
             Notifier.schedule(ctx)
         }

@@ -36,6 +36,7 @@ object Repo {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private lateinit var prefs: SharedPreferences
     private var filesDir: java.io.File? = null
+    private var appCtx: Context? = null   // application context, for Prefs-gated features
     private val saveScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var saveJob: Job? = null
     private val idSeq = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis())
@@ -50,8 +51,18 @@ object Repo {
     /** Collision-free id: strictly monotonic, seeded from wall clock. */
     fun newId(prefix: String): String = prefix + idSeq.incrementAndGet()
 
+    /**
+     * For BroadcastReceivers: initialize only on a cold process. A full re-init
+     * while the app is alive would clobber in-memory edits still inside the
+     * 350 ms debounce window.
+     */
+    fun initIfNeeded(ctx: Context) {
+        if (!::prefs.isInitialized) init(ctx)
+    }
+
     fun init(ctx: Context) {
         val app = ctx.applicationContext
+        appCtx = app
         prefs = app.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         filesDir = app.filesDir
         val primary = prefs.getString(KEY, null)
@@ -110,8 +121,7 @@ object Repo {
     private fun ensureToday() {
         val k = todayKey()
         if (data.days[k] == null) {
-            val seededGoals = DEFAULT_GOAL_TEXTS.mapIndexed { i, t -> Goal("g$i", t) }
-            commit(data.copy(days = data.days + (k to DayData(goals = seededGoals, seeded = true))))
+            commit(data.copy(days = data.days + (k to DayData())))
         }
     }
 
@@ -120,11 +130,14 @@ object Repo {
     fun dayFor(key: String): DayData? = data.days[key]
     fun profile(): Profile = data.profile
 
+    // The three home missions — train · fuel · water. Must stay in lockstep with
+    // HomeScreen's missionsDone; the old seeded daily goals no longer exist.
     fun completion(day: DayData = today(), p: Profile = data.profile): CompletionInfo {
-        val total = day.goals.size + 2
-        var done = day.goals.count { it.done }
+        val total = 3
+        var done = 0
+        if (day.workoutDone || day.trainSets > 0 || day.cali.values.any { it.isNotEmpty() }) done++
+        if (day.meals.sumOf { it.kcal } >= p.kcalGoal) done++
         if (day.water >= p.waterGoal) done++
-        if (day.workoutDone || day.cali.values.any { it.isNotEmpty() }) done++
         return CompletionInfo(done, total)
     }
 
@@ -133,7 +146,7 @@ object Repo {
         return completion(d, data.profile)
     }
 
-    fun workoutSets(day: DayData = today()): Int = day.cali.values.sumOf { it.size }
+    fun workoutSets(day: DayData = today()): Int = day.cali.values.sumOf { it.size } + day.trainSets
     fun workoutReps(day: DayData = today()): Int = day.cali.values.sumOf { it.sum() }
     fun trainedToday(day: DayData = today()): Boolean = day.workoutDone || workoutSets(day) > 0
 
@@ -160,6 +173,23 @@ object Repo {
                     water = (cur.water + n).coerceAtLeast(0),
                     waterLog = stamps.takeLast(40),
                 )),
+            ),
+        )
+        refreshStreak()
+    }
+
+    /**
+     * Room training finished a session today — the ONLY bridge from the training
+     * module into the day record. Feeds completion/streak, the widget, water
+     * bonus, sleep boost and training-load headroom.
+     */
+    fun markTrained(sets: Int, dayKey: String = todayKey()) {
+        if (sets <= 0) return
+        val cur = data.days[dayKey] ?: DayData()
+        commit(
+            data.copy(
+                days = data.days + (dayKey to cur.copy(workoutDone = true, trainSets = cur.trainSets + sets)),
+                profile = data.profile.copy(workoutDays = data.profile.workoutDays + (dayKey to true)),
             ),
         )
         refreshStreak()
@@ -672,6 +702,7 @@ object Repo {
     }
 
     fun setKcalGoal(kcal: Int) = updateProfile { it.copy(kcalGoal = kcal.coerceIn(1200, 6000)) }
+    fun setKcalGoalAuto(on: Boolean) = updateProfile { it.copy(kcalGoalAuto = on) }
     fun markTdeeSuggested() = updateProfile { it.copy(tdeeLastSuggest = todayKey()) }
 
     /**
@@ -680,21 +711,28 @@ object Repo {
      * Falls back to 8h until ≥5 such nights exist. Clamped 6:30–9:00.
      */
     fun sleepNeedMin(): Int {
-        val samples = lastDayKeys(60).filter { key ->
-            runCatching {
-                val d = java.time.LocalDate.parse(key)
-                d.dayOfWeek == java.time.DayOfWeek.SATURDAY || d.dayOfWeek == java.time.DayOfWeek.SUNDAY
-            }.getOrDefault(false)
-        }.mapNotNull { data.bodyDays[it]?.sleepMin }.filter { it > 240 }
-        val base = if (samples.size < 5) 480 else samples.sorted()[samples.size / 2].coerceIn(390, 540)
+        // both settings toggles actually gate their halves here
+        val learnOn = appCtx?.let { Prefs.bool(it, Prefs.SLEEP_NEED_AUTO, true) } ?: true
+        val boostOn = appCtx?.let { Prefs.bool(it, Prefs.STRAIN_SLEEP_BOOST, true) } ?: true
+        val base = if (!learnOn) 480 else {
+            val samples = lastDayKeys(60).filter { key ->
+                runCatching {
+                    val d = java.time.LocalDate.parse(key)
+                    d.dayOfWeek == java.time.DayOfWeek.SATURDAY || d.dayOfWeek == java.time.DayOfWeek.SUNDAY
+                }.getOrDefault(false)
+            }.mapNotNull { data.bodyDays[it]?.sleepMin }.filter { it > 240 }
+            if (samples.size < 5) 480 else samples.sorted()[samples.size / 2].coerceIn(390, 540)
+        }
         // hard days earn extra sleep: today's training sets + growth spurts
         var boost = 0
-        if (workoutSets(today()) >= 12) boost += 30
-        val heights = data.profile.measurements["height"].orEmpty()
-        if (heights.size >= 2) {
-            val monthAgo = System.currentTimeMillis() - 35L * 86_400_000
-            val old = heights.lastOrNull { it.ts < monthAgo }
-            if (old != null && heights.last().cm - old.cm > 0.5) boost += 20
+        if (boostOn) {
+            if (workoutSets(today()) >= 12) boost += 30
+            val heights = data.profile.measurements["height"].orEmpty()
+            if (heights.size >= 2) {
+                val monthAgo = System.currentTimeMillis() - 35L * 86_400_000
+                val old = heights.lastOrNull { it.ts < monthAgo }
+                if (old != null && heights.last().cm - old.cm > 0.5) boost += 20
+            }
         }
         return (base + boost).coerceAtMost(570)
     }
@@ -769,8 +807,11 @@ object Repo {
         val sleepPerf = (sleepMin / 480.0).coerceIn(0.0, 1.0)
         // 45% deep+REM share = full credit (physiological sweet spot; 60% was
         // stricter than any consumer scorer and dragged normal nights down).
-        val restorative =
-            if (sleepMin > 0) ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45 else 0.5
+        // No stage data at all (manual entry, stage-less source) = MISSING
+        // signal, not "0% restorative" — else those nights cap at 70.
+        val restorative: Double? =
+            if (sleepMin > 0 && h.rem + h.deep > 0) ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45
+            else null
 
         val baseline = rhrBaseline()
         val rhr = h.restingHr
@@ -781,12 +822,15 @@ object Repo {
 
         val loadHeadroom = 1.0 - trainingLoad()
 
-        var score: Double
-        if (rhrScore != null) {
-            score = (0.40 * sleepPerf + 0.20 * restorative + 0.25 * rhrScore + 0.15 * loadHeadroom) * 100
-        } else {
-            score = (0.55 * sleepPerf + 0.30 * restorative + 0.15 * loadHeadroom) * 100
+        // renormalize honestly over whichever signals exist
+        val parts = buildList {
+            add(0.40 to sleepPerf)
+            restorative?.let { add(0.20 to it) }
+            rhrScore?.let { add(0.25 to it) }
+            add(0.15 to loadHeadroom)
         }
+        val weightSum = parts.sumOf { it.first }
+        var score = parts.sumOf { it.first * it.second } / weightSum * 100
         // subjective check-ins nudge the score honestly
         data.bodyDays[todayKey()]?.let { d ->
             if (d.soreness == 3) score -= 8.0
@@ -811,9 +855,13 @@ object Repo {
         // 35% deep+REM = full quality credit: the typical healthy share.
         // Calibrated against Samsung Health on real nights (they run ~±2 pts
         // since they also fold sleeping heart rate in — we deliberately don't).
-        val share = ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.35) / 0.35
+        // Stage-less nights renormalize instead of scoring "0% quality".
+        val share: Double? =
+            if (h.rem + h.deep > 0) ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.35) / 0.35 else null
         val awakeFrac = (h.awake.toDouble() / (sleepMin + h.awake).coerceAtLeast(1)).coerceIn(0.0, 0.25) / 0.25
-        val score = (0.55 * duration + 0.30 * share + 0.15 * (1.0 - awakeFrac)) * 100
+        val score =
+            if (share != null) (0.55 * duration + 0.30 * share + 0.15 * (1.0 - awakeFrac)) * 100
+            else (0.55 * duration + 0.15 * (1.0 - awakeFrac)) / 0.70 * 100
         // round like every consumer scorer does — truncating systematically
         // reads one point low
         return Math.round(score).toInt().coerceIn(10, 99)

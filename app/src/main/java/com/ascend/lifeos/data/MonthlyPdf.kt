@@ -39,15 +39,27 @@ object MonthlyPdf {
                     put(MediaStore.Downloads.IS_PENDING, 1)
                 }
             }
-            val resolver = ctx.contentResolver
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return@runCatching null
-            resolver.openOutputStream(uri)?.use { doc.writeTo(it) }
-            doc.close()
             if (Build.VERSION.SDK_INT >= 29) {
+                val resolver = ctx.contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return@runCatching null
+                resolver.openOutputStream(uri)?.use { doc.writeTo(it) }
+                doc.close()
                 values.clear(); values.put(MediaStore.Downloads.IS_PENDING, 0)
                 resolver.update(uri, values, null, null)
+                uri
+            } else {
+                // MediaStore.Downloads is API 29+ — the field access alone threw
+                // on Android 8/9 and runCatching turned it into "Export failed"
+                @Suppress("DEPRECATION")
+                val dir = java.io.File(
+                    android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                    "JARVIS",
+                ).apply { mkdirs() }
+                val f = java.io.File(dir, name)
+                f.outputStream().use { doc.writeTo(it) }
+                doc.close()
+                android.net.Uri.fromFile(f)
             }
-            uri
         }.getOrNull()
     }
 

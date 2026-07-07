@@ -35,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -51,9 +52,12 @@ class JarvisGuardService : Service() {
     private var lastPkg: String? = null               // foreground-transition detection
     private var sessionStart = 0L                     // start of the current continuous session
     private var lastHeavyCheck = 0L                   // throttles the event-stream walk
+    private var lastBudgetCheck = 0L                  // throttles the global day-budget walk
     private var lastGrayWrite: Boolean? = null        // last grayscale state we wrote
     private var power: PowerManager? = null
     private var overlayLifecycle: OverlayLifecycleOwner? = null
+    private var overlayRecomposer: Recomposer? = null // cancelled per overlay — used to leak
+    private var overlayRecomposeJob: Job? = null
 
     // Battery: the poll loop only runs while the screen is on. Screen-off kills
     // it completely; this receiver restarts it on the next unlock.
@@ -128,6 +132,26 @@ class JarvisGuardService : Service() {
             return
         }
 
+        // Just-in-time 80%-of-day-budget warning. The budget is GLOBAL, so it
+        // runs before every per-app rule return below — burning the budget in
+        // unguarded apps used to never trigger it. Own throttle: one walk/min.
+        val nowForBudget = System.currentTimeMillis()
+        if (nowForBudget - lastBudgetCheck >= 60_000L) {
+            lastBudgetCheck = nowForBudget
+            runCatching {
+                val budgetDay = WellbeingStore.budgetMin(this)
+                if (budgetDay > 0) {
+                    val durations = DigitalWellbeingManager.foregroundDurations(
+                        this, DigitalWellbeingManager.startOfToday(), nowForBudget,
+                    )
+                    val totalMin = (durations.values.sum() / 60_000L).toInt()
+                    if (totalMin >= budgetDay * 0.8 && WellbeingStore.markBudgetWarned(this, todayKey())) {
+                        com.ascend.lifeos.data.Notifier.show(this, "screen80")
+                    }
+                }
+            }
+        }
+
         val limits = WellbeingStore.limits(this)
         val gates = WellbeingStore.gateApps(this)
         val budgets = WellbeingStore.openBudgets(this)
@@ -192,17 +216,6 @@ class JarvisGuardService : Service() {
         )
         val usedMs = dayDurations[fg] ?: 0L
         val usedMin = (usedMs / 60_000L).toInt()
-
-        // Just-in-time budget warning: fires once, at 80% of the day budget.
-        runCatching {
-            val totalMin = (dayDurations.values.sum() / 60_000L).toInt()
-            val budgetDay = WellbeingStore.budgetMin(this)
-            if (budgetDay > 0 && totalMin >= budgetDay * 0.8 &&
-                WellbeingStore.markBudgetWarned(this, todayKey())
-            ) {
-                com.ascend.lifeos.data.Notifier.show(this, "screen80")
-            }
-        }
 
         // 2. Focus session — every limited app is shut, no matter the budget.
         if (limitMin != null && WellbeingStore.inFocus(this)) {
@@ -369,7 +382,8 @@ class JarvisGuardService : Service() {
 
             val recomposer = Recomposer(AndroidUiDispatcher.CurrentThread)
             compositionContext = recomposer
-            scope.launch(AndroidUiDispatcher.CurrentThread) { recomposer.runRecomposeAndApplyChanges() }
+            overlayRecomposer = recomposer
+            overlayRecomposeJob = scope.launch(AndroidUiDispatcher.CurrentThread) { recomposer.runRecomposeAndApplyChanges() }
 
             setContent {
                 JarvisInterceptScreen(
@@ -445,6 +459,12 @@ class JarvisGuardService : Service() {
         overlayLifecycle = null
         overlay?.let { runCatching { wm?.removeView(it) } }
         overlay = null
+        // the recompose coroutine is per-overlay; without this every intercept
+        // leaked a Recomposer + endless coroutine into the long-lived service
+        runCatching { overlayRecomposer?.cancel() }
+        overlayRecomposer = null
+        overlayRecomposeJob?.cancel()
+        overlayRecomposeJob = null
     }
 
     // ---- foreground plumbing ----------------------------------------------------
@@ -479,6 +499,7 @@ class JarvisGuardService : Service() {
     override fun onDestroy() {
         removeOverlay()
         loop?.cancel()
+        scope.cancel()
         runCatching { unregisterReceiver(screenReceiver) }
         super.onDestroy()
     }

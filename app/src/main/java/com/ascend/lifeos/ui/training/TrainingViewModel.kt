@@ -279,6 +279,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun startWorkout(template: WorkoutTemplate?) {
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
+        unlockCreditedThisSession.clear()
         activeSessionId = id
         activeTemplateName = template?.name ?: "Free Workout"
         activeStartedAt = now
@@ -425,11 +426,19 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     // ── Progression unlock (Spec §3.2) ──────────────────────────────────────
 
+    // chains already credited this session — the unlock bar says "×3 sessions",
+    // so a chain may earn at most one hit per workout, not one per set
+    private val unlockCreditedThisSession = mutableSetOf<String>()
+
     private suspend fun checkProgressionUnlock(exId: String, reps: Int, weight: Float?, holdSecs: Int?) {
         for (chain in ExerciseSeed.PROGRESSIONS) {
             val userProg = dao.progression(chain.groupKey) ?: UserProgressionEntity(chain.groupKey, 1, 0, null)
             val currentLevel = chain.levels.find { it.level == userProg.currentLevel } ?: continue
             if (currentLevel.isMastery) continue
+            // only the chain whose CURRENT level is the exercise just logged —
+            // 20 squats must never unlock the pull-up chain
+            if (currentLevel.exerciseId != exId) continue
+            if (chain.groupKey in unlockCreditedThisSession) continue
 
             val met = when {
                 currentLevel.unlockHoldSecs != null -> (holdSecs ?: 0) >= currentLevel.unlockHoldSecs
@@ -440,6 +449,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             if (met) {
+                unlockCreditedThisSession.add(chain.groupKey)
                 val newCount = userProg.unlockHitCount + 1
                 if (newCount >= 3) {
                     dao.upsertProgression(userProg.copy(
@@ -480,7 +490,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     .setTimeoutAfter(seconds * 1000L + 3000)
                     .setSilent(true)
                     .build()
-                androidx.core.app.NotificationManagerCompat.from(ctx).notify(6, n)
+                // id 9: must not collide with Notifier's fixed ids (guard screen80 uses 6)
+                androidx.core.app.NotificationManagerCompat.from(ctx).notify(9, n)
             }
         }
     }
@@ -523,7 +534,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 startedAt = activeStartedAt, finishedAt = now, isComplete = true,
                 totalSets = totalSets, totalReps = totalReps, durationMinutes = durMin,
             ))
-            val lastReps = runCatching { dao.lastRepsForTemplate(sessionName, sid) }.getOrDefault(0)
+            val lastReps = runCatching { dao.lastRepsForTemplate(sessionName, sid) }.getOrNull() ?: 0
             val delta = if (lastReps > 0 && totalReps > 0) ((totalReps - lastReps) * 100 / lastReps) else null
             val sessionPrs = runCatching {
                 dao.recentPrs(10).first().filter { it.sessionId == sid }
@@ -540,6 +551,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // protein window: nudge in ~90 min unless food gets logged first
         if (totalSets > 0) {
             runCatching { com.ascend.lifeos.data.Notifier.scheduleProteinNudge(getApplication()) }
+            // bridge into the day record: streak, widget, water bonus, load headroom
+            runCatching { com.ascend.lifeos.data.Repo.markTrained(totalSets) }
         }
 
         activeSessionId = null
@@ -574,6 +587,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val s = abandonedSession ?: return
         viewModelScope.launch {
             val sets = withContext(Dispatchers.IO) { runCatching { dao.setsForSessionOnce(s.id) }.getOrDefault(emptyList()) }
+            unlockCreditedThisSession.clear()
             activeSessionId = s.id
             activeTemplateName = s.templateName
             activeStartedAt = s.startedAt

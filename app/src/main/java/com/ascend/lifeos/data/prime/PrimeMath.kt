@@ -79,7 +79,7 @@ object PrimeMath {
         val missionLoad = (openMissions.coerceAtMost(3)) / 3.0
         val habit = habitStrength.coerceIn(0.0, 1.0)
         val risk = (0.55 * missionLoad + 0.45 * timePressure) * (1.0 - 0.5 * habit)
-        return (risk * 100).toInt().coerceIn(0, 100)
+        return Math.round(risk * 100).toInt().coerceIn(0, 100)
     }
 
     /**
@@ -92,7 +92,9 @@ object PrimeMath {
         if (valid.isEmpty()) return null
         val wSum = valid.sumOf { it.second }
         val score = valid.sumOf { it.first.coerceIn(0.0, 1.0) * it.second } / wSum
-        return (score * 100).toInt().coerceIn(0, 100)
+        // round like the sub-scores do — truncation showed index 79 next to a
+        // sub-score of 80 for the same value
+        return Math.round(score * 100).toInt().coerceIn(0, 100)
     }
 
     /** 1.0 = Ziel exakt getroffen; linear fallend auf 0 bei ±[tolFrac]·2 Abweichung. */

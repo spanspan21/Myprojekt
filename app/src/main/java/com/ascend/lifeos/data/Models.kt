@@ -123,6 +123,7 @@ data class DayData(
     val cali: Map<String, List<Int>> = emptyMap(),
     val caliRpe: Map<String, List<Int>> = emptyMap(), // parallel to cali: RPE per set (0 = not rated)
     val workoutDone: Boolean = false,
+    val trainSets: Int = 0,                   // sets finished in the Room training module today
     val reflection: String = "",
     val coachLog: List<CoachMsg> = emptyList(),
     val meals: List<FoodEntry> = emptyList(),

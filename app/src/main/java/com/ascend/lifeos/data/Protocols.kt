@@ -56,7 +56,8 @@ object Protocols {
         Protocol(
             "sickness_watch", "Illness early warning",
             "Resting HR +5 over baseline for 2 days → back off before it hits",
-        ) { _ ->
+        ) { ctx ->
+            if (!Prefs.bool(ctx, Prefs.SICKNESS_ALERT, true)) return@Protocol null
             Repo.sicknessSignal()?.let { d ->
                 "Resting HR +$d bpm over baseline for 2 days — early illness sign. " +
                     "Train light, sleep long. Sick mode is one tap away in Body."
@@ -94,16 +95,8 @@ object Protocols {
                 } else null
             } else null
         },
-        Protocol(
-            "creatine_guard", "Creatine guard",
-            "Supplement missed 2 days → saturation warning",
-        ) { ctx ->
-            if (!Prefs.bool(ctx, Prefs.SUPPLEMENTS_ON, true)) return@Protocol null
-            val supp = Repo.profile().supplements.firstOrNull { "creatine" in it.lowercase() } ?: return@Protocol null
-            val keys = Repo.lastDayKeys(3).dropLast(1) // yesterday + day before
-            val missed = keys.count { Repo.dayFor(it)?.supps?.contains(supp) != true }
-            if (missed >= 2) "Creatine missed 2 days — stores are draining. Today counts double." else null
-        },
+        // creatine_guard removed: the supplement check-off UI died in the v2
+        // rework, so day.supps was never written and the warning fired daily.
         Protocol(
             "holiday_slot", "Holiday bonus slot",
             "Holiday + nothing planned → claim the free morning",
