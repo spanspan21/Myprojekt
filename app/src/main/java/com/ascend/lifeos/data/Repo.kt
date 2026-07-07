@@ -147,6 +147,18 @@ object Repo {
 
     fun workoutSets(day: DayData = today()): Int = day.cali.values.sumOf { it.size } + day.trainSets
 
+    /** ml from logged drinks: volumeMl if set, else grams for a name-detected drink. */
+    fun drinkMl(day: DayData): Int = day.meals.sumOf { m ->
+        when {
+            m.volumeMl > 0 -> m.volumeMl
+            Drinks.isDrinkName(m.name) && m.grams in 50..2000 -> m.grams
+            else -> 0
+        }
+    }
+
+    /** The ONE hydration truth in ml: water glasses + logged drinks. Shared by Fuel + Prime. */
+    fun hydrationMl(day: DayData): Int = day.water * WaterCalc.GLASS_ML + drinkMl(day)
+
     // ---- mutations ----
     private fun updateDay(block: (DayData) -> DayData) {
         val k = todayKey()

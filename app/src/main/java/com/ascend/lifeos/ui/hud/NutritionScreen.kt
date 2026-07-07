@@ -240,14 +240,8 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             val trainingDay = day.workoutDone || hockeyToday
             HydrationCard(
                 glasses = day.water,
-                // volumeMl bevorzugt; sonst zählen als Getränk erkannte Einträge per Gramm (fängt Alt-Logs wie Spezi)
-                drinkMl = day.meals.sumOf { m ->
-                    when {
-                        m.volumeMl > 0 -> m.volumeMl
-                        Drinks.isDrinkName(m.name) && m.grams in 50..2000 -> m.grams
-                        else -> 0
-                    }
-                },
+                // eine Hydration-Wahrheit für Fuel UND Prime
+                drinkMl = Repo.drinkMl(day),
                 targetGlasses = WaterCalc.targetGlasses(p.weightKg, trainingDay, hot),
                 hot = hot, canEdit = isToday,
                 bonusReason = when {

@@ -105,20 +105,45 @@ class AuditFixesTest {
     // ── L6: muscle rest ETA follows the exponential model ────────────────────
 
     @Test
-    fun `hoursUntilFresh matches the decay model`() {
-        // freshness 0.5 → F0=5, target 0.85 → F=1.5 → t = hl · log2(10/3)
-        assertEquals(56, MuscleRecovery.hoursUntilFresh(Muscle.CHEST, 0.5f))   // 32h half-life
-        assertEquals(69, MuscleRecovery.hoursUntilFresh(Muscle.QUADS, 0.5f))   // 40h half-life
+    fun `hoursUntilFresh is calibrated to 48-72h for a hard day`() {
+        // 2026-07 recalibration: half-lives 30/38h, freshness rarely hits 0
+        // (CAPACITY 20). A solid day leaves freshness ~0.5 → ~52h, not 88h.
+        assertEquals(52, MuscleRecovery.hoursUntilFresh(Muscle.CHEST, 0.5f))   // 30h half-life
+        assertEquals(66, MuscleRecovery.hoursUntilFresh(Muscle.QUADS, 0.5f))   // 38h half-life
+        assertEquals(30, MuscleRecovery.hoursUntilFresh(Muscle.CHEST, 0.7f))   // light day → trainable in ~30h
         assertEquals(0, MuscleRecovery.hoursUntilFresh(Muscle.CHEST, 0.9f))    // already fresher than target
+        // even a near-total blowout stays under the old 88h chest floor
+        assertTrue(MuscleRecovery.hoursUntilFresh(Muscle.CHEST, 0.1f) < 88)
+    }
+
+    // ── Fuel quality: asymmetric, no hard zero for a deficit ─────────────────
+
+    @Test
+    fun `fuelQuality is full on target and never zeroes a moderate deficit`() {
+        assertEquals(1.0, PrimeMath.fuelQuality(2200.0, 2400.0), 0.001)   // within 85-110% band
+        assertEquals(1.0, PrimeMath.fuelQuality(2400.0, 2400.0), 0.001)
+        // the reported case: 1134 of 2400 — old targetScore gave 0, now ~0.62
+        val cut = PrimeMath.fuelQuality(1134.0, 2400.0)
+        assertTrue("deficit must not be a hard zero, was $cut", cut in 0.55..0.70)
+        // a tiny intake scores low but never a hard zero
+        assertTrue(PrimeMath.fuelQuality(300.0, 2400.0) in 0.20..0.40)
+        // a moderate surplus stays decent (a lean bulk is not failure)…
+        assertTrue(PrimeMath.fuelQuality(3200.0, 2400.0) > 0.7)
+        // …but a large surplus is penalised
+        assertTrue(PrimeMath.fuelQuality(4200.0, 2400.0) < 0.55)
     }
 
     // ── L9: vest suggestion is honest whole kilos ────────────────────────────
 
     @Test
-    fun `vest suggestion scales with bodyweight`() {
-        assertEquals(8, TrainBrain.vestSuggestion(20, 80, 25))
-        assertEquals(9, TrainBrain.vestSuggestion(20, 90, 25))   // old code: flat 7 for 75..99 kg
-        assertEquals(10, TrainBrain.vestSuggestion(20, 99, 25))
-        assertEquals(null, TrainBrain.vestSuggestion(10, 80, 25))
+    fun `vest load progresses with strength, capped`() {
+        assertEquals(null, TrainBrain.vestSuggestion(10, 80, 25))   // not earned yet (<15 reps)
+        val base = TrainBrain.vestSuggestion(15, 80, 25)!!          // ~10% BW
+        val strong = TrainBrain.vestSuggestion(30, 80, 25)!!        // progressed toward ~20% BW
+        assertEquals(8, base)
+        assertTrue("load must climb with strength, base=$base strong=$strong", strong > base)
+        assertEquals(16, strong)
+        // never exceeds the physical vest max
+        assertTrue(TrainBrain.vestSuggestion(60, 120, 10)!! <= 10)
     }
 }

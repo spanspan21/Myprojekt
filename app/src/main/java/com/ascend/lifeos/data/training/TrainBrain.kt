@@ -76,12 +76,17 @@ object TrainBrain {
         return FitnessProfile(levels, raw)
     }
 
-    /** Vest recommendation: once a basic hits ~15+ clean reps, load ~10% BW. */
+    /**
+     * Progressive vest load (double progression on load): once a basic hits ~15
+     * clean bodyweight reps, add ~10 % BW; every further 3 reps of bodyweight
+     * strength earns +2.5 % BW, capped at 20 % BW. So the load keeps climbing as
+     * you get stronger instead of sitting at a flat 10 % forever.
+     */
     fun vestSuggestion(bestReps: Int, bodyweightKg: Int, vestMaxKg: Int): Int? {
         if (bestReps < 15) return null
-        // whole kilos, honestly rounded — the old 2.5-step floor + toInt()
-        // collapsed every bodyweight from 75 to 99 kg to a flat 7 kg
-        return Math.round(bodyweightKg * 0.10f).coerceIn(5, vestMaxKg)
+        val extraSteps = ((bestReps - 15) / 3).coerceAtLeast(0)
+        val pct = (0.10f + extraSteps * 0.025f).coerceAtMost(0.20f)
+        return Math.round(bodyweightKg * pct).coerceIn(5, vestMaxKg)
     }
 
     /**

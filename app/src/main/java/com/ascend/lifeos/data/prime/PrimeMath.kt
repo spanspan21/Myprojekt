@@ -104,6 +104,23 @@ object PrimeMath {
         return (1.0 - (dev / (tolFrac * 2))).coerceIn(0.0, 1.0)
     }
 
+    /**
+     * Kalorien-Qualität eines Tages, 0..1 — ASYMMETRISCH, weil Unter-Essen nicht
+     * gleich schlimm ist wie Über-Essen. 85–110 % = voll; ein Defizit fällt mild
+     * mit Boden 0.3 (ein Cut ist kein Versagen); nur echter Überschuss wird wie
+     * capScore bestraft. Ersetzt targetScore für Fuel — das nullte jeden Defizit
+     * unter −20 % hart und deckelte einen disziplinierten Cut bei 40.
+     */
+    fun fuelQuality(kcal: Double, goal: Double): Double {
+        if (goal <= 0.0) return 0.0
+        return when {
+            kcal >= 0.85 * goal && kcal <= 1.10 * goal -> 1.0
+            // stetige Rampe: 0.85·Ziel → 1.0, kleine Portion → ~0.15 (nie harte 0)
+            kcal < 0.85 * goal -> (0.15 + 0.85 * (kcal / (0.85 * goal))).coerceIn(0.0, 1.0)
+            else -> capScore(kcal, goal * 1.10)
+        }
+    }
+
     /** ≥ Ziel ist voll erfüllt (Protein, Wasser): value/goal, gedeckelt bei 1. */
     fun floorScore(value: Double, goal: Double): Double =
         if (goal <= 0.0) 0.0 else (value / goal).coerceIn(0.0, 1.0)

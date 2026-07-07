@@ -594,13 +594,17 @@ object PlanGenerator {
                 )
             }
 
+            // progressive Overload explizit: jeder Kraftsatz trägt ein Ziel nahe
+            // am Versagen (2 RIR / RPE 8, im Deload lockerer) — der Haupttreiber
+            // der Hypertrophie bei 5–30 Wdh ist die Nähe zum Muskelversagen.
+            val effort = if (isHold) note else listOfNotNull(note, "@ ${if (deload) "RPE 6 · locker" else "2 RIR (RPE 8)"}").joinToString(" · ")
             return PlannedExercise(
                 lv.exerciseId, lv.exerciseName,
                 sets = setsBase,
                 repsLow = lo, repsHigh = hi,
                 holdSec = lv.unlockHoldSecs?.let { (it * if (deload) 0.6f else 0.8f).toInt().coerceAtLeast(10) },
                 vestKg = vest, isSkillWork = false, restSec = 90,
-                section = BlockType.STRENGTH, note = note,
+                section = BlockType.STRENGTH, note = effort,
             )
         }
 
@@ -629,13 +633,15 @@ object PlanGenerator {
             val isHold = ex.unit == "sec"
             val best = bestReps[ex.id] ?: 0
             val hi = if (best >= 15) best + 1 else 15
+            val baseNote = if (best >= 15) "Last best $best — go for ${best + 1}" else null
+            val effort = if (isHold) baseNote else listOfNotNull(baseNote, "@ ${if (deload) "RPE 6 · locker" else "2 RIR (RPE 8)"}").joinToString(" · ")
             return PlannedExercise(
                 ex.id, ex.name, setsBase,
                 repsLow = 8, repsHigh = hi,
                 holdSec = if (isHold) 30 else null,
                 vestKg = null, isSkillWork = false, restSec = 90,
                 section = BlockType.STRENGTH,
-                note = if (best >= 15) "Last best $best — go for ${best + 1}" else null,
+                note = effort,
             )
         }
 

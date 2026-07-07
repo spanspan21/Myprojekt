@@ -22,26 +22,32 @@ object MuscleRecovery {
         val tiredest: Pair<Muscle, Float>? get() = map.minByOrNull { it.value }?.toPair()
     }
 
+    // Recovery half-lives (h). Legs recover slower than upper body. Calibrated
+    // 2026-07 so a normal hard day (8–12 sets) lands at ~48–72 h, matching the
+    // ≥2×/week frequency the hypertrophy evidence favours (Schoenfeld 2016).
     private fun halfLifeHours(m: Muscle): Double = when (m) {
-        Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES, Muscle.LOWER_BACK -> 40.0
-        Muscle.CALVES, Muscle.FOREARMS, Muscle.ABS, Muscle.OBLIQUES -> 26.0
-        else -> 32.0
+        Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES, Muscle.LOWER_BACK -> 38.0
+        Muscle.CALVES, Muscle.FOREARMS, Muscle.ABS, Muscle.OBLIQUES -> 24.0
+        else -> 30.0
     }
 
     /**
-     * Hours until [freshness] decays back up to [target], following the same
-     * exponential model as the heatmap. A linear estimate here used to promise
-     * "14 h" where the model needed ~56 h.
+     * Hours until [freshness] decays back up to [target]. Ratio (1−freshness)/
+     * (1−target) is scale-free, so referencing CAPACITY only guards against a
+     * desync with the fatigue scale — the real lever against the old "88 h"
+     * floor is that fatigue no longer saturates freshness to 0 (CAPACITY = 20).
      */
     fun hoursUntilFresh(m: Muscle, freshness: Float, target: Float = 0.85f): Int {
-        val f0 = (1f - freshness) * 10.0          // current fatigue units
-        val fT = (1f - target) * 10.0             // fatigue units at target
+        val f0 = (1f - freshness) * CAPACITY      // current fatigue units
+        val fT = (1f - target) * CAPACITY         // fatigue units at target
         if (f0 <= fT || fT <= 0.0) return 0
         return Math.round(halfLifeHours(m) * (Math.log(f0 / fT) / Math.log(2.0))).toInt()
     }
 
-    /** Fatigue units that push a muscle from fresh to fried. */
-    private const val CAPACITY = 10.0
+    // Fatigue units to fully fry a muscle. 20 = freshness only hits 0 at a real
+    // ~18–20-set blowout, not at 9 sets (which used to peg every hard day to the
+    // 88 h saturation floor and destroy the light-vs-hard resolution).
+    private const val CAPACITY = 20.0
 
     suspend fun compute(ctx: Context): Freshness {
         val now = System.currentTimeMillis()
@@ -83,7 +89,9 @@ object MuscleRecovery {
             if (pm == null) { skipped++; continue }
             val (prim, secs) = pm
             resolved++
-            val intensity = 1.0 + ((s.rpe ?: 7) - 7) * 0.15   // RPE 9 set hits harder
+            // working set (RPE 8) = 1.0 unit; centred on 8, not 7, so a normal
+            // hard set costs one unit rather than 1.15
+            val intensity = (1.0 + ((s.rpe ?: 8) - 8) * 0.15).coerceIn(0.55, 1.30)
             add(prim, intensity, ageH)
             secs.forEach { add(it, intensity * 0.4, ageH) }
         }
@@ -102,7 +110,9 @@ object MuscleRecovery {
                 if (units <= 0) continue
                 val ageH = ((now - (sess.finishedAt ?: sess.startedAt)).coerceAtLeast(0L)) / 3600_000.0
                 val groups = templateMuscles(sess.templateName)
-                val perPrim = units.toDouble() / groups.first.size.coerceAtLeast(1)
+                // 0.35-Dämpfung + Deckel 9: die ganze Session NICHT dreifach auf je
+                // eine Primärgruppe rechnen (62 Sätze /3 = 21 auf Brust war der 88h-Motor)
+                val perPrim = (units * 0.35 / groups.first.size.coerceAtLeast(1)).coerceAtMost(9.0)
                 groups.first.forEach { add(it, perPrim, ageH) }
                 groups.second.forEach { add(it, perPrim * 0.4, ageH) }
                 resolved += units
@@ -125,19 +135,21 @@ object MuscleRecovery {
                         .plusMinutes(b.endMin.toLong()).toInstant().toEpochMilli()
                     if (blockEndMillis > now) return@forEach // future game ≠ fatigue
                     val ageH = (now - blockEndMillis) / 3600_000.0
-                    add(Muscle.QUADS, durH * 2.4, ageH)
-                    add(Muscle.HAMSTRINGS, durH * 2.0, ageH)
-                    add(Muscle.GLUTES, durH * 2.0, ageH)
-                    add(Muscle.CALVES, durH * 1.4, ageH)
-                    add(Muscle.ABS, durH * 1.0, ageH)
-                    add(Muscle.LOWER_BACK, durH * 0.8, ageH)
-                    add(Muscle.HIP_FLEXORS, durH * 1.0, ageH)
+                    // ×1.8 vs. the old coefficients to stay calibrated against the
+                    // doubled CAPACITY — otherwise hockey leg load reads too light
+                    add(Muscle.QUADS, durH * 4.3, ageH)
+                    add(Muscle.HAMSTRINGS, durH * 3.6, ageH)
+                    add(Muscle.GLUTES, durH * 3.6, ageH)
+                    add(Muscle.CALVES, durH * 2.5, ageH)
+                    add(Muscle.ABS, durH * 1.8, ageH)
+                    add(Muscle.LOWER_BACK, durH * 1.4, ageH)
+                    add(Muscle.HIP_FLEXORS, durH * 1.8, ageH)
                     // light upper body: stick handling, shooting, checking
-                    add(Muscle.OBLIQUES, durH * 0.7, ageH)   // shot rotation
-                    add(Muscle.FOREARMS, durH * 0.6, ageH)   // grip on the stick
-                    add(Muscle.SHOULDERS, durH * 0.5, ageH)
-                    add(Muscle.LATS, durH * 0.3, ageH)
-                    add(Muscle.TRAPS, durH * 0.25, ageH)
+                    add(Muscle.OBLIQUES, durH * 1.25, ageH)  // shot rotation
+                    add(Muscle.FOREARMS, durH * 1.1, ageH)   // grip on the stick
+                    add(Muscle.SHOULDERS, durH * 0.9, ageH)
+                    add(Muscle.LATS, durH * 0.55, ageH)
+                    add(Muscle.TRAPS, durH * 0.45, ageH)
                 }
             }
         }

@@ -1,5 +1,14 @@
 package com.ascend.lifeos.ui.prime
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +37,10 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -85,45 +99,8 @@ fun PrimeScreen(onClose: () -> Unit) {
             return@Column
         }
 
-        // ── Hero: der Index und seine Subsysteme ─────────────────────────
-        Panel(Modifier.fillMaxWidth(), lux = true) {
-            Column(Modifier.fillMaxWidth().padding(20.dp)) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    if (r.index != null) {
-                        TickerNumber(r.index, fontSize = 56, color = TextPrimary)
-                        Text(
-                            "  PRIME INDEX", color = Champagne, fontFamily = Display,
-                            fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
-                            modifier = Modifier.padding(bottom = 12.dp),
-                        )
-                    } else {
-                        Text(
-                            "Noch kein Index — ein paar geloggte Tage, dann steht er.",
-                            color = TextMuted, fontSize = 13.sp, fontFamily = Body,
-                        )
-                    }
-                }
-                if (r.subScores.isNotEmpty()) {
-                    Spacer(Modifier.height(14.dp))
-                    r.subScores.forEach { (name, score) ->
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
-                            Text(
-                                name.uppercase(), color = TextDim, fontFamily = Display, fontSize = 8.5.sp,
-                                fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                                modifier = Modifier.width(86.dp),
-                            )
-                            NeonBar(
-                                score / 100f,
-                                color = when { score >= 75 -> Good; score >= 45 -> Amber; else -> Warn },
-                                modifier = Modifier.weight(1f), height = 5.dp,
-                            )
-                            Spacer(Modifier.width(10.dp))
-                            Text("$score", color = TextPrimary, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(26.dp))
-                        }
-                    }
-                }
-            }
-        }
+        // ── Hero: der animierte Index-Ring + seine Subsysteme ────────────
+        PrimeHero(r.index, r.subScores)
 
         // ── Jetzt: die drei wirksamsten Handgriffe ───────────────────────
         if (r.directives.isNotEmpty()) {
@@ -233,5 +210,131 @@ fun PrimeScreen(onClose: () -> Unit) {
             color = TextDim.copy(alpha = 0.7f), fontSize = 10.sp, fontFamily = Body, lineHeight = 14.sp,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
+    }
+}
+
+// ─── Animierter Index-Ring — der lebendige Kopf des Screens ───────────────────
+
+@Composable
+private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
+    val tier = when {
+        index == null -> TextMuted
+        index >= 80 -> Champagne
+        index >= 60 -> Good
+        index >= 40 -> Amber
+        else -> Warn
+    }
+    val tierLabel = when {
+        index == null -> ""
+        index >= 80 -> "PRIME"
+        index >= 60 -> "STARK"
+        index >= 40 -> "SOLIDE"
+        else -> "AUFBAU"
+    }
+    // Ring füllt sich beim Öffnen von 0 auf den Index (Sweep-up)
+    val sweep by animateFloatAsState(
+        (index ?: 0) / 100f, tween(1200, easing = FastOutSlowInEasing), label = "sweep",
+    )
+    // sanftes Atmen des Glows — der Screen lebt, statt still zu stehen
+    val breathe = rememberInfiniteTransition(label = "breathe")
+    val glow by breathe.animateFloat(
+        0.3f, 0.75f, infiniteRepeatable(tween(2200, easing = LinearEasing), RepeatMode.Reverse), label = "glow",
+    )
+
+    Panel(Modifier.fillMaxWidth(), lux = true) {
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val stroke = 13.dp.toPx()
+                    val inset = stroke / 2 + 8.dp.toPx()
+                    val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+                    val topLeft = Offset(inset, inset)
+                    // Bahn
+                    drawArc(
+                        Ivory.copy(alpha = 0.07f), -90f, 360f, false, topLeft, arcSize,
+                        style = Stroke(stroke, cap = StrokeCap.Round),
+                    )
+                    if (index != null && sweep > 0f) {
+                        // weicher, atmender Glow hinter dem Bogen
+                        drawArc(
+                            tier.copy(alpha = glow * 0.35f), -90f, sweep * 360f, false, topLeft, arcSize,
+                            style = Stroke(stroke * 2.1f, cap = StrokeCap.Round),
+                        )
+                        // Hauptbogen
+                        drawArc(
+                            tier, -90f, sweep * 360f, false, topLeft, arcSize,
+                            style = Stroke(stroke, cap = StrokeCap.Round),
+                        )
+                    }
+                    // feine Skalenpunkte alle 10 %
+                    val cx = size.width / 2; val cy = size.height / 2
+                    val rDot = (size.width - inset * 2) / 2 + stroke * 0.05f
+                    for (i in 0 until 20) {
+                        val ang = Math.toRadians((-90 + i * 18).toDouble())
+                        val dx = cx + (rDot * kotlin.math.cos(ang)).toFloat()
+                        val dy = cy + (rDot * kotlin.math.sin(ang)).toFloat()
+                        drawCircle(Ivory.copy(alpha = 0.10f), radius = 1.2.dp.toPx(), center = Offset(dx, dy))
+                    }
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (index != null) {
+                        TickerNumber(index, fontSize = 62, color = TextPrimary)
+                        Text(
+                            tierLabel, color = tier, fontFamily = Display, fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold, letterSpacing = 3.sp,
+                        )
+                    } else {
+                        Text("—", color = TextMuted, fontFamily = Display, fontSize = 46.sp, fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            "NOCH KEINE DATEN", color = TextDim, fontFamily = Display, fontSize = 8.sp,
+                            fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                        )
+                    }
+                }
+            }
+            Text(
+                "PRIME INDEX", color = Champagne, fontFamily = Display, fontSize = 9.sp,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp, modifier = Modifier.padding(top = 8.dp),
+            )
+            if (index == null) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Ein paar geloggte Tage, dann steht er.",
+                    color = TextMuted, fontSize = 12.sp, fontFamily = Body,
+                )
+            }
+            if (subScores.isNotEmpty()) {
+                Spacer(Modifier.height(20.dp))
+                subScores.forEachIndexed { i, (name, score) -> AnimatedSubBar(name, score, i) }
+            }
+        }
+    }
+}
+
+/** Subsystem-Balken, der seine Füllung beim Öffnen sanft aufzieht (gestaffelt). */
+@Composable
+private fun AnimatedSubBar(name: String, score: Int, indexInList: Int) {
+    val fill by animateFloatAsState(
+        score / 100f,
+        tween(900, delayMillis = 250 + indexInList * 80, easing = FastOutSlowInEasing),
+        label = "sub",
+    )
+    val c = when { score >= 75 -> Good; score >= 45 -> Amber; else -> Warn }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.5.dp),
+    ) {
+        Text(
+            name.uppercase(), color = TextDim, fontFamily = Display, fontSize = 8.5.sp,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp, modifier = Modifier.width(82.dp),
+        )
+        Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))) {
+            Box(Modifier.fillMaxWidth(fill).fillMaxHeight().clip(CircleShape).background(c))
+        }
+        Spacer(Modifier.width(10.dp))
+        Text("$score", color = TextPrimary, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
     }
 }

@@ -57,6 +57,11 @@ object PrimeEngine {
         val hour = now.hour
         val zone = ZoneId.systemDefault()
 
+        // Schlaf: EINE Quelle. Erst Health-Connect-Nächte ins Protokoll ziehen,
+        // dann speisen Gauge, Subscore UND Anomalie sich alle aus SleepStore —
+        // vorher las die Gauge data.health, der Subscore SleepStore (widersprüchlich).
+        runCatching { SleepStore.syncFromHealth(ctx) }
+
         // ── Geschichte: 21 Tage rückwärts, ohne heute (heute ist der Prüfling) ──
         val histKeys = ArrayList<String>(21).apply {
             var k = prevKey(todayKey()); repeat(21) { add(k); k = prevKey(k) }
@@ -73,9 +78,7 @@ object PrimeEngine {
         val kcalToday = today?.meals?.sumOf { it.kcal } ?: 0
         val protToday = today?.let { Repo.nutritionTotals(it).protein } ?: 0
         val waterToday = today?.water ?: 0
-        val drinkMl = today?.meals?.sumOf { it.volumeMl } ?: 0
-        val hydrationMl = waterToday * 250 + drinkMl
-        val sleepMin = Repo.data.health?.sleepMin
+        val hydrationMl = today?.let { Repo.hydrationMl(it) } ?: 0   // geteilte Wahrheit (Wasser + Getränke)
 
         // ── Training: Sätze je Tag (35 d) → Banister ATL/CTL + Frische ──
         val dao = TrainingDatabase.get(ctx).dao()
@@ -85,32 +88,22 @@ object PrimeEngine {
         val setsByDay = recentSets.groupBy {
             Instant.ofEpochMilli(it.loggedAt).atZone(zone).toLocalDate()
         }
-        var loads = (34 downTo 0).map { off ->
+        // Session-Aggregate immer holen und PRO TAG additiv einsetzen, wo Einzel-
+        // Sätze fehlen (statt global alles-oder-nichts — das unterschlug bei
+        // gemischter Historie ganze Trainingstage → „Training 50" trotz 4/4).
+        val sessions35 = runCatching { dao.plainSessionsSince(since35) }.getOrDefault(emptyList())
+        val sessionsByDay = sessions35.groupBy { Instant.ofEpochMilli(it.startedAt).atZone(zone).toLocalDate() }
+        fun daySets(d: LocalDate): Int =
+            (setsByDay[d]?.size ?: 0).takeIf { it > 0 } ?: (sessionsByDay[d]?.sumOf { it.totalSets } ?: 0)
+        val loads = (34 downTo 0).map { off ->
             val d = LocalDate.now().minusDays(off.toLong())
-            setsByDay[d]?.sumOf { TrainingLoad.setLoad(it.rpe) } ?: 0.0
-        }
-        // Rettungsnetz analog MuscleRecovery: fehlen Einzel-Sets (Alt-Datenverlust),
-        // tragen die Session-Aggregate die Last-Kurve.
-        val sessions35 = if (loads.all { it == 0.0 }) {
-            runCatching { dao.plainSessionsSince(since35) }.getOrDefault(emptyList())
-        } else emptyList()
-        if (sessions35.isNotEmpty()) {
-            val byDay = sessions35.groupBy { Instant.ofEpochMilli(it.startedAt).atZone(zone).toLocalDate() }
-            loads = (34 downTo 0).map { off ->
-                val d = LocalDate.now().minusDays(off.toLong())
-                byDay[d]?.sumOf { it.totalSets.toDouble() } ?: 0.0
-            }
+            val setLoad = setsByDay[d]?.sumOf { TrainingLoad.setLoad(it.rpe) } ?: 0.0
+            if (setLoad > 0.0) setLoad else (sessionsByDay[d]?.sumOf { it.totalSets.toDouble() } ?: 0.0)
         }
         val load = TrainingLoad.compute(loads)
         val verdict = TrainingLoad.verdict(load)
-        fun sessionDay(s: com.ascend.lifeos.data.training.WorkoutSessionEntity): LocalDate =
-            Instant.ofEpochMilli(s.startedAt).atZone(zone).toLocalDate()
-        val setsToday = setsByDay[LocalDate.now()]?.size
-            ?: sessions35.filter { sessionDay(it) == LocalDate.now() }.sumOf { it.totalSets }
-        val trainDays7 = (1..7).count { off ->
-            val d = LocalDate.now().minusDays(off.toLong())
-            (setsByDay[d]?.size ?: 0) > 0 || sessions35.any { sessionDay(it) == d }
-        }
+        val setsToday = daySets(LocalDate.now())
+        val trainDays7 = (1..7).count { off -> daySets(LocalDate.now().minusDays(off.toLong())) > 0 }
         val freshness = runCatching { MuscleRecovery.compute(ctx) }.getOrNull()
         val tired = freshness?.tiredest?.takeIf { it.second < 0.55f }
 
@@ -122,6 +115,7 @@ object PrimeEngine {
         }
         val tst7 = nights.takeLast(7).map { tst(it).toDouble() }
         val sleepAvg7 = if (tst7.isNotEmpty()) PrimeMath.mean(tst7) else null
+        val lastNightMin = nights.lastOrNull()?.let { tst(it) }   // Gauge = jüngste Protokoll-Nacht (dieselbe Quelle wie der Subscore)
 
         // ── Guard / Kalender / Finance ──
         val screenMin = if (DigitalWellbeingManager.hasUsageAccess(ctx)) {
@@ -142,23 +136,38 @@ object PrimeEngine {
         val projectedSpend = FinanceStore.projectedMonthEndCents(ctx)
 
         // ── Subsysteme (score 0..1, weight) — ohne Daten fällt das Gewicht weg ──
-        val kcal7 = histKcal.take(7).filter { it > 0 }
-        val fuelScore = if (kcal7.isEmpty()) null else PrimeMath.mean(
-            histKeys.take(7).filter { (Repo.kcalForDay(it) ?: 0) > 0 }.map { k ->
-                0.6 * PrimeMath.targetScore((Repo.kcalForDay(k) ?: 0).toDouble(), p.kcalGoal.toDouble()) +
-                    0.4 * PrimeMath.floorScore(dayProtein(k), p.proteinGoal.toDouble())
+        // Fuel über die geloggten Tage der letzten 7 PLUS heute (sonst zählt dein
+        // aktueller Tag nicht). Kalorien asymmetrisch (fuelQuality: Defizit ≠
+        // Katastrophe), Protein nur wenn geloggt — sonst renormalisiert es weg,
+        // statt fehlendes Protein als „0 %" zu werten.
+        val fuelDayKeys = (listOf(todayKey()) + histKeys.take(7)).filter { (Repo.kcalForDay(it) ?: 0) > 0 }
+        val fuelScore = if (fuelDayKeys.isEmpty()) null else PrimeMath.mean(
+            fuelDayKeys.map { k ->
+                val kcalQ = PrimeMath.fuelQuality((Repo.kcalForDay(k) ?: 0).toDouble(), p.kcalGoal.toDouble())
+                val prot = dayProtein(k)
+                if (prot > 0) 0.55 * kcalQ + 0.45 * PrimeMath.floorScore(prot, p.proteinGoal.toDouble()) else kcalQ
             },
         )
-        val hydraScore = histWater.take(7).filter { it > 0 }.let {
-            if (it.isEmpty()) null else PrimeMath.mean(it.map { w -> PrimeMath.floorScore(w, p.waterGoal.toDouble()) })
-        }
+        // Hydration aus GESAMT-ml (Wasser + erkannte Getränke), nicht nur day.water
+        // — sonst zählte der Subscore Getränke null, während die Gauge sie zählte.
+        val hydraGoalMl = (p.waterGoal * 250).coerceAtLeast(1).toDouble()
+        val hydraDays = (listOf(todayKey()) + histKeys.take(7)).mapNotNull { k ->
+            Repo.dayFor(k)?.let { Repo.hydrationMl(it) }
+        }.filter { it > 0 }
+        val hydraScore = if (hydraDays.isEmpty()) null
+            else PrimeMath.mean(hydraDays.map { PrimeMath.floorScore(it.toDouble(), hydraGoalMl) })
         val trainScore = if (loads.all { it == 0.0 }) null else
             PrimeMath.floorScore(trainDays7.toDouble(), p.trainFreq.toDouble().coerceAtLeast(1.0))
         val sleepScore = sleepAvg7?.let { PrimeMath.floorScore(it, 480.0) }
         val screenScore = screenMin?.let { PrimeMath.capScore(it.toDouble(), screenBudget.toDouble()) }
         val logScore = loggedDays.take(7).count { it } / 7.0
 
-        val index = PrimeMath.primeIndex(
+        // Index nur, wenn es echte Substanz gibt — sonst „—" statt eines
+        // alarmierenden „0" (ein frischer Nutzer soll keinen 0-Index sehen, und
+        // Screen-Adherence allein — capScore(0)=1 — soll keinen 100-Index faken).
+        val hasRealData = fuelScore != null || trainScore != null || sleepScore != null ||
+            hydraScore != null || loggedDays.take(7).any { it }
+        val index = if (!hasRealData) null else PrimeMath.primeIndex(
             listOfNotNull(
                 fuelScore?.let { it to 0.25 },
                 trainScore?.let { it to 0.25 },
@@ -182,9 +191,9 @@ object PrimeEngine {
         val gauges = listOf(
             PrimeGauge("KALORIEN", "$kcalToday", if (p.kcalGoal > 0) (kcalToday.toFloat() / p.kcalGoal).coerceIn(0f, 1f) else null, "Ziel ${p.kcalGoal}"),
             PrimeGauge("PROTEIN", "$protToday g", if (p.proteinGoal > 0) (protToday.toFloat() / p.proteinGoal).coerceIn(0f, 1f) else null, "Ziel ${p.proteinGoal} g"),
-            PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), (hydrationMl.toFloat() / (p.waterGoal * 250)).coerceIn(0f, 1f), "Ziel %.1f L".format(p.waterGoal * 0.25)),
+            PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), if (p.waterGoal > 0) (hydrationMl.toFloat() / (p.waterGoal * 250)).coerceIn(0f, 1f) else null, "Ziel %.1f L".format(p.waterGoal * 0.25)),
             PrimeGauge("TRAINING", if (setsToday > 0) "$setsToday Sätze" else "Ruhetag", trainScore?.toFloat(), "ACR %.2f · ${verdict.title}".format(load.acr)),
-            PrimeGauge("SCHLAF", sleepMin?.let { mins(it) } ?: "—", sleepMin?.let { (it / 480f).coerceIn(0f, 1f) }, "Ziel 8h"),
+            PrimeGauge("SCHLAF", lastNightMin?.let { mins(it) } ?: "—", lastNightMin?.let { (it / 480f).coerceIn(0f, 1f) }, "Ziel 8h"),
             PrimeGauge("SCREEN", screenMin?.let { mins(it) } ?: "—", screenScore?.toFloat(), "Budget ${mins(screenBudget)}"),
         )
 
@@ -244,7 +253,8 @@ object PrimeEngine {
                 2.2 - days * 0.4,
             )
         }
-        if (budget > 0 && projectedSpend > budget) {
+        // erst ab Monatstag ≥ 7 — davor ist die Hochrechnung aus 1–6 Tagen Kaffeesatz
+        if (budget > 0 && projectedSpend > budget && LocalDate.now().dayOfMonth >= 7) {
             directives += PrimeDirective(
                 "Budget-Kurs: ${euro(projectedSpend)} zum Monatsende",
                 "Projektion über ${euro(budget)} — Tagesrate ${euro(FinanceStore.dailyAvgSpendCents(ctx))} senken.",
@@ -278,17 +288,18 @@ object PrimeEngine {
         anomaly("Kalorien", histKcal, kcalToday.toDouble(), " kcal", onlyAfter = 18)
         anomaly("Protein", histProt, protToday.toDouble(), " g", onlyAfter = 18)
         anomaly("Trainingsvolumen", loads.dropLast(1).takeLast(21), loads.last(), " Last")
-        if (sleepMin != null && tst7.size >= 5) {
-            PrimeMath.zScore(tst7, sleepMin.toDouble(), minN = 5)?.let { z ->
-                if (abs(z) >= 1.6) anomalies += "Schlaf ${mins(sleepMin)} — ${if (z > 0) "klar mehr" else "klar weniger"} als deine Woche (Ø ${mins(sleepAvg7!!.toInt())})"
+        if (lastNightMin != null && tst7.size >= 5) {
+            // Wert UND Verteilung jetzt aus derselben Quelle (SleepStore) — kein
+            // z-Score mehr über zwei Messsysteme mit systematischem Offset.
+            PrimeMath.zScore(tst7.dropLast(1), lastNightMin.toDouble(), minN = 4)?.let { z ->
+                if (abs(z) >= 1.6) anomalies += "Schlaf ${mins(lastNightMin)} — ${if (z > 0) "klar mehr" else "klar weniger"} als deine Woche (Ø ${mins(sleepAvg7!!.toInt())})"
             }
         }
 
         // ── Muster: Korrelationen über 21 aligned Tage ──
         val insights = ArrayList<String>()
         val setsHist = histKeys.map { k ->
-            val d = LocalDate.parse(k)
-            (setsByDay[d]?.size ?: 0).toDouble()
+            daySets(LocalDate.parse(k)).toDouble()   // Einzel-Sätze ODER Session-Aggregat (wie oben)
         }
         fun insight(a: List<Double>, b: List<Double>, text: (Double) -> String) {
             val pairs = a.zip(b).filter { it.first > 0 || it.second > 0 }
