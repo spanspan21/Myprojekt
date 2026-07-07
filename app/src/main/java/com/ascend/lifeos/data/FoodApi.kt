@@ -79,7 +79,7 @@ object FoodApi {
     }
 
     private const val FIELDS = "code,product_name,product_name_de,brands,nutriments,nutriscore_grade," +
-        "nova_group,serving_quantity,ingredients_text_de,ingredients_text,allergens_tags,additives_tags"
+        "nova_group,serving_quantity,quantity,categories_tags,ingredients_text_de,ingredients_text,allergens_tags,additives_tags"
 
     private fun parseProduct(p: JSONObject, fallbackCode: String): Product? {
         val n = p.optJSONObject("nutriments") ?: JSONObject()
@@ -122,6 +122,11 @@ object FoodApi {
             .distinct()
         val additives = tags("additives_tags").map { it.uppercase() }.distinct()
 
+        // Getränke bekommen ml-Portionen → sie zählen zur Hydration (Spezi & Co.)
+        val isLiquid = Drinks.isBeverageCategory(tags("categories_tags")) ||
+            Drinks.isDrinkName(name) || Drinks.isDrinkName(brand ?: "")
+        val portions = if (isLiquid) Drinks.portionsFor(p.optString("quantity")) else emptyList()
+
         return Product(
             barcode = code,
             name = name,
@@ -141,6 +146,7 @@ object FoodApi {
             per100 = per100,
             allergens = allergens,
             additives = additives,
+            portions = portions,
         )
     }
 

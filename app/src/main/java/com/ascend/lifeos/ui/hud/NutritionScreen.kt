@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -67,6 +68,7 @@ import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.BasicFoods
 import com.ascend.lifeos.data.DayData
+import com.ascend.lifeos.data.Drinks
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.NutTotals
 import com.ascend.lifeos.data.OwnRecipes
@@ -81,10 +83,12 @@ import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.BgElevated
 import com.ascend.lifeos.ui.theme.Blue
+import com.ascend.lifeos.ui.theme.Champagne
 import com.ascend.lifeos.ui.theme.Cyan
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Good
 import com.ascend.lifeos.ui.theme.Ivory
+import com.ascend.lifeos.ui.theme.Void
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.Purple
 import com.ascend.lifeos.ui.theme.Warn
@@ -229,13 +233,28 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             // Kap. 39/44: die handlungsleitende Zeile + der Lücken-Füller
             GapFiller(totals = totals, p = p, isToday = isToday, dayKey = dayKey)
 
-            // Wasser = die animierte Hauptkarte; Getränke (volumeMl) zählen mit
+            // Wasser = die animierte Hauptkarte; Getränke zählen mit
             Spacer(Modifier.height(12.dp))
+            // Ziel steigt nur an echten Belastungstagen: eigenes Training ODER Eishockey
+            val hockeyToday = isToday && gameDay != null
+            val trainingDay = day.workoutDone || hockeyToday
             HydrationCard(
                 glasses = day.water,
-                drinkMl = day.meals.sumOf { it.volumeMl },
-                targetGlasses = WaterCalc.targetGlasses(p.weightKg, day.workoutDone, hot),
+                // volumeMl bevorzugt; sonst zählen als Getränk erkannte Einträge per Gramm (fängt Alt-Logs wie Spezi)
+                drinkMl = day.meals.sumOf { m ->
+                    when {
+                        m.volumeMl > 0 -> m.volumeMl
+                        Drinks.isDrinkName(m.name) && m.grams in 50..2000 -> m.grams
+                        else -> 0
+                    }
+                },
+                targetGlasses = WaterCalc.targetGlasses(p.weightKg, trainingDay, hot),
                 hot = hot, canEdit = isToday,
+                bonusReason = when {
+                    hockeyToday -> "🏒 Eishockey · +0,5 L"
+                    day.workoutDone -> "🏋 Training · +0,5 L"
+                    else -> null
+                },
                 showHeat = isToday && !hasLoc,
                 onEnableHeat = { locPermLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION) },
             )
@@ -525,14 +544,15 @@ private fun ProteinSpread(day: DayData) {
 @Composable
 private fun HydrationCard(
     glasses: Int, drinkMl: Int, targetGlasses: Int,
-    hot: Boolean, canEdit: Boolean, showHeat: Boolean, onEnableHeat: () -> Unit,
+    hot: Boolean, canEdit: Boolean, bonusReason: String?, showHeat: Boolean, onEnableHeat: () -> Unit,
 ) {
     val hCtx = androidx.compose.ui.platform.LocalContext.current
     val totalMl = glasses * WaterCalc.GLASS_ML + drinkMl
     val targetMl = (targetGlasses * WaterCalc.GLASS_ML).coerceAtLeast(1)
     val fraction = (totalMl.toFloat() / targetMl).coerceIn(0f, 1f)
     val goalReached = totalMl >= targetMl
-    val water = if (goalReached) Good else Cyan
+    // Wasser bleibt IMMER blau (Wasser ist blau) — „voll“ feiert in Champagne, nie grün
+    val crest = if (goalReached) Champagne else Cyan
 
     // Füllstand steigt weich, wenn Wasser dazukommt (feder-gedämpft)
     val fill by animateFloatAsState(fraction, spring(dampingRatio = 0.72f, stiffness = 90f), label = "fill")
@@ -546,77 +566,111 @@ private fun HydrationCard(
         0f, (2.0 * PI).toFloat(),
         infiniteRepeatable(tween(3900, easing = LinearEasing), RepeatMode.Restart), label = "p2",
     )
+    // weicher Textschatten → Ziffern/Labels bleiben über dem Wasser lesbar
+    val shadow = androidx.compose.ui.text.TextStyle(
+        shadow = androidx.compose.ui.graphics.Shadow(Void.copy(alpha = 0.75f), Offset(0f, 1f), 12f),
+    )
 
     Box(
         Modifier.fillMaxWidth().height(130.dp).clip(RoundedCornerShape(22.dp))
             .background(BgElevated.copy(alpha = 0.55f))
-            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(22.dp)),
+            .border(0.6.dp, (if (goalReached) Champagne else Ivory).copy(alpha = if (goalReached) 0.35f else 0.10f), RoundedCornerShape(22.dp)),
     ) {
-        // --- animierte Wasserfüllung ---
+        // --- animierte Wasserfüllung mit Tiefen-Gradient + heller Wasserlinie ---
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height
-            val baseY = h * (1f - fill)
-            fun wave(amp: Float, ph: Float, yShift: Float, alpha: Float) {
+            val baseY = (h * (1f - fill)).coerceIn(0f, h)
+            fun body(amp: Float, ph: Float, yShift: Float): Path {
                 val path = Path()
                 path.moveTo(0f, h)
-                val steps = 26
+                val steps = 28
                 for (i in 0..steps) {
                     val x = w * i / steps
                     val y = baseY + yShift + amp * sin(ph + i.toFloat() / steps * 2.6f * PI.toFloat())
                     if (i == 0) path.lineTo(0f, y) else path.lineTo(x, y)
                 }
                 path.lineTo(w, h); path.close()
-                drawPath(path, water.copy(alpha = alpha))
+                return path
             }
             if (fill > 0.01f) {
-                wave(6f, phase2, 4f, 0.14f)   // hintere, ruhigere Welle
-                wave(9f, phase, 0f, 0.30f)    // vordere, kräftigere Welle
+                // hintere, ruhigere Welle
+                drawPath(
+                    body(6f, phase2, 5f),
+                    Brush.verticalGradient(listOf(Cyan.copy(alpha = 0.12f), Blue.copy(alpha = 0.10f)), startY = baseY, endY = h),
+                )
+                // vordere Welle: Tiefe von hell an der Oberfläche zu satt am Boden
+                drawPath(
+                    body(9f, phase, 0f),
+                    Brush.verticalGradient(listOf(crest.copy(alpha = 0.33f), Blue.copy(alpha = 0.44f)), startY = baseY, endY = h),
+                )
+                // helle Wasserlinie an der Oberkante — Licht fängt sich auf der Welle
+                val line = Path()
+                for (i in 0..28) {
+                    val x = w * i / 28
+                    val y = baseY + 9f * sin(phase + i.toFloat() / 28 * 2.6f * PI.toFloat())
+                    if (i == 0) line.moveTo(x, y) else line.lineTo(x, y)
+                }
+                drawPath(line, color = crest.copy(alpha = 0.6f), style = Stroke(width = 2.5f))
             }
         }
+
+        // --- Scrim: hält die Textspalte links lesbar, egal wie hoch das Wasser steht ---
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(
+                    0f to Void.copy(alpha = 0.5f), 0.5f to Void.copy(alpha = 0.14f), 1f to Color.Transparent,
+                ),
+            ),
+        )
 
         // --- Inhalt darüber ---
         Row(Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.WaterDrop, null, tint = water.copy(alpha = 0.9f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.WaterDrop, null, tint = crest, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("HYDRATION", color = TextDim, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                    Text("HYDRATION", color = if (goalReached) Champagne else Ivory.copy(alpha = 0.75f), fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, style = shadow)
                     if (goalReached) {
                         Spacer(Modifier.width(7.dp))
-                        Text("✓ Ziel", color = Good, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                        Text("✓ Ziel erreicht", color = Champagne, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, style = shadow)
                     }
                 }
                 Spacer(Modifier.height(7.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         "%.1f".format(Locale.US, totalMl / 1000.0),
-                        color = TextPrimary, fontFamily = Display, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold,
+                        color = Color.White, fontFamily = Display, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, style = shadow,
                     )
                     Spacer(Modifier.width(5.dp))
                     Text(
                         "/ ${"%.1f".format(Locale.US, targetMl / 1000.0)} L",
-                        color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 5.dp),
+                        color = Ivory.copy(alpha = 0.8f), fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 5.dp), style = shadow,
                     )
                 }
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("$glasses Gläser · Getränke zählen mit", color = TextDim, fontSize = 10.sp)
+                    Text(
+                        bonusReason ?: "$glasses Gläser · Getränke zählen mit",
+                        color = if (bonusReason != null) Ivory.copy(alpha = 0.9f) else Ivory.copy(alpha = 0.62f),
+                        fontSize = 10.sp, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
+                        maxLines = 1, style = shadow,
+                    )
                     if (hot) {
-                        Spacer(Modifier.width(7.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(7.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold, style = shadow)
                     }
                     if (showHeat) {
                         Spacer(Modifier.width(7.dp))
-                        Text("+ Heat", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onEnableHeat() })
+                        Text("+ Heat", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.clickable { onEnableHeat() })
                     }
                 }
             }
             if (canEdit) {
-                WaterButton(Icons.Rounded.Remove, 40.dp, water, filled = false) {
+                WaterButton(Icons.Rounded.Remove, 40.dp, Cyan, filled = false) {
                     if (glasses > 0) { Repo.addWater(-1); com.ascend.lifeos.data.Haptics.tick(hCtx) }
                 }
                 Spacer(Modifier.width(11.dp))
-                WaterButton(Icons.Rounded.Add, 56.dp, water, filled = true) {
+                WaterButton(Icons.Rounded.Add, 56.dp, Cyan, filled = true) {
                     Repo.addWater(1)
                     if (totalMl + WaterCalc.GLASS_ML >= targetMl) com.ascend.lifeos.data.Haptics.success(hCtx)
                     else com.ascend.lifeos.data.Haptics.confirm(hCtx)
@@ -633,11 +687,11 @@ private fun WaterButton(icon: androidx.compose.ui.graphics.vector.ImageVector, s
         Modifier.size(size)
             .pressScale { onClick() }
             .clip(CircleShape)
-            .background(if (filled) tint.copy(alpha = 0.24f) else Ivory.copy(alpha = 0.06f))
-            .border(0.6.dp, tint.copy(alpha = if (filled) 0.55f else 0.30f), CircleShape),
+            .background(if (filled) tint.copy(alpha = 0.26f) else Void.copy(alpha = 0.4f))
+            .border(0.8.dp, tint.copy(alpha = if (filled) 0.6f else 0.35f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.42f))
+        Icon(icon, null, tint = if (filled) Color.White else tint, modifier = Modifier.size(size * 0.42f))
     }
 }
 
