@@ -2,6 +2,14 @@ package com.ascend.lifeos.ui.hud
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -12,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +57,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -67,11 +77,14 @@ import com.ascend.lifeos.data.WaterCalc
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Amber
+import com.ascend.lifeos.ui.theme.BgElevated
 import com.ascend.lifeos.ui.theme.Blue
 import com.ascend.lifeos.ui.theme.Cyan
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Good
+import com.ascend.lifeos.ui.theme.Ivory
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.Purple
 import com.ascend.lifeos.ui.theme.Warn
@@ -81,6 +94,8 @@ import com.ascend.lifeos.ui.theme.TextPrimary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.PI
+import kotlin.math.sin
 
 private enum class NView { DASH, MICROS, STATS, FASTING, RECIPES, SHOPPING }
 
@@ -214,9 +229,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             // Kap. 39/44: die handlungsleitende Zeile + der Lücken-Füller
             GapFiller(totals = totals, p = p, isToday = isToday, dayKey = dayKey)
 
-            // Kap. 39: Wasser wird eine leise Leiste — Getränke (volumeMl) zählen mit
+            // Wasser = die animierte Hauptkarte; Getränke (volumeMl) zählen mit
             Spacer(Modifier.height(12.dp))
-            HydrationBar(
+            HydrationCard(
                 glasses = day.water,
                 drinkMl = day.meals.sumOf { it.volumeMl },
                 targetGlasses = WaterCalc.targetGlasses(p.weightKg, day.workoutDone, hot),
@@ -234,8 +249,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             // Kap. 43: die abgeschlossene Woche als ehrliches Zeugnis (So-Abend + Mo)
             WeeklyFuelReview(isToday)
 
-            Spacer(Modifier.height(14.dp))
-            FastingModule(onFasting, Modifier.fillMaxWidth())
+            // Fasten = Nebenfunktion → schlanke Zeile statt großer Karte
+            Spacer(Modifier.height(12.dp))
+            FastingStrip(onFasting, Modifier.fillMaxWidth())
 
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -498,104 +514,169 @@ private fun ProteinSpread(day: DayData) {
     }
 }
 
-// ---- water + fasting — symmetric twin cards ------------------------------------
-
-/** Fixed height shared by the water and fasting cards so the row stays symmetric. */
-private val TWIN_CARD_HEIGHT = 156.dp
+// ---- water: the animated hero card ---------------------------------------------
 
 /**
- * Kap. 39 (User-Wunsch + P17): Wasser als leise Tropfen-Leiste statt lauter
- * Karte. Gefüllt aus Gläsern UND geloggten Getränken (volumeMl). Tippen setzt
- * den STAND aufs angetippte Segment — kein Ganze-Zeile-Klick mehr, der beim
- * Scroll-Stoppen heimlich Gläser stapelt (so entstanden 46 Gläser an einem Tag).
+ * Wasser ist eine Hauptfunktion → große, lebendige Karte statt leiser Leiste.
+ * Die Karte füllt sich mit einer animierten Wasserwelle bis zum Tagesanteil
+ * (Gläser + geloggte Getränke via volumeMl). Große, sichere +/−-Buttons ersetzen
+ * das fummelige Segment-Antippen — Ziel getroffen wird grün + haptisch gefeiert.
  */
 @Composable
-private fun HydrationBar(
+private fun HydrationCard(
     glasses: Int, drinkMl: Int, targetGlasses: Int,
     hot: Boolean, canEdit: Boolean, showHeat: Boolean, onEnableHeat: () -> Unit,
 ) {
     val hCtx = androidx.compose.ui.platform.LocalContext.current
     val totalMl = glasses * WaterCalc.GLASS_ML + drinkMl
     val targetMl = (targetGlasses * WaterCalc.GLASS_ML).coerceAtLeast(1)
-    val filled = (totalMl.toFloat() / WaterCalc.GLASS_ML).toInt()
-    val segments = targetGlasses.coerceIn(4, 12)
-    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 2.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.WaterDrop, null, tint = Cyan.copy(alpha = 0.8f), modifier = Modifier.size(13.dp))
-            Spacer(Modifier.width(6.dp))
-            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                repeat(segments) { i ->
-                    val on = i < (filled * segments / targetGlasses.coerceAtLeast(1)).coerceAtMost(segments)
-                    // Größere Hit-Box (24dp) um die 6dp-Pille — bewusst treffen, nichts stapeln.
-                    Box(
-                        Modifier.weight(1f).height(24.dp)
-                            .clickable(enabled = canEdit) {
-                                // Segment i+1 als Zielstand: Gläser so setzen, dass total ≈ Stand
-                                val wantMl = (i + 1) * targetMl / segments
-                                val newGlasses = ((wantMl - drinkMl).coerceAtLeast(0) + WaterCalc.GLASS_ML / 2) / WaterCalc.GLASS_ML
-                                Repo.addWater(newGlasses - glasses)
-                                com.ascend.lifeos.data.Haptics.tick(hCtx)
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Box(
-                            Modifier.fillMaxWidth().height(6.dp).clip(CircleShape)
-                                .background(if (on) Cyan.copy(alpha = 0.85f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)),
-                        )
+    val fraction = (totalMl.toFloat() / targetMl).coerceIn(0f, 1f)
+    val goalReached = totalMl >= targetMl
+    val water = if (goalReached) Good else Cyan
+
+    // Füllstand steigt weich, wenn Wasser dazukommt (feder-gedämpft)
+    val fill by animateFloatAsState(fraction, spring(dampingRatio = 0.72f, stiffness = 90f), label = "fill")
+    // zwei versetzte Sinuswellen driften horizontal → lebendige Oberfläche
+    val drift = rememberInfiniteTransition(label = "water")
+    val phase by drift.animateFloat(
+        0f, (2.0 * PI).toFloat(),
+        infiniteRepeatable(tween(2600, easing = LinearEasing), RepeatMode.Restart), label = "p1",
+    )
+    val phase2 by drift.animateFloat(
+        0f, (2.0 * PI).toFloat(),
+        infiniteRepeatable(tween(3900, easing = LinearEasing), RepeatMode.Restart), label = "p2",
+    )
+
+    Box(
+        Modifier.fillMaxWidth().height(130.dp).clip(RoundedCornerShape(22.dp))
+            .background(BgElevated.copy(alpha = 0.55f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(22.dp)),
+    ) {
+        // --- animierte Wasserfüllung ---
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width; val h = size.height
+            val baseY = h * (1f - fill)
+            fun wave(amp: Float, ph: Float, yShift: Float, alpha: Float) {
+                val path = Path()
+                path.moveTo(0f, h)
+                val steps = 26
+                for (i in 0..steps) {
+                    val x = w * i / steps
+                    val y = baseY + yShift + amp * sin(ph + i.toFloat() / steps * 2.6f * PI.toFloat())
+                    if (i == 0) path.lineTo(0f, y) else path.lineTo(x, y)
+                }
+                path.lineTo(w, h); path.close()
+                drawPath(path, water.copy(alpha = alpha))
+            }
+            if (fill > 0.01f) {
+                wave(6f, phase2, 4f, 0.14f)   // hintere, ruhigere Welle
+                wave(9f, phase, 0f, 0.30f)    // vordere, kräftigere Welle
+            }
+        }
+
+        // --- Inhalt darüber ---
+        Row(Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.WaterDrop, null, tint = water.copy(alpha = 0.9f), modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("HYDRATION", color = TextDim, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                    if (goalReached) {
+                        Spacer(Modifier.width(7.dp))
+                        Text("✓ Ziel", color = Good, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(7.dp))
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        "%.1f".format(Locale.US, totalMl / 1000.0),
+                        color = TextPrimary, fontFamily = Display, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold,
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        "/ ${"%.1f".format(Locale.US, targetMl / 1000.0)} L",
+                        color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 5.dp),
+                    )
+                }
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("$glasses Gläser · Getränke zählen mit", color = TextDim, fontSize = 10.sp)
+                    if (hot) {
+                        Spacer(Modifier.width(7.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                    if (showHeat) {
+                        Spacer(Modifier.width(7.dp))
+                        Text("+ Heat", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onEnableHeat() })
                     }
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "${"%.1f".format(Locale.US, totalMl / 1000.0)} / ${"%.1f".format(Locale.US, targetMl / 1000.0)} L",
-                color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-            )
-        }
-        Spacer(Modifier.height(3.dp))
-        Row {
-            Text(
-                if (canEdit) "Tropfen antippen = Stand setzen · Getränke zählen mit" else "$glasses Gläser + Getränke",
-                color = TextDim.copy(alpha = 0.75f), fontSize = 9.sp,
-            )
-            if (hot) { Spacer(Modifier.width(6.dp)); Text("🔥 +0,3 L", color = Amber, fontSize = 9.sp, fontWeight = FontWeight.Bold) }
-            if (showHeat) {
-                Spacer(Modifier.weight(1f))
-                Text("+ Heat", color = Mod.Fuel, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onEnableHeat() })
+            if (canEdit) {
+                WaterButton(Icons.Rounded.Remove, 40.dp, water, filled = false) {
+                    if (glasses > 0) { Repo.addWater(-1); com.ascend.lifeos.data.Haptics.tick(hCtx) }
+                }
+                Spacer(Modifier.width(11.dp))
+                WaterButton(Icons.Rounded.Add, 56.dp, water, filled = true) {
+                    Repo.addWater(1)
+                    if (totalMl + WaterCalc.GLASS_ML >= targetMl) com.ascend.lifeos.data.Haptics.success(hCtx)
+                    else com.ascend.lifeos.data.Haptics.confirm(hCtx)
+                }
             }
         }
     }
 }
 
+/** Round, springy add/remove button — big enough to hit without missing. */
 @Composable
-private fun FastingModule(onOpen: () -> Unit, modifier: Modifier) {
+private fun WaterButton(icon: androidx.compose.ui.graphics.vector.ImageVector, size: androidx.compose.ui.unit.Dp, tint: Color, filled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.size(size)
+            .pressScale { onClick() }
+            .clip(CircleShape)
+            .background(if (filled) tint.copy(alpha = 0.24f) else Ivory.copy(alpha = 0.06f))
+            .border(0.6.dp, tint.copy(alpha = if (filled) 0.55f else 0.30f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.42f))
+    }
+}
+
+// ---- fasting: a slim strip (nice-to-have, not a hero) --------------------------
+
+@Composable
+private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
     val f = Repo.data.fasting
     val protocol = FastingCalc.protocol(f.protocol)
     val elapsed = FastingCalc.elapsedHours(f.startEpoch)
     val zone = FastingCalc.zoneFor(elapsed)
-    GlassPanel(modifier.height(TWIN_CARD_HEIGHT).clickable { onOpen() }) {
-        Column(Modifier.fillMaxSize().padding(14.dp)) {
-            Text("FASTING", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-            Spacer(Modifier.height(8.dp))
-            if (f.active) {
-                Text("${elapsed.toInt()}h ${((elapsed % 1) * 60).toInt()}m", color = TextPrimary, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
-                Text("of ${protocol.fastHours.toInt()}h · ${protocol.id}", color = TextDim, fontSize = 10.5.sp)
-                Spacer(Modifier.weight(1f))
-                NeonBar((elapsed / protocol.fastHours).coerceIn(0.0, 1.0).toFloat(), zone.color, Modifier.fillMaxWidth(), height = 5.dp)
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.height(30.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(zone.label, color = zone.color, fontSize = 10.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                }
-            } else {
-                Text("Ready", color = TextPrimary, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
-                Text("${protocol.id} · ${protocol.desc}", color = TextDim, fontSize = 10.5.sp, maxLines = 1)
-                Spacer(Modifier.weight(1f))
-                NeonBar(0f, zone.color, Modifier.fillMaxWidth(), height = 5.dp)
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.height(30.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Open timer →", color = Mod.Fuel, fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
-                }
+    val progress = if (f.active) (elapsed / protocol.fastHours).coerceIn(0.0, 1.0).toFloat() else 0f
+    Row(
+        modifier.clip(RoundedCornerShape(14.dp))
+            .background(Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+            .clickable { onOpen() }
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("🕐", fontSize = 13.sp)
+        Spacer(Modifier.width(9.dp))
+        Text("Fasting", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.width(9.dp))
+        if (f.active) {
+            Text("${elapsed.toInt()}h ${((elapsed % 1) * 60).toInt()}m", color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+            Text(" / ${protocol.fastHours.toInt()}h", color = TextDim, fontSize = 11.sp)
+            Spacer(Modifier.width(11.dp))
+            Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.08f))) {
+                Box(Modifier.fillMaxWidth(progress).fillMaxHeight().clip(CircleShape).background(zone.color))
             }
+            Spacer(Modifier.width(10.dp))
+            Text(zone.label, color = zone.color, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        } else {
+            Text("${protocol.id} · bereit", color = TextDim, fontSize = 11.5.sp)
+            Spacer(Modifier.weight(1f))
         }
+        Spacer(Modifier.width(8.dp))
+        Icon(Icons.Rounded.ChevronRight, null, tint = TextDim, modifier = Modifier.size(16.dp))
     }
 }
 
