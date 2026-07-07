@@ -203,13 +203,15 @@ fun AscendApp() {
         androidx.compose.animation.AnimatedContent(
             targetState = sub,
             transitionSpec = {
-                // "arriving" feel: the new screen fades + rises a touch while the
-                // old one snaps away — a soft entrance instead of a hard cut.
-                (fadeIn(tween(Motion.standard, delayMillis = Motion.enterDelay, easing = Motion.easeOut)) +
+                // Soft, slow arrival: the two screens cross-fade over the same
+                // window (no delay/no snap) while the new one drifts up a hair —
+                // a gentle glide, not a jump. Longer durations read as "expensive".
+                (fadeIn(tween(460, easing = Motion.easeOut)) +
                     androidx.compose.animation.slideInVertically(
-                        tween(Motion.standard, delayMillis = Motion.enterDelay, easing = Motion.easeOut),
-                    ) { full -> full / 12 })
-                    .togetherWith(fadeOut(tween(Motion.instant)))
+                        tween(560, easing = Motion.easeOut),
+                    ) { full -> full / 22 })
+                    .togetherWith(fadeOut(tween(360, easing = Motion.easeIn)))
+                    .using(androidx.compose.animation.SizeTransform(clip = false))
             },
             label = "sub",
         ) { s ->
