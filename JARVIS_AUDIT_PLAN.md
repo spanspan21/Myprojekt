@@ -334,6 +334,32 @@ mit echtem Minus); `SkillMeta.weekKey` → `core/DayKey.isoWeek` (nach W1.4 korr
    Progression levelt nur die trainierte Kette; Summary-Delta plausibel; Untis-Auto-Sync-Log;
    Sounds bei Frischinstallation hörbar.
 
+## ✅ ERGEBNIS (2026-07-07, gleiche Session)
+
+Alle drei Wellen umgesetzt und committet — `7ae3afc` (Welle 1), `e6236ee` (Welle 2),
+`ba0f75c` (Welle 3). Bilanz: **67 Dateien, +995/−2049 Zeilen (netto −1054)**,
+7 Dateien komplett gelöscht. Testsuite: 128 Tests grün (12 neue Regressionstests in
+`AuditFixesTest.kt`), `assembleDebug` grün, Grep-Abnahme 0 Resttreffer.
+
+Abweichungen vom Plan (je mit Grund):
+- **W3.16 (D10):** Nur die toten Setter (`setSavingsGoal`, `weeklySpendAvg`) entfernt.
+  Der Legacy-Savings-Sync bleibt — er enthält bereits eine Migration-on-first-read,
+  und eine Löschung ohne Kenntnis des Gerätestands riskiert Datenverlust beim
+  einzigen realen Nutzer.
+- **W2.12 (U8):** 5 von 7 Sheets umgestellt; `GoalsSheet` behält sein rohes
+  ModalBottomSheet (bekommt `sheetState` von außen — gleiche Ausnahme wie NutritionAdd).
+- **W2.13:** `eur`/`euros` nicht zusammengelegt (zwei private, lokal genutzte
+  Formatter — kein Verhaltensproblem).
+- **D25:** `MasterPlanDao.deleteDomain` lebt (wird von `importDomain` gerufen) —
+  Audit-Befund war hier falsch, nur `observeDomain` entfernt.
+- **Bonus außerhalb des Plans:** `Repo.initIfNeeded()` für BroadcastReceiver —
+  das bedingungslose `Repo.init()` in Receivern konnte bei laufender App
+  In-Memory-Edits im 350-ms-Debounce-Fenster verwerfen.
+
+Am Gerät zu verifizieren (nächste Geräte-Session): Streak zählt nach vollem Tag,
+Widget „X/3", Progression levelt nur die trainierte Kette, Summary-Delta plausibel,
+Untis-Auto-Sync, Sounds bei Frischinstallation.
+
 ## 7. Bewusst NICHT angefasst (mit Begründung)
 
 - **B14** (Voll-Export/CSV als `EXTRA_TEXT` → `TransactionTooLarge`-Risiko): Umstellung auf
