@@ -57,6 +57,8 @@ import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Body
 import com.ascend.lifeos.ui.theme.Champagne
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Good
 import com.ascend.lifeos.ui.theme.Ivory
@@ -95,19 +97,15 @@ fun PrimeScreen(onClose: () -> Unit) {
         Spacer(Modifier.height(16.dp))
 
         val r = report
-        if (r == null) {
-            Panel(Modifier.fillMaxWidth()) {
-                Text(
-                    "Thinking — fusing Fuel, Training, Sleep, Guard, Calendar …",
-                    color = TextMuted, fontSize = 13.sp, fontFamily = Body,
-                    modifier = Modifier.padding(18.dp),
-                )
-            }
-            return@Column
-        }
-
-        // ── Hero: der animierte Index-Ring + seine Subsysteme ────────────
-        PrimeHero(r.index, r.subScores) { reload.value++ }
+        // The crystal loads instantly (it's just Canvas) and "thinks" — breathing
+        // and glowing — while the index and bars shimmer as a blue skeleton. When
+        // the build lands, the number counts up, the bars fill and the sections
+        // fade in. No spinner, no blank panel — one continuous, calm reveal.
+        PrimeHero(r?.index, r?.subScores ?: emptyList(), loading = r == null) { reload.value++ }
+        val secAlpha by animateFloatAsState(
+            if (r != null) 1f else 0f, tween(420, easing = FastOutSlowInEasing), label = "sections",
+        )
+        if (r != null) Column(Modifier.fillMaxWidth().graphicsLayer { alpha = secAlpha }) {
 
         // ── Jetzt: die drei wirksamsten Handgriffe ───────────────────────
         if (r.directives.isNotEmpty()) {
@@ -217,13 +215,14 @@ fun PrimeScreen(onClose: () -> Unit) {
             color = TextDim.copy(alpha = 0.7f), fontSize = 10.sp, fontFamily = Body, lineHeight = 14.sp,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
+        }
     }
 }
 
 // ─── Animierter Index-Ring — der lebendige Kopf des Screens ───────────────────
 
 @Composable
-private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, onRescore: () -> Unit = {}) {
+private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, loading: Boolean = false, onRescore: () -> Unit = {}) {
     val tier = when {
         index == null -> TextMuted
         index >= 80 -> Champagne
@@ -259,23 +258,29 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, onRescore
                 com.ascend.lifeos.ui.kit.LumenCrystal(
                     Modifier.size(154.dp),
                     accent = Accent,   // the brand blue — the score lives in the number + tier
-                    intensity = ((index ?: 0) / 100f).coerceAtLeast(0.35f),
-                    onTap = onRescore,
+                    intensity = if (loading) 0.5f else ((index ?: 0) / 100f).coerceAtLeast(0.35f),
+                    onTap = if (loading) ({}) else onRescore,
                 )
                 Spacer(Modifier.height(14.dp))
-                if (index != null) {
-                    val shown = com.ascend.lifeos.ui.kit.countUp(index, durationMs = 1100)
-                    Text(
-                        "$shown", color = TextPrimary, fontFamily = Display,
-                        fontStyle = com.ascend.lifeos.ui.theme.DisplayItalic,
-                        fontSize = 56.sp, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
-                    )
-                    Text(
-                        tierLabel, color = tier, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
-                        fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
-                    )
-                } else {
-                    Text("—", color = TextMuted, fontFamily = Display, fontSize = 46.sp, fontWeight = FontWeight.ExtraBold)
+                when {
+                    loading -> {
+                        ShimmerBox(94.dp, 46.dp, 13.dp)     // the number, thinking
+                        Spacer(Modifier.height(9.dp))
+                        ShimmerBox(58.dp, 11.dp, 6.dp)       // the tier
+                    }
+                    index != null -> {
+                        val shown = com.ascend.lifeos.ui.kit.countUp(index, durationMs = 1100)
+                        Text(
+                            "$shown", color = TextPrimary, fontFamily = Display,
+                            fontStyle = com.ascend.lifeos.ui.theme.DisplayItalic,
+                            fontSize = 56.sp, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
+                        )
+                        Text(
+                            tierLabel, color = tier, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
+                            fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
+                        )
+                    }
+                    else -> Text("—", color = TextMuted, fontFamily = Display, fontSize = 46.sp, fontWeight = FontWeight.ExtraBold)
                 }
             } else Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
@@ -330,18 +335,65 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, onRescore
                 "PRIME INDEX", color = Champagne, fontFamily = Display, fontSize = 9.sp,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp, modifier = Modifier.padding(top = 8.dp),
             )
-            if (index == null) {
+            if (index == null && !loading) {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "A few logged days and it's set.",
                     color = TextMuted, fontSize = 12.sp, fontFamily = Body,
                 )
             }
-            if (subScores.isNotEmpty()) {
-                Spacer(Modifier.height(20.dp))
-                subScores.forEachIndexed { i, (name, score) -> AnimatedSubBar(name, score, i) }
+            when {
+                loading -> {
+                    Spacer(Modifier.height(20.dp))
+                    repeat(6) { i ->
+                        if (i > 0) Spacer(Modifier.height(15.dp))
+                        ShimmerBar()
+                    }
+                }
+                subScores.isNotEmpty() -> {
+                    Spacer(Modifier.height(20.dp))
+                    subScores.forEachIndexed { i, (name, score) -> AnimatedSubBar(name, score, i) }
+                }
             }
         }
+    }
+}
+
+// ─── loading skeletons — a calm blue shimmer while Prime "thinks" ────────────
+
+@Composable
+private fun ShimmerFill(modifier: Modifier, corner: androidx.compose.ui.unit.Dp) {
+    val x by rememberInfiniteTransition(label = "sk").animateFloat(
+        0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing)), label = "skx",
+    )
+    Box(
+        modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(corner))
+            .background(Accent.copy(alpha = 0.07f))
+            .drawBehind {
+                val band = size.width * 0.42f
+                val start = -band + (size.width + 2 * band) * x
+                drawRect(
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        0f to androidx.compose.ui.graphics.Color.Transparent,
+                        0.5f to Accent.copy(alpha = 0.16f),
+                        1f to androidx.compose.ui.graphics.Color.Transparent,
+                        startX = start, endX = start + band,
+                    ),
+                )
+            },
+    )
+}
+
+@Composable
+private fun ShimmerBox(width: androidx.compose.ui.unit.Dp, height: androidx.compose.ui.unit.Dp, corner: androidx.compose.ui.unit.Dp) =
+    ShimmerFill(Modifier.width(width).height(height), corner)
+
+@Composable
+private fun ShimmerBar() {
+    Row(Modifier.fillMaxWidth().padding(vertical = 3.5.dp), verticalAlignment = Alignment.CenterVertically) {
+        ShimmerBox(62.dp, 9.dp, 5.dp)
+        Spacer(Modifier.width(14.dp))
+        ShimmerFill(Modifier.weight(1f).height(6.dp), 4.dp)
     }
 }
 
