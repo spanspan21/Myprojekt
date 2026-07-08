@@ -30,9 +30,14 @@ object ShellMotion {
      * late so there is never a double image. [reduced] collapses to a plain fade.
      */
     fun peer(reduced: Boolean): ContentTransform {
-        if (reduced) return fadeIn(tween(80)) togetherWith fadeOut(tween(80))
-        val enter = tween<Float>(210, delayMillis = 90, easing = Motion.easeOut)
-        return (fadeIn(enter) + scaleIn(initialScale = 0.98f, animationSpec = enter)) togetherWith
-            fadeOut(tween(90, easing = Motion.easeIn))
+        if (reduced) return fadeIn(tween(120)) togetherWith fadeOut(tween(120))
+        // A soft, OVERLAPPING dissolve (the earlier fast-out + 90 ms gap read as a
+        // little blink — not smooth). The incoming surface eases in and settles
+        // from 0.985 while the outgoing eases out a touch faster, so they cross
+        // gently: no blink, no gap, no bounce. FastOutSlowIn on both keeps it silky.
+        val smooth = androidx.compose.animation.core.FastOutSlowInEasing
+        val enter = tween<Float>(340, delayMillis = 20, easing = smooth)
+        return (fadeIn(enter) + scaleIn(initialScale = 0.985f, animationSpec = enter)) togetherWith
+            fadeOut(tween(230, easing = smooth))
     }
 }

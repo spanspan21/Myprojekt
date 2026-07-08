@@ -362,15 +362,16 @@ private fun MorphingDock(
                 targetState = subMode,
                 label = "dockMorph",
                 transitionSpec = {
-                    val enter = fadeIn(tween(170, delayMillis = 70, easing = androidx.compose.animation.core.LinearOutSlowInEasing)) +
+                    val smooth = androidx.compose.animation.core.FastOutSlowInEasing
+                    val enter = fadeIn(tween(230, delayMillis = 50, easing = smooth)) +
                         androidx.compose.animation.scaleIn(
-                            initialScale = 0.92f,
-                            animationSpec = tween(260, delayMillis = 70, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+                            initialScale = 0.94f,
+                            animationSpec = tween(300, delayMillis = 50, easing = smooth),
                         )
-                    val exit = fadeOut(tween(80, easing = androidx.compose.animation.core.FastOutLinearInEasing)) +
+                    val exit = fadeOut(tween(160, easing = smooth)) +
                         androidx.compose.animation.scaleOut(
-                            targetScale = 0.96f,
-                            animationSpec = tween(80, easing = androidx.compose.animation.core.FastOutLinearInEasing),
+                            targetScale = 0.97f,
+                            animationSpec = tween(160, easing = smooth),
                         )
                     (enter togetherWith exit).using(
                         androidx.compose.animation.SizeTransform(clip = false) { _, _ ->
