@@ -74,7 +74,10 @@ import com.ascend.lifeos.ui.theme.Warn
 @Composable
 fun PrimeScreen(onClose: () -> Unit) {
     val ctx = LocalContext.current
-    val report by produceState<PrimeReport?>(null) {
+    // tapping the crystal rescores — bump this and the report recomputes (the
+    // previous value stays on screen until the new one lands, so no flicker)
+    val reload = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0) }
+    val report by produceState<PrimeReport?>(null, reload.value) {
         value = runCatching { PrimeEngine.build(ctx) }.getOrNull()
     }
 
@@ -100,7 +103,7 @@ fun PrimeScreen(onClose: () -> Unit) {
         }
 
         // ── Hero: der animierte Index-Ring + seine Subsysteme ────────────
-        PrimeHero(r.index, r.subScores)
+        PrimeHero(r.index, r.subScores) { reload.value++ }
 
         // ── Jetzt: die drei wirksamsten Handgriffe ───────────────────────
         if (r.directives.isNotEmpty()) {
@@ -216,7 +219,7 @@ fun PrimeScreen(onClose: () -> Unit) {
 // ─── Animierter Index-Ring — der lebendige Kopf des Screens ───────────────────
 
 @Composable
-private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
+private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, onRescore: () -> Unit = {}) {
     val tier = when {
         index == null -> TextMuted
         index >= 80 -> Champagne
@@ -253,6 +256,7 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
                     Modifier.size(154.dp),
                     accent = Accent,   // the brand blue — the score lives in the number + tier
                     intensity = ((index ?: 0) / 100f).coerceAtLeast(0.35f),
+                    onTap = onRescore,
                 )
                 Spacer(Modifier.height(14.dp))
                 if (index != null) {

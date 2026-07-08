@@ -30,7 +30,9 @@ import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.theme.themeSpec
 import kotlin.math.PI
 import kotlin.math.floor
+import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 // ─── LUMEN — white light & electric-blue glow ────────────────────────────────
 // The light-world atmosphere and the reusable glow halo. On white, depth is
@@ -146,14 +148,31 @@ fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
     val t = if (reduced) 0.2f else anim
     val tau = 2f * PI.toFloat()
     Canvas(modifier) {
-        motes.forEach { m ->
-            val xx = (m.x + t * m.vx).let { it - floor(it) } * size.width
-            val yy = (m.y + t * m.vy).let { it - floor(it) } * size.height
+        val n = motes.size
+        val px = FloatArray(n); val py = FloatArray(n); val pa = FloatArray(n)
+        for (i in 0 until n) {
+            val m = motes[i]
+            px[i] = (m.x + t * m.vx).let { it - floor(it) } * size.width
+            py[i] = (m.y + t * m.vy).let { it - floor(it) } * size.height
             val tw = 0.55f + 0.45f * (0.5f + 0.5f * sin(t * tau * m.twCycles + m.phase))
-            val a = (m.bright * tw).coerceIn(0f, 1f)
-            val rad = m.r.dp.toPx()
-            val ctr = Offset(xx, yy)
-            // a real glowing bloom: a soft radial halo, then a bright crisp core
+            pa[i] = (m.bright * tw).coerceIn(0f, 1f)
+        }
+        // constellation: a hair-fine line between motes that drift close, fading
+        // with distance — a quiet, shifting web (drawn behind the glowing dots)
+        val maxD = 82.dp.toPx(); val maxD2 = maxD * maxD
+        for (i in 0 until n) {
+            for (j in i + 1 until n) {
+                val dx = px[i] - px[j]; val dy = py[i] - py[j]
+                val d2 = dx * dx + dy * dy
+                if (d2 < maxD2) {
+                    val la = (1f - sqrt(d2) / maxD) * 0.17f * min(pa[i], pa[j])
+                    if (la > 0.012f) drawLine(color.copy(alpha = la), Offset(px[i], py[i]), Offset(px[j], py[j]), 1f)
+                }
+            }
+        }
+        // the glowing motes, on top of the web
+        for (i in 0 until n) {
+            val rad = motes[i].r.dp.toPx(); val a = pa[i]; val ctr = Offset(px[i], py[i])
             val glowR = rad * 8f
             drawCircle(
                 Brush.radialGradient(

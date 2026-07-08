@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.kit
 
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -12,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -162,28 +164,39 @@ fun Panel(
     lux: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    // tappable panels press down under the finger and spring back (IRON MOTION)
-    var m = if (onClick != null) modifier.pressScale(onClick) else modifier
     val shape = RoundedCornerShape(corner)
     val spec = com.ascend.lifeos.ui.theme.themeSpec.value
 
-    // ── LUMEN light path: white glass lifted by a soft blue-tinted shadow;
-    //    lux swaps the ambient shadow for an electric-blue glow halo. ──
+    // ── LUMEN light path: white glass lifted by a soft blue-tinted shadow.
+    //    Press drops the elevation, dips the scale and blooms an electric-blue
+    //    glow — soft glass under a finger. lux cards glow at rest, too. ──
     if (spec.light) {
-        m = m
+        val tappable = onClick != null
+        val interaction = remember { MutableInteractionSource() }
+        val pressed by interaction.collectIsPressedAsState()
+        val down = pressed && tappable
+        val elevBase = if (lux) 24.dp else 13.dp
+        val elev by animateDpAsState(if (down) elevBase * 0.5f else elevBase, tween(150), label = "pElev")
+        val scale by animateFloatAsState(if (down) 0.975f else 1f, tween(150), label = "pScale")
+        val addGlow by animateFloatAsState(if (down) 0.26f else 0f, tween(150), label = "pGlow")
+        val hue = if (lux) spec.glowInk else spec.shadowTint
+        var lm = modifier.graphicsLayer { scaleX = scale; scaleY = scale }
+        if (onClick != null) lm = lm.clickable(interaction, indication = null, onClick = onClick)
+        lm = lm
             .shadow(
-                elevation = if (lux) 24.dp else 13.dp,
-                shape = shape, clip = false,
-                ambientColor = if (lux) spec.glowInk.copy(alpha = 0.24f) else spec.shadowTint.copy(alpha = spec.shadowStrength * 0.6f),
-                spotColor = if (lux) spec.glowInk.copy(alpha = 0.30f) else spec.shadowTint.copy(alpha = spec.shadowStrength),
+                elevation = elev, shape = shape, clip = false,
+                ambientColor = hue.copy(alpha = ((if (lux) 0.24f else spec.shadowStrength * 0.6f) + addGlow).coerceAtMost(0.6f)),
+                spotColor = hue.copy(alpha = ((if (lux) 0.30f else spec.shadowStrength) + addGlow).coerceAtMost(0.7f)),
             )
             .clip(shape)
             .background(spec.cardFill)
-            .border(1.dp, if (lux) spec.glowInk.copy(alpha = 0.32f) else spec.cardBorder, shape)
-        Box(m, content = content)
+            .border(1.dp, if (lux || down) spec.glowInk.copy(alpha = if (down) 0.42f else 0.32f) else spec.cardBorder, shape)
+        Box(lm, content = content)
         return
     }
 
+    // dark path (unchanged): press-scale + dark glass + specular hairline
+    var m = if (onClick != null) modifier.pressScale(onClick) else modifier
     m = m.clip(shape)
         .background(fill)
         // Tiefengefälle: oben minimal heller — Licht von oben

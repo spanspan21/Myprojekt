@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,10 +70,31 @@ fun LumenCrystal(
 
     val glowI = (intensity.coerceIn(0f, 1f) * 0.7f + 0.3f) + pulse * 0.5f
 
+    // device tilt shifts the facet light — the gem catches the room like real
+    // glass. Accelerometer only (no permission); low-passed; safe fallback if
+    // the sensor is missing (the auto-sweep alone still lives).
+    val ctx = LocalContext.current
+    var tilt by remember { mutableStateOf(0f) }
+    if (!reduced) {
+        DisposableEffect(Unit) {
+            val sm = ctx.getSystemService(android.content.Context.SENSOR_SERVICE) as? android.hardware.SensorManager
+            val accel = sm?.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER)
+            val listener = object : android.hardware.SensorEventListener {
+                override fun onSensorChanged(e: android.hardware.SensorEvent) {
+                    val target = e.values[0] * 0.16f          // left/right tilt → light shift
+                    tilt += (target - tilt) * 0.10f           // low-pass for calm
+                }
+                override fun onAccuracyChanged(s: android.hardware.Sensor?, a: Int) {}
+            }
+            if (accel != null) sm.registerListener(listener, accel, android.hardware.SensorManager.SENSOR_DELAY_UI)
+            onDispose { sm?.unregisterListener(listener) }
+        }
+    }
+
     val tapMod = if (onTap != null) Modifier.pressScale { pulseKey = 1; onTap() } else Modifier
     Box(modifier.then(tapMod), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize().scale(breath)) {
-            drawCrystal(accent, light, glowI)
+            drawCrystal(accent, light + tilt, glowI)
         }
     }
 }
