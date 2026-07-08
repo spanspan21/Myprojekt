@@ -426,6 +426,91 @@ object SkillCatalog {
         }
     }
 
+    // ── Leveled skill ladders ────────────────────────────────────────────────
+    // A static skill is not one exercise — it is a ladder of harder holds that
+    // tops out at the finished move. The plan meets the athlete at the rung their
+    // strength supports (chosen by calibration level, 1..6) and prescribes THAT,
+    // with the rung's own honest hold target — so a Front-Lever goal on pull day
+    // gives the tuck you can train, never the full lever you can't. Every rung id
+    // exists in ExerciseSeed.ALL_EXERCISES (tracked + renders the real figure).
+
+    data class SkillRung(val exerciseId: String, val exerciseName: String, val holdSec: Int)
+
+    private val frontLeverLadder = listOf(
+        SkillRung("skill_fl_tuck", "Tuck Front Lever", 12),
+        SkillRung("skill_fl_adv", "Advanced Tuck Front Lever", 12),
+        SkillRung("skill_fl_str", "Straddle Front Lever", 10),
+        SkillRung("skill_fl_half", "Half-Lay Front Lever", 8),
+        SkillRung("skill_fl", "Front Lever", 8),
+    )
+    private val plancheLadder = listOf(
+        SkillRung("skill_pl_lean", "Planche Lean", 20),
+        SkillRung("skill_pl_tuck", "Tuck Planche", 12),
+        SkillRung("skill_pl_adv", "Advanced Tuck Planche", 10),
+        SkillRung("skill_pl_str", "Straddle Planche", 8),
+        SkillRung("skill_planche", "Full Planche", 5),
+    )
+    private val backLeverLadder = listOf(
+        SkillRung("skill_bl_tuck", "Tuck Back Lever", 12),
+        SkillRung("skill_bl_str", "Straddle Back Lever", 10),
+        SkillRung("skill_bl", "Back Lever", 8),
+    )
+    private val humanFlagLadder = listOf(
+        SkillRung("skill_hf_vert", "Vertical Flag", 8),
+        SkillRung("skill_hf_tuck", "Tuck Flag", 8),
+        SkillRung("skill_hf_str", "Straddle Flag", 6),
+        SkillRung("skill_hf", "Human Flag", 5),
+    )
+    private val handstandLadder = listOf(
+        SkillRung("skill_hs_wall", "Wall Handstand", 30),
+        SkillRung("skill_hs_kick", "Kick-up to Balance", 10),
+        SkillRung("skill_hs", "Freestanding Handstand", 15),
+    )
+    private val compressionLadder = listOf(
+        SkillRung("core_lsit", "L-Sit", 15),
+        SkillRung("skill_vsit", "V-Sit", 8),
+        SkillRung("skill_manna", "Manna", 5),
+    )
+
+    private fun ladderForSkill(skillId: String): List<SkillRung>? = when (skillId) {
+        "front_lever_tuck", "front_lever_adv", "front_lever" -> frontLeverLadder
+        "tuck_planche", "straddle_planche", "full_planche", "planche_lean", "pseudo_planche_pushup" -> plancheLadder
+        "back_lever" -> backLeverLadder
+        "human_flag" -> humanFlagLadder
+        "wall_handstand", "handstand", "handstand_walk", "press_handstand", "oah" -> handstandLadder
+        "l_sit", "v_sit", "manna" -> compressionLadder
+        else -> null
+    }
+
+    /** The area-default ladder for the static skill lines (no goal selected). */
+    fun areaLadder(area: SkillArea): List<SkillRung>? = when (area) {
+        SkillArea.PULL -> frontLeverLadder
+        SkillArea.PUSH -> plancheLadder
+        SkillArea.BALANCE -> handstandLadder
+        SkillArea.CORE -> compressionLadder
+        SkillArea.LEGS -> null
+    }
+
+    private fun rungAt(ladder: List<SkillRung>, level: Int) =
+        ladder[(level - 1).coerceIn(0, ladder.size - 1)]
+
+    /** Level-appropriate rung for a skill goal, or null if it has no ladder. */
+    fun skillRung(skill: SkillDef, level: Int): SkillRung? =
+        ladderForSkill(skill.id)?.let { rungAt(it, level) }
+
+    /** The next rung above the athlete's level — the "climb to" target. */
+    fun skillRungNext(skill: SkillDef, level: Int): SkillRung? {
+        val ladder = ladderForSkill(skill.id) ?: return null
+        return ladder.getOrNull((level - 1).coerceIn(0, ladder.size - 1) + 1)
+    }
+
+    /** Rung + next for an area default line (statics). */
+    fun areaRung(area: SkillArea, level: Int): Pair<SkillRung, SkillRung?>? {
+        val ladder = areaLadder(area) ?: return null
+        val idx = (level - 1).coerceIn(0, ladder.size - 1)
+        return ladder[idx] to ladder.getOrNull(idx + 1)
+    }
+
     /** Honest ETA in weeks from level gaps (~3.5 weeks per missing level). */
     fun etaWeeks(skill: SkillDef, profile: FitnessProfile?): Int {
         if (profile == null) return -1

@@ -310,15 +310,22 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             }
             // study-based prescription: how many reps, at what effort, when to load
             ex.prescription?.let {
-                Spacer(Modifier.height(6.dp))
-                Text(it, color = Accent.copy(alpha = 0.85f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
+                Spacer(Modifier.height(8.dp))
+                // The coach's instruction — the plan's fixed target. You execute it;
+                // you don't set it. The stepper below logs what you actually got.
+                Text("PRESCRIBED", color = Accent, fontSize = 8.5.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                Spacer(Modifier.height(2.dp))
+                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
             }
             Spacer(Modifier.height(10.dp))
-            // the movement, drawn — so you always know the shape of the rep
-            PoseFigure(
-                poseFor(ex.exerciseId, ex.exerciseName),
-                Modifier.fillMaxWidth().height(92.dp),
+            // the movement, drawn on the REAL anatomical body — the muscles this
+            // exercise trains are lit (primary bright, secondary faint), so you
+            // see exactly what the rep works, accurately, not a stick doodle
+            ExerciseFigure(
+                exerciseId = ex.exerciseId,
+                exerciseName = ex.exerciseName,
                 color = Accent,
+                modifier = Modifier.fillMaxWidth().height(150.dp),
             )
             Spacer(Modifier.height(14.dp))
 
@@ -330,7 +337,7 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                 Spacer(Modifier.width(20.dp))
                 StepperButton("+") { reps = ((reps.toIntOrNull() ?: 10) + 1).toString() }
             }
-            Text("Reps", color = TextDim, fontSize = 11.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            Text("Reps you got", color = TextDim, fontSize = 11.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             ghost?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, color = Accent.copy(alpha = 0.7f), fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
@@ -347,17 +354,11 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             }
             Spacer(Modifier.height(14.dp))
 
-            // ── Weight + RPE ───────────────────────────────────────
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GlassField("Weight (kg)", weight, KeyboardType.Decimal, Modifier.weight(1f)) { weight = it }
-                GlassField("RPE", rpe, KeyboardType.Number, Modifier.weight(0.5f)) { rpe = it }
-            }
-            // Vest is PRESCRIBED, not chosen. The plan decides the load (and
-            // whether a vest is optimal at all — see the prescription line); there
-            // is no manual "with/without/how much" ladder any more. We show the
-            // prescribed kg read-only and pre-fill the weight so logging just
-            // confirms the assignment. The value is encoded by the generator into
-            // the exercise name ("· vest Nkg").
+            // ── Load + effort ──────────────────────────────────────
+            // The LOAD is the plan's decision, not a dial. A prescribed vest shows
+            // LOCKED — logging only confirms what you wore, you can't re-set it.
+            // Bodyweight moves carry no load field at all (nothing to set); genuine
+            // extra external load is an override, tucked into Advanced below.
             val profileW = com.ascend.lifeos.data.Repo.data.profile
             val prescribedVest = remember(ex.exerciseName) {
                 Regex("vest\\s*(\\d+)\\s*kg", RegexOption.IGNORE_CASE)
@@ -366,22 +367,28 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             LaunchedEffect(ex.exerciseId) {
                 if (prescribedVest != null && weight.isBlank()) weight = prescribedVest.toString()
             }
-            if (prescribedVest != null) {
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("VEST", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                    Box(
-                        Modifier.clip(RoundedCornerShape(10.dp))
-                            .background(Accent.copy(alpha = 0.14f))
-                            .border(0.5.dp, Accent.copy(alpha = 0.40f), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    ) { Text("${prescribedVest}kg · prescribed", color = Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                    weight.toFloatOrNull()?.takeIf { it > 0 }?.let { w ->
-                        Text(
-                            "TSW ${"%.1f".format(w + profileW.weightKg)} kg",
-                            color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
-                        )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
+                if (prescribedVest != null) {
+                    Column(Modifier.weight(1f)) {
+                        Text("VEST · PRESCRIBED", color = Accent, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
+                        Spacer(Modifier.height(5.dp))
+                        Box(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .background(Accent.copy(alpha = 0.10f))
+                                .border(0.5.dp, Accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 14.dp, vertical = 14.dp),
+                        ) { Text("${prescribedVest} kg", color = Accent, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
                     }
+                }
+                GlassField("RPE", rpe, KeyboardType.Number, Modifier.weight(if (prescribedVest != null) 0.7f else 1f)) { rpe = it }
+            }
+            if (prescribedVest != null) {
+                weight.toFloatOrNull()?.takeIf { it > 0 }?.let { w ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Total system weight ${"%.1f".format(w + profileW.weightKg)} kg · load locked to the plan",
+                        color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
+                    )
                 }
             }
             Spacer(Modifier.height(10.dp))
@@ -408,6 +415,12 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                     }
                     Spacer(Modifier.height(8.dp))
                     GlassField("Note", note, KeyboardType.Text, Modifier.fillMaxWidth()) { note = it }
+                    // External-load override — only for the rare case the plan didn't
+                    // prescribe a vest but you genuinely added weight. Not the main dial.
+                    if (prescribedVest == null) {
+                        Spacer(Modifier.height(8.dp))
+                        GlassField("Added load (kg) · override", weight, KeyboardType.Decimal, Modifier.fillMaxWidth()) { weight = it }
+                    }
                 }
             }
             Spacer(Modifier.height(14.dp))

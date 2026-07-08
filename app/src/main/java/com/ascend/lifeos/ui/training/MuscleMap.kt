@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
@@ -23,6 +24,8 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.remember
+import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.Muscle
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.TextDim
@@ -191,5 +194,99 @@ fun MuscleHeatMap(
     Row(modifier, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)) {
         BodyFigure(front = true, fillFor = ::tint, modifier = Modifier.weight(1f))
         BodyFigure(front = false, fillFor = ::tint, modifier = Modifier.weight(1f))
+    }
+}
+
+// ─── Exercise figure ─────────────────────────────────────────────────────────
+// Retires the hand-plotted stick poses. Every exercise already declares the
+// muscles it trains (primary + secondary, for the recovery model) — so we light
+// those up on the SAME real anatomical body the heatmap uses. Accurate by
+// construction, and unmistakable: a front lever and a planche no longer look
+// alike, because the muscles they load differ.
+
+private val exMusclesById: Map<String, Pair<Set<Muscle>, Set<Muscle>>> by lazy {
+    ExerciseSeed.ALL_EXERCISES.associate {
+        it.id to (setOf(it.primaryMuscle) to it.secondaryMuscles.toSet())
+    }
+}
+private val exMusclesByName: Map<String, Pair<Set<Muscle>, Set<Muscle>>> by lazy {
+    ExerciseSeed.ALL_EXERCISES.associate {
+        it.name.trim().lowercase() to (setOf(it.primaryMuscle) to it.secondaryMuscles.toSet())
+    }
+}
+
+/** Keyword fallback so a custom / unknown id never renders a blank body. */
+private fun fallbackMuscles(id: String, name: String): Pair<Set<Muscle>, Set<Muscle>> {
+    val k = "$id $name".lowercase()
+    val prim = when {
+        "hspu" in k || "handstand" in k || "pike push" in k || "overhead" in k -> Muscle.SHOULDERS
+        "planche" in k -> Muscle.SHOULDERS
+        "front lever" in k || "back lever" in k || "lever" in k || "pull" in k ||
+            "row" in k || "chin" in k || "lat" in k || "muscle" in k -> Muscle.LATS
+        "dip" in k || "push" in k || "bench" in k || "fly" in k || "chest" in k -> Muscle.CHEST
+        "curl" in k || "bicep" in k -> Muscle.BICEPS
+        "tricep" in k || "pushdown" in k -> Muscle.TRICEPS
+        "squat" in k || "lunge" in k || "pistol" in k || "quad" in k ||
+            "leg" in k || "step up" in k -> Muscle.QUADS
+        "hamstring" in k || "nordic" in k || "deadlift" in k || "hinge" in k ||
+            "bridge" in k || "glute" in k -> Muscle.HAMSTRINGS
+        "calf" in k || "calve" in k -> Muscle.CALVES
+        "flag" in k || "oblique" in k || "twist" in k || "windshield" in k -> Muscle.OBLIQUES
+        "sit" in k || "hollow" in k || "core" in k || " ab" in k || "raise" in k ||
+            "crunch" in k || "plank" in k -> Muscle.ABS
+        else -> Muscle.FULL_BODY
+    }
+    return setOf(prim) to emptySet()
+}
+
+// Muscles that exist ONLY on the back map (see BodyPaths). A single-body figure
+// whose primary mover is one of these must show the BACK, or it renders as a
+// blank front silhouette — e.g. a front lever (lats) or a Nordic curl (hams).
+private val BACK_ONLY_MUSCLES = setOf(
+    Muscle.LATS, Muscle.REAR_DELTS, Muscle.LOWER_BACK, Muscle.GLUTES, Muscle.HAMSTRINGS,
+)
+
+/**
+ * The accurate per-exercise figure: the anatomical body (front + back, or a single
+ * best-side body when [showBack] is false) with the exercise's trained muscles lit
+ * — primary bright, secondary faint. Drop-in replacement for the old stick-figure
+ * PoseFigure. Sizes by HEIGHT, so give it a bounded height (e.g.
+ * `Modifier.fillMaxWidth().height(140.dp)`) and the bodies scale to fit and center.
+ */
+@Composable
+fun ExerciseFigure(
+    exerciseId: String,
+    exerciseName: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    showBack: Boolean = true,
+) {
+    val (primary, secondary) = remember(exerciseId, exerciseName) {
+        exMusclesById[exerciseId]
+            ?: exMusclesByName[exerciseName.trim().lowercase()]
+            ?: fallbackMuscles(exerciseId, exerciseName)
+    }
+    fun tint(m: Muscle): Color? = when {
+        m in primary || Muscle.FULL_BODY in primary -> color.copy(alpha = 0.55f)
+        m in secondary || Muscle.FULL_BODY in secondary -> color.copy(alpha = 0.22f)
+        else -> null
+    }
+    val bodyMod = Modifier.fillMaxHeight()
+        .aspectRatio(BodyPaths.VIEW_W / BodyPaths.VIEW_H, matchHeightConstraintsFirst = true)
+    Row(
+        modifier,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+            .spacedBy(12.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (showBack) {
+            Canvas(bodyMod) { drawBody(front = true, fillFor = ::tint) }
+            Canvas(bodyMod) { drawBody(front = false, fillFor = ::tint) }
+        } else {
+            // one body — the side that actually carries the primary mover, so a
+            // lats/glute/hamstring move never shows as a blank front silhouette
+            val front = primary.none { it in BACK_ONLY_MUSCLES }
+            Canvas(bodyMod) { drawBody(front = front, fillFor = ::tint) }
+        }
     }
 }

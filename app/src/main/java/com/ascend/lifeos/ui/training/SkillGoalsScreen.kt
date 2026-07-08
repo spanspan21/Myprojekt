@@ -124,8 +124,8 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // the skill, drawn — you see the shape of the goal
-                PoseFigure(poseFor(skill.id, skill.name), Modifier.size(52.dp), color = Mod.Train)
+                // the skill on the real body — the muscles it demands are lit
+                ExerciseFigure(skill.id, skill.name, color = Mod.Train, modifier = Modifier.height(54.dp), showBack = false)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

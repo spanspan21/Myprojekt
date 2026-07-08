@@ -147,8 +147,9 @@ fun StretchScreen(onBack: () -> Unit) {
                     drawArc(Cyan, -90f, fraction * 360f, false, style = stroke)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // the pose sits inside the countdown ring — see the stretch, hold the stretch
-                    PoseFigure(poseFor("", ex.name), Modifier.size(94.dp), color = Cyan)
+                    // the anatomical body sits inside the countdown ring — the
+                    // stretched muscles are lit, so you see what you're opening
+                    ExerciseFigure("", ex.name, color = Cyan, modifier = Modifier.height(84.dp), showBack = false)
                     Text("$remaining", color = TextPrimary, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
                     Text(if (ex.reps != null) "≈ ${ex.reps} reps" else "seconds", color = TextDim, fontSize = 11.sp)
                 }

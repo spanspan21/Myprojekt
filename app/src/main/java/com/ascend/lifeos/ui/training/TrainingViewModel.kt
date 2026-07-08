@@ -157,6 +157,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun dismissSummary() { lastSummary = null }
 
     fun regeneratePlan() = viewModelScope.launch(Dispatchers.IO) {
+        // A deload is a real 7-day week: restore it from prefs each time we build the
+        // plan, so it survives an app restart and expires on its own after the week.
+        val deloadUntil = com.ascend.lifeos.data.Prefs.int(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
+        deloadActive = deloadUntil > 0 && java.time.LocalDate.now().toEpochDay().toInt() < deloadUntil
         val p = com.ascend.lifeos.data.Repo.data.profile
         val best = runCatching { dao.bestRepsAll() }.getOrDefault(emptyList())
             .associate { it.exerciseId to it.best }
@@ -690,8 +694,19 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         deloadRecommended = listOf(volumeDrop, grinding, underslept).count { it } >= 2
     }
 
-    fun activateDeload() { deloadActive = true }
-    fun endDeload() { deloadActive = false; deloadRecommended = false }
+    fun activateDeload() {
+        // Persist a real 7-day deload week, then rebuild NOW so the lighter sessions
+        // (2 sets, no vest, softer holds) show immediately instead of on next hub entry.
+        val until = java.time.LocalDate.now().toEpochDay().toInt() + 7
+        com.ascend.lifeos.data.Prefs.setInt(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, until)
+        deloadActive = true
+        regeneratePlan()
+    }
+    fun endDeload() {
+        com.ascend.lifeos.data.Prefs.setInt(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
+        deloadActive = false; deloadRecommended = false
+        regeneratePlan()
+    }
 
     // ── Custom exercise (Spec §1.2) ─────────────────────────────────────────
 

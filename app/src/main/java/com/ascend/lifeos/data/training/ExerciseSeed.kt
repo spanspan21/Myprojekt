@@ -60,7 +60,12 @@ object ExerciseSeed {
         ex("core_toes", "Toes-to-Bar", CORE, ABS, listOf(HIP_FLEXORS, LATS), "From a hang: bring the toes to the bar.", 8),
     )
 
-    // ── Skill (8) ───────────────────────────────────────────────────────────
+    // ── Skill (23) — finished moves + their leveled progression rungs ─────────
+    // Each static skill is a ladder now: the plan prescribes the rung the athlete
+    // can train (tuck → advanced → straddle → full), never the finished move to a
+    // beginner. Every rung is a real, tracked exercise so it counts toward
+    // recovery/PRs and renders the accurate anatomical figure. (SkillCatalog
+    // ladders map a calibration level to one of these.)
 
     private val skill = listOf(
         ex("skill_hs", "Handstand (freestanding)", SKILL, SHOULDERS, listOf(TRICEPS, ABS), "Balance freestanding.", 0, "sec"),
@@ -71,6 +76,31 @@ object ExerciseSeed {
         ex("skill_hf", "Human Flag", SKILL, OBLIQUES, listOf(LATS, SHOULDERS), "Sideways horizontal hold on a vertical pole.", 5, "sec"),
         ex("skill_vsit", "V-Sit", SKILL, ABS, listOf(HIP_FLEXORS), "Legs and torso form a V.", 6, "sec"),
         ex("skill_manna", "Manna", SKILL, ABS, listOf(HIP_FLEXORS, SHOULDERS), "V-sit with the torso leaning back.", 7, "sec"),
+
+        // Front-lever ladder (pull) — tops out at skill_fl
+        ex("skill_fl_tuck", "Tuck Front Lever", SKILL, LATS, listOf(ABS, BICEPS, LOWER_BACK), "Knees tucked to the chest, back flat and horizontal, arms straight.", 8, "sec"),
+        ex("skill_fl_adv", "Advanced Tuck Front Lever", SKILL, LATS, listOf(ABS, BICEPS, LOWER_BACK), "Tuck opened — hips extended, back still flat and level.", 9, "sec"),
+        ex("skill_fl_str", "Straddle Front Lever", SKILL, LATS, listOf(ABS, BICEPS, LOWER_BACK), "Legs straight and split wide, body horizontal.", 10, "sec"),
+        ex("skill_fl_half", "Half-Lay Front Lever", SKILL, LATS, listOf(ABS, BICEPS, LOWER_BACK), "One leg extended, one tucked — bridge to the full lever.", 11, "sec"),
+
+        // Planche ladder (push) — tops out at skill_planche
+        ex("skill_pl_lean", "Planche Lean", SKILL, SHOULDERS, listOf(CHEST, ABS, TRICEPS), "Plank on straight arms, lean forward until the shoulders pass the wrists.", 12, "sec"),
+        ex("skill_pl_tuck", "Tuck Planche", SKILL, SHOULDERS, listOf(CHEST, ABS, TRICEPS), "Knees tucked, hips high, full bodyweight on straight arms.", 13, "sec"),
+        ex("skill_pl_adv", "Advanced Tuck Planche", SKILL, SHOULDERS, listOf(CHEST, ABS, TRICEPS), "Tuck opened, back flat, hips at shoulder height.", 14, "sec"),
+        ex("skill_pl_str", "Straddle Planche", SKILL, SHOULDERS, listOf(CHEST, ABS, TRICEPS), "Legs straight and wide, body horizontal on straight arms.", 15, "sec"),
+
+        // Back-lever ladder (pull) — tops out at skill_bl
+        ex("skill_bl_tuck", "Tuck Back Lever", SKILL, LATS, listOf(SHOULDERS, LOWER_BACK, BICEPS), "Facing the floor, knees tucked, body horizontal, arms straight.", 16, "sec"),
+        ex("skill_bl_str", "Straddle Back Lever", SKILL, LATS, listOf(SHOULDERS, LOWER_BACK, BICEPS), "Legs straight and wide, body horizontal facing the floor.", 17, "sec"),
+
+        // Human-flag ladder (core/pull) — tops out at skill_hf
+        ex("skill_hf_vert", "Vertical Flag", SKILL, OBLIQUES, listOf(LATS, SHOULDERS, ABS), "Support on the pole, body vertical — build the top-arm press, bottom-arm pull.", 18, "sec"),
+        ex("skill_hf_tuck", "Tuck Flag", SKILL, OBLIQUES, listOf(LATS, SHOULDERS, ABS), "Body off vertical, knees tucked, hips stacked sideways.", 19, "sec"),
+        ex("skill_hf_str", "Straddle Flag", SKILL, OBLIQUES, listOf(LATS, SHOULDERS, ABS), "Legs straight and split wide, body angling toward horizontal.", 20, "sec"),
+
+        // Handstand ladder (balance) — tops out at skill_hs
+        ex("skill_hs_wall", "Wall Handstand", SKILL, SHOULDERS, listOf(TRICEPS, ABS), "Chest to the wall, walk up, hollow line, breathe in the hold.", 21, "sec"),
+        ex("skill_hs_kick", "Kick-up to Balance", SKILL, SHOULDERS, listOf(TRICEPS, ABS), "Kick up off the wall, catch the balance point, hold it.", 22, "sec"),
     )
 
     // ── Cardio (6) ──────────────────────────────────────────────────────────

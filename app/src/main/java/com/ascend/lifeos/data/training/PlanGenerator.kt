@@ -545,49 +545,68 @@ object PlanGenerator {
             )
         }
 
-        /** Feeder drill from a selected skill goal — routed to the REAL exercise
-         *  the skill trains, so the work is tracked (recovery/progression/PRs) and
-         *  resolves to a muscle, instead of the old synthetic "skill_<id>" ghost. */
+        /** Pattern that governs a skill area — the gauge for the ladder rung. */
+        private fun patternFor(area: SkillArea): Pattern = when (area) {
+            SkillArea.PUSH, SkillArea.BALANCE -> Pattern.PUSH
+            SkillArea.PULL -> Pattern.PULL
+            SkillArea.CORE -> Pattern.CORE
+            SkillArea.LEGS -> Pattern.SQUAT
+        }
+
+        /** Feeder drill from a selected skill goal — routed to the level-appropriate
+         *  LADDER rung (tuck → advanced → straddle → full). A goal you can't yet do
+         *  prescribes the progression you CAN train, never the finished move. Each
+         *  rung is a real tracked exercise (recovery/PRs) that renders the true
+         *  figure; the hold target is the rung's own, and it climbs as you level. */
         private fun goalDrill(goal: SkillDef, used: MutableSet<String>): PlannedExercise? {
-            val ex = byId[SkillCatalog.targetExerciseId(goal)] ?: return null
+            // Gauge = calibration level (1..6) in the pattern that governs the skill.
+            val lvl = (profile?.level(patternFor(goal.area)) ?: 1).coerceIn(1, 6)
+            val rung = SkillCatalog.skillRung(goal, lvl)
+            val ex = byId[rung?.exerciseId ?: SkillCatalog.targetExerciseId(goal)] ?: return null
             if (ex.id in used) return null
             used.add(ex.id)
             val isHold = ex.unit == "sec"
             val cue = goal.feeders.firstOrNull()
-            // Per-level dose: a stronger athlete gets more volume on the same skill
-            // — no fixed 3×3–6 regardless of ability. The gauge is his calibration
-            // level in the pattern that governs the skill (1..6).
-            val pattern = when (goal.area) {
-                SkillArea.PUSH, SkillArea.BALANCE -> Pattern.PUSH
-                SkillArea.PULL -> Pattern.PULL
-                SkillArea.CORE -> Pattern.CORE
-                SkillArea.LEGS -> Pattern.SQUAT
-            }
-            val lvl = (profile?.level(pattern) ?: 1).coerceIn(1, 6)
-            val hi = (4 + lvl).coerceIn(5, 10)   // L1 ≈ 5 reps … L6 ≈ 10 reps
+            val next = SkillCatalog.skillRungNext(goal, lvl)
+            val hi = (4 + lvl).coerceIn(5, 10)   // rep dose for rep-based skills
+            // Hold: the RUNG's honest target (deload softens) — not a scaled hold of
+            // the finished move that a beginner could never reach.
+            val hold = if (isHold)
+                ((rung?.holdSec ?: (8 + lvl * 3)) * if (deload) 0.6f else 1f).toInt().coerceAtLeast(6)
+            else null
+            // Climb note: own this hold for 3 sessions → the next rung.
+            val climb = if (rung != null && next != null) " · hold ${rung.holdSec}s ×3 → ${next.exerciseName}" else ""
             return PlannedExercise(
                 ex.id, ex.name,
                 sets = if (deload) 2 else if (lvl >= 4) 4 else 3,
                 repsLow = (hi / 2).coerceAtLeast(3), repsHigh = hi,
-                holdSec = if (isHold) 8 + lvl * 3 else null,   // L1 ≈ 11s … L6 ≈ 26s
+                holdSec = hold,
                 vestKg = null, isSkillWork = true, restSec = 120,
                 section = BlockType.SKILL,
-                note = "Toward ${goal.name}" + (cue?.let { " · $it" } ?: ""),
+                note = "Toward ${goal.name}$climb" + (cue?.let { " · $it" } ?: ""),
             )
         }
 
-        /** Area-mapped static skill lines — the handstand/planche/lever work he asked for. */
+        /** Area-mapped static skill lines — resolved to the level-appropriate rung
+         *  of the area ladder (fallback id/note only if the area has no ladder). */
         private val skillStatics = listOf(
-            Triple(SkillArea.BALANCE, "skill_hs", 15 to "Kick-up + hold practice — fall well"),
-            Triple(SkillArea.PUSH, "skill_planche", 10 to "Planche line — start tucked, arms straight"),
-            Triple(SkillArea.PULL, "skill_fl", 10 to "Front lever — tuck until the line is flat"),
-            Triple(SkillArea.CORE, "skill_vsit", 12 to "Compression — own the L-sit, then fold deeper"),
+            Triple(SkillArea.BALANCE, "skill_hs", "Kick-up + hold practice — fall well"),
+            Triple(SkillArea.PUSH, "skill_planche", "Planche line — start tucked, arms straight"),
+            Triple(SkillArea.PULL, "skill_fl", "Front lever — tuck until the line is flat"),
+            Triple(SkillArea.CORE, "skill_vsit", "Compression — own the L-sit, then fold deeper"),
         )
 
-        private fun staticDrill(id: String, hold: Int, note: String, used: MutableSet<String>): PlannedExercise? {
-            val ex = byId[id] ?: return null
+        private fun staticDrill(area: SkillArea, fallbackId: String, fallbackNote: String, used: MutableSet<String>): PlannedExercise? {
+            val lvl = (profile?.level(patternFor(area)) ?: 1).coerceIn(1, 6)
+            val pair = SkillCatalog.areaRung(area, lvl)   // (current rung, next rung?) or null
+            val rung = pair?.first
+            val next = pair?.second
+            val ex = byId[rung?.exerciseId ?: fallbackId] ?: return null
             if (ex.id in used) return null
             used.add(ex.id)
+            val hold = ((rung?.holdSec ?: 12) * if (deload) 0.6f else 1f).toInt().coerceAtLeast(8)
+            val note = if (rung != null && next != null)
+                "Hold ${rung.holdSec}s ×3 → ${next.exerciseName}" else fallbackNote
             return PlannedExercise(
                 ex.id, ex.name, if (deload) 2 else 3, 3, 5, hold, null, true, 90,
                 BlockType.SKILL, note,
@@ -605,12 +624,13 @@ object PlanGenerator {
             // 2) then the progression chains the athlete is actually levelling
             areas.flatMap { chainAreas[it] ?: emptyList() }
                 .forEach { key -> if (out.size < count) chainSkillDrill(key, used)?.let(out::add) }
-            // 3) static skill lines for today's areas (handstand · planche · lever)
+            // 3) static skill lines for today's areas (handstand · planche · lever),
+            //    each resolved to the athlete's level-appropriate ladder rung
             skillStatics.filter { it.first in areas }
-                .forEach { (_, id, spec) -> if (out.size < count) staticDrill(id, spec.first, spec.second, used)?.let(out::add) }
+                .forEach { (area, id, note) -> if (out.size < count) staticDrill(area, id, note, used)?.let(out::add) }
             // 4) never let the block run empty — balance practice benefits every day
             if (out.size < 2) {
-                skillStatics.forEach { (_, id, spec) -> if (out.size < 2) staticDrill(id, spec.first, spec.second, used)?.let(out::add) }
+                skillStatics.forEach { (area, id, note) -> if (out.size < 2) staticDrill(area, id, note, used)?.let(out::add) }
             }
             return out
         }
