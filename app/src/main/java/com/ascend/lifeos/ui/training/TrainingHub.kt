@@ -242,38 +242,44 @@ fun TrainingHub(
             }
 
             item {
-                // schedule week → calendar · re-plan on demand (Ideensammlung:
-                // "Jetzt neu planen" — the solver reruns whenever life changed)
-                val scheduled = vm.scheduledOk
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        Modifier.clip(RoundedCornerShape(11.dp))
-                            .background(if (scheduled) Accent.copy(alpha = 0.12f) else Mod.Train.copy(alpha = 0.14f))
-                            .border(0.5.dp, if (scheduled) Accent.copy(alpha = 0.4f) else Mod.Train.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
-                            .clickable(enabled = !scheduled && vm.placements.isNotEmpty()) { vm.scheduleWeek() }
-                            .padding(horizontal = 13.dp, vertical = 8.dp),
-                    ) {
-                        Text(
-                            if (scheduled) "✓ On your calendar" else "Schedule week → calendar",
-                            color = if (scheduled) Accent else Mod.Train,
-                            fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
-                        )
+                // Scheduling: recommended (JARVIS auto-places + keeps it clean) vs
+                // custom (you set each session's day & time yourself).
+                ScheduleModeToggle(vm.autoSchedule) { vm.setScheduleMode(it) }
+                Spacer(Modifier.height(10.dp))
+                if (vm.autoSchedule) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier.clip(RoundedCornerShape(11.dp))
+                                .background(Accent.copy(alpha = 0.12f))
+                                .border(0.5.dp, Accent.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
+                                .padding(horizontal = 13.dp, vertical = 8.dp),
+                        ) {
+                            Text("✓ Auto-scheduled — past sessions cleared", color = Accent, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            Modifier.clip(RoundedCornerShape(11.dp))
+                                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                                .clickable { vm.regeneratePlan() }
+                                .padding(horizontal = 13.dp, vertical = 8.dp),
+                        ) {
+                            Text("Re-plan now", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        }
                     }
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        Modifier.clip(RoundedCornerShape(11.dp))
-                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                            .clickable { vm.regeneratePlan() }
-                            .padding(horizontal = 13.dp, vertical = 8.dp),
-                    ) {
-                        Text(
-                            "Re-plan now",
-                            color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                } else {
+                    Text("Tap a session to set its day & time.", color = TextDim, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(8.dp))
+                    vm.weekPlan?.sessions.orEmpty().forEach { session ->
+                        CustomPlaceRow(
+                            session = session,
+                            placement = vm.placements.find { it.session.index == session.index },
+                            onPlace = { d, m -> vm.placeSessionManually(session, d, m) },
                         )
+                        Spacer(Modifier.height(8.dp))
                     }
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(12.dp))
                 ProgramRow(vm, onOpenSkillGoals, onOpenAssess)
                 Spacer(Modifier.height(22.dp))
             }
@@ -606,6 +612,108 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
 }
 
 // ─── Program controls: frequency · length · targets ────────────────────────
+
+@Composable
+private fun ScheduleModeToggle(recommended: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(12.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .padding(3.dp),
+    ) {
+        listOf("Recommended" to true, "Custom" to false).forEach { (label, isRec) ->
+            val on = recommended == isRec
+            Box(
+                Modifier.clip(RoundedCornerShape(10.dp))
+                    .background(if (on) Mod.Train.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
+                    .clickable { onChange(isRec) }
+                    .padding(horizontal = 16.dp, vertical = 7.dp),
+            ) { Text(label, color = if (on) Mod.Train else TextDim, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+        }
+    }
+}
+
+private fun dayLabel(d: java.time.LocalDate): String =
+    if (d == java.time.LocalDate.now()) "Today"
+    else d.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH)
+
+@Composable
+private fun StepBox(label: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(9.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+}
+
+/** Custom mode: pick a day (next 7) + time for one session, then place it. */
+@Composable
+private fun CustomPlaceRow(
+    session: com.ascend.lifeos.data.training.PlannedSession,
+    placement: com.ascend.lifeos.data.training.Placement?,
+    onPlace: (java.time.LocalDate, Int) -> Unit,
+) {
+    val today = remember { java.time.LocalDate.now() }
+    var expanded by remember(session.index) { mutableStateOf(false) }
+    var day by remember(session.index, placement) { mutableStateOf(placement?.day ?: today) }
+    var min by remember(session.index, placement) { mutableStateOf(placement?.startMin ?: (6 * 60)) }
+    fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
+    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+        Column(Modifier.padding(12.dp)) {
+            Row(
+                Modifier.fillMaxWidth().clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(session.name, color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(
+                    placement?.let { "${dayLabel(it.day)} ${fmt(it.startMin)}" } ?: "not placed",
+                    color = if (placement != null) Mod.Train else Amber, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(if (expanded) "▾" else "▸", color = TextDim, fontSize = 11.sp)
+            }
+            androidx.compose.animation.AnimatedVisibility(expanded) {
+                Column {
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        (0..6).forEach { off ->
+                            val d = today.plusDays(off.toLong())
+                            val sel = d == day
+                            Box(
+                                Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
+                                    .background(if (sel) Mod.Train.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                                    .border(0.5.dp, if (sel) Mod.Train.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                                    .clickable { day = d }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(d.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH), color = if (sel) Mod.Train else TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold)
+                                    Text("${d.dayOfMonth}", color = if (sel) Mod.Train else TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        StepBox("−") { min = (min - 15).coerceAtLeast(5 * 60) }
+                        Text(fmt(min), color = TextPrimary, fontSize = 15.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp))
+                        StepBox("+") { min = (min + 15).coerceAtMost(22 * 60) }
+                        Spacer(Modifier.weight(1f))
+                        Box(
+                            Modifier.clip(RoundedCornerShape(10.dp)).background(Mod.Train.copy(alpha = 0.16f))
+                                .border(0.5.dp, Mod.Train.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                                .clickable { onPlace(day, min); expanded = false }
+                                .padding(horizontal = 16.dp, vertical = 7.dp),
+                        ) { Text("Place", color = Mod.Train, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOpenAssess: () -> Unit) {
