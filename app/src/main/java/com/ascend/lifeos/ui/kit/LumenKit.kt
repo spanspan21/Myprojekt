@@ -122,7 +122,7 @@ private class Mote(
 )
 
 @Composable
-fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
+fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 54) {
     val reduced = Motion.reduced(LocalContext.current)
     val motes = remember(count) {
         val rnd = kotlin.random.Random(7)
@@ -134,10 +134,10 @@ fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
             Mote(
                 x = rnd.nextFloat(), y = rnd.nextFloat(),
                 vx = vx, vy = vy,
-                r = 0.6f + rnd.nextFloat() * 1.1f,      // tiny cores: 0.6–1.7 dp
+                r = 0.35f + rnd.nextFloat() * 0.6f,     // very tiny cores: 0.35–0.95 dp
                 twCycles = (1 + rnd.nextInt(3)).toFloat(),
                 phase = rnd.nextFloat() * (2f * PI.toFloat()),
-                bright = 0.34f + rnd.nextFloat() * 0.46f,   // brighter — they glow
+                bright = 0.22f + rnd.nextFloat() * 0.32f,   // faint — a whisper, not a distraction
             )
         }
     }
@@ -173,17 +173,17 @@ fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
         // the glowing motes, on top of the web
         for (i in 0 until n) {
             val rad = motes[i].r.dp.toPx(); val a = pa[i]; val ctr = Offset(px[i], py[i])
-            val glowR = rad * 8f
+            val glowR = rad * 4.5f
             drawCircle(
                 Brush.radialGradient(
-                    0f to color.copy(alpha = a * 0.8f),
-                    0.32f to color.copy(alpha = a * 0.34f),
+                    0f to color.copy(alpha = a * 0.5f),
+                    0.4f to color.copy(alpha = a * 0.18f),
                     1f to Color.Transparent,
                     center = ctr, radius = glowR,
                 ),
                 radius = glowR, center = ctr,
             )
-            drawCircle(color.copy(alpha = (a * 1.15f).coerceAtMost(1f)), rad, ctr)
+            drawCircle(color.copy(alpha = a), rad, ctr)
         }
     }
 }
