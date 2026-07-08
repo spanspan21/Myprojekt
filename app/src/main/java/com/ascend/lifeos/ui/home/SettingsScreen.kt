@@ -119,7 +119,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 }
             }
             Text(
-                "Exam phase hides Finance, Mind, Skills & Explorer · Holidays hide School.",
+                "Exam phase hides Finance, Mind & Skills · Holidays hide School.",
                 color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
                 modifier = Modifier.padding(bottom = 4.dp),
             )

@@ -92,7 +92,6 @@ private enum class Sub(val label: String, val accent: @Composable () -> Color) {
     // System group
     GUARD("Guard", { Mod.Guard }),
     SKILLS("Skills", { Mod.Skills }),
-    EXPLORER("Explorer", { Mod.Home }),
     SETTINGS("Settings", { Mod.Home }),
 }
 
@@ -101,7 +100,7 @@ private enum class Group(val label: String, val icon: ImageVector, val subs: Lis
     TODAY("Today", Icons.Rounded.Hexagon, listOf(Sub.HOME, Sub.PRIME)),
     BODY("Body", Icons.Rounded.FitnessCenter, listOf(Sub.TRAIN, Sub.FUEL, Sub.VITALS, Sub.SLEEP)),
     LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.GOALS, Sub.FINANCE, Sub.SCHOOL, Sub.MIND)),
-    SYSTEM("System", Icons.Rounded.Shield, listOf(Sub.GUARD, Sub.SKILLS, Sub.EXPLORER, Sub.SETTINGS)),
+    SYSTEM("System", Icons.Rounded.Shield, listOf(Sub.GUARD, Sub.SKILLS, Sub.SETTINGS)),
 }
 
 private fun groupOf(sub: Sub): Group = Group.entries.first { sub in it.subs }
@@ -111,7 +110,7 @@ object ShellMode {
     val current = mutableStateOf("normal") // normal | exam | holiday
 
     fun hiddenSubs(mode: String): Set<String> = when (mode) {
-        "exam" -> setOf("FINANCE", "MIND", "SKILLS", "EXPLORER")
+        "exam" -> setOf("FINANCE", "MIND", "SKILLS")
         "holiday" -> setOf("SCHOOL")
         else -> emptySet()
     }
@@ -169,11 +168,10 @@ fun AscendApp() {
             "finance" -> open(Sub.FINANCE)
             "school" -> open(Sub.SCHOOL)
             "mind" -> open(Sub.MIND)
-            "explorer" -> open(Sub.EXPLORER)
             "prime" -> open(Sub.PRIME)
             "settings" -> open(Sub.SETTINGS)
             "report" -> reportOpen = true
-            "heatmap", "wrapped", "achievements", "decisions", "rules" -> overlay = target
+            "heatmap", "achievements", "decisions", "rules" -> overlay = target
             "quicklog" -> { open(Sub.HOME); com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
         }
     }
@@ -240,7 +238,6 @@ fun AscendApp() {
                     Sub.MIND -> com.ascend.lifeos.ui.life.MindScreen(onClose = { open(Sub.CALENDAR) })
                     Sub.GUARD -> GuardScreen()
                     Sub.SKILLS -> SkillsScreen()
-                    Sub.EXPLORER -> com.ascend.lifeos.ui.insights.ExplorerScreen(onClose = { open(Sub.GUARD) })
                     Sub.SETTINGS -> com.ascend.lifeos.ui.home.SettingsScreen(
                         onClose = { open(Sub.HOME) },
                         onOpenReport = { reportOpen = true },
@@ -312,7 +309,6 @@ fun AscendApp() {
                     ModuleBackground(Mod.Home)
                     when (overlay) {
                         "heatmap" -> com.ascend.lifeos.ui.insights.HeatmapScreen(onClose = { overlay = null })
-                        "wrapped" -> com.ascend.lifeos.ui.insights.WrappedScreen(onClose = { overlay = null })
                         "achievements" -> com.ascend.lifeos.ui.life.AchievementsScreen(onClose = { overlay = null })
                         "decisions" -> com.ascend.lifeos.ui.life.DecisionJournalScreen(onClose = { overlay = null })
                         "rules" -> com.ascend.lifeos.ui.home.RuleBuilderScreen(onClose = { overlay = null })

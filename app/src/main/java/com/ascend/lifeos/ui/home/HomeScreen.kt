@@ -607,12 +607,8 @@ fun HomeScreen(
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") } }
                 }
-                Spacer(Modifier.height(14.dp))
-                Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Wrapped", Icons.Rounded.Bolt, Mod.Skills) { onOpenModule("wrapped") } }
-                    Box(Modifier.weight(1f)) {}
-                    Box(Modifier.weight(1f)) {}
-                }
+                // Wave F: "Wrapped" removed — once-a-year vanity that re-told the
+                // same story as Prime/Report. One synthesis surface, not four.
             }
 
             // render in the saved order with a choreographed entrance;
