@@ -114,53 +114,47 @@ fun LumenBackground(accent: Color, modifier: Modifier = Modifier) {
 // of cycles per loop, so t = 1 lands exactly where t = 0 did — no jump, ever.
 
 private class Mote(
-    val x: Float, val y: Float, val r: Float, val speed: Float,
-    val sway: Float, val swayCycles: Float, val twCycles: Float,
-    val phase: Float, val bright: Float,
+    val x: Float, val y: Float,
+    val vx: Float, val vy: Float,          // integer screens per loop → seamless drift
+    val r: Float, val twCycles: Float, val phase: Float, val bright: Float,
 )
 
 @Composable
-fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 44) {
+fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
     val reduced = Motion.reduced(LocalContext.current)
     val motes = remember(count) {
         val rnd = kotlin.random.Random(7)
         List(count) {
+            // slow drift in its own random direction; both axes wrap seamlessly
+            var vx = (rnd.nextInt(5) - 2).toFloat()    // -2..2 screens / loop
+            var vy = (rnd.nextInt(5) - 2).toFloat()
+            if (vx == 0f && vy == 0f) vx = if (rnd.nextBoolean()) 1f else -1f
             Mote(
-                x = rnd.nextFloat(),
-                y = rnd.nextFloat(),
-                r = 0.9f + rnd.nextFloat() * 2.2f,
-                speed = (1 + rnd.nextInt(3)).toFloat(),        // integer traversals / loop
-                sway = 6f + rnd.nextFloat() * 22f,
-                swayCycles = (1 + rnd.nextInt(2)).toFloat(),
-                twCycles = (2 + rnd.nextInt(3)).toFloat(),
+                x = rnd.nextFloat(), y = rnd.nextFloat(),
+                vx = vx, vy = vy,
+                r = 0.5f + rnd.nextFloat() * 1.0f,      // tiny: 0.5–1.5 dp
+                twCycles = (1 + rnd.nextInt(3)).toFloat(),
                 phase = rnd.nextFloat() * (2f * PI.toFloat()),
-                bright = 0.5f + rnd.nextFloat() * 0.5f,
+                bright = 0.16f + rnd.nextFloat() * 0.30f,   // faint
             )
         }
     }
     val trans = rememberInfiniteTransition(label = "sparks")
     val anim by trans.animateFloat(
-        0f, 1f, infiniteRepeatable(tween(17000, easing = LinearEasing)), label = "t",
+        0f, 1f, infiniteRepeatable(tween(95000, easing = LinearEasing)), label = "t",  // very slow
     )
-    val t = if (reduced) 0.15f else anim
+    val t = if (reduced) 0.2f else anim
     val tau = 2f * PI.toFloat()
     Canvas(modifier) {
         motes.forEach { m ->
-            val yy = (m.y - t * m.speed).let { it - floor(it) } * size.height
-            val xx = m.x * size.width + m.sway * sin(t * tau * m.swayCycles + m.phase)
-            val tw = 0.45f + 0.55f * (0.5f + 0.5f * sin(t * tau * m.twCycles + m.phase))
+            val xx = (m.x + t * m.vx).let { it - floor(it) } * size.width
+            val yy = (m.y + t * m.vy).let { it - floor(it) } * size.height
+            val tw = 0.55f + 0.45f * (0.5f + 0.5f * sin(t * tau * m.twCycles + m.phase))
             val a = (m.bright * tw).coerceIn(0f, 1f)
             val rad = m.r.dp.toPx()
             val ctr = Offset(xx, yy)
-            // soft glow halo
-            drawCircle(
-                Brush.radialGradient(
-                    listOf(color.copy(alpha = a * 0.45f), Color.Transparent),
-                    center = ctr, radius = rad * 4f,
-                ),
-                radius = rad * 4f, center = ctr,
-            )
-            // bright core
+            // a tiny soft dot: a faint halo, a crisp little core
+            drawCircle(color.copy(alpha = a * 0.4f), rad * 2.1f, ctr)
             drawCircle(color.copy(alpha = a), rad, ctr)
         }
     }
