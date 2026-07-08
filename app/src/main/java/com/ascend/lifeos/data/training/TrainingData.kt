@@ -170,12 +170,25 @@ data class StretchRoutine(
     val durationMin: Int,
     val focus: String,
     val exercises: List<StretchExercise>,
+    val context: StretchContext = StretchContext.RECOVERY,
+    val purpose: String = "",           // one-line "why you run this"
 )
+
+/** When a routine is for — drives time-of-day surfacing + grouping in the picker. */
+enum class StretchContext(val label: String) {
+    MORNING("Morning"),
+    PRE_TRAINING("Pre-training"),
+    EVENING("Evening"),
+    SPORT("Athlete"),
+    RECOVERY("Recovery"),
+}
 
 data class StretchExercise(
     val name: String,
-    val holdSec: Int,
+    val holdSec: Int,               // seconds on the pacing clock (also paces rep drills)
     val hasSides: Boolean,
+    val cue: String = "",           // 1-line coaching cue shown while you hold it
+    val reps: Int? = null,          // != null → a dynamic drill; show "×N reps", not "seconds"
 )
 
 // ─── Weekly muscle volume aggregate ─────────────────────────────────────────

@@ -27,6 +27,9 @@ data class FoodEntry(
     val volumeMl: Int = 0,           // Getränke: ml zählen zur Hydration (Kap. 36/39)
     val approx: Boolean = false,     // ~Teller-Schätzung, sichtbar ehrlich (Kap. 37)
     val incomplete: Boolean = false, // ◌ Quick-Add ohne volle Makros (Kap. 42)
+    // MASTERY: carry the quality signal onto the logged row (defaults → old JSON loads)
+    val nova: Int? = null,           // ultra-processing 1..4
+    val additives: List<String> = emptyList(), // E-numbers (uppercased)
 )
 
 @Serializable

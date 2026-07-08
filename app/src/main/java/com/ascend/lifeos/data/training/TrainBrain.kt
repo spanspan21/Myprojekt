@@ -66,6 +66,25 @@ object TrainBrain {
         return 6
     }
 
+    /**
+     * Baseline test level (1..6) → the progression-chain level the athlete should
+     * START at. The calibration measures the chain's BASE movement (push-ups,
+     * pull-ups …); the chain then mixes rep- and skill-progressions, so a raw 1:1
+     * map would prescribe planche push-ups to someone who just did 45 clean
+     * push-ups. This is deliberately conservative — it gets a competent athlete
+     * off the Level-1 beginner variant (knee push-ups) and onto the right
+     * standard/diamond/archer work, and the unlock system refines from there.
+     * Erring toward "hard but earnable" is the whole point: no more "lasch".
+     */
+    fun seedChainLevel(patternLevel: Int): Int = when (patternLevel.coerceIn(1, 6)) {
+        1 -> 1      // genuinely weak — start at the base variant
+        2 -> 2
+        3 -> 2
+        4 -> 3
+        5 -> 3
+        else -> 4   // strong athlete — start on archer-tier work, not knee push-ups
+    }
+
     fun profile(raw: Map<String, Int>): FitnessProfile? {
         if (raw.isEmpty()) return null
         val levels = HashMap<Pattern, Int>()

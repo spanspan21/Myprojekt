@@ -619,6 +619,46 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         }
     }
 
+    // ── Details expander — the full evidence layer (P4: depth on demand) ──────
+    var showDetails by remember(product) { mutableStateOf(false) }
+    Spacer(Modifier.height(12.dp))
+    Row(
+        Modifier.fillMaxWidth().clickable { showDetails = !showDetails },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.weight(1f))
+        // collapsed-state teaser badges
+        product.nova?.let { DetailBadge("NOVA $it", if (it >= 4) Crit else TextDim) }
+        product.nutriScore.takeIf { it.isNotBlank() }?.let { Spacer(Modifier.width(6.dp)); DetailBadge("NUTRI ${it.uppercase()}", TextDim) }
+        if (product.additives.isNotEmpty()) { Spacer(Modifier.width(6.dp)); DetailBadge("${product.additives.size} ADD.", if (FoodScore.riskyAdditives(product).isNotEmpty()) Crit else TextDim) }
+    }
+    if (showDetails) {
+        Spacer(Modifier.height(10.dp))
+        // full verdict narration (un-truncated)
+        (eval.pros.map { it to Good } + eval.cons.map { it to Crit }).forEach { (line, c) ->
+            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = 10.5.sp, lineHeight = 15.sp)
+        }
+        Spacer(Modifier.height(12.dp))
+        Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        Spacer(Modifier.height(6.dp))
+        NutrientRow("Saturated fat", product.satFat100 * f, "g", 1.5, 5.0)
+        NutrientRow("Sugar", product.sugars100 * f, "g", 5.0, 22.5)
+        NutrientRow("Salt", product.salt100 * f, "g", 0.3, 1.5)
+        NutrientRow("Fiber", product.fiber100 * f, "g", 1.5, 4.5, inverse = true)
+        val risky = FoodScore.riskyAdditives(product).map { it.first }.toSet()
+        if (product.additives.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            Text("ADDITIVES", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Spacer(Modifier.height(4.dp))
+            FlowRowChips(product.additives.map { FoodScore.normAdditive(it) }) { e -> e in risky }
+        }
+        product.allergens.takeIf { it.isNotEmpty() }?.let {
+            Spacer(Modifier.height(8.dp))
+            Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = 10.sp, lineHeight = 14.sp)
+        }
+    }
+
     Spacer(Modifier.height(14.dp))
     // Kap. 38: Getränke sprechen ml, Essen spricht Portionen — Gramm ist Fallback
     val isMl = product.portions.any { it.ml }
@@ -662,6 +702,8 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
                 nutrients = product.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
                 volumeMl = if (isMl) g else 0,      // Kap. 39: Getränke zählen zur Hydration
                 approx = product.approx,
+                nova = product.nova,
+                additives = product.additives,
             ),
             dayKey,
         )
@@ -669,6 +711,44 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         onAdded()
     }
     Spacer(Modifier.height(6.dp))
+}
+
+@Composable
+private fun DetailBadge(text: String, color: Color) {
+    Box(
+        Modifier.clip(RoundedCornerShape(6.dp)).background(color.copy(alpha = 0.14f))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    ) { Text(text, color = color, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp) }
+}
+
+/** One traffic-light nutrient row. [inverse] = higher is better (fiber). */
+@Composable
+private fun NutrientRow(label: String, value: Double, unit: String, low: Double, high: Double, inverse: Boolean = false) {
+    val dot = if (inverse) {
+        when { value >= high -> Good; value <= low -> Crit; else -> Warn }
+    } else {
+        when { value <= low -> Good; value >= high -> Crit; else -> Warn }
+    }
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.5.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(7.dp).clip(CircleShape).background(dot))
+        Spacer(Modifier.width(9.dp))
+        Text(label, color = TextMuted, fontSize = 11.sp, modifier = Modifier.weight(1f))
+        Text("${if (value >= 10) value.roundToInt().toString() else "%.1f".format(value)} $unit", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun FlowRowChips(items: List<String>, isRisky: (String) -> Boolean) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        items.forEach { e ->
+            val risky = isRisky(e)
+            Box(
+                Modifier.clip(RoundedCornerShape(7.dp))
+                    .background((if (risky) Crit else TextDim).copy(alpha = 0.12f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+            ) { Text(e, color = if (risky) Crit else TextMuted, fontSize = 10.sp, fontWeight = if (risky) FontWeight.Bold else FontWeight.Normal) }
+        }
+    }
 }
 
 @Composable

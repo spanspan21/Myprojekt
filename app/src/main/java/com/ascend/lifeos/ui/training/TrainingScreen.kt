@@ -108,7 +108,7 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
                 onBack = { route = TrainRoute.HUB },
             )
             TrainRoute.ASSESS -> AssessmentScreen(
-                onDone = { vm.regeneratePlan(); route = TrainRoute.HUB },
+                onDone = { vm.applyAssessment(); route = TrainRoute.HUB },
                 onBack = { route = TrainRoute.HUB },
             )
             TrainRoute.SKILL_GOALS -> SkillGoalsScreen(

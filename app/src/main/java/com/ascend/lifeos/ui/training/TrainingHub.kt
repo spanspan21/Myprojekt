@@ -730,7 +730,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             Spacer(Modifier.width(14.dp))
             Column {
                 Text("Start $name", color = TextPrimary, fontFamily = Body, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
-                Text("Next recommended workout", color = TextMuted, fontSize = 11.sp, fontFamily = Body)
+                Text("Today's assignment · non-negotiable", color = TextMuted, fontSize = 11.sp, fontFamily = Body)
             }
         }
     }

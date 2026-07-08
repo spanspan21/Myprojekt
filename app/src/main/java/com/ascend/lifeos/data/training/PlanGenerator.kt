@@ -101,9 +101,7 @@ object PlanGenerator {
             else -> 1.0
         }
         // FIXED plan: a brutal last session does NOT shave the next one. You get
-        // drilled, not coddled — the log informs load tracking, it doesn't lower
-        // the bar. (highStrain stays in the signature for callers/telemetry.)
-        val strainScale = 1.0
+        // drilled, not coddled. (highStrain stays in the signature for telemetry.)
         // Detraining re-entry (Ideensammlung): strength survives a break better
         // than skill/work capacity. 2-4 weeks off → 85%, ≥4 weeks → 70% — never
         // back at the old top, never back at zero.
@@ -112,12 +110,13 @@ object PlanGenerator {
             daysSinceLastSession >= 14 -> 0.85
             else -> 1.0
         }
-        val volumeScale = when {
-            sickMode -> 0.0
-            deload || mesoDeload -> 0.6
-            examWeek -> 0.7
-            else -> listOf(1.0, 1.05, 1.1, 1.15)[trainWeek.coerceIn(0, 3)]
-        } * seasonScale * strainScale * detrainScale
+        // The per-exercise set count comes from VolumeModel (mesocycle ramp +
+        // deload + MEV/MRV bounds). This external scale layers ONLY what
+        // VolumeModel can't see — season phase, exam week, detraining — and is now
+        // ACTUALLY applied to the set count (setsBase). Previously it was computed
+        // and thrown away, so season/exam scaling was dead and the "exam −30%"
+        // note was a lie. Sick mode returns early above, so it isn't a factor here.
+        val extScale = seasonScale * detrainScale * (if (examWeek) 0.70 else 1.0)
 
         // BIG units: sessions are 60–120 min structured blocks
         val len = sessionLen.coerceIn(60, 120)
@@ -133,7 +132,7 @@ object PlanGenerator {
         val ctx = GenCtx(
             profile, skillGoals, chainLevels, bestReps,
             allExercises.ifEmpty { ExerciseSeed.ALL_EXERCISES },
-            bodyweightKg, hasVest, vestMaxKg, isDeload, len, volumeScale,
+            bodyweightKg, hasVest, vestMaxKg, isDeload, len, extScale,
             trainWeek.coerceIn(0, 4), readiness, freshness, season, seasonWord,
         )
 
@@ -361,7 +360,7 @@ object PlanGenerator {
         val vestMaxKg: Int,
         val deload: Boolean,
         val len: Int,                          // coerced 60..120
-        val volumeScale: Double,
+        val extScale: Double,                  // season × exam × detrain (VolumeModel owns the rest)
         val trainWeek: Int,                    // mesocycle week 0..4 (drives MEV→MRV)
         val readiness: Int?,
         val freshness: MuscleRecovery.Freshness?,
@@ -378,10 +377,34 @@ object PlanGenerator {
             return pe.sets * (workSec + pe.restSec) / 60.0
         }
 
-        // Evidence-based volume: MEV→MRV ramp over the mesocycle, scaled by
-        // recovery (calculated fatigue, bounded — never below MEV). Season phases
-        // still cap it via seasonScale folded into the mesocycle week when needed.
-        val setsBase get() = VolumeModel.setsPerExercise(trainWeek, readiness, deload)
+        // Evidence-based volume: MEV→MRV ramp over the mesocycle (VolumeModel),
+        // then the external season/exam/detrain scale is applied and re-bounded to
+        // MEV..MRV. Deload volume is already correct (2) and is left un-scaled.
+        val setsBase: Int get() {
+            val base = VolumeModel.setsPerExercise(trainWeek, readiness, deload)
+            if (deload) return base
+            return Math.round(base * extScale).toInt()
+                .coerceIn(VolumeModel.MEV_SETS_PER_EX, VolumeModel.MRV_SETS_PER_EX)
+        }
+
+        // Mesocycle RIR ramp (evidence: proximity-to-failure should tighten across
+        // the block — leave more in the tank early, empty it into the overreach
+        // week). Replaces a flat "2 RIR" for every session.
+        val rirCue: String get() = when {
+            deload -> "RPE 6 · leave it in the tank"
+            trainWeek <= 0 -> "@ 3 RIR (RPE 7) — crisp reps, bank the fatigue"
+            trainWeek == 1 -> "@ 2 RIR (RPE 8)"
+            trainWeek == 2 -> "@ 1–2 RIR (RPE 8–9)"
+            else -> "@ 0–1 RIR (RPE 9–10) — the overreach, chase every rep"
+        }
+
+        // Rest by load: heavy chain compounds / near-failure work want full ATP-PC
+        // recovery (evidence favours 2–3 min for strength); accessories 60–90 s.
+        fun restFor(isCompound: Boolean, isHold: Boolean): Int = when {
+            isHold -> 90
+            isCompound -> 165
+            else -> 90
+        }
 
         // block minute budgets for a normal day
         val warmMin = 10
@@ -522,20 +545,23 @@ object PlanGenerator {
             )
         }
 
-        /** Feeder drill from a selected skill goal. */
+        /** Feeder drill from a selected skill goal — routed to the REAL exercise
+         *  the skill trains, so the work is tracked (recovery/progression/PRs) and
+         *  resolves to a muscle, instead of the old synthetic "skill_<id>" ghost. */
         private fun goalDrill(goal: SkillDef, used: MutableSet<String>): PlannedExercise? {
-            val id = "skill_${goal.id}"
-            if (id in used) return null
-            val drill = goal.feeders.firstOrNull() ?: return null
-            used.add(id)
-            val holdish = listOf("hold", "lean", "hang", "support").any { it in drill.lowercase() }
+            val ex = byId[SkillCatalog.targetExerciseId(goal)] ?: return null
+            if (ex.id in used) return null
+            used.add(ex.id)
+            val isHold = ex.unit == "sec"
+            val cue = goal.feeders.firstOrNull()
             return PlannedExercise(
-                id, drill,
+                ex.id, ex.name,
                 sets = if (deload) 2 else 3,
                 repsLow = 3, repsHigh = 6,
-                holdSec = if (holdish) 12 else null,
+                holdSec = if (isHold) 12 else null,
                 vestKg = null, isSkillWork = true, restSec = 120,
-                section = BlockType.SKILL, note = "Feeds ${goal.name}",
+                section = BlockType.SKILL,
+                note = "Toward ${goal.name}" + (cue?.let { " · $it" } ?: ""),
             )
         }
 
@@ -598,7 +624,7 @@ object PlanGenerator {
             val vest = if (!isHold && hasVest && !deload && best >= 15) {
                 TrainBrain.vestSuggestion(best, bodyweightKg, vestMaxKg)
             } else null
-            val rir = if (deload) "RPE 6 · leave it in the tank" else "@ 2 RIR (RPE 8)"
+            val rir = rirCue
 
             // Study-based rep prescription: hypertrophy lives in 8–15 reps taken
             // close to failure; double progression drives load once the top is hit.
@@ -607,12 +633,10 @@ object PlanGenerator {
                     val holdT = ((lv.unlockHoldSecs ?: 20) * if (deload) 0.6f else 0.85f).toInt().coerceAtLeast(8)
                     Triple(0, 0, "Hold ${holdT}s × $setsBase" + (next?.let { " · ${lv.unlockHoldSecs}s ×3 sessions → ${it.exerciseName}" } ?: ""))
                 }
-                vest != null -> Triple(6, 10, "Vest ${vest}kg · 6–10 reps $rir — at 10 clean, add load (bodyweight best $best)")
+                vest != null -> Triple(6, 10, "Vest ${vest}kg — optimal load for your $best-rep best · 6–10 reps $rir · add load at 10 clean")
                 best == 0 -> Triple(8, 15, "8–15 reps $rir — log an honest baseline first")
-                else -> Triple(
-                    8, 15,
-                    "8–15 reps $rir" + (next?.let { " · 15 clean ×3 → ${it.exerciseName}" } ?: " · then load the vest"),
-                )
+                hasVest && best in 1..14 -> Triple(8, 15, "8–15 reps $rir — no vest yet: it's not optimal below 15 clean reps, earn it" + (next?.let { " · 15 clean ×3 → ${it.exerciseName}" } ?: ""))
+                else -> Triple(8, 15, "8–15 reps $rir" + (next?.let { " · 15 clean ×3 → ${it.exerciseName}" } ?: " · then earn the vest"))
             }
 
             return PlannedExercise(
@@ -620,7 +644,7 @@ object PlanGenerator {
                 sets = setsBase,
                 repsLow = lo, repsHigh = hi,
                 holdSec = lv.unlockHoldSecs?.let { (it * if (deload) 0.6f else 0.85f).toInt().coerceAtLeast(10) },
-                vestKg = vest, isSkillWork = false, restSec = 90,
+                vestKg = vest, isSkillWork = false, restSec = restFor(isCompound = true, isHold = isHold),
                 section = BlockType.STRENGTH, note = note,
             )
         }
@@ -651,7 +675,7 @@ object PlanGenerator {
             val best = bestReps[ex.id] ?: 0
             val hi = if (best >= 15) best + 1 else 15
             val baseNote = if (best >= 15) "Last best $best — go for ${best + 1}" else null
-            val effort = if (isHold) baseNote else listOfNotNull(baseNote, "@ ${if (deload) "RPE 6 · locker" else "2 RIR (RPE 8)"}").joinToString(" · ")
+            val effort = if (isHold) baseNote else listOfNotNull(baseNote, rirCue).joinToString(" · ")
             return PlannedExercise(
                 ex.id, ex.name, setsBase,
                 repsLow = 8, repsHigh = hi,
@@ -672,16 +696,14 @@ object PlanGenerator {
             for (make in candidates) {
                 if (out.size >= 6 || (mins >= minutes && out.size >= 4)) break
                 var pe = make() ?: continue
-                // freshness gate: a fried prime mover gets replaced, not hammered
+                // freshness gate: a fried prime mover gets SWAPPED for a fresh
+                // hard movement — that's training smart, not soft. We do NOT trim
+                // sets for fatigue (P3: discipline over comfort); if nothing fresh
+                // fits, the prescribed work stands as written.
                 val prim = byId[pe.exerciseId]?.primaryMuscle
                 val f = if (prim != null) freshness?.of(prim) else null
                 if (f != null && f < 0.45f && prim != null) {
-                    val swap = swapForFresh(pe, prim, used)
-                    if (swap != null) pe = swap
-                    else pe = pe.copy(
-                        sets = (pe.sets - 1).coerceAtLeast(2),
-                        note = "${label(prim)} still recovering — volume trimmed",
-                    )
+                    swapForFresh(pe, prim, used)?.let { pe = it }
                 }
                 out.add(pe)
                 mins += exMinutes(pe)

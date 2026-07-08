@@ -337,6 +337,19 @@ fun poseFor(id: String, name: String): Pose {
         "chest" in k && "stretch" in k -> Pose.CHEST_STRETCH
         "doorway" in k || "pec" in k -> Pose.CHEST_STRETCH
         "german hang" in k || "skin the cat" in k -> Pose.LEG_RAISE
+        // mobility drills (route to the closest existing figure — no more generic standing)
+        "cat" in k && "cow" in k -> Pose.COBRA
+        "world" in k && "greatest" in k -> Pose.LUNGE
+        "spiderman" in k -> Pose.LUNGE
+        "90/90" in k || "90 90" in k || "figure-4" in k || "figure 4" in k -> Pose.PIGEON
+        "frog" in k || "butterfly" in k || "adductor" in k || "copenhagen" in k -> Pose.PIGEON
+        "open-book" in k || "open book" in k || "thoracic" in k || "spinal twist" in k || "twist" in k -> Pose.PIGEON
+        "ankle" in k || "dorsiflex" in k || "knee-to-wall" in k || "knee to wall" in k || "tib-ant" in k -> Pose.CALF_RAISE
+        "downward" in k || "down dog" in k || "forward fold" in k || "pike stretch" in k -> Pose.HAMSTRING_STRETCH
+        "wall slide" in k || "pass-through" in k || "pass through" in k || "sleeper" in k || "distraction" in k || "cars" in k -> Pose.SHOULDER_STRETCH
+        "leg swing" in k || "cossack" in k || "stride" in k || "a-skip" in k -> Pose.LUNGE
+        "figure" in k || "supine" in k || "legs-up" in k || "legs up" in k -> Pose.HAMSTRING_STRETCH
+        "wall drive" in k || "march" in k -> Pose.GLUTE_BRIDGE
         else -> Pose.STANDING
     }
 }

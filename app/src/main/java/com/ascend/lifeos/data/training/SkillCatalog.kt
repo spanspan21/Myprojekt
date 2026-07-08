@@ -371,6 +371,61 @@ object SkillCatalog {
 
     fun byId(id: String): SkillDef? = ALL.find { it.id == id }
 
+    /**
+     * The REAL exercise (an id in ExerciseSeed.ALL_EXERCISES) that a selected
+     * skill goal should drive its session work through. Before this, goal drills
+     * used a synthetic "skill_<id>" that existed nowhere — so a chosen skill
+     * produced an untracked drill that never counted toward recovery, progression
+     * or PRs, at a fixed difficulty. Routing to a real exercise makes the work
+     * trackable and level-aware. Every value below exists in the exercise DB.
+     */
+    fun targetExerciseId(skill: SkillDef): String = when (skill.id) {
+        "first_pullup" -> "pull_australian"
+        "pullup_10", "weighted_pullup", "explosive_pullup" -> "pull_pullup"
+        "archer_pullup", "typewriter", "oap", "oac" -> "pull_archer"
+        "muscle_up", "ring_muscleup" -> "skill_mu"
+        "front_lever_tuck", "front_lever_adv", "front_lever" -> "skill_fl"
+        "back_lever" -> "skill_bl"
+        "ice_cream_maker" -> "pull_flrow"
+        "skin_the_cat" -> "grip_hang"
+        "pushup_30" -> "push_pushup"
+        "archer_pushup", "oapu" -> "push_archer"
+        "pike_hspu" -> "push_pike"
+        "wall_hspu", "hspu" -> "push_hspu"
+        "planche_lean", "pseudo_planche_pushup" -> "push_pseudo"
+        "tuck_planche", "straddle_planche", "full_planche" -> "skill_planche"
+        "ring_dips", "ring_support" -> "push_ringdips"
+        "korean_dip" -> "push_dips"
+        "l_sit" -> "core_lsit"
+        "v_sit" -> "skill_vsit"
+        "dragon_flag" -> "core_dragon"
+        "hanging_leg_raise", "windshield_wipers" -> "core_toes"
+        "human_flag" -> "skill_hf"
+        "hollow_rocks" -> "core_hollow"
+        "ab_wheel" -> "core_abwheel"
+        "manna" -> "skill_manna"
+        "pistol" -> "legs_pistol"
+        "shrimp" -> "legs_shrimp"
+        "nordic" -> "legs_nordic"
+        "cossack_squat" -> "legs_bulgarian"
+        "sissy_squat" -> "legs_sissy"
+        "single_leg_calf" -> "legs_calf"
+        "box_jump" -> "plyo_boxjump"
+        "broad_jump" -> "plyo_broad"
+        "wall_handstand", "handstand", "handstand_walk", "press_handstand", "oah" -> "skill_hs"
+        "bridge_wheel" -> "mob_catcow"
+        "pancake" -> "mob_hip90"
+        "front_split" -> "mob_pigeon"
+        "pike_compression" -> "mob_wgs"
+        else -> when (skill.area) {   // safety net — never a fake id
+            SkillArea.PULL -> "pull_pullup"
+            SkillArea.PUSH -> "push_pushup"
+            SkillArea.CORE -> "core_hollow"
+            SkillArea.LEGS -> "legs_squat"
+            SkillArea.BALANCE -> "skill_hs"
+        }
+    }
+
     /** Honest ETA in weeks from level gaps (~3.5 weeks per missing level). */
     fun etaWeeks(skill: SkillDef, profile: FitnessProfile?): Int {
         if (profile == null) return -1

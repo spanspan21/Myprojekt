@@ -87,11 +87,20 @@ fun StretchScreen(onBack: () -> Unit) {
                         remaining = routine.exercises.first().holdSec; running = true
                     }, corner = 16.dp) {
                         Column(Modifier.padding(16.dp)) {
-                            Text(routine.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(routine.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                // context badge — Morning / Pre-training / Evening / Athlete
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(8.dp)).background(Cyan.copy(alpha = 0.12f))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                                ) { Text(routine.context.label.uppercase(), color = Cyan, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                            }
                             Spacer(Modifier.height(3.dp))
-                            Text("${routine.durationMin} min · ${routine.focus}", color = TextDim, fontSize = 11.sp)
-                            Spacer(Modifier.height(3.dp))
-                            Text("${routine.exercises.size} exercises", color = TextMuted, fontSize = 10.sp)
+                            Text("${routine.durationMin} min · ${routine.exercises.size} drills · ${routine.focus}", color = TextDim, fontSize = 11.sp)
+                            if (routine.purpose.isNotBlank()) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(routine.purpose, color = TextMuted, fontSize = 11.sp, lineHeight = 15.sp)
+                            }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -115,13 +124,20 @@ fun StretchScreen(onBack: () -> Unit) {
                     // the pose sits inside the countdown ring — see the stretch, hold the stretch
                     PoseFigure(poseFor("", ex.name), Modifier.size(94.dp), color = Cyan)
                     Text("$remaining", color = TextPrimary, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("seconds", color = TextDim, fontSize = 11.sp)
+                    Text(if (ex.reps != null) "≈ ${ex.reps} reps" else "seconds", color = TextDim, fontSize = 11.sp)
                 }
             }
             Spacer(Modifier.height(24.dp))
 
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(ex.name, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                if (ex.cue.isNotBlank()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        ex.cue, color = TextMuted, fontSize = 12.5.sp, textAlign = TextAlign.Center,
+                        lineHeight = 17.sp, modifier = Modifier.padding(horizontal = 6.dp),
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 if (ex.hasSides) {
                     GlassPanel(corner = 10.dp, fill = if (isSecondSide) Purple.copy(alpha = 0.1f) else Cyan.copy(alpha = 0.1f)) {

@@ -932,22 +932,30 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
  * sections can never smear over their neighbours mid-animation (the
  * "Dashboarderror" overlap).
  */
+/** First-visit-only intro gate. The staggered reveal + typed greeting play once
+ *  per app session, not on every return to Today. After that the shell's
+ *  fade-through IS the entrance, so re-running a second (differently-timed) slide
+ *  here only smeared the sections against the frame — a top cause of the jank. */
+object HomeIntro { var played = false }
+
 @Composable
 internal fun Reveal(index: Int, content: @Composable () -> Unit) {
-    // reduced motion: skip the choreography, content is simply there
-    if (Motion.reduced(LocalContext.current)) { Column { content() }; return }
+    val ctx = LocalContext.current
+    // Decide once, at first composition, so flipping the flag can't cut a running
+    // intro mid-animation. Only the very first visit of the session animates.
+    val animate = remember { !HomeIntro.played && !Motion.reduced(ctx) }
+    if (!animate) { Column { content() }; return }
+    LaunchedEffect(Unit) { HomeIntro.played = true }
     val state = remember {
         androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true }
     }
-    val offsetPx = with(androidx.compose.ui.platform.LocalDensity.current) { 22.dp.roundToPx() }
     androidx.compose.animation.AnimatedVisibility(
         visibleState = state,
         modifier = Modifier.clipToBounds(),
+        // Fade only — no slide. A translating reveal fought the shell transition
+        // and read as "jumping"; a clean staggered fade does not.
         enter = fadeIn(
-            tween(300, delayMillis = 70 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
-        ) + androidx.compose.animation.slideInVertically(
-            initialOffsetY = { offsetPx },
-            animationSpec = tween(360, delayMillis = 70 + index * 55, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            tween(300, delayMillis = 60 + index * 45, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
         ),
         exit = fadeOut(tween(120)),
     ) {
@@ -961,10 +969,13 @@ internal fun Reveal(index: Int, content: @Composable () -> Unit) {
 /** Jarvis types the greeting, one glyph at a time, with a breathing cursor. */
 @Composable
 private fun TypedGreeting(full: String) {
-    var shown by remember(full) { mutableStateOf(0) }
-    val reduced = Motion.reduced(LocalContext.current)
+    // Type once per session; on later returns to Today the greeting is simply
+    // there (re-typing it every tab-back was its own irritant).
+    val ctx = LocalContext.current
+    val type = remember { !HomeIntro.played && !Motion.reduced(ctx) }
+    var shown by remember(full) { mutableStateOf(if (type) 0 else full.length) }
     LaunchedEffect(full) {
-        if (reduced) { shown = full.length; return@LaunchedEffect }
+        if (!type) { shown = full.length; return@LaunchedEffect }
         shown = 0
         kotlinx.coroutines.delay(260)
         while (shown < full.length) {

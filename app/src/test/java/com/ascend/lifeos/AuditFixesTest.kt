@@ -148,10 +148,22 @@ class AuditFixesTest {
     }
 
     @Test
-    fun `low readiness shaves exactly one set, floored at MEV`() {
-        assertEquals(5, VolumeModel.setsPerExercise(3, 40, false))   // peak, tired → 6-1
-        assertEquals(3, VolumeModel.setsPerExercise(0, 40, false))   // week1 tired → floored at MEV 3
-        assertEquals(6, VolumeModel.setsPerExercise(3, 90, false))   // fresh → full send
+    fun `readiness never shaves volume — discipline over comfort`() {
+        // P3: volume does NOT shrink for a low readiness score (that was the
+        // "feel tired, do less" softness). Only the programmed deload + illness
+        // reduce it, so the same trainWeek yields the same sets at any readiness.
+        assertEquals(6, VolumeModel.setsPerExercise(3, 40, false))   // peak, tired → still full send
+        assertEquals(6, VolumeModel.setsPerExercise(3, 90, false))   // peak, fresh → identical
+        assertEquals(3, VolumeModel.setsPerExercise(0, 40, false))   // week 1 MEV, unaffected by readiness
+    }
+
+    @Test
+    fun `baseline test level seeds a real starting chain level, not L1`() {
+        // The wiring gap that WAS "training too lax": a strong athlete must not
+        // start on knee push-ups. Conservative but never Level 1 for a capable one.
+        assertEquals(1, com.ascend.lifeos.data.training.TrainBrain.seedChainLevel(1))
+        assertEquals(3, com.ascend.lifeos.data.training.TrainBrain.seedChainLevel(5))
+        assertEquals(4, com.ascend.lifeos.data.training.TrainBrain.seedChainLevel(6))
     }
 
     @Test

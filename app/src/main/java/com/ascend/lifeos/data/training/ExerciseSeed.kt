@@ -259,54 +259,98 @@ object ExerciseSeed {
     // ── Stretch Routines (Spec §8.1) ────────────────────────────────────────
 
     val STRETCH_ROUTINES = listOf(
-        StretchRoutine("str_morning", "Quick Morning", 5, "Full Body", listOf(
-            StretchExercise("Cat-Cow", 30, false),
-            StretchExercise("World's Greatest Stretch", 30, true),
-            StretchExercise("Shoulder Dislocates", 30, false),
-            StretchExercise("Hip 90/90", 30, true),
-        )),
-        StretchRoutine("str_push", "Post-Push", 10, "Chest, Shoulders, Triceps", listOf(
-            StretchExercise("Wall Chest Stretch", 30, true),
-            StretchExercise("Shoulder Stretch", 30, true),
-            StretchExercise("Triceps Stretch", 30, true),
-            StretchExercise("Wrist Extensions", 30, false),
-            StretchExercise("Thoracic Rotation", 30, true),
-        )),
-        StretchRoutine("str_pull", "Post-Pull", 10, "Lats, Biceps, Forearms", listOf(
-            StretchExercise("Wall Lat Stretch", 30, true),
-            StretchExercise("Biceps Stretch", 30, true),
-            StretchExercise("Forearm Stretch", 30, true),
-            StretchExercise("Shoulder Dislocates", 30, false),
-            StretchExercise("Dead Hang", 30, false),
-        )),
-        StretchRoutine("str_legs", "Post-Legs", 10, "Quads, Hamstrings, Calves, Hips", listOf(
-            StretchExercise("Quad Stretch", 30, true),
-            StretchExercise("Hamstring Stretch", 30, true),
-            StretchExercise("Calf Stretch", 30, true),
-            StretchExercise("Pigeon Stretch", 30, true),
-            StretchExercise("Hip 90/90", 30, true),
-        )),
-        StretchRoutine("str_deep", "Deep Stretch", 20, "Hips, Thoracic Spine, Shoulders", listOf(
-            StretchExercise("World's Greatest Stretch", 45, true),
-            StretchExercise("Pigeon Stretch", 45, true),
-            StretchExercise("Hip 90/90", 45, true),
-            StretchExercise("Thoracic Rotation", 45, true),
-            StretchExercise("Shoulder Dislocates", 30, false),
-            StretchExercise("Lat Stretch", 30, true),
-            StretchExercise("Pancake Stretch", 45, false),
-            StretchExercise("Cat-Cow", 30, false),
-        )),
-        StretchRoutine("str_yoga", "Yoga Flow", 15, "Sun Salutation based", listOf(
-            StretchExercise("Mountain Pose", 20, false),
-            StretchExercise("Forward Fold", 30, false),
-            StretchExercise("Lunge", 30, true),
-            StretchExercise("Downward Dog", 45, false),
-            StretchExercise("Cobra", 30, false),
-            StretchExercise("Warrior I", 30, true),
-            StretchExercise("Warrior II", 30, true),
-            StretchExercise("Triangle", 30, true),
-            StretchExercise("Child's Pose", 45, false),
-        )),
+        // ── Morning — full-body wake-up (dynamic) ────────────────────────────
+        StretchRoutine(
+            "str_morning", "Morning Wake-up", 7, "Full body · dynamic",
+            context = StretchContext.MORNING,
+            purpose = "Raise your temperature and open hips, shoulders and ankles so the day (and the first session) moves well.",
+            exercises = listOf(
+                StretchExercise("Cat-Cow", 30, false, "Round on the exhale, arch on the inhale — move the whole spine.", reps = 8),
+                StretchExercise("Open-Book Thoracic Rotation", 30, true, "Knees stacked, chase the top hand with your eyes.", reps = 6),
+                StretchExercise("World's Greatest Stretch", 40, true, "Lunge deep, drop the elbow inside the foot, then rotate open.", reps = 5),
+                StretchExercise("Hip 90/90 Switches", 30, false, "Switch knees side to side, chest tall, no hands.", reps = 8),
+                StretchExercise("Leg Swings", 30, true, "Relaxed leg — swing front-to-back, then across the body.", reps = 10),
+                StretchExercise("Shoulder CARs", 30, false, "Draw the biggest slow circle you can with the whole arm.", reps = 8),
+                StretchExercise("Deep Squat Pry", 30, false, "Sit in the bottom, pry the knees out with the elbows.", reps = 8),
+                StretchExercise("Ankle Rockers", 30, true, "Knee travels past the toes, heel glued to the floor.", reps = 10),
+            ),
+        ),
+        // ── Pre-training / sprint prep (dynamic ramp) ────────────────────────
+        StretchRoutine(
+            "str_pretrain", "Sprint & Power Prep", 8, "Dynamic warm-up",
+            context = StretchContext.PRE_TRAINING,
+            purpose = "Prime the hip flexors, posterior chain and ankle stiffness before sprints, jumps or a hard lower session.",
+            exercises = listOf(
+                StretchExercise("Leg Swings", 30, true, "Front-to-back then lateral — build range with each swing.", reps = 10),
+                StretchExercise("Walking Knee-to-Chest + Quad Pull", 40, true, "Hug the knee, then pull the heel — stay tall between steps.", reps = 6),
+                StretchExercise("Spiderman Lunge + Rotation", 40, true, "Lunge, hand down, reach the top hand to the ceiling.", reps = 5),
+                StretchExercise("A-Skips", 25, false, "Punch the knee up, snap the ground away — quick contacts.", reps = 20),
+                StretchExercise("Glute Bridge March", 30, false, "Hips high the whole time, march without letting them drop.", reps = 12),
+                StretchExercise("Hip-Flexor Wall Drive", 30, true, "Drive the knee up into the wall, ribs down, glute tight.", reps = 8),
+                StretchExercise("Ankle Pogos", 25, false, "Stiff ankles, spend no time on the ground — bounce off.", reps = 20),
+                StretchExercise("Build-up Strides", 40, false, "Accelerate smoothly to ~80%, relaxed face and hands.", reps = 3),
+            ),
+        ),
+        // ── Hip & groin — the hockey routine (highest value) ─────────────────
+        StretchRoutine(
+            "str_hip", "Hip & Groin (Hockey)", 12, "Adductors · hip flexors · rotation",
+            context = StretchContext.SPORT,
+            purpose = "The skating stride hammers the adductors and hip flexors — adductor strain is the #1 hockey groin injury. This builds range and eccentric strength there.",
+            exercises = listOf(
+                StretchExercise("Copenhagen Adductor", 20, true, "Top leg on the bench, lift the hips — control the way down slowly.", reps = 6),
+                StretchExercise("Frog Stretch", 60, false, "Knees wide, shins parallel, rock the hips back slowly."),
+                StretchExercise("90/90 Hip Switches + Lift-off", 30, false, "Switch, then lift the back knee an inch off the floor.", reps = 8),
+                StretchExercise("Hip CARs", 30, true, "Biggest slow circle at the hip socket, brace the core hard.", reps = 5),
+                StretchExercise("Cossack Squat", 30, true, "Shift side to side, planted heel down, other leg straight.", reps = 6),
+                StretchExercise("Adductor Rock-Back", 30, true, "One leg out to the side, rock the hips back onto it.", reps = 10),
+                StretchExercise("Couch Stretch", 60, true, "Shin up the wall, tuck the pelvis until you feel the hip front."),
+                StretchExercise("Pigeon Stretch", 60, true, "Front shin across, sink the hips square and level."),
+            ),
+        ),
+        // ── Shoulder & thoracic ──────────────────────────────────────────────
+        StretchRoutine(
+            "str_shoulder", "Shoulder & T-Spine", 10, "Overhead ROM · posture",
+            context = StretchContext.SPORT,
+            purpose = "Shooting, checking and overhead work need a mobile thoracic spine and healthy shoulders. This restores rotation and overhead range.",
+            exercises = listOf(
+                StretchExercise("Band Pass-Throughs", 30, false, "Straight arms, wide grip, slow up and over — no shrugging.", reps = 10),
+                StretchExercise("Open-Book Thoracic Rotation", 30, true, "Rotate from the ribcage, chase the top hand around.", reps = 6),
+                StretchExercise("Wall Slides", 30, false, "Arms and wrists on the wall, slide up without arching the back.", reps = 10),
+                StretchExercise("Doorway Pec Stretch", 45, true, "Elbow at 90° on the frame, step through gently until you feel the chest."),
+                StretchExercise("Sleeper Stretch", 45, true, "On your side, press the forearm down slowly — never force it."),
+                StretchExercise("Banded Shoulder Distraction", 45, true, "Let the band pull the joint open, relax into the hang."),
+                StretchExercise("Dead Hang", 30, false, "Full grip, relax the shoulders, breathe — decompress the whole chain."),
+            ),
+        ),
+        // ── Ankle & lower-leg ────────────────────────────────────────────────
+        StretchRoutine(
+            "str_ankle", "Ankle & Lower Leg", 8, "Dorsiflexion · calves",
+            context = StretchContext.SPORT,
+            purpose = "The skate boot locks your ankles down — restore dorsiflexion for a deeper stride and healthy shins and knees.",
+            exercises = listOf(
+                StretchExercise("Knee-to-Wall Ankle Rockers", 30, true, "Drive the knee straight over the toes, heel stays down.", reps = 12),
+                StretchExercise("Banded Dorsiflexion", 45, true, "Band on the ankle, pull the shin forward over the foot."),
+                StretchExercise("Gastroc Calf Stretch", 45, true, "Back leg straight, heel down, hips forward into the wall."),
+                StretchExercise("Soleus Calf Stretch", 45, true, "Same, but bend the back knee — this hits the lower calf."),
+                StretchExercise("Tib-Ant Raises", 30, false, "Heels down, pull the toes up hard, hold each one a beat.", reps = 15),
+            ),
+        ),
+        // ── Evening — pre-sleep wind-down (static, breath-led) ───────────────
+        StretchRoutine(
+            "str_evening", "Evening Wind-down", 10, "Static · parasympathetic",
+            context = StretchContext.EVENING,
+            purpose = "Long, calm holds with slow breathing to downshift your nervous system and release the day's hips before sleep. Pairs with your sleep wind-down.",
+            exercises = listOf(
+                StretchExercise("Supine Figure-4", 60, true, "Pull the thigh in, breathe slowly into the glute — jaw soft."),
+                StretchExercise("Lying Spinal Twist", 60, true, "Knees one way, shoulders flat, exhale and let it sink."),
+                StretchExercise("Reclined Butterfly", 75, false, "Soles together, let the knees fall open, nothing to force."),
+                StretchExercise("Half-Kneel Couch Stretch", 60, true, "Tuck the pelvis, feel the front of the hip lengthen."),
+                StretchExercise("Seated Forward Fold", 60, false, "Hinge from the hips, long spine, slow nasal breath."),
+                StretchExercise("Child's Pose", 60, false, "Hips to heels, arms long, breathe into your back."),
+                StretchExercise("Doorway Pec Stretch", 45, true, "Forearm on the frame, step through gently, open the chest."),
+                StretchExercise("Legs-Up-The-Wall", 90, false, "Let the legs drain, slow the breath right down — this is the off switch."),
+            ),
+        ),
     )
 
     // ── Tempo Presets (Spec §9.1) ───────────────────────────────────────────

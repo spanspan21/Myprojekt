@@ -211,6 +211,34 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         scheduledOk = false
     }
 
+    /**
+     * Calibration → real starting difficulty. Before this, `saveAssessment` only
+     * stored the raw reps and the progression chains stayed at Level 1 forever —
+     * so a 45-push-up / 18-pull-up athlete was still prescribed knee push-ups.
+     * That wiring gap WAS the "training is too lax". Here each chain is seeded to
+     * the level the athlete demonstrated (TrainBrain.seedChainLevel), UPWARD only
+     * (never demote a level already earned by logging). The plan then regenerates
+     * off the seeded levels — automatically too, via the Hub's progressions
+     * observer, so the immediate call just makes it instant.
+     */
+    fun applyAssessment() = viewModelScope.launch(Dispatchers.IO) {
+        val profile = TrainBrain.profile(com.ascend.lifeos.data.Repo.data.profile.assessResults)
+        if (profile != null) {
+            val patternByChain = listOf(
+                "pushups" to Pattern.PUSH, "dips" to Pattern.DIP, "pullups" to Pattern.PULL,
+                "squats" to Pattern.SQUAT, "core" to Pattern.CORE, "grip" to Pattern.HANG,
+            )
+            for ((key, pattern) in patternByChain) {
+                val seed = TrainBrain.seedChainLevel(profile.level(pattern))
+                val existing = dao.progression(key)
+                if (existing == null || existing.currentLevel < seed) {
+                    dao.upsertProgression(UserProgressionEntity(key, seed, 0, System.currentTimeMillis()))
+                }
+            }
+        }
+        regeneratePlan()
+    }
+
     fun scheduleWeek() = viewModelScope.launch(Dispatchers.IO) {
         val p = com.ascend.lifeos.data.Repo.data.profile
         runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }

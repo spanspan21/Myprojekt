@@ -55,28 +55,24 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         adjustMsg = SleepStore.sundayAdjustIfDue(ctx)
     }
 
-    val headerLine = when {
-        restricting -> "restriction · window ${fmtDur(state!!.tibMin)}"
-        logs.size >= BASELINE_NIGHTS -> "baseline complete · ready to start"
-        else -> "baseline · ${logs.size}/$BASELINE_NIGHTS nights"
-    }
+        val recent7 = logs.takeLast(7)
+        val avg7 = recent7.takeIf { it.isNotEmpty() }?.map { SleepProtocol.actualSleep(it) }?.average()?.toInt()
 
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
-        JarvisHeader("Sleep Protocol", headerLine, Mod.Body) {
+        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "syncing from your watch…", Mod.Body) {
             IconOrb(Icons.Rounded.Close, tint = TextPrimary, size = 34.dp) { onBack() }
         }
         Spacer(Modifier.height(18.dp))
 
-        // ── explainer ────────────────────────────────────────────────
+        // ── what this is, in one breath (plain language, P5) ─────────
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
             Column(Modifier.padding(16.dp)) {
                 Text(
-                    "Sleep restriction matches your bed window to real sleep — pressure builds, nights consolidate. " +
-                        "Stimulus control re-couples bed with sleep. " +
-                        "Self-help, not medical advice — persistent problems or apnea signs (loud snoring, gasping) need a doctor.",
+                    "This tracks how long and how well you sleep — straight from your watch — and feeds your daily Readiness. " +
+                        "You're a growing athlete: your job is 8–9 h and a steady bed/wake time. That's the whole game.",
                     color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -85,6 +81,29 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                     else "⚡ Nights sync from your watch automatically.",
                     color = Mod.Body, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+
+        // ── how you're doing vs the target ───────────────────────────
+        SectionLabel("Last night vs your target")
+        Spacer(Modifier.height(10.dp))
+        val lastMin = recent7.lastOrNull()?.let { SleepProtocol.actualSleep(it) }
+        val consistency = sleepConsistency(recent7)
+        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+            Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("TARGET 8–9 H", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                    Text(lastMin?.let { fmtDur(it) } ?: "—", color = if (lastMin != null && lastMin >= 480) Good else Warn, style = metricStyle(34))
+                    Text(avg7?.let { "7-night average ${fmtDur(it)}" } ?: "log a night to begin", color = TextDim, fontSize = 11.sp, fontFamily = Body)
+                }
+                consistency?.let {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$it%", color = if (it >= 80) Good else if (it >= 60) Warn else Crit, style = metricStyle(24))
+                        Text("SCHEDULE", color = TextDim, fontFamily = Display, fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+                        Text("steadiness", color = TextDim, fontSize = 8.5.sp, fontFamily = Body)
+                    }
+                }
             }
         }
         Spacer(Modifier.height(20.dp))
@@ -197,6 +216,11 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
 
         // ── sleep efficiency trend ───────────────────────────────────
         SectionLabel("Sleep efficiency")
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "The share of your time in bed you were actually asleep — higher is better (90%+ is great).",
+            color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+        )
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
             Column(Modifier.padding(16.dp)) {
@@ -232,8 +256,15 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         }
         Spacer(Modifier.height(20.dp))
 
-        // ── window + weekly titration ────────────────────────────────
-        SectionLabel("Window")
+        // ── advanced: sleep restriction (only for real trouble sleeping) ──
+        SectionLabel("Advanced · sleep restriction")
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Only turn this on if you regularly struggle to fall or stay asleep. It's a clinical technique that deliberately " +
+                "SHRINKS your time in bed to rebuild sleep pressure — the opposite of what a growing athlete usually needs. " +
+                "Leave it off unless sleep is genuinely broken; otherwise just chase 8–9 h.",
+            color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+        )
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -353,3 +384,18 @@ private fun RuleLine(text: String) {
 private fun fmtDur(m: Int) = "${m / 60}h ${"%02d".format(m % 60)}m"
 
 private fun wrapMin(m: Int) = ((m % 1440) + 1440) % 1440
+
+/**
+ * Schedule steadiness 0..100 from the spread of bed + final-wake times. A steady
+ * routine (low variance) is the single most actionable teen-sleep lever, so we
+ * surface it as its own score. ~0 min spread → 100; ~90 min spread → ~0.
+ */
+private fun sleepConsistency(logs: List<NightLog>): Int? {
+    if (logs.size < 3) return null
+    fun sd(v: List<Int>): Double {
+        val m = v.average()
+        return Math.sqrt(v.sumOf { (it - m) * (it - m) } / v.size)
+    }
+    val avgSd = (sd(logs.map { it.bedMin }) + sd(logs.map { it.finalWakeMin })) / 2.0
+    return (100 - avgSd / 90.0 * 100).coerceIn(0.0, 100.0).toInt()
+}

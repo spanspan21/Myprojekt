@@ -19,28 +19,26 @@ object VolumeModel {
 
     /**
      * Working sets per strength exercise for mesocycle [trainWeek] (0..4, 4 =
-     * planned deload), scaled by today's [readiness]. Ramps 3→4→5→6 across the
-     * build, deloads to 2. A recovery score under 55 removes one set (calculated,
-     * bounded — never under MEV). Never a bail-out.
+     * planned deload). Ramps 3→4→5→6 across the build, deloads to 2. Volume does
+     * NOT shave for a low readiness score — that was the "feel tired, do less"
+     * softness. The only downward moves are the programmed deload and illness;
+     * genuine fatigue is handled by autoregulating UP on green-light days and by
+     * the periodised deload, never by quietly handing out an easy session. The
+     * [readiness] param is retained for callers/telemetry but no longer trims.
      */
     fun setsPerExercise(trainWeek: Int, readiness: Int?, deload: Boolean): Int {
         if (deload) return 2
-        val base = when (trainWeek.coerceIn(0, 3)) {
+        return when (trainWeek.coerceIn(0, 3)) {
             0 -> 3          // week 1 — MEV, re-sensitise
             1 -> 4
             2 -> 5
             else -> 6       // week 4 — MRV, the overreach before the deload
         }
-        val r = readiness ?: 80
-        val fatigueAdj = if (r < 55) -1 else 0          // calculated, one set, bounded
-        return (base + fatigueAdj).coerceIn(MEV_SETS_PER_EX, MRV_SETS_PER_EX)
     }
 
     /** Honest one-liner explaining today's volume choice. */
     fun rationale(trainWeek: Int, readiness: Int?, deload: Boolean): String = when {
         deload -> "Deload week — volume pulled back so you rebound stronger, not because you're soft."
-        (readiness ?: 80) < 55 ->
-            "Recovery ${readiness} — one set trimmed to your readiness, still above the effective minimum. Earn it back tomorrow."
         trainWeek >= 3 -> "Peak week — max recoverable volume. This is the overreach. Chase every rep."
         else -> "Build week ${trainWeek + 1}/5 — volume climbing toward your ceiling. Add reps, then load."
     }

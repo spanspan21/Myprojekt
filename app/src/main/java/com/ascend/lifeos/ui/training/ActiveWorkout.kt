@@ -352,19 +352,34 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                 GlassField("Weight (kg)", weight, KeyboardType.Decimal, Modifier.weight(1f)) { weight = it }
                 GlassField("RPE", rpe, KeyboardType.Number, Modifier.weight(0.5f)) { rpe = it }
             }
-            // vest quick-load: 1.25-kg ladder + total system weight
+            // Vest is PRESCRIBED, not chosen. The plan decides the load (and
+            // whether a vest is optimal at all — see the prescription line); there
+            // is no manual "with/without/how much" ladder any more. We show the
+            // prescribed kg read-only and pre-fill the weight so logging just
+            // confirms the assignment. The value is encoded by the generator into
+            // the exercise name ("· vest Nkg").
             val profileW = com.ascend.lifeos.data.Repo.data.profile
-            if (profileW.hasVest) {
+            val prescribedVest = remember(ex.exerciseName) {
+                Regex("vest\\s*(\\d+)\\s*kg", RegexOption.IGNORE_CASE)
+                    .find(ex.exerciseName)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            }
+            LaunchedEffect(ex.exerciseId) {
+                if (prescribedVest != null && weight.isBlank()) weight = prescribedVest.toString()
+            }
+            if (prescribedVest != null) {
                 Spacer(Modifier.height(8.dp))
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("VEST", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                    listOf("5", "7.5", "10", "12.5", "15").forEach { kg ->
-                        HudChip(kg, weight == kg) { weight = if (weight == kg) "" else kg }
-                    }
+                    Box(
+                        Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(Accent.copy(alpha = 0.14f))
+                            .border(0.5.dp, Accent.copy(alpha = 0.40f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) { Text("${prescribedVest}kg · prescribed", color = Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                     weight.toFloatOrNull()?.takeIf { it > 0 }?.let { w ->
                         Text(
                             "TSW ${"%.1f".format(w + profileW.weightKg)} kg",
-                            color = Accent, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
+                            color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
                         )
                     }
                 }

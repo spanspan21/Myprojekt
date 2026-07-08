@@ -27,6 +27,12 @@ object FoodScore {
             4 -> score -= 1
             1 -> score += 1
         }
+        // Additives: penalise genuinely risky ones (sweeteners, nitrites,
+        // phosphates, Southampton colours, MSG). Benign E-numbers (E300 vitamin C,
+        // E330 citric acid …) are noise and ignored. This is the "other harmful
+        // markers" signal that was fetched from Open Food Facts but never scored.
+        val riskyAdditives = p.additives.map(::normAdditive).filter { it in RISKY_ADDITIVES }
+        if (riskyAdditives.isNotEmpty()) score -= 1
         if (alcohol) score = 1
         score = score.coerceIn(1, 10)
 
@@ -65,7 +71,7 @@ object FoodScore {
         // Salt
         when {
             p.salt100 in 0.0001..0.3 -> pros.add("Low salt")
-            p.salt100 > 1.5 -> cons.add("High salt (${fmt(p.salt100)} g — ${pct(p.salt100, 6.0)}% of a day's limit)")
+            p.salt100 > 1.5 -> cons.add("Salty (${fmt(p.salt100)} g/100g) — fine around training when you sweat, ease off on rest days")
         }
         // Energy density
         when {
@@ -79,6 +85,13 @@ object FoodScore {
         when (p.nova) {
             1 -> pros.add("Unprocessed or minimally processed")
             4 -> cons.add("Ultra-processed (NOVA 4)")
+        }
+        // Additives — name the risky categories; a long list is a processing flag
+        if (riskyAdditives.isNotEmpty()) {
+            val cats = riskyAdditives.mapNotNull { RISKY_ADDITIVES[it] }.distinct()
+            cons.add("${p.additives.size} additive${if (p.additives.size == 1) "" else "s"} incl. ${cats.joinToString(", ")} (${riskyAdditives.joinToString(", ")})")
+        } else if (p.additives.size >= 5) {
+            cons.add("${p.additives.size} additives — heavily formulated")
         }
 
         val label = when {
@@ -133,6 +146,30 @@ object FoodScore {
     }
 
     private val MINERALS = setOf("calcium", "iron", "magnesium", "potassium", "zinc", "phosphorus")
+
+    /** E-numbers worth flagging → their category. Everything else is benign noise. */
+    private val RISKY_ADDITIVES = mapOf(
+        "E950" to "sweetener", "E951" to "sweetener", "E952" to "sweetener",
+        "E954" to "sweetener", "E955" to "sweetener", "E960" to "sweetener",
+        "E249" to "nitrite", "E250" to "nitrite", "E251" to "nitrate", "E252" to "nitrate",
+        "E338" to "phosphate", "E339" to "phosphate", "E340" to "phosphate", "E341" to "phosphate",
+        "E450" to "phosphate", "E451" to "phosphate", "E452" to "phosphate",
+        "E102" to "artificial colour", "E104" to "artificial colour", "E110" to "artificial colour",
+        "E122" to "artificial colour", "E124" to "artificial colour", "E129" to "artificial colour",
+        "E621" to "MSG",
+    )
+
+    /** OFF tags come as "en:e951" or "E951" — normalise to "E951". */
+    fun normAdditive(a: String): String =
+        a.substringAfterLast(':').uppercase().let { if (it.startsWith("E")) it else "E$it" }
+
+    /** Public: the risky E-numbers in a product (for the Details expander). */
+    fun riskyAdditives(p: FoodApi.Product): List<Pair<String, String>> =
+        p.additives.map(::normAdditive).mapNotNull { e -> RISKY_ADDITIVES[e]?.let { e to it } }
+
+    /** Public: does this raw additive list contain a flagged E-number? (logged rows) */
+    fun hasRiskyAdditive(additives: List<String>): Boolean =
+        additives.map(::normAdditive).any { it in RISKY_ADDITIVES }
 
     private fun fmt(v: Double) = if (v % 1.0 == 0.0) "${v.toInt()}" else "%.1f".format(v)
     private fun pct(v: Double, limit: Double) = ((v / limit) * 100).toInt()

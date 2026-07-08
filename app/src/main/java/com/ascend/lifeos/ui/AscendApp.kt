@@ -2,7 +2,6 @@ package com.ascend.lifeos.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -51,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.motion.Motion
+import com.ascend.lifeos.ui.motion.ShellMotion
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.boot.BootScreen
 import com.ascend.lifeos.ui.calendar.CalendarScreen
@@ -187,7 +187,12 @@ fun AscendApp() {
     // a mode change can hide the screen you're on — fall back gracefully
     LaunchedEffect(mode) { if (sub.name in hidden) openGroup(group) }
 
-    val accent by animateColorAsState(sub.accent(), tween(400), label = "accent")
+    // Snap the accent — do NOT tween it. The nebula in ModuleBackground is drawn
+    // inside a 90dp blur; an animated accent re-rasterizes that blurred layer on
+    // every frame of the tween, concurrently with the tab transition, dropping
+    // frames — the stutter that read as "jank". Snapping reblurs once per switch.
+    val accent = sub.accent()
+    val reduced = remember { Motion.reduced(ctx) }
 
     Box(Modifier.fillMaxSize().background(Void)) {
         ModuleBackground(accent)
@@ -203,14 +208,10 @@ fun AscendApp() {
         androidx.compose.animation.AnimatedContent(
             targetState = sub,
             transitionSpec = {
-                // Soft, slow arrival: the two screens cross-fade over the same
-                // window (no delay/no snap) while the new one drifts up a hair —
-                // a gentle glide, not a jump. Longer durations read as "expensive".
-                (fadeIn(tween(460, easing = Motion.easeOut)) +
-                    androidx.compose.animation.slideInVertically(
-                        tween(560, easing = Motion.easeOut),
-                    ) { full -> full / 22 })
-                    .togetherWith(fadeOut(tween(360, easing = Motion.easeIn)))
+                // One calm law for every tab: a quick fade-through with a 2%
+                // settle. No slide, no bounce, no per-tab direction — nothing
+                // travels, so nothing can jump (see ShellMotion).
+                ShellMotion.peer(reduced)
                     .using(androidx.compose.animation.SizeTransform(clip = false))
             },
             label = "sub",
@@ -254,7 +255,13 @@ fun AscendApp() {
         // screen height — the bar morphs instead of stacking (user request).
         AnimatedVisibility(
             visible = dockVisible,
-            enter = fadeIn(), exit = fadeOut(),
+            // The console retracts downward when a workout claims the screen and
+            // rides back up on a spring when you surface — a physical dock, not
+            // a label that blinks out.
+            enter = fadeIn(tween(260, easing = Motion.easeOut)) +
+                androidx.compose.animation.slideInVertically(Motion.springSmoothOf()) { it / 2 },
+            exit = fadeOut(tween(150, easing = Motion.easeIn)) +
+                androidx.compose.animation.slideOutVertically(tween(200, easing = Motion.easeIn)) { it / 2 },
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             MorphingDock(
@@ -268,7 +275,15 @@ fun AscendApp() {
         }
 
         // ---- Weekly report overlay ----
-        AnimatedVisibility(visible = reportOpen, enter = fadeIn(tween(220)), exit = fadeOut(tween(160))) {
+        // Full-screen rituals share the FOCUS language of the dock: they zoom in
+        // a hair as they materialise over the screen behind, and recede on exit.
+        AnimatedVisibility(
+            visible = reportOpen,
+            enter = fadeIn(tween(240, easing = Motion.easeOut)) +
+                androidx.compose.animation.scaleIn(tween(320, easing = Motion.easeOut), initialScale = 0.97f),
+            exit = fadeOut(tween(150, easing = Motion.easeIn)) +
+                androidx.compose.animation.scaleOut(tween(180, easing = Motion.easeIn), targetScale = 0.985f),
+        ) {
             BackHandler(enabled = true) { reportOpen = false }
             Box(Modifier.fillMaxSize().background(Void)) {
                 ModuleBackground(Mod.Home)
@@ -284,7 +299,13 @@ fun AscendApp() {
         }
 
         // ---- full-screen overlays (rituals & archives, not daily modules) ----
-        AnimatedVisibility(visible = overlay != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(160))) {
+        AnimatedVisibility(
+            visible = overlay != null,
+            enter = fadeIn(tween(240, easing = Motion.easeOut)) +
+                androidx.compose.animation.scaleIn(tween(320, easing = Motion.easeOut), initialScale = 0.97f),
+            exit = fadeOut(tween(150, easing = Motion.easeIn)) +
+                androidx.compose.animation.scaleOut(tween(180, easing = Motion.easeIn), targetScale = 0.985f),
+        ) {
             BackHandler(enabled = true) { overlay = null }
             CompositionLocalProvider(LocalModuleAccent provides Mod.Home) {
                 Box(Modifier.fillMaxSize().background(Void)) {

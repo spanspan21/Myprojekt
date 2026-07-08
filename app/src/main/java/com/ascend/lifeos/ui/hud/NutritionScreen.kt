@@ -84,6 +84,7 @@ import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.BgElevated
 import com.ascend.lifeos.ui.theme.Blue
 import com.ascend.lifeos.ui.theme.Champagne
+import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.Cyan
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Good
@@ -773,6 +774,20 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                             // ◌ = Quick-Add ohne volle Makros, ≈ = ehrliche Teller-Schätzung (Kap. 37/42)
                             Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
                             Text((if (e.grams > 0) "${e.grams}g · " else "") + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = 10.5.sp)
+                        }
+                        // quality badge at a glance — ultra-processing + additives (MASTERY)
+                        if (e.nova != null || e.additives.isNotEmpty()) {
+                            val risky = com.ascend.lifeos.data.FoodScore.hasRiskyAdditive(e.additives)
+                            val c = if (e.nova == 4 || risky) Crit else if (e.nova == 1) Good else TextDim
+                            val txt = buildString {
+                                e.nova?.let { append("NOVA $it") }
+                                if (e.additives.isNotEmpty()) { if (isNotEmpty()) append(" · "); append("${e.additives.size} add") }
+                            }
+                            Box(
+                                Modifier.clip(RoundedCornerShape(6.dp)).background(c.copy(alpha = 0.13f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            ) { Text(txt, color = c, fontSize = 8.5.sp, fontWeight = FontWeight.Bold) }
+                            Spacer(Modifier.width(6.dp))
                         }
                         Box(Modifier.size(30.dp).clip(CircleShape).clickable { Repo.removeFood(e.id, dayKey) }, contentAlignment = Alignment.Center) {
                             Icon(Icons.Rounded.Close, null, tint = TextDim, modifier = Modifier.size(15.dp))
