@@ -26,7 +26,23 @@ Skill-Ladder- und Deload-Arbeit dieser Session, die im Vor-Audit noch nicht exis
 prüft die Kerne unabhängig gegen. Bereits gefixte Welle-1-Befunde werden nicht erneut gemeldet.
 
 ## Zusammenfassung
-_(wird am Ende gefüllt: Anzahl Funde pro Schweregrad, offene Fragen)_
+**21 Fehler gefunden und behoben**, 3 offene Fragen (Design-Entscheidung nötig), 9 neue Tests.
+Ein Commit pro Modul; nach jedem Modul + am Ende die volle Testsuite grün.
+
+| Schweregrad | Anzahl | Beispiele |
+|---|---|---|
+| **P1** (falsch im Normalbetrieb) | 1 | S1 Lie-in wird als Schlaf gezählt (Effizienz/Readiness/SRT verfälscht) |
+| **P2** (falsch in realistischen Fällen / Feature tot) | 7 | T1 Full-Planche nie erreichbar · T2 Manna schon bei CORE 3 · F1 Wochen-Abo ~4,3× unterschätzt · K1 verwaiste Task-Blöcke · K2 RRULE-COUNT Phantom-Stunde · C1 Insight-Korrelation koppelt falschen Tag · N1 Root/Ginger Beer als „Avoid" |
+| **P3** (Grenzfall / Härtung / Anzeige) | 13 | Rundung, Integer-Division bei Halb-Ziel, Screen-off-Phantomzeit, all-day-TZ, leeres ICS-Feed, Sync-Race, latente Crashes |
+
+Verteilung: Sleep 3 · Training 3 · Nutrition 3 · Finance 3 · Kalender 5 · Habits 1 · Screentime 1 ·
+Core 2. Body/Skills/Prime: keine Code-Funde (Kern unabhängig gegengerechnet, sauber).
+
+**Methodik-Hinweis:** Aufbauend auf dem Vor-Audit (`JARVIS_AUDIT_PLAN.md`, 54 Befunde, 2026-07-07).
+Alle Kern-Berechnungen wurden hier unabhängig mit konkreten Beispielen nachgerechnet; Fokus auf
+seither geänderten/neuen Code (u.a. die Skill-Ladder-/Deload-Arbeit dieser Session — T1/T2 lagen
+genau dort). Jeder Agenten-Verdacht wurde selbst am Code + gegen `AuditFixesTest` verifiziert, bevor
+gefixt wurde.
 
 ---
 
@@ -241,7 +257,22 @@ straft >110 %). Zwei verschiedene Zwecke, kein Fehler.
 ---
 
 ## Neu geschriebene Tests
-_ausstehend_
+9 neue Testmethoden (2 neue Dateien, 2 erweiterte):
+
+- **`SleepProtocolTest`** (+1): `a real long lie-in is excluded from sleep` — 7 h Schlaf + 5 h Lounge
+  ergeben 7 h (vorher 12 h), plus Nicht-Sprung-Check um die alte 240-min-Grenze.
+- **`SkillLadderTest`** (neu, 4): Front-Lever-Ladder-Spreizung, Manna erst bei CORE 6, Full-Planche
+  erreichbar (ETA 0), `vestSuggestion` crasht nicht bei winziger Weste.
+- **`NutritionAuditTest`** (neu, 2): Root/Ginger Beer nicht als Alkohol geflaggt (aber „Hard …" schon);
+  `FastingCalc.zoneFor` toleriert negativen Input.
+- **`AboRadarTest`** (+2): Monats-Abo trotz einzelner Fremdbuchung erkannt; Substring-„tv/music"-Paar
+  wird nicht als überlappender Dienst geflaggt.
+
+Nicht unit-getestet (Android-Laufzeit, per Inspektion/Compile verifiziert): K1–K5 (Context/DAO/Compose),
+H1 (Protocols), SC1 (UsageEvents), S2/C1/C2 (Context) — Fixes sind mechanisch eindeutig.
+
+**Endstand: 126 Tests grün** (15 Dateien), `:app:assembleDebug` grün. Volle Suite nach jedem Modul +
+final; kein Test kodiert Fehlverhalten fest.
 
 ## Offene Fragen (menschliche Entscheidung nötig)
 
