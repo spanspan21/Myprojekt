@@ -134,7 +134,10 @@ object TrainBrain {
         if (bestReps < 15) return null
         val extraSteps = ((bestReps - 15) / 3).coerceAtLeast(0)
         val pct = (0.10f + extraSteps * 0.025f).coerceAtMost(0.20f)
-        return Math.round(bodyweightKg * pct).coerceIn(5, vestMaxKg)
+        // vestMaxKg is a fixed 25 today, but guard the degenerate case: coerceIn
+        // throws on an empty range, so a future editable max below 5 kg would
+        // otherwise crash plan generation. minOf keeps the normal path identical.
+        return Math.round(bodyweightKg * pct).coerceIn(minOf(5, vestMaxKg), vestMaxKg)
     }
 
     /**

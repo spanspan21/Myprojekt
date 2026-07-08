@@ -68,7 +68,41 @@ nutzt bereits den echten Double.
 `bedtimeFor`-Wrap, `syncFromHealth`-Einheiten (alles Minuten, Wake-Wrap korrekt), keine Div-by-Zero.
 
 ## Modul: Training
-_ausstehend_
+Dateien: `training/{TrainingLoad, VolumeModel, TrainBrain, MuscleRecovery, PlanGenerator,
+SkillCatalog, ExerciseSeed}.kt`. ACWR/EWMA (Banister ATL/CTL, ka/kc), `hoursUntilFresh`
+(exponentielle Inversion), `checkDeload` (≥2-von-3, DESC-Ordnung), `checkProgressionUnlock`
+(nur die trainierte Kette, 1×/Session), `currentTrainWeek` (idempotent), `autoReschedule`
+(claimed-slots) unabhängig **verifiziert korrekt**.
+
+**T1 · P2 · `SkillCatalog.kt:266` · ✅ gefixt.** `full_planche` verlangte `Pattern.PUSH to 7`,
+aber `TrainBrain.levelFor` liefert max **6**. Folge: `inReach(full_planche)` **immer false** →
+das Ziel „Full Planche" erzeugt nie eine Skill-Übung, und `etaWeeks` (Zeile 527: `gap==0 ? 0`)
+kommt für den stärksten Athleten nie auf 0 („achieved") — gap = (7−6)=1 → dauerhaft „3 Wochen".
+**Fix:** `PUSH to 6`. Regressionstest: maxed Athlet ist in-reach, ETA = 0.
+
+**T2 · P2 · `SkillCatalog.rungAt`/`areaRung` (mein Ladder-Code aus dieser Session) · ✅ gefixt.**
+`(level-1).coerceIn(0, size-1)` **sättigte kurze (3-Rung-)Ladders bei Level 3**: die Area-Statics
+(`PlanGenerator.staticDrill`, **kein** `inReach`-Gate) verschrieben einem CORE-3-Athleten die
+Elite-Endform (Manna — die der Skill selbst erst bei **CORE 6** freigibt; ebenso Straddle Planche
+bei PUSH 4, Gate PUSH 6). Widerspricht der eigenen Schwierigkeits-Logik und meinem Ladder-Design
+(„meet the athlete where they are"). **Fix:** proportionale Verteilung
+`rungIndex = ((level-1)*(size-1)/5)` → Endform erst bei Level 6, matcht die Skill-Gates.
+Regressionstest: `areaRung(CORE,3)=L-Sit`, `areaRung(CORE,6)=Manna`.
+
+**T3 · P3 (latent) · `TrainBrain.vestSuggestion` (Zeile 137) · ✅ gehärtet.** `coerceIn(5, vestMaxKg)`
+wirft `IllegalArgumentException` bei `vestMaxKg < 5` (leerer Bereich). Heute nicht erreichbar
+(`vestMaxKg` fix = 25, kein UI-Editor), aber eine Landmine. **Fix:** `coerceIn(minOf(5, vestMaxKg),
+vestMaxKg)` — Normalpfad unverändert, kein Crash mehr. Regressionstest ergänzt.
+
+**Verifiziert korrekt:** ✔️ TrainingLoad ATL/CTL/ACR (alle 5 Tests), `hoursUntilFresh`, `vestSuggestion`-
+Progression (15→8, 30→16, Cap), `checkProgressionUnlock` (`>=`-Schwellen, 1-Credit/Session,
+Promote bei ≥3), `checkDeload` (keine Div-by-Zero, richtige Ordnung), `autoReschedule`,
+`currentTrainWeek` (kein Doppel-Advance). Zeit-Einheiten modulweit konsistent.
+
+**Nicht gefixt (kosmetisch/vertretbar, kein falsches Ergebnis):** P3 `seasonWord` „build week 4/5"
+vs. `VolumeModel.rationale` „Peak week" (zwei Namen, ein Zustand); P3 `FitnessProfile.overall`
+trunkiert (3.9→3, als „earn it"-Gate vertretbar); P3 `chainStrength` Hold-Note `coerceAtLeast(8)`
+vs. Feld `coerceAtLeast(10)` (Anzeige weicht in seltener Deload-Konstellation 2s ab).
 
 ## Modul: Body Tracking
 _ausstehend_

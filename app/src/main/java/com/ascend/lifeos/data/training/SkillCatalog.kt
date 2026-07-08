@@ -263,7 +263,7 @@ object SkillCatalog {
         ),
         SkillDef(
             "full_planche", "Full Planche", SkillArea.PUSH, 5,
-            mapOf(Pattern.PUSH to 7, Pattern.CORE to 6, Pattern.DIP to 5),
+            mapOf(Pattern.PUSH to 6, Pattern.CORE to 6, Pattern.DIP to 5),
             listOf("Straddle planche", "Advanced tuck planche (long holds)", "Planche push-up negatives"),
             "Body afloat, arms straight, legs together. The push-side summit.",
         ),
@@ -491,8 +491,17 @@ object SkillCatalog {
         SkillArea.LEGS -> null
     }
 
-    private fun rungAt(ladder: List<SkillRung>, level: Int) =
-        ladder[(level - 1).coerceIn(0, ladder.size - 1)]
+    /**
+     * Map a calibration level (1..6) onto a ladder index, spread proportionally
+     * across the whole ladder. A naive `level-1` saturated the SHORT (3-rung)
+     * ladders at level 3 — a mid-level athlete was handed the elite finished move
+     * (e.g. Manna at CORE 3, which the skill itself gates at CORE 6). Spreading
+     * reaches the top rung only at level 6, matching the skills' own requirements.
+     */
+    private fun rungIndex(ladderSize: Int, level: Int): Int =
+        ((level.coerceIn(1, 6) - 1) * (ladderSize - 1) / 5).coerceIn(0, ladderSize - 1)
+
+    private fun rungAt(ladder: List<SkillRung>, level: Int) = ladder[rungIndex(ladder.size, level)]
 
     /** Level-appropriate rung for a skill goal, or null if it has no ladder. */
     fun skillRung(skill: SkillDef, level: Int): SkillRung? =
@@ -501,13 +510,13 @@ object SkillCatalog {
     /** The next rung above the athlete's level — the "climb to" target. */
     fun skillRungNext(skill: SkillDef, level: Int): SkillRung? {
         val ladder = ladderForSkill(skill.id) ?: return null
-        return ladder.getOrNull((level - 1).coerceIn(0, ladder.size - 1) + 1)
+        return ladder.getOrNull(rungIndex(ladder.size, level) + 1)
     }
 
     /** Rung + next for an area default line (statics). */
     fun areaRung(area: SkillArea, level: Int): Pair<SkillRung, SkillRung?>? {
         val ladder = areaLadder(area) ?: return null
-        val idx = (level - 1).coerceIn(0, ladder.size - 1)
+        val idx = rungIndex(ladder.size, level)
         return ladder[idx] to ladder.getOrNull(idx + 1)
     }
 
