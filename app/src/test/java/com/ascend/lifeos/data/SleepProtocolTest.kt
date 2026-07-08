@@ -59,6 +59,27 @@ class SleepProtocolTest {
         assertEquals(420, SleepProtocol.actualSleep(log.copy(outOfBedMin = 601))) // lounge 241 (old: 661)
     }
 
+    // ── titratable (OF-1) ────────────────────────────────────────────
+
+    @Test
+    fun `titration ignores unconfirmed imports and naps`() {
+        // 7 auto-imported nights (bedGiven=false) sit at ~96 % efficiency and would
+        // otherwise push the window open every week; titratable() drops them.
+        val imported = (1..7).map {
+            NightLog("2026-08-%02d".format(it), bedMin = 1380, sleepOnsetMin = 0, nightWakeMin = 20, finalWakeMin = 445, outOfBedMin = 445, bedGiven = false)
+        }
+        assertTrue(SleepProtocol.titratable(imported).isEmpty())
+        // with < 5 titratable nights weeklyAdjust is a no-op (window held, not grown)
+        val st = state(360)
+        val (next, reason) = SleepProtocol.weeklyAdjust(st, SleepProtocol.titratable(imported), baselineAvgSleep = 420)
+        assertEquals(st, next)
+        assertEquals("not enough logs", reason)
+        // naps are excluded, confirmed real nights pass through
+        val mixed = imported + night("2026-08-08").copy(isNap = true) +
+            (1..5).map { night("2026-09-%02d".format(it), lostMin = 0) }
+        assertEquals(5, SleepProtocol.titratable(mixed).size)
+    }
+
     // ── efficiency ───────────────────────────────────────────────────
 
     @Test

@@ -473,6 +473,27 @@ fun HomeScreen(
             SectionLabel("Next up")
             Spacer(Modifier.height(10.dp))
             NextUpCard(trainVm, trainedToday, onOpenTrain)
+            // OF-1: from 19:00, if the watch auto-imported a night we don't yet have
+            // the real lights-out time for, ask — so sleep-restriction titrates on
+            // true efficiency instead of a fake ~95 %. Reads SleepStore.rev to
+            // recompose the moment the user answers.
+            val sleepRev = com.ascend.lifeos.data.sleep.SleepStore.rev
+            val pendingNight = remember(sleepRev) {
+                if (java.time.LocalTime.now().hour >= 19)
+                    com.ascend.lifeos.data.sleep.SleepStore.unconfirmedNight(ctx)
+                else null
+            }
+            pendingNight?.let { night ->
+                Spacer(Modifier.height(10.dp))
+                SleepConfirmCard(
+                    night = night,
+                    onConfirm = { latency ->
+                        val realBed = ((night.bedMin - latency) % 1440 + 1440) % 1440
+                        com.ascend.lifeos.data.sleep.SleepStore.confirmNight(ctx, night.dayKey, realBed)
+                    },
+                    onNap = { com.ascend.lifeos.data.sleep.SleepStore.markNap(ctx, night.dayKey) },
+                )
+            }
             }
 
             homeCards["missions"] = {
@@ -681,6 +702,57 @@ private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.Add, "Quick log", tint = Void, modifier = Modifier.size(26.dp))
+        }
+    }
+}
+
+// ─── Sleep confirm card (OF-1) ───────────────────────────────────────────────
+// A watch import can't know the real lights-out time (it starts the clock at
+// sleep onset → ~95 % efficiency always), which would push the sleep-restriction
+// window open forever. One evening tap on the fall-asleep latency — or "nap" —
+// makes the night honest and titration-eligible.
+
+@Composable
+private fun SleepConfirmCard(
+    night: com.ascend.lifeos.data.sleep.NightLog,
+    onConfirm: (latencyMin: Int) -> Unit,
+    onNap: () -> Unit,
+) {
+    val accent = com.ascend.lifeos.ui.theme.Accent
+    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Column(Modifier.padding(18.dp)) {
+            Text(
+                "SLEEP · CONFIRM", color = accent, fontFamily = Display, fontSize = 9.sp,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "How long to fall asleep last night?", color = TextPrimary,
+                fontFamily = Display, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                "Your watch only sees when you slept — this keeps the sleep window honest.",
+                color = TextDim, fontSize = 11.5.sp, lineHeight = 15.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("Instant" to 0, "15m" to 15, "30m" to 30, "45m" to 45, "1h+" to 75).forEach { (label, mins) ->
+                    Box(
+                        Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
+                            .background(accent.copy(alpha = 0.10f))
+                            .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
+                            .clickable { onConfirm(mins) }
+                            .padding(vertical = 9.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(label, color = accent, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(9.dp))
+            Text(
+                "That was a power nap →", color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
+            )
         }
     }
 }

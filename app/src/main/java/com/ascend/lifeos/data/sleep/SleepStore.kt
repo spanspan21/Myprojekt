@@ -34,6 +34,7 @@ object SleepStore {
     private fun NightLog.toJson() = JSONObject()
         .put("day", dayKey).put("bed", bedMin).put("onset", sleepOnsetMin)
         .put("wake", nightWakeMin).put("final", finalWakeMin).put("up", outOfBedMin)
+        .put("given", bedGiven).put("nap", isNap)
 
     private fun logFrom(o: JSONObject) = NightLog(
         dayKey = o.optString("day"),
@@ -42,6 +43,9 @@ object SleepStore {
         nightWakeMin = o.optInt("wake"),
         finalWakeMin = o.optInt("final"),
         outOfBedMin = o.optInt("up"),
+        // default true: pre-feature logs were manual (real times) → keep counting
+        bedGiven = o.optBoolean("given", true),
+        isNap = o.optBoolean("nap", false),
     )
 
     /** All logged nights, oldest first (sorted by dayKey). */
@@ -63,6 +67,31 @@ object SleepStore {
     /** Adds or replaces the log for its dayKey (one night per day, capped 120). */
     fun upsertLog(ctx: Context, log: NightLog) {
         writeLogs(ctx, logs(ctx).filter { it.dayKey != log.dayKey } + log)
+    }
+
+    /** The most recent auto-imported night still awaiting its real bed time — the
+     *  evening dashboard prompt asks about this one. Null when nothing is pending. */
+    fun unconfirmedNight(ctx: Context): NightLog? =
+        logs(ctx).lastOrNull { !it.bedGiven && !it.isNap }
+
+    /**
+     * The user confirms when they actually went to bed (lights out) for [dayKey].
+     * The imported [NightLog.bedMin] was the sleep-onset moment, so the fall-asleep
+     * latency = that − the real bedtime; the window (and true efficiency) then
+     * reflect the whole time in bed, and the night becomes titration-eligible.
+     */
+    fun confirmNight(ctx: Context, dayKey: String, realBedMin: Int) {
+        val n = logs(ctx).firstOrNull { it.dayKey == dayKey } ?: return
+        val onset = ((n.bedMin - realBedMin) % 1440 + 1440) % 1440
+        // a bedtime logged AFTER sleep onset is nonsense (wraps huge) → onset 0
+        val safeOnset = if (onset > 720) 0 else onset
+        upsertLog(ctx, n.copy(bedMin = realBedMin, sleepOnsetMin = safeOnset, bedGiven = true, isNap = false))
+    }
+
+    /** The user tags [dayKey] as a power nap — resolved, and never titrated on. */
+    fun markNap(ctx: Context, dayKey: String) {
+        val n = logs(ctx).firstOrNull { it.dayKey == dayKey } ?: return
+        upsertLog(ctx, n.copy(isNap = true, bedGiven = true))
     }
 
     /**
@@ -88,6 +117,10 @@ object SleepStore {
                 NightLog(
                     dayKey = key, bedMin = start, sleepOnsetMin = 0,
                     nightWakeMin = awake, finalWakeMin = wake, outOfBedMin = wake,
+                    // the watch starts its clock at sleep onset, so the real
+                    // lights-out (and thus true efficiency) is unknown until the
+                    // user confirms it — until then this night must not titrate.
+                    bedGiven = false,
                 ),
             )
             imported++
@@ -157,7 +190,9 @@ object SleepStore {
         val week = isoWeek()
         if (prefs(ctx).getString("adj_week", null) == week) return null
         val base = baselineAvg(ctx) ?: return null
-        val (next, reason) = SleepProtocol.weeklyAdjust(st, logs(ctx).takeLast(7), base)
+        // Only confirmed, non-nap nights drive the titration — otherwise imported
+        // nights (efficiency ≈ 95 %) would push the window open every week (OF-1).
+        val (next, reason) = SleepProtocol.weeklyAdjust(st, SleepProtocol.titratable(logs(ctx)).takeLast(7), base)
         prefs(ctx).edit().putString("adj_week", week).apply()
         saveState(ctx, next)
         return reason

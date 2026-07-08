@@ -298,8 +298,14 @@ nicht kennt. Optionen: (a) importierte Nächte von der Titration ausschließen (
 Max: unproblematisch — würde er wissen, dass er Schule hat, käme dort ohnehin kein Lernblock hin; die
 seltene Überlappung ist tolerierbar und korrigiert sich beim nächsten Plan. **Bewusst nicht geändert.**
 
-**OF-1 · Sleep · SRT auf importierten Watch-Nächten · ✅ ENTSCHIEDEN: abfragen (Feature).**
-Max: nicht raten, sondern erfassen — „Next up"-Karte im Dashboard ab 19:00, dazu Unterscheidung
-Power-Nap vs. normaler Schlaf; bis bestätigt titriert die Nacht nicht. Wird als eigenes Feature umgesetzt
-(Datenmodell: importierte/unbestätigte Nacht markieren + Nap-Flag → aus der Titration nehmen;
-UI: Abend-Karte zur Erfassung der Zubettgeh-/Licht-aus-Zeit).
+**OF-1 · Sleep · SRT auf importierten Watch-Nächten · ✅ ENTSCHIEDEN & UMGESETZT (abfragen).**
+Max: nicht raten, sondern erfassen. Umgesetzt:
+- **Datenmodell:** `NightLog` +`bedGiven` (Auto-Import = `false`, echte Licht-aus-Zeit unbekannt)
+  +`isNap`; `SleepStore.syncFromHealth` markiert Importe unbestätigt; JSON abwärtskompatibel
+  (Altlogs = `given=true`).
+- **Logik:** neuer reiner Filter `SleepProtocol.titratable(logs)` = nur bestätigte Nicht-Nap-Nächte;
+  `sundayAdjustIfDue` titriert nur darauf → importierte Nächte schieben das Fenster nicht mehr auf.
+  API `confirmNight`/`markNap`/`unconfirmedNight`. Test in `SleepProtocolTest`.
+- **UI:** `SleepConfirmCard` im Dashboard unter „Next up", **ab 19:00**, wenn eine unbestätigte Nacht
+  existiert. Fragt die **Einschlaf-Dauer** ab (Chips: sofort/15/30/45/1 h+ → liefert die Onset-Latenz,
+  genau was SRT braucht) plus „War ein Power-Nap →". Bestätigen macht die Nacht titrationsfähig.

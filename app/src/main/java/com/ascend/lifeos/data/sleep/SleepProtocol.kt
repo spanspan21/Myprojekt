@@ -21,6 +21,11 @@ data class NightLog(
     val nightWakeMin: Int,  // total minutes awake during the night
     val finalWakeMin: Int,  // minute-of-day of final wake
     val outOfBedMin: Int,   // minute-of-day got up
+    // A watch import can't know the real lights-out time (it starts the clock at
+    // sleep onset → efficiency ≈ 95 % always), so an auto-imported night is
+    // `bedGiven = false` until the user confirms when they actually went to bed.
+    val bedGiven: Boolean = true,
+    val isNap: Boolean = false,   // a power nap never counts toward the night window
 )
 
 object SleepProtocol {
@@ -71,6 +76,14 @@ object SleepProtocol {
 
     /** The window never grows past max(baseline avg, 8 h), hard cap 9 h. */
     fun maxTib(baselineAvgSleep: Int): Int = min(540, max(baselineAvgSleep, 480))
+
+    /**
+     * Nights that may drive the weekly titration: real, user-confirmed bedtimes,
+     * and no naps. An auto-imported night forces efficiency ≈ 95 % (onset unknown
+     * → 0), so titrating on it would only ever GROW the window — SRT backwards.
+     * Confirming the real lights-out time (or tagging it a nap) makes it count.
+     */
+    fun titratable(logs: List<NightLog>): List<NightLog> = logs.filter { it.bedGiven && !it.isNap }
 
     /**
      * Weekly titration: mean SE of the provided nights (needs ≥5, else no-op).
