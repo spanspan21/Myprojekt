@@ -28,14 +28,39 @@ private val ManropeFamily = FontFamily(
     Font(R.font.manrope_extrabold, FontWeight.ExtraBold),
 )
 
-/** Display-Stimme der aktiven Welt (Titel, Zahlen, Overlines). */
-val Display: FontFamily get() = if (themeSpec.value.displayChakra) ChakraFamily else ManropeFamily
+// AZURE (Best Design): eine editoriale Welt spricht Serif — hohe Kontrast-
+// Titel in Kursiv — und lässt die Micro-Labels in Monospace laufen. Beide
+// Familien kommen vom Gerät (Noto Serif / Roboto Mono), kein Font-Bundle nötig.
+private val SerifFamily = FontFamily.Serif
+private val MonoFamily = FontFamily.Monospace
+
+/** Display-Stimme der aktiven Welt (Titel, Zahlen). Serif in editorialen Welten. */
+val Display: FontFamily get() = when {
+    themeSpec.value.displaySerif -> SerifFamily
+    themeSpec.value.displayChakra -> ChakraFamily
+    else -> ManropeFamily
+}
+
+/** Micro-Labels/Overlines: Monospace in editorialen Welten, sonst die Display-Stimme. */
+val MicroLabel: FontFamily get() = if (themeSpec.value.displaySerif) MonoFamily else Display
+
+/** Monospace der aktiven Welt — Ticker, Kennzahlen-Spalten, technische Kürzel. */
+val Mono: FontFamily get() = MonoFamily
 
 /** Display-Familie EINER Welt — für die Salon-Vorschaukarten (Kap. 24). */
-fun displayFamilyOf(spec: ThemeSpec): FontFamily = if (spec.displayChakra) ChakraFamily else ManropeFamily
+fun displayFamilyOf(spec: ThemeSpec): FontFamily = when {
+    spec.displaySerif -> SerifFamily
+    spec.displayChakra -> ChakraFamily
+    else -> ManropeFamily
+}
 
 /** Body bleibt in jeder Welt Manrope — Fließtext ist theme-invariant. */
 val Body: FontFamily get() = ManropeFamily
+
+/** Kursiv-Stil der Display-Stimme, aber nur wo die Welt editorial (Serif) ist. */
+val DisplayItalic: androidx.compose.ui.text.font.FontStyle
+    get() = if (themeSpec.value.displaySerif) androidx.compose.ui.text.font.FontStyle.Italic
+            else androidx.compose.ui.text.font.FontStyle.Normal
 
 /** Gewicht großer Ziffern (≥ 30 sp) — Flüstern, Gleichmaß oder Arcade (Kap. 20). */
 val BigNumberWeight: FontWeight get() = FontWeight(themeSpec.value.bigNumberWeight)

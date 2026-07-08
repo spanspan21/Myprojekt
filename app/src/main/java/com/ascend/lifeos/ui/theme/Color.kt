@@ -38,7 +38,7 @@ val ChampagneLine: Color get() = themeSpec.value.metal.copy(alpha = 0.45f)
 
 // Live accent: backed by snapshot state so every `Accent` read recomposes
 // when the user picks a new colour — no per-call-site changes needed.
-val accentState = mutableStateOf(Color(0xFF35D19A))
+val accentState = mutableStateOf(Color(0xFF2563FF))
 val Accent: Color get() = accentState.value
 val AccentSoft: Color get() = accentState.value.copy(alpha = 0.15f)
 val AccentDim: Color get() = lerp(accentState.value, Color.Black, 0.45f)
@@ -88,6 +88,18 @@ val LocalModuleAccent = androidx.compose.runtime.staticCompositionLocalOf { Colo
 val Good: Color get() = themeSpec.value.good
 val Warn: Color get() = themeSpec.value.warn
 val Crit: Color get() = themeSpec.value.crit
+
+// ---- LUMEN light-mode tokens -------------------------------------------------
+// Read by the Kit's light branch. On dark worlds `light` is false and these are
+// never consulted (the dark glass/hairline path runs instead).
+val isLight: Boolean get() = themeSpec.value.light
+val Canvas: Color get() = themeSpec.value.canvasTop
+val CanvasBot: Color get() = themeSpec.value.canvasBot
+val CardFill: Color get() = themeSpec.value.cardFill
+val CardBorder: Color get() = themeSpec.value.cardBorder
+val ShadowTint: Color get() = themeSpec.value.shadowTint
+/** The colour a live element's glow halo emits. */
+val GlowInk: Color get() = themeSpec.value.glowInk
 
 // ---- Radius-Gesetz (Kap. 17/22): Form folgt der Welt --------------------------
 val RHero: Dp get() = themeSpec.value.rHero

@@ -172,6 +172,9 @@ object Repo {
         refreshStreak()
     }
 
+    /** Persist the global accent colour (ARGB long) — used by the theme migration. */
+    fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
+
     fun addWater(n: Int, dayKey: String = todayKey()) {
         val cur = data.days[dayKey] ?: DayData()
         commit(data.copy(days = data.days + (dayKey to cur.copy(water = (cur.water + n).coerceAtLeast(0)))))

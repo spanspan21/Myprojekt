@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -53,6 +54,8 @@ import com.ascend.lifeos.ui.theme.*
 @Composable
 fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
     val spec = com.ascend.lifeos.ui.theme.themeSpec.value
+    // LUMEN: white light path — bright canvas, aurora blooms, circuit filigree.
+    if (spec.light) { LumenBackground(accent, modifier); return }
     // Nebel-Ton: Metall-Beimischung je Welt; warmth == 1 → modul-unabhängig (TERRA)
     val nebulaTint =
         if (spec.nebulaWarmth >= 1f) spec.metal
@@ -162,6 +165,25 @@ fun Panel(
     // tappable panels press down under the finger and spring back (IRON MOTION)
     var m = if (onClick != null) modifier.pressScale(onClick) else modifier
     val shape = RoundedCornerShape(corner)
+    val spec = com.ascend.lifeos.ui.theme.themeSpec.value
+
+    // ── LUMEN light path: white glass lifted by a soft blue-tinted shadow;
+    //    lux swaps the ambient shadow for an electric-blue glow halo. ──
+    if (spec.light) {
+        m = m
+            .shadow(
+                elevation = if (lux) 24.dp else 13.dp,
+                shape = shape, clip = false,
+                ambientColor = if (lux) spec.glowInk.copy(alpha = 0.24f) else spec.shadowTint.copy(alpha = spec.shadowStrength * 0.6f),
+                spotColor = if (lux) spec.glowInk.copy(alpha = 0.30f) else spec.shadowTint.copy(alpha = spec.shadowStrength),
+            )
+            .clip(shape)
+            .background(spec.cardFill)
+            .border(1.dp, if (lux) spec.glowInk.copy(alpha = 0.32f) else spec.cardBorder, shape)
+        Box(m, content = content)
+        return
+    }
+
     m = m.clip(shape)
         .background(fill)
         // Tiefengefälle: oben minimal heller — Licht von oben
@@ -170,10 +192,10 @@ fun Panel(
         // Specular-Oberkante: der 1-px-Lichtfaden — Stärke aus der Welt (MONO: 0)
         .drawWithContent {
             drawContent()
-            val spec = com.ascend.lifeos.ui.theme.themeSpec.value.specular
+            val sp = spec.specular
             val inset = corner.toPx() * 0.9f
-            if (spec > 0f && size.width > inset * 2.5f) {
-                val glint = if (lux) Champagne.copy(alpha = spec * 1.9f) else Ivory.copy(alpha = spec)
+            if (sp > 0f && size.width > inset * 2.5f) {
+                val glint = if (lux) Champagne.copy(alpha = sp * 1.9f) else Ivory.copy(alpha = sp)
                 drawLine(
                     Brush.horizontalGradient(listOf(Color.Transparent, glint, Color.Transparent)),
                     Offset(inset, 0.75f), Offset(size.width - inset, 0.75f),
@@ -184,23 +206,39 @@ fun Panel(
     Box(m, content = content)
 }
 
-/** Module header: overline tag + big Chakra title + context line + action icons. */
+/** Module header: optional mono overline + big editorial title + context + actions.
+ *  In editorialen Welten (AZURE) läuft der Titel als Serif-Kursiv, sonst als
+ *  Display-Bold — die eine Kopfzeile aller Module. */
 @Composable
 fun JarvisHeader(
     title: String,
     context: String? = null,
     accent: Color,
+    overline: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val editorial = com.ascend.lifeos.ui.theme.themeSpec.value.displaySerif
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f)) {
+            if (overline != null) {
+                Text(
+                    overline.uppercase(), color = accent, fontFamily = MicroLabel,
+                    fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.2.sp,
+                )
+                Spacer(Modifier.height(7.dp))
+            }
             Text(
-                title, color = TextPrimary, fontFamily = Display,
-                fontSize = 26.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp,
+                title, color = TextPrimary, fontFamily = Display, fontStyle = DisplayItalic,
+                fontSize = if (editorial) 30.sp else 26.sp,
+                fontWeight = if (editorial) FontWeight.Normal else FontWeight.Bold,
+                letterSpacing = (-0.3).sp, lineHeight = if (editorial) 34.sp else 30.sp,
             )
             if (context != null) {
-                Spacer(Modifier.height(3.dp))
-                Text(context, color = accent, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(if (editorial) 5.dp else 3.dp))
+                Text(
+                    context, color = if (editorial) TextMuted else accent,
+                    fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically, content = actions)
@@ -222,16 +260,29 @@ fun IconOrb(icon: ImageVector, tint: Color = TextMuted, size: Dp = 38.dp, onClic
     ) { Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.45f)) }
 }
 
-/** Uppercase Chakra section label with tracking. */
+/** Editorial section label: a thin accent tick, an optional two-digit number,
+ *  then the mono micro-label (Monospace in AZURE, Display elsewhere). */
 @Composable
-fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+fun SectionLabel(
+    text: String,
+    modifier: Modifier = Modifier,
+    number: Int? = null,
+    accent: Color = Champagne,
+) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        // der Champagne-Punkt: kleinstes Gold der Seite (2 dp, Budget-konform)
-        Box(Modifier.size(4.dp).clip(CircleShape).background(Champagne.copy(alpha = 0.75f)))
-        Spacer(Modifier.width(7.dp))
+        // der editoriale Strich: schmale 2-dp-Marke statt Punkt
+        Box(Modifier.size(width = 2.dp, height = 11.dp).clip(RoundedCornerShape(1.dp)).background(accent.copy(alpha = 0.85f)))
+        Spacer(Modifier.width(8.dp))
+        if (number != null) {
+            Text(
+                number.toString().padStart(2, '0'), color = accent.copy(alpha = 0.9f),
+                fontFamily = MicroLabel, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+            )
+            Spacer(Modifier.width(7.dp))
+        }
         Text(
-            text.uppercase(), color = TextDim, fontFamily = Display,
-            fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+            text.uppercase(), color = TextMuted, fontFamily = MicroLabel,
+            fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.2.sp,
         )
     }
 }
@@ -243,10 +294,10 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 fun StatTile(value: String, label: String, color: Color = TextPrimary, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = metricStyle(22))
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(3.dp))
         Text(
-            label.uppercase(), color = TextDim, fontFamily = Display,
-            fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
+            label.uppercase(), color = TextDim, fontFamily = MicroLabel,
+            fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.4.sp,
         )
     }
 }
@@ -268,10 +319,24 @@ fun Ring(
         Canvas(Modifier.fillMaxSize()) {
             val s = Stroke(stroke.toPx(), cap = StrokeCap.Round)
             val inset = stroke.toPx() / 2
-            drawArc(track, -90f, 360f, false, topLeft = Offset(inset, inset),
-                size = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2), style = s)
-            if (p > 0f) drawArc(color, -90f, p * 360f, false, topLeft = Offset(inset, inset),
-                size = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2), style = s)
+            val tl = Offset(inset, inset)
+            val sz = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
+            drawArc(track, -90f, 360f, false, topLeft = tl, size = sz, style = s)
+            if (p > 0f) {
+                // glow underlay (Faktor der Welt) — a soft wide arc, then the crisp value
+                val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+                if (glowF > 0f) drawArc(
+                    color.copy(alpha = 0.22f * glowF), -90f, p * 360f, false,
+                    topLeft = tl, size = sz, style = Stroke(stroke.toPx() * 2.4f, cap = StrokeCap.Round),
+                )
+                drawArc(color, -90f, p * 360f, false, topLeft = tl, size = sz, style = s)
+                // comet endpoint: a bright dot with a bloom at the arc tip
+                val ang = Math.toRadians((-90f + p * 360f).toDouble())
+                val r = (size.minDimension - inset * 2) / 2f
+                val end = Offset(center.x + kotlin.math.cos(ang).toFloat() * r, center.y + kotlin.math.sin(ang).toFloat() * r)
+                drawCircle(color.copy(alpha = 0.35f), stroke.toPx() * 1.5f, end)
+                drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.45f), stroke.toPx() * 0.72f, end)
+            }
         }
         content()
     }
@@ -359,8 +424,8 @@ fun VerdictPill(text: String, color: Color, modifier: Modifier = Modifier) {
             .padding(horizontal = 8.dp, vertical = 3.dp),
     ) {
         Text(
-            text.uppercase(), color = color, fontFamily = Display,
-            fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            text.uppercase(), color = color, fontFamily = MicroLabel,
+            fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
     }
 }

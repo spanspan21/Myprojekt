@@ -48,9 +48,80 @@ data class ThemeSpec(
     // Stimme
     val displayChakra: Boolean,             // true: Chakra führt Display; false: Manrope
     val bigNumberWeight: Int,               // 500 Medium · 600 SemiBold · 700 Bold
+    val displaySerif: Boolean = false,      // AZURE/LUMEN: Serif führt Display, Mono die Micro-Labels
+    // ─── LUMEN light mode ────────────────────────────────────────────────────
+    // White worlds re-light every surface: depth comes from soft blue-tinted
+    // shadows + glow instead of dark glass + white hairlines. These fields are
+    // only read when light == true, so the five dark worlds ignore them.
+    val light: Boolean = false,
+    val canvasTop: Color = Color(0xFFFFFFFF),   // top of the page gradient
+    val canvasBot: Color = Color(0xFFEEF3FC),   // bottom (a whisper of cool)
+    val cardFill: Color = Color(0xFFFFFFFF),    // white glass surface
+    val cardBorder: Color = Color(0xFFE4EBF7),  // cool hairline
+    val shadowTint: Color = Color(0xFF2E6BFF),  // blue-tinted elevation shadow
+    val shadowStrength: Float = 0.16f,          // ambient shadow alpha factor
+    val glowInk: Color = Color(0xFF2563FF),     // the colour a live glow emits
+    val auroraAlpha: Float = 0.06f,             // soft blue corner blooms
+    val gridAlpha: Float = 0.03f,               // faint circuit filigree
 )
 
 object Themes {
+
+    // LUMEN — „Best Design", hell: weißes Licht & elektrisches Blau. Der Grund
+    // ist weiß und luminös, die Features glühen blau. Depth über weiche
+    // blau-getönte Schatten + Glow statt dunklem Glas. Serif-Kursiv-Titel,
+    // Mono-Micro-Labels. Die Default-Welt der App (futuristisch, glasklar).
+    val LUMEN = ThemeSpec(
+        id = "lumen", label = "Lumen", tagline = "Daylight glass — white light & electric blue",
+        void = Color(0xFFEEF3FC), bg = Color(0xFFFFFFFF), bgElevated = Color(0xFFF6F9FF),
+        surface = Color(0xFFFFFFFF), surfaceHi = Color(0xFFF2F6FF), bgTop = Color(0xFFFFFFFF),
+        ivory = Color(0xFF0B1C3F), lineAlpha = 0.09f, line2Alpha = 0.15f,
+        textPrimary = Color(0xFF0B1C3F), textMuted = Color(0xFF5A6A88), textDim = Color(0xFF97A2B8),
+        metal = Color(0xFF2E6BFF), metalDeep = Color(0xFF1442B4),
+        mods = ModPalette(
+            home = Color(0xFF2563FF), calendar = Color(0xFF7C5CFF), train = Color(0xFFFF5A45),
+            fuel = Color(0xFF00B888), body = Color(0xFF0AA6D6), guard = Color(0xFFF0A62E),
+            skills = Color(0xFF7C3AED), mind = Color(0xFF4F5BD5), finance = Color(0xFF10A96A),
+            school = Color(0xFF2563FF),
+        ),
+        good = Color(0xFF10A96A), warn = Color(0xFFE8991F), crit = Color(0xFFF0453E),
+        accentDefault = Color(0xFF2563FF),
+        nebulaAlpha = 0f, nebulaWarmth = 0f, nebulaDual = false,
+        grainAlpha = 0, scanlines = false, vignette = 0f,
+        rHero = 26.dp, rCard = 20.dp, rElem = 14.dp, rMicro = 9.dp,
+        specular = 0f, glow = 1.25f, dualCelebration = false,
+        displayChakra = false, bigNumberWeight = 600, displaySerif = true,
+        light = true,
+        canvasTop = Color(0xFFFFFFFF), canvasBot = Color(0xFFEAF0FB),
+        cardFill = Color(0xFFFFFFFF), cardBorder = Color(0xFFE1E9F6),
+        shadowTint = Color(0xFF2E6BFF), shadowStrength = 0.18f,
+        glowInk = Color(0xFF2563FF), auroraAlpha = 0.07f, gridAlpha = 0.035f,
+    )
+
+    // AZURE — „Best Design": Saphir & Porzellan. Weiß + Blau, editorial-luxuriös.
+    // Serif-Kursiv-Titel, Monospace-Micro-Labels, glühende Line-Art auf kühlem
+    // Near-Black-Blau. Die kühle Juwelen-Reihe gibt jedem Modul eine Identität.
+    val AZURE = ThemeSpec(
+        id = "azure", label = "Azure", tagline = "Sapphire & porcelain — the editorial luxe",
+        void = Color(0xFF04060B), bg = Color(0xFF070B13), bgElevated = Color(0xFF0C121E),
+        surface = Color(0xFF111827), surfaceHi = Color(0xFF182234), bgTop = Color(0xFF0A0F1A),
+        ivory = Color(0xFFECF2FF), lineAlpha = 0.10f, line2Alpha = 0.17f,
+        textPrimary = Color(0xFFF3F7FF), textMuted = Color(0xFF93A2BE), textDim = Color(0xFF55617A),
+        metal = Color(0xFFC9D8F0), metalDeep = Color(0xFF8FA6C8),
+        mods = ModPalette(
+            home = Color(0xFF5AA2FF), calendar = Color(0xFFA48CF5), train = Color(0xFFFF7E6B),
+            fuel = Color(0xFF3FD9B0), body = Color(0xFF46C6F0), guard = Color(0xFFE7B45C),
+            skills = Color(0xFF9B8CFF), mind = Color(0xFF7E8CF0), finance = Color(0xFF37D69A),
+            school = Color(0xFF5D9BF5),
+        ),
+        good = Color(0xFF37D69A), warn = Color(0xFFE8B45C), crit = Color(0xFFF2647A),
+        accentDefault = Color(0xFF5AA2FF),
+        nebulaAlpha = 0.10f, nebulaWarmth = 0f, nebulaDual = false,
+        grainAlpha = 5, scanlines = false, vignette = 0.20f,
+        rHero = 22.dp, rCard = 18.dp, rElem = 13.dp, rMicro = 9.dp,
+        specular = 0.18f, glow = 1.1f, dualCelebration = false,
+        displayChakra = false, bigNumberWeight = 500, displaySerif = true,
+    )
 
     val SOVEREIGN = ThemeSpec(
         id = "sovereign", label = "Sovereign", tagline = "Obsidian & champagne — the watch salon",
@@ -169,21 +240,22 @@ object Themes {
         displayChakra = true, bigNumberWeight = 500,
     )
 
-    val ALL = listOf(SOVEREIGN, GLACIER, NEON, TERRA, MONO)
+    // LUMEN führt die Reihe (der helle Default-Salon, „Best Design").
+    val ALL = listOf(LUMEN, AZURE, SOVEREIGN, GLACIER, NEON, TERRA, MONO)
 
-    fun byId(id: String): ThemeSpec = ALL.firstOrNull { it.id == id } ?: SOVEREIGN
+    fun byId(id: String): ThemeSpec = ALL.firstOrNull { it.id == id } ?: LUMEN
 
     /** Alte Preset-IDs (stark/stealth/reactor) wandern in ihre Erben (Kap. 25). */
     fun migrate(old: String): String = when (old) {
         "stark" -> "glacier"
         "stealth" -> "mono"
         "reactor" -> "neon"
-        else -> if (ALL.any { it.id == old }) old else "sovereign"
+        else -> if (ALL.any { it.id == old }) old else "lumen"
     }
 }
 
 /** Die eine Quelle — jeder Token der App liest hier. */
-val themeSpec = mutableStateOf(Themes.SOVEREIGN)
+val themeSpec = mutableStateOf(Themes.LUMEN)
 
 fun applyTheme(id: String) {
     val spec = Themes.byId(id)

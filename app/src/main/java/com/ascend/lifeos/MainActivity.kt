@@ -30,9 +30,20 @@ class MainActivity : ComponentActivity() {
         // ATELIER: Welt zuerst (setzt Welt-Default-Akzent), dann gewinnt der
         // gespeicherte Nutzer-Akzent
         run {
-            val saved = com.ascend.lifeos.data.Prefs.string(applicationContext, com.ascend.lifeos.data.Prefs.THEME, "sovereign")
+            val ctx = applicationContext
+            val P = com.ascend.lifeos.data.Prefs
+            // Best Design ships LUMEN (white light) as THE look: lay it over
+            // every existing install exactly once (whatever world was set
+            // before), reset the accent to electric blue, then hand control
+            // back to the theme picker.
+            if (!P.bool(ctx, P.THEME_LUMEN, false)) {
+                P.setString(ctx, P.THEME, "lumen")
+                Repo.setAccent(0xFF2563FFL)
+                P.setBool(ctx, P.THEME_LUMEN, true)
+            }
+            val saved = P.string(ctx, P.THEME, "lumen")
             val id = com.ascend.lifeos.ui.theme.Themes.migrate(saved)
-            if (id != saved) com.ascend.lifeos.data.Prefs.setString(applicationContext, com.ascend.lifeos.data.Prefs.THEME, id)
+            if (id != saved) P.setString(ctx, P.THEME, id)
             com.ascend.lifeos.ui.theme.applyTheme(id)
         }
         com.ascend.lifeos.ui.theme.applyAccent(Repo.profile().accent)

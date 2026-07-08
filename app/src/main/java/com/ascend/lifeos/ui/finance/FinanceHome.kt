@@ -104,6 +104,8 @@ fun FinanceHome(onClose: () -> Unit) {
     // ── data (recomputed only when a store bumps its rev) ──
     val accounts = remember(frev) { FinanceStore.accounts(ctx) }
     val totalBal = remember(accounts) { accounts.sumOf { it.balanceCents } }
+    val netWorth = remember(frev) { FinanceStore.netWorthCents(ctx) }
+    val hasBalanceSheet = remember(frev) { accounts.isNotEmpty() || FinanceStore.holdings(ctx).isNotEmpty() }
     val spend = remember(lrev) { LifeStores.monthSpend(ctx) }
     val income = remember(lrev) { LifeStores.monthIncome(ctx) }
     val byCat = remember(lrev) { LifeStores.monthByCategory(ctx) }
@@ -145,7 +147,7 @@ fun FinanceHome(onClose: () -> Unit) {
     val today = LocalDate.now()
 
     val headerContext = when {
-        accounts.isNotEmpty() -> "${euros(totalBal)} total"
+        hasBalanceSheet -> "${euros(netWorth)} net worth"
         spend > 0 -> "−${euros(spend)} this month"
         else -> null
     }
@@ -158,14 +160,31 @@ fun FinanceHome(onClose: () -> Unit) {
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 120.dp),
         ) {
             item(key = "header") {
-                JarvisHeader("Finance", headerContext, FinAccent) {
+                JarvisHeader(
+                    "Finance", headerContext, FinAccent,
+                    overline = "Net worth · accounts · investments",
+                ) {
                     IconOrb(Icons.Rounded.Close, tint = TextPrimary, onClick = onClose)
                 }
                 Spacer(Modifier.height(18.dp))
             }
 
-            // ── 1 · balance hero + accounts ──────────────────────────────────
+            // ── net worth · the balance-sheet hero ───────────────────────────
+            item(key = "networth") {
+                NetWorthSection()
+                Spacer(Modifier.height(14.dp))
+            }
+            if (hasBalanceSheet) {
+                item(key = "allocation") {
+                    AllocationSection()
+                    Spacer(Modifier.height(26.dp))
+                }
+            }
+
+            // ── 01 · accounts (cash) ─────────────────────────────────────────
             item(key = "hero") {
+                SectionLabel("Accounts", number = 1, accent = FinAccent)
+                Spacer(Modifier.height(8.dp))
                 BalanceHero(
                     accounts = accounts, totalBal = totalBal, income = income, spend = spend,
                     onAccount = { editAccount = it }, onAddAccount = { showNewAccount = true },
@@ -173,7 +192,7 @@ fun FinanceHome(onClose: () -> Unit) {
                 Spacer(Modifier.height(14.dp))
             }
 
-            // ── 2 · quick actions ────────────────────────────────────────────
+            // ── quick actions ────────────────────────────────────────────────
             item(key = "quick") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     QuickAction(Icons.Rounded.Remove, "Expense") { addExpense = true }
@@ -181,6 +200,24 @@ fun FinanceHome(onClose: () -> Unit) {
                     QuickAction(Icons.Rounded.SwapHoriz, "Move") { showMove = true }
                     QuickAction(Icons.Rounded.Radar, "Scan") { showScan = true }
                 }
+                Spacer(Modifier.height(26.dp))
+            }
+
+            // ── 02–05 · investments · crypto · other assets · debt ──────────
+            item(key = "investments") {
+                HoldingsSection(com.ascend.lifeos.data.finance.FinanceStore.HoldingKind.STOCK, "Investments", 2)
+                Spacer(Modifier.height(20.dp))
+            }
+            item(key = "crypto") {
+                HoldingsSection(com.ascend.lifeos.data.finance.FinanceStore.HoldingKind.CRYPTO, "Crypto", 3)
+                Spacer(Modifier.height(20.dp))
+            }
+            item(key = "assets") {
+                HoldingsSection(com.ascend.lifeos.data.finance.FinanceStore.HoldingKind.OTHER, "Other assets", 4)
+                Spacer(Modifier.height(20.dp))
+            }
+            item(key = "debt") {
+                HoldingsSection(com.ascend.lifeos.data.finance.FinanceStore.HoldingKind.DEBT, "Debt", 5)
                 Spacer(Modifier.height(26.dp))
             }
 

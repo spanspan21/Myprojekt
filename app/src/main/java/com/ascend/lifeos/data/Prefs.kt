@@ -45,7 +45,8 @@ object Prefs {
     const val PROTOCOLS_ON = "protocols_on"            // true
     const val INSIGHTS_ON = "insights_on"              // true
     // Experience
-    const val THEME = "theme"                          // "stark" | "stealth" | "reactor"
+    const val THEME = "theme"                          // "azure" (default) | sovereign | glacier | neon | terra | mono
+    const val THEME_LUMEN = "theme_lumen"              // one-time: force Lumen (white light) over any prior world
     const val SOUNDS_ON = "sounds_on"                  // true
     const val HAPTICS_ON = "haptics_on"                // true
     // Train

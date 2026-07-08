@@ -271,13 +271,13 @@ fun HomeScreen(
                         Text(
                             // große Ziffern flüstern: Medium statt ExtraBold (Kap. 13)
                             if (readiness == null) "—" else "${(rise.value * 100).toInt().coerceAtMost(readiness)}",
-                            color = rColor, fontFamily = Display, fontSize = 46.sp,
+                            color = rColor, fontFamily = Display, fontStyle = DisplayItalic, fontSize = 48.sp,
                             fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp,
                         )
                         Text(
                             if (readiness == null) "CONNECT WATCH" else "READINESS",
-                            color = TextDim, fontFamily = Display, fontSize = 9.sp,
-                            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                            color = TextDim, fontFamily = MicroLabel, fontSize = 9.sp,
+                            fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
                         )
                         Spacer(Modifier.height(9.dp))
                         val scanLine = remember(freshness) {
@@ -983,10 +983,13 @@ private fun TypedGreeting(full: String) {
         0.15f, 1f, infiniteRepeatable(tween(550, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "curA",
     )
+    val editorial = themeSpec.value.displaySerif
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            full.take(shown), color = TextPrimary, fontFamily = Display,
-            fontSize = 27.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp, lineHeight = 32.sp,
+            full.take(shown), color = TextPrimary, fontFamily = Display, fontStyle = DisplayItalic,
+            fontSize = if (editorial) 31.sp else 27.sp,
+            fontWeight = if (editorial) FontWeight.Normal else FontWeight.Bold,
+            letterSpacing = (-0.4).sp, lineHeight = if (editorial) 36.sp else 32.sp,
         )
         if (shown < full.length) {
             Box(

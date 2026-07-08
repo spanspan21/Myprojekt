@@ -634,7 +634,7 @@ private fun HydrationCard(
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         "%.1f".format(Locale.US, totalMl / 1000.0),
-                        color = Color.White, fontFamily = Display, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, style = shadow,
+                        color = TextPrimary, fontFamily = Display, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, style = shadow,
                     )
                     Spacer(Modifier.width(5.dp))
                     Text(

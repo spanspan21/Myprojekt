@@ -54,6 +54,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
     }
 
+    Box(Modifier.fillMaxSize()) {
+    var showDocs by remember { mutableStateOf(false) }
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 40.dp),
@@ -61,10 +63,14 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    "SETTINGS", color = Mod.Home, fontFamily = Display,
-                    fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                    "· SETTINGS", color = Mod.Home, fontFamily = MicroLabel,
+                    fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
                 )
-                Text("System configuration", color = TextPrimary, fontFamily = Display, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "System configuration", color = TextPrimary, fontFamily = Display,
+                    fontStyle = DisplayItalic, fontSize = 27.sp, fontWeight = FontWeight.Normal,
+                )
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
@@ -90,6 +96,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 sheetState = androidx.compose.material3.rememberModalBottomSheetState(),
                 onDismiss = { profileOpen = false },
             )
+        }
+
+        // ── GUIDE — the full manual: every feature, tool & algorithm ─
+        SettingsSection("Guide") {
+            ActionRow("Documentation", "Every feature, tool & algorithm — how it all works") { showDocs = true }
         }
 
         // ── CONTEXT MODE — a life phase hides what it doesn't need ───
@@ -207,7 +218,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── DESIGN — der Themen-Salon (ATELIER Kap. 24) ──────────────
         SettingsSection("Design") {
-            var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "sovereign")) }
+            var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "azure")) }
             Text(
                 "THEME", color = TextDim, fontFamily = Display,
                 fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
@@ -450,6 +461,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 }
             }
         }
+    }
+        if (showDocs) DocumentationScreen(onClose = { showDocs = false })
     }
 }
 

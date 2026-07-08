@@ -604,6 +604,134 @@ object FinanceStore {
         return out
     }
 
+    // ─── Net worth: holdings + snapshots ────────────────────────────────────
+    // Accounts already hold cash balances. Holdings add the rest of the balance
+    // sheet — investments, crypto, lump assets and debts. Net worth = cash +
+    // stocks + crypto + other − debt. Prices are MANUAL (no market API — the app
+    // stays offline and free); a snapshot of the total is upserted once per day
+    // on read so the net-worth chart grows honestly from real use, no fabrication.
+
+    enum class HoldingKind { STOCK, CRYPTO, OTHER, DEBT }
+
+    /** A balance-sheet position. [units]×[priceCents] = value; lump assets/debts
+     *  use units = 1 and priceCents = the whole value. */
+    data class Holding(
+        val id: String,
+        val kind: HoldingKind,
+        val name: String,        // ticker (VTI) or asset name (Home, Car …)
+        val units: Double,       // shares / coins / 1.0 for lump positions
+        val priceCents: Long,    // per-unit price in cents (or full value when units = 1)
+    ) {
+        val valueCents: Long get() = Math.round(units * priceCents)
+    }
+
+    private fun holdingFrom(o: JSONObject) = Holding(
+        id = o.optString("id"),
+        kind = runCatching { HoldingKind.valueOf(o.optString("kind", "OTHER")) }.getOrDefault(HoldingKind.OTHER),
+        name = o.optString("name"),
+        units = o.optDouble("units", 1.0),
+        priceCents = o.optLong("price"),
+    )
+
+    private fun Holding.toJson() = JSONObject()
+        .put("id", id).put("kind", kind.name).put("name", name)
+        .put("units", units).put("price", priceCents)
+
+    fun holdings(ctx: Context): List<Holding> {
+        val arr = array(ctx, "holdings")
+        val out = ArrayList<Holding>(arr.length())
+        for (i in 0 until arr.length()) out.add(holdingFrom(arr.getJSONObject(i)))
+        return out
+    }
+
+    fun holdingsOf(ctx: Context, kind: HoldingKind): List<Holding> =
+        holdings(ctx).filter { it.kind == kind }
+
+    private fun writeHoldings(ctx: Context, list: List<Holding>) {
+        val arr = JSONArray()
+        list.forEach { arr.put(it.toJson()) }
+        put(ctx, "holdings", arr.toString())
+    }
+
+    /** Adds a position and returns its id. [units] ≥ 0. */
+    fun addHolding(ctx: Context, kind: HoldingKind, name: String, units: Double, priceCents: Long): String {
+        val id = newId("h")
+        if (name.isBlank()) return id
+        writeHoldings(ctx, holdings(ctx) + Holding(id, kind, name.trim(), units.coerceAtLeast(0.0), priceCents))
+        return id
+    }
+
+    fun updateHolding(ctx: Context, id: String, name: String, units: Double, priceCents: Long) {
+        if (name.isBlank()) return
+        writeHoldings(ctx, holdings(ctx).map {
+            if (it.id == id) it.copy(name = name.trim(), units = units.coerceAtLeast(0.0), priceCents = priceCents) else it
+        })
+    }
+
+    fun deleteHolding(ctx: Context, id: String) {
+        writeHoldings(ctx, holdings(ctx).filter { it.id != id })
+    }
+
+    /** Cash across all accounts. */
+    fun cashCents(ctx: Context): Long = accounts(ctx).sumOf { it.balanceCents }
+
+    /** Everything that isn't debt (stocks + crypto + other). */
+    fun assetsCents(ctx: Context): Long =
+        holdings(ctx).filter { it.kind != HoldingKind.DEBT }.sumOf { it.valueCents }
+
+    /** Total liabilities, as a positive number. */
+    fun debtCents(ctx: Context): Long =
+        holdings(ctx).filter { it.kind == HoldingKind.DEBT }.sumOf { it.valueCents }
+
+    /** Net worth = cash + assets − debt. */
+    fun netWorthCents(ctx: Context): Long = cashCents(ctx) + assetsCents(ctx) - debtCents(ctx)
+
+    /** Allocation of positive holdings by class, for the donut (empty classes dropped). */
+    fun allocation(ctx: Context): List<Pair<String, Long>> {
+        val cash = cashCents(ctx).coerceAtLeast(0)
+        val stocks = holdingsOf(ctx, HoldingKind.STOCK).sumOf { it.valueCents }
+        val crypto = holdingsOf(ctx, HoldingKind.CRYPTO).sumOf { it.valueCents }
+        val other = holdingsOf(ctx, HoldingKind.OTHER).sumOf { it.valueCents }
+        return listOf("Cash" to cash, "Stocks" to stocks, "Crypto" to crypto, "Other" to other)
+            .filter { it.second > 0 }
+    }
+
+    /**
+     * Daily net-worth snapshots as (epochDay, cents), oldest first. Today's point
+     * is upserted to the current net worth on every read (quiet — no rev bump),
+     * so the series builds up honestly as the app is used. Capped at ~2 years.
+     */
+    fun snapshots(ctx: Context): List<Pair<Long, Long>> {
+        val arr = array(ctx, "nw_snaps")
+        val out = ArrayList<Pair<Long, Long>>(arr.length())
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            out.add(o.optLong("d") to o.optLong("c"))
+        }
+        val today = LocalDate.now().toEpochDay()
+        val nw = netWorthCents(ctx)
+        var changed = false
+        if (out.isEmpty() || out.last().first != today) {
+            out.add(today to nw); changed = true
+        } else if (out.last().second != nw) {
+            out[out.size - 1] = today to nw; changed = true
+        }
+        val capped = if (out.size > 740) out.takeLast(740) else out
+        if (changed || capped.size != out.size) {
+            val write = JSONArray()
+            capped.forEach { write.put(JSONObject().put("d", it.first).put("c", it.second)) }
+            putQuiet(ctx, "nw_snaps", write.toString())
+        }
+        return capped
+    }
+
+    /** All-time high / low over the snapshot series (0/0 when empty). */
+    fun netWorthExtremes(ctx: Context): Pair<Long, Long> {
+        val s = snapshots(ctx)
+        if (s.isEmpty()) return 0L to 0L
+        return s.maxOf { it.second } to s.minOf { it.second }
+    }
+
     // ─── Export ─────────────────────────────────────────────────────────────
 
     private fun csv(field: String): String =

@@ -246,7 +246,30 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>) {
             Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
+            if (com.ascend.lifeos.ui.theme.isLight) {
+                // LUMEN: the signature Crystal is the index — breathing, glowing,
+                // its intensity driven by the score; the number counts up below.
+                com.ascend.lifeos.ui.kit.LumenCrystal(
+                    Modifier.size(154.dp),
+                    accent = Accent,   // the brand blue — the score lives in the number + tier
+                    intensity = ((index ?: 0) / 100f).coerceAtLeast(0.35f),
+                )
+                Spacer(Modifier.height(14.dp))
+                if (index != null) {
+                    val shown = com.ascend.lifeos.ui.kit.countUp(index, durationMs = 1100)
+                    Text(
+                        "$shown", color = TextPrimary, fontFamily = Display,
+                        fontStyle = com.ascend.lifeos.ui.theme.DisplayItalic,
+                        fontSize = 56.sp, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
+                    )
+                    Text(
+                        tierLabel, color = tier, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
+                        fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
+                    )
+                } else {
+                    Text("—", color = TextMuted, fontFamily = Display, fontSize = 46.sp, fontWeight = FontWeight.ExtraBold)
+                }
+            } else Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
                     val stroke = 13.dp.toPx()
                     val inset = stroke / 2 + 8.dp.toPx()

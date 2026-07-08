@@ -66,23 +66,26 @@ import kotlin.math.roundToLong
 // Accent, donut shades, money formatting and the small glass pieces every
 // finance surface composes from. Same idiom as the School/Settings screens.
 
-/** Finance module accent — lime. */
-internal val FinAccent = Color(0xFF9CC24A)
+/** Finance module accent — the world's finance jewel (emerald in AZURE). */
+internal val FinAccent: Color get() = com.ascend.lifeos.ui.theme.Mod.Finance
 
 /**
- * Fixed lime lightness ramp for the category donut — validated against the
- * Void surface (all ≥ 3:1, adjacent-step CVD with hairline gaps + labeled
- * legend as secondary encoding). Index-mapped to LifeStores.CATEGORIES so a
+ * Lightness ramp for the donut, derived from the world's finance jewel so the
+ * split reads in the active theme (was a fixed lime). Six adjacent steps from a
+ * light tint down to a deep shade; index-mapped to LifeStores.CATEGORIES so a
  * category keeps its shade regardless of this month's ranking.
  */
-internal val FinShades = listOf(
-    Color(0xFFD1E2AC),
-    Color(0xFFBCD486),
-    Color(0xFFA7C760),
-    Color(0xFF90B540),
-    Color(0xFF729032),
-    Color(0xFF546A25),
-)
+internal val FinShades: List<Color> get() {
+    val base = com.ascend.lifeos.ui.theme.Mod.Finance
+    return listOf(
+        androidx.compose.ui.graphics.lerp(base, Color.White, 0.52f),
+        androidx.compose.ui.graphics.lerp(base, Color.White, 0.28f),
+        base,
+        androidx.compose.ui.graphics.lerp(base, Color.Black, 0.20f),
+        androidx.compose.ui.graphics.lerp(base, Color.Black, 0.38f),
+        androidx.compose.ui.graphics.lerp(base, Color.Black, 0.54f),
+    )
+}
 
 /** Shade follows the category (entity), never its rank this month. */
 internal fun shadeFor(category: String): Color {
@@ -133,8 +136,8 @@ internal fun dueInLabel(epochDay: Long): String {
 @Composable
 internal fun Overline(text: String, color: Color = TextDim) {
     Text(
-        text.uppercase(), color = color, fontFamily = Display,
-        fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+        text.uppercase(), color = color, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
+        fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.6.sp,
     )
 }
 
