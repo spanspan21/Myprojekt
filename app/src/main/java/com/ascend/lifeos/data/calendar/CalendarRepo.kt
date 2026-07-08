@@ -160,6 +160,7 @@ object CalendarRepo {
         allDay: Boolean = false,
         repeatMask: Int = 0,
         id: String? = null,
+        note: String = "",
     ) {
         dao(ctx).upsert(
             CalEventEntity(
@@ -172,9 +173,13 @@ object CalendarRepo {
                 endMin = if (allDay) 24 * 60 else endMin,
                 allDay = allDay,
                 repeatMask = repeatMask,
+                note = note,
             ),
         )
     }
+
+    /** Remove all JARVIS-auto-placed training blocks (past + future). */
+    suspend fun clearPlannedTraining(ctx: Context) = dao(ctx).deletePlannedTraining()
 
     fun fmtMin(min: Int): String = "%02d:%02d".format(min / 60, min % 60)
 }

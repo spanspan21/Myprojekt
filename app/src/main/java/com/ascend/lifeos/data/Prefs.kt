@@ -55,6 +55,7 @@ object Prefs {
     const val STRAIN_TARGET_ON = "strain_target_on"    // true
     const val SEASON_PHASE = "season_phase"            // "OFF" | "PRE" | "IN" | "PLAYOFF" | "" (auto/none)
     const val DELOAD_UNTIL = "deload_until"            // epoch-day the active deload runs until (0 = none)
+    const val TRAIN_AUTO_SCHEDULE = "train_auto_schedule" // true = recommended (auto-place); false = custom (you place)
     // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true
     // Body

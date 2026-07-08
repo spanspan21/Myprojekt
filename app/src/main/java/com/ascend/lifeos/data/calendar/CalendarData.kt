@@ -47,6 +47,12 @@ interface CalendarDao {
     /** Wipe every event imported via WebUntis login (markers: untis / untis_x). */
     @Query("DELETE FROM cal_events WHERE note LIKE 'untis%'")
     suspend fun deleteUntis()
+
+    /** Wipe every JARVIS-auto-placed training block (marker: note == "plan").
+     *  Manual training events (note == "") are untouched, so re-planning cleans up
+     *  its own past/stale blocks without deleting anything the user made by hand. */
+    @Query("DELETE FROM cal_events WHERE type = 'TRAINING' AND note = 'plan'")
+    suspend fun deletePlannedTraining()
 }
 
 @Database(entities = [CalEventEntity::class], version = 1, exportSchema = false)

@@ -259,6 +259,11 @@ object PlanGenerator {
 
     /** Write placements into the JARVIS calendar as TRAINING blocks. */
     suspend fun schedule(ctx: Context, placements: List<Placement>, sessionLen: Int) {
+        // Wipe every previously auto-placed block first — otherwise old and past
+        // sessions pile up (each schedule used to add fresh random-id events and
+        // never cleaned up). Then write the current week, tagged note="plan" so
+        // this cleanup only ever touches JARVIS's own auto-placements.
+        CalendarRepo.clearPlannedTraining(ctx)
         placements.forEach { p ->
             val needMin = maxOf(sessionLen, p.session.estMin)
             CalendarRepo.upsert(
@@ -268,6 +273,7 @@ object PlanGenerator {
                 day = p.day,
                 startMin = p.startMin,
                 endMin = p.startMin + needMin,
+                note = "plan",
             )
         }
     }
@@ -283,7 +289,7 @@ object PlanGenerator {
         val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.plusDays(7).toEpochDay())
         val trainings = entities.filter {
             it.type == EventType.TRAINING.name && it.repeatMask == 0 &&
-                it.dayEpoch >= today.toEpochDay()
+                it.dayEpoch >= today.toEpochDay() && it.note == "plan"
         }
         if (trainings.isEmpty()) return emptyList()
 
@@ -336,7 +342,7 @@ object PlanGenerator {
                 CalendarRepo.upsert(
                     ctx, title = t.title, type = EventType.TRAINING,
                     day = placedAt.first, startMin = placedAt.second,
-                    endMin = placedAt.second + blockLen,
+                    endMin = placedAt.second + blockLen, note = "plan",
                 )
                 val fmt = java.time.format.DateTimeFormatter.ofPattern("EEE", java.util.Locale.ENGLISH)
                 moved.add("${t.title} → ${placedAt.first.format(fmt)} ${CalendarRepo.fmtMin(placedAt.second)}")

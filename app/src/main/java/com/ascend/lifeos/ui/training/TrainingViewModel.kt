@@ -119,8 +119,45 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var scheduledOk by mutableStateOf(false)
         private set
+    /** true = recommended (JARVIS auto-places sessions); false = custom (you do). */
+    var autoSchedule by mutableStateOf(
+        com.ascend.lifeos.data.Prefs.bool(getApplication(), com.ascend.lifeos.data.Prefs.TRAIN_AUTO_SCHEDULE, true),
+    )
+        private set
     var muscleFreshness by mutableStateOf<MuscleRecovery.Freshness?>(null)
         private set
+
+    /** Switch between recommended (auto) and custom (manual) scheduling. */
+    fun setScheduleMode(on: Boolean) {
+        com.ascend.lifeos.data.Prefs.setBool(getApplication(), com.ascend.lifeos.data.Prefs.TRAIN_AUTO_SCHEDULE, on)
+        autoSchedule = on
+        if (on) regeneratePlan()   // recommended → wipe + re-distribute right away
+    }
+
+    /** Custom mode: place one session on a chosen day + time (replacing its block). */
+    fun placeSessionManually(session: PlannedSession, day: java.time.LocalDate, startMin: Int) =
+        viewModelScope.launch(Dispatchers.IO) {
+            val p = com.ascend.lifeos.data.Repo.data.profile
+            val len = maxOf(p.sessionLen, session.estMin)
+            // one block per session name: drop the old planned block for this
+            // session, then write the new one at the chosen slot
+            runCatching {
+                val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(getApplication())
+                val from = java.time.LocalDate.now().minusDays(14).toEpochDay()
+                val to = java.time.LocalDate.now().plusDays(21).toEpochDay()
+                dao.eventsInRangeOnce(from, to)
+                    .filter { it.type == com.ascend.lifeos.data.calendar.EventType.TRAINING.name && it.note == "plan" && it.title == session.name }
+                    .forEach { dao.delete(it.id) }
+                com.ascend.lifeos.data.calendar.CalendarRepo.upsert(
+                    getApplication(), title = session.name,
+                    type = com.ascend.lifeos.data.calendar.EventType.TRAINING,
+                    day = day, startMin = startMin, endMin = startMin + len, note = "plan",
+                )
+            }
+            // refresh the placement preview so the UI reflects the manual choice
+            placements = placements.filter { it.session.index != session.index } +
+                Placement(session, day, startMin)
+        }
 
     fun refreshFreshness() = viewModelScope.launch(Dispatchers.IO) {
         muscleFreshness = runCatching { MuscleRecovery.compute(getApplication()) }.getOrNull()
@@ -212,7 +249,16 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         placements = runCatching {
             PlanGenerator.placeWeek(getApplication(), plan, p.sessionLen)
         }.getOrDefault(emptyList())
-        scheduledOk = false
+        // Recommended mode keeps the calendar in sync by itself: wipe the old
+        // auto-placed blocks and write the fresh week. So changing anything (freq,
+        // session length, deload, a new obligation) re-distributes and clears the
+        // past/stale sessions with no extra tap. Custom mode leaves it to the user.
+        if (autoSchedule) {
+            runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }
+            scheduledOk = true
+        } else {
+            scheduledOk = false
+        }
     }
 
     /**
