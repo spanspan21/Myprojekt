@@ -78,6 +78,10 @@ fun PrimeScreen(onClose: () -> Unit) {
     // previous value stays on screen until the new one lands, so no flicker)
     val reload = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0) }
     val report by produceState<PrimeReport?>(null, reload.value) {
+        // Let the enter transition settle before the heavy build + rich hero
+        // (crystal + subsystem bars + lists) compose — composing all of that
+        // mid-animation was the brief stutter on Today → Prime.
+        kotlinx.coroutines.delay(300)
         value = runCatching { PrimeEngine.build(ctx) }.getOrNull()
     }
 
