@@ -199,6 +199,43 @@ object Notifier {
         runCatching { NotificationManagerCompat.from(ctx).notify(id, builder.build()) }
     }
 
+    /**
+     * A single habit's daily reminder. Silent unless the habit is genuinely due
+     * right now — scheduled today, not skipped, and not already completed (an
+     * auto habit whose steps/sleep target is already met never nags).
+     */
+    fun showHabit(ctx: Context, id: String, title: String, icon: String) {
+        if (!hasPermission(ctx)) return
+        ensureChannel(ctx)
+        runCatching { Repo.initIfNeeded(ctx) }
+        val h = com.ascend.lifeos.data.life.LifeStores.habits(ctx).firstOrNull { it.id == id } ?: return
+        val today = java.time.LocalDate.now()
+        val dayKey = todayKey()
+        if (!com.ascend.lifeos.data.life.HabitMetrics.scheduledOn(h, today)) return
+        if (com.ascend.lifeos.data.life.HabitMetrics.skipped(ctx, h, dayKey)) return
+        if (com.ascend.lifeos.data.life.HabitMetrics.done(ctx, h, dayKey)) return
+
+        var flags = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
+        val open = Intent(ctx, Class.forName("com.ascend.lifeos.MainActivity"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .putExtra("open", "habits")
+        val pi = PendingIntent.getActivity(ctx, 4400 + (id.hashCode() and 0x3F), open, flags)
+
+        val label = (if (icon.isNotBlank()) "$icon " else "") + title.ifBlank { "Habit" }
+        val text = if (h.avoid) "Stay clean today — you've got this." else "Time to get it done. Tap to check it off."
+        val notifId = 12_000 + (id.hashCode() and 0x7FFF)
+        val builder = NotificationCompat.Builder(ctx, CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(label)
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pi)
+            .addAction(0, "Open", pi)
+        runCatching { NotificationManagerCompat.from(ctx).notify(notifId, builder.build()) }
+    }
+
     private fun message(ctx: Context, kind: String): Pair<String, String>? {
         val p = runCatching { Repo.profile() }.getOrDefault(Profile())
         val name = p.name.ifBlank { "operator" }

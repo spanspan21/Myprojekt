@@ -8,6 +8,15 @@ import android.content.Intent
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val kind = intent.getStringExtra("kind") ?: "morning"
+        if (kind == "habit") {
+            Notifier.showHabit(
+                ctx,
+                intent.getStringExtra("habitId") ?: return,
+                intent.getStringExtra("habitTitle") ?: "",
+                intent.getStringExtra("habitIcon") ?: "",
+            )
+            return
+        }
         Notifier.show(ctx, kind)
         // Arm the "training in 30 min" heads-up off the daily anchors, so a
         // block placed later in the morning still gets its warning.
@@ -42,6 +51,8 @@ class BootReceiver : BroadcastReceiver() {
         if (Repo.profile().reminders && Notifier.hasPermission(ctx)) {
             Notifier.schedule(ctx)
         }
+        // per-habit reminders survive a reboot too
+        runCatching { com.ascend.lifeos.data.life.HabitReminders.reschedule(ctx) }
         // The guard persisted isEnabled but never survived a reboot until now.
         runCatching {
             if (com.ascend.lifeos.wellbeing.WellbeingStore.isEnabled(ctx)) {

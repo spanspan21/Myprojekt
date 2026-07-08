@@ -99,7 +99,7 @@ private enum class Sub(val label: String, val accent: @Composable () -> Color) {
 private enum class Group(val label: String, val icon: ImageVector, val subs: List<Sub>) {
     TODAY("Today", Icons.Rounded.Hexagon, listOf(Sub.HOME, Sub.PRIME)),
     BODY("Body", Icons.Rounded.FitnessCenter, listOf(Sub.TRAIN, Sub.FUEL, Sub.VITALS, Sub.SLEEP)),
-    LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.GOALS, Sub.FINANCE, Sub.SCHOOL, Sub.HABITS)),
+    LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.HABITS, Sub.FINANCE, Sub.GOALS, Sub.SCHOOL)),
     SYSTEM("System", Icons.Rounded.Shield, listOf(Sub.GUARD, Sub.SKILLS, Sub.SETTINGS)),
 }
 

@@ -53,6 +53,8 @@ class MainActivity : ComponentActivity() {
             // The proactive layer is dead on 13+ until this is granted — ask once per launch.
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
+        // per-habit reminders are an explicit opt-in, independent of the global toggle
+        runCatching { com.ascend.lifeos.data.life.HabitReminders.reschedule(applicationContext) }
         com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
         // Untis/ICS keep themselves fresh (6h throttle) — the cancellation
         // alarm only ever fires from a sync, so a sync has to actually happen

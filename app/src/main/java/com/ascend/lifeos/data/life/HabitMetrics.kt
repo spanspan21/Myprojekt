@@ -6,12 +6,15 @@ import com.ascend.lifeos.data.Repo
 import java.time.LocalDate
 
 /**
- * Auto-completion + statistics for habits. A habit with a non-blank
- * [Habit.autoMetric] is completed by real data the app already measures —
- * "steps" (Health Connect), "sleep", "trained", "protein", "water" — instead of a
- * manual tap; it is done once the day's measured value reaches [Habit.threshold].
- * Everything reads the same per-day stores the rest of the app writes, so streaks,
- * rates and history are honest and fully retroactive (no stored check-marks needed).
+ * Completion + statistics for habits. A habit completes in one of three ways:
+ *  - AUTO ([Habit.autoMetric] set): from real data the app measures — steps
+ *    (Health Connect), sleep, whether you trained, protein, water — done when the
+ *    day's value reaches [Habit.threshold].
+ *  - MEASURABLE ([Habit.target] > 0): a per-day count (e.g. "Read 20 min"), done
+ *    when the count reaches the target.
+ *  - SIMPLE: a manual check.
+ * A day can also be SKIPPED (streak freeze): it counts as neither done nor missed.
+ * Everything reads the same per-day stores, so streaks/rates/history are honest.
  */
 object HabitMetrics {
 
@@ -29,8 +32,9 @@ object HabitMetrics {
     fun def(metric: String): MetricDef? = METRICS.firstOrNull { it.id == metric }
 
     fun isAuto(h: Habit): Boolean = h.autoMetric.isNotBlank()
+    fun isMeasurable(h: Habit): Boolean = h.autoMetric.isBlank() && h.target > 0
 
-    /** The day's measured value for [metric] (0 when absent/not synced). */
+    /** The day's measured value for an auto [metric] (0 when absent/not synced). */
     fun value(metric: String, dayKey: String): Int = when (metric) {
         "steps" -> Repo.bodyDay(dayKey)?.steps ?: 0
         "sleep" -> Repo.bodyDay(dayKey)?.sleepMin ?: 0
@@ -40,28 +44,50 @@ object HabitMetrics {
         else -> 0
     }
 
-    /** Completed on [dayKey] — from real data for auto habits, else the manual mark. */
-    fun done(ctx: Context, h: Habit, dayKey: String): Boolean =
-        if (isAuto(h)) value(h.autoMetric, dayKey) >= h.threshold
-        else LifeStores.habitDone(ctx, h.id, dayKey)
+    /** Effective target for one completion. */
+    fun targetOf(h: Habit): Int = when {
+        isAuto(h) -> h.threshold
+        isMeasurable(h) -> h.target
+        else -> 1
+    }
+
+    /** Current progress toward today's target (for the counter / auto display). */
+    fun progress(ctx: Context, h: Habit, dayKey: String): Int = when {
+        isAuto(h) -> value(h.autoMetric, dayKey)
+        isMeasurable(h) -> LifeStores.habitCount(ctx, h.id, dayKey)
+        else -> if (LifeStores.habitDone(ctx, h.id, dayKey)) 1 else 0
+    }
+
+    /** Completed on [dayKey]. */
+    fun done(ctx: Context, h: Habit, dayKey: String): Boolean = when {
+        isAuto(h) -> value(h.autoMetric, dayKey) >= h.threshold
+        isMeasurable(h) -> LifeStores.habitCount(ctx, h.id, dayKey) >= h.target
+        else -> LifeStores.habitDone(ctx, h.id, dayKey)
+    }
+
+    fun skipped(ctx: Context, h: Habit, dayKey: String): Boolean = LifeStores.habitSkipped(ctx, h.id, dayKey)
 
     fun scheduledOn(h: Habit, d: LocalDate): Boolean =
         (h.daysMask shr (d.dayOfWeek.value - 1)) and 1 == 1
 
     private fun keyOf(d: LocalDate) = "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
 
-    /** Consecutive scheduled days completed, counting back from today. */
+    /** A day counts toward stats when it's scheduled and not skipped. */
+    private fun counts(ctx: Context, h: Habit, d: LocalDate): Boolean =
+        scheduledOn(h, d) && !LifeStores.habitSkipped(ctx, h.id, keyOf(d))
+
+    /** Consecutive counted days completed, back from today (today's open slot never breaks). */
     fun streak(ctx: Context, h: Habit): Int {
         if (h.daysMask == 0) return 0
         val todayK = todayKey()
         var day = LocalDate.parse(todayK)
         var streak = 0
         repeat(365) {
-            if (scheduledOn(h, day)) {
+            if (counts(ctx, h, day)) {
                 val key = keyOf(day)
                 when {
                     done(ctx, h, key) -> streak++
-                    key == todayK -> Unit             // today still open — don't break
+                    key == todayK -> Unit
                     else -> return streak
                 }
             }
@@ -70,14 +96,13 @@ object HabitMetrics {
         return streak
     }
 
-    /** Longest completed run of scheduled days within the last [window] days. */
     fun bestStreak(ctx: Context, h: Habit, window: Int = 180): Int {
         if (h.daysMask == 0) return 0
         var best = 0
         var run = 0
         var day = LocalDate.parse(todayKey()).minusDays((window - 1).toLong())
         repeat(window) {
-            if (scheduledOn(h, day)) {
+            if (counts(ctx, h, day)) {
                 if (done(ctx, h, keyOf(day))) { run++; best = maxOf(best, run) } else run = 0
             }
             day = day.plusDays(1)
@@ -85,7 +110,6 @@ object HabitMetrics {
         return best
     }
 
-    /** Completion rate 0..1 over scheduled days in the last [window] days (today's open slot excluded). */
     fun completionRate(ctx: Context, h: Habit, window: Int = 30): Float {
         val todayK = todayKey()
         var sched = 0
@@ -93,7 +117,7 @@ object HabitMetrics {
         var day = LocalDate.parse(todayK).minusDays((window - 1).toLong())
         repeat(window) {
             val key = keyOf(day)
-            if (scheduledOn(h, day) && key != todayK) {
+            if (counts(ctx, h, day) && key != todayK) {
                 sched++
                 if (done(ctx, h, key)) did++
             }
@@ -102,15 +126,17 @@ object HabitMetrics {
         return if (sched == 0) 0f else did.toFloat() / sched
     }
 
-    data class DayCell(val date: LocalDate, val scheduled: Boolean, val done: Boolean)
+    data class DayCell(val date: LocalDate, val scheduled: Boolean, val done: Boolean, val skipped: Boolean)
 
     /** Per-day cells for the last [days] days (oldest first) — for the heatmap. */
     fun history(ctx: Context, h: Habit, days: Int): List<DayCell> {
         val out = ArrayList<DayCell>(days)
         var day = LocalDate.parse(todayKey()).minusDays((days - 1).toLong())
         repeat(days) {
+            val key = keyOf(day)
             val sched = scheduledOn(h, day)
-            out.add(DayCell(day, sched, sched && done(ctx, h, keyOf(day))))
+            val skip = LifeStores.habitSkipped(ctx, h.id, key)
+            out.add(DayCell(day, sched && !skip, sched && !skip && done(ctx, h, key), skip))
             day = day.plusDays(1)
         }
         return out
@@ -119,4 +145,47 @@ object HabitMetrics {
     /** Completed-per-week counts over the last [weeks] weeks — for a sparkline. */
     fun weeklyTrend(ctx: Context, h: Habit, weeks: Int = 8): List<Float> =
         history(ctx, h, weeks * 7).chunked(7).map { wk -> wk.count { it.done }.toFloat() }
+
+    // ─── overall (across all habits) ─────────────────────────────────────────
+
+    /** true = every habit due (scheduled, not skipped) that day was done; null = none due. */
+    fun perfectDay(ctx: Context, habits: List<Habit>, date: LocalDate): Boolean? {
+        val key = keyOf(date)
+        val due = habits.filter { scheduledOn(it, date) && !LifeStores.habitSkipped(ctx, it.id, key) }
+        if (due.isEmpty()) return null
+        return due.all { done(ctx, it, key) }
+    }
+
+    /** Consecutive perfect days back from today (empty days skipped; today never breaks). */
+    fun overallStreak(ctx: Context, habits: List<Habit>): Int {
+        if (habits.isEmpty()) return 0
+        val todayK = todayKey()
+        var day = LocalDate.parse(todayK)
+        var streak = 0
+        repeat(365) {
+            when (perfectDay(ctx, habits, day)) {
+                true -> streak++
+                null -> Unit
+                else -> if (keyOf(day) != todayK) return streak
+            }
+            day = day.minusDays(1)
+        }
+        return streak
+    }
+
+    /** Overall completion 0..1 across all (habit × scheduled day) pairs in the last [window] days. */
+    fun overallRate(ctx: Context, habits: List<Habit>, window: Int = 30): Float {
+        val todayK = todayKey()
+        var pairs = 0
+        var did = 0
+        var day = LocalDate.parse(todayK).minusDays((window - 1).toLong())
+        repeat(window) {
+            val key = keyOf(day)
+            if (key != todayK) {
+                habits.forEach { h -> if (counts(ctx, h, day)) { pairs++; if (done(ctx, h, key)) did++ } }
+            }
+            day = day.plusDays(1)
+        }
+        return if (pairs == 0) 0f else did.toFloat() / pairs
+    }
 }

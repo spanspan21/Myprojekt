@@ -55,6 +55,11 @@ data class Habit(
     val icon: String,
     val autoMetric: String = "",
     val threshold: Int = 0,
+    val target: Int = 0,        // measurable daily target (0 = simple check-off)
+    val unit: String = "",      // "min" | "glasses" | "pages" …
+    val avoid: Boolean = false, // a "quit" habit — done = you stayed clean today
+    val order: Int = 0,         // manual sort order in the list
+    val reminderMin: Int = -1,  // minute-of-day reminder; -1 = no reminder
 )
 
 object LifeStores {
@@ -284,6 +289,8 @@ object LifeStores {
     private fun Habit.toJson() = JSONObject()
         .put("id", id).put("title", title).put("mask", daysMask).put("icon", icon)
         .put("auto", autoMetric).put("thr", threshold)
+        .put("target", target).put("unit", unit).put("avoid", avoid)
+        .put("order", order).put("reminder", reminderMin)
 
     private fun habitFrom(o: JSONObject) = Habit(
         id = o.optString("id"),
@@ -292,13 +299,18 @@ object LifeStores {
         icon = o.optString("icon", ""),
         autoMetric = o.optString("auto", ""),
         threshold = o.optInt("thr", 0),
+        target = o.optInt("target", 0),
+        unit = o.optString("unit", ""),
+        avoid = o.optBoolean("avoid", false),
+        order = o.optInt("order", 0),
+        reminderMin = o.optInt("reminder", -1),
     )
 
     fun habits(ctx: Context): List<Habit> {
         val arr = array(ctx, "habits")
         val out = ArrayList<Habit>(arr.length())
         for (i in 0 until arr.length()) out.add(habitFrom(arr.getJSONObject(i)))
-        return out
+        return out.sortedBy { it.order }   // stable: legacy order=0 keeps insertion order
     }
 
     private fun writeHabits(ctx: Context, habits: List<Habit>) {
@@ -307,27 +319,82 @@ object LifeStores {
         put(ctx, "habits", arr.toString())
     }
 
-    fun addHabit(ctx: Context, title: String, daysMask: Int, icon: String = "", autoMetric: String = "", threshold: Int = 0) {
+    fun addHabit(
+        ctx: Context, title: String, daysMask: Int, icon: String = "",
+        autoMetric: String = "", threshold: Int = 0,
+        target: Int = 0, unit: String = "", avoid: Boolean = false,
+    ) {
         if (title.isBlank() || daysMask == 0) return
         // avoid duplicate auto-habits (e.g. two "10k steps") — one per metric
         if (autoMetric.isNotBlank() && habits(ctx).any { it.autoMetric == autoMetric }) return
-        writeHabits(ctx, habits(ctx) + Habit(newId("h"), title.trim(), daysMask and 0b1111111, icon, autoMetric, threshold))
+        val nextOrder = (habits(ctx).maxOfOrNull { it.order } ?: -1) + 1
+        writeHabits(
+            ctx,
+            habits(ctx) + Habit(
+                newId("h"), title.trim(), daysMask and 0b1111111, icon,
+                autoMetric, threshold, target, unit, avoid, nextOrder,
+            ),
+        )
     }
+
+    /** Generic edit — used by the builder, the schedule editor and reminders. */
+    fun updateHabit(ctx: Context, id: String, transform: (Habit) -> Habit) =
+        writeHabits(ctx, habits(ctx).map { if (it.id == id) transform(it) else it })
 
     fun setHabitDays(ctx: Context, id: String, daysMask: Int) {
         val mask = daysMask and 0b1111111
         if (mask == 0) return
-        writeHabits(ctx, habits(ctx).map { if (it.id == id) it.copy(daysMask = mask) else it })
+        updateHabit(ctx, id) { it.copy(daysMask = mask) }
+    }
+
+    /** Minute-of-day for a daily reminder, or -1 to turn it off. */
+    fun setHabitReminder(ctx: Context, id: String, minuteOfDay: Int) =
+        updateHabit(ctx, id) { it.copy(reminderMin = if (minuteOfDay in 0..1439) minuteOfDay else -1) }
+
+    /** Move a habit up/down; rewrites sequential order so it persists. */
+    fun moveHabit(ctx: Context, id: String, up: Boolean) {
+        val list = habits(ctx).toMutableList()   // already sorted by order
+        val i = list.indexOfFirst { it.id == id }
+        if (i < 0) return
+        val j = if (up) i - 1 else i + 1
+        if (j !in list.indices) return
+        java.util.Collections.swap(list, i, j)
+        writeHabits(ctx, list.mapIndexed { idx, h -> h.copy(order = idx) })
+    }
+
+    // ── measurable habits: a per-day count ──────────────────────────────────
+    private fun countMap(ctx: Context): JSONObject =
+        runCatching { JSONObject(prefs(ctx).getString("habit_count", "{}") ?: "{}") }.getOrDefault(JSONObject())
+
+    fun habitCount(ctx: Context, id: String, dayKey: String): Int = countMap(ctx).optInt("$id|$dayKey", 0)
+
+    fun setHabitCount(ctx: Context, id: String, dayKey: String, count: Int) {
+        val o = countMap(ctx)
+        if (count > 0) o.put("$id|$dayKey", count) else o.remove("$id|$dayKey")
+        put(ctx, "habit_count", o.toString())
+    }
+
+    // ── skip a day (streak freeze): neither done nor missed ─────────────────
+    private fun skipMap(ctx: Context): JSONObject =
+        runCatching { JSONObject(prefs(ctx).getString("habit_skip", "{}") ?: "{}") }.getOrDefault(JSONObject())
+
+    fun habitSkipped(ctx: Context, id: String, dayKey: String): Boolean = skipMap(ctx).optBoolean("$id|$dayKey", false)
+
+    fun toggleHabitSkip(ctx: Context, id: String, dayKey: String) {
+        val o = skipMap(ctx)
+        if (o.optBoolean("$id|$dayKey", false)) o.remove("$id|$dayKey") else o.put("$id|$dayKey", true)
+        put(ctx, "habit_skip", o.toString())
     }
 
     fun deleteHabit(ctx: Context, id: String) {
         writeHabits(ctx, habits(ctx).filter { it.id != id })
-        // drop its done-marks too
-        val raw = prefs(ctx).getString("habit_done", null) ?: return
-        val o = runCatching { JSONObject(raw) }.getOrNull() ?: return
-        val keep = JSONObject()
-        for (k in o.keys()) if (!k.startsWith("$id|")) keep.put(k, o.getBoolean(k))
-        prefs(ctx).edit().putString("habit_done", keep.toString()).apply()
+        // drop its per-day marks (done / count / skip) too
+        listOf("habit_done", "habit_count", "habit_skip").forEach { mapKey ->
+            val o = runCatching { JSONObject(prefs(ctx).getString(mapKey, "{}") ?: "{}") }.getOrNull() ?: return@forEach
+            val keep = JSONObject()
+            for (k in o.keys()) if (!k.startsWith("$id|")) keep.put(k, o.get(k))
+            prefs(ctx).edit().putString(mapKey, keep.toString()).apply()
+        }
         touch()
     }
 

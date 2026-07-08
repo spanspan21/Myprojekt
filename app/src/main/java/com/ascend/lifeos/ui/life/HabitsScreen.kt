@@ -1,8 +1,13 @@
 package com.ascend.lifeos.ui.life
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,9 +29,11 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.life.Habit
 import com.ascend.lifeos.data.life.HabitMetrics
+import com.ascend.lifeos.data.life.HabitReminders
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
+import com.ascend.lifeos.ui.kit.Ring
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.kit.Spark
 import com.ascend.lifeos.ui.kit.StatTile
@@ -45,11 +52,15 @@ fun HabitsScreen(onClose: () -> Unit) {
     val habits = LifeStores.habits(ctx)
     val today = todayKey()
     val todayDate = LocalDate.now()
-    val scheduled = habits.filter { HabitMetrics.scheduledOn(it, todayDate) }
+    val scheduled = habits.filter { HabitMetrics.scheduledOn(it, todayDate) && !HabitMetrics.skipped(ctx, it, today) }
     val doneCount = scheduled.count { HabitMetrics.done(ctx, it, today) }
 
     var catalogOpen by remember { mutableStateOf(false) }
+    var builderOpen by remember { mutableStateOf(false) }
     var detail by remember { mutableStateOf<Habit?>(null) }
+
+    // keep per-habit reminder alarms in sync with the current habit set
+    LaunchedEffect(habits.map { "${it.id}:${it.reminderMin}" }) { HabitReminders.reschedule(ctx) }
 
     LifeScaffold(
         title = "Habits",
@@ -71,11 +82,9 @@ fun HabitsScreen(onClose: () -> Unit) {
             }
             Spacer(Modifier.height(12.dp))
         } else {
-            // completed sink to the bottom; scheduled-today first
-            val ordered = habits.sortedWith(
-                compareBy<Habit>({ HabitMetrics.done(ctx, it, today) }, { !HabitMetrics.scheduledOn(it, todayDate) }),
-            )
-            ordered.forEach { h ->
+            OverallHeader(habits, doneCount, scheduled.size, todayDate)
+            Spacer(Modifier.height(14.dp))
+            habits.forEach { h ->   // manual order (reorder in the detail sheet)
                 HabitRow(h, today, todayDate) { detail = h }
                 Spacer(Modifier.height(8.dp))
             }
@@ -96,52 +105,108 @@ fun HabitsScreen(onClose: () -> Unit) {
         }
     }
 
-    if (catalogOpen) HabitCatalogSheet(onDismiss = { catalogOpen = false })
+    if (catalogOpen) HabitCatalogSheet(onDismiss = { catalogOpen = false }, onBuild = { catalogOpen = false; builderOpen = true })
+    if (builderOpen) HabitBuilderSheet(onDismiss = { builderOpen = false })
     detail?.let { HabitDetailSheet(it, onDismiss = { detail = null }) }
 }
 
 @Composable
+private fun OverallHeader(habits: List<Habit>, doneToday: Int, dueToday: Int, todayDate: LocalDate) {
+    val ctx = LocalContext.current
+    val streak = HabitMetrics.overallStreak(ctx, habits)
+    val rate = HabitMetrics.overallRate(ctx, habits, 30)
+    val todayProgress = if (dueToday == 0) 0f else doneToday.toFloat() / dueToday
+    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Ring(progress = todayProgress, color = HabitAccent, modifier = Modifier.size(64.dp), stroke = 6.dp) {
+                Text("$doneToday/$dueToday", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+            }
+            Spacer(Modifier.width(18.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("🔥", fontSize = 17.sp)
+                    Spacer(Modifier.width(4.dp))
+                    TickerNumber(streak, 34, HabitAccent)
+                    Spacer(Modifier.width(6.dp))
+                    Text("day streak", color = TextDim, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 5.dp))
+                }
+                Spacer(Modifier.height(3.dp))
+                Text("${(rate * 100).toInt()}% over 30 days · across all habits", color = TextDim, fontSize = 11.sp, fontFamily = Body)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, onTap: () -> Unit) {
     val ctx = LocalContext.current
     val scheduled = HabitMetrics.scheduledOn(h, todayDate)
+    val skipped = HabitMetrics.skipped(ctx, h, today)
     val done = HabitMetrics.done(ctx, h, today)
     val auto = HabitMetrics.isAuto(h)
-    Panel(Modifier.fillMaxWidth(), corner = 14.dp, onClick = onTap) {
+    val measurable = HabitMetrics.isMeasurable(h)
+    val active = scheduled && !skipped
+    // tap opens detail; long-press skips/unskips today (streak freeze)
+    Panel(
+        Modifier.fillMaxWidth().combinedClickable(onClick = onTap, onLongClick = { LifeStores.toggleHabitSkip(ctx, h.id, today) }),
+        corner = 14.dp,
+    ) {
         Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
-            // check circle — auto habits are read-only (data decides), manual toggle
             Box(
                 Modifier.size(22.dp).clip(CircleShape)
                     .background(if (done) HabitAccent else Color.Transparent)
                     .border(1.dp, if (done) HabitAccent else Ivory.copy(alpha = 0.25f), CircleShape)
-                    .clickable(enabled = scheduled && !auto) { LifeStores.setHabitDone(ctx, h.id, today, !done) },
+                    .clickable(enabled = active && !auto && !measurable) { LifeStores.setHabitDone(ctx, h.id, today, !done) },
                 contentAlignment = Alignment.Center,
             ) {
-                if (done) Text("✓", color = Void, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                else if (auto) Icon(Icons.Rounded.Bolt, null, tint = Ivory.copy(alpha = 0.35f), modifier = Modifier.size(11.dp))
+                when {
+                    done -> Text("✓", color = Void, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    skipped -> Text("–", color = Ivory.copy(alpha = 0.45f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    auto -> Icon(Icons.Rounded.Bolt, null, tint = Ivory.copy(alpha = 0.35f), modifier = Modifier.size(11.dp))
+                    else -> {}
+                }
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (h.icon.isNotBlank()) { Text(h.icon, fontSize = 13.sp); Spacer(Modifier.width(6.dp)) }
-                    Text(h.title, color = if (scheduled) TextPrimary else TextDim, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(h.title, color = if (active) TextPrimary else TextDim, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    if (h.avoid) { Spacer(Modifier.width(6.dp)); Text("QUIT", color = Warn, fontSize = 8.sp, fontFamily = MicroLabel, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
                 }
                 Spacer(Modifier.height(2.dp))
                 val streak = HabitMetrics.streak(ctx, h)
+                val u = if (auto) HabitMetrics.def(h.autoMetric)?.unit ?: "" else h.unit
                 val sub = when {
-                    auto -> {
-                        val v = HabitMetrics.value(h.autoMetric, today)
-                        val u = HabitMetrics.def(h.autoMetric)?.unit ?: ""
-                        "${fmtInt(v)} / ${fmtInt(h.threshold)}${if (u.isBlank()) "" else " $u"} · auto"
-                    }
+                    skipped -> "skipped today · streak $streak"
+                    auto -> "${fmtInt(HabitMetrics.progress(ctx, h, today))} / ${fmtInt(h.threshold)}${if (u.isBlank()) "" else " $u"} · auto"
+                    measurable -> "${HabitMetrics.progress(ctx, h, today)} / ${h.target}${if (u.isBlank()) "" else " $u"}"
                     !scheduled -> "not today · streak $streak"
+                    h.avoid && done -> "clean today · streak $streak"
                     else -> "streak $streak"
                 }
                 Text(sub, color = if (done) HabitAccent.copy(alpha = 0.9f) else TextDim, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium)
             }
-            // last-7-days mini dots
-            WeekDots(h)
+            if (measurable && active) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StepMini("−") { LifeStores.setHabitCount(ctx, h.id, today, (HabitMetrics.progress(ctx, h, today) - 1).coerceAtLeast(0)) }
+                    Spacer(Modifier.width(5.dp))
+                    StepMini("+") { LifeStores.setHabitCount(ctx, h.id, today, HabitMetrics.progress(ctx, h, today) + 1) }
+                }
+            } else {
+                WeekDots(h)
+            }
         }
     }
+}
+
+@Composable
+private fun StepMini(label: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(28.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.07f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -167,16 +232,18 @@ private fun WeekDots(h: Habit) {
 // ─── Detail: stats + charts ──────────────────────────────────────────────────
 
 @Composable
-private fun HabitDetailSheet(h: Habit, onDismiss: () -> Unit) {
+private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_EXPRESSION") LifeStores.rev
+    // re-read live so edits here (reminder, schedule days, reorder) reflect at once
+    val h = LifeStores.habits(ctx).firstOrNull { it.id == initial.id } ?: initial
     val streak = HabitMetrics.streak(ctx, h)
     val best = HabitMetrics.bestStreak(ctx, h)
     val rate = HabitMetrics.completionRate(ctx, h, 30)
     val auto = HabitMetrics.isAuto(h)
 
     JarvisSheet(onDismiss = onDismiss) {
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (h.icon.isNotBlank()) { Text(h.icon, fontSize = 20.sp); Spacer(Modifier.width(8.dp)) }
                 Text(h.title, color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
@@ -231,6 +298,59 @@ private fun HabitDetailSheet(h: Habit, onDismiss: () -> Unit) {
             ScheduleEditor(h)
             Spacer(Modifier.height(18.dp))
 
+            // reminder
+            SectionLabel("Reminder", accent = HabitAccent)
+            Spacer(Modifier.height(8.dp))
+            val hasReminder = h.reminderMin in 0..1439
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    Modifier.clip(RoundedCornerShape(11.dp))
+                        .background(if (hasReminder) HabitAccent.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.05f))
+                        .border(0.5.dp, if (hasReminder) HabitAccent.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                        .clickable {
+                            val init = if (hasReminder) h.reminderMin else 8 * 60
+                            android.app.TimePickerDialog(
+                                ctx,
+                                { _, hh, mm ->
+                                    LifeStores.setHabitReminder(ctx, h.id, hh * 60 + mm)
+                                    HabitReminders.reschedule(ctx)
+                                },
+                                init / 60, init % 60, true,
+                            ).show()
+                        }
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        if (hasReminder) "⏰ %02d:%02d".format(h.reminderMin / 60, h.reminderMin % 60) else "Set a daily time",
+                        color = if (hasReminder) HabitAccent else TextMuted,
+                        fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    )
+                }
+                if (hasReminder) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                            .clickable { LifeStores.setHabitReminder(ctx, h.id, -1); HabitReminders.reschedule(ctx) }
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                    ) { Text("Off", color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+
+            // reorder
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("↑ Move up" to true, "↓ Move down" to false).forEach { (lbl, up) ->
+                    Box(
+                        Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
+                            .background(Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                            .clickable { LifeStores.moveHabit(ctx, h.id, up) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(lbl, color = TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
             // delete
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -293,48 +413,82 @@ private fun ScheduleEditor(h: Habit) {
 
 // ─── Catalog: Notion-style presets ───────────────────────────────────────────
 
-private data class Preset(val title: String, val icon: String, val autoMetric: String = "", val threshold: Int = 0)
+private data class Preset(
+    val title: String, val icon: String,
+    val autoMetric: String = "", val threshold: Int = 0,
+    val target: Int = 0, val unit: String = "", val avoid: Boolean = false,
+)
 private data class PGroup(val label: String, val items: List<Preset>)
 
 private val CATALOG = listOf(
     PGroup(
         "Tracked automatically",
         listOf(
-            Preset("10,000 steps", "🚶", "steps", 10_000),
-            Preset("Sleep 7 h+", "😴", "sleep", 420),
-            Preset("Train today", "🏋️", "trained", 1),
-            Preset("Hit protein goal", "🥩", "protein", 130),
-            Preset("8 glasses water", "💧", "water", 8),
+            Preset("10,000 steps", "🚶", autoMetric = "steps", threshold = 10_000),
+            Preset("Sleep 7 h+", "😴", autoMetric = "sleep", threshold = 420),
+            Preset("Train today", "🏋️", autoMetric = "trained", threshold = 1),
+            Preset("Hit protein goal", "🥩", autoMetric = "protein", threshold = 130),
+            Preset("8 glasses water", "💧", autoMetric = "water", threshold = 8),
         ),
     ),
     PGroup(
         "Health",
         listOf(
-            Preset("Take vitamins", "💊"), Preset("Stretch 10 min", "🤸"),
-            Preset("No alcohol", "🚫"), Preset("Cold shower", "🚿"),
-            Preset("Sunlight 15 min", "☀️"), Preset("Walk after meals", "🌿"),
+            Preset("Take vitamins", "💊"), Preset("Stretch", "🤸", target = 10, unit = "min"),
+            Preset("Cold shower", "🚿"), Preset("Sunlight 15 min", "☀️"),
+            Preset("Walk after meals", "🌿"), Preset("Floss", "🦷"),
+            Preset("Skincare", "🧴"), Preset("Meditate", "🧘", target = 10, unit = "min"),
         ),
     ),
     PGroup(
-        "Mind",
+        "Fitness",
         listOf(
-            Preset("Meditate", "🧘"), Preset("Journal", "📓"),
-            Preset("Read 20 min", "📖"), Preset("Gratitude", "🙏"),
-            Preset("No phone in bed", "📵"), Preset("Breathe 5 min", "🌬️"),
+            Preset("Push-ups", "💪", target = 50, unit = "reps"),
+            Preset("Pull-ups", "🧗", target = 10, unit = "reps"),
+            Preset("Walk", "🚶‍♂️", target = 30, unit = "min"),
+            Preset("Mobility", "🤾"), Preset("Core finisher", "🔥"),
+            Preset("Posture check", "🧍"),
+        ),
+    ),
+    PGroup(
+        "Mind & learning",
+        listOf(
+            Preset("Read", "📖", target = 20, unit = "min"), Preset("Journal", "📓"),
+            Preset("Gratitude", "🙏"), Preset("Breathe", "🌬️", target = 5, unit = "min"),
+            Preset("Study", "📚", target = 30, unit = "min"),
+            Preset("Learn a language", "🗣️", target = 15, unit = "min"),
+            Preset("Code", "💻", target = 60, unit = "min"),
         ),
     ),
     PGroup(
         "Focus & discipline",
         listOf(
-            Preset("Deep work 90 min", "🎯"), Preset("Make the bed", "🛏️"),
+            Preset("Deep work", "🎯", target = 90, unit = "min"), Preset("Make the bed", "🛏️"),
             Preset("Wake by 6:30", "⏰"), Preset("No snooze", "🔕"),
             Preset("Plan tomorrow", "🗒️"), Preset("Inbox zero", "📥"),
+        ),
+    ),
+    PGroup(
+        "Quit (stay clean)",
+        listOf(
+            Preset("No sugar", "🍭", avoid = true), Preset("No fast food", "🍔", avoid = true),
+            Preset("No alcohol", "🍺", avoid = true), Preset("No smoking", "🚬", avoid = true),
+            Preset("No social media", "📱", avoid = true), Preset("No doomscrolling", "📵", avoid = true),
+            Preset("No late snacking", "🌙", avoid = true),
+        ),
+    ),
+    PGroup(
+        "Money & social",
+        listOf(
+            Preset("Track expenses", "💶"), Preset("No impulse buys", "🛑", avoid = true),
+            Preset("Call family", "📞"), Preset("Message a friend", "💬"),
+            Preset("Tidy 10 min", "🧹", target = 10, unit = "min"),
         ),
     ),
 )
 
 @Composable
-private fun HabitCatalogSheet(onDismiss: () -> Unit) {
+private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_EXPRESSION") LifeStores.rev
     val existingTitles = LifeStores.habits(ctx).map { it.title.lowercase() }.toSet()
@@ -342,7 +496,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit) {
     var custom by remember { mutableStateOf("") }
 
     JarvisSheet(onDismiss = onDismiss) {
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Add a habit", color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Icon(Icons.Rounded.Close, null, tint = TextDim, modifier = Modifier.size(20.dp).clickable(onClick = onDismiss))
@@ -362,7 +516,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit) {
                             .background(if (added) Ivory.copy(alpha = 0.04f) else HabitAccent.copy(alpha = 0.10f))
                             .border(0.5.dp, if (added) Ivory.copy(alpha = 0.10f) else HabitAccent.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
                             .clickable(enabled = !added) {
-                                LifeStores.addHabit(ctx, p.title, 0b1111111, p.icon, p.autoMetric, p.threshold)
+                                LifeStores.addHabit(ctx, p.title, 0b1111111, p.icon, p.autoMetric, p.threshold, p.target, p.unit, p.avoid)
                             }
                             .padding(horizontal = 11.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -388,6 +542,110 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit) {
                         .padding(horizontal = 14.dp, vertical = 11.dp),
                 ) { Text("Add", color = Void, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                    .border(0.5.dp, HabitAccent.copy(alpha = 0.3f), RoundedCornerShape(11.dp))
+                    .clickable { onBuild() }.padding(vertical = 11.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) { Text("Build your own — schedule · quit · measurable →", color = HabitAccent, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun HabitBuilderSheet(onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    var name by remember { mutableStateOf("") }
+    var emoji by remember { mutableStateOf("") }
+    var avoid by remember { mutableStateOf(false) }
+    var measurable by remember { mutableStateOf(false) }
+    var target by remember { mutableStateOf(20) }
+    var unit by remember { mutableStateOf("min") }
+    var mask by remember { mutableStateOf(0b1111111) }
+    val emojis = listOf("⭐", "💪", "📖", "🧘", "🏃", "💧", "🥗", "😴", "🧠", "🎯", "🎸", "🧹", "💶", "☀️", "🚭", "📵")
+    val units = listOf("min", "reps", "glasses", "pages", "times", "km")
+    val dayLabels = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
+
+    @Composable
+    fun pill(text: String, on: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+        Box(
+            modifier.clip(RoundedCornerShape(9.dp))
+                .background(if (on) HabitAccent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
+                .border(0.5.dp, if (on) HabitAccent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                .clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) { Text(text, color = if (on) HabitAccent else TextDim, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+    }
+
+    JarvisSheet(onDismiss = onDismiss) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Build a habit", color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Icon(Icons.Rounded.Close, null, tint = TextDim, modifier = Modifier.size(20.dp).clickable(onClick = onDismiss))
+            }
+            Spacer(Modifier.height(14.dp))
+            LifeField("Name (e.g. Read before bed)", name, HabitAccent) { name = it }
+            Spacer(Modifier.height(14.dp))
+
+            SectionLabel("Icon", accent = HabitAccent); Spacer(Modifier.height(8.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                emojis.forEach { e ->
+                    Box(
+                        Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                            .background(if (emoji == e) HabitAccent.copy(alpha = 0.2f) else Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, if (emoji == e) HabitAccent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                            .clickable { emoji = if (emoji == e) "" else e },
+                        contentAlignment = Alignment.Center,
+                    ) { Text(e, fontSize = 17.sp) }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+
+            SectionLabel("Type", accent = HabitAccent); Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f)).padding(3.dp)) {
+                pill("Build", !avoid, { avoid = false }, Modifier.weight(1f))
+                pill("Quit", avoid, { avoid = true }, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(14.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Measurable target", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                pill(if (measurable) "On" else "Off", measurable, { measurable = !measurable })
+            }
+            if (measurable) {
+                Spacer(Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StepMini("−") { target = (target - 5).coerceAtLeast(1) }
+                    Text("$target", color = TextPrimary, fontSize = 16.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp))
+                    StepMini("+") { target += 5 }
+                    Spacer(Modifier.width(12.dp))
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        units.forEach { u -> pill(u, unit == u, { unit = u }) }
+                    }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+
+            SectionLabel("Days", accent = HabitAccent); Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                dayLabels.forEachIndexed { i, lbl ->
+                    pill(lbl, (mask shr i) and 1 == 1, { mask = mask xor (1 shl i) }, Modifier.weight(1f))
+                }
+            }
+            Spacer(Modifier.height(18.dp))
+
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                    .background(if (name.isNotBlank() && mask != 0) HabitAccent else HabitAccent.copy(alpha = 0.25f))
+                    .clickable(enabled = name.isNotBlank() && mask != 0) {
+                        LifeStores.addHabit(ctx, name, mask, emoji, "", 0, if (measurable) target else 0, if (measurable) unit else "", avoid)
+                        onDismiss()
+                    }
+                    .padding(vertical = 13.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text("Create habit", color = Void, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(24.dp))
         }
     }
