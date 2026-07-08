@@ -86,6 +86,14 @@ object DigitalWellbeingManager {
                         curPkg = null; curSince = e.timeStamp
                     }
                 }
+                17 /* SCREEN_NON_INTERACTIVE */, 16 /* KEYGUARD_SHOWN */, 26 /* DEVICE_SHUTDOWN */ -> {
+                    // Screen off / locked / shutdown ends the open session no matter
+                    // the package. Without this, an app left foreground when the
+                    // screen turns off is phantom-credited all the way to `end`
+                    // (e.g. midnight for a past day), inflating screen time.
+                    curPkg?.let { totals.merge(it, (e.timeStamp - curSince).coerceAtLeast(0)) { a, b -> a + b } }
+                    curPkg = null; curSince = e.timeStamp
+                }
             }
         }
         curPkg?.let { totals.merge(it, (end - curSince).coerceAtLeast(0)) { a, b -> a + b } }

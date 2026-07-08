@@ -180,13 +180,27 @@ trunkiert (3.9→3, als „earn it"-Gate vertretbar); P3 `chainStrength` Hold-No
 vs. Feld `coerceAtLeast(10)` (Anzeige weicht in seltener Deload-Konstellation 2s ab).
 
 ## Modul: Body Tracking
-_ausstehend_
+Gewichts-Trend/EMA (`AdaptiveTdee.computeFrom`), RHR-Baseline, ±2.5 kg-Achievement-Schritte
+**verifiziert korrekt** (Vorzeichen: fallendes Gewicht → höherer TDEE; passt `AdaptiveTdeeTest`).
+Keine Funde.
 
 ## Modul: Habits
-_ausstehend_
+Streak-Mechanik (`Repo.refreshStreak` Freeze/Sick-Mode, `LifeStores.habitStreak` Tagesgrenze,
+`habitStrength` EWMA) **verifiziert korrekt** (kein Off-by-one).
+
+**H1 · P3 · `Protocols.kt` `hydration_catchup` (Zeile 81) · ✅ gefixt.** `day.water < p.waterGoal / 2`
+— Integer-Division trunkiert: Ziel 9 → `9/2 = 4` → Bedingung `water < 4`. Ein Nutzer bei **4/9
+(44 %, echt unter der Hälfte)** bekam den Nachhol-Hinweis nicht. **Fix:** `day.water * 2 < p.waterGoal`.
 
 ## Modul: Screentime
-_ausstehend_
+Session-Pairing (`DigitalWellbeingManager`), Guard-Score v2, `weeklyTotals` **verifiziert korrekt**.
+
+**SC1 · P3 · `DigitalWellbeingManager.foregroundDurations` (Zeile 83) · ✅ gefixt.** Sessions endeten
+nur bei `MOVE_TO_BACKGROUND`/`ACTIVITY_STOPPED` — **kein Screen-off-Ende**. Eine beim Bildschirm-Aus
+im Vordergrund gelassene App wurde bis `end` (bei Vergangenheitstagen bis Mitternacht) **phantom-
+gutgeschrieben** → aufgeblähte Screentime (füttert 80 %-Budget-Warnung + InsightMiner). **Fix:**
+`SCREEN_NON_INTERACTIVE`/`KEYGUARD_SHOWN`/`DEVICE_SHUTDOWN` beenden die offene Session. (Android-
+Laufzeit, monotone Verbesserung — kann nur Phantomzeit reduzieren; per Inspektion verifiziert.)
 
 ## Modul: Skills
 _ausstehend_

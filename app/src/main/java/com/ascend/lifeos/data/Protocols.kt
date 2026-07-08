@@ -78,7 +78,9 @@ object Protocols {
             val day = Repo.today()
             val p = Repo.profile()
             if (day.workoutDone || day.cali.values.any { it.isNotEmpty() } || Repo.workoutSets(day) > 0) {
-                if (day.water < p.waterGoal / 2 && LocalTime.now().hour >= 15) {
+                // *2 instead of /2: integer division truncated (goal 9 → 4), so a
+                // user at exactly 4/9 (44 %, genuinely under half) missed the nudge.
+                if (day.water * 2 < p.waterGoal && LocalTime.now().hour >= 15) {
                     "You trained but water is at ${day.water}/${p.waterGoal} — two glasses now."
                 } else null
             } else null
