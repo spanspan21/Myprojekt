@@ -200,6 +200,8 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
         ) {
             JarvisHeader("Fuel", gameDay ?: contextLine(totals.kcal, p.kcalGoal, isToday), Mod.Fuel)
 
+            JarvisReactionBanner()
+
             Spacer(Modifier.height(12.dp))
             DayCursor(
                 offset = dayOffset, dayKey = dayKey,
@@ -301,6 +303,46 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
 
     if (addOpen) AddFoodSheet(sheetState = addState, dayKey = dayKey, onDismiss = { addOpen = false })
     if (goalsOpen) GoalsSheet(sheetState = goalsState, onDismiss = { goalsOpen = false })
+}
+
+/**
+ * The JARVIS reaction to a just-logged food — where your protein stands + a
+ * quality flag, shown for a few seconds under the header, then gone. Real info,
+ * not applause; driven by Repo.jarvisReaction so every add-path feeds it.
+ */
+@Composable
+private fun JarvisReactionBanner() {
+    val reaction = com.ascend.lifeos.data.Repo.jarvisReaction.value
+    androidx.compose.runtime.LaunchedEffect(reaction) {
+        if (reaction != null) {
+            kotlinx.coroutines.delay(4600)
+            com.ascend.lifeos.data.Repo.jarvisReaction.value = null
+        }
+    }
+    var last by remember { mutableStateOf("") }
+    if (reaction != null) last = reaction
+    val blue = com.ascend.lifeos.ui.theme.Accent
+    androidx.compose.animation.AnimatedVisibility(
+        visible = reaction != null,
+        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
+        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically(),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(top = 10.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(blue.copy(alpha = 0.09f))
+                .border(0.5.dp, blue.copy(alpha = 0.28f), RoundedCornerShape(14.dp))
+                .padding(horizontal = 14.dp, vertical = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.size(7.dp).clip(CircleShape).background(blue))
+            Spacer(Modifier.width(10.dp))
+            Text(
+                last, color = TextPrimary, fontSize = 12.5.sp, fontFamily = com.ascend.lifeos.ui.theme.Body,
+                fontWeight = FontWeight.SemiBold, lineHeight = 17.sp,
+            )
+        }
+    }
 }
 
 private fun contextLine(kcal: Int, goal: Int, isToday: Boolean): String = when {

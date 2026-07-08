@@ -239,6 +239,9 @@ object Repo {
     }
 
     // ---- nutrition ----
+    /** The latest one-line JARVIS reaction to a log — the UI shows it briefly, then clears it. */
+    val jarvisReaction = androidx.compose.runtime.mutableStateOf<String?>(null)
+
     fun addFood(entry: FoodEntry, dayKey: String = todayKey()) {
         val e = if (entry.id.isBlank()) entry.copy(id = newId("f"), ts = System.currentTimeMillis()) else entry
         val cur = data.days[dayKey] ?: DayData()
@@ -255,8 +258,30 @@ object Repo {
             if (FoodScore.nameLooksAlcoholic(e.name)) setJournalFactor(alcohol = true)
             val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             if (hour >= 21 || hour < 4) setJournalFactor(lateMeal = true)
+            if (e.kcal > 0) jarvisReaction.value = foodReactionLine(e)
         }
         refreshStreak()
+    }
+
+    /** A short, USEFUL reaction to a just-logged food: where your protein now
+     *  stands and one quality flag worth knowing — information, not applause. */
+    private fun foodReactionLine(e: FoodEntry): String {
+        val p = data.profile
+        val protNow = nutritionTotals(today()).protein
+        val protLeft = (p.proteinGoal - protNow).coerceAtLeast(0)
+        val flag = when {
+            e.nova == 4 -> "Ultra-processed — fine now and then. "
+            FoodScore.hasRiskyAdditive(e.additives) -> "A couple of additives worth a glance. "
+            e.protein >= 25 -> "Strong protein hit. "
+            e.protein >= 15 -> "Decent protein. "
+            else -> ""
+        }
+        val prog = when {
+            p.proteinGoal <= 0 -> ""
+            protLeft > 0 -> "Protein at $protNow/${p.proteinGoal}g — $protLeft to go."
+            else -> "Protein target hit, $protNow/${p.proteinGoal}g. Nicely done."
+        }
+        return (flag + prog).trim().ifEmpty { "Logged — keeping count." }
     }
 
     fun removeFood(id: String, dayKey: String = todayKey()) {

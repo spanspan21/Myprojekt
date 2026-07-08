@@ -140,18 +140,27 @@ fun HomeScreen(
         }
     }
 
+    val proteinToday = remember(kcalToday) {
+        runCatching { com.ascend.lifeos.data.Repo.nutritionTotals(com.ascend.lifeos.data.Repo.today()).protein }.getOrDefault(0)
+    }
     val voice = JarvisVoice.line(
         JarvisVoice.Snapshot(
+            name = profile.name,
             readiness = readiness,
             healthConnected = healthConnected,
             trainedToday = trainedToday,
             nextSplit = trainVm.suggestedSplit(),
             kcalToday = kcalToday,
             kcalGoal = profile.kcalGoal,
+            proteinToday = proteinToday,
+            proteinGoal = profile.proteinGoal,
             screenMinutes = screenMin,
             screenBudgetMinutes = screenBudget,
             waterGlasses = water,
             waterGoal = profile.waterGoal,
+            openMissions = (if (!trainedToday) 1 else 0) +
+                (if (kcalToday < profile.kcalGoal) 1 else 0) +
+                (if (water < profile.waterGoal) 1 else 0),
             hockeyToday = dayContext.first,
             examSoon = dayContext.second,
             streak = profile.streak,
