@@ -161,7 +161,12 @@ object PrimeEngine {
         val trainScore = if (loads.all { it == 0.0 }) null else
             PrimeMath.floorScore(trainDays7.toDouble(), p.trainFreq.toDouble().coerceAtLeast(1.0))
         val sleepScore = sleepAvg7?.let { PrimeMath.floorScore(it, 480.0) }
-        val screenScore = screenMin?.let { PrimeMath.capScore(it.toDouble(), screenBudget.toDouble()) }
+        val screenScore = screenMin?.let {
+            // OF-2: compare against a time-of-day-prorated budget, not the full-day
+            // budget, so a light morning isn't a spurious 100 that inverts by night.
+            val nowMin = java.time.LocalTime.now().let { t -> t.hour * 60 + t.minute }
+            PrimeMath.capScore(it.toDouble(), PrimeMath.proratedBudget(screenBudget.toDouble(), nowMin))
+        }
         val logScore = loggedDays.take(7).count { it } / 7.0
 
         // Index nur, wenn es echte Substanz gibt — sonst „—" statt eines

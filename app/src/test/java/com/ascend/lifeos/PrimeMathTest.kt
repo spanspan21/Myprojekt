@@ -14,6 +14,18 @@ import kotlin.math.abs
 class PrimeMathTest {
 
     @Test
+    fun proratedBudgetScalesWithTimeOfDayWithGrace() {
+        // Audit OF-2: Focus must compare against a time-of-day-prorated budget.
+        assertEquals(180.0, PrimeMath.proratedBudget(180.0, 1440), 1e-9)  // end of day → full
+        assertEquals(90.0, PrimeMath.proratedBudget(180.0, 720), 1e-9)    // noon → half
+        assertEquals(30.0, PrimeMath.proratedBudget(180.0, 0), 1e-9)      // midnight → 30-min grace
+        val paceAt8 = PrimeMath.proratedBudget(180.0, 8 * 60)             // 08:00 → 60 min
+        assertEquals(60.0, paceAt8, 1e-9)
+        assertTrue(PrimeMath.capScore(90.0, paceAt8) < 1.0)              // heavy morning penalised
+        assertEquals(1.0, PrimeMath.capScore(10.0, paceAt8), 1e-9)       // light morning still full
+    }
+
+    @Test
     fun zScoreDetectsOutlierAndRespectsMinN() {
         val hist = listOf(2000.0, 2100.0, 1950.0, 2050.0, 2000.0, 2080.0, 1990.0)
         val z = PrimeMath.zScore(hist, 2900.0)!!

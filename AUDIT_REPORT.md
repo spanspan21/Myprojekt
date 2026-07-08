@@ -230,8 +230,12 @@ Dateien: `prime/PrimeMath.kt`, `prime/PrimeEngine.kt`. **Kern verifiziert korrek
 (Fuel .25/Training .25/Sleep .20/Hydration .10/Focus .10/Logging .10 = 1.00), Renormalisierung bei
 fehlenden Subsystemen, Clamp [0,100], `hasRealData` (kein Fake-0 für neue Nutzer, kein Fake-100 aus
 screen-only), `primeIndex`/`streakRisk`/`fuelQuality`/`capScore` (Formen + `PrimeMathTest`), keine
-Div-by-Zero (`screenBudget ≥ 30`). Keine Code-Fixes.
-**Offen: OF-2** (Focus-Subscore auf Ein-Tages-Basis vs. Mehrtages-Mittel der anderen).
+Div-by-Zero (`screenBudget ≥ 30`).
+
+**P1 · P2 · `PrimeEngine.screenScore` (OF-2) · ✅ gefixt.** Focus verglich die heutige Nutzung gegen
+das GANZE Tagesbudget → vormittags gratis 100, das bis abends absackte (Ein-Tages-Wert gegen
+Mehrtages-Werte der anderen Subscores). **Fix:** `PrimeMath.proratedBudget` (Budget × Tagesfortschritt,
+30-min-Kulanz), Vergleich zeitanteilig. Test in `PrimeMathTest`.
 
 ## Modul: Core (Repo/Streaks/Rules/Insights)
 Dateien: `Repo.kt`, `InsightMiner.kt`, `life/{Achievements, Decisions}.kt`, `rules/CustomRules.kt`,
@@ -285,16 +289,17 @@ nicht kennt. Optionen: (a) importierte Nächte von der Titration ausschließen (
 (b) eine Einschlaf-Latenz schätzen statt `onset = 0`, (c) SRT nur mit manuell erfassten Nächten.
 → **Produktentscheidung nötig** (kein mechanischer Fix). Mechanik bestätigt.
 
-**OF-2 · Prime · Focus-Subscore auf Ein-Tages-Basis (`PrimeEngine.build`, `screenScore`).**
-`screenScore = capScore(screenMin, budget)` ist heute-only und liefert vormittags ~100 (unter
-Budget), während Fuel/Hydration/Sleep über bis zu 7 Tage gemittelt werden. Das kippt den Readiness-
-Index morgens hoch, abends runter für denselben Zustand. Fix wäre ein zeitanteiliges Tagesbudget
-oder eine Mehrtages-Mittelung — beides Verhaltensänderung mit Design-Charakter. → **Entscheidung nötig.**
+**OF-2 · Prime · Focus-Subscore auf Ein-Tages-Basis · ✅ ENTSCHIEDEN & UMGESETZT.**
+`screenScore` verglich die heutige Nutzung gegen das GANZE Tagesbudget → morgens gratis 100.
+**Entscheidung (Max): zeitanteilig.** Umgesetzt: neuer `PrimeMath.proratedBudget(fullBudget, nowMin)`
+(Budget × Tagesfortschritt, 30-min-Kulanz), `PrimeEngine.screenScore` vergleicht dagegen. Test ergänzt.
 
-**OF-3 · Kalender · Task-Blöcke re-planen nach Auto-Sync + Untis-Horizont (`CalendarAutoSync`/
-`TaskBlocks.plan`/`UntisSync`).** Auto-Sync importiert Stunden neu, ruft aber nie `TaskBlocks.plan()`.
-Zudem importiert Untis nur −3..+21 Tage, während `plan` bis zur Deadline (bis zu 180 Tagen) plant →
-frisch synchronisierte Stunden können auf bereits platzierten `jtask`-Blöcken landen, bis manuell neu
-geplant wird. Optionen: (a) `plan()` nach erfolgreichem Auto-Sync auslösen, (b) nur innerhalb des
-Import-Horizonts planen, (c) Untis-Horizont verlängern. → **Entscheidung nötig** (Trade-off
-Datenmenge/Doze vs. Vollständigkeit), kein rein mechanischer Fix.
+**OF-3 · Kalender · Task-Blöcke re-planen + Untis-Horizont · ✅ ENTSCHIEDEN: keine Änderung.**
+Max: unproblematisch — würde er wissen, dass er Schule hat, käme dort ohnehin kein Lernblock hin; die
+seltene Überlappung ist tolerierbar und korrigiert sich beim nächsten Plan. **Bewusst nicht geändert.**
+
+**OF-1 · Sleep · SRT auf importierten Watch-Nächten · ✅ ENTSCHIEDEN: abfragen (Feature).**
+Max: nicht raten, sondern erfassen — „Next up"-Karte im Dashboard ab 19:00, dazu Unterscheidung
+Power-Nap vs. normaler Schlaf; bis bestätigt titriert die Nacht nicht. Wird als eigenes Feature umgesetzt
+(Datenmodell: importierte/unbestätigte Nacht markieren + Nap-Flag → aus der Titration nehmen;
+UI: Abend-Karte zur Erfassung der Zubettgeh-/Licht-aus-Zeit).

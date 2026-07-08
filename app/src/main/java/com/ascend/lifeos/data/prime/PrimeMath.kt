@@ -131,4 +131,14 @@ object PrimeMath {
         if (value <= budget) return 1.0
         return (1.0 - (value - budget) / budget).coerceIn(0.0, 1.0)
     }
+
+    /**
+     * Full-day budget scaled to how far into the day it is (with a 30-min grace
+     * floor), for a fair "on pace?" screen comparison. The Focus subscore used the
+     * FULL-day budget against the partial day, so a light morning was a free 100
+     * that then sank by evening (Audit OF-2) — while every other subscore is a
+     * multi-day average. Prorating puts Focus on the same footing.
+     */
+    fun proratedBudget(fullBudget: Double, nowMinuteOfDay: Int): Double =
+        (fullBudget * nowMinuteOfDay.coerceIn(0, 1440) / 1440.0).coerceAtLeast(30.0)
 }
