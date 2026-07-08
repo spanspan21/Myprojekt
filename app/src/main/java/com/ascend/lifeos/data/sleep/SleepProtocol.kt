@@ -39,11 +39,18 @@ object SleepProtocol {
 
     /** Time in bed minus onset, night wake and morning lounging; never negative. */
     fun actualSleep(log: NightLog): Int {
-        // wrap midnight like timeInBed does (23:50 wake → 00:20 out = 30 min);
-        // anything past 4 h is treated as bad input, not a real lie-in
+        val tib = timeInBed(log)
+        // Morning lounging (awake in bed after the final wake) is NOT sleep and
+        // must be excluded. Wrap midnight like timeInBed does (23:50 wake →
+        // 00:20 out = 30 min). A lounge longer than the whole time in bed is
+        // physically impossible — it only happens when out-of-bed is logged
+        // *before* the final wake, which wraps to a huge value — so treat that
+        // as bad input (0). A real, even long, lie-in is subtracted, never
+        // counted as sleep (the old `> 240 → 0` rule inflated TST/efficiency for
+        // any lie-in over 4 h and had a discontinuity at exactly 240 min).
         val rawLounge = ((log.outOfBedMin - log.finalWakeMin) % 1440 + 1440) % 1440
-        val lounging = if (rawLounge > 240) 0 else rawLounge
-        return (timeInBed(log) - log.sleepOnsetMin - log.nightWakeMin - lounging).coerceAtLeast(0)
+        val lounging = if (rawLounge > tib) 0 else rawLounge
+        return (tib - log.sleepOnsetMin - log.nightWakeMin - lounging).coerceAtLeast(0)
     }
 
     /** Sleep efficiency in percent (0 when no time in bed). */
@@ -73,7 +80,7 @@ object SleepProtocol {
     fun weeklyAdjust(state: State, last7: List<NightLog>, baselineAvgSleep: Int): Pair<State, String> {
         if (last7.size < 5) return state to "not enough logs"
         val se = last7.map { efficiency(it) }.average()
-        val pct = se.toInt()
+        val pct = se.roundToInt()
         return when {
             se >= 90.0 -> {
                 val next = min(state.tibMin + 15, maxTib(baselineAvgSleep))

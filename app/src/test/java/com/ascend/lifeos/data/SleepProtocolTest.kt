@@ -44,6 +44,21 @@ class SleepProtocolTest {
         assertEquals(420, SleepProtocol.actualSleep(odd))
     }
 
+    @Test
+    fun `a real long lie-in is excluded from sleep, never counted as sleep`() {
+        // Audit W2 (Sleep-1): bed 23:00, asleep at once, final wake 06:00, out of
+        // bed 11:00 → 7 h sleep + 5 h awake in bed. The old `rawLounge > 240 → 0`
+        // rule zeroed the lie-in but left it inside TIB, so the whole 12 h read as
+        // sleep. The fix (lounge > TIB = bad input; otherwise subtract) reports 7 h.
+        val log = NightLog("2026-07-03", bedMin = 1380, sleepOnsetMin = 0, nightWakeMin = 0, finalWakeMin = 360, outOfBedMin = 660)
+        assertEquals(720, SleepProtocol.timeInBed(log))   // 12 h in bed
+        assertEquals(420, SleepProtocol.actualSleep(log)) // 7 h actual sleep (was 720)
+        // and no discontinuity as the lie-in lengthens past the old 240-min line —
+        // sleep stays flat instead of jumping up when the lounge crosses 4 h
+        assertEquals(420, SleepProtocol.actualSleep(log.copy(outOfBedMin = 600))) // lounge 240
+        assertEquals(420, SleepProtocol.actualSleep(log.copy(outOfBedMin = 601))) // lounge 241 (old: 661)
+    }
+
     // ── efficiency ───────────────────────────────────────────────────
 
     @Test

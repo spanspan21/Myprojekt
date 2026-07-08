@@ -119,8 +119,11 @@ object SleepStore {
 
     /** Baseline average actual sleep, persisted once when restriction starts. */
     fun baselineAvg(ctx: Context): Int? {
+        // -1 is the "never set" sentinel; a stored 0 is a (degenerate but real)
+        // baseline that must NOT read back as absent — otherwise a restriction
+        // that legitimately started freezes weekly titration forever.
         val v = prefs(ctx).getInt("baseline_avg", -1)
-        return if (v > 0) v else null
+        return if (v >= 0) v else null
     }
 
     /**
