@@ -50,6 +50,7 @@ object FoodApi {
         val additives: List<String> = emptyList(), // E-numbers
         val portions: List<Portion> = emptyList(), // benannte Presets (Kap. 38); leer → UI fällt auf serving/100g zurück
         val approx: Boolean = false,               // ~Teller-Schätzung (Kap. 37) — sichtbar ehrlich
+        val microsEstimated: Boolean = false,      // vitamins/minerals borrowed from a staple (OFF had none)
     )
 
     private val ALLERGEN_DE = mapOf(
@@ -127,6 +128,21 @@ object FoodApi {
             Drinks.isDrinkName(name) || Drinks.isDrinkName(brand ?: "")
         val portions = if (isLiquid) Drinks.portionsFor(p.optString("quantity")) else emptyList()
 
+        // OFF crowd data rarely carries vitamins/minerals; when none arrived,
+        // estimate them from the closest known staple (matched by name/category)
+        // so scanned foods still feed the daily micro totals — flagged as an estimate.
+        val hasMicro = per100.keys.any {
+            val g = NUTRIENTS_BY_ID[it]?.group; g == NGroup.VITAMIN || g == NGroup.MINERAL
+        }
+        var microsEstimated = false
+        if (!hasMicro) {
+            val est = BasicFoods.microsFor(name, tags("categories_tags"))
+            if (est.isNotEmpty()) {
+                est.forEach { (id, v) -> if (id !in per100) per100[id] = v }
+                microsEstimated = true
+            }
+        }
+
         return Product(
             barcode = code,
             name = name,
@@ -147,6 +163,7 @@ object FoodApi {
             allergens = allergens,
             additives = additives,
             portions = portions,
+            microsEstimated = microsEstimated,
         )
     }
 

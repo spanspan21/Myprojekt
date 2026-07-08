@@ -22,6 +22,7 @@ data class FoodEntry(
     val nutriScore: String = "", // a..e or ""
     val barcode: String = "",
     val nutrients: Map<String, Double> = emptyMap(), // detailed nutrients for the eaten portion, in grams
+    val microsEstimated: Boolean = false, // vitamins/minerals estimated from a staple (scan had none)
     val ts: Long = 0,
     // FUEL-Masterplan Kap. 48 — additiv & tolerant (Defaults = Alt-JSON lädt):
     val volumeMl: Int = 0,           // Getränke: ml zählen zur Hydration (Kap. 36/39)

@@ -491,6 +491,7 @@ private fun defaultEntry(p: FoodApi.Product, meal: String): FoodEntry {
         protein = (p.protein100 * f).roundToInt(), carbs = (p.carbs100 * f).roundToInt(), fat = (p.fat100 * f).roundToInt(),
         grams = grams, nutriScore = p.nutriScore, barcode = p.barcode,
         nutrients = p.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
+        microsEstimated = p.microsEstimated,
         volumeMl = if (po?.ml == true) grams else 0,
         approx = p.approx,
     )
@@ -691,6 +692,13 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         MEAL_SLOTS.forEach { (code, label) -> HudChip(label, meal == code) { onMeal(code) } }
     }
 
+    if (product.microsEstimated) {
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "≈ vitamins & minerals estimated from a similar staple — this scan carried none",
+            color = TextDim, fontSize = 10.5.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Medium, lineHeight = 14.sp,
+        )
+    }
     Spacer(Modifier.height(18.dp))
     val backdate = backdateLabel(dayKey)
     HudButton(if (backdate != null) "Add to $backdate · $kcal kcal" else "Add · $kcal kcal", Modifier.fillMaxWidth(), enabled = g in 1..3000) {
@@ -700,6 +708,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
                 protein = (product.protein100 * f).roundToInt(), carbs = (product.carbs100 * f).roundToInt(), fat = (product.fat100 * f).roundToInt(),
                 grams = g, nutriScore = product.nutriScore, barcode = product.barcode,
                 nutrients = product.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
+                microsEstimated = product.microsEstimated,
                 volumeMl = if (isMl) g else 0,      // Kap. 39: Getränke zählen zur Hydration
                 approx = product.approx,
                 nova = product.nova,

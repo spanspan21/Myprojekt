@@ -1117,6 +1117,30 @@ object BasicFoods {
      * Suche v2 (Kap. 34): Match-Qualität + Kürze, sortiert — nie mehr
      * Deklarationsreihenfolge (P1) oder Alias-Substring-Unfälle (P2).
      */
+    /**
+     * Best-effort vitamin/mineral estimate for a scanned product that Open Food
+     * Facts returned WITHOUT micro data: match its name/categories to a known
+     * staple (whole-word, most specific match wins) and borrow that staple's
+     * micros (per 100 g). Returns empty when nothing matches confidently, so we
+     * never invent numbers for an unrecognised product.
+     */
+    fun microsFor(name: String, categories: List<String>): Map<String, Double> {
+        val hay = (name + " " + categories.joinToString(" ")).lowercase()
+        if (hay.length < 3) return emptyMap()
+        var best: FoodApi.Product? = null
+        var bestLen = 0
+        for (p in ALL) {
+            val keys = listOf(p.name.lowercase()) + ALIASES[p.name].orEmpty().map { it.lowercase() }
+            for (k in keys) {
+                if (k.length < 3 || k.length <= bestLen) continue
+                if (Regex("\\b${Regex.escape(k)}\\b").containsMatchIn(hay)) { best = p; bestLen = k.length }
+            }
+        }
+        return best?.per100?.filterKeys {
+            val g = NUTRIENTS_BY_ID[it]?.group; g == NGroup.VITAMIN || g == NGroup.MINERAL
+        }?.takeIf { it.isNotEmpty() } ?: emptyMap()
+    }
+
     fun search(query: String): List<FoodApi.Product> {
         val q = FoodRank.normalize(query)
         if (q.isBlank()) return emptyList()

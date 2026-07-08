@@ -893,7 +893,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
 /** Kap.-44-Formel: fit = 2·P-Deckung + 1·kcal-Deckung − Überschuss-Strafe + Boni. */
 private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
     val cands = ArrayList<GapPick>()
-    fun consider(name: String, kcal: Int, prot: Int, carbs: Int, fat: Int, grams: Int, favorite: Boolean, slotBias: Double) {
+    fun consider(name: String, kcal: Int, prot: Int, carbs: Int, fat: Int, grams: Int, favorite: Boolean, slotBias: Double, micros: Map<String, Double> = emptyMap()) {
         if (kcal <= 0) return
         val pFit = if (protLeft > 0) (prot.toDouble() / protLeft).coerceAtMost(1.0) else 0.5
         val kFit = if (kcalLeft > 0) (kcal.toDouble() / kcalLeft).coerceAtMost(1.0) else 0.0
@@ -902,7 +902,7 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
         if (kcal <= kcalLeft + 100) {
             cands += GapPick(
                 name,
-                FoodEntry(id = "", name = name, meal = "s", kcal = kcal, protein = prot, carbs = carbs, fat = fat, grams = grams),
+                FoodEntry(id = "", name = name, meal = "s", kcal = kcal, protein = prot, carbs = carbs, fat = fat, grams = grams, nutrients = micros),
                 score,
             )
         }
@@ -929,6 +929,9 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
             (prod.kcal100 * f).toInt(), (prod.protein100 * f).toInt(),
             (prod.carbs100 * f).toInt(), (prod.fat100 * f).toInt(),
             grams, favorite = false, slotBias = 0.0,
+            // carry the staple's vitamins/minerals onto the logged row (scaled to
+            // the portion) — the classics have full micro data, don't drop it
+            micros = prod.per100.filterKeys { it !in com.ascend.lifeos.data.MACRO_IDS }.mapValues { it.value * f },
         )
     }
     return cands.sortedWith(compareByDescending<GapPick> { it.score }.thenBy { it.entry.kcal }).take(3)
