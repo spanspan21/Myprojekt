@@ -88,24 +88,15 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
             .sumOf { com.ascend.lifeos.data.skill.SkillMeta.focusMinutesThisWeek(ctx, it.domain.id) }
     }.getOrDefault(0)
 
-    // one honest recommendation per weak spot, max 3
-    val recs = buildList {
-        val p = Repo.data.profile
-        if (workouts < p.trainFreq) add("Training: $workouts/${p.trainFreq} sessions — protect the slots in your calendar.")
-        val need = Repo.sleepNeedMin()
-        if (sleepVals.isNotEmpty() && sleepVals.average() < need - 30) {
-            add("Sleep: Ø ${(sleepVals.average() / 60).toInt()}h vs ${need / 60}h need — the debt card has your bedtime.")
-        }
-        if (kcals.size < 4) add("Fuel: only ${kcals.size}/7 days logged — half-logged weeks hide the truth.")
-        if (proteins.isNotEmpty() && proteins.average() < p.proteinGoal * 0.8) {
-            add("Protein: Ø ${proteins.average().toInt()}g vs ${p.proteinGoal}g goal — the spread bars show which meal is short.")
-        }
-        val budget = com.ascend.lifeos.wellbeing.WellbeingStore.budgetMin(ctx)
-        if (screenVals.isNotEmpty() && screenVals.average() > budget) {
-            add("Screen: Ø ${(screenVals.average() / 60).toInt()}h over budget — try one Gate app this week.")
-        }
-        if (isEmpty()) add("Everything on target. Raise one goal a notch — comfort is the enemy.")
-    }.take(3)
+    // Directives come from the ONE synthesis engine (Prime), not a second
+    // parallel weak-spot aggregator — the report is Prime's Sunday-cadence view,
+    // so the two never tell a different story. Falls back to a single line if
+    // Prime has nothing ranked yet (fresh user).
+    val recs = runCatching { com.ascend.lifeos.data.prime.PrimeEngine.build(ctx).directives }
+        .getOrDefault(emptyList())
+        .take(3)
+        .map { d -> d.text + (d.why.takeIf { it.isNotBlank() }?.let { " — $it" } ?: "") }
+        .ifEmpty { listOf("Everything on target. Raise one goal a notch — comfort is the enemy.") }
 
     WeekStats(
         workouts, sets, reps, prs,

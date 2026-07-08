@@ -554,11 +554,22 @@ object PlanGenerator {
             used.add(ex.id)
             val isHold = ex.unit == "sec"
             val cue = goal.feeders.firstOrNull()
+            // Per-level dose: a stronger athlete gets more volume on the same skill
+            // — no fixed 3×3–6 regardless of ability. The gauge is his calibration
+            // level in the pattern that governs the skill (1..6).
+            val pattern = when (goal.area) {
+                SkillArea.PUSH, SkillArea.BALANCE -> Pattern.PUSH
+                SkillArea.PULL -> Pattern.PULL
+                SkillArea.CORE -> Pattern.CORE
+                SkillArea.LEGS -> Pattern.SQUAT
+            }
+            val lvl = (profile?.level(pattern) ?: 1).coerceIn(1, 6)
+            val hi = (4 + lvl).coerceIn(5, 10)   // L1 ≈ 5 reps … L6 ≈ 10 reps
             return PlannedExercise(
                 ex.id, ex.name,
-                sets = if (deload) 2 else 3,
-                repsLow = 3, repsHigh = 6,
-                holdSec = if (isHold) 12 else null,
+                sets = if (deload) 2 else if (lvl >= 4) 4 else 3,
+                repsLow = (hi / 2).coerceAtLeast(3), repsHigh = hi,
+                holdSec = if (isHold) 8 + lvl * 3 else null,   // L1 ≈ 11s … L6 ≈ 26s
                 vestKg = null, isSkillWork = true, restSec = 120,
                 section = BlockType.SKILL,
                 note = "Toward ${goal.name}" + (cue?.let { " · $it" } ?: ""),

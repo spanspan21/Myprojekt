@@ -59,6 +59,9 @@ fun TrainingHub(
     val progs by vm.progressions.collectAsState()
     val profile = vm.fitnessProfile
     val ctx = LocalContext.current
+    // The assignment is the plan; templates + free workout are a deliberate
+    // detour, collapsed by default so they aren't an equal-weight escape hatch.
+    var offPlanOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(progs, profile != null) {
         if (profile != null) vm.regeneratePlan() else vm.refreshFreshness()
@@ -336,15 +339,32 @@ fun TrainingHub(
             item { Spacer(Modifier.height(14.dp)) }
         }
 
-        // ── Templates ───────────────────────────────────────────────────
+        // ── Off-plan / extra (collapsed by default) ─────────────────────
         item {
-            Text("TEMPLATES", color = TextDim, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-            Spacer(Modifier.height(10.dp))
-        }
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 32.dp)) {
-                items(ExerciseSeed.TEMPLATES) { tpl ->
-                    TemplateCard(tpl) { vm.startWorkout(tpl); onStartWorkout() }
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                    .clickable { offPlanOpen = !offPlanOpen }.padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("OFF-PLAN · EXTRA", color = TextDim, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                Spacer(Modifier.width(8.dp))
+                Text(if (offPlanOpen) "▾" else "▸  templates & free workout", color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+            }
+            AnimatedVisibility(offPlanOpen) {
+                Column {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Your assignment above is the plan. Use these only when you genuinely can't run today's session.",
+                        color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 32.dp)) {
+                        items(ExerciseSeed.TEMPLATES) { tpl ->
+                            TemplateCard(tpl) { vm.startWorkout(tpl); onStartWorkout() }
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    QuickAction(Icons.Rounded.Add, "Free workout") { vm.startFreeWorkout(); onStartWorkout() }
                 }
             }
             Spacer(Modifier.height(22.dp))
@@ -355,9 +375,8 @@ fun TrainingHub(
             Text("TOOLS", color = TextDim, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                QuickAction(Icons.Rounded.Add, "Free workout", Modifier.weight(1f)) { vm.startFreeWorkout(); onStartWorkout() }
-                QuickAction(Icons.Rounded.Timer, "HIIT timer", Modifier.weight(1f), onOpenHiit)
                 QuickAction(Icons.Rounded.SelfImprovement, "Stretch", Modifier.weight(1f), onOpenStretch)
+                QuickAction(Icons.Rounded.Timer, "HIIT timer", Modifier.weight(1f), onOpenHiit)
             }
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

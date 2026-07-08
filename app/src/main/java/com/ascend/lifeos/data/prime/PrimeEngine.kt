@@ -109,10 +109,12 @@ object PrimeEngine {
 
         // ── Schlaf: Protokoll-Nächte (TST in Minuten je Nacht) ──
         val nights = runCatching { SleepStore.logs(ctx) }.getOrDefault(emptyList())
-        fun tst(n: com.ascend.lifeos.data.sleep.NightLog): Int {
-            val inBed = ((n.finalWakeMin - n.bedMin) + 1440) % 1440
-            return (inBed - n.sleepOnsetMin - n.nightWakeMin).coerceAtLeast(0)
-        }
+        // Total sleep time comes from the ONE definition (SleepProtocol.actualSleep),
+        // so the readiness number here and the Sleep screen's SE never disagree for
+        // the same night. Before, this ignored a >4h morning lie-in while the Sleep
+        // screen accounted for it.
+        fun tst(n: com.ascend.lifeos.data.sleep.NightLog): Int =
+            com.ascend.lifeos.data.sleep.SleepProtocol.actualSleep(n)
         val tst7 = nights.takeLast(7).map { tst(it).toDouble() }
         val sleepAvg7 = if (tst7.isNotEmpty()) PrimeMath.mean(tst7) else null
         val lastNightMin = nights.lastOrNull()?.let { tst(it) }   // Gauge = jüngste Protokoll-Nacht (dieselbe Quelle wie der Subscore)

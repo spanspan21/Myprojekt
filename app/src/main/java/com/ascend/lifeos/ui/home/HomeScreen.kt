@@ -603,7 +603,7 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Rules", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Automations", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") } }
                 }

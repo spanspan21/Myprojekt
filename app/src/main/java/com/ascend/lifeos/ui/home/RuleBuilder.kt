@@ -57,6 +57,7 @@ import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Body
 import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.Display
+import com.ascend.lifeos.ui.theme.Good
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
@@ -112,9 +113,9 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Rules", color = TextPrimary, fontFamily = Display, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text("Automations", color = TextPrimary, fontFamily = Display, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    "${rules.size} rule${if (rules.size == 1) "" else "s"} · ${rules.count { it.enabled }} armed",
+                    "Built-in protocols + ${rules.size} custom rule${if (rules.size == 1) "" else "s"} · one home",
                     color = Mod.Home, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
@@ -128,10 +129,36 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
         }
         Spacer(Modifier.height(18.dp))
 
+        // Built-in protocols — the same "automations" family, now managed in ONE
+        // home instead of a separate Settings section (Rules→Protocols merge).
+        SectionLabel("Built-in protocols")
+        Spacer(Modifier.height(8.dp))
+        com.ascend.lifeos.data.Protocols.ALL.forEach { p ->
+            var on by remember(p.id) { mutableStateOf(com.ascend.lifeos.data.Protocols.enabled(ctx, p.id)) }
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                    .clickable { on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
+                    .padding(vertical = 8.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(p.title, color = if (on) TextPrimary else TextDim, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(p.description, color = TextDim, fontSize = 10.5.sp, fontFamily = Body, lineHeight = 14.sp)
+                }
+                Spacer(Modifier.width(10.dp))
+                Box(
+                    Modifier.clip(RoundedCornerShape(10.dp))
+                        .background(if (on) Good.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                ) { Text(if (on) "ON" else "OFF", color = if (on) Good else TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+
         if (rules.isEmpty() && !editorOpen) {
             EmptyState(
                 icon = Icons.Rounded.Bolt,
-                title = "No rules yet",
+                title = "No custom rules yet",
                 hint = "WHEN a number crosses your line, THEN Jarvis speaks up.",
                 accent = Mod.Home,
                 actionLabel = "+ New rule",
@@ -140,7 +167,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
         }
 
         if (rules.isNotEmpty()) {
-            SectionLabel("Your rules")
+            SectionLabel("Your custom rules")
             Spacer(Modifier.height(8.dp))
             rules.forEach { r ->
                 RuleRow(

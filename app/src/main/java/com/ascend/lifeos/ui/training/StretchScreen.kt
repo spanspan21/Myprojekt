@@ -47,6 +47,24 @@ fun StretchScreen(onBack: () -> Unit) {
     var running by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
 
+    // Auto-suggest by time of day + the calibration mobility prescription: the
+    // right routine floats to the top with a "SUGGESTED NOW" badge — morning
+    // wake-up in the morning, wind-down in the evening, plus whatever the
+    // mobility screen flagged as tight.
+    val suggested = remember {
+        val hour = java.time.LocalTime.now().hour
+        val timeRoutine = when (hour) {
+            in 5..10 -> "str_morning"
+            in 19..23, in 0..4 -> "str_evening"
+            else -> null
+        }
+        (setOfNotNull(timeRoutine) +
+            com.ascend.lifeos.data.training.prescribedMobility(com.ascend.lifeos.data.Repo.data.profile.assessResults)).toSet()
+    }
+    val routines = remember(suggested) {
+        ExerciseSeed.STRETCH_ROUTINES.sortedByDescending { it.id in suggested }
+    }
+
     LaunchedEffect(running) {
         if (!running) return@LaunchedEffect
         val routine = activeRoutine ?: return@LaunchedEffect
@@ -81,7 +99,8 @@ fun StretchScreen(onBack: () -> Unit) {
         if (!running) {
             // ── Routine picker ──────────────────────────────────────
             LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-                items(ExerciseSeed.STRETCH_ROUTINES) { routine ->
+                items(routines) { routine ->
+                    val isSuggested = routine.id in suggested
                     GlassPanel(Modifier.fillMaxWidth().clickable {
                         activeRoutine = routine; exIndex = 0; isSecondSide = false
                         remaining = routine.exercises.first().holdSec; running = true
@@ -89,6 +108,13 @@ fun StretchScreen(onBack: () -> Unit) {
                         Column(Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(routine.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                if (isSuggested) {
+                                    Box(
+                                        Modifier.clip(RoundedCornerShape(8.dp)).background(Good.copy(alpha = 0.16f))
+                                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                                    ) { Text("SUGGESTED NOW", color = Good, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                                    Spacer(Modifier.width(6.dp))
+                                }
                                 // context badge — Morning / Pre-training / Evening / Athlete
                                 Box(
                                     Modifier.clip(RoundedCornerShape(8.dp)).background(Cyan.copy(alpha = 0.12f))

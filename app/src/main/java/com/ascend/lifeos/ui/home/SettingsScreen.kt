@@ -337,23 +337,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
         }
 
-        // ── PROTOCOLS ────────────────────────────────────────────────
-        SettingsSection("Active protocols") {
-            Protocols.ALL.forEach { p ->
-                var on by remember(p.id) { mutableStateOf(Protocols.enabled(ctx, p.id)) }
-                Row(
-                    Modifier.fillMaxWidth().clickable { on = !on; Protocols.setEnabled(ctx, p.id, on) }
-                        .padding(vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(p.title, color = if (on) TextPrimary else TextDim, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-                        Text(p.description, color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
-                    }
-                    TogglePill(on)
-                }
-            }
-        }
+        // Protocols moved into the one "Automations" home (Home → Automations),
+        // where they live next to your custom rules — not a second surface here.
 
         // ── DATA ─────────────────────────────────────────────────────
         SettingsSection("Data") {

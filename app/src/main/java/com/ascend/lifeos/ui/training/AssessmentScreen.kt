@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,14 +28,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.training.ASSESS_TESTS
+import com.ascend.lifeos.data.training.ATHLETE_METRICS
+import com.ascend.lifeos.data.training.MOBILITY_CHECKS
 import com.ascend.lifeos.data.training.Pattern
 import com.ascend.lifeos.data.training.TrainBrain
+import com.ascend.lifeos.data.training.prescribedMobility
 import com.ascend.lifeos.ui.kit.ProgressDots
 import com.ascend.lifeos.ui.theme.*
 
 // ─── CALIBRATION PROTOCOL ────────────────────────────────────────────────────
-// Seven max-effort tests, one per page. Results feed the FitnessProfile that
-// the plan generator keys off. Re-run every ~6 weeks.
+// Three phases, one page each: seven max-effort STRENGTH tests → five athlete
+// METRICS (single-leg, posterior chain, jump power, core hold) → a MOBILITY
+// screen that prescribes the matching Part-4 routines. Results feed the
+// FitnessProfile the plan keys off. Re-run every ~6 weeks.
 
 @Composable
 fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
@@ -44,7 +50,11 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
             Repo.data.profile.assessResults.forEach { (k, v) -> put(k, v) }
         }
     }
-    val finished = step >= ASSESS_TESTS.size
+    val strengthN = ASSESS_TESTS.size
+    val metricN = ATHLETE_METRICS.size
+    val mobilityN = MOBILITY_CHECKS.size
+    val total = strengthN + metricN + mobilityN
+    val finished = step >= total
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 24.dp)) {
         Spacer(Modifier.height(12.dp))
@@ -55,17 +65,18 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
             )
             Spacer(Modifier.weight(1f))
             if (!finished) {
+                val phase = when { step < strengthN -> "STRENGTH"; step < strengthN + metricN -> "PERFORMANCE"; else -> "MOBILITY" }
                 Text(
-                    "TEST ${step + 1}/${ASSESS_TESTS.size}", color = Mod.Train, fontFamily = Display,
+                    "$phase · ${step + 1}/$total", color = Mod.Train, fontFamily = Display,
                     fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
             }
         }
         Spacer(Modifier.height(10.dp))
 
-        // progress segments
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ASSESS_TESTS.forEachIndexed { i, _ ->
+        // progress segments across all three phases
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(total) { i ->
                 Box(
                     Modifier.weight(1f).height(2.dp).clip(CircleShape)
                         .background(if (i < step || finished) Mod.Train else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)),
@@ -79,94 +90,158 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
                 (slideInHorizontally { it / 3 } + fadeIn()) togetherWith (slideOutHorizontally { -it / 3 } + fadeOut())
             },
         ) { s ->
-            if (s == -1) {
-                ResultPage(results.toMap(), onDone = {
+            when {
+                s == -1 -> ResultPage(results.toMap(), onDone = {
                     Repo.saveAssessment(results.toMap())
                     onDone()
                 })
-            } else {
-                val test = ASSESS_TESTS[s]
-                var value by remember(s) { mutableIntStateOf(results[test.id] ?: 0) }
-
-                Column(Modifier.fillMaxSize()) {
-                    Spacer(Modifier.height(44.dp))
-                    Text(
-                        "CALIBRATION PROTOCOL", color = TextDim, fontFamily = Display,
-                        fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        test.name, color = TextPrimary, fontFamily = Display,
-                        fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(test.instruction, color = TextMuted, fontSize = 13.5.sp, fontFamily = Body, lineHeight = 20.sp)
-
-                    Spacer(Modifier.weight(0.5f))
-
-                    // big result stepper
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        BigStep("−", enabled = value > 0) { value = (value - 1).coerceAtLeast(0) }
-                        Spacer(Modifier.width(22.dp))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("$value", color = TextPrimary, style = metricStyle(64), textAlign = TextAlign.Center)
-                            Text(
-                                test.unit.uppercase(), color = TextDim, fontFamily = Display,
-                                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
-                            )
-                        }
-                        Spacer(Modifier.width(22.dp))
-                        BigStep("+") { value += 1 }
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    // quick jumps
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        listOf(5, 10, 30).forEach { inc ->
-                            Box(
-                                Modifier.padding(horizontal = 5.dp).clip(RoundedCornerShape(9.dp))
-                                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                                    .clickable { value += inc }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                            ) { Text("+$inc", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
-                        }
-                    }
-
-                    // live level preview
-                    Spacer(Modifier.height(18.dp))
-                    val level = TrainBrain.levelFor(test, value)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                        ProgressDots(total = 6, reached = level, color = Mod.Train)
-                        Spacer(Modifier.width(10.dp))
-                        Text("Level $level", color = Mod.Train, fontFamily = Display, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Spacer(Modifier.weight(1f))
-
-                    Box(
-                        Modifier.fillMaxWidth().padding(bottom = 36.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (value > 0) Mod.Train else Mod.Train.copy(alpha = 0.2f))
-                            .clickable(enabled = value > 0) {
-                                results[test.id] = value
-                                step++
-                            }
-                            .padding(vertical = 15.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            if (s == ASSESS_TESTS.size - 1) "Finish calibration" else "Log & next test",
-                            color = if (value > 0) Void else TextDim,
-                            fontFamily = Body, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,
-                        )
-                    }
+                s < strengthN -> {
+                    val test = ASSESS_TESTS[s]
+                    var value by remember(s) { mutableIntStateOf(results[test.id] ?: 0) }
+                    StepPage(
+                        overline = "CALIBRATION · STRENGTH",
+                        name = test.name, instruction = test.instruction, unit = test.unit,
+                        value = value, quickSteps = listOf(5, 10, 30),
+                        onMinus = { value = (value - 1).coerceAtLeast(0) }, onPlus = { value += 1 },
+                        onQuick = { value += it },
+                        levelPreview = TrainBrain.levelFor(test, value),
+                        isLast = s == total - 1, enabled = value > 0,
+                    ) { results[test.id] = value; step++ }
+                }
+                s < strengthN + metricN -> {
+                    val m = ATHLETE_METRICS[s - strengthN]
+                    var value by remember(s) { mutableIntStateOf(results[m.id] ?: 0) }
+                    StepPage(
+                        overline = "CALIBRATION · PERFORMANCE",
+                        name = m.name, instruction = m.instruction, unit = m.unit,
+                        value = value, quickSteps = listOf(m.step, m.step * 5, m.step * 10),
+                        onMinus = { value = (value - m.step).coerceAtLeast(0) }, onPlus = { value += m.step },
+                        onQuick = { value += it },
+                        levelPreview = null,
+                        isLast = s == total - 1, enabled = value > 0,
+                    ) { results[m.id] = value; step++ }
+                }
+                else -> {
+                    val c = MOBILITY_CHECKS[s - strengthN - metricN]
+                    MobilityPage(
+                        check = c, current = results[c.id],
+                        isLast = s == total - 1,
+                    ) { rating -> results[c.id] = rating; step++ }
                 }
             }
         }
+    }
+}
+
+// ─── generic value step (strength + performance) ─────────────────────────────
+
+@Composable
+private fun StepPage(
+    overline: String, name: String, instruction: String, unit: String,
+    value: Int, quickSteps: List<Int>,
+    onMinus: () -> Unit, onPlus: () -> Unit, onQuick: (Int) -> Unit,
+    levelPreview: Int?, isLast: Boolean, enabled: Boolean, onNext: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        Spacer(Modifier.height(44.dp))
+        Text(overline, color = TextDim, fontFamily = Display, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(name, color = TextPrimary, fontFamily = Display, fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
+        Spacer(Modifier.height(10.dp))
+        Text(instruction, color = TextMuted, fontSize = 13.5.sp, fontFamily = Body, lineHeight = 20.sp)
+
+        Spacer(Modifier.weight(0.5f))
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            BigStep("−", enabled = value > 0, onClick = onMinus)
+            Spacer(Modifier.width(22.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$value", color = TextPrimary, style = metricStyle(64), textAlign = TextAlign.Center)
+                Text(unit.uppercase(), color = TextDim, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            }
+            Spacer(Modifier.width(22.dp))
+            BigStep("+", onClick = onPlus)
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            quickSteps.distinct().forEach { inc ->
+                Box(
+                    Modifier.padding(horizontal = 5.dp).clip(RoundedCornerShape(9.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                        .clickable { onQuick(inc) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) { Text("+$inc", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            }
+        }
+
+        if (levelPreview != null) {
+            Spacer(Modifier.height(18.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                ProgressDots(total = 6, reached = levelPreview, color = Mod.Train)
+                Spacer(Modifier.width(10.dp))
+                Text("Level $levelPreview", color = Mod.Train, fontFamily = Display, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+        NextButton(if (isLast) "Finish calibration" else "Log & next", enabled, onNext)
+    }
+}
+
+// ─── mobility rating step (1 tight … 3 easy) ─────────────────────────────────
+
+@Composable
+private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, current: Int?, isLast: Boolean, onNext: (Int) -> Unit) {
+    var rating by remember(check.id) { mutableIntStateOf(current ?: 0) }
+    Column(Modifier.fillMaxSize()) {
+        Spacer(Modifier.height(44.dp))
+        Text("CALIBRATION · MOBILITY", color = TextDim, fontFamily = Display, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(check.name, color = TextPrimary, fontFamily = Display, fontSize = 26.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
+        Spacer(Modifier.height(10.dp))
+        Text(check.instruction, color = TextMuted, fontSize = 13.5.sp, fontFamily = Body, lineHeight = 20.sp)
+
+        Spacer(Modifier.weight(0.5f))
+
+        val labels = listOf(1 to "Tight", 2 to "Okay", 3 to "Easy")
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            labels.forEach { (n, lbl) ->
+                val on = rating == n
+                val c = when (n) { 1 -> Crit; 2 -> Warn; else -> Good }
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                        .background(if (on) c.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                        .border(0.5.dp, if (on) c.copy(alpha = 0.6f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
+                        .clickable { rating = n }
+                        .padding(horizontal = 18.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("$n", color = if (on) c else TextDim, fontFamily = Display, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(14.dp))
+                    Text(lbl, color = if (on) TextPrimary else TextMuted, fontSize = 15.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    if (n <= 2) Text("→ prescribes a routine", color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+                }
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+        NextButton(if (isLast) "Finish calibration" else "Log & next", rating > 0) { onNext(rating) }
+    }
+}
+
+@Composable
+private fun NextButton(label: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.fillMaxWidth().padding(bottom = 36.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (enabled) Mod.Train else Mod.Train.copy(alpha = 0.2f))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 15.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = if (enabled) Void else TextDim, fontFamily = Body, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
     }
 }
 
@@ -186,23 +261,15 @@ private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit)
 @Composable
 private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
     val profile = TrainBrain.profile(results)
-    Column(Modifier.fillMaxSize()) {
+    val prescribed = prescribedMobility(results)
+    Column(Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState())) {
         Spacer(Modifier.height(44.dp))
-        Text(
-            "CALIBRATION COMPLETE", color = Good, fontFamily = Display,
-            fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
-        )
+        Text("CALIBRATION COMPLETE", color = Good, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
         Spacer(Modifier.height(8.dp))
-        Text(
-            "Your movement profile", color = TextPrimary, fontFamily = Display,
-            fontSize = 26.sp, fontWeight = FontWeight.Bold,
-        )
+        Text("Your movement profile", color = TextPrimary, fontFamily = Display, fontSize = 26.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
-        Text(
-            "The generator builds every session off these levels. Re-run in ~6 weeks.",
-            color = TextMuted, fontSize = 13.sp, fontFamily = Body, lineHeight = 19.sp,
-        )
-        Spacer(Modifier.height(24.dp))
+        Text("The generator builds every session off these — strength, power, and the mobility you need. Re-run in ~6 weeks.", color = TextMuted, fontSize = 13.sp, fontFamily = Body, lineHeight = 19.sp)
+        Spacer(Modifier.height(20.dp))
 
         Pattern.entries.forEach { p ->
             val lv = profile?.level(p) ?: 1
@@ -213,17 +280,39 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
             Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(label, color = TextMuted, fontFamily = Body, fontSize = 13.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
                 Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
-                    Box(
-                        Modifier.fillMaxWidth(lv / 6f).fillMaxHeight().clip(CircleShape)
-                            .background(Mod.Train),
-                    )
+                    Box(Modifier.fillMaxWidth(lv / 6f).fillMaxHeight().clip(CircleShape).background(Mod.Train))
                 }
                 Spacer(Modifier.width(12.dp))
                 Text("L$lv", color = Mod.Train, style = metricStyle(14), modifier = Modifier.width(30.dp))
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        // athlete performance metrics (raw)
+        val perf = ATHLETE_METRICS.mapNotNull { m -> results[m.id]?.takeIf { it > 0 }?.let { m to it } }
+        if (perf.isNotEmpty()) {
+            Spacer(Modifier.height(18.dp))
+            Text("PERFORMANCE", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Spacer(Modifier.height(8.dp))
+            perf.forEach { (m, v) ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text(m.name, color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, modifier = Modifier.weight(1f))
+                    Text("$v ${m.unit}", color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // prescribed mobility
+        Spacer(Modifier.height(18.dp))
+        Text("MOBILITY PRESCRIPTION", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+        Spacer(Modifier.height(8.dp))
+        if (prescribed.isEmpty()) {
+            Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 17.sp)
+        } else {
+            val names = com.ascend.lifeos.data.training.ExerciseSeed.STRETCH_ROUTINES.filter { it.id in prescribed }.map { it.name }
+            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Body, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 17.sp)
+        }
+
+        Spacer(Modifier.height(28.dp))
         Box(
             Modifier.fillMaxWidth().padding(bottom = 36.dp)
                 .clip(RoundedCornerShape(16.dp)).background(Mod.Train)

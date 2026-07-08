@@ -53,6 +53,35 @@ val ASSESS_TESTS = listOf(
     ),
 )
 
+// ─── Extended athlete battery (raw metrics + a mobility screen) ──────────────
+// These sit AFTER the seven strength tests. They capture things the chain levels
+// can't — single-leg strength, posterior chain, jump power, core endurance — and
+// a mobility screen that PRESCRIBES the matching Part-4 routines. Kept as raw
+// values (not Pattern levels) so no Pattern-enum refactor is needed.
+
+data class MetricTest(val id: String, val name: String, val unit: String, val instruction: String, val step: Int = 1)
+
+val ATHLETE_METRICS = listOf(
+    MetricTest("power_vert", "Vertical Jump", "cm", "Reach up and mark, then jump and mark the top — log the difference. Best of 3.", 2),
+    MetricTest("power_broad", "Broad Jump", "cm", "Standing broad jump for distance, stick the landing. Best of 3.", 5),
+    MetricTest("legs_sl", "Pistol Squats", "reps", "Max clean single-leg squats to full depth, your best leg."),
+    MetricTest("posterior_nordic", "Nordic Curls", "reps", "Knees anchored — max reps lowering the torso under control."),
+    MetricTest("core_hollow", "Hollow Hold", "sec", "Lower back pinned to the floor, arms and legs hovering. Max hold.", 5),
+)
+
+/** A mobility check, rated 1 (tight) – 3 (easy). A low score prescribes [routineId]. */
+data class MobilityCheck(val id: String, val name: String, val instruction: String, val routineId: String)
+
+val MOBILITY_CHECKS = listOf(
+    MobilityCheck("mob_ankle", "Ankle dorsiflexion", "Knee-to-wall: drive the knee past the toes, heel glued down. How far?", "str_ankle"),
+    MobilityCheck("mob_hip", "Hips & groin", "Sit into a deep squat and switch 90/90 side to side. Comfortable and even?", "str_hip"),
+    MobilityCheck("mob_shoulder", "Shoulders & T-spine", "Reach overhead against a wall and rotate open. Full range, no pinch?", "str_shoulder"),
+)
+
+/** Routines to prescribe from the calibration mobility screen (score ≤ 2 = work on it). */
+fun prescribedMobility(results: Map<String, Int>): List<String> =
+    MOBILITY_CHECKS.filter { (results[it.id] ?: 3) <= 2 }.map { it.routineId }
+
 /** Movement-pattern levels derived from raw test scores. */
 data class FitnessProfile(val levels: Map<Pattern, Int>, val raw: Map<String, Int>) {
     fun level(p: Pattern): Int = levels[p] ?: 1
