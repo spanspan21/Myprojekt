@@ -42,8 +42,20 @@ data class Kr(
 
 data class Goal(val id: String, val title: String, val krs: List<Kr>)
 
-/** A recurring habit. [daysMask] bit0 = Monday … bit6 = Sunday. */
-data class Habit(val id: String, val title: String, val daysMask: Int, val icon: String)
+/**
+ * A recurring habit. [daysMask] bit0 = Monday … bit6 = Sunday.
+ * [autoMetric] (blank = manual): a data source that auto-completes the habit —
+ * "steps"/"sleep"/"trained"/"protein"/"water" — done when the day's measured
+ * value reaches [threshold]. Auto habits are never toggled by hand.
+ */
+data class Habit(
+    val id: String,
+    val title: String,
+    val daysMask: Int,
+    val icon: String,
+    val autoMetric: String = "",
+    val threshold: Int = 0,
+)
 
 object LifeStores {
     private const val PREF = "life"
@@ -271,12 +283,15 @@ object LifeStores {
 
     private fun Habit.toJson() = JSONObject()
         .put("id", id).put("title", title).put("mask", daysMask).put("icon", icon)
+        .put("auto", autoMetric).put("thr", threshold)
 
     private fun habitFrom(o: JSONObject) = Habit(
         id = o.optString("id"),
         title = o.optString("title"),
         daysMask = o.optInt("mask", 0b1111111),
         icon = o.optString("icon", ""),
+        autoMetric = o.optString("auto", ""),
+        threshold = o.optInt("thr", 0),
     )
 
     fun habits(ctx: Context): List<Habit> {
@@ -292,9 +307,17 @@ object LifeStores {
         put(ctx, "habits", arr.toString())
     }
 
-    fun addHabit(ctx: Context, title: String, daysMask: Int, icon: String = "") {
+    fun addHabit(ctx: Context, title: String, daysMask: Int, icon: String = "", autoMetric: String = "", threshold: Int = 0) {
         if (title.isBlank() || daysMask == 0) return
-        writeHabits(ctx, habits(ctx) + Habit(newId("h"), title.trim(), daysMask and 0b1111111, icon))
+        // avoid duplicate auto-habits (e.g. two "10k steps") — one per metric
+        if (autoMetric.isNotBlank() && habits(ctx).any { it.autoMetric == autoMetric }) return
+        writeHabits(ctx, habits(ctx) + Habit(newId("h"), title.trim(), daysMask and 0b1111111, icon, autoMetric, threshold))
+    }
+
+    fun setHabitDays(ctx: Context, id: String, daysMask: Int) {
+        val mask = daysMask and 0b1111111
+        if (mask == 0) return
+        writeHabits(ctx, habits(ctx).map { if (it.id == id) it.copy(daysMask = mask) else it })
     }
 
     fun deleteHabit(ctx: Context, id: String) {

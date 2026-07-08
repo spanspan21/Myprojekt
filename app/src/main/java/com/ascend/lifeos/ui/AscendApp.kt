@@ -88,7 +88,7 @@ private enum class Sub(val label: String, val accent: @Composable () -> Color) {
     GOALS("Goals", { Mod.Home }),
     FINANCE("Finance", { Mod.Finance }),
     SCHOOL("School", { Mod.School }),
-    MIND("Mind", { Mod.Mind }),
+    HABITS("Habits", { Mod.Mind }),
     // System group
     GUARD("Guard", { Mod.Guard }),
     SKILLS("Skills", { Mod.Skills }),
@@ -99,7 +99,7 @@ private enum class Sub(val label: String, val accent: @Composable () -> Color) {
 private enum class Group(val label: String, val icon: ImageVector, val subs: List<Sub>) {
     TODAY("Today", Icons.Rounded.Hexagon, listOf(Sub.HOME, Sub.PRIME)),
     BODY("Body", Icons.Rounded.FitnessCenter, listOf(Sub.TRAIN, Sub.FUEL, Sub.VITALS, Sub.SLEEP)),
-    LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.GOALS, Sub.FINANCE, Sub.SCHOOL, Sub.MIND)),
+    LIFE("Life", Icons.Rounded.CalendarMonth, listOf(Sub.CALENDAR, Sub.GOALS, Sub.FINANCE, Sub.SCHOOL, Sub.HABITS)),
     SYSTEM("System", Icons.Rounded.Shield, listOf(Sub.GUARD, Sub.SKILLS, Sub.SETTINGS)),
 }
 
@@ -110,7 +110,7 @@ object ShellMode {
     val current = mutableStateOf("normal") // normal | exam | holiday
 
     fun hiddenSubs(mode: String): Set<String> = when (mode) {
-        "exam" -> setOf("FINANCE", "MIND", "SKILLS")
+        "exam" -> setOf("FINANCE", "SKILLS")
         "holiday" -> setOf("SCHOOL")
         else -> emptySet()
     }
@@ -167,7 +167,7 @@ fun AscendApp() {
             "goals" -> open(Sub.GOALS)
             "finance" -> open(Sub.FINANCE)
             "school" -> open(Sub.SCHOOL)
-            "mind" -> open(Sub.MIND)
+            "habits", "mind" -> open(Sub.HABITS)
             "prime" -> open(Sub.PRIME)
             "settings" -> open(Sub.SETTINGS)
             "report" -> reportOpen = true
@@ -235,7 +235,7 @@ fun AscendApp() {
                     Sub.GOALS -> com.ascend.lifeos.ui.life.GoalsScreen(onClose = { open(Sub.CALENDAR) })
                     Sub.FINANCE -> com.ascend.lifeos.ui.finance.FinanceHome(onClose = { open(Sub.CALENDAR) })
                     Sub.SCHOOL -> com.ascend.lifeos.ui.school.SchoolScreen(onClose = { open(Sub.CALENDAR) })
-                    Sub.MIND -> com.ascend.lifeos.ui.life.MindScreen(onClose = { open(Sub.CALENDAR) })
+                    Sub.HABITS -> com.ascend.lifeos.ui.life.HabitsScreen(onClose = { open(Sub.CALENDAR) })
                     Sub.GUARD -> GuardScreen()
                     Sub.SKILLS -> SkillsScreen()
                     Sub.SETTINGS -> com.ascend.lifeos.ui.home.SettingsScreen(

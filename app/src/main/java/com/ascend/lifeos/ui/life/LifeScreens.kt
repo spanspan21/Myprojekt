@@ -334,11 +334,7 @@ fun GoalsScreen(onClose: () -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
         }
-
-        // habits
-        SectionLabel("Habits")
-        Spacer(Modifier.height(8.dp))
-        HabitsBlock()
+        // Habits moved to their own module (replaces Mind) — see HabitsScreen.
     }
 
     if (addOpen) AddGoalSheet(onDone = { addOpen = false })
