@@ -40,9 +40,11 @@ object FoodScore {
         val cons = ArrayList<String>()
 
         if (alcohol) {
-            val g = p.per100["alcohol"]
+            // OpenFoodFacts stores `alcohol_100g` as % vol (ABV), not grams per
+            // 100 g — label it accordingly so a 5 %-beer doesn't read "5 g/100g".
+            val abv = p.per100["alcohol"]
             cons.add(
-                if (g != null && g > 0) "Contains alcohol (${fmt(g)} g/100g) — no amount supports your goals"
+                if (abv != null && abv > 0) "Contains alcohol (${fmt(abv)} % vol) — no amount supports your goals"
                 else "Contains alcohol — no amount supports your goals",
             )
         }
@@ -138,6 +140,12 @@ object FoodScore {
     /** Public name-only check — Fuel auto-tags the Whoop-style alcohol factor with it. */
     fun nameLooksAlcoholic(text: String): Boolean {
         val hay = text.lowercase()
+        // Non-alcoholic drinks that carry an alcohol keyword as a substring —
+        // "root beer" / "ginger beer" are typically 0 % vol. Clear them unless the
+        // name explicitly says otherwise ("hard …"), before the substring sweep.
+        if ("hard" !in hay && ("root beer" in hay || "ginger beer" in hay || "ginger bier" in hay || "wurzelbier" in hay)) {
+            return false
+        }
         return listOf(
             "alkohol", "alcohol", "bier", "beer", "wein", "wine", "vodka", "wodka",
             "whisky", "whiskey", "rum ", "gin ", "likör", "liqueur", "sekt", "prosecco",

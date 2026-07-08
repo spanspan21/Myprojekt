@@ -37,7 +37,28 @@ _ausstehend_
 _ausstehend_
 
 ## Modul: Nutrition
-_ausstehend_
+Dateien: `NutritionCalc, AdaptiveTdee, FastingCalc, WaterCalc, FoodScore, FoodRank, Nutrients,
+ScannerEngine`. **Kern rechnerisch verifiziert korrekt** (mit Beispielen): Mifflin–St Jeor BMR,
+TDEE=BMR×Aktivität, Makro-kcal 4/4/9 (kein Protein/Carb-Swap, Carbs ≥0), Adaptive-TDEE
+(7700 kcal/kg, Vorzeichen korrekt: Gewicht fällt → TDEE höher; keine Div-by-Zero), Fasting
+(ms→h `/3_600_000`, 0.25 h Grace, Streak-Ordnung), Water (30 ml/kg, Glas 250 ml), FoodScore
+(Nutri/NOVA-Vorzeichen, Alkohol-Override), FoodRank.
+
+**N1 · P2 · `FoodScore.nameLooksAlcoholic` (Zeile 142) · ✅ gefixt.** Substring-Match auf `"beer"`
+flaggte **„Root Beer"** und **„Ginger Beer"** (alkoholfrei) als Alkohol → ganzes Produkt hart auf
+Score 1 / „Avoid" + „Contains alcohol"-Con. **Fix:** bekannte alkoholfreie Compounds ausschließen
+(sofern nicht „hard …"), vor dem Substring-Sweep. Regressionstest.
+
+**N2 · P3 · `FoodScore.evaluate` (Zeile 45) · ✅ gefixt.** OpenFoodFacts `alcohol_100g` ist **% vol
+(ABV)**, nicht g/100g — die Con-Zeile zeigte „5 g/100g" für ein 5 %-Bier. Nur Anzeige (Score
+unberührt). **Fix:** Label → „% vol".
+
+**N3 · P3 (latent) · `FastingCalc.zoneFor` (Zeile 35) · ✅ gehärtet.** `ZONES.last { hours >= fromH }`
+wirft `NoSuchElementException` bei negativem Input. Heute nicht erreichbar (Aufrufer clampen via
+`elapsedHours`), aber Landmine. **Fix:** `lastOrNull { … } ?: ZONES.first()`. Regressionstest.
+
+**Verifiziert korrekt:** ✔️ kJ→kcal `/4.184`, g→mg/µg-Faktoren, Tagestotale (keine Feld-Vertauschung,
+`frac()` guarded goal=0), `pendingSuggestion` 7-Tage-Throttle (kein Doppel-Feuern), `28L*…` Long-Math.
 
 ## Modul: Sleep
 Dateien: `sleep/SleepProtocol.kt` (CBT-I-Kern), `sleep/SleepStore.kt` (Persistenz + State Machine).

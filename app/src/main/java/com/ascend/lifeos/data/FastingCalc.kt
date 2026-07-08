@@ -32,7 +32,9 @@ object FastingCalc {
         Zone(24.0, "Deep autophagy", Color(0xFFB794FF)),
     )
 
-    fun zoneFor(hours: Double): Zone = ZONES.last { hours >= it.fromH }
+    // lastOrNull, not last: a negative input (no zone with fromH ≤ hours) would
+    // otherwise throw. Callers clamp via elapsedHours today, but stay defensive.
+    fun zoneFor(hours: Double): Zone = ZONES.lastOrNull { hours >= it.fromH } ?: ZONES.first()
 
     fun elapsedHours(startEpoch: Long, now: Long = System.currentTimeMillis()): Double =
         if (startEpoch <= 0L) 0.0 else ((now - startEpoch) / 3_600_000.0).coerceAtLeast(0.0)
