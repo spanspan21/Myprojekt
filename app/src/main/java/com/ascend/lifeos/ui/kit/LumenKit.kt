@@ -1,5 +1,10 @@
 package com.ascend.lifeos.ui.kit
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -9,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.shadow
@@ -16,9 +23,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.theme.themeSpec
+import kotlin.math.PI
+import kotlin.math.floor
+import kotlin.math.sin
 
 // ─── LUMEN — white light & electric-blue glow ────────────────────────────────
 // The light-world atmosphere and the reusable glow halo. On white, depth is
@@ -90,6 +102,66 @@ fun LumenBackground(accent: Color, modifier: Modifier = Modifier) {
                     drawLine(g, Offset(0f, y), Offset(size.width, y), 1f); y += step
                 }
             }
+        }
+        // rising, twinkling blue sparks — the living atmosphere
+        LumenSparks(spec.glowInk, Modifier.fillMaxSize())
+    }
+}
+
+// ─── the sparks ──────────────────────────────────────────────────────────────
+// A field of glowing blue motes that drift upward and twinkle. The loop is
+// perfectly seamless: every mote's rise, sway and twinkle run an integer number
+// of cycles per loop, so t = 1 lands exactly where t = 0 did — no jump, ever.
+
+private class Mote(
+    val x: Float, val y: Float, val r: Float, val speed: Float,
+    val sway: Float, val swayCycles: Float, val twCycles: Float,
+    val phase: Float, val bright: Float,
+)
+
+@Composable
+fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 44) {
+    val reduced = Motion.reduced(LocalContext.current)
+    val motes = remember(count) {
+        val rnd = kotlin.random.Random(7)
+        List(count) {
+            Mote(
+                x = rnd.nextFloat(),
+                y = rnd.nextFloat(),
+                r = 0.9f + rnd.nextFloat() * 2.2f,
+                speed = (1 + rnd.nextInt(3)).toFloat(),        // integer traversals / loop
+                sway = 6f + rnd.nextFloat() * 22f,
+                swayCycles = (1 + rnd.nextInt(2)).toFloat(),
+                twCycles = (2 + rnd.nextInt(3)).toFloat(),
+                phase = rnd.nextFloat() * (2f * PI.toFloat()),
+                bright = 0.5f + rnd.nextFloat() * 0.5f,
+            )
+        }
+    }
+    val trans = rememberInfiniteTransition(label = "sparks")
+    val anim by trans.animateFloat(
+        0f, 1f, infiniteRepeatable(tween(17000, easing = LinearEasing)), label = "t",
+    )
+    val t = if (reduced) 0.15f else anim
+    val tau = 2f * PI.toFloat()
+    Canvas(modifier) {
+        motes.forEach { m ->
+            val yy = (m.y - t * m.speed).let { it - floor(it) } * size.height
+            val xx = m.x * size.width + m.sway * sin(t * tau * m.swayCycles + m.phase)
+            val tw = 0.45f + 0.55f * (0.5f + 0.5f * sin(t * tau * m.twCycles + m.phase))
+            val a = (m.bright * tw).coerceIn(0f, 1f)
+            val rad = m.r.dp.toPx()
+            val ctr = Offset(xx, yy)
+            // soft glow halo
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(color.copy(alpha = a * 0.45f), Color.Transparent),
+                    center = ctr, radius = rad * 4f,
+                ),
+                radius = rad * 4f, center = ctr,
+            )
+            // bright core
+            drawCircle(color.copy(alpha = a), rad, ctr)
         }
     }
 }
