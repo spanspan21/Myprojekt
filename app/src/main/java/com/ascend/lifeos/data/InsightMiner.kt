@@ -23,8 +23,13 @@ object InsightMiner {
             com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao()
                 .setsLoggedSince(System.currentTimeMillis() - 60L * 86_400_000)
                 .groupBy { set ->
-                    val c = java.util.Calendar.getInstance().apply { timeInMillis = set.loggedAt }
-                    "%04d-%02d-%02d".format(c.get(java.util.Calendar.YEAR), c.get(java.util.Calendar.MONTH) + 1, c.get(java.util.Calendar.DAY_OF_MONTH))
+                    // Same 06:00 app-day rollover as every other series (todayKey),
+                    // not a raw 00:00 calendar date — otherwise a set logged between
+                    // 00:00 and 05:59 pairs with the wrong day's sleep/kcal/water.
+                    val ldt = java.time.LocalDateTime.ofInstant(
+                        java.time.Instant.ofEpochMilli(set.loggedAt), java.time.ZoneId.systemDefault(),
+                    )
+                    com.ascend.lifeos.core.todayKey(ldt)
                 }
                 .mapValues { it.value.size.toDouble() }
         }.getOrDefault(emptyMap())

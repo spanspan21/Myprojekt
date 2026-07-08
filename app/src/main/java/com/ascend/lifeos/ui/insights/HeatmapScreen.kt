@@ -168,7 +168,9 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
         // a day with zero app activity stays honestly empty, not "0/3"
         val missions = if (day == null && !isTrained) null else {
             var done = 0
-            if (kcal > 0) done++
+            // mirror Repo.completion (the streak definition): fuel = hit the kcal
+            // goal, not merely "logged something" — otherwise the heatmap over-reports
+            if (kcal >= profile.kcalGoal) done++
             if (water >= profile.waterGoal) done++
             if (isTrained) done++
             done / 3f

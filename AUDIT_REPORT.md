@@ -203,13 +203,40 @@ gutgeschrieben** → aufgeblähte Screentime (füttert 80 %-Budget-Warnung + Ins
 Laufzeit, monotone Verbesserung — kann nur Phantomzeit reduzieren; per Inspektion verifiziert.)
 
 ## Modul: Skills
-_ausstehend_
+Dateien: `masterplan/{MasterPlan, JarvisRoutingEngine, MasterPlanImport}.kt`, `skill/SkillMeta.kt`,
+`core/Sm2.kt`. **Keine Funde.** Verifiziert korrekt: ✔️ `Sm2.next` (Intervall nutzt Pre-Update-Ease,
+wie dokumentiert), `SkillMeta.grade`, `JarvisRoutingEngine` Scoring/Gating/`slicesOf`,
+`MasterPlanImport.toRows` (unbekannte Prereqs verworfen, ARGB-Alpha). (Hinweis: die im Vor-Audit
+gemeldete SM-2-Doppelimplementierung wurde in Welle 2 zu `core/Sm2.kt` konsolidiert.)
 
 ## Modul: Prime (Readiness)
-_ausstehend_
+Dateien: `prime/PrimeMath.kt`, `prime/PrimeEngine.kt`. **Kern verifiziert korrekt:** Gewichte
+(Fuel .25/Training .25/Sleep .20/Hydration .10/Focus .10/Logging .10 = 1.00), Renormalisierung bei
+fehlenden Subsystemen, Clamp [0,100], `hasRealData` (kein Fake-0 für neue Nutzer, kein Fake-100 aus
+screen-only), `primeIndex`/`streakRisk`/`fuelQuality`/`capScore` (Formen + `PrimeMathTest`), keine
+Div-by-Zero (`screenBudget ≥ 30`). Keine Code-Fixes.
+**Offen: OF-2** (Focus-Subscore auf Ein-Tages-Basis vs. Mehrtages-Mittel der anderen).
 
 ## Modul: Core (Repo/Streaks/Rules/Insights)
-_ausstehend_
+Dateien: `Repo.kt`, `InsightMiner.kt`, `life/{Achievements, Decisions}.kt`, `rules/CustomRules.kt`,
+`ui/insights/HeatmapScreen.kt`. `refreshStreak` (Freeze/Sick-Mode), `habitStrength` EWMA,
+`Decisions.recommendation` (5 %-Tie-Band), `CustomRules.fire` (≤2/Tag, kein Doppel-Feuern),
+`Achievements.scan` (idempotent) **verifiziert korrekt**.
+
+**C1 · P2 · `InsightMiner.metrics` (Zeile 25) · ✅ gefixt.** Die `sets`-Serie leitete den Tageskey aus
+einem rohen `Calendar` (00:00-Grenze) ab, **alle anderen** Serien aus `todayKey` (06:00-Grenze). Ein
+Satz zwischen 00:00–05:59 wurde daher mit der **falschen** Nacht/Kalorien korreliert (Off-by-one Tag).
+**Fix:** derselbe `core.todayKey(ldt)`-Helfer wie überall.
+
+**C2 · P3 · `HeatmapScreen.buildHeatModel` (Zeile 171) · ✅ gefixt.** Das „MISSIONS"-Fuel-Kriterium war
+`kcal > 0` (irgendwas geloggt), während der echte Streak `kcal >= kcalGoal` verlangt (`Repo.completion`)
+— die Heatmap über-meldete Fuel. **Fix:** `kcal >= profile.kcalGoal` (deckungsgleich mit Wasser/Training
+im selben Block).
+
+**Bewusst NICHT geändert (Design, kein Bug):** `Repo.completion` Fuel = `sumKcal >= kcalGoal` ist **oben
+unbegrenzt** (Überessen erfüllt die Mission). Das ist die in Welle 1 (W1.1) bewusst gesetzte
+„genug gegessen"-Definition des Streaks — bewusst anders als `PrimeMath.fuelQuality` („gut gegessen",
+straft >110 %). Zwei verschiedene Zwecke, kein Fehler.
 
 ---
 
