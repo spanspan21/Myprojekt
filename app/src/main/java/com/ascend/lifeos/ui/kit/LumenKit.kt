@@ -132,10 +132,10 @@ fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
             Mote(
                 x = rnd.nextFloat(), y = rnd.nextFloat(),
                 vx = vx, vy = vy,
-                r = 0.5f + rnd.nextFloat() * 1.0f,      // tiny: 0.5–1.5 dp
+                r = 0.6f + rnd.nextFloat() * 1.1f,      // tiny cores: 0.6–1.7 dp
                 twCycles = (1 + rnd.nextInt(3)).toFloat(),
                 phase = rnd.nextFloat() * (2f * PI.toFloat()),
-                bright = 0.16f + rnd.nextFloat() * 0.30f,   // faint
+                bright = 0.34f + rnd.nextFloat() * 0.46f,   // brighter — they glow
             )
         }
     }
@@ -153,9 +153,18 @@ fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 64) {
             val a = (m.bright * tw).coerceIn(0f, 1f)
             val rad = m.r.dp.toPx()
             val ctr = Offset(xx, yy)
-            // a tiny soft dot: a faint halo, a crisp little core
-            drawCircle(color.copy(alpha = a * 0.4f), rad * 2.1f, ctr)
-            drawCircle(color.copy(alpha = a), rad, ctr)
+            // a real glowing bloom: a soft radial halo, then a bright crisp core
+            val glowR = rad * 8f
+            drawCircle(
+                Brush.radialGradient(
+                    0f to color.copy(alpha = a * 0.8f),
+                    0.32f to color.copy(alpha = a * 0.34f),
+                    1f to Color.Transparent,
+                    center = ctr, radius = glowR,
+                ),
+                radius = glowR, center = ctr,
+            )
+            drawCircle(color.copy(alpha = (a * 1.15f).coerceAtMost(1f)), rad, ctr)
         }
     }
 }
