@@ -56,6 +56,9 @@ object IcsSync {
             val body = fetch(url)
             if (!body.contains("BEGIN:VCALENDAR")) throw IOException("Not an ICS feed")
             val events = parse(body)
+            // A transient empty-but-valid feed (server hiccup) must not wipe the
+            // last good import — only replace when the parse produced events.
+            if (events.isEmpty()) return@withContext Result.success(0)
             val dao = CalendarRepo.dao(ctx)
             dao.deleteBySource()
             events.forEach { dao.upsert(it) }
@@ -250,8 +253,22 @@ object IcsSync {
                 lastDay = when {
                     until != null -> until
                     count != null -> {
-                        val perWeek = Integer.bitCount(repeatMask).coerceAtLeast(1)
-                        start.date.plusDays((((count + perWeek - 1) / perWeek) * 7 - 1).toLong())
+                        // Walk to the exact COUNT-th BYDAY occurrence. The old
+                        // end-of-week estimate over-counted when COUNT wasn't a
+                        // multiple of the weekdays-per-week (e.g. MO,WE COUNT=3
+                        // produced a 4th phantom occurrence in the final part-week).
+                        var d = start.date
+                        var seen = 0
+                        var lastOcc = start.date
+                        while (seen < count) {
+                            if (repeatMask and (1 shl (d.dayOfWeek.value - 1)) != 0) {
+                                seen++
+                                lastOcc = d
+                            }
+                            if (seen >= count) break
+                            d = d.plusDays(1)
+                        }
+                        lastOcc
                     }
                     else -> winTo // open-ended → clamp to the import window
                 }

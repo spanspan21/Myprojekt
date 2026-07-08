@@ -1388,7 +1388,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     Text(
                         "✕", color = TextDim, fontSize = 13.sp,
                         modifier = Modifier.clip(CircleShape)
-                            .clickable { com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id) }
+                            .clickable { scope.launch { com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id) } }
                             .padding(6.dp),
                     )
                 }

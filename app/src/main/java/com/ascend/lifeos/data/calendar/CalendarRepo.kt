@@ -84,8 +84,12 @@ object CalendarRepo {
                     val zone = ZoneId.systemDefault()
                     val s = java.time.Instant.ofEpochMilli(ev.start).atZone(zone)
                     val e = java.time.Instant.ofEpochMilli(ev.end).atZone(zone)
-                    val sMin = if (s.toLocalDate() < day) 0 else s.toLocalTime().toMinuteOfDay()
-                    val eMin = if (e.toLocalDate() > day) 24 * 60 else e.toLocalTime().toMinuteOfDay()
+                    // All-day device events are stored at UTC midnight; converting
+                    // through the local zone offsets (or in behind-UTC zones shifts)
+                    // the day. Treat all-day as spanning the whole day, not the
+                    // wall-clock time of the converted UTC-midnight stamp.
+                    val sMin = if (ev.allDay || s.toLocalDate() < day) 0 else s.toLocalTime().toMinuteOfDay()
+                    val eMin = if (ev.allDay || e.toLocalDate() > day) 24 * 60 else e.toLocalTime().toMinuteOfDay()
                     TimelineBlock(
                         id = "device:${ev.title}:${ev.start}",
                         title = ev.title,

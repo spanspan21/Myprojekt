@@ -85,7 +85,13 @@ object TaskBlocks {
     fun setDone(ctx: Context, id: String, done: Boolean) =
         save(ctx, tasks(ctx).map { if (it.id == id) it.copy(done = done) else it })
 
-    fun delete(ctx: Context, id: String) = save(ctx, tasks(ctx).filter { it.id != id })
+    suspend fun delete(ctx: Context, id: String) {
+        save(ctx, tasks(ctx).filter { it.id != id })
+        // Also drop the placed calendar block. plan() only wipes OPEN tasks' blocks,
+        // so a deleted task would otherwise leave an orphan block that permanently
+        // occupies its slot and can never be cleaned.
+        runCatching { CalendarDatabase.get(ctx).dao().delete("jtask_$id") }
+    }
 
     /**
      * The solver. Deterministic order: priority desc → deadline asc → duration

@@ -31,7 +31,38 @@ _(wird am Ende gefüllt: Anzahl Funde pro Schweregrad, offene Fragen)_
 ---
 
 ## Modul: Kalender
-_ausstehend_
+Dateien: `calendar/{CalendarRepo, CalendarData, IcsSync, UntisSync, CalendarAutoSync, TaskBlocks}.kt`,
+`CalendarSync.kt`. `occursOn` (Wochentag-Bit Mo=Bit0), `freeSlots`-Overlap-Sweep, Untis HHMM→min +
+Doppelstunden-Merge + Entfall-Alarm-Dedup, `parseDt` (Z→UTC, TZID→lokal, DST-sicher), ICS all-day
+exclusive-DTEND **verifiziert korrekt**. Keine epochDay/epochMillis-Vermischung.
+
+**K1 · P2 · `TaskBlocks.delete` (Zeile 88) · ✅ gefixt.** `delete` entfernte nur den Task aus den
+Prefs, nie den platzierten Kalender-Block `jtask_<id>`. `plan()` wischt nur Blöcke **offener** Tasks
+— ein gelöschter Task ist nicht mehr in der Liste, sein Block wird **nie** aufgeräumt und belegt
+seinen Slot dauerhaft. **Fix:** `delete` ist jetzt `suspend` und löscht auch den Block; Aufrufstelle
+(`CalendarScreen`) auf `scope.launch { … }` umgestellt.
+
+**K2 · P2 · `IcsSync.buildEvent` RRULE COUNT (Zeile 250) · ✅ gefixt.** `lastDay = start + (ceil(count/
+perWeek)*7 − 1)` reichte bis zum Ende der letzten (Teil-)Woche, während `occursOn` auf **jedem** BYDAY-
+Tag im Bereich feuert → bei `COUNT` nicht-Vielfaches von Tagen/Woche eine **Phantom-Stunde** (Bsp.
+`MO,WE;COUNT=3` → 4. Vorkommen). **Fix:** exakter Walk bis zum COUNT-ten Vorkommen (per Hand
+verifiziert: `MO,WE;COUNT=3` → letzter Tag = Start+7).
+
+**K3 · P3 · `IcsSync.sync` (Zeile 60) · ✅ gefixt.** Reihenfolge fetch→`deleteBySource`→insert: ein
+transient leeres, aber valides Feed (Server-Hickup) löschte alle importierten Stunden und fügte
+nichts ein. **Fix:** bei `events.isEmpty()` nicht wischen (letzter guter Import bleibt).
+
+**K4 · P3 · `CalendarAutoSync.maybe` (Zeile 16) · ✅ gefixt.** Kein Mutex, zwei Aufrufer (App-Start +
+Kalender-Öffnen), read-then-stamp ohne Atomarität → beide konnten den Throttle passieren und
+**gleichzeitig** syncen (interleaved delete/insert, doppelter Entfall-Alarm). **Fix:** `Mutex.withLock`,
+der zweite Aufrufer liest den frisch gestempelten Timestamp und kehrt zurück.
+
+**K5 · P3 · `CalendarRepo.timelineFor` all-day (Zeile 84) · ✅ gefixt.** Geräte-All-Day-Events liegen
+bei UTC-Mitternacht; `systemDefault()`-Konversion verschiebt/versetzt den Tag (in Deutschland
+Start um 01:00/02:00 statt 00:00). **Fix:** `ev.allDay` → spannt den ganzen Tag (0..1440).
+
+**Verifiziert korrekt:** ✔️ `occursOn`, `freeSlots`, Untis-Merge/Dedup/`synced_once`, `parseDt`-DST,
+ICS all-day exclusive `−1`, deterministische IDs + REPLACE (Re-Import dupliziert nicht).
 
 ## Modul: Finance
 Dateien: `finance/FinanceStore.kt`, `finance/AboRadar.kt`. Summen, Budgets, Kategorie-Deltas,
@@ -187,3 +218,11 @@ nicht kennt. Optionen: (a) importierte Nächte von der Titration ausschließen (
 Budget), während Fuel/Hydration/Sleep über bis zu 7 Tage gemittelt werden. Das kippt den Readiness-
 Index morgens hoch, abends runter für denselben Zustand. Fix wäre ein zeitanteiliges Tagesbudget
 oder eine Mehrtages-Mittelung — beides Verhaltensänderung mit Design-Charakter. → **Entscheidung nötig.**
+
+**OF-3 · Kalender · Task-Blöcke re-planen nach Auto-Sync + Untis-Horizont (`CalendarAutoSync`/
+`TaskBlocks.plan`/`UntisSync`).** Auto-Sync importiert Stunden neu, ruft aber nie `TaskBlocks.plan()`.
+Zudem importiert Untis nur −3..+21 Tage, während `plan` bis zur Deadline (bis zu 180 Tagen) plant →
+frisch synchronisierte Stunden können auf bereits platzierten `jtask`-Blöcken landen, bis manuell neu
+geplant wird. Optionen: (a) `plan()` nach erfolgreichem Auto-Sync auslösen, (b) nur innerhalb des
+Import-Horizonts planen, (c) Untis-Horizont verlängern. → **Entscheidung nötig** (Trade-off
+Datenmenge/Doze vs. Vollständigkeit), kein rein mechanischer Fix.
