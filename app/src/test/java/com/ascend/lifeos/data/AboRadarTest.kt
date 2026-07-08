@@ -107,6 +107,35 @@ class AboRadarTest {
     }
 
     @Test
+    fun detectsMonthlySubDespiteOneStrayCharge() {
+        // Wave-2 (Finance-3): a real monthly Netflix plus a single mid-cycle
+        // charge at day 45. The old strictly-consecutive run broke on the two
+        // 15-day gaps and missed the sub; skipping the too-soon charge keeps the
+        // monthly chain intact.
+        val txns = listOf(
+            txn("Netflix", -1299, 0),
+            txn("Netflix", -1299, 30),
+            txn("Netflix", -1299, 45), // stray extra (gift card / double charge)
+            txn("Netflix", -1299, 60),
+            txn("Netflix", -1299, 90),
+        )
+        val subs = AboRadar.detect(txns, base + 95 * day)
+        assertEquals(1, subs.size)
+        assertEquals(30, subs.first().intervalDays)
+        assertEquals(4, subs.first().occurrences)
+    }
+
+    @Test
+    fun duplicatesIgnoresSubstringOnlyServiceMatches() {
+        // Wave-2 (Finance-10): "sportverein" contains "tv" and "musikschule"
+        // contains "music" only as substrings — word-boundary matching must not
+        // pair them as overlapping streaming services.
+        val a = Sub("Sportverein", 1200, 30, 0L, 4, false, null)
+        val b = Sub("Musikschule", 1250, 30, 0L, 4, false, null)
+        assertTrue(AboRadar.duplicates(listOf(a, b)).isEmpty())
+    }
+
+    @Test
     fun emptyInputYieldsNothing() {
         assertTrue(AboRadar.detect(emptyList(), base).isEmpty())
         assertTrue(AboRadar.duplicates(emptyList()).isEmpty())

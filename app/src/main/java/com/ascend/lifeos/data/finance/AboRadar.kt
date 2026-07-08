@@ -101,8 +101,10 @@ object AboRadar {
     private fun payeeKey(s: String): String = s.lowercase().filterNot { it.isDigit() }.trim()
 
     private fun serviceish(payee: String): Boolean {
-        val p = payee.lowercase()
-        return SERVICE_TOKENS.any { it in p }
+        // Match whole words, not raw substrings: short tokens like "tv"/"prime"/
+        // "music" otherwise flag unrelated payees ("spor[tv]erein", "musical").
+        val words = payee.lowercase().split(Regex("[^a-z0-9]+")).toHashSet()
+        return SERVICE_TOKENS.any { it in words }
     }
 
     /** Magnitudes within [tol] of the larger one. */
@@ -129,11 +131,17 @@ object AboRadar {
                 val prev = run.last()
                 val cur = sorted[i]
                 val gapDays = (cur.ts - prev.ts) / DAY_MS.toDouble()
-                if (gapDays in band && close(prev.amountCents, cur.amountCents, AMOUNT_TOL)) {
-                    run.add(cur)
-                } else {
-                    flush()
-                    run = ArrayList<Txn>().apply { add(cur) }
+                when {
+                    gapDays in band && close(prev.amountCents, cur.amountCents, AMOUNT_TOL) -> run.add(cur)
+                    // A charge that lands too SOON (inside the interval) is a one-off
+                    // extra — a gift card, a double-charge — not the end of the run.
+                    // Skip it instead of breaking the chain, so one stray charge no
+                    // longer hides a real monthly/weekly subscription.
+                    gapDays < band.start -> Unit
+                    else -> {
+                        flush()
+                        run = ArrayList<Txn>().apply { add(cur) }
+                    }
                 }
             }
             flush()

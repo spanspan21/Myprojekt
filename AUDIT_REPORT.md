@@ -34,7 +34,30 @@ _(wird am Ende gefüllt: Anzahl Funde pro Schweregrad, offene Fragen)_
 _ausstehend_
 
 ## Modul: Finance
-_ausstehend_
+Dateien: `finance/FinanceStore.kt`, `finance/AboRadar.kt`. Summen, Budgets, Kategorie-Deltas,
+Monatsserie, Budget-Pace-Streak, Goal-Pace, Net-Worth, Tages-Snapshot, CSV, Vorzeichen
+(`bookTxn`/`deleteTxn`), Legacy-Goal-Mapping **verifiziert korrekt**.
+
+**F1 · P2 · `FinanceStore.detectRecurring` (Zeile 388) · ✅ gefixt.** Das `Recurring`-Modell ist
+**monatlich** (ein `dayOfMonth`, `monthlyRecurringCost` summiert 1×/Monat). AboRadar erkennt aber
+auch **wöchentliche** Subs — die wurden als monatliche Recurrings vorgeschlagen und dann
+**~4,3× unterschätzt** + falsch einsortiert. **Fix:** nur monatliche Kadenz (`intervalDays >= 20`)
+wird zur Suggestion; wöchentliche Subs bleiben im AboRadar-Panel mit echtem Intervall sichtbar.
+(Behebt zugleich F-„months=occurrences", da bei rein monatlichen Subs `occurrences == distinct months`.)
+
+**F2 · P3 · `AboRadar.bestRun` (Zeile 128) · ✅ gefixt.** Die Kette war **strikt konsekutiv** — eine
+einzelne Fremdbuchung (Gutschein/Doppelabbuchung) mitten im Zyklus zerriss den Lauf und der
+echte Sub wurde **nicht erkannt** (Beispiel Netflix 0/30/45/60/90 → verpasst). **Fix:** eine zu
+**früh** liegende Buchung (Gap < Band-Untergrenze) wird übersprungen statt die Kette zu brechen.
+Regressionstest. Bestehende `ignoresIrregularIntervals`-Semantik bleibt (bleibt leer).
+
+**F3 · P3 · `AboRadar.serviceish` (Zeile 103) · ✅ gefixt.** Substring-Match auf kurze Tokens
+(`"tv"`, `"prime"`, `"music"`) flaggte unbeteiligte Zahlungen als „überlappende Streaming-Dienste"
+(z.B. „Spor**tv**erein", „**Music**al"). **Fix:** Wort-Grenzen (Tokenisierung). Regressionstest.
+
+**Verifiziert korrekt:** ✔️ `monthlyRecurringCost`, `spendByCategoryIn`, `categoryDeltas`,
+`monthSpendSeries`-Fenster, `daysUnderBudgetStreak`-Tageskappe, `nextDueEpochDay`/`isDue`
+(Monatslängen-Clamp), Net-Worth (cash+assets−debt), Snapshot 1×/Tag, `syncLegacyQuiet` one-shot.
 
 ## Modul: Nutrition
 Dateien: `NutritionCalc, AdaptiveTdee, FastingCalc, WaterCalc, FoodScore, FoodRank, Nutrients,

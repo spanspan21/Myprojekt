@@ -383,6 +383,12 @@ object FinanceStore {
         val existing = recurrings(ctx).mapTo(HashSet()) { it.name.trim().lowercase(Locale.ENGLISH) }
         val txns = LifeStores.txns(ctx)
         return AboRadar.detect(txns, System.currentTimeMillis()).mapNotNull { sub ->
+            // The Recurring model is monthly-only (a single dayOfMonth, summed once
+            // per month by monthlyRecurringCost). Turning a WEEKLY sub into a
+            // monthly recurring undercounts its real cost ~4.3× and over-ranks it,
+            // so only monthly-cadence detections become suggestions here. Weekly
+            // subs still surface in the AboRadar panel with their true interval.
+            if (sub.intervalDays < 20) return@mapNotNull null
             val name = sub.payee.trim()
             if (name.lowercase(Locale.ENGLISH) in existing) return@mapNotNull null
             val last = txns.filter { it.amountCents < 0 && it.note.trim().equals(name, ignoreCase = true) }
