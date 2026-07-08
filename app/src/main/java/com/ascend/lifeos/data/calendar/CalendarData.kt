@@ -53,6 +53,12 @@ interface CalendarDao {
      *  its own past/stale blocks without deleting anything the user made by hand. */
     @Query("DELETE FROM cal_events WHERE type = 'TRAINING' AND note = 'plan'")
     suspend fun deletePlannedTraining()
+
+    /** Wipe training blocks that are already in the past — a done/stale planned
+     *  session doesn't belong on the calendar (workout history lives in the
+     *  training DB). Catches legacy blocks written before the note="plan" marker. */
+    @Query("DELETE FROM cal_events WHERE type = 'TRAINING' AND dayEpoch < :today")
+    suspend fun deletePastTraining(today: Long)
 }
 
 @Database(entities = [CalEventEntity::class], version = 1, exportSchema = false)

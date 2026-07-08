@@ -194,6 +194,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun dismissSummary() { lastSummary = null }
 
     fun regeneratePlan() = viewModelScope.launch(Dispatchers.IO) {
+        // Clear stale/past training blocks first (both modes) — including legacy
+        // ones written before the note="plan" marker, which is what piled up in
+        // the calendar. Future manual events are untouched.
+        runCatching { com.ascend.lifeos.data.calendar.CalendarRepo.clearPastTraining(getApplication()) }
         // A deload is a real 7-day week: restore it from prefs each time we build the
         // plan, so it survives an app restart and expires on its own after the week.
         val deloadUntil = com.ascend.lifeos.data.Prefs.int(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)

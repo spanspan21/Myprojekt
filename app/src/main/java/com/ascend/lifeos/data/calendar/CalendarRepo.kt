@@ -181,6 +181,10 @@ object CalendarRepo {
     /** Remove all JARVIS-auto-placed training blocks (past + future). */
     suspend fun clearPlannedTraining(ctx: Context) = dao(ctx).deletePlannedTraining()
 
+    /** Remove training blocks already in the past (any marker) — stale clutter. */
+    suspend fun clearPastTraining(ctx: Context) =
+        dao(ctx).deletePastTraining(LocalDate.now().toEpochDay())
+
     fun fmtMin(min: Int): String = "%02d:%02d".format(min / 60, min % 60)
 }
 
