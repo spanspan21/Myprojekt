@@ -62,6 +62,13 @@ fun HabitsScreen(onClose: () -> Unit) {
     // keep per-habit reminder alarms in sync with the current habit set
     LaunchedEffect(habits.map { "${it.id}:${it.reminderMin}" }) { HabitReminders.reschedule(ctx) }
 
+    // live clock so a running habit timer ticks each second (only while one runs)
+    val anyTimer = habits.any { HabitMetrics.isMeasurable(it) && it.unit == "min" && LifeStores.habitTimerStart(ctx, it.id) > 0L }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(anyTimer) {
+        while (anyTimer) { now = System.currentTimeMillis(); kotlinx.coroutines.delay(1000) }
+    }
+
     LifeScaffold(
         title = "Habits",
         context = if (scheduled.isEmpty()) "build the life you want, one day at a time"
@@ -85,7 +92,7 @@ fun HabitsScreen(onClose: () -> Unit) {
             OverallHeader(habits, doneCount, scheduled.size, todayDate)
             Spacer(Modifier.height(14.dp))
             habits.forEach { h ->   // manual order (reorder in the detail sheet)
-                HabitRow(h, today, todayDate) { detail = h }
+                HabitRow(h, today, todayDate, now) { detail = h }
                 Spacer(Modifier.height(8.dp))
             }
         }
@@ -139,7 +146,7 @@ private fun OverallHeader(habits: List<Habit>, doneToday: Int, dueToday: Int, to
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, onTap: () -> Unit) {
+private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, onTap: () -> Unit) {
     val ctx = LocalContext.current
     val scheduled = HabitMetrics.scheduledOn(h, todayDate)
     val skipped = HabitMetrics.skipped(ctx, h, today)
@@ -147,6 +154,10 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, onTap: () ->
     val auto = HabitMetrics.isAuto(h)
     val measurable = HabitMetrics.isMeasurable(h)
     val active = scheduled && !skipped
+    val timed = measurable && h.unit == "min"
+    val timerStart = if (timed) LifeStores.habitTimerStart(ctx, h.id) else 0L
+    val running = timerStart > 0L
+    val elapsedSec = if (running) ((now - timerStart) / 1000L).coerceAtLeast(0L) else 0L
     // tap opens detail; long-press skips/unskips today (streak freeze)
     Panel(
         Modifier.fillMaxWidth().combinedClickable(onClick = onTap, onLongClick = { LifeStores.toggleHabitSkip(ctx, h.id, today) }),
@@ -180,6 +191,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, onTap: () ->
                 val sub = when {
                     skipped -> "skipped today · streak $streak"
                     auto -> "${fmtInt(HabitMetrics.progress(ctx, h, today))} / ${fmtInt(h.threshold)}${if (u.isBlank()) "" else " $u"} · auto"
+                    running -> "● %d:%02d running · %d/%d min".format(elapsedSec / 60, elapsedSec % 60, HabitMetrics.progress(ctx, h, today), h.target)
                     measurable -> "${HabitMetrics.progress(ctx, h, today)} / ${h.target}${if (u.isBlank()) "" else " $u"}"
                     !scheduled -> "not today · streak $streak"
                     h.avoid && done -> "clean today · streak $streak"
@@ -188,10 +200,20 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, onTap: () ->
                 Text(sub, color = if (done) HabitAccent.copy(alpha = 0.9f) else TextDim, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium)
             }
             if (measurable && active) {
+                val step = stepFor(h)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    StepMini("−") { LifeStores.setHabitCount(ctx, h.id, today, (HabitMetrics.progress(ctx, h, today) - 1).coerceAtLeast(0)) }
-                    Spacer(Modifier.width(5.dp))
-                    StepMini("+") { LifeStores.setHabitCount(ctx, h.id, today, HabitMetrics.progress(ctx, h, today) + 1) }
+                    if (timed) {
+                        TimerMini(running) {
+                            if (running) LifeStores.stopHabitTimer(ctx, h.id, today)
+                            else LifeStores.startHabitTimer(ctx, h.id)
+                        }
+                        if (!running) Spacer(Modifier.width(5.dp))
+                    }
+                    if (!running) {
+                        StepMini("−") { LifeStores.setHabitCount(ctx, h.id, today, (HabitMetrics.progress(ctx, h, today) - step).coerceAtLeast(0)) }
+                        Spacer(Modifier.width(5.dp))
+                        StepMini("+") { LifeStores.setHabitCount(ctx, h.id, today, HabitMetrics.progress(ctx, h, today) + step) }
+                    }
                 }
             } else {
                 WeekDots(h)
@@ -207,6 +229,26 @@ private fun StepMini(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+}
+
+/** Start/stop stopwatch orb for time-based (min) habits. */
+@Composable
+private fun TimerMini(running: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.size(28.dp).clip(CircleShape)
+            .background(if (running) HabitAccent else HabitAccent.copy(alpha = 0.14f))
+            .border(0.5.dp, HabitAccent.copy(alpha = if (running) 0.9f else 0.4f), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(if (running) "■" else "▶", color = if (running) Void else HabitAccent, fontSize = 11.sp, fontWeight = FontWeight.Black) }
+}
+
+/** Adaptive counter step so a 60-min target isn't 60 taps of +1. */
+private fun stepFor(h: Habit): Int = when {
+    h.unit == "min" -> if (h.target >= 45) 15 else 5
+    h.target >= 40 -> 10
+    h.target >= 15 -> 5
+    else -> 1
 }
 
 @Composable
@@ -616,14 +658,25 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
             }
             if (measurable) {
                 Spacer(Modifier.height(10.dp))
+                val bstep = if (unit == "min") 15 else if (target >= 40) 10 else 5
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    StepMini("−") { target = (target - 5).coerceAtLeast(1) }
+                    StepMini("−") { target = (target - bstep).coerceAtLeast(1) }
                     Text("$target", color = TextPrimary, fontSize = 16.sp, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp))
-                    StepMini("+") { target += 5 }
+                    StepMini("+") { target += bstep }
                     Spacer(Modifier.width(12.dp))
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         units.forEach { u -> pill(u, unit == u, { unit = u }) }
                     }
+                }
+                Spacer(Modifier.height(8.dp))
+                val presets = if (unit == "min") listOf(10, 15, 20, 30, 45, 60, 90) else listOf(5, 10, 15, 20, 30, 50)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    presets.forEach { pv -> pill("$pv", target == pv, { target = pv }) }
+                }
+                if (unit == "min") {
+                    Spacer(Modifier.height(6.dp))
+                    Text("Time habits get a start/stop timer on the row — it logs how long you actually did it.",
+                        color = TextDim, fontSize = 10.5.sp, fontFamily = Body, lineHeight = 14.sp)
                 }
             }
             Spacer(Modifier.height(14.dp))

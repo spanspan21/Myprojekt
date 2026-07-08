@@ -264,15 +264,6 @@ object Notifier {
                     add("water $water/${p.waterGoal}")
                     val debt = Repo.sleepDebtMin()
                     if (debt > 120) add("sleep debt ${debt / 60}h ${debt % 60}m — tonight is the payback")
-                    // homework check for tomorrow (Settings → School)
-                    if (Prefs.bool(ctx, Prefs.HOMEWORK_PROMPT, true)) {
-                        val tomorrow = java.time.LocalDate.now().plusDays(1).toEpochDay()
-                        val due = runCatching {
-                            com.ascend.lifeos.data.school.SchoolStore.openHomework(ctx)
-                                .count { it.dueEpochDay <= tomorrow }
-                        }.getOrDefault(0)
-                        if (due > 0) add("$due homework due by tomorrow")
-                    }
                 }
                 "Evening review" to parts.joinToString(" · ").replaceFirstChar { it.uppercase() }
             }

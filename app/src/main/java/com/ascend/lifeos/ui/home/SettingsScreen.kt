@@ -211,7 +211,6 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── SCHOOL & CALENDAR ────────────────────────────────────────
         SettingsSection("School & Calendar") {
             ToggleRow("Exam countdown", "Home card from 7 days out", Prefs.EXAM_COUNTDOWN, true)
-            ToggleRow("Homework prompt", "Evening question with the day's subjects", Prefs.HOMEWORK_PROMPT, true)
             ToggleRow("Timetable change alarm", "New cancellations become training suggestions", Prefs.UNTIS_CHANGE_ALARM, true)
             ToggleRow("Weather on free slots", "Sun glyph on outdoor-worthy slots", Prefs.WEATHER_SLOTS, true)
         }

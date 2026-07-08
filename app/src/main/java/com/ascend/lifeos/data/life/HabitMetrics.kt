@@ -70,19 +70,35 @@ object HabitMetrics {
     fun scheduledOn(h: Habit, d: LocalDate): Boolean =
         (h.daysMask shr (d.dayOfWeek.value - 1)) and 1 == 1
 
+    /**
+     * The first epoch-day the habit counts. Its stored start day, else derived
+     * from the creation timestamp baked into the id, else 0 (count everything).
+     * Nothing before this ever counts — so a fresh "sleep 7h+" or "10k steps"
+     * habit never claims the past.
+     */
+    fun startDay(h: Habit): Long {
+        if (h.startEpochDay > 0L) return h.startEpochDay
+        val millis = h.id.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toLongOrNull() ?: return 0L
+        return runCatching {
+            java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+        }.getOrDefault(0L)
+    }
+
     private fun keyOf(d: LocalDate) = "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
 
-    /** A day counts toward stats when it's scheduled and not skipped. */
+    /** A day counts toward stats when it's on/after the start, scheduled and not skipped. */
     private fun counts(ctx: Context, h: Habit, d: LocalDate): Boolean =
-        scheduledOn(h, d) && !LifeStores.habitSkipped(ctx, h.id, keyOf(d))
+        d.toEpochDay() >= startDay(h) && scheduledOn(h, d) && !LifeStores.habitSkipped(ctx, h.id, keyOf(d))
 
     /** Consecutive counted days completed, back from today (today's open slot never breaks). */
     fun streak(ctx: Context, h: Habit): Int {
         if (h.daysMask == 0) return 0
+        val start = startDay(h)
         val todayK = todayKey()
         var day = LocalDate.parse(todayK)
         var streak = 0
         repeat(365) {
+            if (day.toEpochDay() < start) return streak   // nothing before the habit began
             if (counts(ctx, h, day)) {
                 val key = keyOf(day)
                 when {
@@ -130,11 +146,12 @@ object HabitMetrics {
 
     /** Per-day cells for the last [days] days (oldest first) — for the heatmap. */
     fun history(ctx: Context, h: Habit, days: Int): List<DayCell> {
+        val start = startDay(h)
         val out = ArrayList<DayCell>(days)
         var day = LocalDate.parse(todayKey()).minusDays((days - 1).toLong())
         repeat(days) {
             val key = keyOf(day)
-            val sched = scheduledOn(h, day)
+            val sched = day.toEpochDay() >= start && scheduledOn(h, day)
             val skip = LifeStores.habitSkipped(ctx, h.id, key)
             out.add(DayCell(day, sched && !skip, sched && !skip && done(ctx, h, key), skip))
             day = day.plusDays(1)
@@ -151,7 +168,8 @@ object HabitMetrics {
     /** true = every habit due (scheduled, not skipped) that day was done; null = none due. */
     fun perfectDay(ctx: Context, habits: List<Habit>, date: LocalDate): Boolean? {
         val key = keyOf(date)
-        val due = habits.filter { scheduledOn(it, date) && !LifeStores.habitSkipped(ctx, it.id, key) }
+        val ed = date.toEpochDay()
+        val due = habits.filter { startDay(it) <= ed && scheduledOn(it, date) && !LifeStores.habitSkipped(ctx, it.id, key) }
         if (due.isEmpty()) return null
         return due.all { done(ctx, it, key) }
     }
@@ -159,10 +177,12 @@ object HabitMetrics {
     /** Consecutive perfect days back from today (empty days skipped; today never breaks). */
     fun overallStreak(ctx: Context, habits: List<Habit>): Int {
         if (habits.isEmpty()) return 0
+        val earliest = habits.minOf { startDay(it) }
         val todayK = todayKey()
         var day = LocalDate.parse(todayK)
         var streak = 0
         repeat(365) {
+            if (day.toEpochDay() < earliest) return streak   // before any habit existed
             when (perfectDay(ctx, habits, day)) {
                 true -> streak++
                 null -> Unit

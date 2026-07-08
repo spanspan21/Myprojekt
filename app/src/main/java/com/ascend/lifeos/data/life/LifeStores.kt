@@ -60,6 +60,7 @@ data class Habit(
     val avoid: Boolean = false, // a "quit" habit — done = you stayed clean today
     val order: Int = 0,         // manual sort order in the list
     val reminderMin: Int = -1,  // minute-of-day reminder; -1 = no reminder
+    val startEpochDay: Long = 0L, // first day it counts; 0 = derive from id / count all
 )
 
 object LifeStores {
@@ -290,7 +291,7 @@ object LifeStores {
         .put("id", id).put("title", title).put("mask", daysMask).put("icon", icon)
         .put("auto", autoMetric).put("thr", threshold)
         .put("target", target).put("unit", unit).put("avoid", avoid)
-        .put("order", order).put("reminder", reminderMin)
+        .put("order", order).put("reminder", reminderMin).put("start", startEpochDay)
 
     private fun habitFrom(o: JSONObject) = Habit(
         id = o.optString("id"),
@@ -304,6 +305,7 @@ object LifeStores {
         avoid = o.optBoolean("avoid", false),
         order = o.optInt("order", 0),
         reminderMin = o.optInt("reminder", -1),
+        startEpochDay = o.optLong("start", 0L),
     )
 
     fun habits(ctx: Context): List<Habit> {
@@ -333,6 +335,7 @@ object LifeStores {
             habits(ctx) + Habit(
                 newId("h"), title.trim(), daysMask and 0b1111111, icon,
                 autoMetric, threshold, target, unit, avoid, nextOrder,
+                startEpochDay = java.time.LocalDate.now().toEpochDay(),
             ),
         )
     }
@@ -374,6 +377,27 @@ object LifeStores {
         put(ctx, "habit_count", o.toString())
     }
 
+    // ── time-based habits: a running stopwatch (epochMillis start; absent = idle) ──
+    private fun timerMap(ctx: Context): JSONObject =
+        runCatching { JSONObject(prefs(ctx).getString("habit_timer", "{}") ?: "{}") }.getOrDefault(JSONObject())
+
+    /** Epoch-millis the current session started, or 0 if the habit isn't running. */
+    fun habitTimerStart(ctx: Context, id: String): Long = timerMap(ctx).optLong(id, 0L)
+
+    fun startHabitTimer(ctx: Context, id: String) {
+        put(ctx, "habit_timer", timerMap(ctx).put(id, System.currentTimeMillis()).toString())
+    }
+
+    /** Stop the running session, add the elapsed whole minutes to today's count, return them. */
+    fun stopHabitTimer(ctx: Context, id: String, dayKey: String): Int {
+        val started = timerMap(ctx).optLong(id, 0L)
+        put(ctx, "habit_timer", timerMap(ctx).also { it.remove(id) }.toString())
+        if (started <= 0L) return 0
+        val mins = ((System.currentTimeMillis() - started) / 60_000L).toInt().coerceAtLeast(0)
+        if (mins > 0) setHabitCount(ctx, id, dayKey, habitCount(ctx, id, dayKey) + mins)
+        return mins
+    }
+
     // ── skip a day (streak freeze): neither done nor missed ─────────────────
     private fun skipMap(ctx: Context): JSONObject =
         runCatching { JSONObject(prefs(ctx).getString("habit_skip", "{}") ?: "{}") }.getOrDefault(JSONObject())
@@ -395,6 +419,8 @@ object LifeStores {
             for (k in o.keys()) if (!k.startsWith("$id|")) keep.put(k, o.get(k))
             prefs(ctx).edit().putString(mapKey, keep.toString()).apply()
         }
+        // the timer map is keyed by plain id
+        timerMap(ctx).also { it.remove(id); prefs(ctx).edit().putString("habit_timer", it.toString()).apply() }
         touch()
     }
 

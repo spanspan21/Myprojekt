@@ -45,7 +45,6 @@ import com.ascend.lifeos.data.masterplan.DomainWithGraph
 import com.ascend.lifeos.data.masterplan.NodeWithChildren
 import com.ascend.lifeos.data.masterplan.ResourceEntity
 import com.ascend.lifeos.data.masterplan.TaskStatus
-import com.ascend.lifeos.data.school.SchoolStore
 import com.ascend.lifeos.data.skill.SkillMeta
 import com.ascend.lifeos.ui.kit.*
 import com.ascend.lifeos.ui.masterplan.MasterPlanViewModel
@@ -142,7 +141,6 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
     val ctx = LocalContext.current
     var metaTick by remember { mutableStateOf(0) }
     val due = remember(domains, metaTick) { dueReviewItems(ctx, domains) }
-    val vocabDue = remember(domains, metaTick) { SchoolStore.dueCards(ctx).size }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(14.dp))
@@ -157,9 +155,9 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
         Spacer(Modifier.height(16.dp))
 
         LazyColumn(contentPadding = PaddingValues(bottom = 120.dp)) {
-            if (due.isNotEmpty() || vocabDue > 0) {
+            if (due.isNotEmpty()) {
                 item(key = "review_queue") {
-                    ReviewQueue(due, vocabDue, onGraded = { metaTick++ })
+                    ReviewQueue(due, onGraded = { metaTick++ })
                     Spacer(Modifier.height(12.dp))
                 }
             }
@@ -190,7 +188,7 @@ private fun dueReviewItems(ctx: android.content.Context, domains: List<DomainWit
 }
 
 @Composable
-private fun ReviewQueue(due: List<DueReview>, vocabDue: Int = 0, onGraded: () -> Unit) {
+private fun ReviewQueue(due: List<DueReview>, onGraded: () -> Unit) {
     val ctx = LocalContext.current
     var openId by remember { mutableStateOf<String?>(null) }
 
@@ -204,7 +202,7 @@ private fun ReviewQueue(due: List<DueReview>, vocabDue: Int = 0, onGraded: () ->
                 Icon(Icons.Rounded.Psychology, null, tint = Mod.Skills, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(7.dp))
                 Text(
-                    "REVIEW · ${due.size + vocabDue} DUE", color = Mod.Skills, fontFamily = Display,
+                    "REVIEW · ${due.size} DUE", color = Mod.Skills, fontFamily = Display,
                     fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
             }
@@ -221,28 +219,6 @@ private fun ReviewQueue(due: List<DueReview>, vocabDue: Int = 0, onGraded: () ->
                         onGraded()
                     },
                 )
-            }
-            // due vocab cards live in the School module — surface the count here
-            if (vocabDue > 0) {
-                if (due.isNotEmpty()) Spacer(Modifier.height(6.dp))
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
-                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            "Vocabulary · $vocabDue card${if (vocabDue == 1) "" else "s"} due",
-                            color = TextPrimary, fontFamily = Body,
-                            fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        )
-                        Text("open School to review", color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
-                    }
-                    Box(Modifier.size(6.dp).clip(CircleShape).background(Mod.Skills.copy(alpha = 0.5f)))
-                }
             }
         }
     }

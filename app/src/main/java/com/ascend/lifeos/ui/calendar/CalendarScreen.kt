@@ -659,7 +659,7 @@ private fun shortIcsError(e: Throwable): String = when (e) {
 
 private const val HOUR_START = 6
 private const val HOUR_END = 23
-private val HOUR_DP = 46.dp
+private val HOUR_DP = 60.dp
 
 @Composable
 private fun DayTimelineView(
@@ -732,12 +732,13 @@ private fun DayTimelineView(
         t.blocks.forEach { b ->
             val topMin = (b.startMin - HOUR_START * 60).coerceAtLeast(0)
             val durMin = (b.endMin - b.startMin).coerceAtLeast(20)
+            val blockH = HOUR_DP * (durMin / 60f) - 2.dp
             val c = if (b.cancelled) TextDim else eventColor(b.type)
             Box(
                 Modifier.padding(start = 30.dp, end = 2.dp)
                     .offset(y = HOUR_DP * (topMin / 60f) + 1.dp)
                     .fillMaxWidth()
-                    .height(HOUR_DP * (durMin / 60f) - 2.dp)
+                    .height(blockH)
                     .clip(RoundedCornerShape(10.dp))
                     .background(c.copy(alpha = if (b.cancelled) 0.05f else 0.13f))
                     .border(
@@ -748,13 +749,13 @@ private fun DayTimelineView(
             ) {
                 Row(Modifier.fillMaxSize()) {
                     Box(Modifier.width(3.dp).fillMaxHeight().background(c.copy(alpha = if (b.cancelled) 0.35f else 1f)))
-                    Column(Modifier.padding(horizontal = 9.dp, vertical = 5.dp)) {
+                    Column(Modifier.padding(horizontal = 9.dp, vertical = 3.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 b.title,
                                 color = if (b.cancelled) TextDim else TextPrimary,
                                 fontFamily = Body,
-                                fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp, fontWeight = FontWeight.Bold,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 textDecoration = if (b.cancelled) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
                                 modifier = Modifier.weight(1f, fill = false),
@@ -771,10 +772,12 @@ private fun DayTimelineView(
                                 Icon(Icons.Rounded.Link, null, tint = c.copy(alpha = 0.6f), modifier = Modifier.size(11.dp))
                             }
                         }
-                        if (durMin >= 40) {
+                        // only show the time line when the block is tall enough to
+                        // hold it — otherwise the fixed height + clip cut it off
+                        if (blockH >= 38.dp) {
                             Text(
                                 "${CalendarRepo.fmtMin(b.startMin)}–${CalendarRepo.fmtMin(b.endMin)} · ${eventLabel(b.type)}",
-                                color = TextDim, fontSize = 10.sp, fontFamily = Body, maxLines = 1,
+                                color = TextDim, fontSize = 9.5.sp, fontFamily = Body, maxLines = 1, lineHeight = 11.sp,
                             )
                         }
                     }
