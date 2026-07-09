@@ -477,6 +477,11 @@ fun HomeScreen(
             homeCards["nextup"] = {
             // ── NEXT UP ──────────────────────────────────────────────────
             Spacer(Modifier.height(24.dp))
+            // On hockey game days, a pre-game readiness card sits up top.
+            GameDayCard(Modifier.padding(bottom = 12.dp))
+            // Morning: Prime's top-3 as a start-the-day ritual. Sunday: week review.
+            TodayFocusCard(onNavigate = { onOpenModule(it) }, modifier = Modifier.padding(bottom = 12.dp))
+            WeeklyReviewCard(onOpenReport = { onOpenModule("report") }, modifier = Modifier.padding(bottom = 12.dp))
             SectionLabel("Next up")
             Spacer(Modifier.height(10.dp))
             NextUpCard(trainVm, trainedToday, onOpenTrain, onOpenCalendar = { onOpenModule("calendar") })
