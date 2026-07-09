@@ -754,15 +754,10 @@ object Repo {
      * daily completion ratio. A missed day only dents it, so one bad day never
      * zeroes motivation the way a raw streak reset does.
      */
-    fun habitStrength(window: Int = 30): Int {
-        var s = 0.0
-        var seeded = false
-        for (key in lastDayKeys(window)) {
-            val pct = (dayCompletion(key)?.pct ?: 0f).toDouble()
-            s = if (!seeded) { seeded = true; pct } else s * 0.87 + pct * 0.13
-        }
-        return (s * 100).roundToInt().coerceIn(0, 100)
-    }
+    fun habitStrength(window: Int = 30): Int =
+        com.ascend.lifeos.domain.HabitMath.strength(
+            lastDayKeys(window).map { (dayCompletion(it)?.pct ?: 0f).toDouble() },
+        )
 
     /** True exactly once: yesterday was rescued by a streak freeze. */
     fun streakSavedYesterday(): Boolean = data.profile.lastFreezeKey == prevKey(todayKey())
