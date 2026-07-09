@@ -88,6 +88,9 @@ class MainActivity : ComponentActivity() {
         if (uri.scheme != "jarvis") return
         // Bank SCA return: browser → jarvis://bank-callback?code=… (Open Banking)
         if (uri.host == "bank-callback") {
+            // GoCardless is the active aggregator; the legacy Enable Banking flow
+            // also gets the callback (each no-ops if it isn't the pending link).
+            runCatching { com.ascend.lifeos.data.finance.GoCardlessLink.handleCallback(applicationContext, uri) }
             runCatching { com.ascend.lifeos.data.finance.BankLink.handleCallback(applicationContext, uri) }
             com.ascend.lifeos.data.DeepLink.pending.value = "finance"
             return

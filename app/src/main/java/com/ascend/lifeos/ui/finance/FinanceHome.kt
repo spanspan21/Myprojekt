@@ -155,9 +155,9 @@ fun FinanceHome(onClose: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Void)) {
         ModuleBackground(FinAccent)
 
-        // Bank sync on open, throttled (BankLink self-limits to ~6 h)
+        // Bank sync on open, throttled (self-limits to ~6 h)
         androidx.compose.runtime.LaunchedEffect(Unit) {
-            runCatching { com.ascend.lifeos.data.finance.BankLink.maybeAutoSync(ctx) }
+            runCatching { com.ascend.lifeos.data.finance.GoCardlessLink.maybeAutoSync(ctx) }
         }
         LazyColumn(
             Modifier.fillMaxSize().statusBarsPadding(),
@@ -185,7 +185,7 @@ fun FinanceHome(onClose: () -> Unit) {
 
             // ── bank link: real transactions, read-only (Open Banking) ───────
             item(key = "bank") {
-                BankPanel()
+                GoCardlessPanel()
                 Spacer(Modifier.height(14.dp))
             }
             if (hasBalanceSheet) {
