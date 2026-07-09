@@ -43,6 +43,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     var backupState by remember { mutableStateOf<String?>(null) }
     var planImportState by remember { mutableStateOf<String?>(null) }
+    var syncState by remember { mutableStateOf<String?>(null) }
     // Import a custom masterplan from a JSON file — the offline replacement for
     // the removed on-device generator (audit F8). Was fully built but unwired.
     val planPicker = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -399,6 +400,23 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── DATA ─────────────────────────────────────────────────────
         SettingsSection("Data") {
             ActionRow("Weekly report", "The last 7 days across every module") { onOpenReport() }
+            ActionRow(
+                "Sync to web dashboard",
+                syncState ?: if (com.ascend.lifeos.data.cloud.CloudSync.enabled())
+                    "Push all your data to your private online dashboard"
+                else "Not configured in this build",
+            ) {
+                if (com.ascend.lifeos.data.cloud.CloudSync.enabled()) {
+                    syncState = "Syncing…"
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val r = com.ascend.lifeos.data.cloud.CloudSync.pushNow(ctx)
+                        syncState = r.fold(
+                            { "Synced ✓ ($it sections) — open your dashboard" },
+                            { "Failed: ${it.message?.take(80)}" },
+                        )
+                    }
+                }
+            }
             val hasFolder = Backup.folder(ctx) != null
             ActionRow(
                 if (hasFolder) "Backup now" else "Set backup folder",

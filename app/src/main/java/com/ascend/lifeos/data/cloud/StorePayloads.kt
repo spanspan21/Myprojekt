@@ -1,0 +1,247 @@
+package com.ascend.lifeos.data.cloud
+
+import android.content.Context
+import com.ascend.lifeos.data.calendar.CalendarDatabase
+import com.ascend.lifeos.data.finance.FinanceStore
+import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
+import com.ascend.lifeos.data.school.SchoolStore
+import com.ascend.lifeos.data.sleep.SleepStore
+import com.ascend.lifeos.data.training.TrainingDatabase
+import com.ascend.lifeos.wellbeing.WellbeingStore
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.Calendar
+
+/**
+ * Builds each non-core store as one composite document whose shape matches what
+ * the web dashboard reads. Every store is wrapped so one failure can't abort the
+ * whole sync. All finance/life/school/sleep/wellbeing reads are synchronous;
+ * the three Room stores (training/calendar/masterplan) need runBlocking.
+ */
+object StorePayloads {
+
+    fun appendAll(ctx: Context, add: (String, Any) -> Unit) {
+        runCatching { add("finance", finance(ctx)) }
+        runCatching { add("life", life(ctx)) }
+        runCatching { add("school", school(ctx)) }
+        runCatching { add("sleep", sleep(ctx)) }
+        runCatching { add("wellbeing", wellbeing(ctx)) }
+        runCatching { add("training", training(ctx)) }
+        runCatching { add("calendar", calendar(ctx)) }
+        runCatching { add("masterplan", masterplan(ctx)) }
+    }
+
+    // ── finance: accounts, txns, budgets, recurring, goals, holdings ──────────
+    private fun finance(ctx: Context): JSONObject {
+        val txnAcc = FinanceStore.txnAccounts(ctx)
+        val accounts = JSONArray().apply {
+            FinanceStore.accounts(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("name", it.name)
+                    .put("icon", it.icon).put("balanceCents", it.balanceCents))
+            }
+        }
+        val txns = JSONArray().apply {
+            LifeStores.txns(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("ts", it.ts)
+                    .put("amountCents", it.amountCents).put("category", it.category)
+                    .put("note", it.note).put("accountId", txnAcc[it.id]))
+            }
+        }
+        val budgets = JSONObject().apply {
+            FinanceStore.budgets(ctx).forEach { (cat, cents) -> put(cat, cents) }
+        }
+        val recurring = JSONArray().apply {
+            FinanceStore.recurrings(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("name", it.name)
+                    .put("cents", it.amountCents).put("cat", it.category)
+                    .put("day", it.dayOfMonth).put("active", it.active))
+            }
+        }
+        val goals = JSONArray().apply {
+            FinanceStore.saveGoals(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("title", it.title)
+                    .put("target", it.targetCents).put("saved", it.savedCents))
+            }
+        }
+        val holdings = JSONArray().apply {
+            FinanceStore.holdings(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("kind", it.kind.name).put("name", it.name)
+                    .put("units", it.units).put("priceCents", it.priceCents))
+            }
+        }
+        return JSONObject().put("accounts", accounts).put("txns", txns)
+            .put("budgets", budgets).put("recurring", recurring)
+            .put("goals", goals).put("holdings", holdings)
+    }
+
+    // ── life: habits, OKR goals, per-day habit-done map ───────────────────────
+    private fun life(ctx: Context): JSONObject {
+        val habits = LifeStores.habits(ctx)
+        val habitsJson = JSONArray().apply {
+            habits.forEach {
+                put(JSONObject().put("id", it.id).put("title", it.title)
+                    .put("mask", it.daysMask).put("icon", it.icon)
+                    .put("auto", it.autoMetric).put("order", it.order)
+                    .put("avoid", it.avoid))
+            }
+        }
+        val goals = JSONArray().apply {
+            LifeStores.goals(ctx).forEach { g ->
+                put(JSONObject().put("id", g.id).put("title", g.title)
+                    .put("krs", JSONArray().apply {
+                        g.krs.forEach { kr ->
+                            put(JSONObject().put("id", kr.id).put("label", kr.label)
+                                .put("progress", kr.manualProgress.toDouble())
+                                .put("metric", kr.metric))
+                        }
+                    }))
+            }
+        }
+        val done = JSONObject()
+        val days = recentDayKeys(35)
+        habits.forEach { h ->
+            days.forEach { dk ->
+                if (LifeStores.habitDone(ctx, h.id, dk)) done.put("${h.id}|$dk", true)
+            }
+        }
+        return JSONObject().put("habits", habitsJson).put("goals", goals).put("habitDone", done)
+    }
+
+    // ── school: subjects, grades ──────────────────────────────────────────────
+    private fun school(ctx: Context): JSONObject {
+        val subjects = JSONArray().apply {
+            SchoolStore.subjects(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("name", it.name)
+                    .put("pts", it.points).put("order", it.order))
+            }
+        }
+        val grades = JSONArray().apply {
+            SchoolStore.grades(ctx).forEach {
+                put(JSONObject().put("id", it.id).put("sid", it.subjectId)
+                    .put("v", it.value).put("oral", it.oral).put("w", it.weight)
+                    .put("note", it.note).put("ts", it.ts))
+            }
+        }
+        return JSONObject().put("subjects", subjects).put("grades", grades)
+    }
+
+    // ── sleep: night logs + window state ──────────────────────────────────────
+    private fun sleep(ctx: Context): JSONObject {
+        val logs = JSONArray().apply {
+            SleepStore.logs(ctx).forEach {
+                put(JSONObject().put("day", it.dayKey).put("bed", it.bedMin)
+                    .put("onset", it.sleepOnsetMin).put("wake", it.nightWakeMin)
+                    .put("final", it.finalWakeMin).put("up", it.outOfBedMin)
+                    .put("given", it.bedGiven).put("nap", it.isNap))
+            }
+        }
+        val state = SleepStore.state(ctx)?.let {
+            JSONObject().put("tib", it.tibMin).put("anchor", it.anchorWakeMin).put("phase", it.phase.name)
+        } ?: JSONObject()
+        return JSONObject().put("logs", logs).put("state", state)
+    }
+
+    // ── wellbeing / guard ─────────────────────────────────────────────────────
+    private fun wellbeing(ctx: Context): JSONObject {
+        return JSONObject().apply {
+            put("enabled", WellbeingStore.isEnabled(ctx))
+            put("budgetMin", WellbeingStore.budgetMin(ctx))
+            put("limits", JSONObject().apply { WellbeingStore.limits(ctx).forEach { (p, m) -> put(p, m) } })
+            put("history", JSONObject().apply {
+                WellbeingStore.history(ctx).forEach { (d, v) ->
+                    put(d, JSONObject().put("totalMin", v.first).put("unlocks", v.second))
+                }
+            })
+        }
+    }
+
+    // ── training (Room): sessions+sets, PRs, progression ──────────────────────
+    private fun training(ctx: Context): JSONObject = runBlocking {
+        val dao = TrainingDatabase.get(ctx).dao()
+        val sessions = dao.sessionsSince(0L)
+        val prs = dao.recentPrs(Int.MAX_VALUE).first()
+        val prog = dao.allProgressions().first()
+        val sessionsJson = JSONArray().apply {
+            sessions.forEach { sw ->
+                val s = sw.session
+                put(JSONObject().put("id", s.id).put("templateName", s.templateName)
+                    .put("startedAt", s.startedAt).put("finishedAt", s.finishedAt)
+                    .put("isComplete", s.isComplete).put("totalSets", s.totalSets)
+                    .put("totalReps", s.totalReps).put("durationMinutes", s.durationMinutes))
+            }
+        }
+        val prsJson = JSONArray().apply {
+            prs.forEach {
+                put(JSONObject().put("exerciseName", it.exerciseName).put("type", it.type.name)
+                    .put("value", it.value).put("date", it.date))
+            }
+        }
+        val progJson = JSONArray().apply {
+            prog.forEach {
+                put(JSONObject().put("groupKey", it.groupKey).put("currentLevel", it.currentLevel))
+            }
+        }
+        JSONObject().put("sessions", sessionsJson).put("prs", prsJson).put("progression", progJson)
+    }
+
+    // ── calendar (Room): all events ───────────────────────────────────────────
+    private fun calendar(ctx: Context): JSONObject = runBlocking {
+        val dao = CalendarDatabase.get(ctx).dao()
+        val events = dao.eventsInRangeOnce(-100_000L, 100_000L)
+        val json = JSONArray().apply {
+            events.forEach {
+                put(JSONObject().put("id", it.id).put("title", it.title).put("type", it.type)
+                    .put("dayEpoch", it.dayEpoch).put("endDayEpoch", it.endDayEpoch)
+                    .put("startMin", it.startMin).put("endMin", it.endMin)
+                    .put("allDay", it.allDay).put("note", it.note))
+            }
+        }
+        JSONObject().put("events", json)
+    }
+
+    // ── masterplan (Room): nested skill graph ─────────────────────────────────
+    private fun masterplan(ctx: Context): JSONObject = runBlocking {
+        val dao = MasterPlanDatabase.get(ctx).dao()
+        val domains = dao.domainsOnce()
+        val json = JSONArray().apply {
+            domains.forEach { dg ->
+                val d = dg.domain
+                put(JSONObject().put("id", d.id).put("title", d.title).put("tagline", d.tagline)
+                    .put("iconKey", d.iconKey).put("orderIndex", d.orderIndex)
+                    .put("nodes", JSONArray().apply {
+                        dg.nodes.forEach { nw ->
+                            val n = nw.node
+                            put(JSONObject().put("id", n.id).put("title", n.title)
+                                .put("subtitle", n.subtitle)
+                                .put("tasks", JSONArray().apply {
+                                    nw.tasks.forEach { t ->
+                                        put(JSONObject().put("id", t.id).put("title", t.title)
+                                            .put("status", t.status.name))
+                                    }
+                                }))
+                        }
+                    }))
+            }
+        }
+        JSONObject().put("domains", json)
+    }
+
+    /** last n logical day keys ("yyyy-MM-dd", 6am rollover). */
+    private fun recentDayKeys(n: Int): List<String> {
+        val out = ArrayList<String>(n)
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.HOUR_OF_DAY, -6)
+        for (i in 0 until n) {
+            out.add(
+                "%04d-%02d-%02d".format(
+                    cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)
+                )
+            )
+            cal.add(Calendar.DAY_OF_MONTH, -1)
+        }
+        return out
+    }
+}

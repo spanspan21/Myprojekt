@@ -5,6 +5,11 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// Cloud-sync config injected from local.properties (git-ignored — no secret in git).
+def _localProps = new Properties()
+def _lpf = rootProject.file("local.properties")
+if (_lpf.exists()) { _lpf.withInputStream { _localProps.load(it) } }
+
 android {
     namespace 'com.ascend.lifeos'
     compileSdk 34
@@ -13,9 +18,12 @@ android {
         applicationId "com.ascend.lifeos"
         minSdk 26
         targetSdk 34
-        versionCode 17
-        versionName "2.15"
+        versionCode 18
+        versionName "2.16"
         vectorDrawables { useSupportLibrary true }
+
+        buildConfigField "String", "SYNC_URL", "\"${_localProps.getProperty('JARVIS_SYNC_URL', '')}\""
+        buildConfigField "String", "SYNC_SECRET", "\"${_localProps.getProperty('JARVIS_SYNC_SECRET', '')}\""
     }
 
     buildTypes {
@@ -40,6 +48,7 @@ android {
 
     buildFeatures {
         compose true
+        buildConfig true
     }
 
     composeOptions {

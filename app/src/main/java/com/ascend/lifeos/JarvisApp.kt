@@ -20,6 +20,14 @@ class JarvisApp : Application() {
         runCatching { Repo.initIfNeeded(this) }
         // Warm the Room finance store (migrates from prefs once, keeps prefs as backup).
         runCatching { com.ascend.lifeos.data.finance.FinanceRoom.init(this) }
+        // Mirror all data to the private web dashboard on startup (one-way,
+        // best-effort, off the main thread). No-op unless sync is configured.
+        val app = this
+        runCatching {
+            if (com.ascend.lifeos.data.cloud.CloudSync.enabled()) {
+                Thread { runCatching { com.ascend.lifeos.data.cloud.CloudSync.pushNow(app) } }.start()
+            }
+        }
     }
 
     companion object {
