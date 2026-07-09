@@ -93,9 +93,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
-        JarvisHeader("Prime", report?.index?.let { "Index $it" }, Accent) {
-            IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, onClick = onClose)
-        }
+        JarvisHeader("Prime", report?.index?.let { "Index $it" }, Accent) {}
         Spacer(Modifier.height(16.dp))
 
         val r = report
@@ -153,7 +151,15 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
         r.gauges.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEach { g ->
-                    Panel(Modifier.weight(1f)) {
+                    // each status box deep-links into its module (audit F1 extended)
+                    val route = when (g.label) {
+                        "CALORIES", "PROTEIN", "HYDRATION" -> "fuel"
+                        "TRAINING" -> "train"
+                        "SLEEP" -> "sleep"
+                        "SCREEN" -> "guard"
+                        else -> null
+                    }
+                    Panel(Modifier.weight(1f), onClick = route?.let { r -> { onNavigate(r) } }) {
                         Column(Modifier.fillMaxWidth().padding(13.dp)) {
                             Text(g.label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                             Spacer(Modifier.height(5.dp))

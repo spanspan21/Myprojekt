@@ -126,9 +126,7 @@ fun SchoolScreen(onClose: () -> Unit) {
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 120.dp),
         ) {
             item(key = "header") {
-                JarvisHeader("School", context, SchoolAccent) {
-                    IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, onClick = onClose)
-                }
+                JarvisHeader("School", context, SchoolAccent) {}
                 Spacer(Modifier.height(18.dp))
             }
 

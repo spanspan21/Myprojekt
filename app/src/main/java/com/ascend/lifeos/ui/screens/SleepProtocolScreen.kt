@@ -62,9 +62,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
-        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "syncing from your watch…", Mod.Body) {
-            IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, size = 34.dp) { onBack() }
-        }
+        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "syncing from your watch…", Mod.Body) {}
         Spacer(Modifier.height(18.dp))
 
         // ── what this is, in one breath (plain language, P5) ─────────

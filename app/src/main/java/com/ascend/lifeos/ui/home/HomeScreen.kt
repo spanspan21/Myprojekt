@@ -479,7 +479,7 @@ fun HomeScreen(
             Spacer(Modifier.height(24.dp))
             SectionLabel("Next up")
             Spacer(Modifier.height(10.dp))
-            NextUpCard(trainVm, trainedToday, onOpenTrain)
+            NextUpCard(trainVm, trainedToday, onOpenTrain, onOpenCalendar = { onOpenModule("calendar") })
             // OF-1: from 19:00, if the watch auto-imported a night we don't yet have
             // the real lights-out time for, ask — so sleep-restriction titrates on
             // true efficiency instead of a fake ~95 %. Reads SleepStore.rev to
@@ -664,12 +664,8 @@ fun HomeScreen(
             }
         }
 
-        // ── QUICK LOG orb — log a purchase before the receipt is pocketed ─
-        QuickLogOrb(
-            onClick = { quickLogOpen = true },
-            modifier = Modifier.align(Alignment.BottomEnd),
-        )
-
+        // Quick-log stays reachable via the command palette / deep link
+        // (jarvis://quicklog); the floating button was removed on request.
         if (quickLogOpen) {
             QuickLogSheet(
                 onDismiss = { quickLogOpen = false },
@@ -773,7 +769,7 @@ private fun SleepConfirmCard(
 // ─── NEXT UP card ────────────────────────────────────────────────────────────
 
 @Composable
-private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpenTrain: () -> Unit) {
+private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpenTrain: () -> Unit, onOpenCalendar: () -> Unit) {
     val ctx = LocalContext.current
     val timeline by produceState<com.ascend.lifeos.data.calendar.DayTimeline?>(null) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -800,53 +796,56 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
 
     // no flash of wrong advice: shimmer until the timeline actually loaded
     if (timeline == null) { ShimmerPanel(height = 74.dp, corner = 20.dp); return }
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp, onClick = onOpenTrain) {
+    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(18.dp)) {
             when {
                 current != null -> {
                     EventLine(
                         "NOW", current.title,
                         "${fmt(current.startMin)}–${fmt(current.endMin)} · ${eventLabel(current.type)}",
-                        eventColor(current.type),
+                        eventColor(current.type), onClick = onOpenCalendar,
                     )
                     if (!trainedToday && slot != null) {
                         Spacer(Modifier.height(12.dp))
                         HairLine()
                         Spacer(Modifier.height(12.dp))
-                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~45 min", Mod.Train)
+                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~45 min", Mod.Train, onClick = onOpenTrain)
                     }
                 }
                 !trainedToday && slot != null && (next == null || slot.startMin < next.startMin) -> {
                     val tag = if (slot.startMin <= nowMin) "READY NOW" else "READY ${fmt(slot.startMin)}"
                     val sub = if (next != null) "fits before ${next.title} at ${fmt(next.startMin)}"
                     else "${slot.durationMin} min free · no blockers"
-                    EventLine(tag, split, sub, Mod.Train)
+                    EventLine(tag, split, sub, Mod.Train, onClick = onOpenTrain)
                     if (next != null) {
                         Spacer(Modifier.height(12.dp))
                         HairLine()
                         Spacer(Modifier.height(12.dp))
-                        EventLine("LATER", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type))
+                        EventLine("LATER", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
                     }
                 }
                 next != null -> {
-                    EventLine("NEXT", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type))
+                    EventLine("NEXT", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
                     if (!trainedToday && slot != null) {
                         Spacer(Modifier.height(12.dp))
                         HairLine()
                         Spacer(Modifier.height(12.dp))
-                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~45 min", Mod.Train)
+                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~45 min", Mod.Train, onClick = onOpenTrain)
                     }
                 }
-                !trainedToday -> EventLine("READY NOW", split, "clear schedule · ~45 min", Mod.Train)
-                else -> EventLine("DONE", "Training complete", "recovery is the mission now", Good)
+                !trainedToday -> EventLine("READY NOW", split, "clear schedule · ~45 min", Mod.Train, onClick = onOpenTrain)
+                else -> EventLine("DONE", "Training complete", "recovery is the mission now", Good, onClick = onOpenTrain)
             }
         }
     }
 }
 
 @Composable
-private fun EventLine(tag: String, title: String, sub: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+private fun EventLine(tag: String, title: String, sub: String, color: Color, onClick: (() -> Unit)? = null) {
+    Row(
+        if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
             Modifier.width(3.dp).height(38.dp).clip(CircleShape)
                 .background(Brush.verticalGradient(listOf(color, color.copy(alpha = 0.3f)))),
