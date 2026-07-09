@@ -141,6 +141,13 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
     val ctx = LocalContext.current
     var metaTick by remember { mutableStateOf(0) }
     val due = remember(domains, metaTick) { dueReviewItems(ctx, domains) }
+    // Revive the readiness router (audit F2): real recovery + a time budget →
+    // the one thing to do now, across every path. Was fully built but orphaned.
+    val readiness = remember(metaTick) { com.ascend.lifeos.data.Repo.recoveryScore() }
+    var focusMin by remember { mutableStateOf(30) }
+    val focusPlan = remember(domains, readiness, focusMin) {
+        com.ascend.lifeos.data.masterplan.JarvisRoutingEngine().planDay(domains, readiness, focusMin)
+    }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(14.dp))
@@ -155,6 +162,12 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
         Spacer(Modifier.height(16.dp))
 
         LazyColumn(contentPadding = PaddingValues(bottom = 120.dp)) {
+            if (domains.isNotEmpty()) {
+                item(key = "focus_now") {
+                    FocusNowCard(focusPlan, focusMin, onMinutes = { focusMin = it })
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
             if (due.isNotEmpty()) {
                 item(key = "review_queue") {
                     ReviewQueue(due, onGraded = { metaTick++ })
@@ -164,6 +177,66 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
             items(domains, key = { it.domain.id }) { d ->
                 PathCard(d, metaTick) { onOpen(d.domain.id) }
                 Spacer(Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+// ─── do-next: the readiness router surfaced (audit F2) ──────────────────────
+
+@Composable
+private fun FocusNowCard(
+    plan: com.ascend.lifeos.data.masterplan.DayPlan,
+    minutes: Int,
+    onMinutes: (Int) -> Unit,
+) {
+    Panel(Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            SectionLabel(
+                plan.readiness?.let { "Do next · readiness $it" } ?: "Do next",
+                accent = Mod.Skills,
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                listOf(15, 30, 45).forEach { m ->
+                    val sel = m == minutes
+                    Box(
+                        Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(if (sel) Mod.Skills else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                            .clickable { onMinutes(m) }
+                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                    ) {
+                        Text(
+                            "${m}m",
+                            color = if (sel) com.ascend.lifeos.ui.theme.Void else com.ascend.lifeos.ui.theme.TextMuted,
+                            fontSize = 12.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                plan.note, color = com.ascend.lifeos.ui.theme.TextDim,
+                fontSize = 12.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, lineHeight = 16.sp,
+            )
+            plan.items.take(3).forEach { item ->
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(7.dp).clip(CircleShape).background(Color(item.accentColor)))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "${item.node.node.title} · ${item.minutes}m",
+                            color = com.ascend.lifeos.ui.theme.TextPrimary,
+                            fontSize = 13.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            "${item.domainTitle} — ${item.reason}",
+                            color = com.ascend.lifeos.ui.theme.TextDim,
+                            fontSize = 11.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, lineHeight = 14.sp,
+                        )
+                    }
+                }
             }
         }
     }

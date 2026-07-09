@@ -665,9 +665,10 @@ private fun WeekChart(week: List<Pair<Long, Long>>, budgetMin: Int, modifier: Mo
             val over = ms > budgetMin * 60_000L
             drawRoundRect(
                 when {
-                    over -> Color(0xFFFF6169).copy(alpha = if (today) 1f else 0.5f)
-                    today -> Color(0xFFF5C451)
-                    else -> Color(0xFFF5C451).copy(alpha = 0.35f)
+                    // semantic tokens instead of raw hex, legible in every world (audit A4)
+                    over -> Crit.copy(alpha = if (today) 1f else 0.5f)
+                    today -> Warn
+                    else -> Warn.copy(alpha = 0.35f)
                 },
                 topLeft = Offset(x, size.height - bh), size = Size(bw, bh.coerceAtLeast(3f)),
                 cornerRadius = CornerRadius(7f, 7f),

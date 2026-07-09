@@ -599,10 +599,11 @@ private fun setTypeLabel(st: SetType) = when (st) {
     SetType.ASSISTED -> "Assisted"; SetType.NEGATIVE -> "Negative"
 }
 
+// Set-type colours via theme tokens so they read on the light world too (audit A4).
 private fun setTypeColor(st: SetType) = when (st) {
     SetType.NORMAL -> Good; SetType.WARMUP -> Warn
-    SetType.DROP -> Color(0xFF5B9DFF); SetType.FAILURE -> Color(0xFFFF6169)
-    SetType.ASSISTED -> Color(0xFFB794FF); SetType.NEGATIVE -> Color(0xFF4CD4C4)
+    SetType.DROP -> Mod.School; SetType.FAILURE -> Crit
+    SetType.ASSISTED -> Mod.Skills; SetType.NEGATIVE -> Mod.Body
 }
 
 private fun prTypeLabel(t: PrType) = when (t) {

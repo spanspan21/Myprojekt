@@ -930,11 +930,13 @@ internal fun catIcon(cat: ExCategory): ImageVector = when (cat) {
     ExCategory.MOBILITY -> Icons.Rounded.SelfImprovement
 }
 
+// Category colours route through theme tokens (Mod.*) so they stay legible in
+// the light LUMEN world — raw saturated hex measured ~1.7–2.5:1 on white (audit A4).
 internal fun catColor(cat: ExCategory) = when (cat) {
-    ExCategory.PUSH -> Color(0xFFFF6B6B); ExCategory.PULL -> Color(0xFF5B9DFF)
-    ExCategory.LEGS -> Color(0xFFFFB347); ExCategory.CORE -> Color(0xFFB794FF)
+    ExCategory.PUSH -> Mod.Train; ExCategory.PULL -> Mod.School
+    ExCategory.LEGS -> Mod.Guard; ExCategory.CORE -> Mod.Skills
     ExCategory.SKILL -> Mod.Home; ExCategory.CARDIO -> Red
-    ExCategory.MOBILITY -> Color(0xFF26C6DA)
+    ExCategory.MOBILITY -> Mod.Body
 }
 
 internal fun catLabel(cat: ExCategory) = when (cat) {
@@ -954,16 +956,16 @@ internal fun muscleLabel(m: Muscle) = when (m) {
 }
 
 private fun templateColor(split: String) = when {
-    "Push" in split -> Color(0xFFFF6B6B)
-    "Pull" in split -> Color(0xFF5B9DFF)
-    "Leg" in split -> Color(0xFFFFB347)
-    "Upper" in split -> Color(0xFF5B9DFF)
-    "Lower" in split -> Color(0xFFFFB347)
+    "Push" in split -> Mod.Train
+    "Pull" in split -> Mod.School
+    "Leg" in split -> Mod.Guard
+    "Upper" in split -> Mod.School
+    "Lower" in split -> Mod.Guard
     "Full" in split -> Mod.Home
-    "Minimal" in split -> Color(0xFF4CD4C4)
-    "Skill" in split || "Freestyle" in split -> Color(0xFFB794FF)
-    "Mobility" in split || "Recovery" in split -> Color(0xFF26C6DA)
-    "Frei" in split -> Color(0xFF4CD4C4)
+    "Minimal" in split -> Mod.Body
+    "Skill" in split || "Freestyle" in split -> Mod.Skills
+    "Mobility" in split || "Recovery" in split -> Mod.Body
+    "Frei" in split -> Mod.Body
     else -> Mod.Home
 }
 
