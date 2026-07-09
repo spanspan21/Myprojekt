@@ -211,8 +211,12 @@ fun GuardScreen() {
                         val saved = WellbeingStore.interceptCount(ctx)
                         if (saved > 0) {
                             Spacer(Modifier.height(4.dp))
+                            // Measured, not a fabricated constant (audit F11): each
+                            // prevented open ≈ the user's OWN average unlock session
+                            // (today's screen minutes / unlocks), clamped to a sane band.
+                            val perOpen = if (unlocks > 0) (usedMin.toDouble() / unlocks).coerceIn(2.0, 20.0) else 6.0
                             Text(
-                                "≈${saved * 9} min reclaimed by Guard so far",
+                                "≈${(saved * perOpen).toInt()} min reclaimed by Guard so far",
                                 color = Mod.Guard, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }

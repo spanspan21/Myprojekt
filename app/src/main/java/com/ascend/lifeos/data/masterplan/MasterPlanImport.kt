@@ -136,6 +136,14 @@ private fun parseArgb(raw: String): Long {
  * Call once on first run (guard with [MasterPlanDao.domainCount]); safe to
  * re-run — REPLACE keeps it idempotent.
  */
+/**
+ * Import a user-supplied plan (JSON text) into the masterplan DB — the honest,
+ * offline replacement for the removed on-device generator (audit F8). Returns
+ * the imported domain id, or a failure the caller can surface.
+ */
+suspend fun importUserPlan(ctx: Context, text: String): Result<String> =
+    MasterPlanImporter(ctx.applicationContext, MasterPlanDatabase.get(ctx).dao()).importJson(text)
+
 class MasterPlanImporter(
     private val context: Context,
     private val dao: MasterPlanDao,
@@ -161,7 +169,7 @@ class MasterPlanImporter(
         count
     }
 
-    /** Import a single plan supplied as a raw JSON string (e.g. from a share sheet). */
+    /** Import a single plan supplied as a raw JSON string (e.g. from a file / share sheet). */
     suspend fun importJson(text: String): Result<String> = runCatching {
         val plan = json.decodeFromString<DomainPlanDto>(text)
         val rows = plan.toRows()

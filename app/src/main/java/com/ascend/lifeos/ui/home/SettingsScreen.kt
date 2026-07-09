@@ -41,6 +41,24 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var backupState by remember { mutableStateOf<String?>(null) }
+    var planImportState by remember { mutableStateOf<String?>(null) }
+    // Import a custom masterplan from a JSON file — the offline replacement for
+    // the removed on-device generator (audit F8). Was fully built but unwired.
+    val planPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            planImportState = "Importing…"
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val text = runCatching {
+                    ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                }.getOrNull()
+                val r = if (text.isNullOrBlank()) Result.failure(Exception("empty file"))
+                    else com.ascend.lifeos.data.masterplan.importUserPlan(ctx, text)
+                planImportState = r.fold({ "Imported plan '$it' ✓" }, { "Import failed: ${it.message}" })
+            }
+        }
+    }
     val folderPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
@@ -401,6 +419,9 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     putExtra(android.content.Intent.EXTRA_TEXT, Repo.exportJson())
                 }
                 runCatching { ctx.startActivity(android.content.Intent.createChooser(send, "Export JARVIS data")) }
+            }
+            ActionRow("Import training plan", planImportState ?: "Load a custom skill plan from a JSON file") {
+                if (planImportState != "Importing…") runCatching { planPicker.launch("*/*") }
             }
             var pdfState by remember { mutableStateOf<String?>(null) }
             ActionRow("Month report PDF", pdfState ?: "One page · saved to Downloads/JARVIS") {
