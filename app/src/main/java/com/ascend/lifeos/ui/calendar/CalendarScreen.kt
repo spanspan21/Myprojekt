@@ -94,11 +94,13 @@ class CalendarViewModel(app: Application) : AndroidViewModel(app) {
     fun delete(id: String) = viewModelScope.launch(Dispatchers.IO) { dao.delete(id) }
 }
 
-// type → colour, one place
+// type → colour, one place. Routed through theme tokens (Mod.*) so categories
+// stay legible in the light LUMEN world — raw saturated hex measured ~2.5:1 on
+// white (audit A4). Mod.* getters resolve to each world's contrast-safe jewel.
 fun eventColor(t: EventType): Color = when (t) {
-    EventType.SCHOOL -> Color(0xFF5B9DFF)
-    EventType.WORK -> Color(0xFF9BA7B8)
-    EventType.HOCKEY -> Color(0xFF4CD4FF)
+    EventType.SCHOOL -> Mod.School
+    EventType.WORK -> Mod.Mind
+    EventType.HOCKEY -> Mod.Body
     EventType.TRAINING -> Mod.Train
     EventType.EXAM -> Crit
     EventType.HOLIDAY -> Good

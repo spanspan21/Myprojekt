@@ -100,6 +100,19 @@ object Notifier {
         runCatching { am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 90L * 60_000, pi) }
     }
 
+    /** One-shot wind-down reminder at [hour]:[minute] today (or tomorrow if past). */
+    fun scheduleBedtime(ctx: Context, hour: Int, minute: Int) {
+        if (!hasPermission(ctx)) return
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val cal = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, hour.coerceIn(0, 23))
+            set(java.util.Calendar.MINUTE, minute.coerceIn(0, 59))
+            set(java.util.Calendar.SECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis()) add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+        runCatching { am.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pending(ctx, 4107, "bedtime")) }
+    }
+
     private fun pending(ctx: Context, req: Int, kind: String): PendingIntent {
         val intent = Intent(ctx, ReminderReceiver::class.java).apply { putExtra("kind", kind) }
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
@@ -146,7 +159,7 @@ object Notifier {
         val msg = message(ctx, kind) ?: return   // nothing worth saying → stay silent
         // every kind gets its own id — protein sharing 4 with weekly used to
         // overwrite the Sunday report
-        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; else -> 4 }
+        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; "bedtime" -> 10; else -> 4 }
 
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -294,6 +307,13 @@ object Notifier {
                     val suggestion = top.joinToString(" or ") { it.name }.ifBlank { "Quark or eggs" }
                     "Protein window" to "~30–40 g within the next hour locks in today's session. $suggestion closes it."
                 }
+            }
+            "bedtime" -> {
+                // Behavioural nudge for the prescribed / earlier bedtime — the SRT
+                // and sleep-debt targets used to be computed but never fired (audit F6).
+                val debt = Repo.sleepDebtMin()
+                val tail = if (debt > 60) " Sleep debt ${debt / 60}h — tonight pays it back." else ""
+                "Wind-down time" to "Lights out soon, $name — recovery is your multiplier.$tail"
             }
             "weekly" -> {
                 val workouts = runCatching {

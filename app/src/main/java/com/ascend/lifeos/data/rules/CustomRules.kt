@@ -190,7 +190,11 @@ object CustomRules {
         when (action) {
             RAction.NOTIFY -> {}
             RAction.GUARD_TIGHT -> WellbeingStore.startFocus(ctx, 90)
-            RAction.BEDTIME_EARLY -> com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.BEDTIME_EARLY_DAY, todayKey())
+            RAction.BEDTIME_EARLY -> {
+                com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.BEDTIME_EARLY_DAY, todayKey())
+                // and actually fire a wind-down reminder tonight (audit F6)
+                com.ascend.lifeos.data.Notifier.scheduleBedtime(ctx, 21, 30)
+            }
             RAction.TRAIN_EASY -> com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.TRAIN_EASY_DAY, todayKey())
         }
     }
