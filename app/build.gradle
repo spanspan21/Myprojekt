@@ -54,6 +54,12 @@ android {
     }
 }
 
+// Room schema baseline — exportSchema=true (audit Phase 3) needs a location.
+// Commit app/schemas so the first real migration has a v1 baseline to diff against.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.documentfile:documentfile:1.0.1'

@@ -168,7 +168,7 @@ data class BestRep(val exerciseId: String, val best: Int)
         UserProgressionEntity::class,
     ],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(TrainingConverters::class)
 abstract class TrainingDatabase : RoomDatabase() {

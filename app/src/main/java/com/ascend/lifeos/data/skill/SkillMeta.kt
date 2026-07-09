@@ -2,6 +2,7 @@ package com.ascend.lifeos.data.skill
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.ascend.lifeos.core.Sm2
 import org.json.JSONObject
 import java.time.Instant
 import java.time.ZoneId
@@ -49,13 +50,13 @@ object SkillMeta {
     // ---- spaced repetition (SM-2-light) ----------------------------------------
 
     // scheduling itself lives in core/Sm2 — shared with SchoolStore's decks
-    const val GRADE_AGAIN = com.ascend.lifeos.core.Sm2.GRADE_AGAIN
-    const val GRADE_GOOD = com.ascend.lifeos.core.Sm2.GRADE_GOOD
-    const val GRADE_EASY = com.ascend.lifeos.core.Sm2.GRADE_EASY
+    const val GRADE_AGAIN = Sm2.GRADE_AGAIN
+    const val GRADE_GOOD = Sm2.GRADE_GOOD
+    const val GRADE_EASY = Sm2.GRADE_EASY
 
-    private const val DAY_MS = com.ascend.lifeos.core.Sm2.DAY_MS
+    private const val DAY_MS = Sm2.DAY_MS
     private const val START_INTERVAL = 1.0
-    private const val START_EASE = com.ascend.lifeos.core.Sm2.START_EASE
+    private const val START_EASE = Sm2.START_EASE
 
     private data class Srs(val nextReviewAt: Long, val intervalDays: Double, val easeFactor: Double)
 
@@ -109,7 +110,7 @@ object SkillMeta {
         now: Long = System.currentTimeMillis(),
     ) {
         val s = readSrs(ctx, nodeId) ?: Srs(now, START_INTERVAL, START_EASE)
-        val next = com.ascend.lifeos.core.Sm2.next(grade, s.intervalDays, s.easeFactor)
+        val next = Sm2.next(grade, s.intervalDays, s.easeFactor)
         writeSrs(ctx, nodeId, Srs(now + (next.intervalDays * DAY_MS).toLong(), next.intervalDays, next.ease))
         if (pathId != null) bumpMonthlyReviews(ctx, pathId, now)
     }

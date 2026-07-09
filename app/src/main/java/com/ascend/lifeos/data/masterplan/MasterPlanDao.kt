@@ -87,7 +87,7 @@ interface MasterPlanDao {
         ResourceEntity::class,
     ],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(MasterPlanConverters::class)
 abstract class MasterPlanDatabase : RoomDatabase() {

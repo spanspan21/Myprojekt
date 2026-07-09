@@ -61,7 +61,7 @@ interface CalendarDao {
     suspend fun deletePastTraining(today: Long)
 }
 
-@Database(entities = [CalEventEntity::class], version = 1, exportSchema = false)
+@Database(entities = [CalEventEntity::class], version = 1, exportSchema = true)
 abstract class CalendarDatabase : RoomDatabase() {
     abstract fun dao(): CalendarDao
 
