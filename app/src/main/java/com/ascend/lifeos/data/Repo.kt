@@ -616,44 +616,22 @@ object Repo {
      * Components renormalize honestly when a signal is missing; no sleep → null.
      */
     fun recoveryScoreV2(h: HealthSnapshot? = data.health): Int? {
-        val sleepMin = h?.sleepMin ?: return null
-        val sleepPerf = (sleepMin / 480.0).coerceIn(0.0, 1.0)
-        // 45% deep+REM share = full credit (physiological sweet spot; 60% was
-        // stricter than any consumer scorer and dragged normal nights down).
-        // No stage data at all (manual entry, stage-less source) = MISSING
-        // signal, not "0% restorative" — else those nights cap at 70.
-        val restorative: Double? =
-            if (sleepMin > 0 && h.rem + h.deep > 0) ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45
-            else null
-
-        val baseline = rhrBaseline()
-        val rhr = h.restingHr
-        val rhrScore = if (baseline != null && rhr != null) {
-            // +5 bpm over baseline → poor; −5 under → great
-            (0.5 - (rhr - baseline) / 10.0).coerceIn(0.0, 1.0)
-        } else null
-
-        // Only credit load headroom when there is recent training — otherwise a
-        // fully sedentary user banks a free +15% for never training (audit C1-4).
+        // Repo now only GATHERS the signals; the scoring math lives in the pure,
+        // unit-tested domain.RecoveryEngine (audit Phase 3 — thin storage facade).
+        val checkins = data.bodyDays[todayKey()]
         val hasTraining = workoutSets(today()) > 0 ||
             (dayFor(prevKey(todayKey()))?.let { workoutSets(it) } ?: 0) > 0
-
-        // renormalize honestly over whichever signals exist
-        val parts = buildList {
-            add(0.40 to sleepPerf)
-            restorative?.let { add(0.20 to it) }
-            rhrScore?.let { add(0.25 to it) }
-            if (hasTraining) add(0.15 to (1.0 - trainingLoad()))
-        }
-        val weightSum = parts.sumOf { it.first }
-        var score = parts.sumOf { it.first * it.second } / weightSum * 100
-        // subjective check-ins nudge the score honestly
-        data.bodyDays[todayKey()]?.let { d ->
-            if (d.soreness == 3) score -= 8.0
-            if (d.morningEnergy == 1) score -= 5.0
-            if (d.morningEnergy == 3) score += 3.0
-        }
-        return Math.round(score).toInt().coerceIn(5, 99)
+        return com.ascend.lifeos.domain.RecoveryEngine.score(
+            sleepMin = h?.sleepMin,
+            remMin = h?.rem ?: 0,
+            deepMin = h?.deep ?: 0,
+            restingHr = h?.restingHr,
+            rhrBaseline = rhrBaseline(),
+            hasTraining = hasTraining,
+            trainingLoad = trainingLoad(),
+            soreness = checkins?.soreness,
+            morningEnergy = checkins?.morningEnergy,
+        )
     }
 
     /**
