@@ -25,7 +25,13 @@ class JarvisApp : Application() {
         val app = this
         runCatching {
             if (com.ascend.lifeos.data.cloud.CloudSync.enabled()) {
-                Thread { runCatching { com.ascend.lifeos.data.cloud.CloudSync.pushNow(app) } }.start()
+                Thread {
+                    val r = com.ascend.lifeos.data.cloud.CloudSync.pushNow(app)
+                    android.util.Log.i(
+                        "CloudSync",
+                        "startup sync: " + r.fold({ "ok ($it docs)" }, { "FAIL: ${it.message}" })
+                    )
+                }.start()
             }
         }
     }
