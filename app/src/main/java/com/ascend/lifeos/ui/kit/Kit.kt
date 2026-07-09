@@ -235,10 +235,7 @@ fun JarvisHeader(
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f)) {
             if (overline != null) {
-                Text(
-                    overline.uppercase(), color = accent, fontFamily = MicroLabel,
-                    fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.2.sp,
-                )
+                Text(overline.uppercase(), color = accent, style = JarvisText.overline)
                 Spacer(Modifier.height(7.dp))
             }
             Text(
