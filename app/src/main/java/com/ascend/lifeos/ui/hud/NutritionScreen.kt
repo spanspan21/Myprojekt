@@ -188,7 +188,14 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                     .eventsInRangeOnce(today, today)
                     .filter { it.type == "HOCKEY" && !it.allDay }
                     .minByOrNull { it.startMin }
-                    ?.let { "Game Day %02d:%02d — Carbs until 15:00, then light".format(it.startMin / 60, it.startMin % 60) }
+                    ?.let {
+                        // Carb-loading window ends ~2h before puck drop — derived from
+                        // the real game time, not a hardcoded 15:00 (audit F7).
+                        val cutoff = (it.startMin - 120).coerceAtLeast(6 * 60)
+                        "Game Day %02d:%02d — carbs until %02d:%02d, then keep it light".format(
+                            it.startMin / 60, it.startMin % 60, cutoff / 60, cutoff % 60,
+                        )
+                    }
             }.getOrNull()
         }
     }
