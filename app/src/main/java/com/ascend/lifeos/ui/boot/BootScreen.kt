@@ -516,19 +516,29 @@ private data class BootSystem(val label: String, val accent: Color, val readout:
 
 @Composable
 private fun CalibratePhase(onNext: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val systems = remember {
         listOf(
             BootSystem("TRAIN", Mod.Train, "loading movement library"),
             BootSystem("FUEL", Mod.Fuel, "compiling nutrition engine"),
             BootSystem("BODY", Mod.Body, "binding Health Connect"),
             BootSystem("GUARD", Mod.Guard, "arming screen-time shield"),
-            BootSystem("SCHOOL", Color(0xFF5B9DFF), "indexing calendar & grades"),
+            BootSystem("SCHOOL", Mod.School, "indexing calendar & grades"),
             BootSystem("SKILLS", Mod.Skills, "mounting skill trees"),
         )
     }
     val progress = remember { systems.map { Animatable(0f) } }
 
     LaunchedEffect(Unit) {
+        // Actually warm real subsystems while the bars fill — the phase used to
+        // animate "arming" but initialize nothing (audit F12). Best-effort, off
+        // the main thread; the overlay/HC permissions stay contextual (asked when
+        // the user first opens Guard / Body), not as a jarring mid-boot redirect.
+        launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { com.ascend.lifeos.data.Notifier.ensureChannel(ctx) }
+            runCatching { com.ascend.lifeos.data.OwnRecipes.init(ctx) }
+            runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(ctx) }
+        }
         progress.forEachIndexed { i, a ->
             launch {
                 delay(140L + i * 270L)
