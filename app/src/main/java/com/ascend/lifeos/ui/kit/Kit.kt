@@ -301,10 +301,10 @@ fun SectionLabel(
             )
             Spacer(Modifier.width(7.dp))
         }
-        Text(
-            text.uppercase(), color = TextMuted, fontFamily = MicroLabel,
-            fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.2.sp,
-        )
+        // Reference the shared overline token instead of hand-rolling the style
+        // (audit A1). SectionLabel is used across ~all screens, so centralizing it
+        // here propagates the token widely from one edit.
+        Text(text.uppercase(), color = TextMuted, style = JarvisText.overline)
     }
 }
 
