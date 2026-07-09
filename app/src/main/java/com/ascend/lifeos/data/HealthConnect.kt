@@ -8,6 +8,7 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import java.time.Instant
@@ -24,7 +25,18 @@ object HealthConnect {
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
         HealthPermission.getReadPermission(StepsRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
     )
+
+    /** Most recent body-weight record (kg) in the last 90 days, or null (audit F9). */
+    suspend fun readLatestWeight(ctx: Context): Double? = runCatching {
+        if (!available(ctx)) return null
+        val now = java.time.Instant.now()
+        val start = now.minus(java.time.Duration.ofDays(90))
+        client(ctx).readRecords(
+            ReadRecordsRequest(WeightRecord::class, timeRangeFilter = TimeRangeFilter.between(start, now)),
+        ).records.maxByOrNull { it.time }?.weight?.inKilograms
+    }.getOrNull()
 
     fun available(ctx: Context): Boolean =
         HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE

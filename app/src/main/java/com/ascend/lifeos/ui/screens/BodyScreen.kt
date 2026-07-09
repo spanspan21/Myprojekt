@@ -55,7 +55,18 @@ fun BodyScreen() {
         scope.launch {
             if (HealthConnect.available(ctx) &&
                 runCatching { HealthConnect.grantedAny(ctx) }.getOrDefault(false)
-            ) runCatching { Repo.setHealth(HealthConnect.read(ctx)) }
+            ) {
+                runCatching { Repo.setHealth(HealthConnect.read(ctx)) }
+                // Import body weight from Health Connect too (audit F9): only log
+                // when it actually differs from the latest entry, so we don't spam
+                // the trend with duplicates on every resume.
+                runCatching {
+                    HealthConnect.readLatestWeight(ctx)?.let { kg ->
+                        val last = Repo.weightLog().lastOrNull()?.kg
+                        if (last == null || kotlin.math.abs(last - kg) >= 0.1) Repo.logWeight(kg)
+                    }
+                }
+            }
         }
     }
     val launcher = rememberLauncherForActivityResult(
