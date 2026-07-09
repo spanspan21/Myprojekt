@@ -5,6 +5,7 @@ import com.ascend.lifeos.data.calendar.CalendarDatabase
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
+import com.ascend.lifeos.data.prime.PrimeEngine
 import com.ascend.lifeos.data.school.SchoolStore
 import com.ascend.lifeos.data.sleep.SleepStore
 import com.ascend.lifeos.data.training.TrainingDatabase
@@ -32,6 +33,29 @@ object StorePayloads {
         runCatching { add("training", training(ctx)) }
         runCatching { add("calendar", calendar(ctx)) }
         runCatching { add("masterplan", masterplan(ctx)) }
+        runCatching { add("prime", prime(ctx)) }
+    }
+
+    // ── prime: the computed cross-module readiness report ─────────────────────
+    private fun prime(ctx: Context): JSONObject = runBlocking {
+        val r = PrimeEngine.build(ctx)
+        val subs = JSONArray().apply {
+            r.subScores.forEach { put(JSONArray().put(it.first).put(it.second)) }
+        }
+        val gauges = JSONArray().apply {
+            r.gauges.forEach {
+                put(JSONObject().put("label", it.label).put("value", it.value)
+                    .put("score", it.score?.toDouble()).put("hint", it.hint))
+            }
+        }
+        val directives = JSONArray().apply {
+            r.directives.forEach {
+                put(JSONObject().put("text", it.text).put("why", it.why)
+                    .put("impact", it.impact).put("route", it.route))
+            }
+        }
+        JSONObject().put("index", r.index).put("subScores", subs)
+            .put("gauges", gauges).put("directives", directives)
     }
 
     // ── finance: accounts, txns, budgets, recurring, goals, holdings ──────────
