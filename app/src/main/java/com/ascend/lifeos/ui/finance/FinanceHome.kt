@@ -172,6 +172,12 @@ fun FinanceHome(onClose: () -> Unit) {
                 NetWorthSection()
                 Spacer(Modifier.height(14.dp))
             }
+
+            // ── co-pilot: safe-to-spend, due subs, abo cost, savings pace ────
+            item(key = "insights") {
+                FinanceInsightsCard()
+                Spacer(Modifier.height(14.dp))
+            }
             if (hasBalanceSheet) {
                 item(key = "allocation") {
                     AllocationSection()

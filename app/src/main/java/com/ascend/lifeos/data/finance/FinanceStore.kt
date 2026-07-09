@@ -214,6 +214,15 @@ object FinanceStore {
         val txnId = newId("t")
         FinanceRoom.addTxn(txnId, System.currentTimeMillis(), amountCents, category, note.trim(), linked)
         if (linked != null) FinanceRoom.adjustBalance(linked, amountCents)
+        // Round-up savings (#7): stash the change up to the next euro into a goal.
+        if (amountCents < 0 && com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.ROUNDUP_ON, false)) {
+            val goalId = com.ascend.lifeos.data.Prefs.string(ctx, com.ascend.lifeos.data.Prefs.ROUNDUP_GOAL_ID, "")
+                .ifBlank { saveGoals(ctx).firstOrNull()?.id ?: "" }
+            if (goalId.isNotBlank()) {
+                val roundUp = (100 - (kotlin.math.abs(amountCents) % 100)) % 100
+                if (roundUp > 0) runCatching { addToGoal(ctx, goalId, roundUp) }
+            }
+        }
         touch()
     }
 

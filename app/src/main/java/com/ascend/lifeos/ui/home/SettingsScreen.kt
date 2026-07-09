@@ -175,6 +175,12 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ToggleRow("Weekly report", "Sunday 19:00", Prefs.NOTIF_WEEKLY, true)
         }
 
+        // ── FINANCE ──────────────────────────────────────────────────
+        SettingsSection("Finance") {
+            ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
+            ToggleRow("Round-up savings", "Round each expense up to the euro into your first goal", Prefs.ROUNDUP_ON, false)
+        }
+
         // ── TRAINING ─────────────────────────────────────────────────
         SettingsSection("Training") {
             ToggleRow("Rest timer notification", "Countdown continues off-screen", Prefs.REST_NOTIFICATION, true)

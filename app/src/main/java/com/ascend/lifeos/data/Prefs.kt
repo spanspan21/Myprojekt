@@ -65,6 +65,10 @@ object Prefs {
     const val RESCHEDULE_NOTIFIED_DAY = "reschedule_notified_day" // dayKey the afternoon nudge fired
     const val RESCHEDULE_HOUR = "reschedule_hour"      // hour-of-day the afternoon nudge fires (default 15)
     const val TRAINED_TIMES = "trained_times"          // csv minute-of-day of recent finished sessions (learned default)
+    // Finance intelligence
+    const val RECURRING_AUTOBOOK = "recurring_autobook" // auto-book due subscriptions instead of asking
+    const val ROUNDUP_ON = "roundup_on"                // round each expense up to the euro into a goal
+    const val ROUNDUP_GOAL_ID = "roundup_goal_id"      // which SaveGoal the round-ups feed
     const val BEDTIME_EARLY_DAY = "bedtime_early_day"  // dayKey an automation asked for an earlier bedtime (audit F3)
     // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true
