@@ -155,6 +155,10 @@ fun FinanceHome(onClose: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Void)) {
         ModuleBackground(FinAccent)
 
+        // Bank sync on open, throttled (BankLink self-limits to ~6 h)
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            runCatching { com.ascend.lifeos.data.finance.BankLink.maybeAutoSync(ctx) }
+        }
         LazyColumn(
             Modifier.fillMaxSize().statusBarsPadding(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 120.dp),
@@ -176,6 +180,12 @@ fun FinanceHome(onClose: () -> Unit) {
             // ── co-pilot: safe-to-spend, due subs, abo cost, savings pace ────
             item(key = "insights") {
                 FinanceInsightsCard()
+                Spacer(Modifier.height(14.dp))
+            }
+
+            // ── bank link: real transactions, read-only (Open Banking) ───────
+            item(key = "bank") {
+                BankPanel()
                 Spacer(Modifier.height(14.dp))
             }
             if (hasBalanceSheet) {

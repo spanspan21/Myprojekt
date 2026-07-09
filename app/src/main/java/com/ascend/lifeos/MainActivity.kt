@@ -86,6 +86,12 @@ class MainActivity : ComponentActivity() {
         intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
         val uri = intent?.data ?: return
         if (uri.scheme != "jarvis") return
+        // Bank SCA return: browser → jarvis://bank-callback?code=… (Open Banking)
+        if (uri.host == "bank-callback") {
+            runCatching { com.ascend.lifeos.data.finance.BankLink.handleCallback(applicationContext, uri) }
+            com.ascend.lifeos.data.DeepLink.pending.value = "finance"
+            return
+        }
         com.ascend.lifeos.data.DeepLink.pending.value = uri.toString().removePrefix("jarvis://").substringBefore("/")
     }
 
