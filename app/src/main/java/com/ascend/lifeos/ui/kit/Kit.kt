@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -258,11 +259,18 @@ fun JarvisHeader(
     }
 }
 
-/** Small round glass icon button (header actions, sheet close). */
+/**
+ * Small round glass icon button (header actions, sheet close). [label] is
+ * REQUIRED and becomes the TalkBack contentDescription — icon-only buttons used
+ * to be silent to screen readers (audit A2). A 48 dp minimum touch target is
+ * reserved even when the visual [size] is smaller (audit A5).
+ */
 @Composable
-fun IconOrb(icon: ImageVector, tint: Color = TextMuted, size: Dp = 38.dp, onClick: () -> Unit) {
+fun IconOrb(icon: ImageVector, label: String, tint: Color = TextMuted, size: Dp = 38.dp, onClick: () -> Unit) {
     Box(
-        Modifier.size(size)
+        Modifier
+            .minimumInteractiveComponentSize()
+            .size(size)
             .pressScale(onClick)
             .clip(CircleShape)
             .background(Ivory.copy(alpha = 0.05f))
@@ -270,7 +278,7 @@ fun IconOrb(icon: ImageVector, tint: Color = TextMuted, size: Dp = 38.dp, onClic
             .background(Brush.verticalGradient(0f to Ivory.copy(alpha = 0.03f), 0.6f to Color.Transparent))
             .border(0.5.dp, Line, CircleShape),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, tint = tint, modifier = Modifier.size(size * 0.45f)) }
+    ) { Icon(icon, label, tint = tint, modifier = Modifier.size(size * 0.45f)) }
 }
 
 /** Editorial section label: a thin accent tick, an optional two-digit number,
@@ -566,11 +574,15 @@ fun MissionChip(
  */
 @Composable
 fun ShimmerPanel(modifier: Modifier = Modifier, height: Dp = 96.dp, corner: Dp = 18.dp) {
-    val x by rememberInfiniteTransition(label = "shimmer").animateFloat(
+    // Respect the system "remove animations" setting — a perpetual shimmer should
+    // hold still for reduced-motion users (audit A7).
+    val reduced = com.ascend.lifeos.ui.motion.Motion.reduced(androidx.compose.ui.platform.LocalContext.current)
+    val anim by rememberInfiniteTransition(label = "shimmer").animateFloat(
         0f, 1f,
         infiniteRepeatable(tween(1500, easing = LinearEasing)),
         label = "shimmerX",
     )
+    val x = if (reduced) 0.5f else anim
     Box(
         modifier
             .fillMaxWidth()

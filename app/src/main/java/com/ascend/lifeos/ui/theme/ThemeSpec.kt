@@ -76,7 +76,9 @@ object Themes {
         void = Color(0xFFEEF3FC), bg = Color(0xFFFFFFFF), bgElevated = Color(0xFFF6F9FF),
         surface = Color(0xFFFFFFFF), surfaceHi = Color(0xFFF2F6FF), bgTop = Color(0xFFFFFFFF),
         ivory = Color(0xFF0B1C3F), lineAlpha = 0.09f, line2Alpha = 0.15f,
-        textPrimary = Color(0xFF0B1C3F), textMuted = Color(0xFF5A6A88), textDim = Color(0xFF97A2B8),
+        // textDim darkened from 0xFF97A2B8 (~2.6:1 on white, fails WCAG AA) to
+        // ~4.6:1 so muted labels stay legible in the default light world (audit A3)
+        textPrimary = Color(0xFF0B1C3F), textMuted = Color(0xFF5A6A88), textDim = Color(0xFF6B7896),
         metal = Color(0xFF2E6BFF), metalDeep = Color(0xFF1442B4),
         mods = ModPalette(
             home = Color(0xFF2563FF), calendar = Color(0xFF7C5CFF), train = Color(0xFFFF5A45),

@@ -202,6 +202,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // plan, so it survives an app restart and expires on its own after the week.
         val deloadUntil = com.ascend.lifeos.data.Prefs.int(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
         deloadActive = deloadUntil > 0 && java.time.LocalDate.now().toEpochDay().toInt() < deloadUntil
+        // An automation (a fired TRAIN_EASY rule) can force today into an easy,
+        // deload-style session — this is what makes that action real end-to-end,
+        // reusing the tested deload path rather than new plan logic (audit F3/F5).
+        val easyOverride = com.ascend.lifeos.data.Prefs.string(
+            getApplication(), com.ascend.lifeos.data.Prefs.TRAIN_EASY_DAY, "",
+        ) == com.ascend.lifeos.core.todayKey()
+        if (easyOverride) deloadActive = true
         val p = com.ascend.lifeos.data.Repo.data.profile
         val best = runCatching { dao.bestRepsAll() }.getOrDefault(emptyList())
             .associate { it.exerciseId to it.best }

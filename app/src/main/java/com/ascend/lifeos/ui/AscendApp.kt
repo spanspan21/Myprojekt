@@ -132,6 +132,9 @@ fun AscendApp() {
     LaunchedEffect(Unit) { ShellMode.current.value = Prefs.string(ctx, Prefs.CONTEXT_MODE, "normal") }
 
     var sub by rememberSaveable { mutableStateOf(Sub.HOME) }
+    // The screen we came FROM, so a sub-screen's close button returns there
+    // instead of always dumping to Calendar regardless of entry point (audit A8).
+    var prevSub by rememberSaveable { mutableStateOf(Sub.HOME) }
     val lastSub = remember { mutableStateMapOf<Group, Sub>() }
     var reportOpen by rememberSaveable { mutableStateOf(false) }
     var paletteOpen by remember { mutableStateOf(false) }
@@ -147,6 +150,7 @@ fun AscendApp() {
     fun open(target: Sub) {
         val g = groupOf(target)
         val t = if (target.name in hidden) visibleSubs(g).firstOrNull() ?: Sub.HOME else target
+        if (t != sub) prevSub = sub
         sub = t
         lastSub[g] = t
     }
@@ -226,16 +230,19 @@ fun AscendApp() {
                         onOpenPalette = { paletteOpen = true },
                         onOpenModule = { navigate(it) },
                     )
-                    Sub.PRIME -> com.ascend.lifeos.ui.prime.PrimeScreen(onClose = { open(Sub.HOME) })
+                    Sub.PRIME -> com.ascend.lifeos.ui.prime.PrimeScreen(
+                        onClose = { open(Sub.HOME) },
+                        onNavigate = { navigate(it) },
+                    )
                     Sub.TRAIN -> TrainingScreen(onDockVisible = { dockVisible = it })
                     Sub.FUEL -> NutritionScreen()
                     Sub.VITALS -> BodyScreen()
                     Sub.SLEEP -> com.ascend.lifeos.ui.screens.SleepProtocolScreen(onBack = { open(Sub.VITALS) })
                     Sub.CALENDAR -> CalendarScreen()
-                    Sub.GOALS -> com.ascend.lifeos.ui.life.GoalsScreen(onClose = { open(Sub.CALENDAR) })
-                    Sub.FINANCE -> com.ascend.lifeos.ui.finance.FinanceHome(onClose = { open(Sub.CALENDAR) })
-                    Sub.SCHOOL -> com.ascend.lifeos.ui.school.SchoolScreen(onClose = { open(Sub.CALENDAR) })
-                    Sub.HABITS -> com.ascend.lifeos.ui.life.HabitsScreen(onClose = { open(Sub.CALENDAR) })
+                    Sub.GOALS -> com.ascend.lifeos.ui.life.GoalsScreen(onClose = { open(prevSub.takeIf { it != Sub.GOALS } ?: Sub.CALENDAR) })
+                    Sub.FINANCE -> com.ascend.lifeos.ui.finance.FinanceHome(onClose = { open(prevSub.takeIf { it != Sub.FINANCE } ?: Sub.CALENDAR) })
+                    Sub.SCHOOL -> com.ascend.lifeos.ui.school.SchoolScreen(onClose = { open(prevSub.takeIf { it != Sub.SCHOOL } ?: Sub.CALENDAR) })
+                    Sub.HABITS -> com.ascend.lifeos.ui.life.HabitsScreen(onClose = { open(prevSub.takeIf { it != Sub.HABITS } ?: Sub.CALENDAR) })
                     Sub.GUARD -> GuardScreen()
                     Sub.SKILLS -> SkillsScreen()
                     Sub.SETTINGS -> com.ascend.lifeos.ui.home.SettingsScreen(

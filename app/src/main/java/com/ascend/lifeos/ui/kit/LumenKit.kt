@@ -170,19 +170,14 @@ fun LumenSparks(color: Color, modifier: Modifier = Modifier, count: Int = 54) {
                 }
             }
         }
-        // the glowing motes, on top of the web
+        // the glowing motes, on top of the web. Three cheap translucent discs
+        // instead of a per-mote radialGradient Brush — the gradient allocated 54
+        // brushes every frame behind the default theme (audit B2-2); solid discs
+        // give a near-identical halo at a fraction of the allocation cost.
         for (i in 0 until n) {
             val rad = motes[i].r.dp.toPx(); val a = pa[i]; val ctr = Offset(px[i], py[i])
-            val glowR = rad * 4.5f
-            drawCircle(
-                Brush.radialGradient(
-                    0f to color.copy(alpha = a * 0.5f),
-                    0.4f to color.copy(alpha = a * 0.18f),
-                    1f to Color.Transparent,
-                    center = ctr, radius = glowR,
-                ),
-                radius = glowR, center = ctr,
-            )
+            drawCircle(color.copy(alpha = a * 0.12f), rad * 4.5f, ctr)
+            drawCircle(color.copy(alpha = a * 0.22f), rad * 2.4f, ctr)
             drawCircle(color.copy(alpha = a), rad, ctr)
         }
     }

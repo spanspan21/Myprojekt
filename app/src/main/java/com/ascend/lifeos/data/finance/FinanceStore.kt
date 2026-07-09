@@ -579,13 +579,18 @@ object FinanceStore {
         val zone = ZoneId.systemDefault()
         val monthStart = today.withDayOfMonth(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val byDay = HashMap<Int, Long>()
+        val loggedDays = HashSet<Int>()
         for (t in LifeStores.txns(ctx)) {
-            if (t.ts < monthStart || t.amountCents >= 0) continue
+            if (t.ts < monthStart) continue
             val d = Instant.ofEpochMilli(t.ts).atZone(zone).toLocalDate().dayOfMonth
-            byDay.merge(d, -t.amountCents) { a, b -> a + b }
+            loggedDays.add(d)
+            if (t.amountCents < 0) byDay.merge(d, -t.amountCents) { a, b -> a + b }
         }
+        // Don't count days before the month's first activity as "under budget" —
+        // they were just days the app wasn't used yet (audit C1-7).
+        val firstLogged = loggedDays.minOrNull() ?: return 0
         var streak = 0
-        for (d in today.dayOfMonth downTo 1) {
+        for (d in today.dayOfMonth downTo firstLogged) {
             if ((byDay[d] ?: 0L) <= cap) streak++ else break
         }
         return streak

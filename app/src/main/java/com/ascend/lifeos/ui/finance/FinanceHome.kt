@@ -164,7 +164,7 @@ fun FinanceHome(onClose: () -> Unit) {
                     "Finance", headerContext, FinAccent,
                     overline = "Net worth · accounts · investments",
                 ) {
-                    IconOrb(Icons.Rounded.Close, tint = TextPrimary, onClick = onClose)
+                    IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, onClick = onClose)
                 }
                 Spacer(Modifier.height(18.dp))
             }

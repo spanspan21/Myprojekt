@@ -28,7 +28,9 @@ class AscendWidget : AppWidgetProvider() {
         }
 
         private fun render(ctx: Context, mgr: AppWidgetManager, id: Int) {
-            runCatching { Repo.init(ctx) }
+            // initIfNeeded, NOT init — init unconditionally re-decodes the whole
+            // JSON store on the main thread on every widget tick (audit B2-6).
+            runCatching { Repo.initIfNeeded(ctx) }
             val day = Repo.today()
             val p = Repo.profile()
             val c = Repo.completion(day, p)

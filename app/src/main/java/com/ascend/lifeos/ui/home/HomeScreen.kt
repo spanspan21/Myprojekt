@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
@@ -212,9 +213,9 @@ fun HomeScreen(
                     fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.width(12.dp))
-                IconOrb(Icons.Rounded.Shield, tint = Mod.Guard, size = 34.dp, onClick = onOpenGuard)
+                IconOrb(Icons.Rounded.Shield, "Open Guard", tint = Mod.Guard, size = 34.dp, onClick = onOpenGuard)
                 Spacer(Modifier.width(8.dp))
-                IconOrb(Icons.Rounded.Tune, size = 34.dp, onClick = onOpenSystem)
+                IconOrb(Icons.Rounded.Tune, "Open settings", size = 34.dp, onClick = onOpenSystem)
             }
 
             Spacer(Modifier.height(22.dp))
@@ -407,10 +408,16 @@ fun HomeScreen(
             homeCards["briefing"] = {
                 var protoTick by remember { mutableIntStateOf(0) }
                 val directives by produceState<List<Pair<com.ascend.lifeos.data.Protocol, String>>>(emptyList(), protoTick) {
-                    value = runCatching { com.ascend.lifeos.data.Protocols.fire(ctx) }.getOrDefault(emptyList())
+                    // fire() reads prefs/data — keep it off the Main dispatcher
+                    // (produceState runs its block on the composition context) — audit B2-4
+                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        runCatching { com.ascend.lifeos.data.Protocols.fire(ctx) }.getOrDefault(emptyList())
+                    }
                 }
                 val customFired by produceState<List<Pair<com.ascend.lifeos.data.rules.CustomRule, String>>>(emptyList(), protoTick) {
-                    value = runCatching { com.ascend.lifeos.data.rules.CustomRules.fire(ctx) }.getOrDefault(emptyList())
+                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        runCatching { com.ascend.lifeos.data.rules.CustomRules.fire(ctx) }.getOrDefault(emptyList())
+                    }
                 }
                 val insight by produceState<com.ascend.lifeos.data.InsightMiner.Insight?>(null) {
                     if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.INSIGHTS_ON, true)) {
@@ -688,12 +695,18 @@ private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .size(60.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // breathing halo — glow without shadow
+        // breathing halo — glow without shadow. Scale + alpha are read in the
+        // draw/layer phase (graphicsLayer + drawBehind), not composition, so the
+        // perpetual breathing costs zero recompositions (audit B2-14 / A9).
         Box(
             Modifier.matchParentSize()
-                .scale(1f + 0.16f * breath)
-                .clip(CircleShape)
-                .background(Mod.Home.copy(alpha = 0.10f + 0.08f * (1f - breath))),
+                .graphicsLayer {
+                    val s = 1f + 0.16f * breath
+                    scaleX = s; scaleY = s
+                }
+                .drawBehind {
+                    drawCircle(Mod.Home.copy(alpha = 0.10f + 0.08f * (1f - breath)))
+                },
         )
         Box(
             Modifier.size(52.dp).clip(CircleShape)

@@ -123,7 +123,7 @@ fun SchoolScreen(onClose: () -> Unit) {
         ) {
             item(key = "header") {
                 JarvisHeader("School", context, SchoolAccent) {
-                    IconOrb(Icons.Rounded.Close, tint = TextPrimary, onClick = onClose)
+                    IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, onClick = onClose)
                 }
                 Spacer(Modifier.height(18.dp))
             }

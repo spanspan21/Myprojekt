@@ -76,8 +76,11 @@ object SchoolStore {
 
     fun addSubject(ctx: Context, name: String, points: Boolean): String {
         if (name.isBlank()) return ""
-        val arr = readArray(ctx, KEY_SUBJECTS)
+        // Resolve the existing subjects FIRST — that runs the legacy migration and
+        // writes the migrated array. Reading KEY_SUBJECTS before migration and then
+        // writing it back clobbered all migrated grades (audit C1-6).
         val order = (subjects(ctx).maxOfOrNull { it.order } ?: -1) + 1
+        val arr = readArray(ctx, KEY_SUBJECTS)
         val id = newId("s")
         arr.put(JSONObject().put("id", id).put("name", name.trim()).put("pts", points).put("order", order))
         writeArray(ctx, KEY_SUBJECTS, arr)

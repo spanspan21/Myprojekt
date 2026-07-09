@@ -115,7 +115,9 @@ object UntisSync {
                     ?: o.optString("lstext").takeIf { it.isNotBlank() }
                     ?: o.optString("activityType").takeIf { it.isNotBlank() }
                     ?: "Lesson"
-                val exam = o.optString("lstype") == "ex" || o.has("exam")
+                // check the VALUE, not mere presence — a period carrying
+                // "exam": false/null must not import as an exam (audit C1-8)
+                val exam = o.optString("lstype") == "ex" || o.optBoolean("exam", false)
                 // cancelled lessons are IMPORTED, visibly — a free period you
                 // can see (and train in) beats one that silently disappears
                 val cancelled = o.optString("code") == "cancelled"

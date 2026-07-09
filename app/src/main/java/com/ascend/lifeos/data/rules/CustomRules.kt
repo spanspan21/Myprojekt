@@ -179,6 +179,22 @@ object CustomRules {
         }.getOrNull()
     }
 
+    /**
+     * Turns a rule's [RAction] into a real side effect (audit F3). Best-effort;
+     * callers wrap it in runCatching. NOTIFY is display-only by design.
+     *  - GUARD_TIGHT   → start a 90-min phone-free focus block now
+     *  - BEDTIME_EARLY → stamp today so the sleep layer can nudge an earlier bedtime
+     *  - TRAIN_EASY    → stamp today so PlanGenerator swaps to an easy/mobility session
+     */
+    private fun actuate(ctx: Context, action: RAction) {
+        when (action) {
+            RAction.NOTIFY -> {}
+            RAction.GUARD_TIGHT -> WellbeingStore.startFocus(ctx, 90)
+            RAction.BEDTIME_EARLY -> com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.BEDTIME_EARLY_DAY, todayKey())
+            RAction.TRAIN_EASY -> com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.TRAIN_EASY_DAY, todayKey())
+        }
+    }
+
     private fun firedToday(ctx: Context): Int {
         val p = prefs(ctx)
         return if (p.getString("fired_day", "") == todayKey()) p.getInt("fired_count", 0) else 0
@@ -203,6 +219,8 @@ object CustomRules {
             if (!conditionsHold(v1, r, v2)) continue
             val fired = r.copy(lastFiredDay = today)
             upsert(ctx, fired)
+            // Actually DO the action, don't just print it (audit F3).
+            runCatching { actuate(ctx, r.action) }
             out.add(fired to "${r.name}: ${r.metric.label} $v1${r.metric.unit} — ${r.action.label}")
         }
         if (out.isNotEmpty()) {

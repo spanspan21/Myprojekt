@@ -107,7 +107,7 @@ fun BodyScreen() {
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
         JarvisHeader("Body", directive, Mod.Body) {
-            IconOrb(Icons.Rounded.Sync, tint = Mod.Body, size = 34.dp) { connect() }
+            IconOrb(Icons.Rounded.Sync, "Sync health data", tint = Mod.Body, size = 34.dp) { connect() }
         }
         Spacer(Modifier.height(18.dp))
 

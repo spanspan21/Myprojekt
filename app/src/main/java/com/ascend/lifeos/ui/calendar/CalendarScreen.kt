@@ -153,11 +153,11 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                 }
             }
             JarvisHeader("Calendar", contextLine, Mod.Calendar) {
-                IconOrb(Icons.Rounded.CalendarMonth, tint = Mod.Calendar, size = 36.dp) { monthOpen = true }
+                IconOrb(Icons.Rounded.CalendarMonth, "Month view", tint = Mod.Calendar, size = 36.dp) { monthOpen = true }
                 Spacer(Modifier.width(8.dp))
-                IconOrb(Icons.Rounded.Checklist, tint = Mod.Calendar, size = 36.dp) { tasksOpen = true }
+                IconOrb(Icons.Rounded.Checklist, "Tasks", tint = Mod.Calendar, size = 36.dp) { tasksOpen = true }
                 Spacer(Modifier.width(8.dp))
-                IconOrb(Icons.Rounded.Tune, size = 36.dp) { settingsOpen = true }
+                IconOrb(Icons.Rounded.Tune, "Calendar settings", size = 36.dp) { settingsOpen = true }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -345,20 +345,20 @@ private fun MonthOverlay(
                     fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                     modifier = Modifier.weight(1f),
                 )
-                IconOrb(Icons.Rounded.Close, size = 34.dp) { onClose() }
+                IconOrb(Icons.Rounded.Close, "Close", size = 34.dp) { onClose() }
             }
             Spacer(Modifier.height(16.dp))
 
             // ‹ month › navigation
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconOrb(Icons.Rounded.ChevronLeft, size = 36.dp) { month = month.minusMonths(1) }
+                IconOrb(Icons.Rounded.ChevronLeft, "Previous month", size = 36.dp) { month = month.minusMonths(1) }
                 Text(
                     month.format(DateTimeFormatter.ofPattern("MMMM uuuu", Locale.ENGLISH)).uppercase(),
                     color = TextPrimary, fontFamily = Display, fontSize = 19.sp,
                     fontWeight = FontWeight.Bold, letterSpacing = 3.sp,
                     textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
                 )
-                IconOrb(Icons.Rounded.ChevronRight, size = 36.dp) { month = month.plusMonths(1) }
+                IconOrb(Icons.Rounded.ChevronRight, "Next month", size = 36.dp) { month = month.plusMonths(1) }
             }
             Spacer(Modifier.height(18.dp))
 

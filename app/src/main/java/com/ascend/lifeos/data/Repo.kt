@@ -633,14 +633,17 @@ object Repo {
             (0.5 - (rhr - baseline) / 10.0).coerceIn(0.0, 1.0)
         } else null
 
-        val loadHeadroom = 1.0 - trainingLoad()
+        // Only credit load headroom when there is recent training — otherwise a
+        // fully sedentary user banks a free +15% for never training (audit C1-4).
+        val hasTraining = workoutSets(today()) > 0 ||
+            (dayFor(prevKey(todayKey()))?.let { workoutSets(it) } ?: 0) > 0
 
         // renormalize honestly over whichever signals exist
         val parts = buildList {
             add(0.40 to sleepPerf)
             restorative?.let { add(0.20 to it) }
             rhrScore?.let { add(0.25 to it) }
-            add(0.15 to loadHeadroom)
+            if (hasTraining) add(0.15 to (1.0 - trainingLoad()))
         }
         val weightSum = parts.sumOf { it.first }
         var score = parts.sumOf { it.first * it.second } / weightSum * 100
@@ -719,6 +722,13 @@ object Repo {
         if (full && p.lastFullKey != k) {
             val ns = if (p.lastFullKey == prevKey(k)) p.streak + 1 else 1
             p = p.copy(streak = ns, lastFullKey = k, longest = maxOf(p.longest, ns))
+        } else if (!full && p.lastFullKey == k) {
+            // Today was credited complete but no longer qualifies (e.g. a meal was
+            // deleted). Revoke the credit instead of keeping streak/longest forever
+            // — the old code skipped this branch entirely (audit C1-3).
+            val prior = mostRecentCompleteBefore(k)
+            val ns = if (prior != null && prior == prevKey(k)) streakEndingAt(prior) else 0
+            p = p.copy(streak = ns, lastFullKey = prior, longest = maxOf(ns, longestRun()))
         } else if (!full) {
             val yest = prevKey(k)
             if (p.lastFullKey != null && p.lastFullKey != k && p.lastFullKey != yest) {
@@ -734,6 +744,32 @@ object Repo {
             }
         }
         if (p != data.profile) { data = data.copy(profile = p); save() }
+    }
+
+    private fun dayComplete(key: String): Boolean = (dayCompletion(key)?.pct ?: 0f) >= 1f
+
+    /** Most recent complete day strictly before [key], or null (bounded scan). */
+    private fun mostRecentCompleteBefore(key: String): String? {
+        var kk = prevKey(key)
+        repeat(400) { if (dayComplete(kk)) return kk; kk = prevKey(kk) }
+        return null
+    }
+
+    /** Consecutive complete days ending at [key] (freezes ignored → conservative). */
+    private fun streakEndingAt(key: String): Int {
+        var count = 0; var kk = key
+        repeat(400) { if (dayComplete(kk)) { count++; kk = prevKey(kk) } else return count }
+        return count
+    }
+
+    /** Best consecutive-complete run over the recent window — recomputed so a
+     *  revoked "today" credit can't leave `longest` permanently inflated. */
+    private fun longestRun(window: Int = 730): Int {
+        var best = 0; var cur = 0
+        for (key in lastDayKeys(window)) {
+            if (dayComplete(key)) { cur++; best = maxOf(best, cur) } else cur = 0
+        }
+        return best
     }
 
     /**

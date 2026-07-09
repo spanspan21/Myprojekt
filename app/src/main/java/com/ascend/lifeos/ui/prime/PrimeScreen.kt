@@ -29,7 +29,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,7 +76,7 @@ import com.ascend.lifeos.ui.theme.Warn
 // entsteht aus Nachvollziehbarkeit, nicht aus Orakelei.
 
 @Composable
-fun PrimeScreen(onClose: () -> Unit) {
+fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
     val ctx = LocalContext.current
     // tapping the crystal rescores — bump this and the report recomputes (the
     // previous value stays on screen until the new one lands, so no flicker)
@@ -92,7 +94,7 @@ fun PrimeScreen(onClose: () -> Unit) {
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
         JarvisHeader("Prime", report?.index?.let { "Index $it" }, Accent) {
-            IconOrb(Icons.Rounded.Close, tint = TextPrimary, onClick = onClose)
+            IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, onClick = onClose)
         }
         Spacer(Modifier.height(16.dp))
 
@@ -113,8 +115,12 @@ fun PrimeScreen(onClose: () -> Unit) {
             SectionLabel("Now")
             Spacer(Modifier.height(8.dp))
             r.directives.forEachIndexed { i, d ->
+                // Tappable when the directive knows which module to act on — it
+                // deep-links there instead of being a dead-end poster (audit F1).
+                val rowMod = if (d.route != null)
+                    Modifier.fillMaxWidth().clickable { onNavigate(d.route) } else Modifier.fillMaxWidth()
                 Panel(Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(rowMod.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             Modifier.size(26.dp).clip(CircleShape).background(Accent.copy(alpha = 0.14f)),
                             contentAlignment = Alignment.Center,
@@ -126,6 +132,13 @@ fun PrimeScreen(onClose: () -> Unit) {
                             Text(d.text, color = TextPrimary, fontSize = 13.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(Modifier.height(2.dp))
                             Text(d.why, color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp)
+                        }
+                        if (d.route != null) {
+                            Spacer(Modifier.width(8.dp))
+                            Icon(
+                                Icons.Rounded.ChevronRight, "Open",
+                                tint = Accent.copy(alpha = 0.7f), modifier = Modifier.size(20.dp),
+                            )
                         }
                     }
                 }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,8 +39,16 @@ private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, P
 @Composable
 fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
     val vm: TrainingViewModel = viewModel()
-    var route by remember { mutableStateOf(if (vm.activeSessionId != null) TrainRoute.WORKOUT else TrainRoute.HUB) }
-    var testChain by remember { mutableStateOf("") }
+    // rememberSaveable so a running workout / current sub-screen survives process
+    // death instead of dumping the user back to the hub (audit B2-11).
+    var route by rememberSaveable { mutableStateOf(if (vm.activeSessionId != null) TrainRoute.WORKOUT else TrainRoute.HUB) }
+    var testChain by rememberSaveable { mutableStateOf("") }
+
+    // If the workout route was restored but the session didn't survive, fall back
+    // to the hub rather than showing an empty workout.
+    LaunchedEffect(Unit) {
+        if (route == TrainRoute.WORKOUT && vm.activeSessionId == null) route = TrainRoute.HUB
+    }
 
     LaunchedEffect(route) {
         onDockVisible(route != TrainRoute.WORKOUT && route != TrainRoute.ASSESS && route != TrainRoute.SUMMARY && route != TrainRoute.TEST_DAY)

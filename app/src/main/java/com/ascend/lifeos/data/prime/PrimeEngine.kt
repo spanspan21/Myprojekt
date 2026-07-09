@@ -1,7 +1,9 @@
 package com.ascend.lifeos.data.prime
 
 import android.content.Context
+import com.ascend.lifeos.core.dayDateOf
 import com.ascend.lifeos.core.prevKey
+import com.ascend.lifeos.core.todayDate
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.calendar.CalendarDatabase
@@ -37,7 +39,9 @@ data class PrimeGauge(
     val hint: String,       // "Ziel 140 g"
 )
 
-data class PrimeDirective(val text: String, val why: String, val impact: Double)
+// route = the module this directive acts on, so the card can deep-link there
+// pre-filled instead of being a dead end (audit F1). null = informational only.
+data class PrimeDirective(val text: String, val why: String, val impact: Double, val route: String? = null)
 
 data class PrimeReport(
     val index: Int?,                       // 0..100; null solange nichts geloggt ist
@@ -85,25 +89,28 @@ object PrimeEngine {
         val since35 = System.currentTimeMillis() - 35L * 86_400_000
         val recentSets = runCatching { dao.setsInSessionsSince(since35) }.getOrDefault(emptyList())
             .filter { it.setType != SetType.WARMUP }
-        val setsByDay = recentSets.groupBy {
-            Instant.ofEpochMilli(it.loggedAt).atZone(zone).toLocalDate()
-        }
+        // Bucket by the SAME 6am-rollover day as nutrition/hydration/streak, so a
+        // pre-6am workout lands on the same logical day everywhere (audit C1-1/C1-2).
+        val setsByDay = recentSets.groupBy { dayDateOf(it.loggedAt, zone) }
         // Session-Aggregate immer holen und PRO TAG additiv einsetzen, wo Einzel-
         // Sätze fehlen (statt global alles-oder-nichts — das unterschlug bei
         // gemischter Historie ganze Trainingstage → „Training 50" trotz 4/4).
         val sessions35 = runCatching { dao.plainSessionsSince(since35) }.getOrDefault(emptyList())
-        val sessionsByDay = sessions35.groupBy { Instant.ofEpochMilli(it.startedAt).atZone(zone).toLocalDate() }
+        val sessionsByDay = sessions35.groupBy { dayDateOf(it.startedAt, zone) }
         fun daySets(d: LocalDate): Int =
             (setsByDay[d]?.size ?: 0).takeIf { it > 0 } ?: (sessionsByDay[d]?.sumOf { it.totalSets } ?: 0)
+        val today6am = todayDate()
         val loads = (34 downTo 0).map { off ->
-            val d = LocalDate.now().minusDays(off.toLong())
+            val d = today6am.minusDays(off.toLong())
             val setLoad = setsByDay[d]?.sumOf { TrainingLoad.setLoad(it.rpe) } ?: 0.0
             if (setLoad > 0.0) setLoad else (sessionsByDay[d]?.sumOf { it.totalSets.toDouble() } ?: 0.0)
         }
         val load = TrainingLoad.compute(loads)
         val verdict = TrainingLoad.verdict(load)
-        val setsToday = daySets(LocalDate.now())
-        val trainDays7 = (1..7).count { off -> daySets(LocalDate.now().minusDays(off.toLong())) > 0 }
+        val setsToday = daySets(today6am)
+        // Include today (0..6), so today's session counts toward frequency — the fuel
+        // and hydration subscores already include today (audit C1-5).
+        val trainDays7 = (0..6).count { off -> daySets(today6am.minusDays(off.toLong())) > 0 }
         val freshness = runCatching { MuscleRecovery.compute(ctx) }.getOrNull()
         val tired = freshness?.tiredest?.takeIf { it.second < 0.55f }
 
@@ -213,6 +220,7 @@ object PrimeEngine {
                 "Close your protein: $protLeft g left",
                 "Low-fat quark 300 g ≈ 36 g — fits your $kcalLeft kcal left.",
                 2.0 + protLeft / 50.0 + hour / 24.0,
+                route = "fuel",
             )
         }
         val waterLeftGlasses = p.waterGoal - hydrationMl / 250
@@ -221,6 +229,7 @@ object PrimeEngine {
                 "Catch up on hydration: ~$waterLeftGlasses glasses left",
                 "Topping up late disrupts sleep — now's your window.",
                 1.2 + waterLeftGlasses / 8.0,
+                route = "fuel",
             )
         }
         if (screenMin != null && screenMin > screenBudget * 0.8) {
@@ -229,6 +238,7 @@ object PrimeEngine {
                 if (over > 0) "Screen ${mins(over)} over budget" else "Screen budget nearly hit",
                 "Guard on — the evening belongs to logging off.",
                 1.0 + (screenMin.toDouble() / screenBudget),
+                route = "guard",
             )
         }
         if (tired != null) {
@@ -236,6 +246,7 @@ object PrimeEngine {
                 "${muscleDe(tired.first)} needs ~${com.ascend.lifeos.data.training.MuscleRecovery.hoursUntilFresh(tired.first, tired.second)}h rest",
                 "Freshness ${(tired.second * 100).toInt()} % — different muscle group today, or a rest day.",
                 1.5 + (0.55 - tired.second),
+                route = "train",
             )
         }
         if (load.acr > 1.4 && load.ctl >= 0.35) {
@@ -243,6 +254,7 @@ object PrimeEngine {
                 "Load running hot: ACR %.2f".format(load.acr),
                 "Acute well above chronic — light session or mobility instead of volume.",
                 1.8 + (load.acr - 1.4),
+                route = "train",
             )
         }
         if (sleepAvg7 != null && sleepAvg7 < 435) { // Ø unter 7h15
@@ -250,6 +262,7 @@ object PrimeEngine {
                 "Sleep debt: avg ${mins(sleepAvg7.toInt())} over 7 nights",
                 "30 min earlier tonight — recovery is your multiplier.",
                 1.6 + (480 - sleepAvg7) / 240.0,
+                route = "sleep",
             )
         }
         if (examSoon != null && examSoon.dayEpoch - todayEpoch in 0..3) {
@@ -258,6 +271,7 @@ object PrimeEngine {
                 "${examSoon.title}: ${if (days == 0) "TODAY" else "in $days day${if (days == 1) "" else "s"}"}",
                 "Study block in the calendar — the time-block solver finds free slots.",
                 2.2 - days * 0.4,
+                route = "school",
             )
         }
         // erst ab Monatstag ≥ 7 — davor ist die Hochrechnung aus 1–6 Tagen Kaffeesatz
@@ -266,6 +280,7 @@ object PrimeEngine {
                 "Budget pace: ${euro(projectedSpend)} by month-end",
                 "Projection over ${euro(budget)} — cut the daily rate of ${euro(FinanceStore.dailyAvgSpendCents(ctx))}.",
                 1.0 + (projectedSpend.toDouble() / budget - 1.0),
+                route = "finance",
             )
         }
         val openMissions = (if (setsToday == 0) 1 else 0) +
@@ -278,6 +293,7 @@ object PrimeEngine {
                 "Streak risk $risk % (day ${p.streak})",
                 "$openMissions mission${if (openMissions == 1) "" else "s"} open and the evening's running out.",
                 1.4 + risk / 100.0 + p.streak / 60.0,
+                route = "quicklog",
             )
         }
         val ranked = directives.sortedByDescending { it.impact }.take(3)

@@ -150,7 +150,7 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
             else "${domains.size} paths · always one clear next step",
             Mod.Skills,
         ) {
-            IconOrb(Icons.Rounded.BubbleChart, tint = Mod.Skills, size = 36.dp, onClick = onConstellation)
+            IconOrb(Icons.Rounded.BubbleChart, "Constellation view", tint = Mod.Skills, size = 36.dp, onClick = onConstellation)
         }
         Spacer(Modifier.height(16.dp))
 

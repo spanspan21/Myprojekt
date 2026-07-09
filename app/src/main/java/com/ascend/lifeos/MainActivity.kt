@@ -53,12 +53,15 @@ class MainActivity : ComponentActivity() {
             // The proactive layer is dead on 13+ until this is granted — ask once per launch.
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
-        // per-habit reminders are an explicit opt-in, independent of the global toggle
-        runCatching { com.ascend.lifeos.data.life.HabitReminders.reschedule(applicationContext) }
-        com.ascend.lifeos.data.Backup.maybeRun(applicationContext)
-        // Untis/ICS keep themselves fresh (6h throttle) — the cancellation
-        // alarm only ever fires from a sync, so a sync has to actually happen
-        lifecycleScope.launch {
+        // Non-UI startup work off the cold-start main thread (audit B2-3): the
+        // first frame only needs Repo + theme + accent (set synchronously above);
+        // reminders, backup and calendar sync can run in the background.
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            // per-habit reminders are an explicit opt-in, independent of the global toggle
+            runCatching { com.ascend.lifeos.data.life.HabitReminders.reschedule(applicationContext) }
+            runCatching { com.ascend.lifeos.data.Backup.maybeRun(applicationContext) }
+            // Untis/ICS keep themselves fresh (6h throttle) — the cancellation
+            // alarm only ever fires from a sync, so a sync has to actually happen
             runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(applicationContext) }
         }
         handleJarvisIntent(intent)

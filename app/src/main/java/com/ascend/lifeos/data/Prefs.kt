@@ -56,6 +56,8 @@ object Prefs {
     const val SEASON_PHASE = "season_phase"            // "OFF" | "PRE" | "IN" | "PLAYOFF" | "" (auto/none)
     const val DELOAD_UNTIL = "deload_until"            // epoch-day the active deload runs until (0 = none)
     const val TRAIN_AUTO_SCHEDULE = "train_auto_schedule" // true = recommended (auto-place); false = custom (you place)
+    const val TRAIN_EASY_DAY = "train_easy_day"        // dayKey an automation forced an easy session (audit F3/F5)
+    const val BEDTIME_EARLY_DAY = "bedtime_early_day"  // dayKey an automation asked for an earlier bedtime (audit F3)
     // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true
     // Body

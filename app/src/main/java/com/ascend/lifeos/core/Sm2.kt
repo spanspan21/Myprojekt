@@ -6,8 +6,8 @@ package com.ascend.lifeos.core
  * drifted (ease-adaptive ×1.3 vs. a fixed ×3.2) while claiming to mirror
  * each other — this is the single source of truth now.
  *
- * again → 1 day · good → interval × ease · easy → interval × ease × 1.3,
- * ease += 0.05 (starts at 2.5). Interval clamped 1..60 days.
+ * again → 1 day · good → interval × ease · easy → ease += 0.05, then
+ * interval × ease × 1.3 (starts at 2.5). Interval clamped 1..60 days.
  */
 object Sm2 {
     const val GRADE_AGAIN = 0
@@ -25,7 +25,9 @@ object Sm2 {
         var e = ease
         val iv = when (grade) {
             GRADE_AGAIN -> MIN_INTERVAL
-            GRADE_EASY -> { e += 0.05; intervalDays * ease * 1.3 }
+            // increment ease first, then grow the interval with the NEW ease so
+            // the stored ease and the interval stay consistent (audit C1-8)
+            GRADE_EASY -> { e += 0.05; intervalDays * e * 1.3 }
             else -> intervalDays * ease
         }.coerceIn(MIN_INTERVAL, MAX_INTERVAL)
         return Next(iv, e)

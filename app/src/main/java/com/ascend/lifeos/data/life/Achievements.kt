@@ -162,6 +162,18 @@ object Achievements {
             }
         }
 
+        // School — overall Notenschnitt milestones (lower is better, 1.0 = best).
+        // The docstring promised a "school" module but scan() never produced one
+        // (audit F13). Idempotent via the natural id per mark.
+        runCatching {
+            val avg = com.ascend.lifeos.data.school.SchoolStore.overallGrade(ctx) ?: return@runCatching
+            for (m in doubleArrayOf(3.0, 2.5, 2.0, 1.7, 1.5, 1.3)) {
+                if (avg <= m + 1e-9) {
+                    if (add(ctx, "school_avg_${num(m)}", "school", "Ø ${num(m)} reached", "Overall average at or below ${num(m)}")) added++
+                }
+            }
+        }
+
         return added
     }
 }

@@ -70,7 +70,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                 JarvisHeader(
                     "Documentation", "How every part of JARVIS works", Mod.Home,
                     overline = "The complete manual",
-                ) { IconOrb(Icons.Rounded.Close, tint = TextPrimary, onClick = onClose) }
+                ) { IconOrb(Icons.Rounded.Close, "Close", tint = TextPrimary, onClick = onClose) }
                 Spacer(Modifier.height(10.dp))
                 Text(
                     "Nothing is hidden. Every score, every tool and every algorithm is spelled out below — " +

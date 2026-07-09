@@ -72,7 +72,7 @@ import kotlin.math.sin
 private enum class Phase { MATERIALIZE, CALIBRATE, OPERATOR, TUNE }
 
 /** Profile the boot writes — mirrors the old questionnaire's defaults. */
-private const val DEFAULT_NAME = "Max"
+private const val DEFAULT_NAME = "Operator" // neutral, on-theme — not a developer's name (audit A10)
 private val DEFAULT_OBJECTIVES = listOf("train", "learn", "sleep", "focus", "fuel")
 
 @Composable
