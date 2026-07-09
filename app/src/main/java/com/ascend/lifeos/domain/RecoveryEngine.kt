@@ -52,4 +52,22 @@ object RecoveryEngine {
         if (morningEnergy == 3) score += 3.0
         return Math.round(score).toInt().coerceIn(5, 99)
     }
+
+    /**
+     * Pure sleep-quality score (0-100), Samsung-Health-style: duration vs an 8h
+     * need (55%) + deep/REM share vs 35% (30%) + wake penalty (15%). Stage-less
+     * nights renormalize instead of scoring "0% quality". Deliberately separate
+     * from [score], which also folds in training load, RHR baseline and check-ins.
+     */
+    fun sleepQuality(sleepMin: Int?, remMin: Int, deepMin: Int, awakeMin: Int): Int? {
+        if (sleepMin == null || sleepMin <= 0) return null
+        val duration = (sleepMin / 450.0).coerceIn(0.0, 1.0)
+        val share: Double? =
+            if (remMin + deepMin > 0) ((remMin + deepMin).toDouble() / sleepMin).coerceIn(0.0, 0.35) / 0.35 else null
+        val awakeFrac = (awakeMin.toDouble() / (sleepMin + awakeMin).coerceAtLeast(1)).coerceIn(0.0, 0.25) / 0.25
+        val score =
+            if (share != null) (0.55 * duration + 0.30 * share + 0.15 * (1.0 - awakeFrac)) * 100
+            else (0.55 * duration + 0.15 * (1.0 - awakeFrac)) / 0.70 * 100
+        return Math.round(score).toInt().coerceIn(10, 99)
+    }
 }

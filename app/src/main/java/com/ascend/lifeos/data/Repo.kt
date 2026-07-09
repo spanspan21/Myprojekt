@@ -640,26 +640,10 @@ object Repo {
      * Deliberately separate from recovery, which also folds in training load,
      * resting-HR baseline and check-ins — the two are not supposed to match.
      */
-    fun sleepScore(h: HealthSnapshot? = data.health): Int? {
-        val sleepMin = h?.sleepMin ?: return null
-        if (sleepMin <= 0) return null
-        // Samsung treats 6-9h as the healthy band, not a hard 8h wall — full
-        // duration credit from 7h30, partial credit down to short nights.
-        val duration = (sleepMin / 450.0).coerceIn(0.0, 1.0)
-        // 35% deep+REM = full quality credit: the typical healthy share.
-        // Calibrated against Samsung Health on real nights (they run ~±2 pts
-        // since they also fold sleeping heart rate in — we deliberately don't).
-        // Stage-less nights renormalize instead of scoring "0% quality".
-        val share: Double? =
-            if (h.rem + h.deep > 0) ((h.rem + h.deep).toDouble() / sleepMin).coerceIn(0.0, 0.35) / 0.35 else null
-        val awakeFrac = (h.awake.toDouble() / (sleepMin + h.awake).coerceAtLeast(1)).coerceIn(0.0, 0.25) / 0.25
-        val score =
-            if (share != null) (0.55 * duration + 0.30 * share + 0.15 * (1.0 - awakeFrac)) * 100
-            else (0.55 * duration + 0.15 * (1.0 - awakeFrac)) / 0.70 * 100
-        // round like every consumer scorer does — truncating systematically
-        // reads one point low
-        return Math.round(score).toInt().coerceIn(10, 99)
-    }
+    fun sleepScore(h: HealthSnapshot? = data.health): Int? =
+        com.ascend.lifeos.domain.RecoveryEngine.sleepQuality(
+            sleepMin = h?.sleepMin, remMin = h?.rem ?: 0, deepMin = h?.deep ?: 0, awakeMin = h?.awake ?: 0,
+        )
 
     /** Rolling 14-night sleep debt vs the learned need, in minutes. */
     fun sleepDebtMin(needMin: Int = sleepNeedMin()): Int =
