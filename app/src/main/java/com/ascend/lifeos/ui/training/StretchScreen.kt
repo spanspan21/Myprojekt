@@ -92,7 +92,7 @@ fun StretchScreen(onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
-            Text("Stretching", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Stretching", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(20.dp))
 
@@ -107,25 +107,25 @@ fun StretchScreen(onBack: () -> Unit) {
                     }, corner = 16.dp) {
                         Column(Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(routine.name, color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                Text(routine.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                                 if (isSuggested) {
                                     Box(
                                         Modifier.clip(RoundedCornerShape(8.dp)).background(Good.copy(alpha = 0.16f))
                                             .padding(horizontal = 8.dp, vertical = 3.dp),
-                                    ) { Text("SUGGESTED NOW", color = Good, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                                    ) { Text("SUGGESTED NOW", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
                                     Spacer(Modifier.width(6.dp))
                                 }
                                 // context badge — Morning / Pre-training / Evening / Athlete
                                 Box(
                                     Modifier.clip(RoundedCornerShape(8.dp)).background(Cyan.copy(alpha = 0.12f))
                                         .padding(horizontal = 8.dp, vertical = 3.dp),
-                                ) { Text(routine.context.label.uppercase(), color = Cyan, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                                ) { Text(routine.context.label.uppercase(), color = Cyan, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
                             }
                             Spacer(Modifier.height(3.dp))
-                            Text("${routine.durationMin} min · ${routine.exercises.size} drills · ${routine.focus}", color = TextDim, fontSize = 11.sp)
+                            Text("${routine.durationMin} min · ${routine.exercises.size} drills · ${routine.focus}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
                             if (routine.purpose.isNotBlank()) {
                                 Spacer(Modifier.height(6.dp))
-                                Text(routine.purpose, color = TextMuted, fontSize = 11.sp, lineHeight = 15.sp)
+                                Text(routine.purpose, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, lineHeight = 15.sp)
                             }
                         }
                     }
@@ -150,18 +150,18 @@ fun StretchScreen(onBack: () -> Unit) {
                     // the anatomical body sits inside the countdown ring — the
                     // stretched muscles are lit, so you see what you're opening
                     ExerciseFigure("", ex.name, color = Cyan, modifier = Modifier.height(84.dp), showBack = false)
-                    Text("$remaining", color = TextPrimary, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
-                    Text(if (ex.reps != null) "≈ ${ex.reps} reps" else "seconds", color = TextDim, fontSize = 11.sp)
+                    Text("$remaining", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold)
+                    Text(if (ex.reps != null) "≈ ${ex.reps} reps" else "seconds", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
                 }
             }
             Spacer(Modifier.height(24.dp))
 
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(ex.name, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(ex.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 if (ex.cue.isNotBlank()) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        ex.cue, color = TextMuted, fontSize = 12.5.sp, textAlign = TextAlign.Center,
+                        ex.cue, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, textAlign = TextAlign.Center,
                         lineHeight = 17.sp, modifier = Modifier.padding(horizontal = 6.dp),
                     )
                 }
@@ -171,13 +171,13 @@ fun StretchScreen(onBack: () -> Unit) {
                         Text(
                             if (isSecondSide) "Right side" else "Left side",
                             color = if (isSecondSide) Purple else Cyan,
-                            fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                     }
                 }
                 Spacer(Modifier.height(4.dp))
-                Text("${exIndex + 1}/${routine.exercises.size}", color = TextDim, fontSize = 12.sp)
+                Text("${exIndex + 1}/${routine.exercises.size}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
             }
 
             Spacer(Modifier.weight(0.3f))
@@ -198,7 +198,7 @@ fun StretchScreen(onBack: () -> Unit) {
                     Modifier.clip(RoundedCornerShape(16.dp)).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                         .clickable { running = false }.padding(horizontal = 20.dp, vertical = 16.dp),
-                ) { Text("End", color = Red, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                ) { Text("End", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.weight(0.3f))
         }

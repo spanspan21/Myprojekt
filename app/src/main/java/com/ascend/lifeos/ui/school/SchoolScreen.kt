@@ -95,7 +95,7 @@ private fun pill(text: String, on: Boolean, modifier: Modifier = Modifier, onCli
             .border(0.5.dp, if (on) SchoolAccent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center,
-    ) { Text(text, color = if (on) SchoolAccent else TextDim, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+    ) { Text(text, color = if (on) SchoolAccent else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -155,12 +155,12 @@ fun SchoolScreen(onClose: () -> Unit) {
                     }
                     Panel(Modifier.fillMaxWidth()) {
                         Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                            Text(ex.title, color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(ex.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 (if (daysLeft <= 0) "Today" else "in $daysLeft day${if (daysLeft == 1) "" else "s"}") +
                                     (needTxt?.let { " · $it" } ?: ""),
-                                color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                             )
                         }
                     }
@@ -229,15 +229,15 @@ private fun GradeHero(overall: Double, subjectCount: Int) {
                 modifier = Modifier.size(72.dp),
                 stroke = 6.dp,
             ) {
-                Text(fmt1(overall), color = TextPrimary, fontFamily = Display, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text(fmt1(overall), color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(18.dp))
             Column {
-                Text("Notenschnitt", color = TextPrimary, fontFamily = Display, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text("Notenschnitt", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(3.dp))
                 Text(
                     "Ø of $subjectCount ${if (subjectCount == 1) "subject" else "subjects"} · each counts the same",
-                    color = TextDim, fontSize = 11.5.sp, fontFamily = Body, lineHeight = 15.sp,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 15.sp,
                 )
             }
         }
@@ -265,24 +265,24 @@ private fun SubjectCard(
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(subject.name, color = TextPrimary, fontFamily = Display, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text(subject.name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(2.dp))
                     Text(
                         (if (subject.points) "0–15 points" else "grades 1–6") +
                             " · ${grades.size} ${if (grades.size == 1) "grade" else "grades"}",
-                        color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                     )
                 }
                 if (avg != null && grade != null) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             if (subject.points) "${fmt1(avg)} P" else fmt1(avg),
-                            color = gradeColor(grade), fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                            color = gradeColor(grade), fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold,
                         )
-                        Text("≈ ${SchoolStore.gradeLabel(grade)}", color = TextDim, fontSize = 10.sp, fontFamily = Body)
+                        Text("≈ ${SchoolStore.gradeLabel(grade)}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
                     }
                 } else {
-                    Text("—", color = TextDim, fontSize = 20.sp, fontFamily = Display)
+                    Text("—", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontFamily = Display)
                 }
             }
 
@@ -298,7 +298,7 @@ private fun SubjectCard(
                 Spacer(Modifier.height(12.dp))
 
                 if (grades.isEmpty()) {
-                    Text("No grades yet — add the first one.", color = TextDim, fontSize = 11.5.sp, fontFamily = Body)
+                    Text("No grades yet — add the first one.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
                 } else {
                     grades.forEach { g ->
                         GradeRow(subject, g) { onDeleteGrade(g) }
@@ -314,7 +314,7 @@ private fun SubjectCard(
                             .border(0.5.dp, SchoolAccent.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
                             .clickable(onClick = onAddGrade).padding(vertical = 11.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("+ Add grade", color = SchoolAccent, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text("+ Add grade", color = SchoolAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Crit.copy(alpha = 0.10f))
@@ -335,11 +335,11 @@ private fun SplitStat(label: String, avg: Double?, subject: Subject, modifier: M
             .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(11.dp))
             .padding(vertical = 9.dp, horizontal = 11.dp),
     ) {
-        Text(label.uppercase(), color = TextDim, fontSize = 8.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        Text(label.uppercase(), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         Spacer(Modifier.height(3.dp))
         Text(
             if (avg == null) "—" else if (subject.points) "${fmt1(avg)} P" else fmt1(avg),
-            color = TextPrimary, fontFamily = Display, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+            color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -353,24 +353,24 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
     ) {
         Text(
             SchoolStore.gradeText(subject, g.value),
-            color = TextPrimary, fontFamily = Display, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+            color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
             modifier = Modifier.width(if (subject.points) 74.dp else 40.dp),
         )
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     if (g.oral) "mündlich" else "schriftlich",
-                    color = TextMuted, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
                 if (g.weight == SchoolStore.WEIGHT_DOUBLE) {
                     Spacer(Modifier.width(6.dp))
-                    Text("×2", color = SchoolAccent, fontSize = 9.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("×2", color = SchoolAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
             if (g.note.isNotBlank() || g.ts > 0) {
                 Text(
                     listOfNotNull(g.note.ifBlank { null }, dateOfTs(g.ts).ifBlank { null }).joinToString(" · "),
-                    color = TextDim, fontSize = 10.sp, fontFamily = Body,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
                 )
             }
         }
@@ -391,7 +391,7 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
 
     JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            Text("New subject", color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("New subject", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
             LifeField("Name (e.g. Mathe)", name, SchoolAccent) { name = it }
             Spacer(Modifier.height(14.dp))
@@ -410,7 +410,7 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
                     .clickable(enabled = name.isNotBlank()) { SchoolStore.addSubject(ctx, name, points); onSaved(); onDismiss() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Add subject", color = Void, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Add subject", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -436,8 +436,8 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
 
     JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
-            Text("New grade", color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text(subject.name, color = TextDim, fontSize = 12.sp, fontFamily = Body)
+            Text("New grade", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
+            Text(subject.name, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
             Spacer(Modifier.height(14.dp))
 
             SectionLabel("Grade  ·  $preview", accent = SchoolAccent)
@@ -483,7 +483,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
                     .clickable { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); onSaved(); onDismiss() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Save grade", color = Void, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Save grade", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(24.dp))
         }
     }

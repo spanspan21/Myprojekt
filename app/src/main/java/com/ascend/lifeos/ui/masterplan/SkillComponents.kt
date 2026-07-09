@@ -102,7 +102,7 @@ fun EnergyBadge(level: EnergyLevel, accent: Color) {
     Box(
         Modifier.clip(RoundedCornerShape(8.dp)).background(accent.copy(alpha = 0.15f))
             .padding(horizontal = 9.dp, vertical = 5.dp),
-    ) { Text(label, color = accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+    ) { Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
 }
 
 // ---- Node detail sheet (shared by Focus & Vault) ----------------------------
@@ -134,9 +134,9 @@ fun NodeSheet(
                 ) { Icon(Icons.Rounded.Bolt, null, tint = accent, modifier = Modifier.size(18.dp)) }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(node.node.title, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(node.node.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
                     if (node.node.subtitle.isNotBlank()) {
-                        Text(node.node.subtitle, color = TextMuted, fontSize = 13.sp, lineHeight = 17.sp)
+                        Text(node.node.subtitle, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 17.sp)
                     }
                 }
             }
@@ -146,14 +146,14 @@ fun NodeSheet(
                 EnergyBadge(node.node.requiredEnergy, accent)
                 Box(
                     Modifier.clip(RoundedCornerShape(8.dp)).background(GlassFill).padding(horizontal = 9.dp, vertical = 5.dp),
-                ) { Text("${node.node.estimatedMinutes} MIN", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                ) { Text("${node.node.estimatedMinutes} MIN", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
             }
 
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProgressBar(progress = node.progress, color = accent, modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(10.dp))
-                Text("${node.doneCount}/${node.tasks.size}", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text("${node.doneCount}/${node.tasks.size}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold)
             }
 
             // keep the spacing the old components.SectionLabel carried built in
@@ -187,11 +187,11 @@ fun TaskRow(task: TaskEntity, onToggle: (Boolean) -> Unit) {
             Text(
                 task.title,
                 color = if (done) TextDim else TextPrimary,
-                fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp,
                 textDecoration = if (done) TextDecoration.LineThrough else TextDecoration.None,
             )
             if (task.detail.isNotBlank()) {
-                Text(task.detail, color = TextMuted, fontSize = 12.5.sp, lineHeight = 17.sp)
+                Text(task.detail, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, lineHeight = 17.sp)
             }
         }
     }
@@ -217,9 +217,9 @@ fun ResourceRow(r: ResourceEntity, accent: Color) {
         Icon(iconFor(r.kind), null, tint = accent, modifier = Modifier.size(17.dp))
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(r.title, color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+            Text(r.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.SemiBold)
             if (r.provider.isNotBlank()) {
-                Text(r.provider, color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.Medium)
+                Text(r.provider, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Medium)
             }
         }
         Spacer(Modifier.width(8.dp))

@@ -211,7 +211,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "COMMAND", color = Mod.Home, fontFamily = Display,
-                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -221,10 +221,10 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                         .border(0.5.dp, Mod.Home.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
                         .padding(horizontal = 15.dp, vertical = 13.dp),
                 ) {
-                    if (input.isEmpty()) Text("water 2 · 71.5 kg · focus 50 · hockey tue 17-19", color = TextDim, fontSize = 13.sp, fontFamily = Body)
+                    if (input.isEmpty()) Text("water 2 · 71.5 kg · focus 50 · hockey tue 17-19", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
                     BasicTextField(
                         value = input, onValueChange = { input = it }, singleLine = true,
-                        textStyle = TextStyle(color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold),
+                        textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold),
                         cursorBrush = SolidColor(Mod.Home),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                         keyboardActions = KeyboardActions(onGo = {
@@ -253,14 +253,14 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Text(
                     text, color = if (ok) Good else Warn,
-                    fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
 
             Spacer(Modifier.height(16.dp))
             Text(
                 "WHAT I UNDERSTAND", color = TextDim, fontFamily = Display,
-                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(6.dp))
             listOf(
@@ -271,7 +271,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 "hockey tue 17-19 · exam fri 9 — calendar",
                 "train · fuel · body · skills · report — jump",
             ).forEach {
-                Text("· $it", color = TextDim, fontSize = 11.5.sp, fontFamily = Body, lineHeight = 18.sp)
+                Text("· $it", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 18.sp)
             }
             Spacer(Modifier.height(14.dp))
         }

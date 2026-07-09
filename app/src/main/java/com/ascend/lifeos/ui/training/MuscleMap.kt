@@ -96,7 +96,7 @@ private fun BodyFigure(front: Boolean, fillFor: (Muscle) -> Color?, modifier: Mo
         Spacer(Modifier.height(6.dp))
         Text(
             if (front) "FRONT" else "BACK",
-            color = TextDim, fontFamily = Display, fontSize = 8.5.sp,
+            color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
         )
     }

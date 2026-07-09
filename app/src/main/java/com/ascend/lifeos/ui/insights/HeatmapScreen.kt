@@ -219,11 +219,11 @@ fun HeatmapScreen(onClose: () -> Unit) {
         ) {
             Text(
                 "LIFE HEATMAP", color = metric.tint, fontFamily = Display,
-                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Text(
                 "The last 365 days", color = TextPrimary, fontFamily = Display,
-                fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(end = 52.dp),
             )
             Spacer(Modifier.height(16.dp))
@@ -240,7 +240,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                 Spacer(Modifier.height(16.dp))
                 com.ascend.lifeos.ui.kit.ShimmerPanel(height = 180.dp)
                 Spacer(Modifier.height(10.dp))
-                Text("Painting the year…", color = TextDim, fontSize = 13.sp, fontFamily = Body)
+                Text("Painting the year…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
                 return@Column
             }
 
@@ -252,7 +252,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                     append("${filled.size} of 365 days with data")
                     avgPct?.let { append(" · Ø $it%") }
                 },
-                color = TextDim, fontSize = 11.5.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
             )
             Spacer(Modifier.height(14.dp))
 
@@ -347,7 +347,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                     Column(Modifier.padding(14.dp)) {
                         Text(
                             LocalDate.parse(f.key).format(DateTimeFormatter.ofPattern("EEE · d MMM yyyy", Locale.ENGLISH)),
-                            color = TextPrimary, fontFamily = Display, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                            color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(10.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -366,7 +366,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                 }
             } else {
                 Spacer(Modifier.height(12.dp))
-                Text("Tap a cell for that day's numbers.", color = TextDim, fontSize = 11.5.sp, fontFamily = Body)
+                Text("Tap a cell for that day's numbers.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
             }
         }
         CloseOrb(onClose)
@@ -390,7 +390,7 @@ private fun MetricChip(m: HeatMetric, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             m.label, color = if (selected) m.tint else TextMuted, fontFamily = Display,
-            fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
         )
     }
 }
@@ -403,7 +403,7 @@ private fun LegendCell(color: Color) {
 @Composable
 private fun LegendLabel(text: String) {
     Text(
-        text, color = TextDim, fontFamily = Display, fontSize = 8.sp,
+        text, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8,
         fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         modifier = Modifier.padding(horizontal = 2.dp),
     )
@@ -419,7 +419,7 @@ private fun MiniPill(text: String, done: Boolean) {
     ) {
         Text(
             text, color = tint, fontFamily = Display,
-            fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
         )
     }
 }
@@ -431,7 +431,7 @@ private fun DetailStat(label: String, value: String) {
         Spacer(Modifier.height(2.dp))
         Text(
             label, color = TextDim, fontFamily = Display,
-            fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
         )
     }
 }

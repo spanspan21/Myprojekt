@@ -251,7 +251,7 @@ private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: 
         Text(
             text = star.node.node.title,
             color = labelColor,
-            fontSize = 11.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s11,
             lineHeight = 13.sp,
             fontWeight = if (star.state == NodeState.LOCKED) FontWeight.Medium else FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -262,7 +262,7 @@ private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: 
             Text(
                 text = "${star.node.doneCount}/${star.node.tasks.size} · ${star.node.node.estimatedMinutes}m",
                 color = TextMuted,
-                fontSize = 9.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.offset(y = star.radius * 2 + 34.dp),
             )

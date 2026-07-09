@@ -49,8 +49,8 @@ internal fun LifeScaffold(title: String, context: String, accent: Color, onClose
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = TextPrimary, fontFamily = Display, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text(context, color = accent, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text(title, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold)
+                Text(context, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
@@ -73,10 +73,10 @@ internal fun LifeField(placeholder: String, value: String, accent: Color, onValu
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
             .padding(horizontal = 13.dp, vertical = 11.dp),
     ) {
-        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = 13.sp, fontFamily = Body)
+        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
         BasicTextField(
             value, onValue, singleLine = true,
-            textStyle = TextStyle(color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold),
+            textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(accent), modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -109,15 +109,15 @@ fun MindScreen(onClose: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
             Column(Modifier.padding(16.dp)) {
-                Text("Best moment today?", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("Best moment today?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(5.dp))
                 LifeField("one line is enough", a1, MindAccent) { a1 = it; saved = false }
                 Spacer(Modifier.height(10.dp))
-                Text("What drained you?", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("What drained you?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(5.dp))
                 LifeField("name it, then let it go", a2, MindAccent) { a2 = it; saved = false }
                 Spacer(Modifier.height(10.dp))
-                Text("Grateful for?", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("Grateful for?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(5.dp))
                 LifeField("small counts", a3, MindAccent) { a3 = it; saved = false }
                 Spacer(Modifier.height(12.dp))
@@ -131,7 +131,7 @@ fun MindScreen(onClose: () -> Unit) {
                                 .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                                 .clickable { mood = v; saved = false }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
-                        ) { Text(label, color = if (on) c else TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                        ) { Text(label, color = if (on) c else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                     Spacer(Modifier.weight(1f))
                     Box(
@@ -145,7 +145,7 @@ fun MindScreen(onClose: () -> Unit) {
                     ) {
                         Text(
                             if (saved) "Saved ✓" else "Save",
-                            color = if (saved) Good else Void, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                            color = if (saved) Good else Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                         )
                     }
                 }
@@ -163,7 +163,7 @@ fun MindScreen(onClose: () -> Unit) {
             ).forEach { (preset, label) ->
                 Panel(Modifier.weight(1f), corner = 14.dp, onClick = { breathing = preset }) {
                     Text(
-                        label, color = MindAccent, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        label, color = MindAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 13.dp).fillMaxWidth(), textAlign = TextAlign.Center,
                     )
                 }
@@ -180,9 +180,9 @@ fun MindScreen(onClose: () -> Unit) {
             archive.forEach { (k, lines) ->
                 Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
                     Column(Modifier.padding(13.dp)) {
-                        Text(k, color = MindAccent, fontFamily = Display, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                        Text(k, color = MindAccent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         lines.filter { it.isNotBlank() }.forEach {
-                            Text("· $it", color = TextMuted, fontSize = 12.sp, fontFamily = Body, lineHeight = 17.sp)
+                            Text("· $it", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp)
                         }
                     }
                 }
@@ -245,14 +245,14 @@ private fun BreathingOverlay(inhale: Int, hold: Int, exhale: Int, onClose: () ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         when (phase) { 0 -> "BREATHE IN"; 1 -> "HOLD"; else -> "BREATHE OUT" },
-                        color = MindAccent, fontFamily = Display, fontSize = 13.sp,
+                        color = MindAccent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
                     )
                     Text("$secondsLeft", color = TextPrimary, style = metricStyle(44))
                 }
             }
             Spacer(Modifier.height(22.dp))
-            Text("$cycles cycles · tap anywhere to finish", color = TextDim, fontSize = 12.sp, fontFamily = Body)
+            Text("$cycles cycles · tap anywhere to finish", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
         }
     }
 }
@@ -281,12 +281,12 @@ fun GoalsScreen(onClose: () -> Unit) {
                         }
                         Spacer(Modifier.width(13.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(g.title, color = TextPrimary, fontSize = 15.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                            Text(g.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                             val (paceText, onCourse) = quarterPaceLine(progress)
                             Text(
                                 paceText,
                                 color = if (onCourse) Good else Warn,
-                                fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                                fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                             )
                         }
                         Icon(
@@ -299,24 +299,24 @@ fun GoalsScreen(onClose: () -> Unit) {
                         val p = krProgress(kr, ctx)
                         Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(kr.label, color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(kr.label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 Box(Modifier.fillMaxWidth().padding(top = 4.dp).height(5.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
                                     Box(Modifier.fillMaxWidth(p.coerceIn(0.02f, 1f)).fillMaxHeight().clip(CircleShape).background(Mod.Home))
                                 }
                             }
                             if (kr.metric.isBlank()) {
                                 Spacer(Modifier.width(10.dp))
-                                Text("−", color = TextMuted, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                                Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).clickable {
                                         LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
                                     }.padding(horizontal = 7.dp))
-                                Text("+", color = TextMuted, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                                Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).clickable {
                                         LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
                                     }.padding(horizontal = 7.dp))
                             } else {
                                 Spacer(Modifier.width(10.dp))
-                                Text("AUTO", color = Mod.Home, fontFamily = Display, fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+                                Text("AUTO", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
                             }
                         }
                     }
@@ -328,7 +328,7 @@ fun GoalsScreen(onClose: () -> Unit) {
         if (goals.size < LifeStores.MAX_GOALS) {
             Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = { addOpen = true }) {
                 Text(
-                    "+ Add quarter goal", color = Mod.Home, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    "+ Add quarter goal", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
                 )
             }
@@ -396,14 +396,14 @@ private fun HabitsBlock() {
                         .border(1.dp, if (done) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
                         .clickable(enabled = scheduled) { LifeStores.setHabitDone(ctx, h.id, today, !done) },
                     contentAlignment = Alignment.Center,
-                ) { if (done) Text("✓", color = Void, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                ) { if (done) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(11.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(h.title, color = if (scheduled) TextPrimary else TextDim, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(h.title, color = if (scheduled) TextPrimary else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     val streak = LifeStores.habitStreak(ctx, h.id)
                     Text(
                         if (scheduled) "streak $streak" else "not scheduled today · streak $streak",
-                        color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                     )
                 }
                 Icon(
@@ -426,7 +426,7 @@ private fun HabitsBlock() {
                     title = ""
                 }
                 .padding(horizontal = 14.dp, vertical = 10.dp),
-        ) { Text("Add", color = Void, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+        ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
     }
 }
 
@@ -441,7 +441,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
 
     JarvisSheet(onDismiss = onDone) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
-            Text("NEW GOAL", color = Mod.Home, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+            Text("NEW GOAL", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
             Spacer(Modifier.height(12.dp))
             LifeField("Goal title (e.g. Muscle-up by October)", title, Mod.Home) { title = it }
             Spacer(Modifier.height(8.dp))
@@ -456,9 +456,9 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                         .border(1.dp, if (weightBind) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
                         .clickable { weightBind = !weightBind },
                     contentAlignment = Alignment.Center,
-                ) { if (weightBind) Text("✓", color = Void, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                ) { if (weightBind) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(9.dp))
-                Text("Track weight to", color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("Track weight to", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(8.dp))
                 Box(Modifier.width(80.dp)) { LifeField("kg", targetKg, Mod.Home) { targetKg = it.filter { c -> c.isDigit() || c == '.' } } }
             }
@@ -481,7 +481,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                     }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Create goal", color = Void, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Create goal", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(16.dp))
         }
     }

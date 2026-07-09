@@ -235,7 +235,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                         Spacer(Modifier.height(9.dp))
                         MacroLegend("Fat", totals.fat, p.fatGoal, Purple)
                         Spacer(Modifier.height(10.dp))
-                        Text("View micros →", color = Mod.Fuel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("View micros →", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -291,7 +291,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             }
 
             Spacer(Modifier.height(20.dp))
-            Text("MEALS", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Text("MEALS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
             MEAL_SLOTS.forEach { (code, name) ->
                 val slotMeals = day.meals.filter { it.meal == code }
@@ -345,7 +345,7 @@ private fun JarvisReactionBanner() {
             Box(Modifier.size(7.dp).clip(CircleShape).background(blue))
             Spacer(Modifier.width(10.dp))
             Text(
-                last, color = TextPrimary, fontSize = 12.5.sp, fontFamily = com.ascend.lifeos.ui.theme.Body,
+                last, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = com.ascend.lifeos.ui.theme.Body,
                 fontWeight = FontWeight.SemiBold, lineHeight = 17.sp,
             )
         }
@@ -380,7 +380,7 @@ private fun DayCursor(offset: Int, dayKey: String, onPrev: () -> Unit, onNext: (
         Text(
             dayLabel(offset, dayKey).uppercase(),
             color = if (offset == 0) TextPrimary else Mod.Fuel,
-            fontFamily = Display, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             modifier = Modifier.weight(1f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
@@ -452,13 +452,13 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
             if (kcal == 0) {
                 // der Tag beginnt mit Budget, nicht mit Null (Kap. 39)
                 TickerNumber(kcalGoal, fontSize = numSize)
-                Text("kcal free", color = TextDim, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text("kcal free", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.Bold, maxLines = 1)
             } else {
                 TickerNumber(kcal, fontSize = numSize)
                 Text(
                     if (left >= 0) "$left left" else "+${-left} over",
                     color = if (left >= 0) TextDim else Warn,
-                    fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.Bold, maxLines = 1,
                 )
             }
         }
@@ -470,8 +470,8 @@ private fun MacroLegend(label: String, value: Int, goal: Int, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(8.dp))
-        Text(label, color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-        Text("$value/$goal g", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text("$value/$goal g", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -499,16 +499,16 @@ private fun TdeeSuggestCard() {
         Column(Modifier.padding(14.dp)) {
             Text(
                 "RECALIBRATION", color = Mod.Fuel,
-                fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 "Your real expenditure is ~${s.expenditure} kcal (${s.daysOfData} logged days, " +
                     "trend %+.2f kg/week). Suggested goal: ${s.suggestedKcal} kcal.".format(s.trendKgPerWeek),
-                color = TextMuted, fontSize = 12.5.sp, lineHeight = 18.sp,
+                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, lineHeight = 18.sp,
             )
             if (s.confidence == "low") {
-                Text("Confidence still low — more logged days sharpen this.", color = TextDim, fontSize = 10.5.sp)
+                Text("Confidence still low — more logged days sharpen this.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
             }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -521,7 +521,7 @@ private fun TdeeSuggestCard() {
                             suggestion = null
                         }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("Adopt ${s.suggestedKcal} kcal", color = Mod.Fuel, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                ) { Text("Adopt ${s.suggestedKcal} kcal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
@@ -530,7 +530,7 @@ private fun TdeeSuggestCard() {
                             suggestion = null
                         }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("Keep current", color = TextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                ) { Text("Keep current", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
             }
         }
     }
@@ -547,7 +547,7 @@ private fun ProteinSpread(day: DayData) {
             Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 15.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("PROTEIN SPREAD", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text("PROTEIN SPREAD", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                 perSlot.forEach { (code, grams) ->
@@ -567,12 +567,12 @@ private fun ProteinSpread(day: DayData) {
                             }
                         }
                         Spacer(Modifier.height(3.dp))
-                        Text(code.uppercase(), color = TextDim, fontSize = 7.5.sp, fontWeight = FontWeight.Bold)
+                        Text(code.uppercase(), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s7_5, fontWeight = FontWeight.Bold)
                     }
                 }
             }
             Spacer(Modifier.weight(1f))
-            Text("$hit/4 meals ≥20g", color = if (hit == 4) Good else TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold)
+            Text("$hit/4 meals ≥20g", color = if (hit == 4) Good else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -673,22 +673,22 @@ private fun HydrationCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.WaterDrop, null, tint = crest, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("HYDRATION", color = if (goalReached) Champagne else Ivory.copy(alpha = 0.75f), fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, style = shadow)
+                    Text("HYDRATION", color = if (goalReached) Champagne else Ivory.copy(alpha = 0.75f), fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, style = shadow)
                     if (goalReached) {
                         Spacer(Modifier.width(7.dp))
-                        Text("✓ Goal reached", color = Champagne, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, style = shadow)
+                        Text("✓ Goal reached", color = Champagne, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, style = shadow)
                     }
                 }
                 Spacer(Modifier.height(7.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         "%.1f".format(Locale.US, totalMl / 1000.0),
-                        color = TextPrimary, fontFamily = Display, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, style = shadow,
+                        color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold, style = shadow,
                     )
                     Spacer(Modifier.width(5.dp))
                     Text(
                         "/ ${"%.1f".format(Locale.US, targetMl / 1000.0)} L",
-                        color = Ivory.copy(alpha = 0.8f), fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        color = Ivory.copy(alpha = 0.8f), fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 5.dp), style = shadow,
                     )
                 }
@@ -697,15 +697,15 @@ private fun HydrationCard(
                     Text(
                         bonusReason ?: "$glasses glasses · drinks count too",
                         color = if (bonusReason != null) Ivory.copy(alpha = 0.9f) else Ivory.copy(alpha = 0.62f),
-                        fontSize = 10.sp, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
                         maxLines = 1, style = shadow,
                     )
                     if (hot) {
-                        Spacer(Modifier.width(7.dp)); Text("🔥 +0.3 L", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold, style = shadow)
+                        Spacer(Modifier.width(7.dp)); Text("🔥 +0.3 L", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow)
                     }
                     if (showHeat) {
                         Spacer(Modifier.width(7.dp))
-                        Text("+ Heat", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.clickable { onEnableHeat() })
+                        Text("+ Heat", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.clickable { onEnableHeat() })
                     }
                 }
             }
@@ -756,21 +756,21 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("🕐", fontSize = 13.sp)
+        Text("🕐", fontSize = com.ascend.lifeos.ui.theme.FS.s13)
         Spacer(Modifier.width(9.dp))
-        Text("Fasting", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text("Fasting", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.width(9.dp))
         if (f.active) {
-            Text("${elapsed.toInt()}h ${((elapsed % 1) * 60).toInt()}m", color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
-            Text(" / ${protocol.fastHours.toInt()}h", color = TextDim, fontSize = 11.sp)
+            Text("${elapsed.toInt()}h ${((elapsed % 1) * 60).toInt()}m", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold)
+            Text(" / ${protocol.fastHours.toInt()}h", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
             Spacer(Modifier.width(11.dp))
             Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.08f))) {
                 Box(Modifier.fillMaxWidth(progress).fillMaxHeight().clip(CircleShape).background(zone.color))
             }
             Spacer(Modifier.width(10.dp))
-            Text(zone.label, color = zone.color, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(zone.label, color = zone.color, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, maxLines = 1)
         } else {
-            Text("${protocol.id} · ready", color = TextDim, fontSize = 11.5.sp)
+            Text("${protocol.id} · ready", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
             Spacer(Modifier.weight(1f))
         }
         Spacer(Modifier.width(8.dp))
@@ -792,24 +792,24 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                 Modifier.fillMaxWidth().clickable { if (meals.isNotEmpty()) onToggle() }.padding(horizontal = 15.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(name, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 if (meals.isNotEmpty()) {
-                    Text("${meals.size} · ", color = TextDim, fontSize = 11.sp)
-                    Text("$kcal kcal", color = Mod.Fuel, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("${meals.size} · ", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+                    Text("$kcal kcal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
                 } else {
                     // Kap. 40: der leere Slot bietet gestern an — ein Tipp, fertig.
                     val y = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == code }.orEmpty()
                     if (y.isNotEmpty()) {
                         Text(
                             "⟳ like yesterday · ${y.sumOf { it.kcal }} kcal",
-                            color = Mod.Fuel.copy(alpha = 0.85f), fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                            color = Mod.Fuel.copy(alpha = 0.85f), fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable {
                                 y.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
                                 com.ascend.lifeos.data.Haptics.confirm(ctx)
                             },
                         )
                     } else {
-                        Text("empty", color = TextDim, fontSize = 12.sp)
+                        Text("empty", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
                     }
                 }
             }
@@ -821,8 +821,8 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                     ) {
                         Column(Modifier.weight(1f)) {
                             // ◌ = Quick-Add ohne volle Makros, ≈ = ehrliche Teller-Schätzung (Kap. 37/42)
-                            Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-                            Text((if (e.grams > 0) "${e.grams}g · " else "") + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = 10.5.sp)
+                            Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Medium, maxLines = 1)
+                            Text((if (e.grams > 0) "${e.grams}g · " else "") + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
                         }
                         // quality badge at a glance — ultra-processing + additives (MASTERY)
                         if (e.nova != null || e.additives.isNotEmpty()) {
@@ -835,7 +835,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                             Box(
                                 Modifier.clip(RoundedCornerShape(6.dp)).background(c.copy(alpha = 0.13f))
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
-                            ) { Text(txt, color = c, fontSize = 8.5.sp, fontWeight = FontWeight.Bold) }
+                            ) { Text(txt, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold) }
                             Spacer(Modifier.width(6.dp))
                         }
                         Box(Modifier.size(30.dp).clip(CircleShape).clickable { Repo.removeFood(e.id, dayKey) }, contentAlignment = Alignment.Center) {
@@ -844,7 +844,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 15.dp, end = 15.dp, bottom = 12.dp)) {
-                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { Repo.saveMeal(name, meals) })
+                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { Repo.saveMeal(name, meals) })
                 }
             }
         }
@@ -873,7 +873,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
     Spacer(Modifier.height(12.dp))
     Text(
         "Left: $kcalLeft kcal · ${protLeft.coerceAtLeast(0)} g protein",
-        color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
+        color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold,
     )
     Spacer(Modifier.height(8.dp))
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -889,8 +889,8 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
                     .padding(horizontal = 12.dp, vertical = 9.dp),
             ) {
                 Column {
-                    Text(pick.label, color = TextPrimary, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                    Text("${pick.entry.protein} P · ${pick.entry.kcal} kcal", color = Mod.Fuel, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(pick.label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text("${pick.entry.protein} P · ${pick.entry.kcal} kcal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold)
                 }
             }
         }

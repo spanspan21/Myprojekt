@@ -137,7 +137,7 @@ internal fun dueInLabel(epochDay: Long): String {
 internal fun Overline(text: String, color: Color = TextDim) {
     Text(
         text.uppercase(), color = color, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
-        fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.6.sp,
+        fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 1.6.sp,
     )
 }
 
@@ -156,7 +156,7 @@ internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent
     ) {
         Text(
             label, color = if (selected) accent else TextMuted,
-            fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
         )
     }
 }
@@ -172,7 +172,7 @@ internal fun ActionButton(label: String, enabled: Boolean = true, accent: Color 
     ) {
         Text(
             label, color = if (enabled) Void else TextDim,
-            fontSize = 14.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
         )
     }
 }
@@ -190,7 +190,7 @@ internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Add, null, tint = accent, modifier = Modifier.size(15.dp))
             Spacer(Modifier.width(7.dp))
-            Text(label, color = accent, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -226,12 +226,12 @@ internal fun GlassField(
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) {
-            Text(placeholder, color = TextDim, fontSize = 13.5.sp, fontFamily = Body)
+            Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body)
         }
         BasicTextField(
             value, onChange, singleLine = singleLine,
             textStyle = TextStyle(
-                color = TextPrimary, fontSize = 13.5.sp, fontFamily = Body,
+                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body,
                 fontWeight = FontWeight.SemiBold, lineHeight = 19.sp,
             ),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard),
@@ -255,12 +255,12 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
         Spacer(Modifier.width(9.dp))
         Box(Modifier.weight(1f)) {
             if (value.isEmpty()) {
-                Text(placeholder, color = TextDim, fontSize = 13.sp, fontFamily = Body)
+                Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
             }
             BasicTextField(
                 value, onChange, singleLine = true,
                 textStyle = TextStyle(
-                    color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 ),
                 cursorBrush = SolidColor(FinAccent),
                 modifier = Modifier.fillMaxWidth(),
@@ -268,7 +268,7 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
         }
         if (value.isNotEmpty()) {
             Text(
-                "Clear", color = FinAccent, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                "Clear", color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onChange("") }.padding(4.dp),
             )
         }
@@ -307,7 +307,7 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
         Text(
             if (parsed != null) "= ${euros(parsed)}" else "Amount in €",
             color = if (parsed != null) FinAccent else TextDim,
-            fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -321,7 +321,7 @@ internal fun StepperOrb(label: String, onClick: () -> Unit) {
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.Bold) }
 }
 
 /** Standard finance bottom sheet: dark glass, no drag handle, lime overline. */
@@ -332,7 +332,7 @@ internal fun SheetShell(title: String, onDismiss: () -> Unit, content: @Composab
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding().imePadding()) {
             Text(
                 title.uppercase(), color = FinAccent, fontFamily = Display,
-                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
             )
             Spacer(Modifier.height(14.dp))
             content()

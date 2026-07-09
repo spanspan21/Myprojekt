@@ -59,7 +59,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                 if (subs.isEmpty()) {
                     Text(
                         "No recurring charges detected yet",
-                        color = TextDim, fontSize = 12.sp, fontFamily = Body,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
                         textAlign = TextAlign.Center,
                     )
@@ -69,14 +69,14 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(
-                                    s.payee, color = TextPrimary, fontSize = 13.sp,
+                                    s.payee, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
                                     fontFamily = Body, fontWeight = FontWeight.Bold,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 )
                                 if (s.priceIncreased && s.previousAmountCents != null) {
                                     Text(
                                         "↑ price up from ${eur(s.previousAmountCents)}",
-                                        color = Warn, fontSize = 10.5.sp,
+                                        color = Warn, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
                                         fontFamily = Body, fontWeight = FontWeight.Bold,
                                     )
                                 }
@@ -95,7 +95,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                         val more = if (dups.size > 1) " · +${dups.size - 1} more" else ""
                         Text(
                             "${a.payee} + ${b.payee} overlap — one may be enough$more",
-                            color = Warn, fontSize = 11.5.sp, fontFamily = Body,
+                            color = Warn, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
                             fontWeight = FontWeight.Bold, lineHeight = 16.sp,
                         )
                     }
@@ -103,7 +103,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                     Spacer(Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "Monthly total", color = TextMuted, fontSize = 11.5.sp,
+                            "Monthly total", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
                             fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f),
                         )

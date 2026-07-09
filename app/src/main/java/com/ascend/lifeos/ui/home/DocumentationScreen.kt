@@ -75,7 +75,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                 Text(
                     "Nothing is hidden. Every score, every tool and every algorithm is spelled out below — " +
                         "the app stays quiet so this stays complete. Tap any topic to open it.",
-                    color = TextMuted, fontSize = 13.sp, fontFamily = Body, lineHeight = 20.sp,
+                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, lineHeight = 20.sp,
                 )
                 Spacer(Modifier.height(22.dp))
             }
@@ -85,7 +85,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                         Column(Modifier.padding(horizontal = 15.dp, vertical = 12.dp)) {
-                            Text(ch.lead, color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 19.sp)
+                            Text(ch.lead, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 19.sp)
                             Spacer(Modifier.height(6.dp))
                             ch.topics.forEachIndexed { i, t ->
                                 if (i == 0) Spacer(Modifier.height(4.dp))
@@ -111,7 +111,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                topic.q, color = if (open) accent else TextPrimary, fontSize = 13.5.sp,
+                topic.q, color = if (open) accent else TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(10.dp))
@@ -122,7 +122,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
         }
         if (open) {
             Text(
-                topic.a, color = TextMuted, fontSize = 13.sp, fontFamily = Body, lineHeight = 20.sp,
+                topic.a, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, lineHeight = 20.sp,
                 modifier = Modifier.padding(bottom = 12.dp, end = 26.dp),
             )
         }

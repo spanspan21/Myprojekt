@@ -75,7 +75,7 @@ fun FastingScreen(onBack: () -> Unit) {
                 Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(14.dp))
-            Text("Fasting", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Fasting", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
         }
 
         // protocol picker
@@ -100,18 +100,18 @@ fun FastingScreen(onBack: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (state.active) {
-                    Text(hm(elapsed), color = TextPrimary, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("/ ${target.toInt()}h · ${protocol.id}", color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(hm(elapsed), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s42, fontWeight = FontWeight.ExtraBold)
+                    Text("/ ${target.toInt()}h · ${protocol.id}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     Box(Modifier.clip(RoundedCornerShape(9.dp)).background(zone.color.copy(alpha = 0.16f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Text(zone.label, color = zone.color, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                        Text(zone.label, color = zone.color, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     val remaining = (target - elapsed).coerceAtLeast(0.0)
-                    Text(if (remaining <= 0) "Eating window open ✓" else "${hm(remaining)} to go", color = TextDim, fontSize = 12.sp)
+                    Text(if (remaining <= 0) "Eating window open ✓" else "${hm(remaining)} to go", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
                 } else {
-                    Text("Ready", color = TextPrimary, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("${protocol.id} · ${protocol.desc}", color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Ready", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontWeight = FontWeight.ExtraBold)
+                    Text("${protocol.id} · ${protocol.desc}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -124,7 +124,7 @@ fun FastingScreen(onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(22.dp))
-        Text("ZONES", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("ZONES", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Spacer(Modifier.height(10.dp))
         GlassPanel(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -133,16 +133,16 @@ fun FastingScreen(onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 5.dp)) {
                         Box(Modifier.size(10.dp).clip(CircleShape).background(z.color))
                         Spacer(Modifier.width(12.dp))
-                        Text(z.label, color = if (active) z.color else TextMuted, fontSize = 13.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text(z.label, color = if (active) z.color else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         val to = FastingCalc.ZONES.getOrNull(i + 1)?.fromH
-                        Text(if (to != null) "${z.fromH.toInt()}–${to.toInt()}h" else "${z.fromH.toInt()}h+", color = TextDim, fontSize = 11.sp)
+                        Text(if (to != null) "${z.fromH.toInt()}–${to.toInt()}h" else "${z.fromH.toInt()}h+", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
                     }
                 }
             }
         }
 
         Spacer(Modifier.height(16.dp))
-        Text("STATS", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("STATS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Spacer(Modifier.height(10.dp))
         GlassPanel(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(18.dp)) {
@@ -163,7 +163,7 @@ private fun hm(hours: Double): String {
 @Composable
 private fun FastStat(value: String, label: String, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
-        Text(label.uppercase(), color = TextDim, fontSize = 8.sp, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(value, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.ExtraBold)
+        Text(label.uppercase(), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
     }
 }

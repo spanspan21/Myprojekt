@@ -75,9 +75,9 @@ fun WeeklyFuelReview(isToday: Boolean) {
     GlassPanel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("WEEKLY REVIEW", color = TextDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
-                Text("$score", color = scoreColor, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                Text(" / 100", color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("WEEKLY REVIEW", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
+                Text("$score", color = scoreColor, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)
+                Text(" / 100", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))
             // 7 Balken — grün: ±10 % ums Ziel, amber: drunter, warn: drüber
@@ -99,7 +99,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
             Spacer(Modifier.height(10.dp))
             Text(
                 "Ø $avgK kcal · Ø $avgP g protein · $logged/7 days logged",
-                color = TextPrimary, fontSize = 12.5.sp, fontWeight = FontWeight.Bold,
+                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
@@ -108,7 +108,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
                     score >= 55 -> "Solid base. Protein came up short on ${(logged - protHit).coerceAtLeast(0)} logged days — the gap filler helps in the evening."
                     else -> "Reset week: today counts, not yesterday. One logged day is a good day."
                 },
-                color = TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp,
+                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, lineHeight = 16.sp,
             )
         }
     }

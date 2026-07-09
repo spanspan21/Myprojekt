@@ -92,8 +92,8 @@ fun ActiveWorkoutScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(vm.activeTemplateName, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                        Text("$elapsedMin min", color = TextDim, fontSize = 12.sp)
+                        Text(vm.activeTemplateName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
+                        Text("$elapsedMin min", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
                     }
                     // form-check camera
                     Box(
@@ -115,7 +115,7 @@ fun ActiveWorkoutScreen(
                         Modifier.clip(RoundedCornerShape(12.dp)).background(Red.copy(alpha = 0.12f))
                             .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                             .clickable { vm.cancelWorkout(); onFinish() }.padding(horizontal = 14.dp, vertical = 9.dp),
-                    ) { Text("Cancel", color = Red, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    ) { Text("Cancel", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
                 }
                 Spacer(Modifier.height(16.dp))
             }
@@ -162,9 +162,9 @@ fun ActiveWorkoutScreen(
                                 Modifier.fillMaxWidth().clickable { warmupOpen = !warmupOpen },
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text("WARM-UP", color = Amber, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                Text("WARM-UP", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                                 Spacer(Modifier.weight(1f))
-                                Text(if (warmupOpen) "▾" else "▸", color = TextDim, fontSize = 12.sp)
+                                Text(if (warmupOpen) "▾" else "▸", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
                             }
                             if (warmupOpen) {
                                 Spacer(Modifier.height(6.dp))
@@ -183,10 +183,10 @@ fun ActiveWorkoutScreen(
                                         Text(
                                             w.name,
                                             color = if (done) TextDim else TextMuted,
-                                            fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold,
+                                            fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.SemiBold,
                                             modifier = Modifier.weight(1f),
                                         )
-                                        Text(w.detail, color = TextDim, fontSize = 10.5.sp)
+                                        Text(w.detail, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
                                     }
                                 }
                             }
@@ -227,7 +227,7 @@ fun ActiveWorkoutScreen(
                 if (toTarget != null && toTarget in 1..2) {
                     Text(
                         if (toTarget == 1) "1 set to today's target" else "$toTarget sets to today's target",
-                        color = TextDim, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(Modifier.height(8.dp))
                 }
@@ -305,17 +305,17 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(catIcon(exCategory ?: ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(ex.exerciseName, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(ex.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
             }
             // study-based prescription: how many reps, at what effort, when to load
             ex.prescription?.let {
                 Spacer(Modifier.height(8.dp))
                 // The coach's instruction — the plan's fixed target. You execute it;
                 // you don't set it. The stepper below logs what you actually got.
-                Text("PRESCRIBED", color = Accent, fontSize = 8.5.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                Text("PRESCRIBED", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(2.dp))
-                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
+                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
             }
             Spacer(Modifier.height(10.dp))
             // the movement, drawn on the REAL anatomical body — the muscles this
@@ -333,21 +333,21 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
                 StepperButton("−") { reps = ((reps.toIntOrNull() ?: 10) - 1).coerceAtLeast(1).toString() }
                 Spacer(Modifier.width(20.dp))
-                Text(reps, color = TextPrimary, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.width(70.dp))
+                Text(reps, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s42, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.width(70.dp))
                 Spacer(Modifier.width(20.dp))
                 StepperButton("+") { reps = ((reps.toIntOrNull() ?: 10) + 1).toString() }
             }
-            Text("Reps you got", color = TextDim, fontSize = 11.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            Text("Reps you got", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             ghost?.let {
                 Spacer(Modifier.height(4.dp))
-                Text(it, color = Accent.copy(alpha = 0.7f), fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                Text(it, color = Accent.copy(alpha = 0.7f), fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             }
             // live autoregulation: last set's RPE steers the next target
             ex.loggedSets.lastOrNull()?.let { last ->
                 TrainBrain.nextSetHint(last.reps, last.rpe)?.let { hint ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        hint, color = Amber, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
+                        hint, color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                     )
                 }
@@ -370,14 +370,14 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
                 if (prescribedVest != null) {
                     Column(Modifier.weight(1f)) {
-                        Text("VEST · PRESCRIBED", color = Accent, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
+                        Text("VEST · PRESCRIBED", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
                         Spacer(Modifier.height(5.dp))
                         Box(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                                 .background(Accent.copy(alpha = 0.10f))
                                 .border(0.5.dp, Accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                                 .padding(horizontal = 14.dp, vertical = 14.dp),
-                        ) { Text("${prescribedVest} kg", color = Accent, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+                        ) { Text("${prescribedVest} kg", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
                     }
                 }
                 GlassField("RPE", rpe, KeyboardType.Number, Modifier.weight(if (prescribedVest != null) 0.7f else 1f)) { rpe = it }
@@ -387,7 +387,7 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "Total system weight ${"%.1f".format(w + profileW.weightKg)} kg · load locked to the plan",
-                        color = TextDim, fontSize = 10.5.sp, fontWeight = FontWeight.Bold,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -396,7 +396,7 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             // ── Advanced toggle (set type + tempo + hold + note) ──
             Text(
                 if (showAdvanced) "▾ Advanced" else "▸ Advanced",
-                color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable { showAdvanced = !showAdvanced }.padding(vertical = 4.dp),
             )
             AnimatedVisibility(showAdvanced) {
@@ -452,7 +452,7 @@ private fun StepperButton(label: String, onClick: () -> Unit) {
         Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, HudLine, CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
 }
 
 // ─── Set Row with colored stripe ───────────────────────────────────────────
@@ -467,19 +467,19 @@ private fun SetRow(set: WorkoutSetEntity, index: Int, onDelete: () -> Unit) {
                 Box(
                     Modifier.size(24.dp).clip(CircleShape).background(color.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center,
-                ) { Text("${index + 1}", color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                ) { Text("${index + 1}", color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     val parts = mutableListOf("${set.reps} Reps")
                     set.weight?.let { parts.add("${it}kg") }
                     set.rpe?.let { parts.add("RPE $it") }
-                    Text(parts.joinToString(" · "), color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(parts.joinToString(" · "), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold)
                     val meta = mutableListOf(setTypeLabel(set.setType))
                     set.tempo?.let { meta.add("⏱ $it") }
-                    Text(meta.joinToString(" · "), color = TextDim, fontSize = 10.sp)
+                    Text(meta.joinToString(" · "), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
                 }
                 if (set.isPersonalRecord) {
-                    Text("PR", color = ChampagneDeep, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
+                    Text("PR", color = ChampagneDeep, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
                 }
                 Icon(Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
                     modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
@@ -510,13 +510,13 @@ private fun RestTimerCard(vm: TrainingViewModel) {
                     drawCircle(sweepColor, 5.dp.toPx(), Offset(cx, cy))
                 }
                 val display = if (vm.restTimerRemaining >= 0) "${vm.restTimerRemaining}s" else "+${-vm.restTimerRemaining}s"
-                Text(display, color = if (vm.restTimerRemaining <= 5) Red else if (vm.restTimerRemaining <= 10) Amber else Accent, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+                Text(display, color = if (vm.restTimerRemaining <= 5) Red else if (vm.restTimerRemaining <= 10) Amber else Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.ExtraBold)
             }
 
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text("Rest", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text("${vm.restTimerTotal}s total", color = TextDim, fontSize = 11.sp)
+                Text("Rest", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
+                Text("${vm.restTimerTotal}s total", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -534,7 +534,7 @@ private fun MiniBtn(label: String, onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(10.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, HudLine, RoundedCornerShape(10.dp)).clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
-    ) { Text(label, color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
 }
 
 // ─── PR Celebration Overlay (8s timeout) ───────────────────────────────────
@@ -571,9 +571,9 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
             line = Champagne.copy(alpha = 0.4f * alpha),
         ) {
             Column(Modifier.padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("NEW PR", color = Champagne, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+                Text("NEW PR", color = Champagne, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
                 Spacer(Modifier.height(8.dp))
-                Text(pr.exerciseName, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(pr.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(4.dp))
                 val valueStr = when (pr.type) {
                     PrType.MAX_REPS -> "${pr.value.toInt()} Reps"
@@ -583,9 +583,9 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
                     PrType.LONGEST_HOLD -> "${pr.value.toInt()}s Hold"
                 }
                 // die Leistung steht größer als das Etikett (Kap. 20)
-                Text(valueStr, color = Champagne, fontSize = 30.sp, fontWeight = FontWeight.Medium)
+                Text(valueStr, color = Champagne, fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(6.dp))
-                Text(prTypeLabel(pr.type), color = TextDim, fontSize = 12.sp)
+                Text(prTypeLabel(pr.type), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
             }
         }
     }

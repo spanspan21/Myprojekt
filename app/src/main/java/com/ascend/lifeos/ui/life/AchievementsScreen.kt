@@ -134,11 +134,11 @@ private fun Plaque(a: Achievement) {
         }
         Spacer(Modifier.height(6.dp))
         Text(
-            a.title, color = TextMuted, fontSize = 10.5.sp, fontFamily = Body,
+            a.title, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = 13.sp,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
-        Text(DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = 9.sp, fontFamily = Body)
+        Text(DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = Body)
     }
 }
 
@@ -153,13 +153,13 @@ private fun BlankPlaque(nextStreakMark: Int?) {
         ) {
             Text(
                 nextStreakMark?.toString() ?: "—", color = TextDim,
-                fontFamily = Display, fontSize = 16.sp, fontWeight = FontWeight.Medium,
+                fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Medium,
             )
         }
         Spacer(Modifier.height(6.dp))
         Text(
             if (nextStreakMark != null) "next: $nextStreakMark-day streak" else "all marks minted",
-            color = TextDim, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             maxLines = 2, lineHeight = 13.sp,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
@@ -189,19 +189,19 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
         Column(Modifier.weight(1f).padding(bottom = if (last) 2.dp else 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    a.title, color = TextPrimary, fontSize = 13.5.sp,
+                    a.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
                     fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = 10.5.sp,
+                    DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
                     fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
             if (a.detail.isNotBlank()) {
                 Spacer(Modifier.height(2.dp))
-                Text(a.detail, color = TextMuted, fontSize = 12.sp, fontFamily = Body, lineHeight = 16.sp)
+                Text(a.detail, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 16.sp)
             }
         }
     }

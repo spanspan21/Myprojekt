@@ -142,16 +142,16 @@ fun ChangelogSheet(onDismiss: () -> Unit) {
         ) {
             Text(
                 "SYSTEM UPDATES", color = Mod.Home, fontFamily = Display,
-                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(4.dp))
-            Text("New in this build", color = TextPrimary, fontFamily = Display, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Text("New in this build", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s21, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
             Changelog.ENTRIES.forEach {
                 Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.Top) {
                     Box(Modifier.padding(top = 6.dp).size(5.dp).clip(CircleShape).background(Mod.Home))
                     Spacer(Modifier.width(10.dp))
-                    Text(it, color = TextMuted, fontSize = 13.sp, fontFamily = Body, lineHeight = 18.sp)
+                    Text(it, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, lineHeight = 18.sp)
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -159,7 +159,7 @@ fun ChangelogSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Home)
                     .clickable(onClick = onDismiss).padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Understood", color = Void, fontSize = 13.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Understood", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(14.dp))
         }
     }

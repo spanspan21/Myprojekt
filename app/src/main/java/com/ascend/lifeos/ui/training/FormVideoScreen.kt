@@ -85,8 +85,8 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp).padding(top = 14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Form Check", color = TextPrimary, fontFamily = Display, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text(exercise.ifBlank { "Any exercise" }, color = Mod.Train, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("Form Check", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold)
+                Text(exercise.ifBlank { "Any exercise" }, color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
@@ -101,8 +101,8 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
         if (!camGranted) {
             Panel(Modifier.fillMaxWidth(), corner = 18.dp, onClick = { permLauncher.launch(android.Manifest.permission.CAMERA) }) {
                 Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Camera permission needed", color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    Text("Tap to grant — clips never leave the device.", color = TextDim, fontSize = 12.sp, fontFamily = Body)
+                    Text("Camera permission needed", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("Tap to grant — clips never leave the device.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
                 }
             }
         } else {
@@ -172,7 +172,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Text(
                 "Film from the side · full body in frame · max 60 s",
-                color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                 modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
@@ -188,11 +188,11 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                             Icon(Icons.Rounded.PlayArrow, null, tint = Mod.Train, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(11.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(clipLabel(f), color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(clipLabel(f), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 Text(
                                     SimpleDateFormat("EEE dd.MM · HH:mm", Locale.ENGLISH).format(Date(f.lastModified())) +
                                         " · ${"%.1f".format(f.length() / 1_048_576.0)} MB",
-                                    color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                                 )
                             }
                             Icon(
@@ -222,7 +222,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
             )
             Text(
-                "tap anywhere to close", color = TextDim, fontSize = 12.sp, fontFamily = Body,
+                "tap anywhere to close", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
             )
         }

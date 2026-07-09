@@ -248,7 +248,7 @@ fun JarvisHeader(
                 Spacer(Modifier.height(if (editorial) 5.dp else 3.dp))
                 Text(
                     context, color = if (editorial) TextMuted else accent,
-                    fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -294,7 +294,7 @@ fun SectionLabel(
         if (number != null) {
             Text(
                 number.toString().padStart(2, '0'), color = accent.copy(alpha = 0.9f),
-                fontFamily = MicroLabel, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+                fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
             )
             Spacer(Modifier.width(7.dp))
         }
@@ -315,7 +315,7 @@ fun StatTile(value: String, label: String, color: Color = TextPrimary, modifier:
         Spacer(Modifier.height(3.dp))
         Text(
             label.uppercase(), color = TextDim, fontFamily = MicroLabel,
-            fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.4.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 1.4.sp,
         )
     }
 }
@@ -443,7 +443,7 @@ fun VerdictPill(text: String, color: Color, modifier: Modifier = Modifier) {
     ) {
         Text(
             text.uppercase(), color = color, fontFamily = MicroLabel,
-            fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
     }
 }
@@ -469,16 +469,16 @@ fun EmptyState(
             contentAlignment = Alignment.Center,
         ) { Icon(icon, null, tint = accent, modifier = Modifier.size(24.dp)) }
         Spacer(Modifier.height(12.dp))
-        Text(title, color = TextPrimary, fontFamily = Body, fontSize = 14.5.sp, fontWeight = FontWeight.Bold)
+        Text(title, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(3.dp))
-        Text(hint, color = TextDim, fontSize = 12.sp, fontFamily = Body)
+        Text(hint, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(14.dp))
             Box(
                 Modifier.clip(RoundedCornerShape(12.dp)).background(accent.copy(alpha = 0.14f))
                     .border(0.5.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onAction).padding(horizontal = 16.dp, vertical = 9.dp),
-            ) { Text(actionLabel, color = accent, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            ) { Text(actionLabel, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
     }
 }
@@ -539,7 +539,7 @@ fun MissionChip(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     label, color = if (done) color else TextMuted, fontFamily = Body,
-                    fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
             Spacer(Modifier.height(8.dp))

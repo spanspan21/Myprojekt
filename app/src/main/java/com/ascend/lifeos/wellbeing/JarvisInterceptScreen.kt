@@ -180,7 +180,7 @@ private fun InterceptCard(
                 Text(
                     "JARVIS OVERRIDE",
                     color = DoomRed,
-                    fontSize = 11.sp,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s11,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.5.sp,
                 )
@@ -191,7 +191,7 @@ private fun InterceptCard(
             Text(
                 "$appLabel blocked",
                 color = Primary,
-                fontSize = 24.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s24,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.5).sp,
             )
@@ -200,7 +200,7 @@ private fun InterceptCard(
                     ?: if (limitMinutes > 0) "${usedMinutes}m of ${limitMinutes}m used"
                     else "${usedMinutes}m today — this window is protected",
                 color = Muted,
-                fontSize = 13.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s13,
             )
 
             Spacer(Modifier.height(24.dp))
@@ -233,7 +233,7 @@ private fun InterceptCard(
                     .border(0.5.dp, NeonCyan.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
                     .padding(16.dp),
             ) {
-                Text(altText, color = Primary, fontSize = 13.5.sp, lineHeight = 19.sp)
+                Text(altText, color = Primary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, lineHeight = 19.sp)
             }
 
             Spacer(Modifier.height(22.dp))
@@ -255,7 +255,7 @@ private fun InterceptCard(
                         Text(
                             if (waiting) "Later · ${unlockIn}s" else "Later",
                             color = if (waiting) Dim else Muted,
-                            fontSize = 14.sp,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s14,
                             fontWeight = FontWeight.Bold,
                         )
                     }
@@ -269,7 +269,7 @@ private fun InterceptCard(
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("Start skill work", color = Color(0xFF06110C), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("Start skill work", color = Color(0xFF06110C), fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -284,7 +284,7 @@ private fun InterceptCard(
                 Text(
                     note,
                     color = DoomRed.copy(alpha = 0.8f),
-                    fontSize = 11.sp,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s11,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
@@ -330,7 +330,7 @@ private fun GateCard(
         Text(
             "PAUSE GATE",
             color = NeonCyan,
-            fontSize = 11.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s11,
             fontWeight = FontWeight.Bold,
             letterSpacing = 2.5.sp,
         )
@@ -353,11 +353,11 @@ private fun GateCard(
                     .graphicsLayer { scaleX = scale; scaleY = scale }
                     .border(1.dp, NeonCyan.copy(alpha = 0.55f), CircleShape),
             )
-            Text("Breathe.", color = Primary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text("Breathe.", color = Primary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.SemiBold)
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("$appLabel can wait.", color = Muted, fontSize = 13.sp)
+        Text("$appLabel can wait.", color = Muted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
 
         // Offer slot — one concrete 2-minute alternative instead of the scroll.
         if (offerText.isNotBlank()) {
@@ -373,11 +373,11 @@ private fun GateCard(
                 Column(Modifier.weight(1f)) {
                     Text(
                         "INSTEAD · 2 MIN",
-                        color = Neon, fontSize = 9.sp,
+                        color = Neon, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                         fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp,
                     )
                     Spacer(Modifier.height(3.dp))
-                    Text(offerText, color = Primary, fontSize = 13.sp, lineHeight = 18.sp)
+                    Text(offerText, color = Primary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 18.sp)
                 }
                 Spacer(Modifier.width(10.dp))
                 Box(
@@ -386,7 +386,7 @@ private fun GateCard(
                         .border(0.5.dp, Neon.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
                         .clickable(onClick = onOfferDone)
                         .padding(horizontal = 12.dp, vertical = 8.dp),
-                ) { Text("Done ✓", color = Neon, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                ) { Text("Done ✓", color = Neon, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.height(24.dp))
         } else {
@@ -407,7 +407,7 @@ private fun GateCard(
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Continue · 5 min", color = Muted, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Continue · 5 min", color = Muted, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
             }
             Box(
                 Modifier
@@ -418,7 +418,7 @@ private fun GateCard(
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("I'm out", color = Color(0xFF06110C), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("I'm out", color = Color(0xFF06110C), fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -441,9 +441,9 @@ private fun GuiltBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 icon()
                 Spacer(Modifier.width(6.dp))
-                Text(label, color = Dim, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
+                Text(label, color = Dim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
             }
-            Text(value, color = color, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+            Text(value, color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(6.dp))
         Box(

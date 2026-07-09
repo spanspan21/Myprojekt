@@ -68,8 +68,8 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
         Column(Modifier.fillMaxSize().statusBarsPadding().padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Rep Counter", color = TextPrimary, fontFamily = Display, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text("EXPERIMENTAL · on-device only", color = Warn, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                    Text("Rep Counter", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold)
+                    Text("EXPERIMENTAL · on-device only", color = Warn, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                 }
                 Box(
                     Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
@@ -89,7 +89,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                         .clickable { permLauncher.launch(android.Manifest.permission.CAMERA) }
                         .padding(20.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
             } else {
                 Box(
                     Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(20.dp))
@@ -143,14 +143,14 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                         Text(
                             if (tracking) "TRACKING" else "STEP INTO FRAME",
                             color = if (tracking) Good else TextDim,
-                            fontFamily = Display, fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                         )
                     }
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "Prop the phone up · whole body visible · steady light",
-                    color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(12.dp))
@@ -162,14 +162,14 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                             .clickable { reps = 0; counter.reset() }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Reset", color = TextMuted, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text("Reset", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Box(
                         Modifier.weight(2f).clip(RoundedCornerShape(13.dp))
                             .background(if (reps > 0) Mod.Train else Mod.Train.copy(alpha = 0.25f))
                             .clickable(enabled = reps > 0) { onUseCount(reps); onClose() }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Use $reps reps", color = Void, fontSize = 13.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+                    ) { Text("Use $reps reps", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
                 }
                 Spacer(Modifier.height(6.dp))
             }

@@ -83,7 +83,7 @@ fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onC
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
-    ) { Text(label, color = fg, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = fg, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
 }
 
 /** Filled/ghost neon action button — tinted in the current module's accent. */
@@ -107,7 +107,7 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
         Text(
             label,
             color = if (primary) Color(0xFF06110C) else com.ascend.lifeos.ui.theme.TextMuted,
-            fontSize = 14.sp, fontWeight = FontWeight.Bold,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -122,10 +122,10 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
             .border(0.5.dp, HudLine, RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 13.dp),
     ) {
-        if (value.isEmpty()) Text(placeholder, color = com.ascend.lifeos.ui.theme.TextDim, fontSize = 14.sp)
+        if (value.isEmpty()) Text(placeholder, color = com.ascend.lifeos.ui.theme.TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14)
         BasicTextField(
             value = value, onValueChange = onValue, singleLine = true,
-            textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+            textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(LocalModuleAccent.current),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard),
             modifier = if (focus != null) Modifier.fillMaxWidth().focusRequester(focus) else Modifier.fillMaxWidth(),

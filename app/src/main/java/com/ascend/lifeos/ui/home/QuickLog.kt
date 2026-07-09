@@ -89,13 +89,13 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
                         QlMode.WEIGHT -> "LOG WEIGHT"
                         else -> "QUICK LOG"
                     },
-                    color = Mod.Home, fontFamily = Display, fontSize = 10.sp,
+                    color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                 )
                 Spacer(Modifier.weight(1f))
                 if (mode == QlMode.PURCHASE || mode == QlMode.WEIGHT) {
                     Text(
-                        "BACK", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
+                        "BACK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
                             .clickable { mode = QlMode.ACTIONS }
@@ -198,7 +198,7 @@ private fun RowScope.QlTile(
         Spacer(Modifier.height(9.dp))
         Text(
             label, color = TextPrimary, fontFamily = Body,
-            fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1,
         )
         Spacer(Modifier.height(2.dp))
         Text(stat, color = statColor, style = metricStyle(10, FontWeight.SemiBold), maxLines = 1)
@@ -272,7 +272,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                     ) {
                         Text(
                             c, color = fg,
-                            fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -290,12 +290,12 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                 .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f), RoundedCornerShape(13.dp))
                 .padding(horizontal = 14.dp, vertical = 11.dp),
         ) {
-            if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = 12.5.sp, fontFamily = Body)
+            if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
             BasicTextField(
                 value = note,
                 onValueChange = { if (it.length <= 60) note = it },
                 singleLine = true,
-                textStyle = TextStyle(color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Medium),
+                textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium),
                 cursorBrush = SolidColor(FinAccent),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -319,7 +319,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         ) {
             Text(
                 "Save", color = if (canSave) Void else TextDim,
-                fontSize = 14.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
             )
         }
     }
@@ -347,7 +347,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
             QlStep("+1") { kg = (kg + 1.0).coerceAtMost(250.0) }
         }
         Spacer(Modifier.height(4.dp))
-        Text("kilograms", color = TextDim, fontSize = 11.sp, fontFamily = Body)
+        Text("kilograms", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
         Spacer(Modifier.height(18.dp))
         Box(
             Modifier.fillMaxWidth()
@@ -361,7 +361,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
                 .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Save", color = Void, fontSize = 14.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+            Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
     }
 }
@@ -375,7 +375,7 @@ private fun QlStep(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+        Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -393,9 +393,9 @@ private fun DonePane(onDismiss: () -> Unit) {
                 .background(Good.copy(alpha = 0.14f))
                 .border(0.5.dp, Good.copy(alpha = 0.4f), CircleShape),
             contentAlignment = Alignment.Center,
-        ) { Text("✓", color = Good, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+        ) { Text("✓", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
         Spacer(Modifier.height(10.dp))
-        Text("Logged ✓", color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+        Text("Logged ✓", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
 

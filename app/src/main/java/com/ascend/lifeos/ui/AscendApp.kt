@@ -411,7 +411,7 @@ private fun MorphingDock(
                                 modifier = Modifier.size(19.dp),
                             )
                             Text(
-                                "▾", color = TextDim, fontSize = 7.sp, fontWeight = FontWeight.Bold,
+                                "▾", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s7, fontWeight = FontWeight.Bold,
                             )
                         }
                         Box(
@@ -442,7 +442,7 @@ private fun MorphingDock(
                                 Text(
                                     s.label,
                                     color = fg,
-                                    fontFamily = Body, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                                    fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Box(Modifier.size(3.5.dp).clip(CircleShape).background(dot))
@@ -481,7 +481,7 @@ private fun MorphingDock(
                                 Text(
                                     g.label,
                                     color = fg,
-                                    fontFamily = Body, fontSize = 8.5.sp, fontWeight = FontWeight.Bold,
+                                    fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp, maxLines = 1, softWrap = false,
                                     lineHeight = 11.sp,
                                 )

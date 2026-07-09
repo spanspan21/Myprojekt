@@ -82,12 +82,12 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             Column(Modifier.weight(1f)) {
                 Text(
                     "· SETTINGS", color = Mod.Home, fontFamily = MicroLabel,
-                    fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "System configuration", color = TextPrimary, fontFamily = Display,
-                    fontStyle = DisplayItalic, fontSize = 27.sp, fontWeight = FontWeight.Normal,
+                    fontStyle = DisplayItalic, fontSize = com.ascend.lifeos.ui.theme.FS.s27, fontWeight = FontWeight.Normal,
                 )
             }
             Box(
@@ -133,7 +133,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     Text(
                         label,
                         color = if (sel) Mod.Home else TextMuted,
-                        fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .clip(RoundedCornerShape(11.dp))
                             .background(if (sel) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
@@ -149,7 +149,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             Text(
                 "Exam phase hides Finance, Mind & Skills · Holidays hide School.",
-                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                 modifier = Modifier.padding(bottom = 4.dp),
             )
         }
@@ -183,7 +183,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "SEASON PHASE", color = TextDim, fontFamily = Display,
-                fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
             Spacer(Modifier.height(7.dp))
             var season by remember { mutableStateOf(Prefs.string(ctx, Prefs.SEASON_PHASE, "")) }
@@ -196,13 +196,13 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
                             .clickable { season = v; Prefs.setString(ctx, Prefs.SEASON_PHASE, v) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
-                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
             Spacer(Modifier.height(4.dp))
             Text(
                 "In-season keeps you fresh for the ice (2-3 short sessions); off-season builds.",
-                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
         }
 
@@ -238,7 +238,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "azure")) }
             Text(
                 "THEME", color = TextDim, fontFamily = Display,
-                fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
             Spacer(Modifier.height(8.dp))
             // Fünf Welt-Karten: echte Materialprobe (Raum + Nebel + Karte im
@@ -300,7 +300,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 Text(
                                     "Aa", color = spec.textPrimary,
                                     fontFamily = com.ascend.lifeos.ui.theme.displayFamilyOf(spec),
-                                    fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                    fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold,
                                 )
                             }
                         }
@@ -309,7 +309,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             spec.label,
                             color = if (on) TextPrimary else TextMuted,
                             fontFamily = com.ascend.lifeos.ui.theme.displayFamilyOf(spec),
-                            fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, maxLines = 1,
                         )
                     }
                 }
@@ -317,7 +317,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             Spacer(Modifier.height(6.dp))
             Text(
                 com.ascend.lifeos.ui.theme.Themes.byId(themeId).tagline,
-                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
         }
 
@@ -327,7 +327,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             var icon by remember { mutableStateOf(currentIconAlias(ctx)) }
             Text(
                 "APP ICON", color = TextDim, fontFamily = Display,
-                fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
             Spacer(Modifier.height(7.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -343,13 +343,13 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
                             .clickable { if (!on) { switchIconAlias(ctx, alias); icon = alias } }
                             .padding(horizontal = 12.dp, vertical = 7.dp),
-                    ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
             Spacer(Modifier.height(4.dp))
             Text(
                 "The home-screen icon updates within a few seconds.",
-                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
             Spacer(Modifier.height(10.dp))
             ToggleRow("Sounds", "PR, level-up and focus chimes", Prefs.SOUNDS_ON, true)
@@ -476,8 +476,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             Row(Modifier.padding(vertical = 4.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text("JARVIS v2", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    Text("Build $buildStamp · offline-first · your data never leaves this device", color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+                    Text("JARVIS v2", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("Build $buildStamp · offline-first · your data never leaves this device", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
                 }
             }
         }
@@ -512,8 +512,8 @@ private fun ToggleRow(title: String, sub: String, on: Boolean, onToggle: (Boolea
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(title, color = if (on) TextPrimary else TextMuted, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-            Text(sub, color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+            Text(title, color = if (on) TextPrimary else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
         }
         TogglePill(on)
     }
@@ -541,10 +541,10 @@ private fun ActionRow(title: String, sub: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(title, color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
-            Text(sub, color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+            Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
         }
-        Text("→", color = TextDim, fontSize = 14.sp)
+        Text("→", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14)
     }
 }
 

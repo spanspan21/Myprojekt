@@ -78,12 +78,12 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
 
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp).padding(bottom = 20.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Custom food", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            Text("Custom food", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
             Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { favorite = !favorite }, contentAlignment = Alignment.Center) {
                 Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, null, tint = if (favorite) Amber else TextDim, modifier = Modifier.size(20.dp))
             }
         }
-        if (barcode.isNotBlank()) Text("Barcode $barcode", color = TextDim, fontSize = 11.sp)
+        if (barcode.isNotBlank()) Text("Barcode $barcode", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
 
         Spacer(Modifier.height(14.dp))
         GlassField("Name", name, KeyboardType.Text, Modifier.fillMaxWidth()) { name = it }
@@ -96,7 +96,7 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
         }
 
         Spacer(Modifier.height(12.dp))
-        Text("PER SERVING", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        Text("PER SERVING", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(8.dp))
         Box(Modifier.fillMaxWidth()) { GlassField("Calories (kcal)", kcal, KeyboardType.Number) { kcal = it.filter(Char::isDigit).take(5) } }
         Spacer(Modifier.height(10.dp))
@@ -111,15 +111,15 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).clickable { showMicros = !showMicros }.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Micronutrients (optional)", color = TextMuted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            Text(if (showMicros) "−" else "+", color = Accent, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Micronutrients (optional)", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Text(if (showMicros) "−" else "+", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.Bold)
         }
         if (showMicros) {
             Spacer(Modifier.height(10.dp))
             MICRO_16.forEach { id ->
                 val nd = NUTRIENTS_BY_ID[id] ?: return@forEach
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text(nd.label, color = TextMuted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    Text(nd.label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, modifier = Modifier.weight(1f))
                     Box(Modifier.width(120.dp)) {
                         GlassField(nd.unit, micros[id] ?: "", KeyboardType.Number) { v -> micros[id] = v.filter { it.isDigit() || it == '.' }.take(7) }
                     }

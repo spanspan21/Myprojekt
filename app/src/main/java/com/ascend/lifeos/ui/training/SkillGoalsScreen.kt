@@ -67,11 +67,11 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             )
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("Skill targets", color = TextPrimary, fontFamily = Display, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("Skill targets", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold)
                 Text(
                     if (selected.isEmpty()) "Pick skills — each earns time in every session's skill block"
                     else "${selected.size} selected · steering your skill blocks",
-                    color = Mod.Train, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -79,12 +79,12 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         if (profile == null) {
             Text(
                 "No calibration yet — ETAs appear after you run the protocol.",
-                color = TextDim, fontSize = 12.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
             )
         } else {
             Text(
                 "In-reach picks get drilled fresh, right after the warm-up.",
-                color = TextDim, fontSize = 12.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
             )
         }
         Spacer(Modifier.height(10.dp))
@@ -96,7 +96,7 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     Text(
                         label.uppercase(), color = TextDim, fontFamily = Display,
-                        fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(8.dp))
                 }
@@ -129,7 +129,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(skill.name, color = TextPrimary, fontFamily = Body, fontSize = 14.5.sp, fontWeight = FontWeight.ExtraBold)
+                        Text(skill.name, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontWeight = FontWeight.ExtraBold)
                         Spacer(Modifier.width(8.dp))
                         // tier dots
                         Row(horizontalArrangement = Arrangement.spacedBy(2.5.dp)) {
@@ -142,7 +142,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                         }
                     }
                     Spacer(Modifier.height(3.dp))
-                    Text(skill.blurb, color = TextDim, fontSize = 11.5.sp, fontFamily = Body, lineHeight = 16.sp)
+                    Text(skill.blurb, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 16.sp)
                 }
                 Spacer(Modifier.width(10.dp))
                 Column(horizontalAlignment = Alignment.End) {
@@ -158,7 +158,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                             .background(if (selected) Mod.Train else Color.Transparent)
                             .border(1.dp, if (selected) Mod.Train else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.22f), CircleShape),
                         contentAlignment = Alignment.Center,
-                    ) { if (selected) Text("✓", color = Void, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                    ) { if (selected) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
                 }
             }
 
@@ -180,7 +180,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                             Text(
                                 "$label L$req",
                                 color = if (met) Good else TextDim,
-                                fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp,
+                                fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp,
                             )
                         }
                     }
@@ -192,7 +192,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "In your sessions: " + skill.feeders.take(2).joinToString(" · "),
-                    color = Mod.Train.copy(alpha = 0.85f), fontSize = 10.5.sp,
+                    color = Mod.Train.copy(alpha = 0.85f), fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
                     fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
             }

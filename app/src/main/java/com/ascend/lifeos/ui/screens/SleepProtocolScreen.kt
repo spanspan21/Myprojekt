@@ -73,13 +73,13 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Text(
                     "This tracks how long and how well you sleep — straight from your watch — and feeds your daily Readiness. " +
                         "You're a growing athlete: your job is 8–9 h and a steady bed/wake time. That's the whole game.",
-                    color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp,
+                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
                     if (synced > 0) "⚡ $synced night${if (synced == 1) "" else "s"} synced from your watch just now — nothing to type."
                     else "⚡ Nights sync from your watch automatically.",
-                    color = Mod.Body, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = Mod.Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -93,15 +93,15 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
             Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("TARGET 8–9 H", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                    Text("TARGET 8–9 H", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                     Text(lastMin?.let { fmtDur(it) } ?: "—", color = if (lastMin != null && lastMin >= 480) Good else Warn, style = metricStyle(34))
-                    Text(avg7?.let { "7-night average ${fmtDur(it)}" } ?: "log a night to begin", color = TextDim, fontSize = 11.sp, fontFamily = Body)
+                    Text(avg7?.let { "7-night average ${fmtDur(it)}" } ?: "log a night to begin", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
                 }
                 consistency?.let {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("$it%", color = if (it >= 80) Good else if (it >= 60) Warn else Crit, style = metricStyle(24))
-                        Text("SCHEDULE", color = TextDim, fontFamily = Display, fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
-                        Text("steadiness", color = TextDim, fontSize = 8.5.sp, fontFamily = Body)
+                        Text("SCHEDULE", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+                        Text("steadiness", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontFamily = Body)
                     }
                 }
             }
@@ -118,7 +118,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                     Column(Modifier.weight(1f)) {
                         Text(
                             "LIGHTS OUT", color = TextDim, fontFamily = Display,
-                            fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                         )
                         Text(
                             SleepProtocol.formatMin(SleepProtocol.bedtimeFor(st)),
@@ -157,7 +157,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             Text(
                 if (refineOpen) "▴" else "▾  watch data is used automatically",
-                color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
         }
         androidx.compose.animation.AnimatedVisibility(
@@ -179,7 +179,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             Column(Modifier.padding(16.dp)) {
                 Text(
                     "The one thing no sensor knows: how long you lay in bed before sleep. Correct it here — manual entries always beat synced ones.",
-                    color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, lineHeight = 15.sp,
                 )
                 Spacer(Modifier.height(10.dp))
                 StepRow("To bed", SleepProtocol.formatMin(bed),
@@ -205,7 +205,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 ) {
                     Text(
                         if (saved) "Saved ✓" else "Save last night",
-                        color = if (saved) Good else Void, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                        color = if (saved) Good else Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                     )
                 }
             }
@@ -219,7 +219,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(4.dp))
         Text(
             "The share of your time in bed you were actually asleep — higher is better (90%+ is great).",
-            color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, lineHeight = 15.sp,
         )
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
@@ -229,16 +229,16 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 if (latest == null) {
                     Text(
                         "No nights logged — SE appears after the first morning log.",
-                        color = TextDim, fontSize = 12.sp, fontFamily = Body,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
                     )
                 } else {
                     val c = when { latest >= 90f -> Good; latest >= 85f -> Warn; else -> Crit }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Latest SE", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("Latest SE", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text(
                                 "last ${effs.size} night${if (effs.size == 1) "" else "s"} · target ≥ 90%",
-                                color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                             )
                         }
                         Text("${latest.toInt()}%", color = c, style = metricStyle(24))
@@ -263,7 +263,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             "Only turn this on if you regularly struggle to fall or stay asleep. It's a clinical technique that deliberately " +
                 "SHRINKS your time in bed to rebuild sleep pressure — the opposite of what a growing athlete usually needs. " +
                 "Leave it off unless sleep is genuinely broken; otherwise just chase 8–9 h.",
-            color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp,
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, lineHeight = 15.sp,
         )
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
@@ -271,17 +271,17 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     if (restricting) {
                         val st = state!!
-                        Text("Time in bed ${fmtDur(st.tibMin)}", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("Time in bed ${fmtDur(st.tibMin)}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         Text(
                             "${SleepProtocol.formatMin(SleepProtocol.bedtimeFor(st))} → ${SleepProtocol.formatMin(st.anchorWakeMin)}" +
                                 (SleepStore.baselineAvg(ctx)?.let { " · baseline Ø ${fmtDur(it)}" } ?: ""),
-                            color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                         )
                     } else {
-                        Text("No window yet", color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("No window yet", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         Text(
                             "needs $BASELINE_NIGHTS baseline nights · floor ${fmtDur(SleepProtocol.FLOOR_MIN)}",
-                            color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                         )
                     }
                 }
@@ -300,7 +300,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                     .clickable(enabled = canStart) { SleepStore.startRestriction(ctx) }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Start restriction", color = Void, fontSize = 13.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Start restriction", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
         }
         adjustMsg?.let { msg ->
             Spacer(Modifier.height(8.dp))
@@ -308,10 +308,10 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "WEEKLY ADJUST", color = Mod.Body, fontFamily = Display,
-                        fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                     )
                     Spacer(Modifier.width(10.dp))
-                    Text(msg, color = TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(msg, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -350,7 +350,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
 private fun StepRow(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
-            label, color = TextMuted, fontSize = 12.sp, fontFamily = Body,
+            label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
         )
         StepOrb("−", onMinus)
@@ -369,15 +369,15 @@ private fun StepOrb(label: String, onClick: () -> Unit) {
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
 private fun RuleLine(text: String) {
     Row(Modifier.padding(vertical = 3.dp)) {
-        Text("·", color = Mod.Body, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+        Text("·", color = Mod.Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
         Spacer(Modifier.width(8.dp))
-        Text(text, color = TextMuted, fontSize = 12.sp, fontFamily = Body, lineHeight = 17.sp)
+        Text(text, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp)
     }
 }
 

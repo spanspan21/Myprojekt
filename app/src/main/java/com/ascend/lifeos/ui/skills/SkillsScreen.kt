@@ -209,7 +209,7 @@ private fun FocusNowCard(
                         Text(
                             "${m}m",
                             color = if (sel) com.ascend.lifeos.ui.theme.Void else com.ascend.lifeos.ui.theme.TextMuted,
-                            fontSize = 12.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -217,7 +217,7 @@ private fun FocusNowCard(
             Spacer(Modifier.height(12.dp))
             Text(
                 plan.note, color = com.ascend.lifeos.ui.theme.TextDim,
-                fontSize = 12.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, lineHeight = 16.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = com.ascend.lifeos.ui.theme.Body, lineHeight = 16.sp,
             )
             plan.items.take(3).forEach { item ->
                 Spacer(Modifier.height(12.dp))
@@ -228,12 +228,12 @@ private fun FocusNowCard(
                         Text(
                             "${item.node.node.title} · ${item.minutes}m",
                             color = com.ascend.lifeos.ui.theme.TextPrimary,
-                            fontSize = 13.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
                         )
                         Text(
                             "${item.domainTitle} — ${item.reason}",
                             color = com.ascend.lifeos.ui.theme.TextDim,
-                            fontSize = 11.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, lineHeight = 14.sp,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = com.ascend.lifeos.ui.theme.Body, lineHeight = 14.sp,
                         )
                     }
                 }
@@ -276,7 +276,7 @@ private fun ReviewQueue(due: List<DueReview>, onGraded: () -> Unit) {
                 Spacer(Modifier.width(7.dp))
                 Text(
                     "REVIEW · ${due.size} DUE", color = Mod.Skills, fontFamily = Display,
-                    fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -310,10 +310,10 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
             Column(Modifier.weight(1f)) {
                 Text(
                     r.nodeTitle, color = TextPrimary, fontFamily = Body,
-                    fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
-                Text(r.pathTitle, color = TextDim, fontSize = 10.5.sp, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(r.pathTitle, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Box(Modifier.size(6.dp).clip(CircleShape).background(Mod.Skills.copy(alpha = if (expanded) 0.9f else 0.5f)))
         }
@@ -321,7 +321,7 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
             Spacer(Modifier.height(9.dp))
             Text(
                 "Explain ${r.nodeTitle} in two sentences — out loud or in your head.",
-                color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp,
+                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
             )
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -345,7 +345,7 @@ private fun RowScope.GradeChip(label: String, color: Color, onClick: () -> Unit)
     ) {
         Text(
             label.uppercase(), color = color, fontFamily = Display,
-            fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
         )
     }
 }
@@ -374,19 +374,19 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, onOpen: () -> Unit) 
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(d.domain.title, color = TextPrimary, fontFamily = Body, fontSize = 15.5.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(d.domain.tagline, color = TextDim, fontSize = 11.5.sp, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(d.domain.title, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(d.domain.tagline, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(3.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             "$doneNodes/${d.nodes.size} milestones",
-                            color = accent, fontFamily = Display, fontSize = 10.sp,
+                            color = accent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
                         )
                         Spacer(Modifier.weight(1f))
                         Text(
                             "${SkillMeta.rankFor(xp)} · $xp XP",
-                            color = TextMuted, fontFamily = Display, fontSize = 9.5.sp,
+                            color = TextMuted, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
                         )
                     }
@@ -394,7 +394,7 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, onOpen: () -> Unit) 
                         Spacer(Modifier.height(2.dp))
                         Text(
                             "${formatFocus(focusMin)} this week",
-                            color = TextDim, fontSize = 10.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
@@ -412,11 +412,11 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, onOpen: () -> Unit) 
                         Spacer(Modifier.width(7.dp))
                         Text(
                             "NEXT: ${next.node.title}",
-                            color = TextMuted, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                         Spacer(Modifier.weight(1f))
-                        Text("~${next.node.estimatedMinutes}m", color = accent, fontSize = 10.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("~${next.node.estimatedMinutes}m", color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -445,10 +445,10 @@ private fun PathDetail(d: DomainWithGraph, vm: MasterPlanViewModel, onBack: () -
                 )
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(d.domain.title, color = TextPrimary, fontFamily = Display, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(d.domain.title, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
                         "${(d.progress * 100).toInt()}% · ${done.size}/${d.nodes.size} milestones",
-                        color = accent, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -510,12 +510,12 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                     Text(
                         n.node.title,
                         color = if (dimmed) TextDim else TextPrimary,
-                        fontFamily = Body, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                        fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
                         maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         "~${n.node.estimatedMinutes} min · ${n.doneCount}/${n.tasks.size} tasks",
-                        color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                     )
                 }
                 if (proof.isNotBlank()) {
@@ -536,18 +536,18 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                 // WHY
                 if (n.node.subtitle.isNotBlank()) {
                     Text(
-                        "WHY", color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                        "WHY", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text(n.node.subtitle, color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp)
+                    Text(n.node.subtitle, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 18.sp)
                     Spacer(Modifier.height(12.dp))
                 }
 
                 // LEARN
                 if (n.resources.isNotEmpty()) {
                     Text(
-                        "LEARN", color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                        "LEARN", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(6.dp))
@@ -561,7 +561,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                 // DO
                 if (n.tasks.isNotEmpty()) {
                     Text(
-                        "DO", color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                        "DO", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(6.dp))
@@ -590,10 +590,10 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                                 Text(
                                     t.title,
                                     color = if (doneTask) TextDim else TextPrimary,
-                                    fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                                    fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                                 )
                                 if (t.detail.isNotBlank()) {
-                                    Text(t.detail, color = TextDim, fontSize = 11.sp, fontFamily = Body, lineHeight = 15.sp)
+                                    Text(t.detail, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, lineHeight = 15.sp)
                                 }
                             }
                         }
@@ -603,7 +603,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                 // NOTES — free-form, saved as typed
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "NOTES", color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                    "NOTES", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
                 Spacer(Modifier.height(6.dp))
@@ -619,7 +619,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                 if (state == NodeState.CURRENT || state == NodeState.DONE) {
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        "PROOF OF WORK", color = TextDim, fontFamily = Display, fontSize = 9.sp,
+                        "PROOF OF WORK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(6.dp))
@@ -652,7 +652,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 "Start 25-min focus session",
-                                color = accent, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -681,8 +681,8 @@ private fun ResourceRowMini(r: ResourceEntity, accent: Color) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(r.title, color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(r.provider, color = TextDim, fontSize = 10.sp, fontFamily = Body)
+            Text(r.title, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(r.provider, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
         }
         Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = accent.copy(alpha = 0.7f), modifier = Modifier.size(13.dp))
     }
@@ -700,7 +700,7 @@ private fun MetaField(
     BasicTextField(
         value = value,
         onValueChange = onChange,
-        textStyle = TextStyle(color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 17.sp),
+        textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 17.sp),
         cursorBrush = SolidColor(accent),
         singleLine = singleLine,
         modifier = Modifier.fillMaxWidth(),
@@ -712,7 +712,7 @@ private fun MetaField(
                     .padding(horizontal = 11.dp, vertical = 9.dp),
             ) {
                 if (value.isEmpty()) {
-                    Text(placeholder, color = TextDim, fontSize = 12.sp, fontFamily = Body)
+                    Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
                 }
                 inner()
             }

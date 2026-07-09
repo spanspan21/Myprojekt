@@ -72,16 +72,16 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
         } else {
             VoidBackground(Accent)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Loading constellations…", color = TextMuted, fontSize = 14.sp)
+                Text("Loading constellations…", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14)
             }
         }
 
         // Floating header + domain switcher over the map.
         Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 18.dp, vertical = 12.dp)) {
-            Text("SKILL VAULT", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Text("SKILL VAULT", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
             if (active != null) {
                 Spacer(Modifier.height(2.dp))
-                Text(active.domain.title, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(active.domain.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))
             Row(
@@ -133,8 +133,8 @@ private fun DomainChip(
     ) {
         Box(Modifier.width(7.dp).height(7.dp).clip(RoundedCornerShape(4.dp)).background(accent))
         Spacer(Modifier.width(8.dp))
-        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.width(8.dp))
-        Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
     }
 }

@@ -82,15 +82,15 @@ fun metricStyle(size: Int, weight: FontWeight = FontWeight.Bold) = TextStyle(
  * track the active world) and safe to read inside a composable.
  */
 object JarvisText {
-    val overline: TextStyle get() = TextStyle(fontFamily = MicroLabel, fontWeight = FontWeight.Medium, fontSize = 10.sp, letterSpacing = 2.2.sp)
-    val labelSmall: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.4.sp)
-    val label: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-    val bodySmall: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 13.sp, lineHeight = 18.sp)
-    val body: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
-    val bodyStrong: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 22.sp)
-    val title: TextStyle get() = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-    val headline: TextStyle get() = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 22.sp, letterSpacing = (-0.3).sp)
-    val display: TextStyle get() = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 30.sp, letterSpacing = (-0.5).sp, fontFeatureSettings = TNUM)
+    val overline: TextStyle get() = TextStyle(fontFamily = MicroLabel, fontWeight = FontWeight.Medium, fontSize = com.ascend.lifeos.ui.theme.FS.s10, letterSpacing = 2.2.sp)
+    val labelSmall: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s11, letterSpacing = 0.4.sp)
+    val label: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+    val bodySmall: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 18.sp)
+    val body: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = com.ascend.lifeos.ui.theme.FS.s15, lineHeight = 22.sp)
+    val bodyStrong: TextStyle get() = TextStyle(fontFamily = Body, fontWeight = FontWeight.SemiBold, fontSize = com.ascend.lifeos.ui.theme.FS.s15, lineHeight = 22.sp)
+    val title: TextStyle get() = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = com.ascend.lifeos.ui.theme.FS.s17)
+    val headline: TextStyle get() = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s22, letterSpacing = (-0.3).sp)
+    val display: TextStyle get() = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s30, letterSpacing = (-0.5).sp, fontFeatureSettings = TNUM)
     fun metric(size: Int, weight: FontWeight = FontWeight.Bold): TextStyle = metricStyle(size, weight)
 }
 
@@ -99,16 +99,16 @@ fun ascendTypography(): Typography {
     val d = Display
     val b = Body
     return Typography(
-        displayLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = 40.sp, lineHeight = 44.sp, letterSpacing = (-1).sp, fontFeatureSettings = TNUM),
-        displayMedium = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 34.sp, letterSpacing = (-0.5).sp, fontFeatureSettings = TNUM),
-        headlineLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 30.sp, letterSpacing = (-0.4).sp),
-        headlineMedium = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 26.sp, letterSpacing = (-0.3).sp),
-        titleLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 22.sp),
-        titleMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 20.sp),
-        bodyLarge = TextStyle(fontFamily = b, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp),
-        bodyMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 20.sp),
-        labelLarge = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 16.sp),
-        labelMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 0.4.sp),
-        labelSmall = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = 10.sp, lineHeight = 13.sp, letterSpacing = 1.8.sp),
+        displayLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s40, lineHeight = 44.sp, letterSpacing = (-1).sp, fontFeatureSettings = TNUM),
+        displayMedium = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s30, lineHeight = 34.sp, letterSpacing = (-0.5).sp, fontFeatureSettings = TNUM),
+        headlineLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s26, lineHeight = 30.sp, letterSpacing = (-0.4).sp),
+        headlineMedium = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = com.ascend.lifeos.ui.theme.FS.s22, lineHeight = 26.sp, letterSpacing = (-0.3).sp),
+        titleLarge = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = com.ascend.lifeos.ui.theme.FS.s17, lineHeight = 22.sp),
+        titleMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s15, lineHeight = 20.sp),
+        bodyLarge = TextStyle(fontFamily = b, fontWeight = FontWeight.Normal, fontSize = com.ascend.lifeos.ui.theme.FS.s15, lineHeight = 22.sp),
+        bodyMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Normal, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, lineHeight = 20.sp),
+        labelLarge = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 16.sp),
+        labelMedium = TextStyle(fontFamily = b, fontWeight = FontWeight.Bold, fontSize = com.ascend.lifeos.ui.theme.FS.s11, lineHeight = 14.sp, letterSpacing = 0.4.sp),
+        labelSmall = TextStyle(fontFamily = d, fontWeight = FontWeight.SemiBold, fontSize = com.ascend.lifeos.ui.theme.FS.s10, lineHeight = 13.sp, letterSpacing = 1.8.sp),
     )
 }

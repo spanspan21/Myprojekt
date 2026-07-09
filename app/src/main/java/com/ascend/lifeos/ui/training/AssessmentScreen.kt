@@ -68,7 +68,7 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
                 val phase = when { step < strengthN -> "STRENGTH"; step < strengthN + metricN -> "PERFORMANCE"; else -> "MOBILITY" }
                 Text(
                     "$phase · ${step + 1}/$total", color = Mod.Train, fontFamily = Display,
-                    fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
             }
         }
@@ -144,11 +144,11 @@ private fun StepPage(
 ) {
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.height(44.dp))
-        Text(overline, color = TextDim, fontFamily = Display, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+        Text(overline, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
         Spacer(Modifier.height(8.dp))
-        Text(name, color = TextPrimary, fontFamily = Display, fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
+        Text(name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s28, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
         Spacer(Modifier.height(10.dp))
-        Text(instruction, color = TextMuted, fontSize = 13.5.sp, fontFamily = Body, lineHeight = 20.sp)
+        Text(instruction, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, lineHeight = 20.sp)
 
         Spacer(Modifier.weight(0.5f))
 
@@ -157,7 +157,7 @@ private fun StepPage(
             Spacer(Modifier.width(22.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("$value", color = TextPrimary, style = metricStyle(64), textAlign = TextAlign.Center)
-                Text(unit.uppercase(), color = TextDim, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+                Text(unit.uppercase(), color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             }
             Spacer(Modifier.width(22.dp))
             BigStep("+", onClick = onPlus)
@@ -171,7 +171,7 @@ private fun StepPage(
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
                         .clickable { onQuick(inc) }
                         .padding(horizontal = 12.dp, vertical = 6.dp),
-                ) { Text("+$inc", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                ) { Text("+$inc", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
             }
         }
 
@@ -180,7 +180,7 @@ private fun StepPage(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 ProgressDots(total = 6, reached = levelPreview, color = Mod.Train)
                 Spacer(Modifier.width(10.dp))
-                Text("Level $levelPreview", color = Mod.Train, fontFamily = Display, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text("Level $levelPreview", color = Mod.Train, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold)
             }
         }
 
@@ -196,11 +196,11 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
     var rating by remember(check.id) { mutableIntStateOf(current ?: 0) }
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.height(44.dp))
-        Text("CALIBRATION · MOBILITY", color = TextDim, fontFamily = Display, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+        Text("CALIBRATION · MOBILITY", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
         Spacer(Modifier.height(8.dp))
-        Text(check.name, color = TextPrimary, fontFamily = Display, fontSize = 26.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
+        Text(check.name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
         Spacer(Modifier.height(10.dp))
-        Text(check.instruction, color = TextMuted, fontSize = 13.5.sp, fontFamily = Body, lineHeight = 20.sp)
+        Text(check.instruction, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, lineHeight = 20.sp)
 
         Spacer(Modifier.weight(0.5f))
 
@@ -217,11 +217,11 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
                         .padding(horizontal = 18.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("$n", color = if (on) c else TextDim, fontFamily = Display, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("$n", color = if (on) c else TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(14.dp))
-                    Text(lbl, color = if (on) TextPrimary else TextMuted, fontSize = 15.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(lbl, color = if (on) TextPrimary else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
-                    if (n <= 2) Text("→ prescribes a routine", color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+                    if (n <= 2) Text("→ prescribes a routine", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
                 }
             }
         }
@@ -241,7 +241,7 @@ private fun NextButton(label: String, enabled: Boolean, onClick: () -> Unit) {
             .padding(vertical = 15.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (enabled) Void else TextDim, fontFamily = Body, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+        Text(label, color = if (enabled) Void else TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold)
     }
 }
 
@@ -253,7 +253,7 @@ private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit)
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold) }
 }
 
 // ─── Result summary ──────────────────────────────────────────────────────────
@@ -264,11 +264,11 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
     val prescribed = prescribedMobility(results)
     Column(Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState())) {
         Spacer(Modifier.height(44.dp))
-        Text("CALIBRATION COMPLETE", color = Good, fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+        Text("CALIBRATION COMPLETE", color = Good, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
         Spacer(Modifier.height(8.dp))
-        Text("Your movement profile", color = TextPrimary, fontFamily = Display, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        Text("Your movement profile", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
-        Text("The generator builds every session off these — strength, power, and the mobility you need. Re-run in ~6 weeks.", color = TextMuted, fontSize = 13.sp, fontFamily = Body, lineHeight = 19.sp)
+        Text("The generator builds every session off these — strength, power, and the mobility you need. Re-run in ~6 weeks.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, lineHeight = 19.sp)
         Spacer(Modifier.height(20.dp))
 
         Pattern.entries.forEach { p ->
@@ -278,7 +278,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
                 Pattern.SQUAT -> "Squat"; Pattern.ROW -> "Row"; Pattern.CORE -> "Core"; Pattern.HANG -> "Grip"
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(label, color = TextMuted, fontFamily = Body, fontSize = 13.5.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
+                Text(label, color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
                 Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
                     Box(Modifier.fillMaxWidth(lv / 6f).fillMaxHeight().clip(CircleShape).background(Mod.Train))
                 }
@@ -291,25 +291,25 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         val perf = ATHLETE_METRICS.mapNotNull { m -> results[m.id]?.takeIf { it > 0 }?.let { m to it } }
         if (perf.isNotEmpty()) {
             Spacer(Modifier.height(18.dp))
-            Text("PERFORMANCE", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Text("PERFORMANCE", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             Spacer(Modifier.height(8.dp))
             perf.forEach { (m, v) ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    Text(m.name, color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, modifier = Modifier.weight(1f))
-                    Text("$v ${m.unit}", color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(m.name, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
+                    Text("$v ${m.unit}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
         // prescribed mobility
         Spacer(Modifier.height(18.dp))
-        Text("MOBILITY PRESCRIPTION", color = TextDim, fontFamily = Display, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+        Text("MOBILITY PRESCRIPTION", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
         Spacer(Modifier.height(8.dp))
         if (prescribed.isEmpty()) {
-            Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 17.sp)
+            Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 17.sp)
         } else {
             val names = com.ascend.lifeos.data.training.ExerciseSeed.STRETCH_ROUTINES.filter { it.id in prescribed }.map { it.name }
-            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Body, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 17.sp)
+            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 17.sp)
         }
 
         Spacer(Modifier.height(28.dp))
@@ -318,6 +318,6 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
                 .clip(RoundedCornerShape(16.dp)).background(Mod.Train)
                 .clickable(onClick = onDone).padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Save profile", color = Void, fontFamily = Body, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold) }
+        ) { Text("Save profile", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
     }
 }

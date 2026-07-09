@@ -173,11 +173,11 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
             .padding(horizontal = 26.dp).padding(top = 40.dp, bottom = 30.dp),
     ) {
         com.ascend.lifeos.ui.home.Reveal(0) {
-        Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = 10.sp,
+        Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
             fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
         Spacer(Modifier.height(6.dp))
         Text("The numbers everything is computed from", color = TextPrimary,
-            fontFamily = Display, fontSize = 21.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
+            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s21, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
         }
         Spacer(Modifier.height(18.dp))
 
@@ -196,7 +196,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
 
         Spacer(Modifier.height(14.dp))
         com.ascend.lifeos.ui.home.Reveal(2) {
-        Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
+        Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -218,7 +218,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
 
         Spacer(Modifier.height(14.dp))
         com.ascend.lifeos.ui.home.Reveal(3) {
-        Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = 9.5.sp,
+        Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         BootPanel {
@@ -238,7 +238,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
         }
         Text(
             "Each one is optional — JARVIS stays honest about what it can't see.",
-            color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             modifier = Modifier.padding(top = 8.dp),
         )
         }
@@ -252,7 +252,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = 13.5.sp,
+            Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
                 fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         }
         }
@@ -308,7 +308,7 @@ private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
     ) {
-        Text(label, color = fg, fontSize = 12.sp,
+        Text(label, color = fg, fontSize = com.ascend.lifeos.ui.theme.FS.s12,
             fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
@@ -316,11 +316,11 @@ private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 private fun TuneStepper(label: String, value: Int, unit: String, onDelta: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = TextMuted, fontSize = 13.sp, fontFamily = Body,
+        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body,
             fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         StepBtn("−") { onDelta(-1) }
         Text(
-            "$value $unit", color = TextPrimary, fontFamily = Display, fontSize = 16.sp,
+            "$value $unit", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s16,
             fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
             modifier = Modifier.width(86.dp),
         )
@@ -336,7 +336,7 @@ private fun StepBtn(sign: String, onClick: () -> Unit) {
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(sign, color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
+    ) { Text(sign, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -353,13 +353,13 @@ private fun PermRow(title: String, hint: String, granted: Boolean, onRequest: ()
         )
         Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold)
-            Text(hint, color = TextDim, fontSize = 10.5.sp, fontFamily = Body)
+            Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+            Text(hint, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
         }
         Text(
             if (granted) "ONLINE" else "GRANT",
             color = if (granted) Good else Mod.Home,
-            fontFamily = Display, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
         )
     }
 }
@@ -467,7 +467,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                         val a by animateFloatAsState(if (i < lit) 1f else 0f, tween(300), label = "l$i")
                         Text(
                             "$ch", color = lerp(Mod.Home, TextPrimary, a),
-                            fontFamily = Display, fontSize = 36.sp, fontWeight = FontWeight.Bold,
+                            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s36, fontWeight = FontWeight.Bold,
                             modifier = Modifier.graphicsLayer {
                                 alpha = a
                                 translationY = (1f - a) * 10.dp.toPx()
@@ -480,7 +480,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                 val capA by animateFloatAsState(if (lit >= 6) 1f else 0f, tween(400), label = "cap")
                 Text(
                     "PERSONAL OPERATING SYSTEM", color = TextDim.copy(alpha = capA),
-                    fontFamily = Display, fontSize = 9.5.sp,
+                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
                 )
             }
@@ -503,7 +503,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
 
         Text(
             "INITIALIZING · TAP TO SKIP", color = TextDim.copy(alpha = 0.6f),
-            fontFamily = Display, fontSize = 9.sp,
+            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
         )
         Spacer(Modifier.height(52.dp))
@@ -560,12 +560,12 @@ private fun CalibratePhase(onNext: () -> Unit) {
 
         Text(
             "CALIBRATION", color = Mod.Home, fontFamily = Display,
-            fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             "Bringing systems online", color = TextPrimary, fontFamily = Display,
-            fontSize = 23.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s23, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp,
         )
 
         Spacer(Modifier.height(30.dp))
@@ -577,7 +577,7 @@ private fun CalibratePhase(onNext: () -> Unit) {
                 Text(
                     s.label,
                     color = if (on) TextPrimary else TextMuted,
-                    fontFamily = Display, fontSize = 11.5.sp,
+                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                     modifier = Modifier.width(84.dp),
                 )
@@ -589,13 +589,13 @@ private fun CalibratePhase(onNext: () -> Unit) {
                         )
                     }
                     Spacer(Modifier.height(5.dp))
-                    Text(s.readout, color = TextDim, fontSize = 10.sp, fontFamily = Body, maxLines = 1)
+                    Text(s.readout, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, maxLines = 1)
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(
                     if (on) "ONLINE" else "· · ·",
                     color = if (on) s.accent else TextDim,
-                    fontFamily = Display, fontSize = 9.5.sp,
+                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                     modifier = Modifier.width(46.dp), textAlign = TextAlign.End,
                 )
@@ -612,7 +612,7 @@ private fun CalibratePhase(onNext: () -> Unit) {
             Spacer(Modifier.weight(1f))
             Text(
                 "TAP TO SKIP", color = TextDim.copy(alpha = 0.6f), fontFamily = Display,
-                fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
             )
         }
         Spacer(Modifier.height(52.dp))
@@ -656,7 +656,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
 
         Text(
             "OPERATOR", color = Mod.Home, fontFamily = Display,
-            fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
         )
         Spacer(Modifier.height(10.dp))
 
@@ -667,7 +667,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 onValueChange = { if (it.length <= 24) onName(it) },
                 singleLine = true,
                 textStyle = TextStyle(
-                    color = TextPrimary, fontFamily = Display, fontSize = 30.sp,
+                    color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s30,
                     fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                 ),
                 cursorBrush = SolidColor(Mod.Home),
@@ -676,7 +676,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         } else {
             Text(
                 name.ifBlank { DEFAULT_NAME }, color = TextPrimary, fontFamily = Display,
-                fontSize = 30.sp, fontWeight = FontWeight.Bold,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
                     .clickable(
@@ -689,7 +689,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         Spacer(Modifier.height(6.dp))
         Text(
             "profile calibrated · tap name to change",
-            color = TextDim, fontSize = 11.5.sp, fontFamily = Body,
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
         )
 
         Spacer(Modifier.height(44.dp))
@@ -718,7 +718,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
             ) {
                 Text(
                     if (engaged) "ONLINE" else "GO ONLINE",
-                    color = Void, fontFamily = Display, fontSize = 13.sp,
+                    color = Void, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
                     fontWeight = FontWeight.Bold, letterSpacing = 2.5.sp,
                 )
             }
@@ -739,7 +739,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 Spacer(Modifier.width(9.dp))
                 Text(
                     "Connect Health Connect", color = TextMuted,
-                    fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
         }

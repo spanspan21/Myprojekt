@@ -206,9 +206,9 @@ private fun SearchPane(
     autoFocus: Boolean, onAutoFocused: () -> Unit,
 ) {
     val ctx = LocalContext.current
-    Text("Add food", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+    Text("Add food", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
     backdateLabel(dayKey)?.let {
-        Text("Logging to $it", color = Mod.Fuel, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+        Text("Logging to $it", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold)
     }
     Spacer(Modifier.height(14.dp))
 
@@ -265,7 +265,7 @@ private fun SearchPane(
                         Repo.profile().recentFoods.sortedByDescending { if (it.meal == meal) 1 else 0 }
                     }
                     if (recents.isEmpty()) {
-                        Text("Nothing logged yet — type in the search above or scan.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                        Text("Nothing logged yet — type in the search above or scan.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 18.sp)
                     } else {
                         Section("RECENT — 1 TAP LOGS, ＋ COLLECTS")
                         recents.take(12).forEach { e ->
@@ -306,12 +306,12 @@ private fun SearchPane(
                         }
                     }
                     if (favorites.isEmpty() && savedMeals.isEmpty()) {
-                        Text("Mark foods with ★ or save a slot as a meal — then they live here.", color = TextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+                        Text("Mark foods with ★ or save a slot as a meal — then they live here.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 18.sp)
                     }
                 }
                 // ── Teller: die ~geschätzten Alltagsgerichte (Kap. 37) ──
                 else -> {
-                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, lineHeight = 17.sp)
                     Spacer(Modifier.height(10.dp))
                     BasicFoods.ALL.filter { it.approx }.forEach { p ->
                         ResultRow(
@@ -382,10 +382,10 @@ private fun SearchPane(
                     .take(15)
             }
             if (loading && results.isEmpty()) {
-                Text("Searching…", color = TextMuted, fontSize = 13.sp)
+                Text("Searching…", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
             } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
                 Column {
-                    Text("No results.", color = TextMuted, fontSize = 13.sp)
+                    Text("No results.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
                     // Kap. 35: drei Wege statt Sackgasse
                     val dym = remember(query) { com.ascend.lifeos.data.BasicFoods.didYouMean(query) }
                     if (dym != null) {
@@ -420,11 +420,11 @@ private fun SearchPane(
         GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("${basket.size} in basket", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g protein", color = TextDim, fontSize = 10.5.sp)
+                    Text("${basket.size} in basket", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g protein", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
                 }
                 Text(
-                    "Clear", color = TextDim, fontSize = 11.5.sp, fontWeight = FontWeight.Bold,
+                    "Clear", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { onBasket(emptyList()) }.padding(8.dp),
                 )
                 Spacer(Modifier.width(6.dp))
@@ -514,7 +514,7 @@ private fun pseudoProduct(e: FoodEntry): FoodApi.Product? {
 
 @Composable
 private fun Section(title: String) {
-    Text(title, color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
+    Text(title, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
 }
 
 @Composable
@@ -534,7 +534,7 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
     ) {
         Icon(icon, null, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
-        Text(label, color = TextMuted, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 
@@ -547,8 +547,8 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text(sub, color = TextDim, fontSize = 11.sp, maxLines = 1)
+                Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, maxLines = 1)
             }
             if (verified) {
                 Spacer(Modifier.width(8.dp))
@@ -560,7 +560,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
                 } else {
                     val c = when (score) { "A" -> Good; "B" -> Mod.Fuel; "C" -> Warn; "D" -> Orange; else -> Crit }
                     Box(Modifier.size(24.dp).clip(RoundedCornerShape(7.dp)).background(c.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
-                        Text(score, color = c, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(score, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -592,9 +592,9 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(product.name, color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 2)
-            product.brand?.let { Text(it, color = TextDim, fontSize = 11.5.sp) }
-            if (fromCache) Text("cached", color = Mod.Fuel.copy(alpha = 0.85f), fontSize = 9.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+            Text(product.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold, maxLines = 2)
+            product.brand?.let { Text(it, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5) }
+            if (fromCache) Text("cached", color = Mod.Fuel.copy(alpha = 0.85f), fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
         }
         Spacer(Modifier.width(8.dp))
         VerdictPill("${eval.score}/10 · ${eval.label}", Color(eval.color))
@@ -605,7 +605,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     if (evalLines.isNotEmpty()) {
         Spacer(Modifier.height(10.dp))
         evalLines.forEach { (line, c) ->
-            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = 10.5.sp, lineHeight = 15.sp, maxLines = 2)
+            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, lineHeight = 15.sp, maxLines = 2)
         }
     }
 
@@ -627,7 +627,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         Modifier.fillMaxWidth().clickable { showDetails = !showDetails },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+        Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
         // collapsed-state teaser badges
         product.nova?.let { DetailBadge("NOVA $it", if (it >= 4) Crit else TextDim) }
@@ -638,10 +638,10 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         Spacer(Modifier.height(10.dp))
         // full verdict narration (un-truncated)
         (eval.pros.map { it to Good } + eval.cons.map { it to Crit }).forEach { (line, c) ->
-            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = 10.5.sp, lineHeight = 15.sp)
+            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, lineHeight = 15.sp)
         }
         Spacer(Modifier.height(12.dp))
-        Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         Spacer(Modifier.height(6.dp))
         NutrientRow("Saturated fat", product.satFat100 * f, "g", 1.5, 5.0)
         NutrientRow("Sugar", product.sugars100 * f, "g", 5.0, 22.5)
@@ -650,20 +650,20 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         val risky = FoodScore.riskyAdditives(product).map { it.first }.toSet()
         if (product.additives.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
-            Text("ADDITIVES", color = TextDim, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("ADDITIVES", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
             Spacer(Modifier.height(4.dp))
             FlowRowChips(product.additives.map { FoodScore.normAdditive(it) }) { e -> e in risky }
         }
         product.allergens.takeIf { it.isNotEmpty() }?.let {
             Spacer(Modifier.height(8.dp))
-            Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = 10.sp, lineHeight = 14.sp)
+            Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10, lineHeight = 14.sp)
         }
     }
 
     Spacer(Modifier.height(14.dp))
     // Kap. 38: Getränke sprechen ml, Essen spricht Portionen — Gramm ist Fallback
     val isMl = product.portions.any { it.ml }
-    Text("AMOUNT", color = TextDim, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("AMOUNT", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(96.dp)) {
@@ -684,7 +684,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     }
     if (lastGrams != null) {
         Spacer(Modifier.height(6.dp))
-        Text("last time: $lastGrams ${if (isMl) "ml" else "g"}", color = TextDim, fontSize = 10.sp)
+        Text("last time: $lastGrams ${if (isMl) "ml" else "g"}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
     }
 
     Spacer(Modifier.height(14.dp))
@@ -696,7 +696,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         Spacer(Modifier.height(10.dp))
         Text(
             "≈ vitamins & minerals estimated from a similar staple — this scan carried none",
-            color = TextDim, fontSize = 10.5.sp, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Medium, lineHeight = 14.sp,
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Medium, lineHeight = 14.sp,
         )
     }
     Spacer(Modifier.height(18.dp))
@@ -727,7 +727,7 @@ private fun DetailBadge(text: String, color: Color) {
     Box(
         Modifier.clip(RoundedCornerShape(6.dp)).background(color.copy(alpha = 0.14f))
             .padding(horizontal = 6.dp, vertical = 2.dp),
-    ) { Text(text, color = color, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp) }
+    ) { Text(text, color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp) }
 }
 
 /** One traffic-light nutrient row. [inverse] = higher is better (fiber). */
@@ -741,8 +741,8 @@ private fun NutrientRow(label: String, value: Double, unit: String, low: Double,
     Row(Modifier.fillMaxWidth().padding(vertical = 2.5.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(7.dp).clip(CircleShape).background(dot))
         Spacer(Modifier.width(9.dp))
-        Text(label, color = TextMuted, fontSize = 11.sp, modifier = Modifier.weight(1f))
-        Text("${if (value >= 10) value.roundToInt().toString() else "%.1f".format(value)} $unit", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, modifier = Modifier.weight(1f))
+        Text("${if (value >= 10) value.roundToInt().toString() else "%.1f".format(value)} $unit", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -755,7 +755,7 @@ private fun FlowRowChips(items: List<String>, isRisky: (String) -> Boolean) {
                 Modifier.clip(RoundedCornerShape(7.dp))
                     .background((if (risky) Crit else TextDim).copy(alpha = 0.12f))
                     .padding(horizontal = 8.dp, vertical = 3.dp),
-            ) { Text(e, color = if (risky) Crit else TextMuted, fontSize = 10.sp, fontWeight = if (risky) FontWeight.Bold else FontWeight.Normal) }
+            ) { Text(e, color = if (risky) Crit else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = if (risky) FontWeight.Bold else FontWeight.Normal) }
         }
     }
 }
@@ -763,8 +763,8 @@ private fun FlowRowChips(items: List<String>, isRisky: (String) -> Boolean) {
 @Composable
 private fun PortionStat(value: String, label: String, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = TextPrimary, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
-        Text(label.uppercase(), color = TextDim, fontSize = 8.sp, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(value, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.ExtraBold)
+        Text(label.uppercase(), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
