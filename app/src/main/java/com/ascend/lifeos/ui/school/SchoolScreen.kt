@@ -105,6 +105,10 @@ fun SchoolScreen(onClose: () -> Unit) {
 
     val subjects = remember(tick) { SchoolStore.subjects(ctx) }
     val overall = remember(tick) { SchoolStore.overallGrade(ctx) }
+    // Exams scheduled on the calendar, matched to subjects (audit F4).
+    val exams by produceState(emptyList<SchoolStore.UpcomingExam>(), tick) {
+        value = runCatching { SchoolStore.upcomingExams(ctx) }.getOrDefault(emptyList())
+    }
 
     var expanded by remember { mutableStateOf<String?>(null) }
     var addSubject by remember { mutableStateOf(false) }
@@ -132,6 +136,35 @@ fun SchoolScreen(onClose: () -> Unit) {
                 item(key = "hero") {
                     GradeHero(overall, subjects.size)
                     Spacer(Modifier.height(18.dp))
+                }
+            }
+
+            if (exams.isNotEmpty()) {
+                item(key = "exams_label") {
+                    SectionLabel("Upcoming exams", accent = SchoolAccent)
+                    Spacer(Modifier.height(8.dp))
+                }
+                items(exams, key = { "exam_${it.title}_${it.dayEpoch}" }) { ex ->
+                    val daysLeft = (ex.dayEpoch - java.time.LocalDate.now().toEpochDay()).toInt()
+                    val subj = ex.subject
+                    // Revive the dead neededFor(): grade needed next to HOLD the average.
+                    val needTxt = subj?.let { s ->
+                        SchoolStore.avgFor(ctx, s.id)?.let { cur ->
+                            SchoolStore.neededFor(ctx, s, cur, 1)?.let { "need ${SchoolStore.gradeText(s, it)} to hold Ø" }
+                        }
+                    }
+                    Panel(Modifier.fillMaxWidth()) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                            Text(ex.title, color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                (if (daysLeft <= 0) "Today" else "in $daysLeft day${if (daysLeft == 1) "" else "s"}") +
+                                    (needTxt?.let { " · $it" } ?: ""),
+                                color = TextDim, fontSize = 11.sp, fontFamily = Body,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
                 }
             }
 

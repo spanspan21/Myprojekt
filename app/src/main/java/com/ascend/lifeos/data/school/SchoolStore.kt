@@ -227,6 +227,35 @@ object SchoolStore {
 
     fun ceilNeeded(x: Double): Int = ceil(x - 1e-9).toInt()
 
+    /** An exam on the calendar, matched to a school subject by title where possible. */
+    data class UpcomingExam(val title: String, val dayEpoch: Long, val subject: Subject?)
+
+    /**
+     * Exams from the calendar in the next [days] days, matched to a subject by
+     * name (audit F4). Lets the School module study for the exam that's actually
+     * scheduled — the calendar, School grades and neededFor() previously ignored
+     * each other. Suspends: it reads the calendar Room DB.
+     */
+    suspend fun upcomingExams(ctx: Context, days: Int = 21): List<UpcomingExam> {
+        val today = java.time.LocalDate.now()
+        val subs = subjects(ctx)
+        val events = runCatching {
+            com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay() + days)
+        }.getOrDefault(emptyList())
+        return events
+            .filter { it.type == com.ascend.lifeos.data.calendar.EventType.EXAM.name }
+            .sortedBy { it.dayEpoch }
+            .map { ev ->
+                val t = ev.title.trim().lowercase()
+                val match = subs.firstOrNull {
+                    val n = it.name.trim().lowercase()
+                    n.isNotBlank() && (t.contains(n) || n.contains(t))
+                }
+                UpcomingExam(ev.title, ev.dayEpoch, match)
+            }
+    }
+
     // ── one-time migration from the old 0–15-only store ─────────────────────────
 
     @Volatile private var migrated = false
