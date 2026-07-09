@@ -8,6 +8,35 @@ import android.content.Intent
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val kind = intent.getStringExtra("kind") ?: "morning"
+        // Smart reschedule (afternoon nudge + its 1-tap answers). All three need a
+        // Room query, so run off the receiver thread with goAsync + runBlocking.
+        if (kind == "reschedule" || kind == "reschedule_accept" || kind == "reschedule_skip") {
+            val pending = goAsync()
+            Thread {
+                try {
+                    runCatching { Repo.initIfNeeded(ctx) }
+                    val R = com.ascend.lifeos.data.training.TrainingReschedule
+                    when (kind) {
+                        "reschedule" -> {
+                            if (!R.handledToday(ctx)) {
+                                val s = kotlinx.coroutines.runBlocking { R.suggest(ctx) }
+                                if (s != null) Notifier.showReschedule(ctx, s.startMin, s.endMin, s.reason)
+                            }
+                        }
+                        "reschedule_accept" -> {
+                            val s = kotlinx.coroutines.runBlocking { R.suggest(ctx) }
+                            if (s != null) kotlinx.coroutines.runBlocking { R.accept(ctx, s) }
+                            runCatching { androidx.core.app.NotificationManagerCompat.from(ctx).cancel(11) }
+                        }
+                        "reschedule_skip" -> {
+                            R.skip(ctx)
+                            runCatching { androidx.core.app.NotificationManagerCompat.from(ctx).cancel(11) }
+                        }
+                    }
+                } finally { pending.finish() }
+            }.start()
+            return
+        }
         if (kind == "habit") {
             Notifier.showHabit(
                 ctx,

@@ -57,6 +57,12 @@ object Prefs {
     const val DELOAD_UNTIL = "deload_until"            // epoch-day the active deload runs until (0 = none)
     const val TRAIN_AUTO_SCHEDULE = "train_auto_schedule" // true = recommended (auto-place); false = custom (you place)
     const val TRAIN_EASY_DAY = "train_easy_day"        // dayKey an automation forced an easy session (audit F3/F5)
+    // Smart afternoon reschedule of a missed morning session (user request)
+    const val RESCHEDULE_ON = "reschedule_on"          // true = offer to reschedule a missed session
+    const val AFTER_SCHOOL_BUFFER_MIN = "after_school_buffer_min" // 45 — home-way + change before training
+    const val LATEST_TRAIN_START_MIN = "latest_train_start_min"   // 1260 (21:00) latest afternoon start
+    const val RESCHEDULE_HANDLED_DAY = "reschedule_handled_day"   // dayKey the user accepted/skipped
+    const val RESCHEDULE_NOTIFIED_DAY = "reschedule_notified_day" // dayKey the afternoon nudge fired
     const val BEDTIME_EARLY_DAY = "bedtime_early_day"  // dayKey an automation asked for an earlier bedtime (audit F3)
     // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true

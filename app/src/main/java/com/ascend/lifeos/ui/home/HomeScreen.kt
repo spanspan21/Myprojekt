@@ -480,6 +480,8 @@ fun HomeScreen(
             SectionLabel("Next up")
             Spacer(Modifier.height(10.dp))
             NextUpCard(trainVm, trainedToday, onOpenTrain, onOpenCalendar = { onOpenModule("calendar") })
+            // Missed the morning session? Offer a smart afternoon slot to move it to.
+            RescheduleCard(Modifier.padding(top = 10.dp))
             // OF-1: from 19:00, if the watch auto-imported a night we don't yet have
             // the real lights-out time for, ask — so sleep-restriction titrates on
             // true efficiency instead of a fake ~95 %. Reads SleepStore.rev to

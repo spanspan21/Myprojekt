@@ -30,6 +30,7 @@ object Notifier {
     private const val REQ_FUEL = 4103
     private const val REQ_WEEKLY = 4104
     private const val REQ_WORKOUT_SOON = 4106
+    private const val REQ_RESCHEDULE = 4108
 
     fun hasPermission(ctx: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
@@ -54,6 +55,10 @@ object Notifier {
         scheduleDaily(ctx, REQ_FUEL, 13, 0, "fuel")
         scheduleDaily(ctx, REQ_EVENING, 20, 30, "evening")
         scheduleWeekly(ctx, REQ_WEEKLY, Calendar.SUNDAY, 19, "weekly")
+        // afternoon check: if a morning session was missed, nudge to reschedule it
+        if (Prefs.bool(ctx, Prefs.RESCHEDULE_ON, true)) {
+            scheduleDaily(ctx, REQ_RESCHEDULE, 15, 0, "reschedule")
+        }
     }
 
     /**
@@ -111,6 +116,35 @@ object Notifier {
             if (timeInMillis <= System.currentTimeMillis()) add(java.util.Calendar.DAY_OF_YEAR, 1)
         }
         runCatching { am.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pending(ctx, 4107, "bedtime")) }
+    }
+
+    /** Afternoon reschedule nudge with a concrete suggestion + 1-tap answers. */
+    fun showReschedule(ctx: Context, startMin: Int, endMin: Int, reason: String) {
+        if (!hasPermission(ctx)) return
+        ensureChannel(ctx)
+        fun hm(m: Int) = "%02d:%02d".format(m / 60, m % 60)
+        var flags = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
+        fun action(kind: String, req: Int): PendingIntent = PendingIntent.getBroadcast(
+            ctx, req, Intent(ctx, ReminderReceiver::class.java).putExtra("kind", kind), flags,
+        )
+        // tapping the body opens the app → the Home reschedule card (also offers "Other time")
+        val open = Intent(ctx, Class.forName("com.ascend.lifeos.MainActivity"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val openPi = PendingIntent.getActivity(ctx, 4209, open, flags)
+        val n = NotificationCompat.Builder(ctx, CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Training still open")
+            .setContentText("Move it to ${hm(startMin)}–${hm(endMin)}? · $reason")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Move today's session to ${hm(startMin)}–${hm(endMin)}? · $reason"))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(openPi)
+            .addAction(0, "Fits", action("reschedule_accept", 4210))
+            .addAction(0, "Other time", openPi)
+            .addAction(0, "Skip", action("reschedule_skip", 4211))
+            .build()
+        androidx.core.app.NotificationManagerCompat.from(ctx).notify(11, n)
     }
 
     private fun pending(ctx: Context, req: Int, kind: String): PendingIntent {
