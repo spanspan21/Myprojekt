@@ -444,6 +444,21 @@ object Repo {
     private fun Map<String, BodyDay>.takeLastDays(n: Int): Map<String, BodyDay> =
         if (size <= n) this else entries.sortedBy { it.key }.takeLast(n).associate { it.key to it.value }
 
+    /**
+     * Manually log last night's total sleep (no stages) — so the Body tab and
+     * recovery aren't hollow on nights without a watch (audit F9). Feeds both the
+     * daily snapshot (trends) and data.health (recovery/sleep scores).
+     */
+    fun logManualSleep(minutes: Int) {
+        val m = minutes.coerceIn(0, 16 * 60)
+        val k = todayKey()
+        val prev = data.bodyDays[k] ?: BodyDay()
+        val day = prev.copy(sleepMin = m, rem = 0, deep = 0, light = 0, awake = 0)
+        val h = (data.health ?: HealthSnapshot(updatedAt = System.currentTimeMillis()))
+            .copy(sleepMin = m, rem = 0, deep = 0, light = 0, awake = 0)
+        commit(data.copy(health = h, bodyDays = (data.bodyDays + (k to day)).takeLastDays(120)))
+    }
+
     fun bodyDay(key: String = todayKey()): BodyDay? = data.bodyDays[key]
 
     /** Last [n] day keys (today inclusive), oldest first. */

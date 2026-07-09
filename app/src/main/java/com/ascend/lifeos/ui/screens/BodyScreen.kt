@@ -101,6 +101,7 @@ fun BodyScreen() {
     }
 
     var weightOpen by remember { mutableStateOf(false) }
+    var sleepOpen by remember { mutableStateOf(false) }
 
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
@@ -156,11 +157,20 @@ fun BodyScreen() {
                                 color = TextMuted, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 18.sp,
                             )
                             Spacer(Modifier.height(10.dp))
-                            Box(
-                                Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Body.copy(alpha = 0.14f))
-                                    .border(0.5.dp, Mod.Body.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
-                                    .clickable { connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
-                            ) { Text("Connect", color = Mod.Body, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                            Row {
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Body.copy(alpha = 0.14f))
+                                        .border(0.5.dp, Mod.Body.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
+                                        .clickable { connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
+                                ) { Text("Connect", color = Mod.Body, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                                Spacer(Modifier.width(8.dp))
+                                // no-watch nights still get logged (audit F9)
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(11.dp))
+                                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.14f), RoundedCornerShape(11.dp))
+                                        .clickable { sleepOpen = true }.padding(horizontal = 13.dp, vertical = 8.dp),
+                                ) { Text("Log sleep", color = TextMuted, fontSize = 12.sp, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                            }
                         }
                     }
                 }
@@ -472,6 +482,45 @@ fun BodyScreen() {
     }
 
     if (weightOpen) WeightSheet(onDismiss = { weightOpen = false })
+    if (sleepOpen) SleepSheet(onDismiss = { sleepOpen = false })
+}
+
+@Composable
+private fun SleepSheet(onDismiss: () -> Unit) {
+    var minutes by remember { mutableStateOf(Repo.bodyDay()?.sleepMin?.takeIf { it > 0 } ?: 450) }
+    JarvisSheet(onDismiss = onDismiss) {
+        Column(
+            Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "LOG SLEEP", color = Mod.Body, fontFamily = Display, fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                WeightStep("−30") { minutes = (minutes - 30).coerceAtLeast(0) }
+                Spacer(Modifier.width(8.dp))
+                WeightStep("−15") { minutes = (minutes - 15).coerceAtLeast(0) }
+                Text(
+                    "%dh%02d".format(minutes / 60, minutes % 60), color = TextPrimary, style = metricStyle(36),
+                    modifier = Modifier.widthIn(min = 150.dp), textAlign = TextAlign.Center,
+                )
+                WeightStep("+15") { minutes = (minutes + 15).coerceAtMost(16 * 60) }
+                Spacer(Modifier.width(8.dp))
+                WeightStep("+30") { minutes = (minutes + 30).coerceAtMost(16 * 60) }
+            }
+            Text("last night", color = TextDim, fontSize = 11.sp, fontFamily = Body)
+            Spacer(Modifier.height(18.dp))
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
+                    .clickable { Repo.logManualSleep(minutes); onDismiss() }
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text("Save", color = Void, fontSize = 14.5.sp, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
 }
 
 // ─── body measurements — growth in centimeters, not just kilos ──────────────
