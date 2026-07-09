@@ -109,6 +109,12 @@ fun SchoolScreen(onClose: () -> Unit) {
     val exams by produceState(emptyList<SchoolStore.UpcomingExam>(), tick) {
         value = runCatching { SchoolStore.upcomingExams(ctx) }.getOrDefault(emptyList())
     }
+    // auto-create + schedule study blocks for upcoming exams (idea #2, idempotent)
+    LaunchedEffect(exams) {
+        if (exams.isNotEmpty()) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { com.ascend.lifeos.data.school.StudyPlanner.sync(ctx) }
+        }
+    }
 
     var expanded by remember { mutableStateOf<String?>(null) }
     var addSubject by remember { mutableStateOf(false) }
