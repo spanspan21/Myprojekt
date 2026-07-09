@@ -23,7 +23,11 @@ import kotlinx.coroutines.launch
  */
 class MasterPlanViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val dao = MasterPlanDatabase.get(app).dao()
+    // Obtain the DAO from the app-wide container rather than newing it up inline
+    // (audit Phase 3: DI seam). Falls back to the direct call if ever accessed
+    // before the container is built.
+    private val dao = runCatching { com.ascend.lifeos.JarvisApp.container.masterPlanDao }
+        .getOrElse { MasterPlanDatabase.get(app).dao() }
     private val importer = MasterPlanImporter(app, dao)
     private val engine = JarvisRoutingEngine()
 
