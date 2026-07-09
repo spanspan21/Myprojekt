@@ -539,30 +539,28 @@ object Repo {
      * Falls back to 8h until ≥5 such nights exist. Clamped 6:30–9:00.
      */
     fun sleepNeedMin(): Int {
-        // both settings toggles actually gate their halves here
+        // Repo gathers; the pure median+boost math lives in domain.SleepMath.
         val learnOn = appCtx?.let { Prefs.bool(it, Prefs.SLEEP_NEED_AUTO, true) } ?: true
         val boostOn = appCtx?.let { Prefs.bool(it, Prefs.STRAIN_SLEEP_BOOST, true) } ?: true
-        val base = if (!learnOn) 480 else {
-            val samples = lastDayKeys(60).filter { key ->
-                runCatching {
-                    val d = java.time.LocalDate.parse(key)
-                    d.dayOfWeek == java.time.DayOfWeek.SATURDAY || d.dayOfWeek == java.time.DayOfWeek.SUNDAY
-                }.getOrDefault(false)
-            }.mapNotNull { data.bodyDays[it]?.sleepMin }.filter { it > 240 }
-            if (samples.size < 5) 480 else samples.sorted()[samples.size / 2].coerceIn(390, 540)
+        val samples = lastDayKeys(60).filter { key ->
+            runCatching {
+                val d = java.time.LocalDate.parse(key)
+                d.dayOfWeek == java.time.DayOfWeek.SATURDAY || d.dayOfWeek == java.time.DayOfWeek.SUNDAY
+            }.getOrDefault(false)
+        }.mapNotNull { data.bodyDays[it]?.sleepMin }
+        val heights = data.profile.measurements["height"].orEmpty()
+        val growthSpurt = heights.size >= 2 && run {
+            val monthAgo = System.currentTimeMillis() - 35L * 86_400_000
+            val old = heights.lastOrNull { it.ts < monthAgo }
+            old != null && heights.last().cm - old.cm > 0.5
         }
-        // hard days earn extra sleep: today's training sets + growth spurts
-        var boost = 0
-        if (boostOn) {
-            if (workoutSets(today()) >= 12) boost += 30
-            val heights = data.profile.measurements["height"].orEmpty()
-            if (heights.size >= 2) {
-                val monthAgo = System.currentTimeMillis() - 35L * 86_400_000
-                val old = heights.lastOrNull { it.ts < monthAgo }
-                if (old != null && heights.last().cm - old.cm > 0.5) boost += 20
-            }
-        }
-        return (base + boost).coerceAtMost(570)
+        return com.ascend.lifeos.domain.SleepMath.need(
+            freeMorningSamples = samples,
+            learnOn = learnOn,
+            hardTrainingDay = workoutSets(today()) >= 12,
+            growthSpurt = growthSpurt,
+            boostOn = boostOn,
+        )
     }
 
     /** Merge one historical day (Health Connect backfill) without clobbering check-ins. */
