@@ -108,40 +108,38 @@ object LifeStores {
         note = o.optString("note", ""),
     )
 
-    /** All transactions, newest first. */
-    fun txns(ctx: Context): List<Txn> {
+    /** Raw prefs read — the pre-Room store; used ONLY by the one-time migration. */
+    fun txnsFromPrefs(ctx: Context): List<Txn> {
         val arr = array(ctx, "txns")
         val out = ArrayList<Txn>(arr.length())
         for (i in 0 until arr.length()) out.add(txnFrom(arr.getJSONObject(i)))
         return out.sortedByDescending { it.ts }
     }
 
+    /** All transactions, newest first — now Room-backed (audit finance→Room). */
+    fun txns(ctx: Context): List<Txn> {
+        com.ascend.lifeos.data.finance.FinanceRoom.initIfNeeded(ctx)
+        return com.ascend.lifeos.data.finance.FinanceRoom.txns()
+    }
+
     /** Returns the created txn id so callers can attach metadata race-free. */
     fun addTxn(ctx: Context, amountCents: Long, category: String, note: String = ""): String? {
         if (amountCents == 0L) return null
-        val t = Txn(newId("t"), System.currentTimeMillis(), amountCents, category, note.trim())
-        val list = txns(ctx).take(999) // keep the store bounded
-        val arr = JSONArray().put(t.toJson())
-        list.forEach { arr.put(it.toJson()) }
-        put(ctx, "txns", arr.toString())
-        return t.id
+        com.ascend.lifeos.data.finance.FinanceRoom.initIfNeeded(ctx)
+        val id = newId("t")
+        com.ascend.lifeos.data.finance.FinanceRoom.addTxn(id, System.currentTimeMillis(), amountCents, category, note.trim(), accountId = null)
+        return id
     }
 
     fun deleteTxn(ctx: Context, id: String) {
-        val arr = JSONArray()
-        txns(ctx).filter { it.id != id }.forEach { arr.put(it.toJson()) }
-        put(ctx, "txns", arr.toString())
+        com.ascend.lifeos.data.finance.FinanceRoom.initIfNeeded(ctx)
+        com.ascend.lifeos.data.finance.FinanceRoom.deleteTxn(id)
     }
 
     /** Edits category/note in place, keeping id/ts/amount. */
     fun updateTxn(ctx: Context, id: String, category: String, note: String) {
-        val arr = JSONArray()
-        var changed = false
-        txns(ctx).forEach { t ->
-            val next = if (t.id == id) { changed = true; t.copy(category = category, note = note.trim()) } else t
-            arr.put(next.toJson())
-        }
-        if (changed) put(ctx, "txns", arr.toString())
+        com.ascend.lifeos.data.finance.FinanceRoom.initIfNeeded(ctx)
+        com.ascend.lifeos.data.finance.FinanceRoom.updateTxn(id, category, note.trim())
     }
 
     private fun monthStartMs(): Long =

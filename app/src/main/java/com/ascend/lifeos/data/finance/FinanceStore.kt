@@ -121,11 +121,18 @@ object FinanceStore {
     private fun Account.toJson() = JSONObject()
         .put("id", id).put("name", name).put("icon", icon).put("bal", balanceCents)
 
-    fun accounts(ctx: Context): List<Account> {
+    /** Raw prefs read — the pre-Room store; used ONLY by the one-time migration. */
+    fun accountsFromPrefs(ctx: Context): List<Account> {
         val arr = array(ctx, "accounts")
         val out = ArrayList<Account>(arr.length())
         for (i in 0 until arr.length()) out.add(accountFrom(arr.getJSONObject(i)))
         return out
+    }
+
+    /** Accounts — now Room-backed (audit finance→Room). */
+    fun accounts(ctx: Context): List<Account> {
+        FinanceRoom.initIfNeeded(ctx)
+        return FinanceRoom.accounts()
     }
 
     private fun writeAccounts(ctx: Context, list: List<Account>, quiet: Boolean = false) {
@@ -138,122 +145,105 @@ object FinanceStore {
     fun addAccount(ctx: Context, name: String, icon: String = "", startCents: Long = 0L): String {
         val id = newId("a")
         if (name.isBlank()) return id
-        writeAccounts(ctx, accounts(ctx) + Account(id, name.trim(), icon.trim(), startCents))
+        FinanceRoom.initIfNeeded(ctx)
+        FinanceRoom.upsertAccount(Account(id, name.trim(), icon.trim(), startCents), FinanceRoom.accountCount())
         return id
     }
 
     fun updateAccount(ctx: Context, id: String, name: String, icon: String) {
         if (name.isBlank()) return
-        writeAccounts(ctx, accounts(ctx).map {
-            if (it.id == id) it.copy(name = name.trim(), icon = icon.trim()) else it
-        })
+        FinanceRoom.initIfNeeded(ctx)
+        val cur = FinanceRoom.accounts().firstOrNull { it.id == id } ?: return
+        val idx = FinanceRoom.accounts().indexOfFirst { it.id == id }
+        FinanceRoom.upsertAccount(cur.copy(name = name.trim(), icon = icon.trim()), idx)
     }
 
     /** Manual balance correction — overwrites the running balance. */
     fun setAccountBalance(ctx: Context, id: String, balanceCents: Long) {
-        writeAccounts(ctx, accounts(ctx).map {
-            if (it.id == id) it.copy(balanceCents = balanceCents) else it
-        })
+        FinanceRoom.initIfNeeded(ctx)
+        FinanceRoom.setBalance(id, balanceCents)
     }
 
-    /** Removes the account; its txns stay in LifeStores, just unassigned. */
+    /** Removes the account; its txns stay, just unassigned (FK onDelete SET_NULL). */
     fun deleteAccount(ctx: Context, id: String) {
-        writeAccounts(ctx, accounts(ctx).filter { it.id != id }, quiet = true)
-        val map = obj(ctx, "txn_acc")
-        val drop = ArrayList<String>()
-        for (k in map.keys()) if (map.optString(k) == id) drop.add(k)
-        drop.forEach { map.remove(it) }
-        put(ctx, "txn_acc", map.toString())
+        FinanceRoom.initIfNeeded(ctx)
+        FinanceRoom.deleteAccount(id)
     }
-
 
     /** Transfer between two own accounts — balances only, no Txn (not spend/income). */
     fun move(ctx: Context, fromId: String, toId: String, cents: Long) {
         if (cents <= 0 || fromId == toId) return
-        val list = accounts(ctx)
+        FinanceRoom.initIfNeeded(ctx)
+        val list = FinanceRoom.accounts()
         if (list.none { it.id == fromId } || list.none { it.id == toId }) return
-        writeAccounts(ctx, list.map {
-            when (it.id) {
-                fromId -> it.copy(balanceCents = it.balanceCents - cents)
-                toId -> it.copy(balanceCents = it.balanceCents + cents)
-                else -> it
-            }
-        })
+        FinanceRoom.adjustBalance(fromId, -cents)
+        FinanceRoom.adjustBalance(toId, cents)
     }
 
     private fun adjustBalanceQuiet(ctx: Context, accountId: String, deltaCents: Long) {
-        val list = accounts(ctx)
-        if (list.none { it.id == accountId }) return
-        writeAccounts(ctx, list.map {
-            if (it.id == accountId) it.copy(balanceCents = it.balanceCents + deltaCents) else it
-        }, quiet = true)
+        FinanceRoom.initIfNeeded(ctx)
+        FinanceRoom.adjustBalance(accountId, deltaCents)
     }
 
     // ─── Txn ↔ account bridge ───────────────────────────────────────────────
     // LifeStores.Txn stays untouched; the mapping txnId → accountId lives here.
 
-    /** Full mapping txnId → accountId (for history rows, resolved in one read). */
-    fun txnAccounts(ctx: Context): Map<String, String> {
-        val o = obj(ctx, "txn_acc")
-        val out = HashMap<String, String>()
-        for (k in o.keys()) out[k] = o.optString(k)
-        return out
-    }
-
-    fun accountIdOf(ctx: Context, txnId: String): String? =
+    /** Raw prefs read of the legacy txn→account map — used ONLY by the migration. */
+    fun accountIdOfFromPrefs(ctx: Context, txnId: String): String? =
         obj(ctx, "txn_acc").optString(txnId, "").ifEmpty { null }
 
+    /** Full mapping txnId → accountId — now the Room FK column (no more hand map). */
+    fun txnAccounts(ctx: Context): Map<String, String> {
+        FinanceRoom.initIfNeeded(ctx)
+        return FinanceRoom.txnAccounts()
+    }
+
+    fun accountIdOf(ctx: Context, txnId: String): String? {
+        FinanceRoom.initIfNeeded(ctx)
+        return FinanceRoom.accountIdOf(txnId)
+    }
+
     /**
-     * Books a transaction through LifeStores (so quick-log & co. see it) and —
-     * when [accountId] is given — maps it to the account and moves its balance.
+     * Books a transaction (single Room store) and — when [accountId] is given —
+     * links it via the FK and moves the account balance.
      */
     fun bookTxn(ctx: Context, amountCents: Long, category: String, note: String = "", accountId: String? = null) {
         if (amountCents == 0L) return
-        val txnId = LifeStores.addTxn(ctx, amountCents, category, note)
-        if (txnId != null && accountId != null && accounts(ctx).any { it.id == accountId }) {
-            val map = obj(ctx, "txn_acc")
-            map.put(txnId, accountId)
-            pruneMapQuiet(ctx, map)
-            adjustBalanceQuiet(ctx, accountId, amountCents)
-        }
+        FinanceRoom.initIfNeeded(ctx)
+        val linked = accountId?.takeIf { id -> FinanceRoom.accounts().any { it.id == id } }
+        val txnId = newId("t")
+        FinanceRoom.addTxn(txnId, System.currentTimeMillis(), amountCents, category, note.trim(), linked)
+        if (linked != null) FinanceRoom.adjustBalance(linked, amountCents)
         touch()
     }
 
-    /** Deletes a txn everywhere: reverses the account balance, drops the mapping. */
+    /** Deletes a txn everywhere: reverses the account balance, drops the FK link. */
     fun deleteTxn(ctx: Context, txnId: String) {
-        val t = LifeStores.txns(ctx).firstOrNull { it.id == txnId }
-        val map = obj(ctx, "txn_acc")
-        val acc = map.optString(txnId, "")
-        if (acc.isNotEmpty()) {
-            if (t != null) adjustBalanceQuiet(ctx, acc, -t.amountCents)
-            map.remove(txnId)
-            putQuiet(ctx, "txn_acc", map.toString())
-        }
-        LifeStores.deleteTxn(ctx, txnId)
+        FinanceRoom.initIfNeeded(ctx)
+        val t = FinanceRoom.txns().firstOrNull { it.id == txnId }
+        val acc = FinanceRoom.accountIdOf(txnId)
+        if (acc != null && t != null) FinanceRoom.adjustBalance(acc, -t.amountCents)
+        FinanceRoom.deleteTxn(txnId)
         touch()
     }
 
     /** Edits category/note of an existing txn in place, keeping id/ts/amount. */
     fun updateTxn(ctx: Context, txnId: String, category: String, note: String) {
-        // real API now — no more rewriting LifeStores' private JSON schema here
-        LifeStores.updateTxn(ctx, txnId, category, note)
+        FinanceRoom.initIfNeeded(ctx)
+        FinanceRoom.updateTxn(txnId, category, note.trim())
         touch()
     }
 
     /** Re-assigns (or clears, accountId = null) the account of a txn, moving balances. */
     fun setTxnAccount(ctx: Context, txnId: String, accountId: String?) {
-        val t = LifeStores.txns(ctx).firstOrNull { it.id == txnId } ?: return
-        val map = obj(ctx, "txn_acc")
-        val old = map.optString(txnId, "").ifEmpty { null }
+        FinanceRoom.initIfNeeded(ctx)
+        val t = FinanceRoom.txns().firstOrNull { it.id == txnId } ?: return
+        val old = FinanceRoom.accountIdOf(txnId)
         if (old == accountId) return
-        old?.let { adjustBalanceQuiet(ctx, it, -t.amountCents) }
-        if (accountId != null && accounts(ctx).any { it.id == accountId }) {
-            adjustBalanceQuiet(ctx, accountId, t.amountCents)
-            map.put(txnId, accountId)
-        } else {
-            map.remove(txnId)
-        }
-        put(ctx, "txn_acc", map.toString())
+        old?.let { FinanceRoom.adjustBalance(it, -t.amountCents) }
+        val linked = accountId?.takeIf { id -> FinanceRoom.accounts().any { it.id == id } }
+        if (linked != null) FinanceRoom.adjustBalance(linked, t.amountCents)
+        FinanceRoom.setTxnAccount(txnId, linked)
     }
 
     /** LifeStores caps txns at 1000 — drop mappings whose txn fell off the end. */

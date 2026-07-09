@@ -18,6 +18,8 @@ class JarvisApp : Application() {
         // Init the store at the Application level so receivers/widgets that run
         // before any Activity find Repo ready (audit: init-ordering hazard).
         runCatching { Repo.initIfNeeded(this) }
+        // Warm the Room finance store (migrates from prefs once, keeps prefs as backup).
+        runCatching { com.ascend.lifeos.data.finance.FinanceRoom.init(this) }
     }
 
     companion object {
