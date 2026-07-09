@@ -60,6 +60,23 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
         }
     }
+    var csvImportState by remember { mutableStateOf<String?>(null) }
+    // Import bank transactions from a CSV export (Option B — any bank, offline).
+    val csvPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            csvImportState = "Importing…"
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val text = runCatching {
+                    ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                }.getOrNull()
+                val r = if (text.isNullOrBlank()) Result.failure(Exception("empty file"))
+                    else com.ascend.lifeos.data.finance.CsvImport.import(ctx, text)
+                csvImportState = r.fold({ "Imported $it transactions ✓" }, { "Import failed: ${it.message}" })
+            }
+        }
+    }
     val folderPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
@@ -179,6 +196,9 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         SettingsSection("Finance") {
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
             ToggleRow("Round-up savings", "Round each expense up to the euro into your first goal", Prefs.ROUNDUP_ON, false)
+            ActionRow("Import bank CSV", csvImportState ?: "Load a transaction export from your bank (any format)") {
+                if (csvImportState != "Importing…") runCatching { csvPicker.launch("*/*") }
+            }
         }
 
         // ── TRAINING ─────────────────────────────────────────────────

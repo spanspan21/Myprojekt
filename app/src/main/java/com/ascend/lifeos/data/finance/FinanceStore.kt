@@ -226,6 +226,14 @@ object FinanceStore {
         touch()
     }
 
+    /** Book a txn at a specific timestamp (for CSV/bank imports). No round-up/account. */
+    fun bookTxnAt(ctx: Context, ts: Long, amountCents: Long, category: String, note: String = "") {
+        if (amountCents == 0L) return
+        FinanceRoom.initIfNeeded(ctx)
+        FinanceRoom.addTxn(newId("t"), ts, amountCents, category, note.trim(), null)
+        touch()
+    }
+
     /** Deletes a txn everywhere: reverses the account balance, drops the FK link. */
     fun deleteTxn(ctx: Context, txnId: String) {
         FinanceRoom.initIfNeeded(ctx)
