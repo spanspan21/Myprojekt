@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Backup
@@ -179,6 +180,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ToggleRow("Rest timer notification", "Countdown continues off-screen", Prefs.REST_NOTIFICATION, true)
             ToggleRow("Strain target", "Recovery-based set range on the hub", Prefs.STRAIN_TARGET_ON, true)
             ToggleRow("Camera rep counter", "Experimental — pose detection counts for you", Prefs.AUTO_COUNT, false)
+            RescheduleSettings()
             // season phase
             Spacer(Modifier.height(6.dp))
             Text(
@@ -487,6 +489,54 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 }
 
 // ─── pieces ─────────────────────────────────────────────────────────────────
+
+@Composable
+private fun RescheduleSettings() {
+    val ctx = LocalContext.current
+    var on by remember { mutableStateOf(Prefs.bool(ctx, Prefs.RESCHEDULE_ON, true)) }
+    var buffer by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.AFTER_SCHOOL_BUFFER_MIN, 45)) }
+    var latestH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.LATEST_TRAIN_START_MIN, 21 * 60) / 60) }
+    var askH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RESCHEDULE_HOUR, 15)) }
+    fun rearm() = runCatching { com.ascend.lifeos.data.Notifier.schedule(ctx) }
+
+    ToggleRow("Reschedule missed sessions", "Ask in the afternoon to move a skipped morning session", on) {
+        on = it; Prefs.setBool(ctx, Prefs.RESCHEDULE_ON, it); rearm()
+    }
+    if (on) {
+        StepRow("After-school buffer", "$buffer min",
+            { buffer = (buffer - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.AFTER_SCHOOL_BUFFER_MIN, buffer) },
+            { buffer = (buffer + 15).coerceAtMost(120); Prefs.setInt(ctx, Prefs.AFTER_SCHOOL_BUFFER_MIN, buffer) })
+        StepRow("Latest training start", "%02d:00".format(latestH),
+            { latestH = (latestH - 1).coerceAtLeast(17); Prefs.setInt(ctx, Prefs.LATEST_TRAIN_START_MIN, latestH * 60) },
+            { latestH = (latestH + 1).coerceAtMost(23); Prefs.setInt(ctx, Prefs.LATEST_TRAIN_START_MIN, latestH * 60) })
+        StepRow("Ask me at", "%02d:00".format(askH),
+            { askH = (askH - 1).coerceAtLeast(12); Prefs.setInt(ctx, Prefs.RESCHEDULE_HOUR, askH); rearm() },
+            { askH = (askH + 1).coerceAtMost(19); Prefs.setInt(ctx, Prefs.RESCHEDULE_HOUR, askH); rearm() })
+    }
+}
+
+@Composable
+private fun StepRow(title: String, value: String, onDec: () -> Unit, onInc: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, modifier = Modifier.weight(1f))
+        StepBtn("−", onDec)
+        Text(
+            value, color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+            textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 62.dp).padding(horizontal = 8.dp),
+        )
+        StepBtn("+", onInc)
+    }
+}
+
+@Composable
+private fun StepBtn(label: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(34.dp).clip(CircleShape)
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
+}
 
 @Composable
 private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {

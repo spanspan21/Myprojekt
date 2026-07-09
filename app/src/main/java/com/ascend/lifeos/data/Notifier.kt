@@ -57,7 +57,7 @@ object Notifier {
         scheduleWeekly(ctx, REQ_WEEKLY, Calendar.SUNDAY, 19, "weekly")
         // afternoon check: if a morning session was missed, nudge to reschedule it
         if (Prefs.bool(ctx, Prefs.RESCHEDULE_ON, true)) {
-            scheduleDaily(ctx, REQ_RESCHEDULE, 15, 0, "reschedule")
+            scheduleDaily(ctx, REQ_RESCHEDULE, Prefs.int(ctx, Prefs.RESCHEDULE_HOUR, 15), 0, "reschedule")
         }
     }
 

@@ -670,6 +670,12 @@ object PlanGenerator {
                     val holdT = ((lv.unlockHoldSecs ?: 20) * if (deload) 0.6f else 0.85f).toInt().coerceAtLeast(8)
                     Triple(0, 0, "Hold ${holdT}s × $setsBase" + (next?.let { " · ${lv.unlockHoldSecs}s ×3 sessions → ${it.exerciseName}" } ?: ""))
                 }
+                // outgrown the vest: keep driving strength with external load
+                // (dip belt / plates) via double progression (LoadProgression model)
+                vest != null && vest >= vestMaxKg && best >= 20 -> {
+                    val rx = com.ascend.lifeos.domain.LoadProgression.next(vestMaxKg.toDouble(), best, repLow = 6, repHigh = 10)
+                    Triple(rx.repLow, rx.repHigh, "Vest maxed at ${vestMaxKg}kg — add a dip belt / plates beyond it · 6–10 reps $rir · +2.5kg at 10 clean")
+                }
                 vest != null -> Triple(6, 10, "Vest ${vest}kg — optimal load for your $best-rep best · 6–10 reps $rir · add load at 10 clean")
                 best == 0 -> Triple(8, 15, "8–15 reps $rir — log an honest baseline first")
                 hasVest && best in 1..14 -> Triple(8, 15, "8–15 reps $rir — no vest yet: it's not optimal below 15 clean reps, earn it" + (next?.let { " · 15 clean ×3 → ${it.exerciseName}" } ?: ""))

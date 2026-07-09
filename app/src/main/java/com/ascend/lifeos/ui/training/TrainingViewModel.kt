@@ -644,6 +644,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { com.ascend.lifeos.data.Notifier.scheduleProteinNudge(getApplication()) }
             // bridge into the day record: streak, widget, water bonus, load headroom
             runCatching { com.ascend.lifeos.data.Repo.markTrained(totalSets) }
+            // learn when you actually train → smarter reschedule default (idea #5)
+            runCatching { com.ascend.lifeos.data.training.TrainingReschedule.recordTrainedNow(getApplication()) }
         }
 
         activeSessionId = null

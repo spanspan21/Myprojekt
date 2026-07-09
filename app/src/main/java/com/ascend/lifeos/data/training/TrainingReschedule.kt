@@ -32,6 +32,23 @@ object TrainingReschedule {
     fun handledToday(ctx: Context) = Prefs.string(ctx, Prefs.RESCHEDULE_HANDLED_DAY, "") == todayKey()
     fun markHandled(ctx: Context) = Prefs.setString(ctx, Prefs.RESCHEDULE_HANDLED_DAY, todayKey())
 
+    // ── learned training time (audit-idea #5): remember when you actually train ──
+    /** Record the current time-of-day as a finished-session time (rolling last 20). */
+    fun recordTrainedNow(ctx: Context) {
+        val nowMin = LocalTime.now().let { it.hour * 60 + it.minute }
+        val list = (readTimes(ctx) + nowMin).takeLast(20)
+        Prefs.setString(ctx, Prefs.TRAINED_TIMES, list.joinToString(","))
+    }
+
+    /** Median start time you tend to train at, or null until there's enough history. */
+    fun learnedStartMin(ctx: Context): Int? {
+        val list = readTimes(ctx).sorted()
+        return if (list.size < 4) null else list[list.size / 2]
+    }
+
+    private fun readTimes(ctx: Context): List<Int> =
+        Prefs.string(ctx, Prefs.TRAINED_TIMES, "").split(",").mapNotNull { it.trim().toIntOrNull() }
+
     /**
      * A concrete afternoon slot to move today's missed session to, or null when
      * there's nothing to reschedule (already trained, not a training day, no slot).
@@ -60,16 +77,23 @@ object TrainingReschedule {
             .maxOfOrNull { it.endMin } ?: 0
         val earliest = maxOf(nowMin, lastObligationEnd + buffer)
 
-        val slot = timeline.freeSlots
+        val candidates = timeline.freeSlots
             .map { if (it.startMin < earliest) it.copy(startMin = earliest) else it }
-            .firstOrNull { it.startMin <= latest && it.endMin - it.startMin >= len }
-            ?: return null
+            .filter { it.startMin <= latest && it.endMin - it.startMin >= len }
+        if (candidates.isEmpty()) return null
 
-        val start = slot.startMin
+        // Bias toward the time you usually train, if it fits a free slot (idea #5)
+        val learned = learnedStartMin(ctx)
+        val slot = if (learned != null)
+            candidates.minByOrNull { c -> kotlin.math.abs(learned.coerceIn(c.startMin, c.endMin - len) - learned) }!!
+        else candidates.first()
+        val start = if (learned != null) learned.coerceIn(slot.startMin, slot.endMin - len) else slot.startMin
         val end = (start + len).coerceAtMost(slot.endMin)
-        val reason = if (lastObligationEnd > 0)
-            "after school (+$buffer min) · before your next event"
-        else "next free slot today"
+        val reason = when {
+            learned != null -> "your usual time · after school (+$buffer min)"
+            lastObligationEnd > 0 -> "after school (+$buffer min) · before your next event"
+            else -> "next free slot today"
+        }
         return Suggestion(start, end, reason)
     }
 

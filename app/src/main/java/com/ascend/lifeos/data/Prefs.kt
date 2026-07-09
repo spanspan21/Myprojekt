@@ -63,6 +63,8 @@ object Prefs {
     const val LATEST_TRAIN_START_MIN = "latest_train_start_min"   // 1260 (21:00) latest afternoon start
     const val RESCHEDULE_HANDLED_DAY = "reschedule_handled_day"   // dayKey the user accepted/skipped
     const val RESCHEDULE_NOTIFIED_DAY = "reschedule_notified_day" // dayKey the afternoon nudge fired
+    const val RESCHEDULE_HOUR = "reschedule_hour"      // hour-of-day the afternoon nudge fires (default 15)
+    const val TRAINED_TIMES = "trained_times"          // csv minute-of-day of recent finished sessions (learned default)
     const val BEDTIME_EARLY_DAY = "bedtime_early_day"  // dayKey an automation asked for an earlier bedtime (audit F3)
     // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true
