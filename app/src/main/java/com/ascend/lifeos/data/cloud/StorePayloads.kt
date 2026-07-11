@@ -8,6 +8,7 @@ import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
 import com.ascend.lifeos.data.prime.PrimeEngine
 import com.ascend.lifeos.data.school.SchoolStore
 import com.ascend.lifeos.data.sleep.SleepStore
+import com.ascend.lifeos.data.training.MuscleRecovery
 import com.ascend.lifeos.data.training.TrainingDatabase
 import com.ascend.lifeos.wellbeing.WellbeingStore
 import kotlinx.coroutines.flow.first
@@ -208,7 +209,16 @@ object StorePayloads {
                 put(JSONObject().put("groupKey", it.groupKey).put("currentLevel", it.currentLevel))
             }
         }
+        // Per-Muskel-Frische fürs Web-HUD: exakter Satz-Level-Snapshot statt
+        // Template-Heuristik. 0.0 = gebraten · 1.0 = frisch; der Zeitstempel
+        // lässt das Web veraltete Snapshots verwerfen (Fallback: 48-h-Heuristik).
+        val freshness = runCatching { MuscleRecovery.compute(ctx) }.getOrNull()
+        val freshnessJson = JSONObject().apply {
+            freshness?.map?.forEach { (m, f) -> put(m.name, Math.round(f * 100.0) / 100.0) }
+        }
         JSONObject().put("sessions", sessionsJson).put("prs", prsJson).put("progression", progJson)
+            .put("muscleFreshness", freshnessJson)
+            .put("muscleFreshnessAt", System.currentTimeMillis())
     }
 
     // ── calendar (Room): all events ───────────────────────────────────────────
