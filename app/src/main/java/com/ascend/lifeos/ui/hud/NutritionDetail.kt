@@ -36,9 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,6 +55,8 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.data.targetFor
 import com.ascend.lifeos.ui.kit.JarvisSheet
+import com.ascend.lifeos.ui.kit.endpointHalo
+import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.BgElevated
@@ -486,17 +490,34 @@ private fun ProteinTrend(data: List<Int>, goal: Int, modifier: Modifier) {
             )
         }
         val step = size.width / (data.size - 1).coerceAtLeast(1)
-        val path = Path()
-        var started = false
+        // Web-Dashboard-Look: Segmente (Logging-Lücken bleiben Lücken) als
+        // weiche Catmull-Rom-Kurven mit Gradient-Fill und Glow-Unterzug
+        val segments = ArrayList<List<Offset>>()
+        var cur = ArrayList<Offset>()
         data.forEachIndexed { i, v ->
-            if (v <= 0) { started = false; return@forEachIndexed }
-            val pt = Offset(i * step, y(v.toFloat()))
-            if (!started) { path.moveTo(pt.x, pt.y); started = true } else path.lineTo(pt.x, pt.y)
+            if (v <= 0) {
+                if (cur.isNotEmpty()) { segments.add(cur); cur = ArrayList() }
+            } else cur.add(Offset(i * step, y(v.toFloat())))
         }
-        drawPath(path, Accent, style = Stroke(2.5f))
+        if (cur.isNotEmpty()) segments.add(cur)
+        val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+        segments.forEach { seg ->
+            val path = smoothPath(seg)
+            if (seg.size > 1) {
+                val area = Path().apply {
+                    addPath(path)
+                    lineTo(seg.last().x, size.height); lineTo(seg.first().x, size.height); close()
+                }
+                drawPath(area, Brush.verticalGradient(listOf(Accent.copy(alpha = 0.14f), Color.Transparent)))
+            }
+            if (glowF > 0f) drawPath(path, Accent.copy(alpha = 0.20f * glowF), style = Stroke(6f, cap = StrokeCap.Round))
+            drawPath(path, Accent, style = Stroke(2.5f, cap = StrokeCap.Round))
+        }
         data.forEachIndexed { i, v ->
             if (v > 0) drawCircle(if (v >= goal) Accent else Amber, 3.5f, Offset(i * step, y(v.toFloat())))
         }
+        // der jüngste geloggte Wert trägt den Endpunkt-Halo
+        segments.lastOrNull()?.lastOrNull()?.let { endpointHalo(Accent, it, 4f) }
     }
 }
 
@@ -566,16 +587,21 @@ private fun WeekBars(days: List<Pair<String, Int>>, goal: Int, modifier: Modifie
         val n = days.size
         val gap = size.width * 0.04f
         val bw = (size.width - gap * (n - 1)) / n
-        // goal line
+        // goal line — gestrichelt wie im Web-Dashboard
         val gy = size.height - (goal.toFloat() / maxV) * size.height
-        drawLine(Accent.copy(alpha = 0.4f), Offset(0f, gy), Offset(size.width, gy), 1.5f)
+        drawLine(
+            Accent.copy(alpha = 0.45f), Offset(0f, gy), Offset(size.width, gy), 1.5f,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(9f, 9f)),
+        )
         days.forEachIndexed { i, (_, v) ->
             val bh = (v.toFloat() / maxV) * size.height
             val x = i * (bw + gap)
             val over = v > goal * 1.05
             val col = if (v == 0) com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f) else if (over) Red else Accent
+            // Web-Look: Bars mit vertikalem Verlauf statt Flachfarbe
             drawRoundRect(
-                col, topLeft = Offset(x, size.height - bh), size = androidx.compose.ui.geometry.Size(bw, bh),
+                Brush.verticalGradient(listOf(col, col.copy(alpha = col.alpha * 0.55f))),
+                topLeft = Offset(x, size.height - bh), size = androidx.compose.ui.geometry.Size(bw, bh),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f, 6f),
             )
         }

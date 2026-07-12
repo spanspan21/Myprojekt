@@ -385,10 +385,8 @@ fun Spark(
         val stepX = size.width / (values.size - 1)
         fun y(v: Float) = size.height - ((v - min) / span) * size.height * 0.92f - size.height * 0.04f
 
-        val path = Path()
-        values.forEachIndexed { i, v ->
-            if (i == 0) path.moveTo(0f, y(v)) else path.lineTo(i * stepX, y(v))
-        }
+        // Web-Dashboard-Look: Catmull-Rom-Glättung statt harter Ecken
+        val path = smoothPath(values.mapIndexed { i, v -> Offset(i * stepX, y(v)) })
         baseline?.let {
             val by = y(it)
             drawLine(
@@ -414,7 +412,8 @@ fun Spark(
         val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
         if (glowF > 0f) drawPath(shown, color.copy(alpha = 0.22f * glowF), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
         drawPath(shown, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-        if (p >= 1f) drawCircle(color, 3.dp.toPx(), Offset(size.width, y(values.last())))
+        // Endpunkt-Halo (Web-Signatur): Ring + Kern markieren den jüngsten Wert
+        if (p >= 1f) endpointHalo(color, Offset(size.width, y(values.last())), 3.dp.toPx())
     }
 }
 

@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.HudChip
+import com.ascend.lifeos.ui.kit.endpointHalo
+import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -118,15 +120,8 @@ private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
 
         val points = volumes.mapIndexed { i, v -> Offset(i * stepX, h - (v / maxVol) * h * 0.85f) }
 
-        // Bezier path
-        val path = Path().apply {
-            moveTo(points[0].x, points[0].y)
-            for (i in 0 until points.size - 1) {
-                val cp1x = (points[i].x + points[i + 1].x) / 2
-                cubicTo(cp1x, points[i].y, cp1x, points[i + 1].y, points[i + 1].x, points[i + 1].y)
-            }
-        }
-        drawPath(path, Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.7f), Cyan.copy(alpha = 0.7f))), style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+        // Web-Dashboard-Look: Catmull-Rom-Kurve + Glow-Unterzug + Endpunkt-Halo
+        val path = smoothPath(points)
 
         // Fill under curve
         val fillPath = Path().apply {
@@ -137,10 +132,15 @@ private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
         }
         drawPath(fillPath, Brush.verticalGradient(listOf(Accent.copy(alpha = 0.15f), Color.Transparent)))
 
-        // Points
-        points.forEach { p ->
-            drawCircle(Accent, 4.dp.toPx(), p)
+        val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+        if (glowF > 0f) drawPath(path, Accent.copy(alpha = 0.20f * glowF), style = Stroke(6.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(path, Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.7f), Cyan.copy(alpha = 0.7f))), style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+
+        // Punkte dezent, der jüngste trägt den Halo
+        points.dropLast(1).forEach { p ->
+            drawCircle(Accent.copy(alpha = 0.75f), 2.5.dp.toPx(), p)
         }
+        endpointHalo(Accent, points.last(), 3.5.dp.toPx())
     }
 }
 

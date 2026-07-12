@@ -188,9 +188,8 @@ private fun NetWorthChart(points: List<Pair<Long, Long>>, color: Color, modifier
             points.map { Offset((it.first - minD) / dSpan * size.width, y(it.second)) }
         }
 
-        val line = Path().apply {
-            screen.forEachIndexed { i, p -> if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }
-        }
+        // Web-Dashboard-Look: Catmull-Rom-Glättung (kit.smoothPath)
+        val line = com.ascend.lifeos.ui.kit.smoothPath(screen)
         val area = Path().apply {
             addPath(line)
             lineTo(screen.last().x, size.height)
