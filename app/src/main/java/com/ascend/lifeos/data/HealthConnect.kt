@@ -20,6 +20,13 @@ import kotlin.math.roundToInt
 
 object HealthConnect {
 
+    /**
+     * Read-in-background permission (Android 15+): lets the HealthBridge worker
+     * pull Health Connect while the app is closed. Older Androids allow
+     * background reads without an extra grant.
+     */
+    const val BG_READ = "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
+
     val permissions = setOf(
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
@@ -27,6 +34,23 @@ object HealthConnect {
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
     )
+
+    /** What the permission launcher asks for: every read + background access where the platform knows it. */
+    fun requestPermissions(): Set<String> =
+        if (android.os.Build.VERSION.SDK_INT >= 35) permissions + BG_READ else permissions
+
+    /** True when the bridge may read while the app is in the background. */
+    suspend fun grantedBackground(ctx: Context): Boolean =
+        android.os.Build.VERSION.SDK_INT < 35 ||
+            client(ctx).permissionController.getGrantedPermissions().contains(BG_READ)
+
+    /** Friendly label for a Health Connect data source package. */
+    fun sourceName(pkg: String): String = when (pkg) {
+        "com.sec.android.app.shealth" -> "Samsung Health"
+        "nl.appyhapps.healthsync" -> "Health Sync"
+        "com.google.android.apps.fitness" -> "Google Fit"
+        else -> pkg.substringAfterLast('.')
+    }
 
     /** Most recent body-weight record (kg) in the last 90 days, or null (audit F9). */
     suspend fun readLatestWeight(ctx: Context): Double? = runCatching {
@@ -107,7 +131,8 @@ object HealthConnect {
                 if (s.isEmpty()) null else s[(s.size * 0.05).toInt().coerceIn(0, s.size - 1)]
             }
 
-        val steps = readSafe(StepsRecord::class, todayStart).sumOf { it.count }.toInt()
+        val stepRecs = readSafe(StepsRecord::class, todayStart)
+        val steps = stepRecs.sumOf { it.count }.toInt()
 
         val sleepRecords = readSafe(SleepSessionRecord::class, sleepWindowStart)
         // Today's sleep = last night's main sleep PLUS any naps — exactly how
@@ -155,6 +180,21 @@ object HealthConnect {
                 t.hour * 60 + t.minute
             }
 
+        // Who is actually feeding Health Connect right now — the decisive
+        // diagnostic for the bridge (Samsung Health native sync vs a dead
+        // third-party syncer) plus how fresh the newest record of each type is.
+        val origins = buildSet {
+            hrRecords.forEach { add(it.metadata.dataOrigin.packageName) }
+            sleepRecords.forEach { add(it.metadata.dataOrigin.packageName) }
+            rhrRecords.forEach { add(it.metadata.dataOrigin.packageName) }
+            stepRecs.forEach { add(it.metadata.dataOrigin.packageName) }
+        }.map(::sourceName).sorted()
+        val fmt = java.time.format.DateTimeFormatter.ofPattern("EEE HH:mm")
+        fun newest(i: Instant?): String = i?.atZone(zone)?.toLocalDateTime()?.format(fmt) ?: "—"
+        val newestHr = hrRecords.flatMap { r -> r.samples.map { it.time } }.maxOrNull()
+        val newestStep = stepRecs.maxOfOrNull { it.endTime }
+        val newestSleep = sleepRecords.maxOfOrNull { it.endTime }
+
         return HealthSnapshot(
             updatedAt = now.toEpochMilli(), source = "live",
             sleepMin = sleepMin, rem = rem.toInt(), deep = deep.toInt(), light = light.toInt(), awake = awake.toInt(),
@@ -162,8 +202,11 @@ object HealthConnect {
             sleepStartMin = sleepStartMin,
             hrSeries = series,
             hrAvg = if (cnt > 0) (sum.toDouble() / cnt).roundToInt() else null,
-            diag = "Found: $cnt heart-rate samples · ${sleepRecords.size} sleep sessions " +
-                "(${todaysSleep.size} counted today) · ${rhrRecords.size} resting HR · $steps steps",
+            diag = "Found: $cnt heart-rate samples (newest ${newest(newestHr)}) · ${sleepRecords.size} sleep sessions " +
+                "(${todaysSleep.size} counted today, newest ${newest(newestSleep)}) · ${rhrRecords.size} resting HR · " +
+                "$steps steps (newest ${newest(newestStep)})" +
+                (if (origins.isNotEmpty()) " · via ${origins.joinToString()}" else ""),
+            origins = origins,
         )
     }
 

@@ -731,7 +731,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 Modifier.clip(RoundedCornerShape(12.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable { hcLauncher.launch(HealthConnect.permissions) }
+                    .clickable { hcLauncher.launch(HealthConnect.requestPermissions()) }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

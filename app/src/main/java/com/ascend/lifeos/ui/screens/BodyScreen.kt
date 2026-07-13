@@ -75,8 +75,12 @@ fun BodyScreen() {
     fun connect() {
         if (!HealthConnect.available(ctx)) { HealthConnect.openSettings(ctx); return }
         scope.launch {
-            if (runCatching { HealthConnect.grantedAny(ctx) }.getOrDefault(false)) refresh()
-            else launcher.launch(HealthConnect.permissions)
+            val any = runCatching { HealthConnect.grantedAny(ctx) }.getOrDefault(false)
+            // Missing background access (Android 15+) re-opens the request so
+            // the HealthBridge worker can read with the app closed.
+            val bg = runCatching { HealthConnect.grantedBackground(ctx) }.getOrDefault(true)
+            if (any && bg) refresh()
+            else launcher.launch(HealthConnect.requestPermissions())
         }
     }
     val owner = LocalLifecycleOwner.current

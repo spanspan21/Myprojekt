@@ -44,6 +44,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     var backupState by remember { mutableStateOf<String?>(null) }
     var planImportState by remember { mutableStateOf<String?>(null) }
     var syncState by remember { mutableStateOf<String?>(null) }
+    var bridgeState by remember { mutableStateOf<String?>(null) }
     // Import a custom masterplan from a JSON file — the offline replacement for
     // the removed on-device generator (audit F8). Was fully built but unwired.
     val planPicker = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -400,6 +401,17 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── DATA ─────────────────────────────────────────────────────
         SettingsSection("Data") {
             ActionRow("Weekly report", "The last 7 days across every module") { onOpenReport() }
+            ActionRow(
+                "Health bridge",
+                bridgeState ?: com.ascend.lifeos.data.HealthBridge.statusLine(ctx),
+            ) {
+                bridgeState = "Sync requested — check back in a moment"
+                com.ascend.lifeos.data.HealthBridge.syncNow(ctx)
+                scope.launch {
+                    kotlinx.coroutines.delay(6000)
+                    bridgeState = com.ascend.lifeos.data.HealthBridge.statusLine(ctx)
+                }
+            }
             ActionRow(
                 "Sync to web dashboard",
                 syncState ?: if (com.ascend.lifeos.data.cloud.CloudSync.enabled())

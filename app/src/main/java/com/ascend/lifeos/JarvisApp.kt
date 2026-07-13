@@ -20,6 +20,11 @@ class JarvisApp : Application() {
         runCatching { Repo.initIfNeeded(this) }
         // Warm the Room finance store (migrates from prefs once, keeps prefs as backup).
         runCatching { com.ascend.lifeos.data.finance.FinanceRoom.init(this) }
+        // Health bridge: hourly Health Connect pull, app open or not — the
+        // in-app replacement for the retired Health Sync subscription. Plus one
+        // immediate pull per process start so opening the app is always fresh.
+        runCatching { com.ascend.lifeos.data.HealthBridge.schedule(this) }
+        runCatching { com.ascend.lifeos.data.HealthBridge.syncNow(this) }
         // Mirror all data to the private web dashboard on startup (one-way,
         // best-effort, off the main thread). No-op unless sync is configured.
         val app = this

@@ -110,6 +110,7 @@ data class HealthSnapshot(
     val hrSeries: List<HrPoint> = emptyList(),
     val hrAvg: Int? = null,
     val diag: String = "", // record counts from the last sync, for troubleshooting
+    val origins: List<String> = emptyList(), // apps feeding Health Connect (friendly names)
 )
 
 @Serializable

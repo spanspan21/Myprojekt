@@ -18,8 +18,8 @@ android {
         applicationId "com.ascend.lifeos"
         minSdk 26
         targetSdk 34
-        versionCode 18
-        versionName "2.16"
+        versionCode 19
+        versionName "2.17"
         vectorDrawables { useSupportLibrary true }
 
         buildConfigField "String", "SYNC_URL", "\"${_localProps.getProperty('JARVIS_SYNC_URL', '')}\""
@@ -93,6 +93,10 @@ dependencies {
     // NOTE: stable 1.1.0 needs compileSdk 36 + AGP 8.9 — bump alongside the next
     // toolchain upgrade; until then this alpha is the newest SDK-34-compatible.
     implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
+
+    // WorkManager — drives the HealthBridge background sync (the in-app
+    // replacement for the Health Sync app). 2.9.x = last SDK-34-compatible line.
+    implementation 'androidx.work:work-runtime-ktx:2.9.1'
 
     // Barcode scanning for the nutrition tracker: ML Kit code scanner
     // (on-device, no camera permission) with embedded ZXing as fallback.
