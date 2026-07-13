@@ -33,6 +33,7 @@ object HealthBridge {
     private const val LAST_OK = "hb_last_ok"
     private const val LAST_RESULT = "hb_last_result"
     private const val LAST_ERROR = "hb_last_error"
+    private const val DEEP_IMPORT = "hb_deep_import"
 
     /** Idempotent — called from Application.onCreate on every process start. */
     fun schedule(ctx: Context) {
@@ -103,6 +104,14 @@ object HealthBridge {
                     // An all-null read (rate limit, provider hiccup) must not blank
                     // the dashboard — keep the last good snapshot, only log it.
                     if (!empty) Repo.setHealth(snap)
+                    // One-time deep import: everything Health Connect still holds
+                    // (120d = Repo's bodyDays retention), so trends and baselines
+                    // get the full Health-Sync-era past, not just a rolling window.
+                    if (Prefs.string(ctx, DEEP_IMPORT, "") != "done") {
+                        val days = runCatching { HealthConnect.backfill(ctx, 120) }.getOrDefault(0)
+                        Prefs.setString(ctx, DEEP_IMPORT, "done")
+                        Log.i(TAG, "deep import: $days days of history")
+                    }
                     // Heal history only after a real outage (>24h without success):
                     // hourly re-merges would fight setHealth's day attribution.
                     if (System.currentTimeMillis() - before > 24 * 60 * 60 * 1000L) {
