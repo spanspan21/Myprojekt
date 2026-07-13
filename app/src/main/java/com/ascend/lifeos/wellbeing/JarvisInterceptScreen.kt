@@ -81,7 +81,11 @@ fun JarvisInterceptScreen(
     onOfferDone: () -> Unit = {},
     onGateContinue: () -> Unit = {},
     onGateExit: () -> Unit = {},
+    casinoPkg: String? = null,
+    onCasinoWin: () -> Unit = {},
+    onCasinoLose: () -> Unit = {},
 ) {
+    var casinoOpen by remember { mutableStateOf(false) }
     val pulse = rememberInfiniteTransition(label = "pulse")
     val glow by pulse.animateFloat(
         initialValue = 0.25f, targetValue = 0.55f,
@@ -120,6 +124,12 @@ fun JarvisInterceptScreen(
 
         if (mode == InterceptMode.GATE) {
             GateCard(appLabel, offerText, onGateContinue, onGateExit, onOfferDone)
+        } else if (casinoOpen && casinoPkg != null) {
+            CasinoScreen(
+                appLabel = appLabel, pkg = casinoPkg,
+                onWin = onCasinoWin, onLose = onCasinoLose,
+                onBack = { casinoOpen = false },
+            )
         } else {
             InterceptCard(
                 appLabel = appLabel,
@@ -133,6 +143,7 @@ fun JarvisInterceptScreen(
                 statusText = statusText,
                 onSnooze = onSnooze,
                 onSkill = onSkill,
+                onCasino = if (casinoPkg != null) ({ casinoOpen = true }) else null,
             )
         }
     }
@@ -153,6 +164,7 @@ private fun InterceptCard(
     statusText: String?,
     onSnooze: () -> Unit,
     onSkill: () -> Unit,
+    onCasino: (() -> Unit)? = null,
 ) {
     // Strict-mode escalation ladder: snooze #1 free, #2 waits out a 15s
     // countdown, #3+ has no snooze at all.
@@ -270,6 +282,35 @@ private fun InterceptCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("Start skill work", color = Color(0xFF06110C), fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            if (onCasino != null) {
+                val gold = com.ascend.lifeos.ui.theme.Champagne
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val left = remember { com.ascend.lifeos.data.casino.CasinoStore.attemptsLeft(ctx) }
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(gold.copy(alpha = 0.06f))
+                        .border(0.5.dp, gold.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                        .clickable(onClick = onCasino)
+                        .padding(vertical = 13.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "HOUSE OF TIME",
+                            color = gold, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                            fontWeight = FontWeight.ExtraBold, letterSpacing = 2.5.sp,
+                        )
+                        Text(
+                            "gamble minutes · $left attempt${if (left == 1) "" else "s"} left",
+                            color = gold.copy(alpha = 0.65f), fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                        )
+                    }
                 }
             }
 

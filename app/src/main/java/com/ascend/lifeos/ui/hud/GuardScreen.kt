@@ -350,6 +350,72 @@ fun GuardScreen() {
             Spacer(Modifier.height(10.dp))
             PhoneFreePanel(pfWindows, onChanged = { tick++ })
 
+            // ── casino unlock (optional, CASINO_GUARD_PLAN.md §20) ───
+            Spacer(Modifier.height(18.dp))
+            SectionLabel("Casino unlock")
+            Spacer(Modifier.height(10.dp))
+            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    tick // settings below re-read on every change
+                    val cas = com.ascend.lifeos.data.casino.CasinoStore
+                    val casOn = cas.enabled(ctx)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("House of Time", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Gamble minutes at the limit wall. The house edge works for you.",
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        TogglePill(casOn) { cas.setEnabled(ctx, !casOn); tick++ }
+                    }
+                    if (casOn) {
+                        Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
+                        MiniStepper(
+                            "Attempts per day", "${cas.attemptsPerDay(ctx)}",
+                            onMinus = { cas.setAttemptsPerDay(ctx, cas.attemptsPerDay(ctx) - 1); tick++ },
+                            onPlus = { cas.setAttemptsPerDay(ctx, cas.attemptsPerDay(ctx) + 1); tick++ },
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        MiniStepper(
+                            "Daily win cap", "${cas.winCapDay(ctx)}m",
+                            onMinus = { cas.setWinCapDay(ctx, cas.winCapDay(ctx) - 15); tick++ },
+                            onPlus = { cas.setWinCapDay(ctx, cas.winCapDay(ctx) + 15); tick++ },
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text("Max stake", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            listOf(25, 40, 60, 120).forEach { m ->
+                                LimitChip("${m}m", cas.stakeMax(ctx) == m) { cas.setStakeRange(ctx, 5, m); tick++ }
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Text("Loss lockout · lose 25m → locked 25/50/75m", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            listOf(1, 2, 3).forEach { f ->
+                                LimitChip("×$f", cas.lossMult(ctx) == f) { cas.setLossMult(ctx, f); tick++ }
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Text("Break after last attempt", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            listOf("midnight" to "Tomorrow", "60" to "1h", "180" to "3h", "360" to "6h").forEach { (v, l) ->
+                                LimitChip(l, cas.breakMode(ctx) == v) { cas.setBreakMode(ctx, v); tick++ }
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "This month: you +${cas.statWon(ctx)}m · house +${cas.statLost(ctx)}m",
+                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                        )
+                    }
+                }
+            }
+
             // ── weekly trend ─────────────────────────────────────────
             if (week.isNotEmpty()) {
                 Spacer(Modifier.height(18.dp))

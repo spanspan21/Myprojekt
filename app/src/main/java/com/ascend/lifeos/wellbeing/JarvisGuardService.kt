@@ -123,6 +123,9 @@ class JarvisGuardService : Service() {
 
     private suspend fun tick() {
         if (!WellbeingStore.isEnabled(this)) return
+        // Crash-safe casino settlement: a result resolved before an animation
+        // that never finished (force-kill) still lands (CASINO_GUARD_PLAN §18).
+        runCatching { com.ascend.lifeos.data.casino.CasinoStore.settlePendingIfAny(this) }
         tickWindDown()
         if (overlay != null) return
         if (!DigitalWellbeingManager.hasUsageAccess(this) || !DigitalWellbeingManager.canOverlay(this)) return
@@ -176,6 +179,21 @@ class JarvisGuardService : Service() {
         val catBudgetMin = category?.let { catBudgets[it] }
         if (limitMin == null && budget == null && !gated && catBudgetMin == null) return
         if (now < (cooldownUntil[fg] ?: 0L)) return
+
+        // Casino loss lockout — the extra pause a lost stake bought. Checked
+        // before every other rule: the house is paid first (plan §19).
+        val casLock = com.ascend.lifeos.data.casino.CasinoStore.lockoutUntil(this, fg)
+        if (now < casLock) {
+            cooldownUntil[fg] = now + 60_000L
+            WellbeingStore.recordIntercept(this)
+            val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
+            val hm = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(casLock))
+            showOverlay(
+                DigitalWellbeingManager.appLabel(this, fg), fg, usedNow, limitMin ?: 0,
+                statusText = "House lockout · until $hm",
+            )
+            return
+        }
 
         // 0. Phone-free window — every guarded app is shut, gate passes included.
         if (limitMin != null || budget != null || gated) {
@@ -259,15 +277,18 @@ class JarvisGuardService : Service() {
             }
         }
 
-        // 5. Daily limit reached.
-        if (limitMin != null && usedMs >= limitMin * 60_000L) {
+        // 5. Daily limit reached — casino bonus minutes raise the bar, and the
+        //    plain LIMIT intercept is the only place the tables are offered.
+        val casBonus = com.ascend.lifeos.data.casino.CasinoStore.bonusMin(this, fg)
+        if (limitMin != null && usedMs >= (limitMin + casBonus) * 60_000L) {
             cooldownUntil[fg] = now + 90_000L
             WellbeingStore.recordIntercept(this)
             showOverlay(
                 DigitalWellbeingManager.appLabel(this, fg),
                 fg,
                 usedMin,
-                limitMin,
+                limitMin + casBonus,
+                casinoPkg = if (com.ascend.lifeos.data.casino.CasinoStore.offerAvailable(this, fg)) fg else null,
             )
             return
         }
@@ -330,6 +351,7 @@ class JarvisGuardService : Service() {
         limit: Int,
         mode: InterceptMode = InterceptMode.LIMIT,
         statusText: String? = null,
+        casinoPkg: String? = null,
     ) {
         if (overlay != null) return
 
@@ -422,6 +444,24 @@ class JarvisGuardService : Service() {
                     },
                     onGateExit = {
                         // Short cooldown so the gate doesn't re-fire mid-exit.
+                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
+                        removeOverlay()
+                        runCatching {
+                            startActivity(
+                                Intent(Intent.ACTION_MAIN)
+                                    .addCategory(Intent.CATEGORY_HOME)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
+                    },
+                    casinoPkg = casinoPkg,
+                    onCasinoWin = {
+                        // Bonus is committed — the raised limit lets the app pass.
+                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
+                        removeOverlay()
+                    },
+                    onCasinoLose = {
+                        // Lockout is committed — leave the table, leave the app.
                         cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
                         removeOverlay()
                         runCatching {
