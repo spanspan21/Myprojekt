@@ -59,7 +59,7 @@ import kotlin.math.sin
 // ── BLACKJACK (plan §13) ─────────────────────────────────────────────────────
 
 @Composable
-internal fun BlackjackTable(pkg: String, stake: Int, onResolved: (Int) -> Unit) {
+internal fun BlackjackTable(pkg: String, stake: Int, deficitMin: Int, onResolved: (Int) -> Unit) {
     val ctx = LocalContext.current
     var roundKey by remember { mutableIntStateOf(0) }
     val round = remember(roundKey) { CasinoEngine.BlackjackRound() }
@@ -88,7 +88,9 @@ internal fun BlackjackTable(pkg: String, stake: Int, onResolved: (Int) -> Unit) 
             roundKey++ // fresh hand, attempt not spent
             return@LaunchedEffect
         }
-        CasinoStore.writePending(ctx, pkg, delta)
+        // a win must also buy back the minutes already spent past the limit,
+        // otherwise "+5 min" reopens an app that re-locks on the next tick
+        CasinoStore.writePending(ctx, pkg, if (delta > 0) delta + deficitMin else delta)
         dealerShown = 2; Haptics.tick(ctx); delay(500)               // hole flip
         while (dealerShown < round.dealer.size) {                     // dealer draws
             dealerShown++; Haptics.tick(ctx); delay(500)
@@ -209,7 +211,7 @@ internal fun CasCard(card: CasinoEngine.Card, hidden: Boolean, index: Int) {
 // ── ROULETTE (plan §14) ──────────────────────────────────────────────────────
 
 @Composable
-internal fun RouletteTable(pkg: String, stake: Int, onResolved: (Int) -> Unit) {
+internal fun RouletteTable(pkg: String, stake: Int, deficitMin: Int, onResolved: (Int) -> Unit) {
     val ctx = LocalContext.current
     var bet by remember { mutableStateOf<CasinoEngine.RouletteBet?>(null) }
     var showGrid by remember { mutableStateOf(false) }
@@ -277,7 +279,8 @@ internal fun RouletteTable(pkg: String, stake: Int, onResolved: (Int) -> Unit) {
         CasinoStore.reserveAttempt(ctx)
         val n = CasinoEngine.spin()
         val delta = CasinoEngine.rouletteDelta(b, n, stake, CasinoStore.winCapRest(ctx))
-        CasinoStore.writePending(ctx, pkg, delta)
+        // wins also cover the minutes already spent past the limit (see BJ table)
+        CasinoStore.writePending(ctx, pkg, if (delta > 0) delta + deficitMin else delta)
         val idx = CasinoEngine.WHEEL_ORDER.indexOf(n)
         val current = ((angle.value % 360f) + 360f) % 360f
         val targetNorm = ((-(idx * seg)) % 360f + 360f) % 360f

@@ -25,6 +25,13 @@ class JarvisApp : Application() {
         // immediate pull per process start so opening the app is always fresh.
         runCatching { com.ascend.lifeos.data.HealthBridge.schedule(this) }
         runCatching { com.ascend.lifeos.data.HealthBridge.syncNow(this) }
+        // Guard survives app updates: the foreground service dies with the old
+        // process and nothing restarted it until the toggle was cycled by hand.
+        runCatching {
+            if (com.ascend.lifeos.wellbeing.WellbeingStore.isEnabled(this)) {
+                com.ascend.lifeos.wellbeing.JarvisGuardService.start(this)
+            }
+        }
         // Mirror all data to the private web dashboard on startup (one-way,
         // best-effort, off the main thread). No-op unless sync is configured.
         val app = this

@@ -127,6 +127,7 @@ fun JarvisInterceptScreen(
         } else if (casinoOpen && casinoPkg != null) {
             CasinoScreen(
                 appLabel = appLabel, pkg = casinoPkg,
+                deficitMin = (usedMinutes - limitMinutes).coerceAtLeast(0),
                 onWin = onCasinoWin, onLose = onCasinoLose,
                 onBack = { casinoOpen = false },
             )

@@ -69,6 +69,7 @@ internal enum class CasPhase { PICK, STAKE, TABLE, REVEAL }
 fun CasinoScreen(
     appLabel: String,
     pkg: String,
+    deficitMin: Int, // minutes already used beyond the limit — a win must cover them
     onWin: () -> Unit,
     onLose: () -> Unit,
     onBack: () -> Unit,
@@ -113,10 +114,10 @@ fun CasinoScreen(
                 )
                 CasPhase.TABLE -> {
                     if (game == "bj") BlackjackTable(
-                        pkg = pkg, stake = stake,
+                        pkg = pkg, stake = stake, deficitMin = deficitMin,
                         onResolved = { delta -> resultDelta = delta; phase = CasPhase.REVEAL },
                     ) else RouletteTable(
-                        pkg = pkg, stake = stake,
+                        pkg = pkg, stake = stake, deficitMin = deficitMin,
                         onResolved = { delta -> resultDelta = delta; phase = CasPhase.REVEAL },
                     )
                 }
