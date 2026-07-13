@@ -51,11 +51,16 @@ fun BodyScreen() {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // Whether Health Connect is actually linked (permission granted) — the UI
+    // must never show "Connect" while we're already reading; a watch that
+    // hasn't delivered its first night yet is a different truth entirely.
+    var hcLinked by remember { mutableStateOf<Boolean?>(null) }
     fun refresh() {
         scope.launch {
-            if (HealthConnect.available(ctx) &&
+            val linked = HealthConnect.available(ctx) &&
                 runCatching { HealthConnect.grantedAny(ctx) }.getOrDefault(false)
-            ) {
+            hcLinked = linked
+            if (linked) {
                 runCatching { Repo.setHealth(HealthConnect.read(ctx)) }
                 // Import body weight from Health Connect too (audit F9): only log
                 // when it actually differs from the latest entry, so we don't spam
@@ -109,6 +114,7 @@ fun BodyScreen() {
         else -> Crit
     }
     val directive = when {
+        score == null && hcLinked == true -> "Linked — waiting for tonight's sleep"
         score == null -> "No sleep signal — connect your watch"
         score >= 75 -> "Green — full send today"
         score >= 50 -> "Amber — train, but keep headroom"
@@ -167,8 +173,19 @@ fun BodyScreen() {
                                 }
                             }
                         } else {
+                            // Two different truths: not linked at all vs. linked
+                            // but the watch hasn't delivered its first night yet.
+                            val linked = hcLinked == true
+                            val signals = buildList {
+                                h?.steps?.let { add("$it steps") }
+                                (h?.hrAvg ?: h?.restingHr)?.let { add("$it bpm") }
+                            }
                             Text(
-                                "Connect Health Connect and I'll read sleep, heart rate and steps — nothing gets faked.",
+                                when {
+                                    !linked -> "Connect Health Connect and I'll read sleep, heart rate and steps — nothing gets faked."
+                                    signals.isEmpty() -> "Health Connect is linked — waiting for your watch's first sync. Sleep lands after tonight."
+                                    else -> "Linked · ${signals.joinToString(" · ")} — sleep lands after your first night with the watch."
+                                },
                                 color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
                             )
                             Spacer(Modifier.height(10.dp))
@@ -177,7 +194,7 @@ fun BodyScreen() {
                                     Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Body.copy(alpha = 0.14f))
                                         .border(0.5.dp, Mod.Body.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
                                         .clickable { connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
-                                ) { Text("Connect", color = Mod.Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                                ) { Text(if (linked) "Sync now" else "Connect", color = Mod.Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                                 Spacer(Modifier.width(8.dp))
                                 // no-watch nights still get logged (audit F9)
                                 Box(
