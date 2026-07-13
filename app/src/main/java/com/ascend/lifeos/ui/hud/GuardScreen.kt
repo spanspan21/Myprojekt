@@ -162,23 +162,65 @@ fun GuardScreen() {
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
         val guardedCount = (limits.keys + gates + openBudgets.keys).size
+        // R5: proof of life — intercepts today + liveness instead of a mute title
+        val icptToday = remember(tick) { WellbeingStore.interceptsToday(ctx) }
         JarvisHeader(
             "Guard",
-            if (data != null) "${fmtDur(data!!.totalMs)} today · $guardedCount apps guarded" else "Real screen time. Hard boundaries.",
+            if (data != null) {
+                "${fmtDur(data!!.totalMs)} today · $guardedCount guarded" +
+                    (if (icptToday > 0) " · $icptToday intercepts" else "")
+            } else "Real screen time. Hard boundaries.",
             Mod.Guard,
         )
         Spacer(Modifier.height(16.dp))
 
-        if (!usageOk || !overlayOk) {
-            PermissionCard(usageOk, overlayOk, ctx)
+        // A6 watchdog: enabled but the service went quiet (One UI kill, crash)
+        // → restart silently on every screen visit. start() is idempotent.
+        val batteryOk = remember(tick) {
+            runCatching {
+                (ctx.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager)
+                    .isIgnoringBatteryOptimizations(ctx.packageName)
+            }.getOrDefault(true)
+        }
+        LaunchedEffect(tick) {
+            if (enabled && System.currentTimeMillis() - WellbeingStore.lastTick(ctx) > 90_000L) {
+                runCatching { JarvisGuardService.start(ctx) }
+            }
+        }
+
+        if (!usageOk || !overlayOk || !batteryOk) {
+            PermissionCard(usageOk, overlayOk, batteryOk, ctx)
             Spacer(Modifier.height(14.dp))
         }
+
+        // ── segments: the daily action (apps) first, reading matter last ──
+        // Kills the 5.5-screen scroll to the app list (masterplan §9).
+        var segment by remember { mutableStateOf("apps") }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            listOf("apps" to "Apps", "rules" to "Rules", "casino" to "Casino", "insights" to "Insights").forEach { (key, label) ->
+                val on = segment == key
+                Box(
+                    Modifier.weight(1f).pressScale { segment = key }
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(if (on) Mod.Guard.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                        .border(0.5.dp, if (on) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(11.dp))
+                        .padding(vertical = 9.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        label, color = if (on) Mod.Guard else TextMuted,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(14.dp))
 
         if (usageOk) {
             val d = data
 
             // ── focus score hero — das Wappen trägt den Goldfaden ────
-            Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true) {
+            if (segment == "insights") Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Ring(
                         progress = (focusScore ?: 0) / 100f, color = scoreColor,
@@ -223,18 +265,71 @@ fun GuardScreen() {
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            if (segment == "insights") Spacer(Modifier.height(12.dp))
+
+            // ── presets: profiles for real days (masterplan §11) ─────
+            if (segment == "rules") {
+                Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Text("Presets", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("One tap arms a whole day.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                        Spacer(Modifier.height(9.dp))
+                        val lastPreset = remember(tick) {
+                            ctx.getSharedPreferences("wellbeing", android.content.Context.MODE_PRIVATE)
+                                .getString("wb_preset_last", "") ?: ""
+                        }
+                        fun applied(name: String) {
+                            ctx.getSharedPreferences("wellbeing", android.content.Context.MODE_PRIVATE)
+                                .edit().putString(
+                                    "wb_preset_last",
+                                    "$name · ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date())}",
+                                ).apply()
+                            WellbeingStore.setEnabled(ctx, true)
+                            JarvisGuardService.start(ctx)
+                            tick++
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            LimitChip("School day", false) {
+                                WellbeingStore.setCategoryBudget(ctx, "social", 30)
+                                WellbeingStore.setMorningBlockUntil(ctx, 14 * 60)
+                                if (WellbeingStore.phoneFreeWindows(ctx).none { it.first == 20 * 60 + 30 }) {
+                                    WellbeingStore.addPhoneFreeWindow(ctx, 20 * 60 + 30, 6 * 60)
+                                }
+                                applied("School day")
+                            }
+                            LimitChip("Deep work", false) {
+                                WellbeingStore.startFocus(ctx, 90)
+                                applied("Deep work")
+                            }
+                            LimitChip("Weekend", false) {
+                                WellbeingStore.setMorningBlockUntil(ctx, 0)
+                                applied("Weekend")
+                            }
+                            LimitChip("Detox", false) {
+                                WellbeingStore.limits(ctx).keys.forEach { WellbeingStore.setLimit(ctx, it, 15) }
+                                com.ascend.lifeos.data.casino.CasinoStore.setEnabled(ctx, false)
+                                applied("Detox")
+                            }
+                        }
+                        if (lastPreset.isNotBlank()) {
+                            Spacer(Modifier.height(7.dp))
+                            Text("applied: $lastPreset", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
 
             // ── focus session ────────────────────────────────────────
-            FocusSessionCard(enabled, overlayOk, onArm = {
+            if (segment == "rules") FocusSessionCard(enabled, overlayOk, onArm = {
                 WellbeingStore.setEnabled(ctx, true)
                 JarvisGuardService.start(ctx)
                 tick++
             })
-            Spacer(Modifier.height(12.dp))
+            if (segment == "rules") Spacer(Modifier.height(12.dp))
 
             // ── controls ─────────────────────────────────────────────
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            if (segment == "rules") Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                 Column(Modifier.padding(16.dp)) {
                     // guard master switch
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -312,7 +407,7 @@ fun GuardScreen() {
             // ── category budgets ─────────────────────────────────────
             val usedCats = listOf("social" to "Social", "video" to "Video", "games" to "Games")
                 .filter { (key, _) -> appCats.containsValue(key) }
-            if (usedCats.isNotEmpty()) {
+            if (segment == "rules" && usedCats.isNotEmpty()) {
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Category budgets")
                 Spacer(Modifier.height(10.dp))
@@ -345,15 +440,16 @@ fun GuardScreen() {
             }
 
             // ── phone-free windows ───────────────────────────────────
-            Spacer(Modifier.height(18.dp))
-            SectionLabel("Phone-free windows")
-            Spacer(Modifier.height(10.dp))
-            PhoneFreePanel(pfWindows, onChanged = { tick++ })
+            if (segment == "rules") {
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("Phone-free windows")
+                Spacer(Modifier.height(10.dp))
+                PhoneFreePanel(pfWindows, onChanged = { tick++ })
+            }
 
             // ── casino unlock (optional, CASINO_GUARD_PLAN.md §20) ───
-            Spacer(Modifier.height(18.dp))
-            SectionLabel("Casino unlock")
-            Spacer(Modifier.height(10.dp))
+            if (segment == "casino") {
+            Spacer(Modifier.height(4.dp))
             Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     tick // settings below re-read on every change
@@ -415,9 +511,10 @@ fun GuardScreen() {
                     }
                 }
             }
+            }
 
             // ── weekly trend ─────────────────────────────────────────
-            if (week.isNotEmpty()) {
+            if (segment == "insights" && week.isNotEmpty()) {
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Last 7 days")
                 Spacer(Modifier.height(10.dp))
@@ -433,6 +530,7 @@ fun GuardScreen() {
             }
 
             // ── unlock heatmap ───────────────────────────────────────
+            if (segment == "insights") {
             Spacer(Modifier.height(18.dp))
             SectionLabel("Unlock pattern")
             Spacer(Modifier.height(10.dp))
@@ -450,9 +548,12 @@ fun GuardScreen() {
                 }
             }
 
+            }
+
             // ── per-app breakdown ────────────────────────────────────
-            Spacer(Modifier.height(18.dp))
-            SectionLabel("By app · tap to set rules")
+            if (segment == "apps") {
+            Spacer(Modifier.height(4.dp))
+            SectionLabel("Tap a chip — rule set. · for more")
             Spacer(Modifier.height(10.dp))
             when {
                 d == null && loading -> EmptyHint("Reading screen time…")
@@ -507,6 +608,7 @@ fun GuardScreen() {
                         Spacer(Modifier.height(9.dp))
                     }
                 }
+            }
             }
         }
     }
@@ -800,6 +902,18 @@ private fun AppRow(
             }
             Spacer(Modifier.height(9.dp))
             NeonBar(app.ms.toFloat() / maxMs, if (over) Red else Mod.Guard, Modifier.fillMaxWidth(), height = 5.dp)
+            if (!expanded) {
+                // Quick rules (masterplan §10): the most common verdicts live in
+                // the row itself — a rule is one tap, re-tap turns it off.
+                Spacer(Modifier.height(9.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(15 to "15m", 30 to "30m", 60 to "1h").forEach { (m, l) ->
+                        LimitChip(l, limit == m) { onSetLimit(if (limit == m) null else m) }
+                    }
+                    LimitChip("Gate", gated) { onSetGate(!gated) }
+                    LimitChip("···", false) { onToggle() }
+                }
+            }
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
                 // mode chips — which editor is open
@@ -931,18 +1045,35 @@ private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlu
 }
 
 @Composable
-private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, ctx: android.content.Context) {
+private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, batteryOk: Boolean, ctx: android.content.Context) {
     GlassPanel(Modifier.fillMaxWidth(), line = Mod.Guard.copy(alpha = 0.35f)) {
         Column(Modifier.fillMaxWidth().padding(18.dp)) {
             Text("Unlock access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold)
             Text(
-                "Guard needs usage access (to read screen time) and the overlay permission (to intercept over other apps).",
+                when {
+                    !usageOk || !overlayOk ->
+                        "Guard needs usage access (to read screen time) and the overlay permission (to intercept over other apps)."
+                    else ->
+                        "One UI throttles background apps. One tap keeps the watchdog awake through the whole day."
+                },
                 color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, lineHeight = 17.sp,
             )
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!usageOk) PillButton("Usage access", primary = true) { DigitalWellbeingManager.requestUsageAccess(ctx) }
                 if (!overlayOk) PillButton("Allow overlay", primary = true) { DigitalWellbeingManager.requestOverlay(ctx) }
+                if (usageOk && overlayOk && !batteryOk) {
+                    PillButton("Run unthrottled", primary = true) {
+                        runCatching {
+                            ctx.startActivity(
+                                android.content.Intent(
+                                    android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                    android.net.Uri.parse("package:${ctx.packageName}"),
+                                ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
+                    }
+                }
             }
         }
     }

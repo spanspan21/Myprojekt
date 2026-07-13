@@ -20,6 +20,8 @@
     <!-- Daily reminder notifications (opt-in in settings). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Guard watchdog: ask once to be exempt from One UI battery throttling. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- Read-only calendar sync: show today's events (opt-in). -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
@@ -204,6 +206,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- Guard survives app updates too — not just reboots (M6). -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

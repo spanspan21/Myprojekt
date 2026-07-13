@@ -58,8 +58,14 @@ object DigitalWellbeingManager {
 
     private fun usm(ctx: Context) = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
+    // 06:00 rollover — the app-wide day boundary (core.todayKey). Minutes,
+    // opens, snoozes and history now agree on what "today" means; the old
+    // midnight boundary made limits reset at 00:00 while everything else
+    // waited until 06:00, and let a post-midnight GuardScreen visit overwrite
+    // yesterday's history entry with 30 minutes of doomscrolling (M5).
     fun startOfToday(): Long = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        if (get(Calendar.HOUR_OF_DAY) < 6) add(Calendar.DAY_OF_YEAR, -1)
+        set(Calendar.HOUR_OF_DAY, 6); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
     /**

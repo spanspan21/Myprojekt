@@ -49,6 +49,7 @@ class JarvisGuardService : Service() {
     private var overlay: View? = null
     private val cooldownUntil = HashMap<String, Long>()
     private val passUntil = HashMap<String, Long>()   // gate passes ("Continue · 5 min")
+    private val lastSeenAt = HashMap<String, Long>()  // session continuity (M3/M4)
     private var lastPkg: String? = null               // foreground-transition detection
     private var sessionStart = 0L                     // start of the current continuous session
     private var lastHeavyCheck = 0L                   // throttles the event-stream walk
@@ -162,15 +163,27 @@ class JarvisGuardService : Service() {
         val anyCategoryRule = appCats.isNotEmpty() && catBudgets.isNotEmpty()
         if (limits.isEmpty() && gates.isEmpty() && budgets.isEmpty() && !anyCategoryRule) return
 
-        val fg = DigitalWellbeingManager.foregroundApp(this) ?: return
+        // Sticky foreground (M1 fix): MOVE_TO_FOREGROUND fires once on entry, so
+        // during continuous use the 10s event window goes quiet. The last known
+        // package IS still in front until a real switch produces a new event —
+        // without this, one dismissed overlay meant free scrolling forever.
+        val fg = DigitalWellbeingManager.foregroundApp(this) ?: lastPkg ?: return
         val now = System.currentTimeMillis()
 
-        // Foreground transition → new continuous session; count opens for budgeted apps.
+        // Foreground transition → maybe a new session. A return within 90s
+        // continues the old session (M3: app-hopping reset) and does NOT count
+        // a fresh open (M4: screen off/on burned an open per unlock).
         if (fg != lastPkg) {
             lastPkg = fg
-            sessionStart = now
-            if (budgets.containsKey(fg)) runCatching { WellbeingStore.recordOpen(this, fg, todayKey()) }
+            lastHeavyCheck = 0L // fast path (R1): a rule check runs this tick, not in ~5s
+            val gap = now - (lastSeenAt[fg] ?: 0L)
+            if (gap > SESSION_CONTINUITY_MS) {
+                sessionStart = now
+                if (budgets.containsKey(fg)) runCatching { WellbeingStore.recordOpen(this, fg, todayKey()) }
+            }
         }
+        lastSeenAt[fg] = now
+        WellbeingStore.recordTick(this)
 
         val limitMin = limits[fg]
         val budget = budgets[fg]
@@ -184,7 +197,7 @@ class JarvisGuardService : Service() {
         // before every other rule: the house is paid first (plan §19).
         val casLock = com.ascend.lifeos.data.casino.CasinoStore.lockoutUntil(this, fg)
         if (now < casLock) {
-            cooldownUntil[fg] = now + 60_000L
+            cooldownUntil[fg] = now + SHOW_GRACE_MS
             WellbeingStore.recordIntercept(this)
             val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
             val hm = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(casLock))
@@ -201,7 +214,7 @@ class JarvisGuardService : Service() {
             val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
             val window = runCatching { WellbeingStore.activePhoneFreeWindow(this, nowMin) }.getOrNull()
             if (window != null) {
-                cooldownUntil[fg] = now + 90_000L
+                cooldownUntil[fg] = now + SHOW_GRACE_MS
                 WellbeingStore.recordIntercept(this)
                 WellbeingStore.recordWindowViolation(this, todayKey())
                 val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
@@ -236,7 +249,7 @@ class JarvisGuardService : Service() {
 
         // 2. Focus session — every limited app is shut, no matter the budget.
         if (limitMin != null && WellbeingStore.inFocus(this)) {
-            cooldownUntil[fg] = now + 60_000L
+            cooldownUntil[fg] = now + SHOW_GRACE_MS
             WellbeingStore.recordIntercept(this)
             showOverlay(DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0, mode = InterceptMode.FOCUS)
             return
@@ -248,7 +261,7 @@ class JarvisGuardService : Service() {
             val cal = java.util.Calendar.getInstance()
             val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
             if (nowMin < morningUntil) {
-                cooldownUntil[fg] = now + 90_000L
+                cooldownUntil[fg] = now + SHOW_GRACE_MS
                 WellbeingStore.recordIntercept(this)
                 WellbeingStore.recordWindowViolation(this, todayKey())
                 showOverlay(
@@ -266,7 +279,7 @@ class JarvisGuardService : Service() {
             val overOpens = opens > opensPerDay
             val overSession = now - sessionStart >= minutesPerOpen * 60_000L
             if (overOpens || overSession) {
-                cooldownUntil[fg] = now + 90_000L
+                cooldownUntil[fg] = now + SHOW_GRACE_MS
                 WellbeingStore.recordIntercept(this)
                 showOverlay(
                     DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
@@ -281,7 +294,7 @@ class JarvisGuardService : Service() {
         //    plain LIMIT intercept is the only place the tables are offered.
         val casBonus = com.ascend.lifeos.data.casino.CasinoStore.bonusMin(this, fg)
         if (limitMin != null && usedMs >= (limitMin + casBonus) * 60_000L) {
-            cooldownUntil[fg] = now + 90_000L
+            cooldownUntil[fg] = now + SHOW_GRACE_MS
             WellbeingStore.recordIntercept(this)
             showOverlay(
                 DigitalWellbeingManager.appLabel(this, fg),
@@ -299,7 +312,7 @@ class JarvisGuardService : Service() {
                 .filter { it.value == category }
                 .sumOf { dayDurations[it.key] ?: 0L }
             if (catUsedMs >= catBudgetMin * 60_000L) {
-                cooldownUntil[fg] = now + 90_000L
+                cooldownUntil[fg] = now + SHOW_GRACE_MS
                 WellbeingStore.recordIntercept(this)
                 showOverlay(
                     DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
@@ -360,7 +373,7 @@ class JarvisGuardService : Service() {
         val skillMin = if (mode == InterceptMode.GATE) 0
         else (DigitalWellbeingManager.usageTodayMs(this, packageName) / 60_000L).toInt()
 
-        val lockedOut = DoomscrollDetector.isLockedOut(pkg)
+        val lockedOut = DoomscrollDetector.isLockedOut(this, pkg)
         val snoozes = DoomscrollDetector.snoozesToday(this, pkg)
 
         val altText = if (mode == InterceptMode.GATE) "" else runCatching {
@@ -426,6 +439,9 @@ class JarvisGuardService : Service() {
                     },
                     onSnooze = {
                         DoomscrollDetector.recordSnooze(this@JarvisGuardService, pkg)
+                        // "Later" is an explicit, bounded pass — not an implicit
+                        // side effect of the show-cooldown (M2).
+                        cooldownUntil[pkg] = System.currentTimeMillis() + SNOOZE_PASS_MS
                         removeOverlay()
                     },
                     onSkill = {
@@ -547,6 +563,13 @@ class JarvisGuardService : Service() {
         private const val CHANNEL = "jarvis_guard"
         private const val NOTIF_ID = 4711
         private const val GATE_PASS_MS = 5 * 60_000L // "Continue · 5 min"
+        // M2 fix: the old 60–90s cooldown was set at SHOW time and kept running
+        // after dismiss — every intercept gifted a free scrolling window. Now:
+        // a short anti-flicker grace while the overlay stands, and explicit
+        // passes (snooze/gate) are the only way to buy real time.
+        private const val SHOW_GRACE_MS = 12_000L
+        private const val SNOOZE_PASS_MS = 3 * 60_000L // "Later" = 3 honest minutes
+        private const val SESSION_CONTINUITY_MS = 90_000L // M3/M4: return <90s = same session
         const val ACTION_STOP = "com.ascend.lifeos.STOP_GUARD"
 
         fun start(ctx: Context) {

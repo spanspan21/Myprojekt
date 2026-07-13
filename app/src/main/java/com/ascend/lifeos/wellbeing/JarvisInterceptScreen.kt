@@ -93,8 +93,19 @@ fun JarvisInterceptScreen(
         label = "glow",
     )
 
+    // Entry choreography (plan §12): scrim fades, the card rises 24dp on a
+    // smooth spring, content staggers in. The wall should ARRIVE, not pop.
+    var entered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { entered = true }
+    val scrim by animateFloatAsState(if (entered) 0.92f else 0f, tween(180), label = "scrim")
+    val cardT by animateFloatAsState(
+        if (entered) 0f else 1f,
+        androidx.compose.animation.core.spring(dampingRatio = 0.85f, stiffness = 380f),
+        label = "cardT",
+    )
+
     Box(
-        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.92f)),
+        Modifier.fillMaxSize().background(Color.Black.copy(alpha = scrim)),
         contentAlignment = Alignment.Center,
     ) {
         // Background nebula glow
@@ -122,6 +133,12 @@ fun JarvisInterceptScreen(
             )
         }
 
+        Box(
+            Modifier.graphicsLayer {
+                translationY = cardT * 24.dp.toPx()
+                alpha = 1f - cardT
+            },
+        ) {
         if (mode == InterceptMode.GATE) {
             GateCard(appLabel, offerText, onGateContinue, onGateExit, onOfferDone)
         } else if (casinoOpen && casinoPkg != null) {
@@ -146,6 +163,7 @@ fun JarvisInterceptScreen(
                 onSkill = onSkill,
                 onCasino = if (casinoPkg != null) ({ casinoOpen = true }) else null,
             )
+        }
         }
     }
 }
@@ -216,26 +234,39 @@ private fun InterceptCard(
                 fontSize = com.ascend.lifeos.ui.theme.FS.s13,
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(22.dp))
 
-            // Guilt bars
-            GuiltBar(
-                label = "DOOM-TIME",
-                value = "${usedMinutes}m",
-                progress = (usedMinutes.toFloat() / (limitMinutes * 3).coerceAtLeast(1)).coerceAtMost(1f),
-                color = DoomRed,
-                icon = { Icon(Icons.Rounded.Block, null, tint = DoomRed, modifier = Modifier.size(14.dp)) },
-            )
-            Spacer(Modifier.height(14.dp))
-            GuiltBar(
-                label = "SKILL-TIME",
-                value = "${skillMinutes}m",
-                progress = (skillMinutes.toFloat() / (usedMinutes).coerceAtLeast(1)).coerceAtMost(1f),
-                color = SkillGreen,
-                icon = { Icon(Icons.Rounded.Bolt, null, tint = SkillGreen, modifier = Modifier.size(14.dp)) },
-            )
+            // One picture instead of two bars: the ring is the wall (plan §12).
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                com.ascend.lifeos.ui.kit.Ring(
+                    progress = if (limitMinutes > 0) (usedMinutes.toFloat() / limitMinutes).coerceIn(0f, 1f) else 1f,
+                    color = DoomRed,
+                    modifier = Modifier.size(86.dp), stroke = 7.dp,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("${usedMinutes}m", color = Primary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.ExtraBold)
+                        if (limitMinutes > 0) {
+                            Text("of ${limitMinutes}m", color = Dim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5)
+                        }
+                    }
+                }
+                Spacer(Modifier.width(18.dp))
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.Bolt, null, tint = SkillGreen, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("SKILL-TIME TODAY", color = Dim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text("${skillMinutes}m", color = SkillGreen, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)
+                    Text(
+                        if (skillMinutes >= usedMinutes) "ahead of the scroll — keep it" else "the scroll is winning today",
+                        color = Muted, fontSize = com.ascend.lifeos.ui.theme.FS.s11,
+                    )
+                }
+            }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(22.dp))
 
             // Alt text
             Box(
@@ -331,6 +362,16 @@ private fun InterceptCard(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
             }
+
+            // Proof-of-life footer (R5): guard is watching, and this is its work.
+            val fCtx = androidx.compose.ui.platform.LocalContext.current
+            val icpt = remember { WellbeingStore.interceptsToday(fCtx) }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "intercept #$icpt today · guard live",
+                color = Dim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, letterSpacing = 1.2.sp,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
         }
     }
 }
@@ -466,42 +507,4 @@ private fun GateCard(
     }
 }
 
-@Composable
-private fun GuiltBar(
-    label: String,
-    value: String,
-    progress: Float,
-    color: Color,
-    icon: @Composable () -> Unit,
-) {
-    Column(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                icon()
-                Spacer(Modifier.width(6.dp))
-                Text(label, color = Dim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
-            }
-            Text(value, color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.ExtraBold)
-        }
-        Spacer(Modifier.height(6.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(CircleShape)
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)),
-        ) {
-            Box(
-                Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(progress.coerceIn(0f, 1f))
-                    .clip(CircleShape)
-                    .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.5f), color))),
-            )
-        }
-    }
-}
+// (GuiltBar retired — the ring in InterceptCard is the one picture now.)

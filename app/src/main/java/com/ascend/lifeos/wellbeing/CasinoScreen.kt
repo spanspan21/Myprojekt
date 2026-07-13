@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.casino.CasinoEngine
 import com.ascend.lifeos.data.casino.CasinoStore
+import com.ascend.lifeos.ui.motion.pressScale
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
@@ -94,8 +96,10 @@ fun CasinoScreen(
         AnimatedContent(
             targetState = phase,
             transitionSpec = {
-                (fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 24 })
-                    .togetherWith(fadeOut(tween(120)))
+                // height morphs instead of jumping between phases (plan §13.1)
+                (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 24 })
+                    .togetherWith(fadeOut(tween(110)))
+                    .using(androidx.compose.animation.SizeTransform(clip = false))
             },
             label = "casPhase",
         ) { p ->
@@ -186,10 +190,11 @@ private fun StakePhase(
             chips.forEach { c ->
                 val sel = c == stake
                 Box(
-                    Modifier.weight(1f).clip(CircleShape)
+                    Modifier.weight(1f).pressScale { onStake(c) }
+                        .clip(CircleShape)
                         .background(if (sel) CasAccent else CasPanel)
                         .border(0.5.dp, if (sel) CasAccent else Color.White.copy(alpha = 0.10f), CircleShape)
-                        .clickable { onStake(c) }.padding(vertical = 13.dp),
+                        .padding(vertical = 13.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -223,13 +228,24 @@ private fun RevealPhase(appLabel: String, delta: Int, onWin: () -> Unit, onLose:
     }
     Column(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         if (delta > 0) {
+            // The most expensive moment of the app: count-up + one breathing pulse.
+            var target by remember { mutableIntStateOf(0) }
+            LaunchedEffect(Unit) { target = delta }
+            val shown by androidx.compose.animation.core.animateIntAsState(target, tween(500), label = "casWin")
+            val pulse = remember { androidx.compose.animation.core.Animatable(1f) }
+            LaunchedEffect(Unit) {
+                pulse.animateTo(1.06f, tween(450))
+                pulse.animateTo(1f, tween(550))
+            }
             Box(
-                Modifier.size(150.dp).background(
-                    Brush.radialGradient(listOf(CasGold.copy(alpha = 0.28f), Color.Transparent)), CircleShape,
-                ),
+                Modifier.size(150.dp)
+                    .graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
+                    .background(
+                        Brush.radialGradient(listOf(CasGold.copy(alpha = 0.28f), Color.Transparent)), CircleShape,
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("+$delta MIN", color = CasGold, fontSize = com.ascend.lifeos.ui.theme.FS.s28, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                Text("+$shown MIN", color = CasGold, fontSize = com.ascend.lifeos.ui.theme.FS.s28, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
             }
             Spacer(Modifier.height(8.dp))
             Text(
@@ -277,9 +293,11 @@ internal fun CasHeader(title: String, onBack: () -> Unit) {
 @Composable
 internal fun CasCta(label: String, onClick: () -> Unit, enabled: Boolean = true) {
     Box(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+        Modifier.fillMaxWidth()
+            .then(if (enabled) Modifier.pressScale(onClick) else Modifier)
+            .clip(RoundedCornerShape(14.dp))
             .background(if (enabled) CasAccent else CasAccent.copy(alpha = 0.25f))
-            .clickable(enabled = enabled, onClick = onClick).padding(vertical = 14.dp),
+            .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = Color(0xFF06110C), fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)

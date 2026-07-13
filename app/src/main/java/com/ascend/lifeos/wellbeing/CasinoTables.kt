@@ -50,6 +50,7 @@ import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.casino.CasinoEngine
 import com.ascend.lifeos.data.casino.CasinoEngine.BetType
 import com.ascend.lifeos.data.casino.CasinoStore
+import com.ascend.lifeos.ui.motion.pressScale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.cos
@@ -91,7 +92,7 @@ internal fun BlackjackTable(pkg: String, stake: Int, deficitMin: Int, onResolved
         // a win must also buy back the minutes already spent past the limit,
         // otherwise "+5 min" reopens an app that re-locks on the next tick
         CasinoStore.writePending(ctx, pkg, if (delta > 0) delta + deficitMin else delta)
-        dealerShown = 2; Haptics.tick(ctx); delay(500)               // hole flip
+        dealerShown = 2; delay(190); Haptics.tick(ctx); delay(310)   // hole flip — tick at the flip peak
         while (dealerShown < round.dealer.size) {                     // dealer draws
             dealerShown++; Haptics.tick(ctx); delay(500)
         }
@@ -158,10 +159,11 @@ private fun RowLabel(label: String, score: String) {
 @Composable
 private fun BjAction(label: String, modifier: Modifier, enabled: Boolean, onClick: () -> Unit) {
     Box(
-        modifier.clip(RoundedCornerShape(12.dp))
+        modifier.then(if (enabled) Modifier.pressScale(onClick) else Modifier)
+            .clip(RoundedCornerShape(12.dp))
             .background(if (enabled) CasAccent.copy(alpha = 0.14f) else CasPanel)
             .border(0.5.dp, CasAccent.copy(alpha = if (enabled) 0.45f else 0.12f), RoundedCornerShape(12.dp))
-            .clickable(enabled = enabled, onClick = onClick).padding(vertical = 12.dp),
+            .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = if (enabled) CasAccent else CasDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
@@ -287,7 +289,8 @@ internal fun RouletteTable(pkg: String, stake: Int, deficitMin: Int, onResolved:
         var deltaAngle = targetNorm - current
         if (deltaAngle <= 0f) deltaAngle += 360f
         val target = angle.value + deltaAngle + 360f * 5
-        angle.animateTo(target, tween(4200, easing = CubicBezierEasing(0.08f, 0.6f, 0.04f, 1f)))
+        // one combined curve: a felt launch (accelerate) into the long tail-out
+        angle.animateTo(target, tween(4500, easing = CubicBezierEasing(0.35f, 0f, 0.04f, 1f)))
         landed = n
         Haptics.tick(ctx)
         delay(SUSPENSE_MS) // §15
@@ -300,10 +303,11 @@ private fun BetChip(b: BetType, sel: CasinoEngine.RouletteBet?, modifier: Modifi
     val isSel = sel?.type == b
     val tint = when (b) { BetType.RED -> CasRed; BetType.BLACK -> CasInk; else -> CasMuted }
     Column(
-        modifier.clip(RoundedCornerShape(11.dp))
+        modifier.pressScale { onPick(CasinoEngine.RouletteBet(b)) }
+            .clip(RoundedCornerShape(11.dp))
             .background(if (isSel) CasAccent else CasPanel)
             .border(0.5.dp, if (isSel) CasAccent else tint.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
-            .clickable { onPick(CasinoEngine.RouletteBet(b)) }.padding(vertical = 9.dp),
+            .padding(vertical = 9.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(b.label, color = if (isSel) Color(0xFF06110C) else tint, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.ExtraBold)

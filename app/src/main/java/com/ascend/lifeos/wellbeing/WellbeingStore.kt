@@ -61,8 +61,29 @@ object WellbeingStore {
 
     // ---- intercept stats: how much time Guard clawed back ----
     fun interceptCount(ctx: Context): Int = prefs(ctx).getInt("intercepts", 0)
-    fun recordIntercept(ctx: Context) =
+    fun recordIntercept(ctx: Context) {
         prefs(ctx).edit().putInt("intercepts", interceptCount(ctx) + 1).apply()
+        // per-day counter for the "N intercepts today" proof line (R5)
+        val key = com.ascend.lifeos.core.todayKey()
+        val raw = prefs(ctx).getString("icpt_day", "") ?: ""
+        val cur = if (raw.startsWith("$key|")) raw.substringAfter('|').toIntOrNull() ?: 0 else 0
+        prefs(ctx).edit().putString("icpt_day", "$key|${cur + 1}").apply()
+    }
+    fun interceptsToday(ctx: Context): Int {
+        val raw = prefs(ctx).getString("icpt_day", "") ?: ""
+        val key = com.ascend.lifeos.core.todayKey()
+        return if (raw.startsWith("$key|")) raw.substringAfter('|').toIntOrNull() ?: 0 else 0
+    }
+
+    // ---- liveness: the watchdog + "on guard" proof line (R3/R5) ----
+    private var lastTickWrite = 0L
+    fun recordTick(ctx: Context) {
+        val now = System.currentTimeMillis()
+        if (now - lastTickWrite < 30_000L) return // throttle prefs writes
+        lastTickWrite = now
+        prefs(ctx).edit().putLong("wb_last_tick", now).apply()
+    }
+    fun lastTick(ctx: Context): Long = prefs(ctx).getLong("wb_last_tick", 0L)
 
     // ---- 80% screen-budget warning: at most once per day ----
     fun markBudgetWarned(ctx: Context, dayKey: String): Boolean {
