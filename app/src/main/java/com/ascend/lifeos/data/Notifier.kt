@@ -305,7 +305,9 @@ object Notifier {
                 else "Fuel check" to "Nothing logged today. Even a quick entry keeps the data honest."
             }
             "evening" -> {
-                val water = day.water
+                // hydration in glass-equivalents (logged drinks included), matching
+                // completion()/Home — not raw water taps, which under-report
+                val water = Repo.hydrationMl(day) / WaterCalc.GLASS_ML
                 val parts = buildList {
                     add(if (kcal > 0) "$kcal kcal logged" else "no food logged")
                     add("water $water/${p.waterGoal}")

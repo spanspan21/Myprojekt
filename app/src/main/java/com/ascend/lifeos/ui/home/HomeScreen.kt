@@ -164,7 +164,7 @@ fun HomeScreen(
             kcalGoal = profile.kcalGoal,
             screenMinutes = screenMin,
             screenBudgetMinutes = screenBudget,
-            waterGlasses = water,
+            waterGlasses = waterGlassEq,
             waterGoal = profile.waterGoal,
             hockeyToday = dayContext.first,
             examSoon = dayContext.second,

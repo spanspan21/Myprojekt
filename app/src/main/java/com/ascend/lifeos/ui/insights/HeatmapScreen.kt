@@ -163,15 +163,19 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
         val day = Repo.data.days[key]
         val body = Repo.data.bodyDays[key]
         val kcal = day?.meals?.sumOf { it.kcal } ?: 0
-        val water = day?.water ?: 0
+        // hydration in ml (logged drinks + taps); glass-equivalent for the cell
+        val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
+        val water = hydrationMl / com.ascend.lifeos.data.WaterCalc.GLASS_ML
         val isTrained = key in trained
         // a day with zero app activity stays honestly empty, not "0/3"
         val missions = if (day == null && !isTrained) null else {
             var done = 0
             // mirror Repo.completion (the streak definition): fuel = hit the kcal
-            // goal, not merely "logged something" — otherwise the heatmap over-reports
+            // goal, not merely "logged something"; hydration counts logged drinks
+            // too (hydrationMl), not just water taps — otherwise the heatmap cell
+            // disagrees with the streak it claims to mirror on drink-heavy days
             if (kcal >= profile.kcalGoal) done++
-            if (water >= profile.waterGoal) done++
+            if (hydrationMl >= profile.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML) done++
             if (isTrained) done++
             done / 3f
         }

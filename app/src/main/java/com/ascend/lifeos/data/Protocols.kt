@@ -80,8 +80,11 @@ object Protocols {
             if (day.workoutDone || day.cali.values.any { it.isNotEmpty() } || Repo.workoutSets(day) > 0) {
                 // *2 instead of /2: integer division truncated (goal 9 → 4), so a
                 // user at exactly 4/9 (44 %, genuinely under half) missed the nudge.
-                if (day.water * 2 < p.waterGoal && LocalTime.now().hour >= 15) {
-                    "You trained but water is at ${day.water}/${p.waterGoal} — two glasses now."
+                // Count logged drinks too (hydrationMl), matching completion()/Home —
+                // otherwise a 1.5 L bottle day still nags "water is at 0".
+                val hydrationMl = Repo.hydrationMl(day)
+                if (hydrationMl * 2 < p.waterGoal * WaterCalc.GLASS_ML && LocalTime.now().hour >= 15) {
+                    "You trained but water is at ${hydrationMl / WaterCalc.GLASS_ML}/${p.waterGoal} — two glasses now."
                 } else null
             } else null
         },
