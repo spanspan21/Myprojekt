@@ -178,6 +178,120 @@ object CasinoEngine {
         if (resolves(bet, n)) minOf(stake * bet.type.payoutFactor, winCapRest.coerceAtLeast(0))
         else -stake
 
+    // ── Dice (Stake edition §10.1) ───────────────────────────────────────────
+    // Roll is an int 0..9999 = 0.00..99.99. Target is a percentile 2..98. Under
+    // wins when roll < target*100; Over wins when roll > (100-? ) — expressed on
+    // the same scale so the multiplier math is one formula.
+
+    const val DICE_MAX = 10_000            // rolls span [0, 9999]
+    const val DICE_EDGE = 0.02
+
+    fun diceRoll(rng: Random = Random): Int = rng.nextInt(DICE_MAX)
+
+    /** Win chance (0..1) for a target percentile and direction. */
+    fun diceChance(target: Int, over: Boolean): Double {
+        val t = target.coerceIn(2, 98)
+        return if (over) (100 - t) / 100.0 else t / 100.0
+    }
+
+    /** Fair-minus-edge payout multiple (e.g. t=50 → 1.96×). */
+    fun diceMultiplier(target: Int, over: Boolean, edge: Double = DICE_EDGE): Double {
+        val p = diceChance(target, over)
+        if (p <= 0.0) return 0.0
+        return (1.0 - edge) / p
+    }
+
+    fun diceWin(roll: Int, target: Int, over: Boolean): Boolean {
+        val t = target.coerceIn(2, 98)
+        val line = t * 100 // roll scale
+        return if (over) roll > line else roll < line
+    }
+
+    /** Minute delta for a resolved roll; win profit clamped to the daily cap. */
+    fun diceDelta(stake: Int, target: Int, over: Boolean, roll: Int, winCapRest: Int): Int =
+        if (diceWin(roll, target, over)) {
+            val profit = Math.round(stake * (diceMultiplier(target, over) - 1.0)).toInt()
+            minOf(profit, winCapRest.coerceAtLeast(0))
+        } else -stake
+
+    // ── Mines (Stake edition §10.2) ──────────────────────────────────────────
+
+    const val MINES_TILES = 25
+    const val MINES_EDGE = 0.02
+
+    /**
+     * Fair-minus-edge multiplier after revealing [safeCount] safe tiles with
+     * [mineCount] mines on a 25-tile grid:
+     *   M(k) = (1-edge) · Π_{i=0}^{k-1} (25-i)/(25-mines-i)   (= (1-e)·C(25,k)/C(25-m,k))
+     */
+    fun minesMultiplier(mineCount: Int, safeCount: Int, edge: Double = MINES_EDGE): Double {
+        val m = mineCount.coerceIn(1, MINES_TILES - 1)
+        val safeTiles = MINES_TILES - m
+        val k = safeCount.coerceIn(0, safeTiles)
+        if (k == 0) return 1.0
+        var prod = 1.0 - edge
+        for (i in 0 until k) prod *= (MINES_TILES - i).toDouble() / (safeTiles - i).toDouble()
+        return prod
+    }
+
+    /** Cashout profit after [safeCount] safe reveals; clamped to the daily cap. */
+    fun minesCashoutDelta(stake: Int, mineCount: Int, safeCount: Int, winCapRest: Int): Int {
+        if (safeCount <= 0) return 0 // nothing revealed = no bet resolved yet
+        val profit = Math.round(stake * (minesMultiplier(mineCount, safeCount) - 1.0)).toInt()
+        return minOf(profit, winCapRest.coerceAtLeast(0))
+    }
+
+    /**
+     * One mines board. Mine positions are fixed at construction from the seed —
+     * the UI reveals tiles, but the outcome of any tile was decided before the
+     * first tap (resolve-then-animate / provably fair).
+     */
+    class MinesGame(mineCount: Int, seed: Long = Random.nextLong()) {
+        val mines: Int = mineCount.coerceIn(1, MINES_TILES - 1)
+        val minePositions: Set<Int> = run {
+            val rng = Random(seed)
+            val all = (0 until MINES_TILES).toMutableList()
+            all.shuffle(rng)
+            all.take(mines).toSet()
+        }
+        private val revealed = HashSet<Int>()
+        var dead = false; private set
+
+        val safeCount: Int get() = revealed.size
+
+        /** Reveal tile [i]; returns true if safe, false if it was a mine (ends game). */
+        fun reveal(i: Int): Boolean {
+            if (dead || i in revealed) return i !in minePositions
+            if (i in minePositions) { dead = true; return false }
+            revealed.add(i); return true
+        }
+
+        fun isRevealed(i: Int) = i in revealed
+        fun multiplier(edge: Double = MINES_EDGE): Double = minesMultiplier(mines, safeCount, edge)
+        fun nextMultiplier(edge: Double = MINES_EDGE): Double = minesMultiplier(mines, safeCount + 1, edge)
+    }
+
+    // ── Blackjack Pair Play side bet (Stake edition §10.3, single deck) ───────
+    // Single deck ⇒ a true "perfect pair" (same rank & suit) is impossible; the
+    // reachable outcomes are a colored pair (same rank, same colour) and a mixed
+    // pair (same rank, different colour). Paytable colored 25:1 / mixed 10:1 sets
+    // the house edge to 5.9% — verified by Monte-Carlo in CasinoEngineTest.
+
+    enum class PairKind { NONE, MIXED, COLORED }
+
+    fun pairKind(a: Card, b: Card): PairKind = when {
+        a.rank != b.rank -> PairKind.NONE
+        a.suit.red == b.suit.red -> PairKind.COLORED
+        else -> PairKind.MIXED
+    }
+
+    /** Minute delta for the side bet on the player's first two cards. */
+    fun pairDelta(kind: PairKind, sideStake: Int, winCapRest: Int): Int = when (kind) {
+        PairKind.COLORED -> minOf(sideStake * 25, winCapRest.coerceAtLeast(0))
+        PairKind.MIXED -> minOf(sideStake * 10, winCapRest.coerceAtLeast(0))
+        PairKind.NONE -> -sideStake
+    }
+
     // ── Shared money math (pure store helpers, unit-tested here) ─────────────
 
     /** Lockout minutes for a lost stake under loss factor f (×1/×2/×3). */

@@ -33,6 +33,8 @@ object GuardRuntime {
         val casinoPkg: String?,    // non-null = the tables may be offered
         val deficitMin: Int,       // minutes already burnt past the wall (ceiled)
         val interceptNo: Int,      // "intercept #N today"
+        val guardStreak: Int,      // consecutive days the line was held (plan §16)
+        val reclaimToday: Int,     // minutes reclaimed today so far (plan §17)
     )
 
     /** Compose-observable: hosts recompose when the service swaps the payload. */
@@ -78,6 +80,20 @@ object GuardRuntime {
 
     // ── Lock actions (shared by both hosts — activity and window fallback) ───
 
+    /**
+     * A wall was accepted — the user left instead of pushing through. Books the
+     * discipline streak and the reclaim ledger (plan §16/§17). Snoozes never
+     * call this, so both numbers stay honest.
+     */
+    private fun bookAccepted(ctx: Context) {
+        val day = com.ascend.lifeos.core.todayKey()
+        WellbeingStore.recordHeldLine(ctx, day)
+        // Honest flat estimate of the scroll session the wall just prevented
+        // (the audit's F11 constant). Cheap — this runs on a button tap, no
+        // event-stream walk on the main thread.
+        WellbeingStore.addReclaim(ctx, day, 6)
+    }
+
     /** "Later" — an explicit, bounded pass. Escalates via DoomscrollDetector. */
     fun actLater(ctx: Context, pkg: String) {
         DoomscrollDetector.recordSnooze(ctx, pkg)
@@ -93,21 +109,24 @@ object GuardRuntime {
         clear()
     }
 
-    /** Offer "Done ✓" — nothing recorded; grace keeps the gate from re-firing mid-close. */
+    /** Offer "Done ✓" — the gate alternative was taken; a held line. */
     fun actOfferDone(ctx: Context, pkg: String) {
+        bookAccepted(ctx)
         cooldownUntil[pkg] = System.currentTimeMillis() + REARM_GRACE_MS
         clear()
     }
 
-    /** Primary exit — leave the app, land on the launcher. */
+    /** Primary exit — leave the app, land on the launcher. A held line. */
     fun actExitHome(ctx: Context, pkg: String) {
+        bookAccepted(ctx)
         cooldownUntil[pkg] = System.currentTimeMillis() + REARM_GRACE_MS
         clear()
         goHome(ctx)
     }
 
-    /** Skill work — leave the wall into JARVIS itself. */
+    /** Skill work — leave the wall into JARVIS itself. The best held line. */
     fun actSkill(ctx: Context, pkg: String) {
+        bookAccepted(ctx)
         cooldownUntil[pkg] = System.currentTimeMillis() + REARM_GRACE_MS
         clear()
         runCatching {
@@ -115,6 +134,15 @@ object GuardRuntime {
                 ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 ?.let { ctx.startActivity(it) }
         }
+    }
+
+    /** Panic focus — the user asked for the door to slam (plan §18). */
+    fun actPanicFocus(ctx: Context, pkg: String, minutes: Int = 30) {
+        bookAccepted(ctx)
+        WellbeingStore.startFocus(ctx, minutes)
+        cooldownUntil[pkg] = System.currentTimeMillis() + REARM_GRACE_MS
+        clear()
+        goHome(ctx)
     }
 
     /** Casino win — the bonus is committed; the raised wall lets the app pass. */
@@ -125,6 +153,7 @@ object GuardRuntime {
 
     /** Casino loss — lockout is committed; leave the table, leave the app. */
     fun actCasinoLose(ctx: Context, pkg: String) {
+        bookAccepted(ctx) // gambled for entry, didn't get in → the line held
         cooldownUntil[pkg] = System.currentTimeMillis() + REARM_GRACE_MS
         clear()
         goHome(ctx)

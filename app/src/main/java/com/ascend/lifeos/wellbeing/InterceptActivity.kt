@@ -43,6 +43,7 @@ class InterceptActivity : ComponentActivity() {
                     onGateContinue = { GuardRuntime.actGatePass(this, cur.pkg); finishLock() },
                     onCasinoWin = { GuardRuntime.actCasinoWin(this, cur.pkg); finishLock() },
                     onCasinoLose = { GuardRuntime.actCasinoLose(this, cur.pkg); finishLock() },
+                    onPanic = { GuardRuntime.actPanicFocus(this, cur.pkg); finishLock() },
                 )
             }
         }

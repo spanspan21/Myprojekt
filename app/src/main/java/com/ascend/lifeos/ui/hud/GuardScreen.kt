@@ -138,6 +138,7 @@ fun GuardScreen() {
     }
 
     var expandedPkg by remember { mutableStateOf<String?>(null) }
+    var practiceOpen by remember { mutableStateOf(false) }
 
     // ---- focus score v2: all four masterplan terms ----
     // budget 45 · unlocks 20 · first pickup 10 · doomscroll snoozes 15 · schedule adherence 10
@@ -271,15 +272,16 @@ fun GuardScreen() {
                         )
                         ScoreRow("Doomscroll", if (dsSnoozes == 0) "clean" else "$dsSnoozes snoozes", doomPart / 15f)
                         ScoreRow("Schedules", if (windowViolations == 0) "honored" else "$windowViolations hits", schedulePart / 10f)
-                        val saved = WellbeingStore.interceptCount(ctx)
-                        if (saved > 0) {
+                        // Real cumulative ledger now (plan §17): only accepted
+                        // walls add here, so the number is honest. Streak too.
+                        val reclaimed = remember(tick) { WellbeingStore.reclaimTotal(ctx) }
+                        val streak = remember(tick) { WellbeingStore.guardStreak(ctx) }
+                        if (reclaimed > 0 || streak > 0) {
                             Spacer(Modifier.height(4.dp))
-                            // Measured, not a fabricated constant (audit F11): each
-                            // prevented open ≈ the user's OWN average unlock session
-                            // (today's screen minutes / unlocks), clamped to a sane band.
-                            val perOpen = if (unlocks > 0) (usedMin.toDouble() / unlocks).coerceIn(2.0, 20.0) else 6.0
                             Text(
-                                "≈${(saved * perOpen).toInt()} min reclaimed by Guard so far",
+                                (if (reclaimed > 0) "$reclaimed min reclaimed by Guard" else "") +
+                                    (if (reclaimed > 0 && streak >= 2) " · " else "") +
+                                    (if (streak >= 2) "🔥 $streak-day line" else ""),
                                 color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
@@ -493,10 +495,29 @@ fun GuardScreen() {
                     }
                     if (casOn) {
                         Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
+                        // Practice table (plan §8) — try every game risk-free.
+                        Box(
+                            Modifier.fillMaxWidth().pressScale { practiceOpen = true }
+                                .clip(RoundedCornerShape(13.dp))
+                                .background(CasinoViolet.copy(alpha = 0.12f))
+                                .border(0.5.dp, CasinoViolet.copy(alpha = 0.45f), RoundedCornerShape(13.dp))
+                                .padding(vertical = 13.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("🎮  Practice table — try it risk-free", color = CasinoViolet, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
                         MiniStepper(
-                            "Attempts per day", "${cas.attemptsPerDay(ctx)}",
+                            "Base attempts / day", "${cas.attemptsPerDay(ctx)}",
                             onMinus = { cas.setAttemptsPerDay(ctx, cas.attemptsPerDay(ctx) - 1); tick++ },
                             onPlus = { cas.setAttemptsPerDay(ctx, cas.attemptsPerDay(ctx) + 1); tick++ },
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        val skillMin = remember(tick) { (DigitalWellbeingManager.usageTodayMs(ctx, ctx.packageName) / 60_000L).toInt() }
+                        val earned = remember(tick) { cas.earnedAttempts(ctx, skillMin) }
+                        Text(
+                            "Skill-time earns extra spins · 20 min = +1 (max 5). Today: ${skillMin}m → +$earned earned.",
+                            color = if (earned > 0) Champagne else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, lineHeight = 13.sp,
                         )
                         Spacer(Modifier.height(10.dp))
                         MiniStepper(
@@ -676,7 +697,34 @@ fun GuardScreen() {
             } // AnimatedContent
         }
     }
+
+    // Practice table (plan §8) — a full-screen, risk-free casino from settings.
+    if (practiceOpen) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { practiceOpen = false },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            val ledger = remember { com.ascend.lifeos.wellbeing.PracticeLedger(ctx, ctx.packageName) }
+            Box(
+                Modifier.fillMaxSize().background(Color(0xFF050505))
+                    .statusBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+            ) {
+                com.ascend.lifeos.wellbeing.CasinoScreen(
+                    appLabel = "Practice",
+                    ledger = ledger,
+                    deficitMin = 0,
+                    onWin = { practiceOpen = false },
+                    onLose = { practiceOpen = false },
+                    onBack = { practiceOpen = false },
+                )
+            }
+        }
+    }
 }
+
+private val CasinoViolet = Color(0xFF9B8CFF)
 
 // ─── focus session card ─────────────────────────────────────────────────────
 

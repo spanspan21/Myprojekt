@@ -95,6 +95,38 @@ object WellbeingStore {
     }
     fun lastTick(ctx: Context): Long = prefs(ctx).getLong("wb_last_tick", 0L)
 
+    // ---- discipline streak: days you accepted the wall (plan §16) ----
+    // A day counts as "held" the first time an intercept is answered with
+    // "Back to focus" / "I'm out" (not a snooze). The streak is the count of
+    // consecutive held days; it makes being locked out something to be proud of.
+    fun guardStreak(ctx: Context): Int = prefs(ctx).getInt("guard_streak", 0)
+
+    /** Record that today's line was held. Consecutive days grow the streak. */
+    fun recordHeldLine(ctx: Context, dayKey: String) {
+        if (prefs(ctx).getString("guard_streak_last", "") == dayKey) return // once per day
+        val last = prefs(ctx).getString("guard_streak_last", "") ?: ""
+        val yesterday = runCatching { LocalDate.parse(dayKey).minusDays(1).toString() }.getOrNull()
+        val next = if (last == yesterday) guardStreak(ctx) + 1 else 1
+        prefs(ctx).edit().putInt("guard_streak", next).putString("guard_streak_last", dayKey).apply()
+    }
+
+    // ---- reclaim ledger: minutes actually clawed back (plan §17) ----
+    // Only accepted walls count — a snooze did NOT reclaim the time, so it is
+    // never added here. Keeps the number honest.
+    fun reclaimToday(ctx: Context, dayKey: String): Int {
+        val raw = prefs(ctx).getString("reclaim_day", "") ?: ""
+        return if (raw.startsWith("$dayKey|")) raw.substringAfter('|').toIntOrNull() ?: 0 else 0
+    }
+    fun reclaimTotal(ctx: Context): Int = prefs(ctx).getInt("reclaim_total", 0)
+    fun addReclaim(ctx: Context, dayKey: String, minutes: Int) {
+        if (minutes <= 0) return
+        val cur = reclaimToday(ctx, dayKey)
+        prefs(ctx).edit()
+            .putString("reclaim_day", "$dayKey|${cur + minutes}")
+            .putInt("reclaim_total", reclaimTotal(ctx) + minutes)
+            .apply()
+    }
+
     // ---- 80% screen-budget warning: at most once per day ----
     fun markBudgetWarned(ctx: Context, dayKey: String): Boolean {
         if (prefs(ctx).getString("warn80", "") == dayKey) return false

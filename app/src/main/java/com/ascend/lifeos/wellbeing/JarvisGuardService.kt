@@ -308,10 +308,13 @@ class JarvisGuardService : Service() {
             // Ceil, not floor: a win must cover every second already burnt past
             // the wall, or "+5 min" silently pays out 4.
             val deficit = (((usedMs - effLimit * 60_000L) + 59_999L) / 60_000L).toInt().coerceAtLeast(0)
+            // Skill-time today earns extra attempts (plan §6): the offer must
+            // count them, or an earned spin would be hidden at the wall.
+            val skillMinNow = (DigitalWellbeingManager.usageTodayMs(this, packageName) / 60_000L).toInt()
             showIntercept(
                 fg, InterceptMode.LIMIT, usedMin, effLimit,
                 bonusWon = com.ascend.lifeos.data.casino.CasinoStore.wonBonusMin(this, fg),
-                casinoPkg = if (com.ascend.lifeos.data.casino.CasinoStore.offerAvailable(this, fg)) fg else null,
+                casinoPkg = if (com.ascend.lifeos.data.casino.CasinoStore.offerAvailable(this, fg, skillMinNow)) fg else null,
                 deficitMin = deficit,
                 resetText = "fresh minutes at 06:00",
             )
@@ -493,6 +496,8 @@ class JarvisGuardService : Service() {
             casinoPkg = casinoPkg,
             deficitMin = deficitMin,
             interceptNo = WellbeingStore.interceptsToday(this),
+            guardStreak = WellbeingStore.guardStreak(this),
+            reclaimToday = WellbeingStore.reclaimToday(this, todayKey()),
         )
         GuardRuntime.payload.value = p
 
@@ -542,6 +547,7 @@ class JarvisGuardService : Service() {
                     onGateContinue = { GuardRuntime.actGatePass(ctx, cur.pkg); removeOverlay() },
                     onCasinoWin = { GuardRuntime.actCasinoWin(ctx, cur.pkg); removeOverlay() },
                     onCasinoLose = { GuardRuntime.actCasinoLose(ctx, cur.pkg); removeOverlay() },
+                    onPanic = { GuardRuntime.actPanicFocus(ctx, cur.pkg); removeOverlay() },
                 )
             }
         }

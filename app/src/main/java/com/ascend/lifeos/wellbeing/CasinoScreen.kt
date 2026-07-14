@@ -40,15 +40,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
-import com.ascend.lifeos.data.casino.CasinoEngine
 import com.ascend.lifeos.data.casino.CasinoStore
 import com.ascend.lifeos.ui.motion.pressScale
+import com.ascend.lifeos.ui.theme.FS
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
-// Design tokens (plan §10/§11: clean core, guard-tinted, gold only on a win)
+// Design tokens (plan §2: clean core, guard-tinted, gold only on a win)
 internal val CasVoid = Color(0xFF050505)
 internal val CasInk = Color(0xFFEEF1F6)
 internal val CasMuted = Color(0xFF8B93A1)
@@ -60,38 +61,60 @@ internal val CasRed = Color(0xFFB04A3E)
 internal val CasBlackChip = Color(0xFF14141B)
 internal const val SUSPENSE_MS = 650L
 
-internal enum class CasPhase { PICK, STAKE, TABLE, REVEAL }
+internal enum class CasPhase { LOBBY, STAKE, TABLE, REVEAL }
 
 /**
- * HOUSE OF TIME — the guard-side flow (plan §12). Lives inside the intercept
- * overlay; result minutes are resolved by the engine and persisted before any
- * animation plays (resolve-then-animate, §18).
+ * HOUSE OF TIME — Stake edition (plan §9). A lobby with a live balance header,
+ * four games, side bets and a provably-fair tag. Lives inside the lock overlay
+ * (real ledger) or the settings practice table (practice ledger). Results are
+ * resolved by the engine and persisted before any animation plays (§18).
  */
 @Composable
 fun CasinoScreen(
     appLabel: String,
-    pkg: String,
+    ledger: CasinoLedger,
     deficitMin: Int, // minutes already used beyond the limit — a win must cover them
     onWin: () -> Unit,
     onLose: () -> Unit,
     onBack: () -> Unit,
 ) {
     val ctx = LocalContext.current
-    var phase by remember { mutableStateOf(CasPhase.PICK) }
+    var phase by remember { mutableStateOf(CasPhase.LOBBY) }
     var game by remember { mutableStateOf("bj") }
+    var fairSeed by remember { mutableStateOf(Random.nextLong()) }
+    var showFair by remember { mutableStateOf(false) }
     val chips = remember {
         listOf(5, 10, 15, 25, 40, 60).filter { it in CasinoStore.stakeMin(ctx)..CasinoStore.stakeMax(ctx) }
             .ifEmpty { listOf(CasinoStore.stakeMin(ctx)) }
     }
     var stake by remember { mutableIntStateOf(chips.first()) }
+    var pairStake by remember { mutableIntStateOf(0) }
     var resultDelta by remember { mutableStateOf<Int?>(null) }
+    var revealCover by remember { mutableIntStateOf(0) }
+    var revealPair by remember { mutableStateOf<String?>(null) }
 
-    // Full-screen now — the lock screen is the surface, the table gets room.
-    Box(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+    fun toTable() { fairSeed = Random.nextLong(); phase = CasPhase.TABLE }
+
+    Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        if (phase != CasPhase.REVEAL) {
+            BalanceHeader(
+                ledger = ledger,
+                fairSeedTag = fairTag(fairSeed),
+                onBack = { if (phase == CasPhase.LOBBY) onBack() else phase = CasPhase.LOBBY },
+                onFair = { showFair = true },
+            )
+            if (ledger.practice) {
+                Spacer(Modifier.height(10.dp))
+                PracticeBanner(credits = (ledger as? PracticeLedger)?.credits() ?: 0) {
+                    (ledger as? PracticeLedger)?.reset()
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+        }
+
         AnimatedContent(
             targetState = phase,
             transitionSpec = {
-                // height morphs instead of jumping between phases (plan §13.1)
                 (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 24 })
                     .togetherWith(fadeOut(tween(110)))
                     .using(androidx.compose.animation.SizeTransform(clip = false))
@@ -99,181 +122,194 @@ fun CasinoScreen(
             label = "casPhase",
         ) { p ->
             when (p) {
-                CasPhase.PICK -> PickPhase(
-                    ctx = ctx,
-                    onBack = onBack,
-                    onPick = { g -> game = g; phase = CasPhase.STAKE },
+                CasPhase.LOBBY -> Lobby(
+                    ledger = ledger,
+                    onPick = { g ->
+                        game = g
+                        pairStake = 0
+                        if (g == "dice" || g == "mines") toTable() else phase = CasPhase.STAKE
+                    },
                 )
                 CasPhase.STAKE -> StakePhase(
                     appLabel = appLabel, chips = chips, stake = stake, game = game,
                     lossMult = CasinoStore.lossMult(ctx),
                     deficitMin = deficitMin,
+                    pairStake = pairStake,
                     onStake = { stake = it },
-                    onBack = { phase = CasPhase.PICK },
-                    onGo = { phase = CasPhase.TABLE },
+                    onPairStake = { pairStake = it },
+                    onGo = { toTable() },
                 )
                 CasPhase.TABLE -> {
-                    if (game == "bj") BlackjackTable(
-                        pkg = pkg, stake = stake, deficitMin = deficitMin,
-                        onResolved = { delta -> resultDelta = delta; phase = CasPhase.REVEAL },
-                    ) else RouletteTable(
-                        pkg = pkg, stake = stake, deficitMin = deficitMin,
-                        onResolved = { delta -> resultDelta = delta; phase = CasPhase.REVEAL },
-                    )
+                    when (game) {
+                        "bj" -> BlackjackTable(
+                            ledger = ledger, stake = stake, deficitMin = deficitMin,
+                            pairStake = pairStake, seed = fairSeed,
+                            onResolved = { delta, cover, pair ->
+                                resultDelta = delta; revealCover = cover; revealPair = pair
+                                phase = CasPhase.REVEAL
+                            },
+                        )
+                        "ru" -> RouletteTable(
+                            ledger = ledger, stake = stake, deficitMin = deficitMin, seed = fairSeed,
+                            onResolved = { delta -> resultDelta = delta; revealCover = if (delta > 0) deficitMin else 0; revealPair = null; phase = CasPhase.REVEAL },
+                        )
+                        "dice" -> DiceTable(
+                            ledger = ledger, chips = chips, deficitMin = deficitMin, seed = fairSeed,
+                            onResolved = { delta, cover -> resultDelta = delta; revealCover = cover; revealPair = null; phase = CasPhase.REVEAL },
+                        )
+                        else -> MinesTable(
+                            ledger = ledger, chips = chips, deficitMin = deficitMin, seed = fairSeed,
+                            onResolved = { delta, cover -> resultDelta = delta; revealCover = cover; revealPair = null; phase = CasPhase.REVEAL },
+                        )
+                    }
                 }
                 CasPhase.REVEAL -> RevealPhase(
                     appLabel = appLabel, delta = resultDelta ?: 0,
-                    coverMin = if ((resultDelta ?: 0) > 0) deficitMin else 0,
-                    onWin = onWin, onLose = onLose,
+                    coverMin = revealCover, pairNote = revealPair, practice = ledger.practice,
+                    onWin = { if (ledger.practice) phase = CasPhase.LOBBY else onWin() },
+                    onLose = { if (ledger.practice) phase = CasPhase.LOBBY else onLose() },
                 )
             }
         }
     }
+
+    if (showFair) FairSheet(fairSeed) { showFair = false }
 }
 
-// ── PICK ─────────────────────────────────────────────────────────────────────
+// ── LOBBY ─────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PickPhase(ctx: android.content.Context, onBack: () -> Unit, onPick: (String) -> Unit) {
+private fun Lobby(ledger: CasinoLedger, onPick: (String) -> Unit) {
     Column(Modifier.fillMaxWidth()) {
-        CasHeader("HOUSE OF TIME", onBack)
-        Spacer(Modifier.height(4.dp))
-        Text("Pick your table", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
-        Spacer(Modifier.height(14.dp))
+        Text("Choose your game", color = CasInk, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TableCard(Modifier.weight(1f), "BLACKJACK", "the skill table", "edge ≈1%") { onPick("bj") }
-            TableCard(Modifier.weight(1f), "ROULETTE", "the wheel", "edge 2.7%") { onPick("ru") }
+            GameTile(Modifier.weight(1f), "🎲", "DICE", "roll under / over", "edge 2%") { onPick("dice") }
+            GameTile(Modifier.weight(1f), "💣", "MINES", "climb the ladder", "up to 24×") { onPick("mines") }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            GameTile(Modifier.weight(1f), "🃏", "BLACKJACK", "skill · pair side bet", "edge ≈1%") { onPick("bj") }
+            GameTile(Modifier.weight(1f), "🎡", "ROULETTE", "the wheel", "edge 2.7%") { onPick("ru") }
         }
         Spacer(Modifier.height(14.dp))
-        val left = CasinoStore.attemptsLeft(ctx)
-        AttemptPips(total = CasinoStore.attemptsPerDay(ctx), left = left)
-        Spacer(Modifier.height(6.dp))
         Text(
-            "Attempts today · $left of ${CasinoStore.attemptsPerDay(ctx)} left",
-            color = CasDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+            if (ledger.practice) "Practice freely — try every game and side bet."
+            else "Win minutes back · the house edge still works for you.",
+            color = CasDim, fontSize = FS.s11, modifier = Modifier.align(Alignment.CenterHorizontally),
         )
     }
 }
 
-@Composable
-private fun TableCard(modifier: Modifier, title: String, sub: String, edge: String, onClick: () -> Unit) {
-    Column(
-        modifier.clip(RoundedCornerShape(16.dp)).background(CasPanel)
-            .border(0.5.dp, CasAccent.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick).padding(16.dp),
-    ) {
-        Text(title, color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
-        Spacer(Modifier.height(3.dp))
-        Text(sub, color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
-        Spacer(Modifier.height(10.dp))
-        Text(edge, color = CasAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-    }
-}
-
-// ── STAKE ────────────────────────────────────────────────────────────────────
+// ── STAKE (blackjack / roulette) ──────────────────────────────────────────────
 
 @Composable
 private fun StakePhase(
     appLabel: String, chips: List<Int>, stake: Int, game: String, lossMult: Int,
-    deficitMin: Int,
-    onStake: (Int) -> Unit, onBack: () -> Unit, onGo: () -> Unit,
+    deficitMin: Int, pairStake: Int,
+    onStake: (Int) -> Unit, onPairStake: (Int) -> Unit, onGo: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
-        CasHeader("HOUSE OF TIME", onBack)
-        Spacer(Modifier.height(4.dp))
-        Text("Your stake", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
+        Text("Your stake", color = CasInk, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
         Spacer(Modifier.height(14.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            chips.forEach { c ->
-                val sel = c == stake
-                Box(
-                    Modifier.weight(1f).pressScale { onStake(c) }
-                        .clip(CircleShape)
-                        .background(if (sel) CasAccent else CasPanel)
-                        .border(0.5.dp, if (sel) CasAccent else Color.White.copy(alpha = 0.10f), CircleShape)
-                        .padding(vertical = 13.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "$c", color = if (sel) Color(0xFF06110C) else CasMuted,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.ExtraBold,
-                    )
+        StakeChips(chips, stake, onStake = onStake)
+        Spacer(Modifier.height(14.dp))
+
+        // Blackjack side bet — Pair Play (plan §10.3)
+        if (game == "bj") {
+            Text("SIDE BET · PAIR PLAY", color = CasGold, fontSize = FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 1.8.sp)
+            Spacer(Modifier.height(6.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(0, 5, 10).forEach { s ->
+                    val sel = s == pairStake
+                    Box(
+                        Modifier.weight(1f).pressScale { onPairStake(s) }
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (sel) CasGold.copy(alpha = 0.16f) else CasPanel)
+                            .border(0.5.dp, if (sel) CasGold.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+                            .padding(vertical = 11.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            if (s == 0) "Off" else "$s", color = if (sel) CasGold else CasMuted,
+                            fontSize = FS.s13, fontWeight = FontWeight.ExtraBold,
+                        )
+                    }
                 }
             }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Colored pair 25× · mixed pair 10× on your first two cards",
+                color = CasDim, fontSize = FS.s10, modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            Spacer(Modifier.height(14.dp))
         }
-        Spacer(Modifier.height(14.dp))
-        Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(CasPanel).padding(14.dp),
-        ) {
-            Text("Win → +$stake fresh min $appLabel today", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(CasPanel).padding(14.dp)) {
+            Text("Win → +$stake fresh min $appLabel today", color = CasInk, fontSize = FS.s13)
             if (deficitMin > 0) {
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    "a win also clears the ${deficitMin}m you're already over",
-                    color = CasGold.copy(alpha = 0.8f), fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
-                )
+                Text("a win also clears the ${deficitMin}m you're already over", color = CasGold.copy(alpha = 0.8f), fontSize = FS.s11_5)
             }
             Spacer(Modifier.height(4.dp))
-            Text("Lose → locked ${stake * lossMult} min extra", color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+            Text("Lose → locked ${stake * lossMult} min extra", color = CasMuted, fontSize = FS.s13)
         }
         Spacer(Modifier.height(16.dp))
-        CasCta(if (game == "bj") "Deal" else "To the wheel", onGo)
+        CasCta(if (game == "bj") "Deal" else "To the wheel", onClick = onGo)
     }
 }
 
 // ── REVEAL (plan §12/§15: gold on win, quiet on loss) ────────────────────────
 
 @Composable
-private fun RevealPhase(appLabel: String, delta: Int, coverMin: Int, onWin: () -> Unit, onLose: () -> Unit) {
+private fun RevealPhase(
+    appLabel: String, delta: Int, coverMin: Int, pairNote: String?, practice: Boolean,
+    onWin: () -> Unit, onLose: () -> Unit,
+) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) {
-        CasinoStore.commitPending(ctx)
+        // Practice never touches the real ledger; the ledger's own commit already
+        // ran inside the table for the real path.
         if (delta > 0) { Haptics.success(ctx); delay(2000); onWin() } else Haptics.warn(ctx)
     }
     Column(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        if (pairNote != null) {
+            Text(pairNote, color = CasGold, fontSize = FS.s13, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+        }
         if (delta > 0) {
-            // The most expensive moment of the app: count-up + one breathing pulse.
             var target by remember { mutableIntStateOf(0) }
             LaunchedEffect(Unit) { target = delta }
             val shown by androidx.compose.animation.core.animateIntAsState(target, tween(500), label = "casWin")
             val pulse = remember { androidx.compose.animation.core.Animatable(1f) }
-            LaunchedEffect(Unit) {
-                pulse.animateTo(1.06f, tween(450))
-                pulse.animateTo(1f, tween(550))
-            }
+            LaunchedEffect(Unit) { pulse.animateTo(1.06f, tween(450)); pulse.animateTo(1f, tween(550)) }
             Box(
                 Modifier.size(150.dp)
                     .graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
-                    .background(
-                        Brush.radialGradient(listOf(CasGold.copy(alpha = 0.28f), Color.Transparent)), CircleShape,
-                    ),
+                    .background(Brush.radialGradient(listOf(CasGold.copy(alpha = 0.28f), Color.Transparent)), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("+$shown MIN", color = CasGold, fontSize = com.ascend.lifeos.ui.theme.FS.s28, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                Text("+$shown${if (practice) "" else " MIN"}", color = CasGold, fontSize = FS.s28, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                "$appLabel is open — the house honors its debts.",
-                color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                if (practice) "Practice win — nothing credited." else "$appLabel is open — the house honors its debts.",
+                color = CasMuted, fontSize = FS.s13,
             )
-            if (coverMin > 0) {
+            if (coverMin > 0 && !practice) {
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    "+${delta}m fresh clock · your ${coverMin}m overrun is cleared on top",
-                    color = CasGold.copy(alpha = 0.75f), fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
-                )
+                Text("+${delta}m fresh clock · your ${coverMin}m overrun cleared on top", color = CasGold.copy(alpha = 0.75f), fontSize = FS.s11_5)
             }
         } else {
             Spacer(Modifier.height(22.dp))
-            Text("House wins.", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)
+            Text(if (practice) "Practice loss." else "House wins.", color = CasInk, fontSize = FS.s22, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Locked until ${lockText(ctx)} · your stake, your rules.",
-                color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                if (practice) "No lockout — this was practice." else "Locked until ${lockText(ctx)} · your stake, your rules.",
+                color = CasMuted, fontSize = FS.s13,
             )
             Spacer(Modifier.height(22.dp))
-            CasCta("Accept", onLose)
+            CasCta(if (practice) "Back to lobby" else "Accept", onClick = onLose)
         }
     }
 }
@@ -288,44 +324,43 @@ private fun lockText(ctx: android.content.Context): String {
     return Instant.ofEpochMilli(latest).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))
 }
 
-// ── Shared bits ──────────────────────────────────────────────────────────────
+// ── Provably-fair sheet (plan §19) ────────────────────────────────────────────
 
 @Composable
-internal fun CasHeader(title: String, onBack: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            "‹", color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).clickable(onClick = onBack).padding(horizontal = 10.dp, vertical = 2.dp),
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(title, color = CasAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold, letterSpacing = 2.5.sp)
+private fun FairSheet(seed: Long, onClose: () -> Unit) {
+    Box(
+        Modifier.fillMaxWidth().padding(top = 8.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(CasVoid.copy(alpha = 0.96f))
+            .border(0.5.dp, CasAccent.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .clickable(onClick = onClose)
+            .padding(18.dp),
+    ) {
+        Column {
+            Text("PROVABLY FAIR", color = CasAccent, fontSize = FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Spacer(Modifier.height(8.dp))
+            Text("This round · seed ${fairTag(seed)}", color = CasInk, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "The outcome was fixed before the animation played — the engine resolves first, then animates. No number moves once the cards are dealt or the wheel is spun. Tap to close.",
+                color = CasMuted, fontSize = FS.s12, lineHeight = 17.sp,
+            )
+        }
     }
 }
 
+// ── Shared bits (kept from v1) ────────────────────────────────────────────────
+
 @Composable
-internal fun CasCta(label: String, onClick: () -> Unit, enabled: Boolean = true) {
+internal fun CasCta(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth()
             .then(if (enabled) Modifier.pressScale(onClick) else Modifier)
             .clip(RoundedCornerShape(14.dp))
             .background(if (enabled) CasAccent else CasAccent.copy(alpha = 0.25f))
-            .padding(vertical = 14.dp),
+            .padding(vertical = 15.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = Color(0xFF06110C), fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
-    }
-}
-
-@Composable
-internal fun AttemptPips(total: Int, left: Int) {
-    Row(
-        Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-    ) {
-        repeat(total) { i ->
-            Box(
-                Modifier.width(26.dp).height(5.dp).clip(CircleShape)
-                    .background(if (i < left) CasAccent else Color.White.copy(alpha = 0.08f)),
-            )
-        }
+        Text(label, color = Color(0xFF06110C), fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
     }
 }

@@ -163,4 +163,154 @@ class CasinoEngineTest {
         assertEquals((0..36).toSet(), CasinoEngine.WHEEL_ORDER.toSet())
         assertEquals(18, CasinoEngine.RED_NUMBERS.size)
     }
+
+    // ── Dice (Stake edition) ──────────────────────────────────────────────────
+
+    @Test fun `dice multiplier follows the fair-minus-edge formula`() {
+        assertEquals(1.96, CasinoEngine.diceMultiplier(50, over = false), 1e-9)  // 0.98/0.5
+        assertEquals(49.0, CasinoEngine.diceMultiplier(2, over = false), 1e-9)   // 0.98/0.02
+        assertEquals(49.0, CasinoEngine.diceMultiplier(98, over = true), 1e-9)   // over 98 → p .02
+        assertEquals(1.96, CasinoEngine.diceMultiplier(50, over = true), 1e-9)
+    }
+
+    @Test fun `dice win boundary is strict under and over`() {
+        assertTrue(CasinoEngine.diceWin(4999, 50, over = false))   // 49.99 < 50
+        assertFalse(CasinoEngine.diceWin(5000, 50, over = false))  // 50.00 not < 50
+        assertTrue(CasinoEngine.diceWin(5001, 50, over = true))    // 50.01 > 50
+        assertFalse(CasinoEngine.diceWin(5000, 50, over = true))
+    }
+
+    @Test fun `dice delta pays profit and clamps to the cap`() {
+        assertEquals(+5, CasinoEngine.diceDelta(5, 50, over = false, roll = 100, winCapRest = 60))   // 5*(1.96-1)=4.8→5
+        assertEquals(-5, CasinoEngine.diceDelta(5, 50, over = false, roll = 9000, winCapRest = 60))
+        assertEquals(+60, CasinoEngine.diceDelta(10, 2, over = false, roll = 100, winCapRest = 60))  // 10*48=480→cap
+    }
+
+    @Test fun `dice roll is uniform over 500k`() {
+        val rng = Random(11)
+        var under50 = 0
+        val n = 500_000
+        repeat(n) { if (CasinoEngine.diceRoll(rng) < 5000) under50++ }
+        val p = under50.toDouble() / n
+        assertTrue("under-50 rate $p ≈ .5", p in 0.495..0.505)
+    }
+
+    @Test fun `dice EV stays in the honest band at low and mid targets`() {
+        for (target in intArrayOf(10, 50, 90)) {
+            val rng = Random(target.toLong())
+            val n = 300_000
+            var units = 0.0
+            repeat(n) {
+                val roll = CasinoEngine.diceRoll(rng)
+                units += CasinoEngine.diceDelta(1000, target, over = false, roll = roll, winCapRest = 10_000_000) / 1000.0
+            }
+            val ev = units / n
+            assertTrue("dice EV $ev @t=$target should be in [-0.05, 0]", ev > -0.05 && ev < 0.0)
+        }
+    }
+
+    // ── Mines ─────────────────────────────────────────────────────────────────
+
+    @Test fun `mines multiplier equals the combinatorial ratio`() {
+        // M(k) = 0.98 * C(25,k)/C(22,k) for 3 mines
+        fun comb(n: Int, k: Int): Double {
+            var r = 1.0; for (i in 0 until k) r = r * (n - i) / (i + 1); return r
+        }
+        for (k in 1..10) {
+            val expected = 0.98 * comb(25, k) / comb(22, k)
+            assertEquals("M($k)", expected, CasinoEngine.minesMultiplier(3, k), 1e-6)
+        }
+        assertEquals(1.0, CasinoEngine.minesMultiplier(3, 0), 1e-9) // no reveal = 1×
+    }
+
+    @Test fun `mines board places exactly the requested mines`() {
+        repeat(200) { seed ->
+            val g = CasinoEngine.MinesGame(5, seed.toLong())
+            assertEquals(5, g.minePositions.size)
+            assertTrue(g.minePositions.all { it in 0..24 })
+        }
+    }
+
+    @Test fun `mines reveal ends on a mine and accrues safe count`() {
+        // find a seed, walk every tile in index order until a mine
+        val g = CasinoEngine.MinesGame(3, 123L)
+        var safe = 0
+        var died = false
+        for (i in 0 until 25) {
+            val ok = g.reveal(i)
+            if (!ok) { died = true; break }
+            safe++
+        }
+        assertTrue(died)
+        assertEquals(safe, g.safeCount)
+        assertTrue(g.dead)
+    }
+
+    @Test fun `mines cashout delta pays the ladder and clamps`() {
+        // 3 mines, 5 safe → ~2.0×; on stake 10 profit ≈ 10
+        val profit = CasinoEngine.minesCashoutDelta(10, 3, 5, winCapRest = 1000)
+        assertEquals(Math.round(10 * (CasinoEngine.minesMultiplier(3, 5) - 1.0)).toInt(), profit)
+        assertEquals(0, CasinoEngine.minesCashoutDelta(10, 3, 0, winCapRest = 1000)) // nothing revealed
+        assertEquals(5, CasinoEngine.minesCashoutDelta(10, 24, 1, winCapRest = 5))   // huge mult → cap
+    }
+
+    @Test fun `mines EV with random cashout stays in the honest band`() {
+        val n = 200_000
+        var units = 0.0
+        for (seed in 0 until n) {
+            val rng = Random(seed.toLong())
+            val mines = 1 + rng.nextInt(5)               // 1..5 mines
+            val g = CasinoEngine.MinesGame(mines, seed * 31L + 7)
+            val target = 1 + rng.nextInt(6)              // cash out after 1..6 safe picks
+            val order = (0 until 25).shuffled(rng)
+            var alive = true
+            for (i in 0 until target) {
+                if (!g.reveal(order[i])) { alive = false; break }
+            }
+            units += if (alive) {
+                CasinoEngine.minesCashoutDelta(100, mines, g.safeCount, 10_000_000) / 100.0
+            } else -1.0
+        }
+        val ev = units / n
+        assertTrue("mines EV $ev should be in [-0.06, 0]", ev > -0.06 && ev < 0.0)
+    }
+
+    // ── Blackjack Pair Play side bet ──────────────────────────────────────────
+
+    @Test fun `pair kind classifies colored mixed and none`() {
+        assertEquals(CasinoEngine.PairKind.COLORED, CasinoEngine.pairKind(Card(11, Suit.SPADE), Card(11, Suit.CLUB)))   // both black
+        assertEquals(CasinoEngine.PairKind.MIXED, CasinoEngine.pairKind(Card(11, Suit.SPADE), Card(11, Suit.HEART)))    // black+red
+        assertEquals(CasinoEngine.PairKind.NONE, CasinoEngine.pairKind(Card(11, Suit.SPADE), Card(12, Suit.SPADE)))
+    }
+
+    @Test fun `pair delta follows the paytable and clamps`() {
+        assertEquals(+125, CasinoEngine.pairDelta(CasinoEngine.PairKind.COLORED, 5, winCapRest = 1000))
+        assertEquals(+50, CasinoEngine.pairDelta(CasinoEngine.PairKind.MIXED, 5, winCapRest = 1000))
+        assertEquals(-5, CasinoEngine.pairDelta(CasinoEngine.PairKind.NONE, 5, winCapRest = 1000))
+        assertEquals(+30, CasinoEngine.pairDelta(CasinoEngine.PairKind.COLORED, 5, winCapRest = 30)) // 125 → cap
+    }
+
+    @Test fun `pair play rates and EV match single-deck math over 300k`() {
+        val n = 300_000
+        var colored = 0; var mixed = 0
+        var units = 0.0
+        for (seed in 0 until n) {
+            val rng = Random(seed.toLong() * 2654435761L)
+            val deck = CasinoEngine.freshDeck(rng)
+            val a = deck.removeLast(); val b = deck.removeLast()
+            val kind = CasinoEngine.pairKind(a, b)
+            when (kind) {
+                CasinoEngine.PairKind.COLORED -> colored++
+                CasinoEngine.PairKind.MIXED -> mixed++
+                else -> {}
+            }
+            units += CasinoEngine.pairDelta(kind, 100, 10_000_000) / 100.0
+        }
+        val pc = colored.toDouble() / n
+        val pm = mixed.toDouble() / n
+        assertTrue("colored $pc ≈ 1/51", pc in 0.017..0.023)
+        assertTrue("mixed $pm ≈ 2/51", pm in 0.036..0.043)
+        val ev = units / n
+        assertTrue("pair EV $ev ≈ -0.059", ev > -0.075 && ev < -0.04)
+    }
 }

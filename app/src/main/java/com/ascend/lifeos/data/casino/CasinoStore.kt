@@ -22,9 +22,24 @@ object CasinoStore {
     fun enabled(ctx: Context) = sp(ctx).getBoolean("cas_enabled", false)
     fun setEnabled(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("cas_enabled", on).apply()
 
-    fun attemptsPerDay(ctx: Context) = sp(ctx).getInt("cas_attempts_per_day", 3)
+    fun attemptsPerDay(ctx: Context) = sp(ctx).getInt("cas_attempts_per_day", 5)
     fun setAttemptsPerDay(ctx: Context, n: Int) =
         sp(ctx).edit().putInt("cas_attempts_per_day", n.coerceIn(1, 10)).apply()
+
+    // ── Earned attempts: skill-time buys extra spins (plan §6) ────────────────
+    // The disciplined behaviour the app wants is what unlocks more play. Every
+    // MIN_PER_EARNED minutes of real JARVIS skill-time today grants one extra
+    // attempt, capped — so focus is the currency of the casino, and someone who
+    // did nothing stays at the base count.
+    private const val MIN_PER_EARNED = 20
+
+    fun maxEarnedPerDay(ctx: Context) = sp(ctx).getInt("cas_max_earned", 5)
+    fun setMaxEarnedPerDay(ctx: Context, n: Int) =
+        sp(ctx).edit().putInt("cas_max_earned", n.coerceIn(0, 10)).apply()
+
+    /** Extra attempts earned by [skillMin] minutes of skill-time today. */
+    fun earnedAttempts(ctx: Context, skillMin: Int): Int =
+        (skillMin / MIN_PER_EARNED).coerceIn(0, maxEarnedPerDay(ctx))
 
     fun stakeMin(ctx: Context) = sp(ctx).getInt("cas_stake_min", 5)
     fun stakeMax(ctx: Context) = sp(ctx).getInt("cas_stake_max", 60)
@@ -55,17 +70,30 @@ object CasinoStore {
         }
     }
 
-    fun attemptsLeft(ctx: Context): Int {
-        ensureDay(ctx)
-        return (attemptsPerDay(ctx) - sp(ctx).getInt("cas_attempts_used", 0)).coerceAtLeast(0)
-    }
+    fun attemptsUsed(ctx: Context): Int { ensureDay(ctx); return sp(ctx).getInt("cas_attempts_used", 0) }
 
-    /** Reserve one attempt at deal/spin time; refunded only on a push. */
-    fun reserveAttempt(ctx: Context) {
+    /** Base-only attempts left (no earned) — kept for callers without skill-time. */
+    fun attemptsLeft(ctx: Context): Int =
+        (attemptsPerDay(ctx) - attemptsUsed(ctx)).coerceAtLeast(0)
+
+    /** Total attempts today (base + earned) — drives the pips. */
+    fun attemptsTotal(ctx: Context, skillMin: Int): Int =
+        attemptsPerDay(ctx) + earnedAttempts(ctx, skillMin)
+
+    /** Attempts left including the ones skill-time earned (plan §6.2). */
+    fun attemptsLeft(ctx: Context, skillMin: Int): Int =
+        (attemptsTotal(ctx, skillMin) - attemptsUsed(ctx)).coerceAtLeast(0)
+
+    /**
+     * Reserve one attempt at deal/spin time; refunded only on a push. [total] is
+     * base+earned so the break-after-last-attempt fires when the FULL allotment
+     * (including skill-earned spins) is spent, not just the base.
+     */
+    fun reserveAttempt(ctx: Context, total: Int = attemptsPerDay(ctx)) {
         ensureDay(ctx)
         val used = sp(ctx).getInt("cas_attempts_used", 0) + 1
         sp(ctx).edit().putInt("cas_attempts_used", used).apply()
-        if (used >= attemptsPerDay(ctx)) {
+        if (used >= total) {
             sp(ctx).edit().putLong(
                 "cas_break_until",
                 CasinoEngine.breakUntil(breakMode(ctx), System.currentTimeMillis(), nextRollover()),
@@ -73,12 +101,12 @@ object CasinoStore {
         }
     }
 
-    fun refundAttempt(ctx: Context) {
+    fun refundAttempt(ctx: Context, total: Int = attemptsPerDay(ctx)) {
         ensureDay(ctx)
         val used = (sp(ctx).getInt("cas_attempts_used", 0) - 1).coerceAtLeast(0)
         // a refund can reopen the tables — clear the break if it was just set
         sp(ctx).edit().putInt("cas_attempts_used", used).apply()
-        if (used < attemptsPerDay(ctx)) sp(ctx).edit().putLong("cas_break_until", 0L).apply()
+        if (used < total) sp(ctx).edit().putLong("cas_break_until", 0L).apply()
     }
 
     fun breakUntil(ctx: Context): Long = sp(ctx).getLong("cas_break_until", 0L)
@@ -167,14 +195,23 @@ object CasinoStore {
     // ── Availability (the offer gate, plan §12) ──────────────────────────────
 
     /** True when the intercept may offer the tables for [pkg] right now. */
-    fun offerAvailable(ctx: Context, pkg: String): Boolean {
+    fun offerAvailable(ctx: Context, pkg: String, skillMin: Int = 0): Boolean {
         if (!enabled(ctx)) return false
         val now = System.currentTimeMillis()
-        return attemptsLeft(ctx) > 0 &&
+        return attemptsLeft(ctx, skillMin) > 0 &&
             now >= breakUntil(ctx) &&
             now >= lockoutUntil(ctx, pkg) &&
             winCapRest(ctx) > 0
     }
+
+    // ── Practice credits (plan §8) — a fake balance for the settings table.
+    // Never touches attempts, bonuses, lockouts, the win cap or the ledger.
+    fun practiceCredits(ctx: Context): Int = sp(ctx).getInt("cas_practice", 500)
+    fun setPracticeCredits(ctx: Context, n: Int) =
+        sp(ctx).edit().putInt("cas_practice", n.coerceIn(0, 100_000)).apply()
+    fun addPracticeCredits(ctx: Context, delta: Int) =
+        setPracticeCredits(ctx, practiceCredits(ctx) + delta)
+    fun resetPracticeCredits(ctx: Context) = setPracticeCredits(ctx, 500)
 
     // ── Monthly honesty stats ────────────────────────────────────────────────
 
