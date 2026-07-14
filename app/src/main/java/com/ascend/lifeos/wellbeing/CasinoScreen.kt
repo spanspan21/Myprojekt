@@ -100,7 +100,18 @@ fun CasinoScreen(
             BalanceHeader(
                 ledger = ledger,
                 fairSeedTag = fairTag(fairSeed),
-                onBack = { if (phase == CasPhase.LOBBY) onBack() else phase = CasPhase.LOBBY },
+                onBack = {
+                    when (phase) {
+                        CasPhase.LOBBY -> onBack()
+                        // Leaving a live table settles whatever is armed: an
+                        // abandoned round eats its stake (the house keeps it),
+                        // a resolved-but-unrevealed round still pays. commit() is
+                        // idempotent when nothing is pending. Closes the review's
+                        // "back out to void a losing bet" hole.
+                        CasPhase.TABLE -> { runCatching { ledger.commit() }; phase = CasPhase.LOBBY }
+                        else -> phase = CasPhase.LOBBY
+                    }
+                },
                 onFair = { showFair = true },
             )
             if (ledger.practice) {
@@ -270,14 +281,31 @@ private fun RevealPhase(
     LaunchedEffect(Unit) {
         // Practice never touches the real ledger; the ledger's own commit already
         // ran inside the table for the real path.
-        if (delta > 0) { Haptics.success(ctx); delay(2000); onWin() } else Haptics.warn(ctx)
+        when {
+            delta > 0 -> { Haptics.success(ctx); delay(2000); onWin() }
+            delta < 0 -> Haptics.warn(ctx)
+            else -> {} // a push — no haptic, the user taps to leave
+        }
     }
     Column(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         if (pairNote != null) {
             Text(pairNote, color = CasGold, fontSize = FS.s13, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
         }
-        if (delta > 0) {
+        if (delta == 0) {
+            // A push — a win and a loss cancelled, or a rounded-to-zero cash-out.
+            // Neither a celebration nor a lockout; don't frame it as "House wins"
+            // (review #7). Nothing was gained, so the wall still stands.
+            Spacer(Modifier.height(22.dp))
+            Text("Even.", color = CasInk, fontSize = FS.s22, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                if (practice) "Nothing won or lost." else "Nothing gained — no lockout, but the wall stands.",
+                color = CasMuted, fontSize = FS.s13,
+            )
+            Spacer(Modifier.height(22.dp))
+            CasCta(if (practice) "Back to lobby" else "Back to focus", onClick = onLose)
+        } else if (delta > 0) {
             var target by remember { mutableIntStateOf(0) }
             LaunchedEffect(Unit) { target = delta }
             val shown by androidx.compose.animation.core.animateIntAsState(target, tween(500), label = "casWin")

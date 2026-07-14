@@ -173,11 +173,17 @@ class CasinoEngineTest {
         assertEquals(1.96, CasinoEngine.diceMultiplier(50, over = true), 1e-9)
     }
 
-    @Test fun `dice win boundary is strict under and over`() {
+    @Test fun `dice win boundary partitions cleanly under and over`() {
+        // UNDER wins [0, line), OVER wins [line, 9999] — the boundary is OVER's,
+        // so the realised odds equal diceChance exactly (no one-roll shortfall).
         assertTrue(CasinoEngine.diceWin(4999, 50, over = false))   // 49.99 < 50
         assertFalse(CasinoEngine.diceWin(5000, 50, over = false))  // 50.00 not < 50
-        assertTrue(CasinoEngine.diceWin(5001, 50, over = true))    // 50.01 > 50
-        assertFalse(CasinoEngine.diceWin(5000, 50, over = true))
+        assertTrue(CasinoEngine.diceWin(5001, 50, over = true))    // 50.01 ≥ 50
+        assertTrue(CasinoEngine.diceWin(5000, 50, over = true))    // boundary belongs to over
+        // partition: exactly one side wins every roll
+        for (r in intArrayOf(0, 4999, 5000, 9999)) {
+            assertTrue(CasinoEngine.diceWin(r, 50, false) != CasinoEngine.diceWin(r, 50, true))
+        }
     }
 
     @Test fun `dice delta pays profit and clamps to the cap`() {

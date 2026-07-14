@@ -146,7 +146,15 @@ internal fun MinesTable(
             if (dead) {
                 Text("Mine! House wins this one.", color = CasRed, fontSize = FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
-                CasCta(if (safe > 0) "CASH OUT +${cashoutMin}m" else "Pick a tile to begin", enabled = safe > 0) {
+                // Only offer cash-out once there is real profit to take (#7): the
+                // first tile at low mine counts can round to +0m, and a "+0m"
+                // cash-out would then read as a loss in the reveal.
+                val label = when {
+                    safe == 0 -> "Pick a tile to begin"
+                    cashoutMin <= 0 -> "Keep going — no profit yet"
+                    else -> "CASH OUT +${cashoutMin}m"
+                }
+                CasCta(label, enabled = cashoutMin > 0) {
                     val profit = CasinoEngine.minesCashoutDelta(stake, mines, safe, ledger.winCapRest())
                     ledger.writePending(profit, if (profit > 0) deficitMin else 0)
                     resolving = true

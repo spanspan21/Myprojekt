@@ -748,3 +748,37 @@ Cloud-Sync der Guard-Stats ins Dashboard · Intercept-Themes je Welt · Achievem
 **Verifikation Geräte-Teil**: v2.21 gebaut; Install/Live-Verify am S24 sobald USB zurück
 (Gerät trennte sich während des Builds). Erwartet: Practice-Lobby, Balance-Header,
 Dice/Mines/Pair-Play, Lock-v4-Aurora/Ember/Ring/Streak.
+
+---
+
+## 29 · Adversariale Code-Review + Fixes (v2.21, 2026-07-14)
+
+Nach dem Bau lief ein Review-Agent über die neue Casino-/Lock-Schicht. Er fand einen
+kritischen und sechs kleinere Korrektheitsfehler — alle in der Naht zwischen den Tischen
+und dem Guard-Tick (die Spielmathematik selbst war sauber). Alle behoben, am S24 verifiziert:
+
+- **#1 (KRITISCH):** `settlePendingIfAny` lief im Tick VOR dem lock-visible-Return →
+  konsumierte das Worst-Case-Pending laufender BJ/Mines-Runden → Doppel-Settlement +
+  Phantom-Lockouts bei praktisch jeder echten Runde. **Fix:** Settle unter den
+  lock-visible-Guard verschoben (nur Crash-Recovery, wenn kein Lock offen). **Live
+  verifiziert:** Deal + 9s (Tick feuerte) → `cas_pending` blieb scharf, KEIN `cas_lockout`.
+- **#2:** Mid-Runde-Back-out ließ Pending scharf; neue Wette überschrieb es → verlorene
+  Wette gevoidet. **Fix:** Back aus TABLE committet das laufende Pending (Abbruch = Einsatz
+  verloren, `commit()` ist idempotent bei leerem Slot).
+- **#3:** BJ-Gewinn nicht an `winCapRest` geklemmt. **Fix:** `total` positiv an Cap geklemmt.
+- **#4:** BJ-Doppel-Tap konnte `check(outcome==null)` werfen → Lock-Crash. **Fix:** Handler
+  lesen live `round.finished`; DOUBLE ruft `double()` VOR `writePending`.
+- **#5:** Pair-Note zeigte rohe 25×/10× statt geklemmten Wert. **Fix:** Note aus `pairDelta`.
+- **#6:** Dice-OVER zahlte eine Roll-Stufe zu wenig. **Fix:** saubere Partition
+  (`over → roll >= line`), Test angepasst.
+- **#7:** delta==0 (Gewinn+Sidebet-Verlust heben sich auf) rendete als „House wins" +
+  Home. **Fix:** neuer „Even."-Push-Zweig, kein Lockout; Mines-Cashout erst ab profit>0.
+  **Live verifiziert:** BJ-Haupthand-Gewinn + Pair-Verlust → „Even. Nothing gained — no
+  lockout, but the wall stands", Prefs: kein Lockout/Bonus, Pending committed.
+
+**Geräte-Verify v2.21 GESAMT (S24, 2026-07-14):** Practice-Lobby + Balance (500→495 Credits
+nach Dice-Verlust korrekt), Dice (Multiplier 1,96× exakt, grün/rot-Slider), Mines-Grid
+(1,11× erste Kachel), Real-Lobby mit Balance-Header (5 Pips/WON 0m/MONTH +27/fair-Tag),
+Lock v4 (Gradient-Ring, Ember-Partikel, „Hold the line", Gold-Shimmer, Panik-Knopf),
+Pair-Play-Sidebet, alle 7 Fixes. Guard+a11y nach allen Tests wieder aktiv, IG-Limit 15
+restauriert, Casino-State sauber. 27 Unit-Test-Klassen grün.

@@ -203,8 +203,11 @@ object CasinoEngine {
 
     fun diceWin(roll: Int, target: Int, over: Boolean): Boolean {
         val t = target.coerceIn(2, 98)
-        val line = t * 100 // roll scale
-        return if (over) roll > line else roll < line
+        val line = t * 100 // roll scale (0..9999)
+        // Clean partition so the realised odds match diceChance exactly (review
+        // #6): UNDER wins [0, line), OVER wins [line, 9999]. The boundary roll
+        // belongs to OVER; without this OVER paid one roll short of its quote.
+        return if (over) roll >= line else roll < line
     }
 
     /** Minute delta for a resolved roll; win profit clamped to the daily cap. */

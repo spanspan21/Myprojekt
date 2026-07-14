@@ -89,8 +89,9 @@ internal fun BlackjackTable(
     LaunchedEffect(finishing) {
         if (!finishing) return@LaunchedEffect
         val out = round.outcome ?: return@LaunchedEffect
+        val cap = ledger.winCapRest()
         val bjDelta = CasinoEngine.blackjackDelta(out, stake, round.doubled)
-        val pairDelta = if (pairStake > 0) CasinoEngine.pairDelta(pairKind, pairStake, ledger.winCapRest()) else 0
+        val pairDelta = if (pairStake > 0) CasinoEngine.pairDelta(pairKind, pairStake, cap) else 0
 
         // A pure push with no side bet is a free redeal — the attempt isn't spent.
         if (out == CasinoEngine.Outcome.PUSH && pairStake == 0) {
@@ -102,18 +103,22 @@ internal fun BlackjackTable(
             return@LaunchedEffect
         }
 
-        val total = bjDelta + pairDelta
+        // Winnings clamp to the daily cap like every other game (review #3):
+        // blackjackDelta has no cap of its own, and bj+pair could exceed it.
+        val rawTotal = bjDelta + pairDelta
+        val total = if (rawTotal > 0) minOf(rawTotal, cap) else rawTotal
         val cover = if (total > 0) deficitMin else 0
         ledger.writePending(total, cover)
         dealerShown = 2; delay(190); Haptics.tick(ctx); delay(310)
         while (dealerShown < round.dealer.size) { dealerShown++; Haptics.tick(ctx); delay(500) }
         delay(SUSPENSE_MS)
         ledger.commit()
-        val pairNote = when (pairKind) {
-            CasinoEngine.PairKind.COLORED -> if (pairStake > 0) "COLORED PAIR · +${pairStake * 25}m" else null
-            CasinoEngine.PairKind.MIXED -> if (pairStake > 0) "MIXED PAIR · +${pairStake * 10}m" else null
-            CasinoEngine.PairKind.NONE -> if (pairStake > 0) "No pair — side bet lost" else null
-        }
+        // Note reads from the CLAMPED pairDelta, never the raw paytable (#5).
+        val pairNote = if (pairStake > 0) when (pairKind) {
+            CasinoEngine.PairKind.COLORED -> "COLORED PAIR · +${pairDelta}m"
+            CasinoEngine.PairKind.MIXED -> "MIXED PAIR · +${pairDelta}m"
+            CasinoEngine.PairKind.NONE -> "No pair — side bet lost"
+        } else null
         onResolved(total, cover, pairNote)
     }
 
@@ -144,17 +149,27 @@ internal fun BlackjackTable(
             Text("Push — dealt again, attempt not spent.", color = CasMuted, fontSize = FS.s12, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Guard on the round's LIVE state, not the stale `finishing` flag:
+                // two taps in one frame would otherwise re-enter a finished hand
+                // and throw check(outcome==null), crashing the lock (review #4).
                 BjAction("HIT", Modifier.weight(1f), enabled = !finishing) {
+                    if (round.finished) return@BjAction
                     round.hit(); mut++
                     if (round.finished) finishing = true else Haptics.tick(ctx)
                 }
                 BjAction("STAND", Modifier.weight(1f), enabled = !finishing) {
+                    if (round.finished) return@BjAction
                     round.stand(); mut++; finishing = true
                 }
                 if (round.player.size == 2 && !finishing) {
                     BjAction("DOUBLE", Modifier.weight(1f), enabled = true) {
+                        if (round.finished || round.player.size != 2) return@BjAction
+                        // double() first, THEN raise the pending — so a hand that
+                        // was already finished by a same-frame tap can't leave a
+                        // doubled worst-case armed for a double that never happened.
+                        round.double(); mut++
                         ledger.writePending(-(stake * 2 + pairStake))
-                        round.double(); mut++; finishing = true
+                        finishing = true
                     }
                 }
             }

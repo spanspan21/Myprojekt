@@ -133,12 +133,15 @@ class JarvisGuardService : Service() {
 
     private suspend fun tick(forcedFg: String? = null) {
         if (!WellbeingStore.isEnabled(this)) return
-        // Crash-safe casino settlement: a result resolved before an animation
-        // that never finished (force-kill) still lands (CASINO_GUARD_PLAN §18).
-        runCatching { com.ascend.lifeos.data.casino.CasinoStore.settlePendingIfAny(this) }
         tickWindDown()
         tickA11yRebind()
         if (overlay != null || GuardRuntime.lockVisible || GuardRuntime.payload.value != null) return
+        // Crash-safe casino settlement (CASINO_GUARD_PLAN §18): a result resolved
+        // before an animation that never finished still lands. This MUST run only
+        // while NO lock host is up — otherwise the poll loop (which keeps ticking
+        // during play) would consume the worst-case pending a live Blackjack/Mines
+        // round wrote at deal time, double-settling essentially every round.
+        runCatching { com.ascend.lifeos.data.casino.CasinoStore.settlePendingIfAny(this) }
         if (!DigitalWellbeingManager.hasUsageAccess(this) || !DigitalWellbeingManager.canOverlay(this)) return
         if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
             GuardRuntime.lastPkg = null // screen off ends the session; next unlock counts as a new open
