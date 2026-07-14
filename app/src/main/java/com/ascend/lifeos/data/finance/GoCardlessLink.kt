@@ -205,8 +205,14 @@ object GoCardlessLink {
                 val booked = res.optJSONObject("transactions")?.optJSONArray("booked") ?: JSONArray()
                 for (i in 0 until booked.length()) {
                     val t = booked.getJSONObject(i)
+                    // Fallback dedup key (no bank transactionId): include the
+                    // counterparty + full remittance memo, not just date+amount —
+                    // otherwise two same-amount same-day charges collapsed into one.
                     val id = t.optString("transactionId").ifBlank { t.optString("internalTransactionId") }
-                        .ifBlank { "${acc.gcId}:${t.optString("bookingDate")}:${t.optJSONObject("transactionAmount")?.optString("amount")}" }
+                        .ifBlank {
+                            val memo = t.optString("remittanceInformationUnstructured")
+                            "${acc.gcId}:${t.optString("bookingDate")}:${t.optJSONObject("transactionAmount")?.optString("amount")}:${counterparty(t).take(24)}:${memo.take(24)}"
+                        }
                     if (id in seenSet) continue
                     val cents = txnCents(t) ?: continue
                     val name = counterparty(t)
