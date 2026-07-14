@@ -82,37 +82,52 @@ Structured (Drag-Timeline), Exist/Oura-Web (Korrelationen, Auto-Insights), M3 Ex
 
 Methodik: zwei parallele Review-Agenten (Android-Regressions-Sweep über ALLE
 Runde-1-Dateien · Dashboard-Frischblick), jeder verifiziert jeden Befund am echten
-Code statt Muster-Matching. Ergebnis: 2 neue Features + 9 verifizierte Fixes, alle
-gebaut + getestet + (Android) am Emulator live geprüft. 0 Crashes/ANRs im Smoke-Test.
+Code statt Muster-Matching. Danach ein DRITTER Agent, der adversariell die eigene
+Runde-2-Arbeit prüfte (Kern-Logik als korrekt bestätigt, 5 kleine Befunde behoben).
+Ergebnis: 3 neue Features + 14 verifizierte Fixes, alle gebaut + getestet +
+(Android) am Emulator live geprüft. 0 Crashes/ANRs im gesamten Smoke-Test.
 
 **Neue Features**
 1. **Dashboard Auto-Insights** (Exist/Oura-Stil) — `lib/insights.ts`: Gruppen-Kontraste
    der letzten 28 Tage in Klartext („Nach Trainingstagen schläfst du Ø 32 min länger").
    Objektive Metriken mit echter Zahl, subjektive (Stimmung/Energie) nur qualitativ,
-   ehrliches Schweigen unter 5 Tagen/Gruppe · 12 Vitest · „Muster"-Kachel auf Heute.
-2. **Training-Undo** (Hevy/Strong) — ein Fehltipp aufs winzige Lösch-× kostete den Satz
+   ehrliches Schweigen unter 5 Tagen/Gruppe · „Muster"-Kachel auf Heute.
+2. **Dashboard Momentum** (`lib/momentum.ts`) — diese vs. letzte Woche (Schlaf/Training/
+   Ess-Präzision/Habits) als Richtungssignal im Wochen-Briefing. Vergleicht zwei
+   voll-abgelaufene Fenster (enden GESTERN, kein Fake-↓ am Morgen), rankt nach
+   normalisierter Signifikanz, nur „höher = besser"-Metriken (kein verrauschtes Geld-Netto).
+3. **Training-Undo** (Hevy/Strong) — ein Fehltipp aufs winzige Lösch-× kostete den Satz
    (Reps/Gewicht/RPE/PR) ohne Rettung. Jetzt schwebt „Satz gelöscht · Rückgängig" über
    dem Finish-Button (5s Auto-Dismiss), stellt die exakte Entity wieder her. LIVE geprüft.
 
 **Fixes (Review-Befunde)**
-3. Insights bed-energy invertierte bei Zubettgehen nach Mitternacht (kein Wrap) — behoben
+4. Insights bed-energy invertierte bei Zubettgehen nach Mitternacht (kein Wrap) — behoben
    wie engines.ts; sleep-sets Negativ-Zweig war doppelt verneint (falsche Zahl) — behoben.
-4. „Eine Hydration-Wahrheit" war unvollständig: Heatmap, Protocols (Nudge), Notifier
-   (Abend), JarvisVoice zählten noch Gläser-only → widersprachen der Streak. Alle vier
-   jetzt über Repo.hydrationMl. LIVE: Heatmap-Zelle zeigt hydrations-bewusste 2/9.
-5. PrimeEngine openMissions zählte Live-Sätze einer UNfertigen Session als „Training
+5. „Eine Hydration-Wahrheit" war unvollständig — voller Codebase-Sweep, jetzt lückenlos:
+   Heatmap, Protocols (Nudge), Notifier (Abend), JarvisVoice, Home-Widget UND der
+   Korrelations-Miner (InsightMiner + Prime histWater) zählen Getränke mit. LIVE geprüft.
+6. PrimeEngine openMissions zählte Live-Sätze einer UNfertigen Session als „Training
    erledigt" → Streak-Risk-Nudge verstummte beim Abbruch. Jetzt spiegelt es completion()s
    persistiertes Signal (Gauge behält Live-setsToday).
-6. Prime-Tagescache wird bei jedem Repo.commit() invalidiert (Memoization von `data`
+7. Prime-Tagescache wird bei jedem Repo.commit() invalidiert (Memoization von `data`
    statt 90-s-Timer) → kein Vor-Log-Fokus mehr nach dem Loggen.
-7. SkillMeta Lifetime-Zähler seedet über reviewsLifetime() (−1-Sentinel) statt getInt(…,0)
+8. SkillMeta Lifetime-Zähler seedet über reviewsLifetime() (−1-Sentinel) statt getInt(…,0)
    → Bestandsnutzer verlieren ihren Monats-Count (einmaliger XP-Verlust) nicht mehr.
-8. Prime-Hydration-Mathe über WaterCalc.GLASS_ML statt 5× hartcodiertem 250/0.25.
-9. BankPanel: letzte 14 Inline-fontSize-Literale → FS-Tokens (Typsystem 100% greppbar).
+9. Prime-Hydration-Mathe über WaterCalc.GLASS_ML statt hartcodiertem 250/0.25.
+10. BankPanel: letzte 14 Inline-fontSize-Literale → FS-Tokens (Typsystem 100% greppbar).
+11. Neuer `HydrationTruthTest` (6 JVM-Fälle) pinnt hydrationMl = Wasser + Getränke und
+    „ein per Getränk erfüllter Tag zählt die Wasser-Mission" gegen Regression.
+
+**Adversarielle Selbst-Verifikation (5 Befunde behoben)**
+12. Undo-Diff hatte `newPrCelebration`s `private set` verschoben → Kapselung wieder her.
+13. Undo-DB-Upsert joint jetzt den laufenden Delete-Job → kein Race auf dem IO-Pool.
+14. Momentum: partieller Heute-Tag verzerrte Zähl-Metriken (Fenster enden jetzt gestern);
+    „stärkster Mover" nach normalisierter Signifikanz statt roher Delta-Größe.
 
 ### Bewusst NICHT gemacht (Runde 2)
 - Insights `effect()` als echtes Cohen's d (within-group-SD): nur Ranking-Feinheit,
   konservativ (unterdrückt nie fälschlich) — Aufwand/Nutzen zu gering.
 - Dashboard weekStartMs UTC-Wochengrenze: realer, aber Rand-Fall (Mo 00–02 Uhr Berlin),
   braucht TZ-kontrollierten Test — Follow-up.
+- HabitMetrics/CustomRules „water" bleibt Gläser: bewusste Habit-/Regel-Metrik, kein Loch.
 EOF
