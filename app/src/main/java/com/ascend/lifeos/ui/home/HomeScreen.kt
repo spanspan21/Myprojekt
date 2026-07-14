@@ -118,11 +118,19 @@ fun HomeScreen(
     val waterDone = hydrationMl >= waterGoalMl
     val waterGlassEq = hydrationMl / com.ascend.lifeos.data.WaterCalc.GLASS_ML
     val trainedToday = trainVm.todaySets > 0
-    val hasUsage = DigitalWellbeingManager.hasUsageAccess(ctx)
     val screenBudget = remember { com.ascend.lifeos.wellbeing.WellbeingStore.budgetMin(ctx) }
-    val screenMin = remember(hasUsage) {
-        if (hasUsage) runCatching { (DigitalWellbeingManager.todayUsage(ctx).totalMs / 60000L).toInt() }.getOrNull() else null
+    // Usage-access check + the UsageStats aggregation (a per-app PackageManager
+    // IPC walk) used to run synchronously in composition on the main thread —
+    // the one Home load that wasn't on IO, an ANR/jank hazard on the front door.
+    val screenState by produceState<Pair<Boolean, Int?>>(false to null) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val ok = runCatching { DigitalWellbeingManager.hasUsageAccess(ctx) }.getOrDefault(false)
+            val min = if (ok) runCatching { (DigitalWellbeingManager.todayUsage(ctx).totalMs / 60000L).toInt() }.getOrNull() else null
+            ok to min
+        }
     }
+    val hasUsage = screenState.first
+    val screenMin = screenState.second
     val healthConnected = Repo.data.health != null && Repo.data.health?.sleepMin != null
 
     // day context: today's ice block + imminent exam feed the Jarvis line

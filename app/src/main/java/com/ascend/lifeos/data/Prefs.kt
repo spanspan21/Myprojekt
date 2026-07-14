@@ -13,7 +13,10 @@ object Prefs {
     private fun sp(ctx: Context) = ctx.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
     // hot mirror for compose (key -> state). Booleans only; others read directly.
-    private val boolStates = HashMap<String, androidx.compose.runtime.MutableState<Boolean>>()
+    // ConcurrentHashMap: getOrPut/writes happen from composition AND background
+    // workers (Notifier, HealthBridge, JarvisGuardService) — a plain HashMap can
+    // drop an update or throw under concurrent structural mutation.
+    private val boolStates = java.util.concurrent.ConcurrentHashMap<String, androidx.compose.runtime.MutableState<Boolean>>()
 
     fun bool(ctx: Context, key: String, default: Boolean): Boolean =
         boolStates.getOrPut(key) { mutableStateOf(sp(ctx).getBoolean(key, default)) }.value

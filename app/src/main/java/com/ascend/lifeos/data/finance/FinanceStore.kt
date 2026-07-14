@@ -207,7 +207,7 @@ object FinanceStore {
      * Books a transaction (single Room store) and — when [accountId] is given —
      * links it via the FK and moves the account balance.
      */
-    fun bookTxn(ctx: Context, amountCents: Long, category: String, note: String = "", accountId: String? = null) {
+    fun bookTxn(ctx: Context, amountCents: Long, category: String, note: String = "", accountId: String? = null, roundUp: Boolean = true) {
         if (amountCents == 0L) return
         FinanceRoom.initIfNeeded(ctx)
         val linked = accountId?.takeIf { id -> FinanceRoom.accounts().any { it.id == id } }
@@ -215,7 +215,9 @@ object FinanceStore {
         FinanceRoom.addTxn(txnId, System.currentTimeMillis(), amountCents, category, note.trim(), linked)
         if (linked != null) FinanceRoom.adjustBalance(linked, amountCents)
         // Round-up savings (#7): stash the change up to the next euro into a goal.
-        if (amountCents < 0 && com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.ROUNDUP_ON, false)) {
+        // Bank/CSV imports pass roundUp=false — otherwise the first connect (full
+        // booked history, no date_from) floods the goal with phantom round-ups.
+        if (roundUp && amountCents < 0 && com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.ROUNDUP_ON, false)) {
             val goalId = com.ascend.lifeos.data.Prefs.string(ctx, com.ascend.lifeos.data.Prefs.ROUNDUP_GOAL_ID, "")
                 .ifBlank { saveGoals(ctx).firstOrNull()?.id ?: "" }
             if (goalId.isNotBlank()) {

@@ -1410,9 +1410,12 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     .clickable(enabled = tasks.any { !it.done }) {
                         planNote = "Planning…"
                         scope.launch {
-                            val placed = runCatching {
-                                com.ascend.lifeos.data.calendar.TaskBlocks.plan(ctx)
-                            }.getOrDefault(0)
+                            // plan() runs synchronous device-calendar ContentResolver
+                            // queries per open task × days-to-deadline — must be off
+                            // the main thread or "Plan now" ANRs with a few tasks.
+                            val placed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                runCatching { com.ascend.lifeos.data.calendar.TaskBlocks.plan(ctx) }.getOrDefault(0)
+                            }
                             planNote = "$placed placed into free slots ✓"
                         }
                     }
