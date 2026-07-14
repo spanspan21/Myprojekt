@@ -737,7 +737,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun checkDeload() {
         val fourWeeksAgo = System.currentTimeMillis() - 28L * 86_400_000
-        val sessions = dao.sessionsSince(fourWeeksAgo)
+        // Only FINISHED sessions — an abandoned/active session (totalReps=0) sat in
+        // the newest slot and dragged the volume signal down into a false deload.
+        val sessions = dao.sessionsSince(fourWeeksAgo).filter { it.session.isComplete }
         if (sessions.size < 4) { deloadRecommended = false; return }
 
         val recent = sessions.take(2)

@@ -57,7 +57,11 @@ object CsvImport {
             val k = key(r.ts, r.amountCents, r.note)
             if (k in existing) continue
             existing.add(k)
-            FinanceStore.bookTxnAt(ctx, r.ts, r.amountCents, category = "Import", note = r.note)
+            // Categorise from the note like the bank-API path, instead of dumping
+            // everything into a flat "Import" bucket (which isn't even a real
+            // category) — so the breakdown/budgets actually work after a CSV import.
+            val cat = BankLink.categorize(r.note, r.amountCents > 0)
+            FinanceStore.bookTxnAt(ctx, r.ts, r.amountCents, category = cat, note = r.note)
             added++
         }
         added
