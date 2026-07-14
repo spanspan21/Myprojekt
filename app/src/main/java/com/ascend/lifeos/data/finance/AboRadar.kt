@@ -98,7 +98,14 @@ object AboRadar {
     // ─── internals ──────────────────────────────────────────────────────────
 
     /** Grouping key: lowercase, digits stripped, trimmed ("Netflix 042" → "netflix"). */
-    private fun payeeKey(s: String): String = s.lowercase().filterNot { it.isDigit() }.trim()
+    private fun payeeKey(s: String): String = s.lowercase()
+        // strip payment-processor prefixes + TLDs + all punctuation/digits so
+        // "Netflix.com", "PAYPAL *NETFLIX" and "Netflix" collapse to one key
+        // instead of fragmenting into three (audit: subscriptions went undetected).
+        .replace(Regex("\\b(paypal|sepa|lastschrift|kartenzahlung|visa|mastercard|debit|pp)\\b"), " ")
+        .replace(Regex("\\.(com|de|net|org|io|co|app|tv)\\b"), " ")
+        .filter { it.isLetter() || it.isWhitespace() }
+        .split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" ").trim()
 
     private fun serviceish(payee: String): Boolean {
         // Match whole words, not raw substrings: short tokens like "tv"/"prime"/
