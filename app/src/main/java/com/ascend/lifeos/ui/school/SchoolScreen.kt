@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -148,24 +149,53 @@ fun SchoolScreen(onClose: () -> Unit) {
                     SectionLabel("Upcoming exams", accent = SchoolAccent)
                     Spacer(Modifier.height(8.dp))
                 }
-                items(exams, key = { "exam_${it.title}_${it.dayEpoch}" }) { ex ->
+                itemsIndexed(exams, key = { _, it -> "exam_${it.title}_${it.dayEpoch}" }) { i, ex ->
                     val daysLeft = (ex.dayEpoch - java.time.LocalDate.now().toEpochDay()).toInt()
                     val subj = ex.subject
-                    // Revive the dead neededFor(): grade needed next to HOLD the average.
+                    // A real, aspirational target: the grade needed on this exam to
+                    // climb HALF a grade better (points → +1.5, 1–6 → −0.5) — not the
+                    // circular "need [current Ø] to hold Ø" the old call produced.
                     val needTxt = subj?.let { s ->
                         SchoolStore.avgFor(ctx, s.id)?.let { cur ->
-                            SchoolStore.neededFor(ctx, s, cur, 1)?.let { "need ${SchoolStore.gradeText(s, it)} to hold Ø" }
+                            val better = if (s.points) (cur + 1.5).coerceAtMost(15.0) else (cur - 0.5).coerceAtLeast(1.0)
+                            SchoolStore.neededFor(ctx, s, better, 1)
+                                ?.let { "need ${SchoolStore.gradeText(s, it)} → ${SchoolStore.gradeText(s, better)}" }
                         }
                     }
-                    Panel(Modifier.fillMaxWidth()) {
-                        Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                            Text(ex.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                (if (daysLeft <= 0) "Today" else "in $daysLeft day${if (daysLeft == 1) "" else "s"}") +
-                                    (needTxt?.let { " · $it" } ?: ""),
-                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
-                            )
+                    val whenTxt = if (daysLeft <= 0) "Today" else "in $daysLeft day${if (daysLeft == 1) "" else "s"}"
+                    if (i == 0) {
+                        // The nearest exam is the highest-stakes item on the screen —
+                        // give it a real countdown hero, not a flat text line.
+                        Panel(Modifier.fillMaxWidth(), line = SchoolAccent.copy(alpha = 0.4f)) {
+                            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(76.dp)) {
+                                    Text(
+                                        if (daysLeft <= 0) "!" else "$daysLeft",
+                                        color = SchoolAccent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold,
+                                    )
+                                    Text(if (daysLeft == 1) "DAY" else "DAYS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                                Spacer(Modifier.width(16.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(ex.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                    Text(whenTxt, color = SchoolAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                                    needTxt?.let {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(it, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Panel(Modifier.fillMaxWidth()) {
+                            Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                                Text(ex.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    whenTxt + (needTxt?.let { " · $it" } ?: ""),
+                                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.height(8.dp))
