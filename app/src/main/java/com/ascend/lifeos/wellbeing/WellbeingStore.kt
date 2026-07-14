@@ -54,6 +54,14 @@ object WellbeingStore {
     fun cancelFocus(ctx: Context) = prefs(ctx).edit().putLong("focus_until", 0L).apply()
     fun inFocus(ctx: Context): Boolean = System.currentTimeMillis() < focusUntil(ctx)
 
+    // ---- guard pause (D3): walls sleep until the timestamp, then auto-resume ----
+    // Deliberately loud in the UI while active — pausing is a conscious state,
+    // not a silent kill switch. Maintenance (a11y self-heal, casino settlement,
+    // wind-down) keeps running; only intercepts stop.
+    fun pausedUntil(ctx: Context): Long = prefs(ctx).getLong("wb_pause_until", 0L)
+    fun setPausedUntil(ctx: Context, ms: Long) = prefs(ctx).edit().putLong("wb_pause_until", ms).apply()
+    fun isPaused(ctx: Context): Boolean = System.currentTimeMillis() < pausedUntil(ctx)
+
     // ---- morning block: limited apps stay shut before this minute-of-day ----
     fun morningBlockUntil(ctx: Context): Int = prefs(ctx).getInt("morning_until", 0) // 0 = off
     fun setMorningBlockUntil(ctx: Context, minuteOfDay: Int) =

@@ -192,10 +192,14 @@ object StorePayloads {
         val sessionsJson = JSONArray().apply {
             sessions.forEach { sw ->
                 val s = sw.session
+                // compact superset signal (full sets would blow the store size cap):
+                // distinct pair groups in this session — the web shows it as a badge
+                val ssGroups = sw.sets.mapNotNull { it.supersetGroup }.distinct().size
                 put(JSONObject().put("id", s.id).put("templateName", s.templateName)
                     .put("startedAt", s.startedAt).put("finishedAt", s.finishedAt)
                     .put("isComplete", s.isComplete).put("totalSets", s.totalSets)
-                    .put("totalReps", s.totalReps).put("durationMinutes", s.durationMinutes))
+                    .put("totalReps", s.totalReps).put("durationMinutes", s.durationMinutes)
+                    .put("supersets", ssGroups))
             }
         }
         val prsJson = JSONArray().apply {

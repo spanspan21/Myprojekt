@@ -156,6 +156,9 @@ class JarvisGuardService : Service() {
         // during play) would consume the worst-case pending a live Blackjack/Mines
         // round wrote at deal time, double-settling essentially every round.
         runCatching { com.ascend.lifeos.data.casino.CasinoStore.settlePendingIfAny(this) }
+        // Guard pause (D3): everything above is maintenance and keeps running;
+        // from here on it's walls — and walls sleep while the pause stands.
+        if (WellbeingStore.isPaused(this)) return
         if (!DigitalWellbeingManager.hasUsageAccess(this) || !DigitalWellbeingManager.canOverlay(this)) return
         if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
             GuardRuntime.lastPkg = null // screen off ends the session; next unlock counts as a new open

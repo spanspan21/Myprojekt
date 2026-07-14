@@ -115,7 +115,7 @@ object IcsSync {
     /** Local date + minute-of-day; minute == null means a date-only (all-day) value. */
     private data class Dt(val date: LocalDate, val minute: Int?)
 
-    private fun parse(text: String): List<CalEventEntity> {
+    internal fun parse(text: String): List<CalEventEntity> {
         val today = LocalDate.now()
         val winFrom = today.minusDays(PAST_DAYS)
         val winTo = today.plusDays(FUTURE_DAYS)
@@ -129,7 +129,7 @@ object IcsSync {
                 line.equals("BEGIN:VEVENT", ignoreCase = true) -> cur = HashMap()
                 line.equals("END:VEVENT", ignoreCase = true) -> {
                     cur?.let { props ->
-                        buildEvent(props, winFrom, winTo)?.let { if (seen.add(it.id)) out.add(it) }
+                        buildEvents(props, winFrom, winTo).forEach { if (seen.add(it.id)) out.add(it) }
                     }
                     cur = null
                     if (out.size >= MAX_EVENTS) break
@@ -205,11 +205,11 @@ object IcsSync {
         }
     }
 
-    private fun buildEvent(p: Map<String, Prop>, winFrom: LocalDate, winTo: LocalDate): CalEventEntity? {
-        if (p["STATUS"]?.value?.trim().equals("CANCELLED", ignoreCase = true)) return null
+    private fun buildEvents(p: Map<String, Prop>, winFrom: LocalDate, winTo: LocalDate): List<CalEventEntity> {
+        if (p["STATUS"]?.value?.trim().equals("CANCELLED", ignoreCase = true)) return emptyList()
 
-        val dtstartProp = p["DTSTART"] ?: return null
-        val start = parseDt(dtstartProp.value, dtstartProp.params) ?: return null
+        val dtstartProp = p["DTSTART"] ?: return emptyList()
+        val start = parseDt(dtstartProp.value, dtstartProp.params) ?: return emptyList()
         val allDay = start.minute == null
         val startMin = start.minute ?: 0
 
@@ -234,16 +234,44 @@ object IcsSync {
             if (endMin <= startMin) endMin = (startMin + 30).coerceAtMost(24 * 60)
         }
 
-        // RRULE → weekly repeatMask; anything else keeps the first occurrence only
+        // RRULE → weekly repeatMask; INTERVAL≥2 weekly gets MATERIALISED (the
+        // mask model has no week-skip); anything else keeps the first occurrence
         var repeatMask = 0
         var lastDay = endDate
+        var skipWeekDays: List<LocalDate>? = null   // bi-weekly & friends → real occurrence days
         p["RRULE"]?.value?.let { rrule ->
             val parts = rrule.split(';').mapNotNull {
                 val kv = it.split('=', limit = 2)
                 if (kv.size == 2) kv[0].trim().uppercase() to kv[1].trim() else null
             }.toMap()
             val interval = parts["INTERVAL"]?.toIntOrNull() ?: 1
-            if (parts["FREQ"]?.uppercase() == "WEEKLY" && interval == 1) {
+            if (parts["FREQ"]?.uppercase() == "WEEKLY" && interval >= 2) {
+                // A/B-week timetables, bi-weekly practices: walk day by day from
+                // DTSTART, keep days whose Monday-aligned week index sits on the
+                // interval grid. COUNT counts from DTSTART (pre-window hits too).
+                var mask = parts["BYDAY"]?.split(',')?.fold(0) { acc, raw ->
+                    BYDAY_BITS[raw.trim().uppercase().takeLast(2)]?.let { acc or (1 shl it) } ?: acc
+                } ?: 0
+                if (mask == 0) mask = 1 shl (start.date.dayOfWeek.value - 1)
+                val until = parts["UNTIL"]?.let { parseDt(it, "")?.date }
+                val count = parts["COUNT"]?.toIntOrNull()
+                fun weekIndex(d: LocalDate) = Math.floorDiv(d.toEpochDay() + 3, 7L) // +3 → Monday-aligned
+                val anchorWeek = weekIndex(start.date)
+                val days = ArrayList<LocalDate>()
+                var d = start.date
+                var hits = 0
+                val hardEnd = minOf(until ?: winTo, winTo)
+                while (d <= hardEnd && days.size < 120) {
+                    val onGrid = (weekIndex(d) - anchorWeek) % interval == 0L
+                    if (onGrid && mask and (1 shl (d.dayOfWeek.value - 1)) != 0) {
+                        hits++
+                        days.add(d)
+                        if (count != null && hits >= count) break
+                    }
+                    d = d.plusDays(1)
+                }
+                skipWeekDays = days
+            } else if (parts["FREQ"]?.uppercase() == "WEEKLY" && interval == 1) {
                 repeatMask = parts["BYDAY"]?.split(',')?.fold(0) { acc, raw ->
                     BYDAY_BITS[raw.trim().uppercase().takeLast(2)]?.let { acc or (1 shl it) } ?: acc
                 } ?: 0
@@ -277,12 +305,31 @@ object IcsSync {
 
         // import window: past 7 days … +180 days
         val rangeEnd = if (repeatMask != 0) lastDay else endDate
-        if (rangeEnd < winFrom || start.date > winTo) return null
+        if (skipWeekDays == null && (rangeEnd < winFrom || start.date > winTo)) return emptyList()
 
         val summary = unescape(p["SUMMARY"]?.value ?: "").trim().ifBlank { "Untitled" }
         val uid = p["UID"]?.value?.trim().takeUnless { it.isNullOrBlank() } ?: summary
 
-        return CalEventEntity(
+        // materialised INTERVAL≥2 weekly: one single-day event per occurrence,
+        // day-keyed ids so re-syncs upsert instead of duplicating
+        skipWeekDays?.let { occ ->
+            return occ.filter { it >= winFrom }.map { d ->
+                CalEventEntity(
+                    id = "ics_" + md5("$uid|${dtstartProp.value.trim()}|$d").take(16),
+                    title = summary,
+                    type = guessType(summary).name,
+                    dayEpoch = d.toEpochDay(),
+                    endDayEpoch = d.toEpochDay(),
+                    startMin = startMin,
+                    endMin = endMin,
+                    allDay = allDay,
+                    repeatMask = 0,
+                    note = SOURCE_NOTE,
+                )
+            }
+        }
+
+        return listOf(CalEventEntity(
             id = "ics_" + md5("$uid|${dtstartProp.value.trim()}").take(16),
             title = summary,
             type = guessType(summary).name,
@@ -293,7 +340,7 @@ object IcsSync {
             allDay = allDay,
             repeatMask = repeatMask,
             note = SOURCE_NOTE,
-        )
+        ))
     }
 
     private fun md5(s: String): String =

@@ -201,6 +201,19 @@ fun GuardScreen() {
             Spacer(Modifier.height(14.dp))
         }
 
+        // ── guard pause (D3): conscious, loud, auto-expiring ──
+        // Local state: the screen's tick only fires on resume/actions, so the
+        // card owns its value — a chip tap must flip it instantly.
+        if (enabled) {
+            var pausedUntil by remember(tick) { mutableStateOf(WellbeingStore.pausedUntil(ctx)) }
+            PauseCard(
+                pausedUntil = pausedUntil,
+                onPause = { untilMs -> WellbeingStore.setPausedUntil(ctx, untilMs); pausedUntil = untilMs },
+                onResume = { WellbeingStore.setPausedUntil(ctx, 0L); pausedUntil = 0L },
+            )
+            Spacer(Modifier.height(14.dp))
+        }
+
         // ── segments: the daily action (apps) first, reading matter last ──
         // Kills the 5.5-screen scroll to the app list (masterplan §9).
         var segment by remember { mutableStateOf("apps") }
@@ -727,6 +740,81 @@ fun GuardScreen() {
 }
 
 private val CasinoViolet = Color(0xFF9B8CFF)
+
+// ─── guard pause card (D3) ──────────────────────────────────────────────────
+
+/**
+ * Pause every wall for a bounded window (guests, an emergency, a deliberate
+ * off-evening) — auto-resumes, never silently. Active state is LOUD: amber
+ * frame, countdown, one-tap resume. Maintenance keeps running underneath.
+ */
+@Composable
+private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -> Unit) {
+    // own countdown clock: refreshes the "resumes in Xm" line and flips the
+    // card back to idle the moment the pause expires — no screen tick needed
+    var now by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(pausedUntil) {
+        now = System.currentTimeMillis()
+        while (pausedUntil > System.currentTimeMillis()) {
+            kotlinx.coroutines.delay(20_000)
+            now = System.currentTimeMillis()
+        }
+        now = System.currentTimeMillis()
+    }
+    val active = pausedUntil > now
+    Panel(
+        Modifier.fillMaxWidth(), corner = 16.dp,
+        line = if (active) Warn.copy(alpha = 0.45f) else HudLine,
+        fill = if (active) Warn.copy(alpha = 0.06f) else HudFill,
+    ) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (active) "⏸ WALLS PAUSED" else "PAUSE",
+                    color = if (active) Warn else TextDim,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
+                )
+                Spacer(Modifier.weight(1f))
+                if (active) {
+                    Text(
+                        "Resume now",
+                        color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onResume)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
+            }
+            if (active) {
+                val left = (((pausedUntil - now) / 60_000L).toInt() + 1).coerceAtLeast(1)
+                val leftStr = if (left >= 60) "${left / 60}h ${left % 60}m" else "${left}m"
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    "Every wall is down · auto-resumes in $leftStr",
+                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.SemiBold,
+                )
+            } else {
+                Spacer(Modifier.height(7.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    HudChip("15m", selected = false) { onPause(now + 15 * 60_000L) }
+                    HudChip("1h", selected = false) { onPause(now + 60 * 60_000L) }
+                    HudChip("Rest of day", selected = false) { onPause(next6amMs()) }
+                }
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    "Intercepts sleep, maintenance keeps running. It resumes by itself.",
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                )
+            }
+        }
+    }
+}
+
+/** Next 06:00 — the app's day boundary, so "rest of day" means the real day. */
+private fun next6amMs(): Long {
+    val now = java.time.LocalDateTime.now()
+    val next = if (now.hour < 6) now.toLocalDate().atTime(6, 0) else now.toLocalDate().plusDays(1).atTime(6, 0)
+    return next.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+}
 
 // ─── focus session card ─────────────────────────────────────────────────────
 
