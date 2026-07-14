@@ -45,7 +45,7 @@ data class PrimeDirective(val text: String, val why: String, val impact: Double,
 
 data class PrimeReport(
     val index: Int?,                       // 0..100; null solange nichts geloggt ist
-    val subScores: List<Pair<String, Int>>, // benannte Subsysteme fürs Hero-Detail
+    val subScores: List<Triple<String, Int, String>>, // name, score%, contributor "why"
     val gauges: List<PrimeGauge>,
     val directives: List<PrimeDirective>,  // bereits gerankt, max 3
     val anomalies: List<String>,
@@ -191,13 +191,16 @@ object PrimeEngine {
                 (logScore to 0.10),
             ),
         )
+        // Each subscore carries its OWN contributor line (Oura/Whoop pattern) so
+        // the index stops being a wall of opaque numbers — tap a bar, see why.
+        fun mins7(m: Double) = "${(m / 60).toInt()}h %02dm".format((m % 60).toInt())
         val subScores = listOfNotNull(
-            fuelScore?.let { "Fuel" to (it * 100).roundToInt() },
-            trainScore?.let { "Training" to (it * 100).roundToInt() },
-            sleepScore?.let { "Sleep" to (it * 100).roundToInt() },
-            hydraScore?.let { "Hydration" to (it * 100).roundToInt() },
-            screenScore?.let { "Focus" to (it * 100).roundToInt() },
-            ("Logging" to (logScore * 100).roundToInt()),
+            fuelScore?.let { Triple("Fuel", (it * 100).roundToInt(), "protein $protToday/${p.proteinGoal} g today · kcal + protein over 8 days") },
+            trainScore?.let { Triple("Training", (it * 100).roundToInt(), "$trainDays7 session${if (trainDays7 == 1) "" else "s"} in 7 days vs ${p.trainFreq}× goal") },
+            sleepScore?.let { s -> Triple("Sleep", (s * 100).roundToInt(), sleepAvg7?.let { "7-night avg ${mins7(it)} vs 8h target" } ?: "sleep trend") },
+            hydraScore?.let { Triple("Hydration", (it * 100).roundToInt(), "%.1f / %.1f L today · 8-day avg".format(hydrationMl / 1000.0, p.waterGoal * 0.25)) },
+            screenScore?.let { Triple("Focus", (it * 100).roundToInt(), screenMin?.let { m -> "${m}m screen vs today's prorated budget" } ?: "screen time") },
+            Triple("Logging", (logScore * 100).roundToInt(), "${loggedDays.take(7).count { it }} of the last 7 days logged"),
         )
 
         // ── Anzeigen ──

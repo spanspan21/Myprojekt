@@ -35,7 +35,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -241,7 +244,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
 // ─── Animierter Index-Ring — der lebendige Kopf des Screens ───────────────────
 
 @Composable
-private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, loading: Boolean = false, onRescore: () -> Unit = {}) {
+private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>, loading: Boolean = false, onRescore: () -> Unit = {}) {
     val tier = when {
         index == null -> TextMuted
         index >= 80 -> Champagne
@@ -371,7 +374,7 @@ private fun PrimeHero(index: Int?, subScores: List<Pair<String, Int>>, loading: 
                 }
                 subScores.isNotEmpty() -> {
                     Spacer(Modifier.height(20.dp))
-                    subScores.forEachIndexed { i, (name, score) -> AnimatedSubBar(name, score, i) }
+                    subScores.forEachIndexed { i, (name, score, why) -> AnimatedSubBar(name, score, why, i) }
                 }
             }
         }
@@ -418,25 +421,37 @@ private fun ShimmerBar() {
 
 /** Subsystem-Balken, der seine Füllung beim Öffnen sanft aufzieht (gestaffelt). */
 @Composable
-private fun AnimatedSubBar(name: String, score: Int, indexInList: Int) {
+private fun AnimatedSubBar(name: String, score: Int, why: String, indexInList: Int) {
     val fill by animateFloatAsState(
         score / 100f,
         tween(900, delayMillis = 250 + indexInList * 80, easing = FastOutSlowInEasing),
         label = "sub",
     )
     val c = when { score >= 75 -> Good; score >= 45 -> Amber; else -> Warn }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 3.5.dp),
+    // Tap a bar to reveal its contributor line — the index stops being opaque.
+    var open by remember { mutableStateOf(false) }
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .clickable(enabled = why.isNotBlank()) { open = !open }
+            .padding(vertical = 3.5.dp),
     ) {
-        Text(
-            name.uppercase(), color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
-            fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp, modifier = Modifier.width(82.dp),
-        )
-        Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))) {
-            Box(Modifier.fillMaxWidth(fill).fillMaxHeight().clip(CircleShape).background(c))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                name.uppercase(), color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp, modifier = Modifier.width(82.dp),
+            )
+            Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))) {
+                Box(Modifier.fillMaxWidth(fill).fillMaxHeight().clip(CircleShape).background(c))
+            }
+            Spacer(Modifier.width(10.dp))
+            Text("$score", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
         }
-        Spacer(Modifier.width(10.dp))
-        Text("$score", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+        androidx.compose.animation.AnimatedVisibility(open) {
+            Text(
+                why, color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                lineHeight = 13.sp, modifier = Modifier.padding(start = 82.dp, top = 4.dp, bottom = 2.dp),
+            )
+        }
     }
 }
