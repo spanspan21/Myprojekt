@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.spring
@@ -51,6 +52,35 @@ object Motion {
     fun reduced(ctx: Context): Boolean = runCatching {
         Settings.Global.getFloat(ctx.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
     }.getOrDefault(false)
+}
+
+/**
+ * A perpetual breathing/rotating float that goes STILL under reduced-motion —
+ * so always-on ambient glows (water wave, prime crystal, skill graph) stop
+ * draining battery / burning AMOLED / triggering vestibular discomfort when the
+ * user asked for no animations. Reads the setting once per composition.
+ */
+@Composable
+fun infiniteFloatOrStill(
+    initial: Float,
+    target: Float,
+    durationMs: Int,
+    repeatMode: androidx.compose.animation.core.RepeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+    easing: Easing = androidx.compose.animation.core.LinearEasing,
+    still: Float = (initial + target) / 2f,
+    label: String = "inf",
+): Float {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val reduced = remember { Motion.reduced(ctx) }
+    if (reduced) return still
+    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = label)
+    return t.animateFloat(
+        initial, target,
+        androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(durationMs, easing = easing), repeatMode,
+        ),
+        label = label,
+    ).value
 }
 
 /**

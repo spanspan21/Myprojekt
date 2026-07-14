@@ -263,10 +263,9 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
     val sweep by animateFloatAsState(
         (index ?: 0) / 100f, tween(1200, easing = FastOutSlowInEasing), label = "sweep",
     )
-    // sanftes Atmen des Glows — der Screen lebt, statt still zu stehen
-    val breathe = rememberInfiniteTransition(label = "breathe")
-    val glow by breathe.animateFloat(
-        0.3f, 0.75f, infiniteRepeatable(tween(2200, easing = LinearEasing), RepeatMode.Reverse), label = "glow",
+    // sanftes Atmen des Glows — still unter reduced-motion (Akku/AMOLED)
+    val glow = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
+        0.3f, 0.75f, 2200, RepeatMode.Reverse, LinearEasing, still = 0.5f, label = "primeGlow",
     )
 
     Panel(Modifier.fillMaxWidth(), lux = true) {

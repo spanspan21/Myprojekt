@@ -92,11 +92,9 @@ fun SkillNetworkCanvas(
     val stars = remember(nodes) { layout(nodes) }
     val byId = remember(stars) { stars.associateBy { it.node.node.id } }
 
-    // Slow breathing glow for available (unlocked, unfinished) stars.
-    val pulse by rememberInfiniteTransition(label = "pulse").animateFloat(
-        initialValue = 0.55f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(2200), RepeatMode.Reverse),
-        label = "pulseAlpha",
+    // Slow breathing glow for available stars — still under reduced-motion.
+    val pulse = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
+        0.55f, 1f, 2200, RepeatMode.Reverse, still = 0.8f, label = "pulseAlpha",
     )
 
     val density = LocalDensity.current

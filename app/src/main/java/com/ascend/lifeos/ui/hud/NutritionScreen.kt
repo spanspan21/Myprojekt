@@ -617,15 +617,13 @@ private fun HydrationCard(
 
     // Füllstand steigt weich, wenn Wasser dazukommt (feder-gedämpft)
     val fill by animateFloatAsState(fraction, spring(dampingRatio = 0.72f, stiffness = 90f), label = "fill")
-    // zwei versetzte Sinuswellen driften horizontal → lebendige Oberfläche
-    val drift = rememberInfiniteTransition(label = "water")
-    val phase by drift.animateFloat(
-        0f, (2.0 * PI).toFloat(),
-        infiniteRepeatable(tween(2600, easing = LinearEasing), RepeatMode.Restart), label = "p1",
+    // zwei versetzte Sinuswellen driften horizontal → lebendige Oberfläche.
+    // Reduced-motion → still (kein Dauer-Redraw / AMOLED-Drain).
+    val phase = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
+        0f, (2.0 * PI).toFloat(), 2600, RepeatMode.Restart, LinearEasing, still = 0f, label = "waterP1",
     )
-    val phase2 by drift.animateFloat(
-        0f, (2.0 * PI).toFloat(),
-        infiniteRepeatable(tween(3900, easing = LinearEasing), RepeatMode.Restart), label = "p2",
+    val phase2 = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
+        0f, (2.0 * PI).toFloat(), 3900, RepeatMode.Restart, LinearEasing, still = 0f, label = "waterP2",
     )
     // weicher Textschatten → Ziffern/Labels bleiben über dem Wasser lesbar
     val shadow = androidx.compose.ui.text.TextStyle(
