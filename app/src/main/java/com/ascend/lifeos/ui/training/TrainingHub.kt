@@ -765,8 +765,8 @@ private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
 
 @Composable
 private fun CalibrateCta(onOpenAssess: () -> Unit) {
-    val glow by rememberInfiniteTransition(label = "cal").animateFloat(
-        0.14f, 0.28f, infiniteRepeatable(tween(2000), RepeatMode.Reverse), label = "g",
+    val glow = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
+        0.14f, 0.28f, 2000, RepeatMode.Reverse, still = 0.21f, label = "calGlow",
     )
     Box(
         Modifier.fillMaxWidth()
@@ -835,8 +835,8 @@ private fun TickerStatBlock(label: String, value: Int, color: Color) {
 
 @Composable
 private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
-    val glow by rememberInfiniteTransition(label = "glow").animateFloat(
-        0.18f, 0.35f, infiniteRepeatable(tween(2200), RepeatMode.Reverse), label = "g",
+    val glow = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
+        0.18f, 0.35f, 2200, RepeatMode.Reverse, still = 0.26f, label = "startGlow",
     )
     Box(
         Modifier.fillMaxWidth().height(76.dp)
