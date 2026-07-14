@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Themed-icon layer (Android 13+): the J alone, system supplies the tint. -->
+    <path
+        android:pathData="M 40 38 H 68 M 58 38 V 59 A 9 9 0 0 1 40 59 L 40 56"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 76.6 31.4 m -3.6 0 a 3.6 3.6 0 1 1 7.2 0 a 3.6 3.6 0 1 1 -7.2 0" />
+</vector>

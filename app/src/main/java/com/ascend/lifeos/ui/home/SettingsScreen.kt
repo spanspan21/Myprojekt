@@ -362,7 +362,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             Spacer(Modifier.height(7.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf(
-                    "LauncherDefault" to "Mint",
+                    "LauncherDefault" to "Sovereign",
                     "LauncherStealth" to "Stealth",
                     "LauncherEmber" to "Ember",
                 ).forEach { (alias, label) ->

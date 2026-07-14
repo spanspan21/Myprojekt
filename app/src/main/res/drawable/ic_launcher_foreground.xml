@@ -1,13 +1,40 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Upward "ascend" chevron pair — neon green mark. -->
+    <!-- Sovereign J: champagne monogram + gauge arc + online dot (matches the web favicon). -->
+
+    <!-- Gauge arc: open ring, gap at the top-right where the status dot sits. -->
     <path
-        android:fillColor="#4ade80"
-        android:pathData="M54,32 L74,58 L66,58 L54,42 L42,58 L34,58 Z" />
+        android:pathData="M 84.9 46.0 A 32 32 0 1 1 62.3 23.1"
+        android:strokeColor="#59D4B579"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- The J monogram, single calligraphic weight. -->
     <path
-        android:fillColor="#22c55e"
-        android:pathData="M54,50 L74,76 L66,76 L54,60 L42,76 L34,76 Z" />
+        android:pathData="M 40 38 H 68 M 58 38 V 59 A 9 9 0 0 1 40 59 L 40 56"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="54" android:startY="33"
+                android:endX="54" android:endY="73">
+                <item android:offset="0.0" android:color="#F4E6BE" />
+                <item android:offset="0.55" android:color="#D4B579" />
+                <item android:offset="1.0" android:color="#A8834E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Systems online. -->
+    <path
+        android:fillColor="#10A96A"
+        android:pathData="M 76.6 31.4 m -3.4 0 a 3.4 3.4 0 1 1 6.8 0 a 3.4 3.4 0 1 1 -6.8 0" />
 </vector>
