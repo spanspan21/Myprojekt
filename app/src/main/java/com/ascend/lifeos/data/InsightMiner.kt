@@ -41,7 +41,10 @@ object InsightMiner {
             Metric("mood", "mood", ofBody { it.mood }),
             Metric("kcal", "calories", keys.mapNotNull { k -> Repo.dayFor(k)?.meals?.sumOf { it.kcal }?.takeIf { it > 0 }?.let { k to it.toDouble() } }.toMap()),
             Metric("protein", "protein", keys.mapNotNull { k -> Repo.dayFor(k)?.meals?.sumOf { it.protein }?.takeIf { it > 0 }?.let { k to it.toDouble() } }.toMap()),
-            Metric("water", "water", keys.mapNotNull { k -> Repo.dayFor(k)?.water?.takeIf { it > 0 }?.let { k to it.toDouble() } }.toMap()),
+            // total hydration in ml (logged drinks included), not raw tap count —
+            // correlations should read real hydration, matching the one truth.
+            // Pearson is scale-invariant, so the "water" label still holds.
+            Metric("water", "water", keys.mapNotNull { k -> Repo.dayFor(k)?.let { Repo.hydrationMl(it) }?.takeIf { it > 0 }?.let { k to it.toDouble() } }.toMap()),
             Metric("screen", "screen time", keys.mapNotNull { k -> screen[k]?.first?.let { k to it.toDouble() } }.toMap()),
             Metric("unlocks", "unlocks", keys.mapNotNull { k -> screen[k]?.second?.let { k to it.toDouble() } }.toMap()),
             Metric("sets", "training volume", sets),
