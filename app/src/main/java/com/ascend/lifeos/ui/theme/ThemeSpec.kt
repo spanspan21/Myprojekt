@@ -108,7 +108,7 @@ object Themes {
         void = Color(0xFF04060B), bg = Color(0xFF070B13), bgElevated = Color(0xFF0C121E),
         surface = Color(0xFF111827), surfaceHi = Color(0xFF182234), bgTop = Color(0xFF0A0F1A),
         ivory = Color(0xFFECF2FF), lineAlpha = 0.10f, line2Alpha = 0.17f,
-        textPrimary = Color(0xFFF3F7FF), textMuted = Color(0xFF93A2BE), textDim = Color(0xFF55617A),
+        textPrimary = Color(0xFFF3F7FF), textMuted = Color(0xFF93A2BE), textDim = Color(0xFF6E7A94),
         metal = Color(0xFFC9D8F0), metalDeep = Color(0xFF8FA6C8),
         mods = ModPalette(
             home = Color(0xFF5AA2FF), calendar = Color(0xFFA48CF5), train = Color(0xFFFF7E6B),
@@ -130,7 +130,7 @@ object Themes {
         void = Color(0xFF060504), bg = Color(0xFF0B0A08), bgElevated = Color(0xFF12100C),
         surface = Color(0xFF171411), surfaceHi = Color(0xFF1E1A15), bgTop = Color(0xFF0D0B09),
         ivory = Color(0xFFF3E9D8), lineAlpha = 0.08f, line2Alpha = 0.14f,
-        textPrimary = Color(0xFFF2EFE8), textMuted = Color(0xFF9B9487), textDim = Color(0xFF615B51),
+        textPrimary = Color(0xFFF2EFE8), textMuted = Color(0xFF9B9487), textDim = Color(0xFF7A7264),
         metal = Color(0xFFE6C888), metalDeep = Color(0xFFB99154),
         mods = ModPalette(
             home = Color(0xFF35D19A), calendar = Color(0xFFA98BF2), train = Color(0xFFF0663A),
@@ -152,7 +152,7 @@ object Themes {
         void = Color(0xFF04060A), bg = Color(0xFF080C14), bgElevated = Color(0xFF0D1220),
         surface = Color(0xFF111827), surfaceHi = Color(0xFF182032), bgTop = Color(0xFF0A0F1A),
         ivory = Color(0xFFE4EDF7), lineAlpha = 0.09f, line2Alpha = 0.15f,
-        textPrimary = Color(0xFFECF2F9), textMuted = Color(0xFF8C98AB), textDim = Color(0xFF545E70),
+        textPrimary = Color(0xFFECF2F9), textMuted = Color(0xFF8C98AB), textDim = Color(0xFF6D7789),
         metal = Color(0xFFC8D8E8), metalDeep = Color(0xFF8FA3B8),
         mods = ModPalette(
             home = Color(0xFF3FD6A8), calendar = Color(0xFFA090F0), train = Color(0xFFF07048),
@@ -174,7 +174,7 @@ object Themes {
         void = Color(0xFF030308), bg = Color(0xFF07070E), bgElevated = Color(0xFF0C0A16),
         surface = Color(0xFF120E1E), surfaceHi = Color(0xFF181328), bgTop = Color(0xFF0A0714),
         ivory = Color(0xFFEAE6F2), lineAlpha = 0.08f, line2Alpha = 0.14f,
-        textPrimary = Color(0xFFF0EDF8), textMuted = Color(0xFF9A92AC), textDim = Color(0xFF5C5570),
+        textPrimary = Color(0xFFF0EDF8), textMuted = Color(0xFF9A92AC), textDim = Color(0xFF756D89),
         metal = Color(0xFF00E5FF), metalDeep = Color(0xFF0E9CB8),
         mods = ModPalette(
             home = Color(0xFF2AF5B0), calendar = Color(0xFFC24DFF), train = Color(0xFFFF5A3C),
@@ -196,7 +196,7 @@ object Themes {
         void = Color(0xFF0C0906), bg = Color(0xFF120E09), bgElevated = Color(0xFF1A140D),
         surface = Color(0xFF201912), surfaceHi = Color(0xFF282017), bgTop = Color(0xFF150F09),
         ivory = Color(0xFFEFE3CE), lineAlpha = 0.10f, line2Alpha = 0.16f,
-        textPrimary = Color(0xFFF0E8DA), textMuted = Color(0xFFA89C88), textDim = Color(0xFF6B6152),
+        textPrimary = Color(0xFFF0E8DA), textMuted = Color(0xFFA89C88), textDim = Color(0xFF837968),
         metal = Color(0xFFC88A5E), metalDeep = Color(0xFF96653F),
         mods = ModPalette(
             home = Color(0xFF93C29B), calendar = Color(0xFFB39CD9), train = Color(0xFFD98E73),
@@ -218,7 +218,7 @@ object Themes {
         void = Color(0xFF050505), bg = Color(0xFF0A0A0A), bgElevated = Color(0xFF101010),
         surface = Color(0xFF161616), surfaceHi = Color(0xFF1D1D1D), bgTop = Color(0xFF0C0C0C),
         ivory = Color(0xFFEDEAE3), lineAlpha = 0.12f, line2Alpha = 0.20f,
-        textPrimary = Color(0xFFF0EDE6), textMuted = Color(0xFF98948C), textDim = Color(0xFF5E5B54),
+        textPrimary = Color(0xFFF0EDE6), textMuted = Color(0xFF98948C), textDim = Color(0xFF78746C),
         metal = Color(0xFFEDEAE3).copy(alpha = 0.90f), metalDeep = Color(0xFFEDEAE3).copy(alpha = 0.62f),
         mods = ModPalette(
             // Tinte in Stufen — Identität über Icon + Position (Kap. 19)

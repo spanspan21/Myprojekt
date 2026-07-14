@@ -137,16 +137,28 @@ fun BodyScreen() {
         Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
             Column(Modifier.padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Ring(
-                        progress = (score ?: 0) / 100f, color = scoreColor,
-                        modifier = Modifier.size(96.dp), stroke = 7.dp,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(score?.toString() ?: "—", color = scoreColor, style = metricStyle(30))
-                            Text(
-                                "RECOVERY", color = TextDim, fontFamily = Display,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                            )
+                    Box(contentAlignment = Alignment.Center) {
+                        // Soft glow behind the ring — gives the recovery hero the
+                        // same depth the Fuel water card has instead of a flat ring.
+                        Box(
+                            Modifier.size(116.dp).background(
+                                androidx.compose.ui.graphics.Brush.radialGradient(
+                                    listOf(scoreColor.copy(alpha = if (score != null) 0.20f else 0.08f), androidx.compose.ui.graphics.Color.Transparent),
+                                ),
+                                CircleShape,
+                            ),
+                        )
+                        Ring(
+                            progress = (score ?: 0) / 100f, color = scoreColor,
+                            modifier = Modifier.size(96.dp), stroke = 7.dp,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(score?.toString() ?: "—", color = scoreColor, style = metricStyle(30))
+                                Text(
+                                    "RECOVERY", color = TextDim, fontFamily = Display,
+                                    fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.width(18.dp))

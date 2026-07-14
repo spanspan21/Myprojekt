@@ -15,6 +15,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -222,9 +223,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             GlassPanel(Modifier.fillMaxWidth().clickable { onMicros() }) {
                 Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     MacroReactor(
-                        pPct = frac(totals.protein, p.proteinGoal),
-                        cPct = frac(totals.carbs, p.carbGoal),
-                        fPct = frac(totals.fat, p.fatGoal),
+                        pPct = fracRaw(totals.protein, p.proteinGoal),
+                        cPct = fracRaw(totals.carbs, p.carbGoal),
+                        fPct = fracRaw(totals.fat, p.fatGoal),
                         kcal = totals.kcal, kcalGoal = p.kcalGoal,
                     )
                     Spacer(Modifier.width(20.dp))
@@ -362,6 +363,9 @@ private fun contextLine(kcal: Int, goal: Int, isToday: Boolean): String = when {
 }
 
 private fun frac(v: Int, goal: Int): Float = if (goal > 0) (v.toFloat() / goal).coerceIn(0f, 1f) else 0f
+// Raw fraction capped at 2 (one overshoot lap) so the reactor can SHOW going over
+// target — protein 150/130 no longer reads identical to exactly 100%.
+private fun fracRaw(v: Int, goal: Int): Float = if (goal > 0) (v.toFloat() / goal).coerceIn(0f, 2f) else 0f
 
 // ---- day cursor --------------------------------------------------------------
 
@@ -409,37 +413,50 @@ private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, e
 @Composable
 private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalGoal: Int) {
     val kA by androidx.compose.animation.core.animateFloatAsState(
-        (kcal.toFloat() / kcalGoal.coerceAtLeast(1)).coerceIn(0f, 1f),
+        (kcal.toFloat() / kcalGoal.coerceAtLeast(1)).coerceIn(0f, 2f),
         com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrK",
     )
     val pA by androidx.compose.animation.core.animateFloatAsState(
-        pPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrP",
+        pPct.coerceIn(0f, 2f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrP",
     )
     val cA by androidx.compose.animation.core.animateFloatAsState(
-        cPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrC",
+        cPct.coerceIn(0f, 2f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrC",
     )
     val fA by androidx.compose.animation.core.animateFloatAsState(
-        fPct.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrF",
+        fPct.coerceIn(0f, 2f), com.ascend.lifeos.ui.motion.Motion.springGrand, label = "mrF",
     )
+    val gold = com.ascend.lifeos.ui.theme.Champagne
     val left = kcalGoal - kcal
-    // User-Feedback: Schrift muss IN den Kreis passen — kompaktere Ringe,
-    // größere Mitte, Ziffern skalieren mit der Stellenzahl.
-    Box(Modifier.size(124.dp), contentAlignment = Alignment.Center) {
+    // Bigger, thicker, legible rings that can SHOW overshoot: the base arc fills to
+    // 100%, then any excess draws a second faint lap in the same hue, and a small
+    // gold pip marks a hit/over — 150/130 protein no longer looks like exactly 100%.
+    Box(Modifier.size(134.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             fun ring(inset: Float, pct: Float, color: Color, sw: Float) {
-                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw, cap = StrokeCap.Round))
-                if (pct > 0f) {
-                    // Endspurt-Glow (Kap. 22-Erbe) am kcal-Ring
-                    if (sw > 8.dp.toPx() && pct >= 0.8f && pct < 1f) {
-                        drawArc(color.copy(alpha = 0.22f), -90f, 360f * pct, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw * 1.8f, cap = StrokeCap.Round))
-                    }
-                    drawArc(color, -90f, 360f * pct, false, topLeft = Offset(inset, inset), size = Size(size.width - 2 * inset, size.height - 2 * inset), style = Stroke(sw, cap = StrokeCap.Round))
+                val sz = Size(size.width - 2 * inset, size.height - 2 * inset)
+                val tl = Offset(inset, inset)
+                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), 0f, 360f, false, topLeft = tl, size = sz, style = Stroke(sw, cap = StrokeCap.Round))
+                if (pct <= 0f) return
+                val base = pct.coerceAtMost(1f)
+                // final-stretch glow on the calorie ring
+                if (sw > 8.dp.toPx() && pct >= 0.8f && pct < 1f) {
+                    drawArc(color.copy(alpha = 0.22f), -90f, 360f * base, false, topLeft = tl, size = sz, style = Stroke(sw * 1.8f, cap = StrokeCap.Round))
+                }
+                drawArc(color, -90f, 360f * base, false, topLeft = tl, size = sz, style = Stroke(sw, cap = StrokeCap.Round))
+                // overshoot = a second, fainter lap
+                val over = (pct - 1f).coerceIn(0f, 1f)
+                if (over > 0f) {
+                    drawArc(color.copy(alpha = 0.4f), -90f, 360f * over, false, topLeft = tl, size = sz, style = Stroke(sw, cap = StrokeCap.Round))
+                }
+                // a small gold pip at 12 o'clock once the target is met
+                if (pct >= 1f) {
+                    drawArc(gold, -92f, 4f, false, topLeft = tl, size = sz, style = Stroke(sw, cap = StrokeCap.Round))
                 }
             }
-            val kw = 9.dp.toPx()
-            val mw = 3.5.dp.toPx()
+            val kw = 10.dp.toPx()
+            val mw = 4.5.dp.toPx()
             val g1 = 5.dp.toPx()
-            val g2 = 3.dp.toPx()
+            val g2 = 4.dp.toPx()
             ring(kw / 2, kA, Mod.Fuel, kw)                       // außen: KALORIE
             ring(kw + g1, pA, Cyan, mw)                          // innen: Protein
             ring(kw + g1 + mw + g2, cA, Blue, mw)                // Carbs
@@ -695,7 +712,7 @@ private fun HydrationCard(
                 Spacer(Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        bonusReason ?: "$glasses glasses · drinks count too",
+                        bonusReason ?: "$glasses glasses · hold ＋ for a bottle",
                         color = if (bonusReason != null) Ivory.copy(alpha = 0.9f) else Ivory.copy(alpha = 0.62f),
                         fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
                         maxLines = 1, style = shadow,
@@ -714,7 +731,15 @@ private fun HydrationCard(
                     if (glasses > 0) { Repo.addWater(-1); com.ascend.lifeos.data.Haptics.tick(hCtx) }
                 }
                 Spacer(Modifier.width(11.dp))
-                WaterButton(Icons.Rounded.Add, 56.dp, Cyan, filled = true) {
+                WaterButton(
+                    Icons.Rounded.Add, 56.dp, Cyan, filled = true,
+                    // Long-press logs a 0.5 L bottle (2 glasses) in one go — big-bottle
+                    // drinkers shouldn't tap three times for one bottle.
+                    onLongClick = {
+                        Repo.addWater(2)
+                        com.ascend.lifeos.data.Haptics.success(hCtx)
+                    },
+                ) {
                     Repo.addWater(1)
                     if (totalMl + WaterCalc.GLASS_ML >= targetMl) com.ascend.lifeos.data.Haptics.success(hCtx)
                     else com.ascend.lifeos.data.Haptics.confirm(hCtx)
@@ -726,10 +751,24 @@ private fun HydrationCard(
 
 /** Round, springy add/remove button — big enough to hit without missing. */
 @Composable
-private fun WaterButton(icon: androidx.compose.ui.graphics.vector.ImageVector, size: androidx.compose.ui.unit.Dp, tint: Color, filled: Boolean, onClick: () -> Unit) {
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private fun WaterButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    size: androidx.compose.ui.unit.Dp,
+    tint: Color,
+    filled: Boolean,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
+) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Box(
         Modifier.size(size)
-            .pressScale { onClick() }
+            .then(if (onLongClick != null)
+                Modifier.combinedClickable(
+                    interactionSource = interaction, indication = null,
+                    onClick = onClick, onLongClick = onLongClick,
+                )
+            else Modifier.pressScale { onClick() })
             .clip(CircleShape)
             .background(if (filled) tint.copy(alpha = 0.26f) else Void.copy(alpha = 0.4f))
             .border(0.8.dp, tint.copy(alpha = if (filled) 0.6f else 0.35f), CircleShape),
