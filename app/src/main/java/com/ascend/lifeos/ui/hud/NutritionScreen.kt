@@ -267,8 +267,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             Spacer(Modifier.height(14.dp))
             ProteinSpread(day)
 
-            // adaptive TDEE: the weekly recalibration ritual (MacroFactor-style)
-            TdeeSuggestCard()
+            // adaptive TDEE: the weekly coaching check-in (MacroFactor-class,
+            // recovery-aware — deficits ease when sleep/exams bite)
+            CoachCheckInCard()
 
             // Kap. 43: die abgeschlossene Woche als ehrliches Zeugnis (So-Abend + Mo)
             WeeklyFuelReview(isToday)
@@ -496,16 +497,27 @@ private fun MacroLegend(label: String, value: Int, goal: Int, color: Color) {
 
 /** Full-bar reference: a 30g meal maxes out its mini bar (≥20g already reads Good). */
 /**
- * Weekly kcal recalibration from real expenditure (weight trend + intake).
- * Only speaks when it has ≥10 logged days + ≥4 weigh-ins AND the target
- * actually moves ≥60 kcal — no noise, no judgment.
+ * Weekly coaching check-in — MacroFactor-class, recovery-aware. Real
+ * expenditure (energy-ledger back-calculation) + smoothed weight trend →
+ * new kcal & macros, every change carrying a plain-language WHY line and
+ * study-anchored warnings. Non-punitive by design: weeks are closed units,
+ * overshoots are never "paid back" (shame corrupts logging honesty, and the
+ * algorithm eats what you log). The rate dial writes %BW/week to the profile.
  */
 @Composable
-private fun TdeeSuggestCard() {
-    var suggestion by remember {
-        mutableStateOf(runCatching { com.ascend.lifeos.data.AdaptiveTdee.pendingSuggestion() }.getOrNull())
+private fun CoachCheckInCard() {
+    val cctx = androidx.compose.ui.platform.LocalContext.current
+    var refresh by remember { mutableIntStateOf(0) }
+    var gone by remember { mutableStateOf(false) }
+    val state by androidx.compose.runtime.produceState<com.ascend.lifeos.data.nutrition.CoachRitual.State?>(null, refresh) {
+        value = runCatching {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                com.ascend.lifeos.data.nutrition.CoachRitual.weekly(cctx)
+            }
+        }.getOrNull()
     }
-    val s = suggestion ?: return
+    val s = state
+    if (gone || s == null) return
     Spacer(Modifier.height(14.dp))
     GlassPanel(
         Modifier.fillMaxWidth(),
@@ -513,41 +525,98 @@ private fun TdeeSuggestCard() {
         line = Mod.Fuel.copy(alpha = 0.4f),
         corner = 16.dp,
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(
-                "RECALIBRATION", color = Mod.Fuel,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Your real expenditure is ~${s.expenditure} kcal (${s.daysOfData} logged days, " +
-                    "trend %+.2f kg/week). Suggested goal: ${s.suggestedKcal} kcal.".format(s.trendKgPerWeek),
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, lineHeight = 18.sp,
-            )
-            if (s.confidence == "low") {
-                Text("Confidence still low — more logged days sharpen this.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+        Column(Modifier.padding(14.dp).animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
+            val c = s.checkIn
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "WEEKLY CHECK-IN", color = Mod.Fuel,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                )
+                Spacer(Modifier.weight(1f))
+                if (c != null) {
+                    Text(
+                        c.phase.label.uppercase(), color = TextDim,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
+                    )
+                }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
-                    Modifier.clip(RoundedCornerShape(11.dp))
-                        .background(Mod.Fuel.copy(alpha = 0.16f))
-                        .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(11.dp))
-                        .clickable {
-                            com.ascend.lifeos.data.AdaptiveTdee.accept(s)
-                            suggestion = null
-                        }
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("Adopt ${s.suggestedKcal} kcal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+            Spacer(Modifier.height(8.dp))
+
+            if (s.holding != null) {
+                Text(s.holding, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, lineHeight = 18.sp)
+                Spacer(Modifier.height(10.dp))
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                        .clickable {
-                            com.ascend.lifeos.data.AdaptiveTdee.dismiss()
-                            suggestion = null
-                        }
+                        .clickable { com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("Keep current", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+                ) { Text("Okay", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+            } else if (c != null) {
+                // headline: the new program
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("${c.newKcal}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.width(5.dp))
+                    Text("kcal", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+                    if (c.newKcal != c.prevKcal) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "was ${c.prevKcal}", color = TextDim,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        "P ${c.protein} · C ${c.carbs} · F ${c.fat}",
+                        color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                c.why.forEach {
+                    Text("· $it", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, lineHeight = 16.sp)
+                }
+                c.warnings.forEach {
+                    Spacer(Modifier.height(3.dp))
+                    Text("⚠ $it", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                // rate dial — the evidence zone for this phase, one tap to retune
+                if (c.phase != com.ascend.lifeos.data.nutrition.DietPhase.MAINTAIN) {
+                    Spacer(Modifier.height(10.dp))
+                    val zone = if (c.phase == com.ascend.lifeos.data.nutrition.DietPhase.CUT)
+                        listOf(0.25, 0.5, 0.75, 1.0) else listOf(0.25, 0.35, 0.5)
+                    val currentRate = com.ascend.lifeos.data.Repo.data.profile.dietRatePct ?: c.phase.defaultRate
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        zone.forEach { r ->
+                            HudChip("${r}%/wk", selected = kotlin.math.abs(currentRate - r) < 0.01) {
+                                com.ascend.lifeos.data.Repo.setDietRate(r)
+                                refresh++
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(11.dp))
+                            .background(Mod.Fuel.copy(alpha = 0.16f))
+                            .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(11.dp))
+                            .clickable {
+                                com.ascend.lifeos.data.nutrition.CoachRitual.adopt(c)
+                                gone = true
+                            }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                    ) { Text("Adopt ${c.newKcal} kcal · P${c.protein}", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+                    Box(
+                        Modifier.clip(RoundedCornerShape(11.dp))
+                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .clickable {
+                                com.ascend.lifeos.data.nutrition.CoachRitual.snooze()
+                                gone = true
+                            }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                    ) { Text("Not this week", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+                }
             }
         }
     }

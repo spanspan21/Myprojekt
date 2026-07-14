@@ -428,8 +428,16 @@ object Repo {
         it.copy(
             sex = sex, age = age.coerceIn(12, 100), heightCm = heightCm.coerceIn(120, 230),
             weightKg = weightKg.coerceIn(30, 300), activity = activity.coerceIn(1, 5), dietGoal = dietGoal,
+            // phase change restarts the diet-break clock and clears a custom rate
+            // (each phase has its own evidence zone — a cut's 0.75 makes no sense
+            // as a bulk's 0.75); same phase keeps both
+            dietPhaseSince = if (dietGoal != it.dietGoal) todayKey() else (it.dietPhaseSince ?: todayKey()),
+            dietRatePct = if (dietGoal != it.dietGoal) null else it.dietRatePct,
         )
     }
+
+    /** Weekly-check-in rate dial (%BW/week) — clamping happens in CoachEngine. */
+    fun setDietRate(pct: Double?) = updateProfile { it.copy(dietRatePct = pct) }
 
     // Legacy calisthenics logging, the Repo txn/subs stores and day time-blocking
     // were removed in the 2026-07 audit (Welle 3): training lives in Room

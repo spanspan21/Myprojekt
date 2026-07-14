@@ -85,6 +85,8 @@ data class Profile(
     val measurements: Map<String, List<MeasurePoint>> = emptyMap(), // "arm"/"chest"/… -> history
     val kcalGoalAuto: Boolean = true,                  // adaptive TDEE may adjust kcalGoal weekly
     val tdeeLastSuggest: String? = null,               // dayKey of last accepted/shown suggestion
+    val dietRatePct: Double? = null,                   // desired %BW/week (null → phase default)
+    val dietPhaseSince: String? = null,                // dayKey the current dietGoal was set (diet-break rhythm)
     val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
     val customFoods: List<CustomFood> = emptyList(), // user-created foods
     val savedMeals: List<SavedMeal> = emptyList(),   // saved meal combinations
