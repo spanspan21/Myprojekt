@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ascend.lifeos.data.training.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,12 +62,14 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     // ── New PR celebration ──────────────────────────────────────────────────
 
     var newPrCelebration by mutableStateOf<PersonalRecordEntity?>(null)
+        private set
 
     /** Last set pulled by [deleteSet], kept briefly so a mis-tapped delete mid-set
      *  (the Close icon is tiny and hands are sweaty) is undoable — the Hevy/Strong
      *  pattern. Any new [logSet] or delete supersedes it. */
     var lastDeletedSet by mutableStateOf<DeletedSet?>(null)
         private set
+    private var lastDeleteJob: Job? = null   // so undo can order its upsert after the delete
 
     // ── Today stats ─────────────────────────────────────────────────────────
 
@@ -483,7 +486,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         if (index < 0 || index >= ex.loggedSets.size) return
         val set = ex.loggedSets.removeAt(index)
         lastDeletedSet = DeletedSet(exerciseId, index, set)
-        viewModelScope.launch(Dispatchers.IO) { dao.deleteSet(set.id) }
+        lastDeleteJob = viewModelScope.launch(Dispatchers.IO) { dao.deleteSet(set.id) }
     }
 
     /** Re-insert the last deleted set at its original slot (same id, PR flag and
@@ -493,7 +496,14 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         lastDeletedSet = null
         val ex = activeExercises.find { it.exerciseId == d.exerciseId } ?: return
         ex.loggedSets.add(d.index.coerceIn(0, ex.loggedSets.size), d.set)
-        viewModelScope.launch(Dispatchers.IO) { dao.upsertSet(d.set) }
+        val pendingDelete = lastDeleteJob
+        viewModelScope.launch(Dispatchers.IO) {
+            // wait out the row's own delete before re-inserting it — both run on the
+            // IO pool, so without this the upsert could race ahead of the delete and
+            // lose the restored row on disk (memory would still show it)
+            pendingDelete?.join()
+            dao.upsertSet(d.set)
+        }
     }
 
     fun dismissUndo() { lastDeletedSet = null }

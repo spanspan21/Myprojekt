@@ -100,14 +100,15 @@ object PrimeEngine {
             Repo.dayFor(k)?.let { Repo.nutritionTotals(it).protein.toDouble() } ?: 0.0
         val histKcal = histKeys.map { (Repo.kcalForDay(it) ?: 0).toDouble() }
         val histProt = histKeys.map { dayProtein(it) }
-        val histWater = histKeys.map { (Repo.dayFor(it)?.water ?: 0).toDouble() }
+        // real hydration (drinks included), matching the one truth — Pearson is
+        // scale-invariant so the correlation threshold is unaffected
+        val histWater = histKeys.map { (Repo.dayFor(it)?.let { d -> Repo.hydrationMl(d) } ?: 0).toDouble() }
         val loggedDays = histKeys.map { Repo.dayFor(it)?.meals?.isNotEmpty() == true }
 
         // ── Heute ──
         val today = Repo.dayFor(todayKey())
         val kcalToday = today?.meals?.sumOf { it.kcal } ?: 0
         val protToday = today?.let { Repo.nutritionTotals(it).protein } ?: 0
-        val waterToday = today?.water ?: 0
         val hydrationMl = today?.let { Repo.hydrationMl(it) } ?: 0   // geteilte Wahrheit (Wasser + Getränke)
 
         // ── Training: Sätze je Tag (35 d) → Banister ATL/CTL + Frische ──
