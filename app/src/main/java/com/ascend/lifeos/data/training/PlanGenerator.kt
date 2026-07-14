@@ -43,6 +43,7 @@ data class PlannedExercise(
     val restSec: Int,
     val section: BlockType = BlockType.STRENGTH,   // which block this belongs to
     val note: String? = null,                       // progression / coaching note
+    val supersetGroup: Int? = null,                 // paired-set group (SupersetPlanner)
 )
 
 data class PlannedSession(
@@ -440,9 +441,23 @@ object PlanGenerator {
         // ── session assembly ─────────────────────────────────────────────────
 
         fun assemble(index: Int, name: String, focus: String, exs: List<PlannedExercise>, whySuffix: String? = null): PlannedSession {
-            val ordered = exs.sortedBy { it.section.ordinal }
+            val flat = exs.sortedBy { it.section.ordinal }
+            // Superset the accessory tail (Weakley 2025: ~37% shorter at equal
+            // volume; antagonist pairs even gain reps). Deload weeks stay
+            // un-paired — paired sets run hotter (RPE +0.77 SMD) and a deload's
+            // whole point is running cool.
+            val ordered = if (deload) flat else {
+                val strength = flat.filter { it.section == BlockType.STRENGTH }
+                val paired = SupersetPlanner.assign(strength) { id -> byId[id]?.primaryMuscle }
+                (flat.filterNot { it.section == BlockType.STRENGTH } + paired)
+                    .sortedBy { it.section.ordinal }
+            }
             val blocks = BlockType.entries.mapNotNull { t ->
-                val mins = ordered.filter { it.section == t }.sumOf { exMinutes(it) }
+                val inBlock = ordered.filter { it.section == t }
+                // paired exercises rest once per round, so the strength block's
+                // estimate must be group-aware or the session over-quotes its time
+                val mins = if (t == BlockType.STRENGTH) SupersetPlanner.blockMinutes(inBlock)
+                    else inBlock.sumOf { exMinutes(it) }
                 if (mins < 0.5) null else PlannedBlock(t, Math.round(mins).toInt().coerceAtLeast(1))
             }
             val est = blocks.sumOf { it.minutes }

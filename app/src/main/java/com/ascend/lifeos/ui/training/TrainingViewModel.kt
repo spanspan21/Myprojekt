@@ -348,7 +348,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     targetSets = pe.sets,
                     targetReps = if (pe.holdSec != null) pe.holdSec else pe.repsHigh,
                     restSeconds = pe.restSec,
-                    supersetGroup = null,
+                    supersetGroup = pe.supersetGroup,
                     prescription = pe.note,
                 )
             },
@@ -479,6 +479,53 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         }
 
         startRestTimer(ex.restSeconds)
+    }
+
+    /** Rewrite a logged set in place (same row id) — mis-typed reps/weight are a
+     *  fact of sweaty hands. PR flags are NOT retro-awarded on an edit (a typo
+     *  fix must never throw the celebration overlay); session aggregates
+     *  recompute at finish from the live list, so nothing else needs patching. */
+    fun editSet(
+        exerciseId: String,
+        index: Int,
+        reps: Int,
+        weight: Float?,
+        rpe: Int?,
+        holdSeconds: Int? = null,
+        setType: SetType? = null,
+    ) {
+        val ex = activeExercises.find { it.exerciseId == exerciseId } ?: return
+        val old = ex.loggedSets.getOrNull(index) ?: return
+        val updated = old.copy(
+            reps = reps, weight = weight, rpe = rpe,
+            holdSeconds = holdSeconds ?: old.holdSeconds,
+            setType = setType ?: old.setType,
+        )
+        ex.loggedSets[index] = updated
+        viewModelScope.launch(Dispatchers.IO) { dao.upsertSet(updated) }
+    }
+
+    // ── Supersets: link / unlink mid-session (Hevy-style, any time) ─────────
+
+    /** Pair two exercises. If either is already grouped the other joins that
+     *  group (3+ partners = circuit, same mechanism, no upper bound). */
+    fun linkSupersets(indexA: Int, indexB: Int) {
+        val a = activeExercises.getOrNull(indexA) ?: return
+        val b = activeExercises.getOrNull(indexB) ?: return
+        if (indexA == indexB) return
+        val group = a.supersetGroup ?: b.supersetGroup
+            ?: ((activeExercises.mapNotNull { it.supersetGroup }.maxOrNull() ?: 0) + 1)
+        a.supersetGroup = group
+        b.supersetGroup = group
+    }
+
+    fun unlinkSuperset(index: Int) {
+        val ex = activeExercises.getOrNull(index) ?: return
+        val g = ex.supersetGroup ?: return
+        ex.supersetGroup = null
+        // a group of one is no group — dissolve the leftover partner too
+        val remaining = activeExercises.filter { it.supersetGroup == g }
+        if (remaining.size == 1) remaining[0].supersetGroup = null
     }
 
     fun deleteSet(exerciseId: String, index: Int) {
@@ -863,8 +910,10 @@ class ActiveExercise(
     val targetSets: Int,
     val targetReps: Int,
     val restSeconds: Int,
-    val supersetGroup: Int?,
+    supersetGroup: Int?,
     val prescription: String? = null,   // study-based rep/RIR/vest cue from the plan
 ) {
+    /** Mutable + observable: pairs can be linked/unlinked mid-session. */
+    var supersetGroup by mutableStateOf(supersetGroup)
     val loggedSets = mutableStateListOf<WorkoutSetEntity>()
 }

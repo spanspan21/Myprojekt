@@ -130,9 +130,12 @@ fun ActiveWorkoutScreen(
 
             // ── Exercise tabs ───────────────────────────────────────────
             item {
+                val groupOrder = vm.activeExercises.mapNotNull { it.supersetGroup }.distinct()
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     vm.activeExercises.forEachIndexed { i, ex ->
-                        val label = "${ex.exerciseName.take(10)} (${ex.loggedSets.size})"
+                        // superset partners share a letter — the tab row shows the pairing at a glance
+                        val prefix = ex.supersetGroup?.let { "${'A' + groupOrder.indexOf(it)}·" } ?: ""
+                        val label = "$prefix${ex.exerciseName.take(10)} (${ex.loggedSets.size})"
                         HudChip(label, selected = i == vm.activeCurrentExIndex) { vm.setCurrentExercise(i) }
                     }
                     Box(
@@ -204,7 +207,13 @@ fun ActiveWorkoutScreen(
                 // ── Logged sets list ────────────────────────────────────
                 itemsIndexed(ex.loggedSets, key = { _, set -> set.id }) { idx, set ->
                     Column(Modifier.animateItem()) {
-                        SetRow(set, idx) { vm.deleteSet(ex.exerciseId, idx) }
+                        SetRow(
+                            set, idx,
+                            onDelete = { vm.deleteSet(ex.exerciseId, idx) },
+                            onSave = { reps, weight, rpe, holdSecs ->
+                                vm.editSet(ex.exerciseId, idx, reps, weight, rpe, holdSecs)
+                            },
+                        )
                         Spacer(Modifier.height(6.dp))
                     }
                 }
@@ -322,13 +331,77 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
         }
     }
 
-    GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    // Superset bookkeeping: letter + colour follow first-appearance order, so
+    // "A" is always the session's first pair no matter which tab you're on.
+    val groupOrder = vm.activeExercises.mapNotNull { it.supersetGroup }.distinct()
+    val ssGroup = ex.supersetGroup
+    val ssColor = ssGroup?.let { supersetColor(groupOrder.indexOf(it)) }
+    var linkOpen by remember(ex.exerciseId) { mutableStateOf(false) }
+
+    GlassPanel(
+        Modifier.fillMaxWidth(), corner = 18.dp,
+        line = ssColor?.copy(alpha = 0.35f) ?: HudLine,
+    ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(catIcon(exCategory ?: ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(ex.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+            }
+
+            // ── Superset banner (grouped) / linker (solo) ──────────────
+            if (ssGroup != null && ssColor != null) {
+                val partners = vm.activeExercises.withIndex()
+                    .filter { it.value.supersetGroup == ssGroup && it.index != vm.activeCurrentExIndex }
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.width(3.dp).height(12.dp).clip(RoundedCornerShape(2.dp)).background(ssColor))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "SUPERSET ${'A' + groupOrder.indexOf(ssGroup)}",
+                        color = ssColor, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+                        fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        "Unlink",
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                            .clickable { vm.unlinkSuperset(vm.activeCurrentExIndex) }
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    partners.forEach { (idx, p) ->
+                        HudChip("↔ ${p.exerciseName.take(14)}", selected = false) { vm.setCurrentExercise(idx) }
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Alternate sets — rest fires after the round, not between partners",
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                )
+            } else if (vm.activeExercises.size > 1) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (linkOpen) "▾ Superset with…" else "⛓ Superset with…",
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { linkOpen = !linkOpen }.padding(vertical = 2.dp),
+                )
+                AnimatedVisibility(linkOpen) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        vm.activeExercises.withIndex()
+                            .filter { it.index != vm.activeCurrentExIndex }
+                            .forEach { (idx, other) ->
+                                HudChip(other.exerciseName.take(14), selected = false) {
+                                    vm.linkSupersets(vm.activeCurrentExIndex, idx)
+                                    linkOpen = false
+                                }
+                            }
+                    }
+                }
             }
             // study-based prescription: how many reps, at what effort, when to load
             ex.prescription?.let {
@@ -488,34 +561,85 @@ private fun StepperButton(label: String, onClick: () -> Unit) {
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
 }
 
-// ─── Set Row with colored stripe ───────────────────────────────────────────
+// ─── Set Row with colored stripe (tap the row to edit it in place) ──────────
 
 @Composable
-private fun SetRow(set: WorkoutSetEntity, index: Int, onDelete: () -> Unit) {
+private fun SetRow(
+    set: WorkoutSetEntity,
+    index: Int,
+    onDelete: () -> Unit,
+    onSave: (reps: Int, weight: Float?, rpe: Int?, holdSecs: Int?) -> Unit,
+) {
     val color = setTypeColor(set.setType)
+    val isHold = set.holdSeconds != null
+    var editing by remember(set.id) { mutableStateOf(false) }
+    var eMain by remember(set.id) { mutableStateOf("") }
+    var eWeight by remember(set.id) { mutableStateOf("") }
+    var eRpe by remember(set.id) { mutableStateOf("") }
+
     GlassPanel(Modifier.fillMaxWidth(), corner = 12.dp) {
-        Row(Modifier.fillMaxWidth()) {
-            Box(Modifier.width(3.dp).height(44.dp).background(color))
-            Row(Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.size(24.dp).clip(CircleShape).background(color.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center,
-                ) { Text("${index + 1}", color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    val parts = mutableListOf("${set.reps} Reps")
-                    set.weight?.let { parts.add("${it}kg") }
-                    set.rpe?.let { parts.add("RPE $it") }
-                    Text(parts.joinToString(" · "), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold)
-                    val meta = mutableListOf(setTypeLabel(set.setType))
-                    set.tempo?.let { meta.add("⏱ $it") }
-                    Text(meta.joinToString(" · "), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
+        Column(Modifier.animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
+            Row(Modifier.fillMaxWidth()) {
+                Box(Modifier.width(3.dp).height(44.dp).background(color))
+                Row(
+                    Modifier.weight(1f)
+                        .clickable {
+                            if (!editing) {
+                                // prefill from the row — the sweaty-hands edit path
+                                eMain = if (isHold) "${set.holdSeconds}" else "${set.reps}"
+                                eWeight = set.weight?.let { if (it % 1f == 0f) "${it.toInt()}" else "$it" } ?: ""
+                                eRpe = set.rpe?.toString() ?: ""
+                            }
+                            editing = !editing
+                        }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier.size(24.dp).clip(CircleShape).background(color.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center,
+                    ) { Text("${index + 1}", color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        val parts = mutableListOf(if (isHold) "${set.holdSeconds}s hold" else "${set.reps} Reps")
+                        set.weight?.let { parts.add("${it}kg") }
+                        set.rpe?.let { parts.add("RPE $it") }
+                        Text(parts.joinToString(" · "), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold)
+                        val meta = mutableListOf(setTypeLabel(set.setType))
+                        set.tempo?.let { meta.add("⏱ $it") }
+                        Text(meta.joinToString(" · "), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
+                    }
+                    if (set.isPersonalRecord) {
+                        Text("PR", color = ChampagneDeep, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
+                    }
+                    Icon(Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
                 }
-                if (set.isPersonalRecord) {
-                    Text("PR", color = ChampagneDeep, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
+            }
+            if (editing) {
+                Column(Modifier.padding(start = 15.dp, end = 12.dp, bottom = 10.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        GlassField(if (isHold) "Sec" else "Reps", eMain, KeyboardType.Number, Modifier.weight(1f)) { eMain = it }
+                        GlassField("kg", eWeight, KeyboardType.Decimal, Modifier.weight(1f)) { eWeight = it }
+                        GlassField("RPE", eRpe, KeyboardType.Number, Modifier.weight(0.8f)) { eRpe = it }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HudChip("Save", selected = true) {
+                            val main = eMain.toIntOrNull()
+                            if (main != null && main > 0) {
+                                onSave(
+                                    if (isHold) set.reps else main,
+                                    eWeight.toFloatOrNull(),
+                                    eRpe.toIntOrNull(),
+                                    if (isHold) main else set.holdSeconds,
+                                )
+                                editing = false
+                            }
+                        }
+                        HudChip("Cancel", selected = false) { editing = false }
+                    }
                 }
-                Icon(Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
-                    modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
             }
         }
     }
@@ -666,6 +790,13 @@ private fun setTypeColor(st: SetType) = when (st) {
     SetType.NORMAL -> Good; SetType.WARMUP -> Warn
     SetType.DROP -> Mod.School; SetType.FAILURE -> Crit
     SetType.ASSISTED -> Mod.Skills; SetType.NEGATIVE -> Mod.Body
+}
+
+// Superset group colours — distinct per group, stable by first appearance
+// (Hevy's colour-bar convention). Live getters so theme switches re-tint.
+private fun supersetColor(orderIdx: Int): Color {
+    val palette = listOf(Accent, Amber, Good, Mod.School, Mod.Skills)
+    return palette[orderIdx.coerceAtLeast(0) % palette.size]
 }
 
 private fun prTypeLabel(t: PrType) = when (t) {
