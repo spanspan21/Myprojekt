@@ -207,12 +207,15 @@ object FinanceStore {
      * Books a transaction (single Room store) and — when [accountId] is given —
      * links it via the FK and moves the account balance.
      */
-    fun bookTxn(ctx: Context, amountCents: Long, category: String, note: String = "", accountId: String? = null, roundUp: Boolean = true) {
+    fun bookTxn(ctx: Context, amountCents: Long, category: String, note: String = "", accountId: String? = null, roundUp: Boolean = true, at: Long = System.currentTimeMillis()) {
         if (amountCents == 0L) return
         FinanceRoom.initIfNeeded(ctx)
         val linked = accountId?.takeIf { id -> FinanceRoom.accounts().any { it.id == id } }
         val txnId = newId("t")
-        FinanceRoom.addTxn(txnId, System.currentTimeMillis(), amountCents, category, note.trim(), linked)
+        // `at` lets a manual entry land on the day it actually happened (back-dating)
+        // instead of always "now" — otherwise Saturday's spend logged Monday skews
+        // the wrong day/month bucket.
+        FinanceRoom.addTxn(txnId, at, amountCents, category, note.trim(), linked)
         if (linked != null) FinanceRoom.adjustBalance(linked, amountCents)
         // Round-up savings (#7): stash the change up to the next euro into a goal.
         // Bank/CSV imports pass roundUp=false — otherwise the first connect (full

@@ -65,6 +65,7 @@ internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss:
     var category by remember { mutableStateOf(if (isExpense) "Other" else "Income") }
     var note by remember { mutableStateOf("") }
     var accountId by remember { mutableStateOf(if (accounts.size == 1) accounts[0].id else null) }
+    var dayOffset by remember { mutableIntStateOf(0) } // 0 = today, N = N days ago
     val cents = parseCents(amount)
 
     SheetShell(if (isExpense) "Add expense" else "Add income", onDismiss) {
@@ -82,6 +83,16 @@ internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss:
 
         GlassField(note, { note = it }, if (isExpense) "Note — merchant, what for… (optional)" else "Note — source (optional)")
 
+        // When did it happen — back-date so it lands on the right day/month.
+        Spacer(Modifier.height(12.dp))
+        Overline("When")
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            listOf(0 to "Today", 1 to "Yesterday", 2 to "2d ago", 3 to "3d ago", 7 to "1w ago").forEach { (off, lbl) ->
+                FinChip(lbl, dayOffset == off) { dayOffset = off }
+            }
+        }
+
         if (accounts.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
             Overline("Account")
@@ -94,7 +105,11 @@ internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss:
 
         Spacer(Modifier.height(18.dp))
         ActionButton(if (isExpense) "Save expense" else "Save income", enabled = cents != null) {
-            FinanceStore.bookTxn(ctx, if (isExpense) -cents!! else cents!!, category, note, accountId)
+            // Back-date to noon on the chosen day so day-key bucketing is unambiguous.
+            val at = if (dayOffset == 0) System.currentTimeMillis()
+            else java.time.LocalDate.now().minusDays(dayOffset.toLong())
+                .atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            FinanceStore.bookTxn(ctx, if (isExpense) -cents!! else cents!!, category, note, accountId, at = at)
             onDismiss()
         }
     }
