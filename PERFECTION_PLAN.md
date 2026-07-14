@@ -132,4 +132,21 @@ Ergebnis: 3 neue Features + 14 verifizierte Fixes, alle gebaut + getestet +
   UTC-Host im falschen Bucket); braucht TZ-kontrollierten Test — Follow-up, nicht kurz
   vor Deadline ohne Test „blind" fixen (falsche TZ-Mathe wäre schlimmer).
 - HabitMetrics/CustomRules „water" bleibt Gläser: bewusste Habit-/Regel-Metrik, kein Loch.
+
+## Runde 3 — Sicherheits-Review Guard + Casino (die höchsten Einsätze)
+
+Ein dritter Agent prüfte gezielt Sperr-Logik und Casino-Geld-Mathe. Urteil: **Kern
+solide** — kein Verlust-von-Zeit-Bug, keine unentrinnbare Sperre, Settle-Pending-Race
+bleibt gefixt, Practice/Real getrennt, provably-fair + 6-Uhr-Rollover korrekt. 3 von
+5 Befunden behoben:
+15. Guard-Service lief UsageStats-Event-Stream-Walks auf Dispatchers.Main im tick()/
+    showIntercept() → ANR-/Jank-Risiko genau auf dem Sofort-Sperr-Pfad. Über zwei
+    IO-Helfer (usageMinIO/durationsIO) ausgelagert (GuardScreen tat das schon).
+16. Mines „PLACE BET" ohne Same-Frame-Guard (Blackjack/Dice haben ihn) → Doppeltipp
+    reservierte den Versuch zweimal → Spin verschenkt / Break einen Tap zu früh. Gefixt.
+17. Settings „attempts left" basis-only statt skill-bewusst wie Wall/Header → konnte
+    „0 left" zeigen, obwohl noch ein Spin offen war. Jetzt dieselbe Zahl überall.
+
+Bewusst NICHT (Runde 3): 0-Auszahlung-verbraucht-Versuch (Rand, offengelegt) und die
+15-s-Re-Arm-Gnadenfrist (getunte Anti-Flacker-Konstante — nicht ohne Test blind ändern).
 EOF
