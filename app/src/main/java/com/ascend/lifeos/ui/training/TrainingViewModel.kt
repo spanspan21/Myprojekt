@@ -69,6 +69,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var todayReps by mutableIntStateOf(0)
         private set
+
+    // Live figures that INCLUDE the in-progress session. `todaySets` comes from
+    // the DAO which filters isComplete=1, so a live workout's sets were invisible
+    // to the strain line + "N sets to target" nudge until the session finished
+    // (they read stale mid-workout). Reading the snapshot list keeps them reactive.
+    val todaySetsLive: Int get() = todaySets + activeExercises.sumOf { it.loggedSets.size }
+    val todayRepsLive: Int get() = todayReps + activeExercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps } }
     var weekSessions by mutableIntStateOf(0)
         private set
 
@@ -482,11 +489,15 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val existing = dao.prsForExercise(exId).first()
         val now = System.currentTimeMillis()
 
+        // Only CELEBRATE a beaten prior best — the first-ever set of a movement
+        // still records a baseline PR (so later sets compare correctly) but must
+        // not throw the full-screen epic overlay, which used to spam on every new
+        // exercise in Explore/free workouts and cheapen real PRs.
         val bestReps = existing.filter { it.type == PrType.MAX_REPS }.maxByOrNull { it.value }
         if (reps > (bestReps?.value ?: 0f)) {
             val pr = PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.MAX_REPS, reps.toFloat(), now, sessionId)
             dao.upsertPr(pr)
-            newPrCelebration = pr
+            if (bestReps != null) newPrCelebration = pr
         }
 
         if (weight != null && weight > 0f) {
@@ -494,7 +505,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             if (weight > (bestWeight?.value ?: 0f)) {
                 val pr = PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.MAX_WEIGHT, weight, now, sessionId)
                 dao.upsertPr(pr)
-                newPrCelebration = pr
+                if (bestWeight != null) newPrCelebration = pr
             }
             val e1rm = weight * (1 + reps / 30f)
             val best1rm = existing.filter { it.type == PrType.EST_1RM }.maxByOrNull { it.value }
@@ -508,7 +519,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             if (holdSecs > (bestHold?.value ?: 0f)) {
                 val pr = PersonalRecordEntity(UUID.randomUUID().toString(), exId, exName, PrType.LONGEST_HOLD, holdSecs.toFloat(), now, sessionId)
                 dao.upsertPr(pr)
-                newPrCelebration = pr
+                if (bestHold != null) newPrCelebration = pr
             }
         }
     }

@@ -94,7 +94,7 @@ fun TrainingHub(
                         else -> 4 to 8
                     }
                     Spacer(Modifier.height(3.dp))
-                    val doneSets = vm.todaySets
+                    val doneSets = vm.todaySetsLive // include the live session
                     Text(
                         if (doneSets > 0) "Strain: $doneSets/$lo–$hi sets today (recovery $rec)"
                         else "Today's target: $lo–$hi sets (recovery $rec)",
@@ -108,7 +108,7 @@ fun TrainingHub(
 
         // ── Today stats strip ───────────────────────────────────────────
         item {
-            TodayStrip(vm.todaySets, vm.todayReps, vm.weekSessions)
+            TodayStrip(vm.todaySetsLive, vm.todayRepsLive, vm.weekSessions)
             Spacer(Modifier.height(18.dp))
         }
 

@@ -222,7 +222,7 @@ fun ActiveWorkoutScreen(
                 // eine Information, kein Nag
                 val toTarget = com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
                     val lo = when { rec >= 75 -> 14; rec >= 50 -> 10; else -> 4 }
-                    lo - vm.todaySets
+                    lo - vm.todaySetsLive // count what you've already logged this session
                 }
                 if (toTarget != null && toTarget in 1..2) {
                     Text(
@@ -279,25 +279,37 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
     var showAdvanced by remember(ex.exerciseId) { mutableStateOf(false) }
     var ghost by remember(ex.exerciseId) { mutableStateOf<String?>(null) }
 
+    // Real category icon + unit ("sec" holds vs "reps") for this exercise.
+    val exEntity by androidx.compose.runtime.produceState<com.ascend.lifeos.data.training.ExerciseEntity?>(null, ex.exerciseId) {
+        value = runCatching { vm.exerciseById(ex.exerciseId) }.getOrNull()
+    }
+    val exCategory = exEntity?.category
+    // Holds (plank / hang / L-sit / lever / handstand) are logged in SECONDS, not
+    // reps — otherwise a 60s plank saves as "60 reps", hold PRs never fire, and
+    // the grip/core progressions can't advance from normal logging.
+    val isHold = exEntity?.unit == "sec"
+
     // Ghost values: prefill from the last logged session of this exercise.
-    LaunchedEffect(ex.exerciseId) {
+    // Keyed on exEntity too so hold-vs-rep prefill uses the right field.
+    LaunchedEffect(ex.exerciseId, exEntity) {
         if (ex.loggedSets.isEmpty()) {
             val history = runCatching { vm.getExerciseHistory(ex.exerciseId) }.getOrDefault(emptyList())
             history.firstOrNull()?.let { last ->
-                reps = "${last.reps}"
-                last.weight?.let { w -> weight = if (w % 1f == 0f) "${w.toInt()}" else "$w" }
-                ghost = buildString {
-                    append("Last: ${last.reps} reps")
-                    last.weight?.let { append(" · ${it}kg") }
-                    last.rpe?.let { append(" · RPE $it") }
+                if (isHold) {
+                    val secs = last.holdSeconds ?: last.reps
+                    if (secs > 0) reps = "$secs"
+                    ghost = "Last: ${secs}s hold" + (last.rpe?.let { " · RPE $it" } ?: "")
+                } else {
+                    reps = "${last.reps}"
+                    last.weight?.let { w -> weight = if (w % 1f == 0f) "${w.toInt()}" else "$w" }
+                    ghost = buildString {
+                        append("Last: ${last.reps} reps")
+                        last.weight?.let { append(" · ${it}kg") }
+                        last.rpe?.let { append(" · RPE $it") }
+                    }
                 }
             }
         }
-    }
-
-    // Real category icon instead of a hardcoded PUSH glyph for every exercise.
-    val exCategory by androidx.compose.runtime.produceState<ExCategory?>(null, ex.exerciseId) {
-        value = runCatching { vm.exerciseById(ex.exerciseId)?.category }.getOrNull()
     }
 
     GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
@@ -329,15 +341,22 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             )
             Spacer(Modifier.height(14.dp))
 
-            // ── Reps +/- (56dp stepper buttons) ────────────────────
+            // ── Reps (or hold seconds) +/- stepper ─────────────────
+            // For holds the value IS the seconds held; step by 5s, min 5.
+            val stepBy = if (isHold) 5 else 1
+            val stepMin = if (isHold) 5 else 1
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                StepperButton("−") { reps = ((reps.toIntOrNull() ?: 10) - 1).coerceAtLeast(1).toString() }
+                StepperButton("−") { reps = ((reps.toIntOrNull() ?: 10) - stepBy).coerceAtLeast(stepMin).toString() }
                 Spacer(Modifier.width(20.dp))
-                Text(reps, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s42, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.width(70.dp))
+                Text(
+                    if (isHold) "${reps}s" else reps,
+                    color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s42, fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center, modifier = Modifier.width(if (isHold) 110.dp else 70.dp),
+                )
                 Spacer(Modifier.width(20.dp))
-                StepperButton("+") { reps = ((reps.toIntOrNull() ?: 10) + 1).toString() }
+                StepperButton("+") { reps = ((reps.toIntOrNull() ?: 10) + stepBy).toString() }
             }
-            Text("Reps you got", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            Text(if (isHold) "Seconds held" else "Reps you got", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             ghost?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, color = Accent.copy(alpha = 0.7f), fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
@@ -411,7 +430,9 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                     Spacer(Modifier.height(10.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         GlassField("Tempo (3-1-2-0)", tempo, KeyboardType.Text, Modifier.weight(1f)) { tempo = it }
-                        GlassField("Hold (sec)", holdSec, KeyboardType.Number, Modifier.weight(0.6f)) { holdSec = it }
+                        // For hold moves the seconds live in the main stepper; the
+                        // Advanced hold field is only for adding a hold to a rep move.
+                        if (!isHold) GlassField("Hold (sec)", holdSec, KeyboardType.Number, Modifier.weight(0.6f)) { holdSec = it }
                     }
                     Spacer(Modifier.height(8.dp))
                     GlassField("Note", note, KeyboardType.Text, Modifier.fillMaxWidth()) { note = it }
@@ -430,15 +451,17 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             val btnText = "Log set $setNum"
             HudButton(btnText, Modifier.fillMaxWidth()) {
                 com.ascend.lifeos.data.Haptics.confirm(ctx)
+                // Holds: the stepper value IS the seconds → route to holdSeconds,
+                // count the hold as one rep so set/volume math stays sane.
                 vm.logSet(
                     exerciseId = ex.exerciseId,
-                    reps = reps.toIntOrNull() ?: 0,
+                    reps = if (isHold) 1 else (reps.toIntOrNull() ?: 0),
                     weight = weight.toFloatOrNull(),
                     rpe = rpe.toIntOrNull(),
                     tempo = tempo.ifBlank { null },
                     note = note.ifBlank { null },
                     setType = setType,
-                    holdSeconds = holdSec.toIntOrNull(),
+                    holdSeconds = if (isHold) reps.toIntOrNull() else holdSec.toIntOrNull(),
                 )
             }
         }
