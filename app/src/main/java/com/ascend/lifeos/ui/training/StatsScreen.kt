@@ -44,6 +44,8 @@ import java.util.*
 fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     val sessions by vm.recentSessions.collectAsState()
     val prs by vm.recentPrs.collectAsState()
+    val allExercises by vm.exercises.collectAsState()
+    var detailFor by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
@@ -72,7 +74,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         item {
             Text("MUSCLE VOLUME (THIS WEEK)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
-            MuscleHeatmap(sessions)
+            MuscleHeatmap(sessions, allExercises)
             Spacer(Modifier.height(22.dp))
         }
 
@@ -91,10 +93,15 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                 Spacer(Modifier.height(10.dp))
             }
             items(prs) { pr ->
-                PrRow(pr)
+                PrRow(pr) { detailFor = pr.exerciseId }
                 Spacer(Modifier.height(6.dp))
             }
         }
+    }
+
+    // tap any record → the exercise's deep dive (trend, PR timeline, sets)
+    detailFor?.let { exId ->
+        ExerciseDetailDialog(vm, exId) { detailFor = null }
     }
 }
 
@@ -147,7 +154,7 @@ private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
 // ─── Muscle Heatmap ─────────────────────────────────────────────────────────
 
 @Composable
-private fun MuscleHeatmap(sessions: List<SessionWithSets>) {
+private fun MuscleHeatmap(sessions: List<SessionWithSets>, allExercises: List<ExerciseEntity>) {
     val weekStart = run {
         val c = Calendar.getInstance()
         c.set(Calendar.DAY_OF_WEEK, c.firstDayOfWeek)
@@ -158,8 +165,11 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>) {
 
     val muscleMap = mutableMapOf<Muscle, Int>()
 
+    // resolve through the exercise DB — the old label==exerciseName comparison
+    // never matched ("Archer Push-ups" ≠ "Chest"), so the heatmap sat empty
+    val byId = remember(allExercises) { allExercises.associateBy { it.id } }
     weekSets.forEach { set ->
-        val muscle = Muscle.entries.find { m -> muscleLabel(m).equals(set.exerciseName, true) } ?: Muscle.FULL_BODY
+        val muscle = byId[set.exerciseId]?.primaryMuscle ?: Muscle.FULL_BODY
         muscleMap[muscle] = (muscleMap[muscle] ?: 0) + set.reps
     }
 
@@ -236,10 +246,13 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
 // ─── PR Row ─────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PrRow(pr: PersonalRecordEntity) {
+private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
     val date = SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(Date(pr.date))
     GlassPanel(Modifier.fillMaxWidth(), corner = 12.dp) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Box(Modifier.size(26.dp).clip(CircleShape).background(Amber.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
                 Text("PR", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold)
             }

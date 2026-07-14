@@ -880,6 +880,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     suspend fun exerciseById(exId: String): ExerciseEntity? = dao.exercise(exId)
 
+    suspend fun prsFor(exId: String): List<PersonalRecordEntity> =
+        dao.prsForExercise(exId).first()
+
     // ── Helpers ─────────────────────────────────────────────────────────────
 
     private fun startOfToday(): Long {

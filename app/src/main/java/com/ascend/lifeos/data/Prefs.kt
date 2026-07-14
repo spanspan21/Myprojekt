@@ -60,6 +60,7 @@ object Prefs {
     const val DELOAD_UNTIL = "deload_until"            // epoch-day the active deload runs until (0 = none)
     const val TRAIN_AUTO_SCHEDULE = "train_auto_schedule" // true = recommended (auto-place); false = custom (you place)
     const val TRAIN_EASY_DAY = "train_easy_day"        // dayKey an automation forced an easy session (audit F3/F5)
+    const val PLATE_BAR = "plate_bar"                  // plate-calculator bar id ("belt" | "oly" | "w15" | "ez")
     // Smart afternoon reschedule of a missed morning session (user request)
     const val RESCHEDULE_ON = "reschedule_on"          // true = offer to reschedule a missed session
     const val AFTER_SCHOOL_BUFFER_MIN = "after_school_buffer_min" // 45 — home-way + change before training

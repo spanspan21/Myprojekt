@@ -79,6 +79,7 @@ fun ActiveWorkoutScreen(
 
     var formVideoOpen by remember { mutableStateOf(false) }
     var repCounterOpen by remember { mutableStateOf(false) }
+    var detailFor by remember { mutableStateOf<String?>(null) }
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -202,7 +203,7 @@ fun ActiveWorkoutScreen(
             // ── Current exercise card ───────────────────────────────────
             val ex = vm.activeExercises.getOrNull(vm.activeCurrentExIndex)
             if (ex != null) {
-                item { ExerciseSetLogger(vm, ex, ctx) }
+                item { ExerciseSetLogger(vm, ex, ctx, onOpenDetail = { detailFor = it }) }
 
                 // ── Logged sets list ────────────────────────────────────
                 itemsIndexed(ex.loggedSets, key = { _, set -> set.id }) { idx, set ->
@@ -281,13 +282,23 @@ fun ActiveWorkoutScreen(
                 onClose = { repCounterOpen = false },
             )
         }
+
+        // ── per-exercise deep dive (tap the exercise name) ──────────────
+        detailFor?.let { exId ->
+            ExerciseDetailDialog(vm, exId) { detailFor = null }
+        }
     }
 }
 
 // ─── Set Logger ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Context) {
+private fun ExerciseSetLogger(
+    vm: TrainingViewModel,
+    ex: ActiveExercise,
+    ctx: Context,
+    onOpenDetail: (String) -> Unit = {},
+) {
     var reps by remember(ex.exerciseId) { mutableStateOf("${ex.targetReps}") }
     var weight by remember(ex.exerciseId) { mutableStateOf("") }
     var rpe by remember(ex.exerciseId) { mutableStateOf("") }
@@ -346,7 +357,11 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(catIcon(exCategory ?: ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(ex.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                // name opens the exercise deep dive (trend, PRs, history)
+                Text(
+                    ex.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f).clickable { onOpenDetail(ex.exerciseId) },
+                )
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
             }
 
@@ -491,6 +506,12 @@ private fun ExerciseSetLogger(vm: TrainingViewModel, ex: ActiveExercise, ctx: Co
                         "Total system weight ${"%.1f".format(w + profileW.weightKg)} kg · load locked to the plan",
                         color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
                     )
+                }
+            }
+            // plate math: external load (belt/barbell) gets its per-side answer
+            if (prescribedVest == null) {
+                weight.toFloatOrNull()?.takeIf { it > 0f }?.let { w ->
+                    PlateHint(w.toDouble(), ctx)
                 }
             }
             Spacer(Modifier.height(10.dp))
@@ -797,6 +818,85 @@ private fun setTypeColor(st: SetType) = when (st) {
 private fun supersetColor(orderIdx: Int): Color {
     val palette = listOf(Accent, Amber, Good, Mod.School, Mod.Skills)
     return palette[orderIdx.coerceAtLeast(0) % palette.size]
+}
+
+// ─── Plate math hint (dip belt / barbell) ───────────────────────────────────
+
+/**
+ * "What do I actually hang/load" — greedy per-side stack with competition
+ * colours. The bar chip cycles belt → barbell → 15 → EZ and persists; when the
+ * target isn't loadable the NEAREST weight is shown and marked, never silent.
+ */
+@Composable
+private fun PlateHint(targetKg: Double, ctx: Context) {
+    var barId by remember {
+        mutableStateOf(com.ascend.lifeos.data.Prefs.string(ctx, com.ascend.lifeos.data.Prefs.PLATE_BAR, "belt"))
+    }
+    val bar = PlateMath.barById(barId)
+    val load = PlateMath.solve(targetKg, bar) ?: return
+    Spacer(Modifier.height(8.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("PLATES", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            "${bar.label} ▸",
+            color = Accent.copy(alpha = 0.85f), fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold,
+            modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                .clickable {
+                    val i = PlateMath.BARS.indexOfFirst { it.id == barId }
+                    val next = PlateMath.BARS[(i + 1) % PlateMath.BARS.size].id
+                    barId = next
+                    com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.PLATE_BAR, next)
+                }
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+        )
+    }
+    Spacer(Modifier.height(5.dp))
+    Row(
+        Modifier.horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        if (load.plates.isEmpty()) {
+            Text("bar only", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+        }
+        load.plates.forEach { p -> PlateChip(p) }
+        Spacer(Modifier.width(3.dp))
+        val kgStr = if (load.achievedKg % 1.0 == 0.0) "${load.achievedKg.toInt()}" else "%.1f".format(load.achievedKg)
+        Text(
+            buildString {
+                append("= $kgStr kg")
+                if (bar.twoSided) append(" · per side shown")
+                if (!load.exact) append(" · closest")
+            },
+            color = if (load.exact) TextMuted else Amber,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+// Physical plate colours (IPF/IWF) — deliberately NOT theme tokens; a 25 is
+// red in every gym on earth.
+@Composable
+private fun PlateChip(p: Double) {
+    val bg = when (PlateMath.colorOf(p)) {
+        PlateMath.PlateColor.RED -> Color(0xFFD84040)
+        PlateMath.PlateColor.BLUE -> Color(0xFF2E63D8)
+        PlateMath.PlateColor.YELLOW -> Color(0xFFE0B31E)
+        PlateMath.PlateColor.GREEN -> Color(0xFF2FA968)
+        PlateMath.PlateColor.WHITE -> Color(0xFFE9EDF2)
+        PlateMath.PlateColor.DARK -> Color(0xFF585F68)
+    }
+    val fg = if (PlateMath.colorOf(p) == PlateMath.PlateColor.WHITE) Color(0xFF20242B) else Color.White
+    Box(
+        Modifier.size(26.dp).clip(CircleShape).background(bg.copy(alpha = 0.92f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            if (p % 1.0 == 0.0) "${p.toInt()}" else "$p",
+            color = fg, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold,
+        )
+    }
 }
 
 private fun prTypeLabel(t: PrType) = when (t) {
