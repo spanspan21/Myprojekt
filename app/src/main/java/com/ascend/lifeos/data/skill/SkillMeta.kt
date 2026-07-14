@@ -127,8 +127,12 @@ object SkillMeta {
         val o = runCatching { JSONObject(prefs(ctx).getString("rev.$pathId", null) ?: "{}") }
             .getOrDefault(JSONObject())
         val n = if (o.optString("m") == month) o.optInt("n") else 0
+        // Lifetime counter drives XP so a path never LOSES rank on the 1st of the
+        // month (audit: pathXp used the monthly count → visible rank regression).
+        val life = prefs(ctx).getInt("revlife.$pathId", 0) + 1
         prefs(ctx).edit()
             .putString("rev.$pathId", JSONObject().put("m", month).put("n", n + 1).toString())
+            .putInt("revlife.$pathId", life)
             .apply()
     }
 
@@ -136,6 +140,17 @@ object SkillMeta {
         val raw = prefs(ctx).getString("rev.$pathId", null) ?: return 0
         val o = runCatching { JSONObject(raw) }.getOrNull() ?: return 0
         return if (o.optString("m") == monthKey(now)) o.optInt("n") else 0
+    }
+
+    /** Lifetime reviews graded on this path — never resets, so XP never regresses. */
+    fun reviewsLifetime(ctx: Context, pathId: String): Int {
+        // Back-compat: seed the lifetime counter from this month's count the first
+        // time (best effort — old data only had the monthly count).
+        val life = prefs(ctx).getInt("revlife.$pathId", -1)
+        if (life >= 0) return life
+        val seed = reviewsGradedThisMonth(ctx, pathId)
+        if (seed > 0) prefs(ctx).edit().putInt("revlife.$pathId", seed).apply()
+        return seed
     }
 
     // ---- focus minutes per path (per ISO week, last 8 weeks kept) ----------------
@@ -171,9 +186,9 @@ object SkillMeta {
 
     // ---- XP & rank per path -------------------------------------------------------
 
-    /** XP = completed tasks × 10 + proofs × 25 + reviews graded this month × 5. */
+    /** XP = completed tasks × 10 + proofs × 25 + LIFETIME reviews × 5 (never regresses). */
     fun pathXp(ctx: Context, pathId: String, completedTasks: Int, proofCount: Int): Int =
-        completedTasks * 10 + proofCount * 25 + reviewsGradedThisMonth(ctx, pathId) * 5
+        completedTasks * 10 + proofCount * 25 + reviewsLifetime(ctx, pathId) * 5
 
     fun rankFor(xp: Int): String = when {
         xp >= 1600 -> "MASTER"

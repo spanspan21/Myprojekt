@@ -206,7 +206,9 @@ object PrimeEngine {
             PrimeGauge("CALORIES", "$kcalToday", if (p.kcalGoal > 0) (kcalToday.toFloat() / p.kcalGoal).coerceIn(0f, 1f) else null, "Target ${p.kcalGoal}"),
             PrimeGauge("PROTEIN", "$protToday g", if (p.proteinGoal > 0) (protToday.toFloat() / p.proteinGoal).coerceIn(0f, 1f) else null, "Target ${p.proteinGoal} g"),
             PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), if (p.waterGoal > 0) (hydrationMl.toFloat() / (p.waterGoal * 250)).coerceIn(0f, 1f) else null, "Target %.1f L".format(p.waterGoal * 0.25)),
-            PrimeGauge("TRAINING", if (setsToday > 0) "$setsToday sets" else "Rest day", trainScore?.toFloat(), "ACR %.2f · ${verdict.title}".format(load.acr)),
+            // "Not yet" not "Rest day": 0 sets ≠ a rest day (Home may show a session
+            // scheduled today) — don't contradict the other surfaces.
+            PrimeGauge("TRAINING", if (setsToday > 0) "$setsToday sets" else "Not yet", trainScore?.toFloat(), "ACR %.2f · ${verdict.title}".format(load.acr)),
             PrimeGauge("SLEEP", lastNightMin?.let { mins(it) } ?: "—", lastNightMin?.let { (it / 480f).coerceIn(0f, 1f) }, "Target 8h"),
             PrimeGauge("SCREEN", screenMin?.let { mins(it) } ?: "—", screenScore?.toFloat(), "Budget ${mins(screenBudget)}"),
         )
@@ -283,9 +285,12 @@ object PrimeEngine {
                 route = "finance",
             )
         }
+        // Mirror Repo.completion() EXACTLY — the streak breaks at full goals, so
+        // a half-met day must count as open or the streak-risk nudge stays silent
+        // exactly when it matters (audit: 50% thresholds vs 100% completion).
         val openMissions = (if (setsToday == 0) 1 else 0) +
-            (if (kcalToday < p.kcalGoal * 0.5) 1 else 0) +
-            (if (hydrationMl < p.waterGoal * 250 / 2) 1 else 0)
+            (if (kcalToday < p.kcalGoal) 1 else 0) +
+            (if (hydrationMl < p.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML) 1 else 0)
         val habit = Repo.habitStrength() / 100.0
         val risk = PrimeMath.streakRisk(openMissions, hour, habit)
         if (risk >= 45 && p.streak > 2) {

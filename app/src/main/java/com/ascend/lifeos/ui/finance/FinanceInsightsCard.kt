@@ -146,8 +146,18 @@ fun FinanceInsightsCard() {
                 val remaining = g.targetCents - g.savedCents
                 Text(g.title, color = TextPrimary, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
                 Text(
-                    d.goalWeekly?.let { "${eur0(remaining)} to go · save ${eur(it)}/week → ~3 months" }
-                        ?: "reached 🎉",
+                    d.goalWeekly?.let { weekly ->
+                        // Real ETA from the actual weekly rate, not a hardcoded "~3
+                        // months" that read identically for a 40€ and a 3000€ goal.
+                        val weeks = if (weekly > 0) Math.ceil(remaining.toDouble() / weekly).toInt() else 0
+                        val eta = when {
+                            weekly <= 0 -> ""
+                            weeks <= 1 -> " → ~1 week"
+                            weeks < 9 -> " → ~$weeks weeks"
+                            else -> " → ~${Math.round(weeks / 4.345).toInt()} months"
+                        }
+                        "${eur0(remaining)} to go · save ${eur(weekly)}/week$eta"
+                    } ?: "reached 🎉",
                     color = if (remaining <= 0) Good else TextDim, fontFamily = Body, fontSize = FS.s11_5,
                 )
             }

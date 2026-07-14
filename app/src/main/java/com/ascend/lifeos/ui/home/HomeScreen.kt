@@ -112,6 +112,11 @@ fun HomeScreen(
     val readiness = Repo.recoveryScore(Repo.data.health)
     val kcalToday = day?.meals?.sumOf { it.kcal } ?: 0
     val water = day?.water ?: 0
+    // Hydration truth incl. logged drinks (matches Repo.completion + Prime + Fuel).
+    val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
+    val waterGoalMl = (profile.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML).coerceAtLeast(1)
+    val waterDone = hydrationMl >= waterGoalMl
+    val waterGlassEq = hydrationMl / com.ascend.lifeos.data.WaterCalc.GLASS_ML
     val trainedToday = trainVm.todaySets > 0
     val hasUsage = DigitalWellbeingManager.hasUsageAccess(ctx)
     val screenBudget = remember { com.ascend.lifeos.wellbeing.WellbeingStore.budgetMin(ctx) }
@@ -163,7 +168,7 @@ fun HomeScreen(
     // opening the app with goals already met stays silent (edges, not states)
     val missionsDone = (if (trainedToday) 1 else 0) +
         (if (kcalToday >= profile.kcalGoal) 1 else 0) +
-        (if (water >= profile.waterGoal) 1 else 0)
+        (if (waterDone) 1 else 0)
     var seenDone by remember { mutableIntStateOf(-1) }
     var goldSweepTick by remember { mutableIntStateOf(0) }
     LaunchedEffect(missionsDone) {
@@ -576,9 +581,9 @@ fun HomeScreen(
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MissionChip(
-                    Icons.Rounded.WaterDrop, "$water/${profile.waterGoal} water",
-                    progress = water / profile.waterGoal.toFloat().coerceAtLeast(1f), color = Mod.Body,
-                    done = water >= profile.waterGoal, modifier = Modifier.weight(1f), onClick = onOpenFuel,
+                    Icons.Rounded.WaterDrop, "$waterGlassEq/${profile.waterGoal} water",
+                    progress = hydrationMl / waterGoalMl.toFloat(), color = Mod.Body,
+                    done = waterDone, modifier = Modifier.weight(1f), onClick = onOpenFuel,
                 )
                 if (screenMin != null) {
                     val h = screenMin / 60; val m = screenMin % 60

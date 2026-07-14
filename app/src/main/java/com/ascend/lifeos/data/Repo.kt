@@ -136,7 +136,10 @@ object Repo {
         var done = 0
         if (day.workoutDone || day.trainSets > 0 || day.cali.values.any { it.isNotEmpty() }) done++
         if (day.meals.sumOf { it.kcal } >= p.kcalGoal) done++
-        if (day.water >= p.waterGoal) done++
+        // Hydration counts logged drinks too — the ONE hydration truth, so the
+        // mission/streak agree with Prime and the Fuel card (audit: glasses vs
+        // drinks disagreed across screens).
+        if (hydrationMl(day) >= p.waterGoal * WaterCalc.GLASS_ML) done++
         return CompletionInfo(done, total)
     }
 
