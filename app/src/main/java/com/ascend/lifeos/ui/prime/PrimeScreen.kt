@@ -89,7 +89,10 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
         // (crystal + subsystem bars + lists) compose — composing all of that
         // mid-animation was the brief stutter on Today → Prime.
         kotlinx.coroutines.delay(300)
-        value = runCatching { PrimeEngine.build(ctx) }.getOrNull()
+        // A manual rescore (reload>0) forces a fresh compute; a normal open shares
+        // the day cache with the Home cards so they never disagree.
+        if (reload.value > 0) PrimeEngine.invalidateCache()
+        value = runCatching { PrimeEngine.buildCached(ctx) }.getOrNull()
     }
 
     Column(

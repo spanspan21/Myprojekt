@@ -48,7 +48,7 @@ fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier) 
 
     val directives by produceState<List<PrimeDirective>>(emptyList()) {
         value = withContext(Dispatchers.IO) {
-            runCatching { PrimeEngine.build(ctx).directives }.getOrDefault(emptyList())
+            runCatching { PrimeEngine.buildCached(ctx).directives }.getOrDefault(emptyList())
         }
     }
     if (directives.isEmpty()) return

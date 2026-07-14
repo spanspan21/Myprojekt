@@ -92,7 +92,7 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
     // parallel weak-spot aggregator — the report is Prime's Sunday-cadence view,
     // so the two never tell a different story. Falls back to a single line if
     // Prime has nothing ranked yet (fresh user).
-    val recs = runCatching { com.ascend.lifeos.data.prime.PrimeEngine.build(ctx).directives }
+    val recs = runCatching { com.ascend.lifeos.data.prime.PrimeEngine.buildCached(ctx).directives }
         .getOrDefault(emptyList())
         .take(3)
         .map { d -> d.text + (d.why.takeIf { it.isNotBlank() }?.let { " — $it" } ?: "") }

@@ -17,6 +17,8 @@ import com.ascend.lifeos.data.training.TrainingLoad
 import com.ascend.lifeos.wellbeing.DigitalWellbeingManager
 import com.ascend.lifeos.wellbeing.WellbeingStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
@@ -54,6 +56,29 @@ data class PrimeReport(
 )
 
 object PrimeEngine {
+
+    // ── Day cache ────────────────────────────────────────────────────────────
+    // build() does heavy IO (health sync, a 35-day training query, muscle
+    // recovery, calendar + finance projection). On a single Home open FOUR cards
+    // used to each run it within the same second. buildCached() serves one shared
+    // report per day (90s TTL keeps it fresh for same-day logging) so the front
+    // door doesn't jank. The dedicated Prime screen still calls build() directly.
+    private val cacheMutex = Mutex()
+    @Volatile private var cached: PrimeReport? = null
+    @Volatile private var cachedKey: String = ""
+    @Volatile private var cachedAt: Long = 0L
+
+    suspend fun buildCached(ctx: Context, maxAgeMs: Long = 90_000L): PrimeReport {
+        cached?.let { if (cachedKey == todayKey() && System.currentTimeMillis() - cachedAt < maxAgeMs) return it }
+        return cacheMutex.withLock {
+            // re-check inside the lock — a racing caller may have just built it
+            cached?.let { if (cachedKey == todayKey() && System.currentTimeMillis() - cachedAt < maxAgeMs) return@withLock it }
+            build(ctx).also { cached = it; cachedKey = todayKey(); cachedAt = System.currentTimeMillis() }
+        }
+    }
+
+    /** Force the next buildCached() to recompute (e.g. after a manual rescore). */
+    fun invalidateCache() { cached = null }
 
     suspend fun build(ctx: Context): PrimeReport = withContext(Dispatchers.IO) {
         val p = Repo.profile()

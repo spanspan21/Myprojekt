@@ -39,7 +39,7 @@ object StorePayloads {
 
     // ── prime: the computed cross-module readiness report ─────────────────────
     private fun prime(ctx: Context): JSONObject = runBlocking {
-        val r = PrimeEngine.build(ctx)
+        val r = PrimeEngine.buildCached(ctx)
         val subs = JSONArray().apply {
             r.subScores.forEach { put(JSONArray().put(it.first).put(it.second)) }
         }
