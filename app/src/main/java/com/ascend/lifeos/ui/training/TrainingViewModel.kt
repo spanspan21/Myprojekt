@@ -61,6 +61,11 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     // ── New PR celebration ──────────────────────────────────────────────────
 
     var newPrCelebration by mutableStateOf<PersonalRecordEntity?>(null)
+
+    /** Last set pulled by [deleteSet], kept briefly so a mis-tapped delete mid-set
+     *  (the Close icon is tiny and hands are sweaty) is undoable — the Hevy/Strong
+     *  pattern. Any new [logSet] or delete supersedes it. */
+    var lastDeletedSet by mutableStateOf<DeletedSet?>(null)
         private set
 
     // ── Today stats ─────────────────────────────────────────────────────────
@@ -434,6 +439,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     ) {
         val sid = activeSessionId ?: return
         val ex = activeExercises.find { it.exerciseId == exerciseId } ?: return
+        lastDeletedSet = null   // a fresh log supersedes any pending undo
         val setId = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         val setIndex = ex.loggedSets.size
@@ -476,8 +482,21 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val ex = activeExercises.find { it.exerciseId == exerciseId } ?: return
         if (index < 0 || index >= ex.loggedSets.size) return
         val set = ex.loggedSets.removeAt(index)
+        lastDeletedSet = DeletedSet(exerciseId, index, set)
         viewModelScope.launch(Dispatchers.IO) { dao.deleteSet(set.id) }
     }
+
+    /** Re-insert the last deleted set at its original slot (same id, PR flag and
+     *  all), restoring the DB row too. No-op once superseded or dismissed. */
+    fun undoDeleteSet() {
+        val d = lastDeletedSet ?: return
+        lastDeletedSet = null
+        val ex = activeExercises.find { it.exerciseId == d.exerciseId } ?: return
+        ex.loggedSets.add(d.index.coerceIn(0, ex.loggedSets.size), d.set)
+        viewModelScope.launch(Dispatchers.IO) { dao.upsertSet(d.set) }
+    }
+
+    fun dismissUndo() { lastDeletedSet = null }
 
     // ── PR detection (Spec §4.1) ────────────────────────────────────────────
 
@@ -823,6 +842,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 }
 
 // ── Active workout in-memory model ──────────────────────────────────────────
+
+/** A set removed mid-workout, retained so [TrainingViewModel.undoDeleteSet] can
+ *  restore it at [index] with the exact same entity (id, PR flag, timestamps). */
+data class DeletedSet(val exerciseId: String, val index: Int, val set: WorkoutSetEntity)
 
 class ActiveExercise(
     val exerciseId: String,

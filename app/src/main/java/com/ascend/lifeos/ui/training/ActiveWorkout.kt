@@ -211,12 +211,22 @@ fun ActiveWorkoutScreen(
             }
         }
 
-        // ── Finish button ───────────────────────────────────────────────
-        if (!vm.restTimerRunning) {
-            Column(
-                Modifier.align(Alignment.BottomCenter).padding(horizontal = 20.dp, vertical = 24.dp).navigationBarsPadding(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+        // ── Bottom stack: undo affordance floats directly above the finish button ──
+        Column(
+            Modifier.align(Alignment.BottomCenter).padding(horizontal = 20.dp, vertical = 24.dp).navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // Undo a mis-tapped set deletion (Hevy/Strong) — auto-dismisses after 5 s
+            vm.lastDeletedSet?.let { del ->
+                LaunchedEffect(del) { delay(5000); vm.dismissUndo() }
+                UndoDeleteBar(
+                    reps = del.set.reps,
+                    onUndo = { vm.undoDeleteSet(); haptic(ctx, 12) },
+                    onDismiss = { vm.dismissUndo() },
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            if (!vm.restTimerRunning) {
                 val totalSets = vm.activeExercises.sumOf { it.loggedSets.size }
                 // der teuerste Moment im Kraftsport: der letzte Satz (Kap. 22) —
                 // eine Information, kein Nag
@@ -507,6 +517,35 @@ private fun SetRow(set: WorkoutSetEntity, index: Int, onDelete: () -> Unit) {
                 Icon(Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
                     modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
             }
+        }
+    }
+}
+
+// ─── Undo bar (recover a mis-tapped set deletion) ──────────────────────────
+
+@Composable
+private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("↺", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Satz gelöscht · $reps Reps",
+                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                "Rückgängig",
+                color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onUndo).padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+            Icon(
+                Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
+                modifier = Modifier.size(16.dp).clickable(onClick = onDismiss),
+            )
         }
     }
 }
