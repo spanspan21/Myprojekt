@@ -363,9 +363,17 @@ fun HomeScreen(
                                 }
                                 Spacer(Modifier.width(4.dp))
                             }
+                            // Gentle streak (Finch): a broken chain shouldn't read as
+                            // a demoralising "day one" if you've actually been showing
+                            // up — surface the forgiving 30-day consistency instead.
+                            val habit = remember(profile.streak, missionsDone) { Repo.habitStrength() }
                             Text(
-                                if (profile.streak > 0) "${profile.streak} days" else "day one",
-                                color = if (profile.streak > 0) Champagne else TextMuted,
+                                when {
+                                    profile.streak > 0 -> "${profile.streak} days"
+                                    habit >= 40 -> "$habit% consistent"
+                                    else -> "day one"
+                                },
+                                color = if (profile.streak > 0 || habit >= 40) Champagne else TextMuted,
                                 fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
                             )
                         }
