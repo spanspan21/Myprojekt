@@ -102,11 +102,14 @@ internal fun MinesTable(
             MinesGrid(game = null, safe = 0, onReveal = {})
             Spacer(Modifier.height(14.dp))
             CasCta("PLACE BET") {
+                // two taps in one frame (before the button swaps for the grid) would
+                // otherwise reserve the attempt TWICE — same guard as Blackjack/Dice
+                if (started) return@CasCta
+                started = true
                 game = CasinoEngine.MinesGame(mines, seed)
                 ledger.reserve()
                 ledger.writePending(-stake) // worst case lands first (§18)
                 Haptics.tick(ctx)
-                started = true
             }
         } else {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

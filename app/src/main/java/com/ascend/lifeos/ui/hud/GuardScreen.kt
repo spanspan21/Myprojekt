@@ -553,9 +553,11 @@ fun GuardScreen() {
                         // Today at the tables — the won minutes finally have a
                         // home ("ergambelte Zeit" was invisible outside the wall).
                         val todayBonuses = remember(tick) { cas.bonusesToday(ctx) }
-                        val attemptsLeft = remember(tick) { cas.attemptsLeft(ctx) }
+                        // skill-aware, like the wall + header — base-only disagreed
+                        // with them (settings showed "0 left" while a spin remained)
+                        val attemptsLeft = remember(tick) { cas.attemptsLeft(ctx, skillMin) }
                         Text(
-                            "Today: $attemptsLeft of ${cas.attemptsPerDay(ctx)} attempts left · won ${cas.wonToday(ctx)}m of ${cas.winCapDay(ctx)}m cap",
+                            "Today: $attemptsLeft of ${cas.attemptsTotal(ctx, skillMin)} attempts left · won ${cas.wonToday(ctx)}m of ${cas.winCapDay(ctx)}m cap",
                             color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                         if (todayBonuses.isNotEmpty()) {

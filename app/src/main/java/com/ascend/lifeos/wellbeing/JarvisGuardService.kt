@@ -131,6 +131,20 @@ class JarvisGuardService : Service() {
         }
     }
 
+    // UsageStats queries walk the whole 06:00→now event stream — heavy enough to
+    // jank/ANR the instant lock if run on Main. tick()/showIntercept() are already
+    // suspend, so route every such read through IO (and swallow the rare query
+    // exception, so a stats hiccup never blocks the lock decision).
+    private suspend fun usageMinIO(pkg: String): Int =
+        withContext(Dispatchers.IO) {
+            (runCatching { DigitalWellbeingManager.usageTodayMs(this@JarvisGuardService, pkg) }.getOrDefault(0L) / 60_000L).toInt()
+        }
+
+    private suspend fun durationsIO(end: Long): Map<String, Long> =
+        withContext(Dispatchers.IO) {
+            runCatching { DigitalWellbeingManager.foregroundDurations(this@JarvisGuardService, DigitalWellbeingManager.startOfToday(), end) }.getOrDefault(emptyMap())
+        }
+
     private suspend fun tick(forcedFg: String? = null) {
         if (!WellbeingStore.isEnabled(this)) return
         tickWindDown()
@@ -157,9 +171,7 @@ class JarvisGuardService : Service() {
             runCatching {
                 val budgetDay = WellbeingStore.budgetMin(this)
                 if (budgetDay > 0) {
-                    val durations = DigitalWellbeingManager.foregroundDurations(
-                        this, DigitalWellbeingManager.startOfToday(), nowForBudget,
-                    )
+                    val durations = durationsIO(nowForBudget)
                     val totalMin = (durations.values.sum() / 60_000L).toInt()
                     if (totalMin >= budgetDay * 0.8 && WellbeingStore.markBudgetWarned(this, todayKey())) {
                         com.ascend.lifeos.data.Notifier.show(this, "screen80")
@@ -213,7 +225,7 @@ class JarvisGuardService : Service() {
         // before every other rule: the house is paid first (plan §19).
         val casLock = com.ascend.lifeos.data.casino.CasinoStore.lockoutUntil(this, fg)
         if (now < casLock) {
-            val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
+            val usedNow = usageMinIO(fg)
             val hm = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(casLock))
             showIntercept(
                 fg, InterceptMode.LIMIT, usedNow, limitMin ?: 0,
@@ -230,7 +242,7 @@ class JarvisGuardService : Service() {
             val window = runCatching { WellbeingStore.activePhoneFreeWindow(this, nowMin) }.getOrNull()
             if (window != null) {
                 WellbeingStore.recordWindowViolation(this, todayKey())
-                val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
+                val usedNow = usageMinIO(fg)
                 showIntercept(
                     fg, InterceptMode.FOCUS, usedNow, 0,
                     statusText = "Phone-free window · until %02d:%02d".format(window.second / 60, window.second % 60),
@@ -253,9 +265,7 @@ class JarvisGuardService : Service() {
         if (now - lastHeavyCheck < 4_500L) return
         lastHeavyCheck = now
 
-        val dayDurations = DigitalWellbeingManager.foregroundDurations(
-            this, DigitalWellbeingManager.startOfToday(), now,
-        )
+        val dayDurations = durationsIO(now)
         val usedMs = dayDurations[fg] ?: 0L
         val usedMin = (usedMs / 60_000L).toInt()
 
@@ -313,7 +323,7 @@ class JarvisGuardService : Service() {
             val deficit = (((usedMs - effLimit * 60_000L) + 59_999L) / 60_000L).toInt().coerceAtLeast(0)
             // Skill-time today earns extra attempts (plan §6): the offer must
             // count them, or an earned spin would be hidden at the wall.
-            val skillMinNow = (DigitalWellbeingManager.usageTodayMs(this, packageName) / 60_000L).toInt()
+            val skillMinNow = usageMinIO(packageName)
             showIntercept(
                 fg, InterceptMode.LIMIT, usedMin, effLimit,
                 bonusWon = com.ascend.lifeos.data.casino.CasinoStore.wonBonusMin(this, fg),
@@ -446,7 +456,7 @@ class JarvisGuardService : Service() {
         // The gate view shows neither guilt bars nor the alt plan — skip that work
         // so the breathing screen appears fast. It gets one small offer instead.
         val skillMin = if (mode == InterceptMode.GATE) 0
-        else (DigitalWellbeingManager.usageTodayMs(this, packageName) / 60_000L).toInt()
+        else usageMinIO(packageName)
 
         val lockedOut = DoomscrollDetector.isLockedOut(this, pkg)
         val snoozes = DoomscrollDetector.snoozesToday(this, pkg)
