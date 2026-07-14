@@ -6,6 +6,7 @@ import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayDate
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.WaterCalc
 import com.ascend.lifeos.data.calendar.CalendarDatabase
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.sleep.SleepStore
@@ -184,7 +185,7 @@ object PrimeEngine {
         )
         // Hydration aus GESAMT-ml (Wasser + erkannte Getränke), nicht nur day.water
         // — sonst zählte der Subscore Getränke null, während die Gauge sie zählte.
-        val hydraGoalMl = (p.waterGoal * 250).coerceAtLeast(1).toDouble()
+        val hydraGoalMl = (p.waterGoal * WaterCalc.GLASS_ML).coerceAtLeast(1).toDouble()
         val hydraDays = (listOf(todayKey()) + histKeys.take(7)).mapNotNull { k ->
             Repo.dayFor(k)?.let { Repo.hydrationMl(it) }
         }.filter { it > 0 }
@@ -223,7 +224,7 @@ object PrimeEngine {
             fuelScore?.let { Triple("Fuel", (it * 100).roundToInt(), "protein $protToday/${p.proteinGoal} g today · kcal + protein over 8 days") },
             trainScore?.let { Triple("Training", (it * 100).roundToInt(), "$trainDays7 session${if (trainDays7 == 1) "" else "s"} in 7 days vs ${p.trainFreq}× goal") },
             sleepScore?.let { s -> Triple("Sleep", (s * 100).roundToInt(), sleepAvg7?.let { "7-night avg ${mins7(it)} vs 8h target" } ?: "sleep trend") },
-            hydraScore?.let { Triple("Hydration", (it * 100).roundToInt(), "%.1f / %.1f L today · 8-day avg".format(hydrationMl / 1000.0, p.waterGoal * 0.25)) },
+            hydraScore?.let { Triple("Hydration", (it * 100).roundToInt(), "%.1f / %.1f L today · 8-day avg".format(hydrationMl / 1000.0, p.waterGoal * WaterCalc.GLASS_ML / 1000.0)) },
             screenScore?.let { Triple("Focus", (it * 100).roundToInt(), screenMin?.let { m -> "${m}m screen vs today's prorated budget" } ?: "screen time") },
             Triple("Logging", (logScore * 100).roundToInt(), "${loggedDays.take(7).count { it }} of the last 7 days logged"),
         )
@@ -233,7 +234,7 @@ object PrimeEngine {
         val gauges = listOf(
             PrimeGauge("CALORIES", "$kcalToday", if (p.kcalGoal > 0) (kcalToday.toFloat() / p.kcalGoal).coerceIn(0f, 1f) else null, "Target ${p.kcalGoal}"),
             PrimeGauge("PROTEIN", "$protToday g", if (p.proteinGoal > 0) (protToday.toFloat() / p.proteinGoal).coerceIn(0f, 1f) else null, "Target ${p.proteinGoal} g"),
-            PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), if (p.waterGoal > 0) (hydrationMl.toFloat() / (p.waterGoal * 250)).coerceIn(0f, 1f) else null, "Target %.1f L".format(p.waterGoal * 0.25)),
+            PrimeGauge("HYDRATION", "%.1f L".format(hydrationMl / 1000.0), if (p.waterGoal > 0) (hydrationMl.toFloat() / (p.waterGoal * WaterCalc.GLASS_ML)).coerceIn(0f, 1f) else null, "Target %.1f L".format(p.waterGoal * WaterCalc.GLASS_ML / 1000.0)),
             // "Not yet" not "Rest day": 0 sets ≠ a rest day (Home may show a session
             // scheduled today) — don't contradict the other surfaces.
             PrimeGauge("TRAINING", if (setsToday > 0) "$setsToday sets" else "Not yet", trainScore?.toFloat(), "ACR %.2f · ${verdict.title}".format(load.acr)),
@@ -253,7 +254,7 @@ object PrimeEngine {
                 route = "fuel",
             )
         }
-        val waterLeftGlasses = p.waterGoal - hydrationMl / 250
+        val waterLeftGlasses = p.waterGoal - hydrationMl / WaterCalc.GLASS_ML
         if (waterLeftGlasses >= 3 && hour >= 14) {
             directives += PrimeDirective(
                 "Catch up on hydration: ~$waterLeftGlasses glasses left",
@@ -323,7 +324,7 @@ object PrimeEngine {
         val trainDone = today?.let { it.workoutDone || it.trainSets > 0 || it.cali.values.any { c -> c.isNotEmpty() } } ?: false
         val openMissions = (if (!trainDone) 1 else 0) +
             (if (kcalToday < p.kcalGoal) 1 else 0) +
-            (if (hydrationMl < p.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML) 1 else 0)
+            (if (hydrationMl < p.waterGoal * WaterCalc.GLASS_ML) 1 else 0)
         val habit = Repo.habitStrength() / 100.0
         val risk = PrimeMath.streakRisk(openMissions, hour, habit)
         if (risk >= 45 && p.streak > 2) {
