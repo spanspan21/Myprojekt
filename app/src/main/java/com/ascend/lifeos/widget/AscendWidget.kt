@@ -46,7 +46,11 @@ class AscendWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_title, "${c.done}/${c.total} missions")
             views.setProgressBar(R.id.widget_progress, 100, (c.pct * 100).toInt(), false)
             val kcal = day.meals.sumOf { it.kcal }
-            views.setTextViewText(R.id.widget_sub, "Fuel $kcal kcal · Water ${day.water}/${p.waterGoal}")
+            // hydration in glass-equivalents (logged drinks included) — the widget's
+            // mission count already goes through completion()/hydrationMl, so raw
+            // day.water here would contradict its own progress bar on drink days.
+            val waterGlassEq = Repo.hydrationMl(day) / com.ascend.lifeos.data.WaterCalc.GLASS_ML
+            views.setTextViewText(R.id.widget_sub, "Fuel $kcal kcal · Water $waterGlassEq/${p.waterGoal}")
 
             var flags = PendingIntent.FLAG_UPDATE_CURRENT
             if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
