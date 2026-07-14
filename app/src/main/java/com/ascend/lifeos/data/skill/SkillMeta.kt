@@ -129,7 +129,11 @@ object SkillMeta {
         val n = if (o.optString("m") == month) o.optInt("n") else 0
         // Lifetime counter drives XP so a path never LOSES rank on the 1st of the
         // month (audit: pathXp used the monthly count → visible rank regression).
-        val life = prefs(ctx).getInt("revlife.$pathId", 0) + 1
+        // Seed via reviewsLifetime() (the -1 sentinel), NOT getInt(...,0): a
+        // pre-existing user whose first graded review since the update happens
+        // before any read would otherwise start life at 1 and drop the whole
+        // prior monthly count forever.
+        val life = reviewsLifetime(ctx, pathId) + 1
         prefs(ctx).edit()
             .putString("rev.$pathId", JSONObject().put("m", month).put("n", n + 1).toString())
             .putInt("revlife.$pathId", life)

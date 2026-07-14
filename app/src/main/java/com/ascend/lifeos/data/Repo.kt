@@ -115,7 +115,16 @@ object Repo {
         write(data)
     }
 
-    private fun commit(nd: AppData) { data = nd; save() }
+    private fun commit(nd: AppData) {
+        data = nd
+        // Any data change makes the Prime day-cache stale — invalidate here so it's
+        // a memoization of `data`, not merely a 90 s timer. Without this, logging a
+        // meal/water/set and returning to Home within 90 s showed the pre-log focus
+        // directive. invalidateCache() just nulls a field; the rebuild is lazy on
+        // the next buildCached() read.
+        com.ascend.lifeos.data.prime.PrimeEngine.invalidateCache()
+        save()
+    }
 
     private fun ensureToday() {
         val k = todayKey()
