@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.RadioButtonUnchecked
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,7 +71,7 @@ fun GameDayCard(modifier: Modifier = Modifier) {
 
     fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
     val cue = when {
-        greens == 3 -> "Locked in — go win it. 🏒"
+        greens == 3 -> "Locked in — go win it."
         !sleptOk -> "Short on sleep — long warm-up, carbs by 2 h before, hydrate now."
         !fueledOk -> "Top up carbs before puck drop — pasta/rice ~2–3 h out."
         else -> "Sip water steadily until warm-up, then taper."
@@ -88,7 +93,10 @@ fun GameDayCard(modifier: Modifier = Modifier) {
 @Composable
 private fun Check(label: String, ok: Boolean, value: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(if (ok) "✓" else "○", color = if (ok) Good else Crit, fontFamily = Body, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+        Icon(
+            if (ok) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
+            null, tint = if (ok) Good else Crit, modifier = Modifier.size(17.dp),
+        )
         Spacer(Modifier.width(10.dp))
         Text(label, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
         Text(value, color = TextDim, fontFamily = Body, fontSize = FS.s12_5)

@@ -265,7 +265,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── DESIGN — der Themen-Salon (ATELIER Kap. 24) ──────────────
         SettingsSection("Design") {
-            var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "azure")) }
+            var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "lumen")) }
             Text(
                 "THEME", color = TextDim, fontFamily = Display,
                 fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,

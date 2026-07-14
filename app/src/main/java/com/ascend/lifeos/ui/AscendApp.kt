@@ -160,6 +160,14 @@ fun AscendApp() {
     }
 
     fun navigate(target: String) {
+        // A deep link / notification tap must dismiss any open overlay first, or
+        // the overlay (Weekly Report, heatmap, palette…) hovers over the freshly
+        // swapped screen underneath it (audit: nav edge case).
+        paletteOpen = false
+        if (target !in setOf("report", "heatmap", "achievements", "decisions", "rules")) {
+            overlay = null
+            reportOpen = false
+        }
         when (target) {
             "train" -> open(Sub.TRAIN)
             "fuel" -> open(Sub.FUEL)
