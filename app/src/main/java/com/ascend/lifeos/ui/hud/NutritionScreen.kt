@@ -859,7 +859,13 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                         Column(Modifier.weight(1f)) {
                             // ◌ = Quick-Add ohne volle Makros, ≈ = ehrliche Teller-Schätzung (Kap. 37/42)
                             Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Medium, maxLines = 1)
-                            Text((if (e.grams > 0) "${e.grams}g · " else "") + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+                            // Drinks carry volumeMl → show "300 ml", not "300 g".
+                            val amountTxt = when {
+                                e.volumeMl > 0 -> "${e.volumeMl} ml · "
+                                e.grams > 0 -> "${e.grams}g · "
+                                else -> ""
+                            }
+                            Text(amountTxt + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
                         }
                         // quality badge at a glance — ultra-processing + additives (MASTERY)
                         if (e.nova != null || e.additives.isNotEmpty()) {
@@ -966,7 +972,11 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
         if (prod.protein100 <= 1.0) return@forEach
         val targetP = protLeft.coerceIn(20, 50)
         var grams = (targetP * 100.0 / prod.protein100).toInt()
-        grams = (grams / 50 * 50).coerceIn(100, 400)
+        // Portion sizing must respect density: a 100g floor + 50g rounding turned
+        // whey (78g protein/100g) into 100g = 3 scoops / 380 kcal. Powders round
+        // to 5g with a serving-sized floor; whole foods keep the coarse 50g floor.
+        val dense = prod.protein100 >= 40
+        grams = if (dense) (grams / 5 * 5).coerceIn(15, 60) else (grams / 50 * 50).coerceIn(100, 400)
         val f = grams / 100.0
         consider(
             "${prod.name} $grams g",
