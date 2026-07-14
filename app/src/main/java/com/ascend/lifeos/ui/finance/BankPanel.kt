@@ -72,7 +72,7 @@ internal fun BankPanel() {
                 Spacer(Modifier.width(8.dp))
                 Text(
                     if (linked) BankLink.bankName(ctx) ?: "Bank" else "Bank verbinden",
-                    color = TextPrimary, fontSize = 14.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
                 if (linked) {
@@ -87,7 +87,7 @@ internal fun BankPanel() {
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 if (busy) "läuft…" else "Sync",
-                                color = FinAccent, fontSize = 11.5.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -98,7 +98,7 @@ internal fun BankPanel() {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Umsätze automatisch importieren — nur Lesezugriff, Freigabe per TAN bei deiner Bank. Der AboRadar erkennt deine Abos dann von selbst.",
-                    color = TextMuted, fontSize = 12.sp, fontFamily = Body, lineHeight = 17.sp,
+                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp,
                 )
                 Spacer(Modifier.height(12.dp))
                 ActionButton(if (busy) "Verbinde …" else "Bank auswählen", enabled = !busy) { showPicker = true }
@@ -109,14 +109,14 @@ internal fun BankPanel() {
                 accounts.forEach { acc ->
                     Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(acc.label, color = TextPrimary, fontSize = 12.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Text(acc.label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             if (acc.iban.length > 4) {
-                                Text("···${acc.iban.takeLast(4)}", color = TextDim, fontSize = 10.sp, fontFamily = Body)
+                                Text("···${acc.iban.takeLast(4)}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
                             }
                         }
                         Text(
                             euros(finance[acc.financeAccountId]?.balanceCents ?: 0L),
-                            color = TextPrimary, fontSize = 13.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -131,7 +131,7 @@ internal fun BankPanel() {
                 }
                 Text(
                     "Sync: $lastLabel" + (vu?.let { " · Freigabe bis ${it.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))}" } ?: ""),
-                    color = TextDim, fontSize = 10.5.sp, fontFamily = Body,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                 )
                 // Freigabe läuft ab → rechtzeitig neu verbinden können
                 if (vu != null && !vu.isAfter(LocalDate.now().plusDays(7))) {
@@ -141,7 +141,7 @@ internal fun BankPanel() {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "Trennen",
-                    color = TextDim, fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable(enabled = !busy) { BankLink.unlink(ctx) }.padding(vertical = 4.dp),
                 )
             }
@@ -151,7 +151,7 @@ internal fun BankPanel() {
                 Text(
                     it,
                     color = if (it.startsWith("Fehler") || it.contains("abgelaufen")) Crit else FinAccent,
-                    fontSize = 11.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
                 )
             }
         }
@@ -179,8 +179,8 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
         SearchField(query, { query = it }, "Bank suchen — z. B. Sparkasse, DKB, N26")
         Spacer(Modifier.height(12.dp))
         when {
-            error != null -> Text("Fehler: $error", color = Crit, fontSize = 12.5.sp, fontFamily = Body, lineHeight = 17.sp)
-            banks == null -> Text("Lade Institute …", color = TextMuted, fontSize = 12.5.sp, fontFamily = Body)
+            error != null -> Text("Fehler: $error", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 17.sp)
+            banks == null -> Text("Lade Institute …", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
             else -> {
                 val hits = remember(query, banks) {
                     val q = query.trim().lowercase()
@@ -188,7 +188,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                     if (q.isEmpty()) all else all.filter { it.name.lowercase().contains(q) }
                 }
                 if (hits.isEmpty()) {
-                    Text("Keine Treffer — anders schreiben?", color = TextMuted, fontSize = 12.5.sp, fontFamily = Body)
+                    Text("Keine Treffer — anders schreiben?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
                 } else {
                     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
                         items(hits, key = { it.name }) { bank ->
@@ -211,7 +211,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                             ) {
                                 Icon(Icons.Rounded.AccountBalance, null, tint = TextDim, modifier = Modifier.size(15.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text(bank.name, color = TextPrimary, fontSize = 13.5.sp, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                Text(bank.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             }
                         }
                     }
@@ -219,7 +219,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Du wirst zu deiner Bank weitergeleitet und gibst dort per TAN frei. JARVIS sieht deine Zugangsdaten nie — nur die Umsätze (Lesezugriff, bis zu 90 Tage gültig).",
-                    color = TextDim, fontSize = 10.5.sp, fontFamily = Body, lineHeight = 15.sp,
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, lineHeight = 15.sp,
                 )
             }
         }
