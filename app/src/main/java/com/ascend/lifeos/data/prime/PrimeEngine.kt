@@ -316,7 +316,12 @@ object PrimeEngine {
         // Mirror Repo.completion() EXACTLY — the streak breaks at full goals, so
         // a half-met day must count as open or the streak-risk nudge stays silent
         // exactly when it matters (audit: 50% thresholds vs 100% completion).
-        val openMissions = (if (setsToday == 0) 1 else 0) +
+        // Training uses completion()'s PERSISTED signal (workoutDone / trainSets /
+        // calisthenics), not the live DAO set count: a logged-but-unfinished
+        // session must still read OPEN like the streak does, else the evening nudge
+        // goes quiet mid-abandon (audit R2: setsToday counted mid-session sets done).
+        val trainDone = today?.let { it.workoutDone || it.trainSets > 0 || it.cali.values.any { c -> c.isNotEmpty() } } ?: false
+        val openMissions = (if (!trainDone) 1 else 0) +
             (if (kcalToday < p.kcalGoal) 1 else 0) +
             (if (hydrationMl < p.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML) 1 else 0)
         val habit = Repo.habitStrength() / 100.0
