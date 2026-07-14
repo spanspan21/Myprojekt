@@ -127,7 +127,9 @@ Ergebnis: 3 neue Features + 14 verifizierte Fixes, alle gebaut + getestet +
 ### Bewusst NICHT gemacht (Runde 2)
 - Insights `effect()` als echtes Cohen's d (within-group-SD): nur Ranking-Feinheit,
   konservativ (unterdrückt nie fälschlich) — Aufwand/Nutzen zu gering.
-- Dashboard weekStartMs UTC-Wochengrenze: realer, aber Rand-Fall (Mo 00–02 Uhr Berlin),
-  braucht TZ-kontrollierten Test — Follow-up.
+- Dashboard server-lokale `new Date()`-Grenzen (weekStartMs UND finance monthStart):
+  realer, aber Rand-Fall (Transaktion 00–02 Uhr Berlin am 1./Montag landet auf dem
+  UTC-Host im falschen Bucket); braucht TZ-kontrollierten Test — Follow-up, nicht kurz
+  vor Deadline ohne Test „blind" fixen (falsche TZ-Mathe wäre schlimmer).
 - HabitMetrics/CustomRules „water" bleibt Gläser: bewusste Habit-/Regel-Metrik, kein Loch.
 EOF
