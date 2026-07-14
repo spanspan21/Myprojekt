@@ -86,13 +86,8 @@ fun CasinoScreen(
     var stake by remember { mutableIntStateOf(chips.first()) }
     var resultDelta by remember { mutableStateOf<Int?>(null) }
 
-    Box(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(CasVoid.copy(alpha = 0.88f))
-            .border(0.5.dp, CasAccent.copy(alpha = 0.30f), RoundedCornerShape(20.dp))
-            .padding(20.dp),
-    ) {
+    // Full-screen now — the lock screen is the surface, the table gets room.
+    Box(Modifier.fillMaxWidth().padding(top = 6.dp)) {
         AnimatedContent(
             targetState = phase,
             transitionSpec = {
@@ -112,6 +107,7 @@ fun CasinoScreen(
                 CasPhase.STAKE -> StakePhase(
                     appLabel = appLabel, chips = chips, stake = stake, game = game,
                     lossMult = CasinoStore.lossMult(ctx),
+                    deficitMin = deficitMin,
                     onStake = { stake = it },
                     onBack = { phase = CasPhase.PICK },
                     onGo = { phase = CasPhase.TABLE },
@@ -127,6 +123,7 @@ fun CasinoScreen(
                 }
                 CasPhase.REVEAL -> RevealPhase(
                     appLabel = appLabel, delta = resultDelta ?: 0,
+                    coverMin = if ((resultDelta ?: 0) > 0) deficitMin else 0,
                     onWin = onWin, onLose = onLose,
                 )
             }
@@ -179,6 +176,7 @@ private fun TableCard(modifier: Modifier, title: String, sub: String, edge: Stri
 @Composable
 private fun StakePhase(
     appLabel: String, chips: List<Int>, stake: Int, game: String, lossMult: Int,
+    deficitMin: Int,
     onStake: (Int) -> Unit, onBack: () -> Unit, onGo: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
@@ -208,7 +206,14 @@ private fun StakePhase(
         Column(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(CasPanel).padding(14.dp),
         ) {
-            Text("Win → +$stake min $appLabel today", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+            Text("Win → +$stake fresh min $appLabel today", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+            if (deficitMin > 0) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "a win also clears the ${deficitMin}m you're already over",
+                    color = CasGold.copy(alpha = 0.8f), fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                )
+            }
             Spacer(Modifier.height(4.dp))
             Text("Lose → locked ${stake * lossMult} min extra", color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
         }
@@ -220,11 +225,11 @@ private fun StakePhase(
 // ── REVEAL (plan §12/§15: gold on win, quiet on loss) ────────────────────────
 
 @Composable
-private fun RevealPhase(appLabel: String, delta: Int, onWin: () -> Unit, onLose: () -> Unit) {
+private fun RevealPhase(appLabel: String, delta: Int, coverMin: Int, onWin: () -> Unit, onLose: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) {
         CasinoStore.commitPending(ctx)
-        if (delta > 0) { Haptics.success(ctx); delay(1600); onWin() } else Haptics.warn(ctx)
+        if (delta > 0) { Haptics.success(ctx); delay(2000); onWin() } else Haptics.warn(ctx)
     }
     Column(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         if (delta > 0) {
@@ -252,6 +257,13 @@ private fun RevealPhase(appLabel: String, delta: Int, onWin: () -> Unit, onLose:
                 "$appLabel is open — the house honors its debts.",
                 color = CasMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
             )
+            if (coverMin > 0) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "+${delta}m fresh clock · your ${coverMin}m overrun is cleared on top",
+                    color = CasGold.copy(alpha = 0.75f), fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                )
+            }
         } else {
             Spacer(Modifier.height(22.dp))
             Text("House wins.", color = CasInk, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)

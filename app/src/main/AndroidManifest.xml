@@ -221,6 +221,32 @@
                 android:value="focus_guard_overlay" />
         </service>
 
+        <!-- Guard lock screen: a real full-screen wall over the blocked app.
+             Own task, never in recents, portrait like the rest of the app. -->
+        <activity
+            android:name=".wellbeing.InterceptActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.ascend.lifeos.guardlock"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            android:showForAllUsers="false"
+            android:theme="@style/Theme.Ascend" />
+
+        <!-- Instant guard detection: window-state events only, no content. -->
+        <service
+            android:name=".wellbeing.JarvisAccessibilityService"
+            android:exported="false"
+            android:label="JARVIS Guard — instant detection"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/jarvis_accessibility" />
+        </service>
+
         <!-- JARVIS live wallpaper — breathing void nebula, set from Settings. -->
         <service
             android:name=".ui.wallpaper.JarvisWallpaper"

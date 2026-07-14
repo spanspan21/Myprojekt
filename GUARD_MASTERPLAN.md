@@ -601,3 +601,80 @@ Dashboard · Intercept-Themes je Welt · „Strict mode" (Pause & Toggle hinter
 *Kapitel 5/6-Nachtrag (Detail-Exploits + vollständiges Prefs-Inventar) wird
 nach Abschluss des parallelen Code-Tiefenaudits eingefügt — die Wellen A–D
 sind davon unabhängig gültig.*
+
+---
+
+# Teil XI — GUARD v3: Die Wand steht, bevor die App lädt (v2.20, 2026-07-14)
+
+Referenz-Recherche: Qustodio / AppBlock / Family Link / one sec / ScreenZen —
+alle ernsthaften Blocker teilen drei Muster: (1) AccessibilityService statt
+Polling für 0-Latenz-Erkennung, (2) der Block ist eine opake VOLLBILD-Seite
+mit App-Icon, Grund und Countdown — kein Popup, (3) Primäraktion ist „raus",
+mehr Zeit kostet eskalierende Reibung. Alle drei sind jetzt gebaut.
+
+## Was v3 liefert
+
+1. **Instant-Detection** — `JarvisAccessibilityService` (nur
+   TYPE_WINDOW_STATE_CHANGED, canRetrieveWindowContent=false, liest keinerlei
+   Inhalte). Event → `GuardRuntime.onWindowEvent` (Debounce 400 ms,
+   Launchable-Filter, IME/SystemUI ignoriert) → `instantCheck(pkg)` →
+   Regel-Tick sofort. Live gemessen: **Instagram-Start → Lock in ~530–740 ms**
+   (BAL_ALLOW_SAW_PERMISSION im ActivityTaskManager-Log), vorher 2–10 s.
+   Der 5-s-Poll bleibt als Fallback UND für Mid-Session-Grenzen (Limit läuft
+   WÄHREND des Scrollens ab — dafür gibt es keine Window-Events).
+
+2. **Vollbild-Lock statt Popup** — `InterceptActivity` (singleInstance,
+   eigene Task-Affinity, excludeFromRecents, edge-to-edge). Die App darunter
+   geht in onPause (Reels-Ton stoppt), Back führt IMMER raus (nie zurück in
+   die App), Home/Screen-off schließen ohne Pass (15 s Anti-Flacker-Grace).
+   Start aus dem Service ist durch die SYSTEM_ALERT_WINDOW-Ausnahme von den
+   Background-Launch-Restriktionen gedeckt (targetSdk 34). Fallback: dieselbe
+   Composable als fokussierbares Overlay-Window, falls ein OEM den Launch
+   schluckt (Watchdog nach 900 ms). UI: App-Icon im 196-dp-Ring, „X is
+   locked", Grund + Reset-Zeit, Skill-Alternative, Buttons [Back to focus |
+   Start skill work | Later·3min | House of Time]. Motion: 150-ms-Backdrop,
+   3 Gruppen je 60 ms versetzt, kein Overshoot, kein blur()-Puls mehr.
+
+3. **GuardRuntime** — Session/Cooldown/Pass-Maps + Intercept-Payload als
+   prozessweites Singleton (Compose-observable). Service-Restarts löschen
+   verdiente Reibung nicht mehr; Activity & Overlay teilen dieselben Aktionen.
+
+4. **Ehrliche Casino-Anzeige** — Bonus-Format `day:total:won`: `total` hebt
+   die Wand (Gewinn + Overrun-Deckung), `won` ist überall die Anzeige.
+   Stake-Screen: „Win → +5 fresh min · a win also clears the 2m you're
+   already over". Reveal: „+5 MIN · overrun cleared on top". AppRow: „Limit
+   15m · +5m won · +8m cover" (over rechnet gegen total!). Casino-Segment:
+   „Today: N attempts left · won Xm of cap" + Pro-App-Zeile „+5m won (+8m
+   overrun cleared) — expires 06:00". Win-Cap & Monatsstatistik zählen nur
+   noch echte Gewinne, nicht die Deckung. Deficit wird jetzt GECEILT
+   (59 s Überzug kosteten sonst still 1 Bonus-Minute).
+
+5. **Selbstheilung & Wiederbelebung** (live am S24 verifiziert):
+   - Force-Stop/Update entbindet den AccessibilityService und Android bindet
+     NIE selbst neu (One UI putzt den Settings-Eintrag teils sogar weg).
+     `tickA11yRebind` (alle 90 s, NonCancellable, WRITE_SECURE_SETTINGS)
+     schreibt die Service-Liste remove→800ms→add — System bindet in ≤2 s.
+     `a11y_opted`-Pref unterscheidet „System hat geputzt" (heilen) von „nie
+     aktiviert" (Finger weg).
+   - Revive-Pfade für den Guard-Service selbst: JarvisApp.onCreate,
+     BootReceiver (BOOT+REPLACED), a11y.onServiceConnected, QS-Tile
+     onStartListening, Widget-onUpdate, ReminderReceiver-Alarme,
+     HealthBridge-Worker (stündlich). Ein echter User-Force-Stop bleibt
+     prinzipbedingt tot bis zur nächsten App-/Trigger-Berührung — mehr geht
+     ohne Device-Admin auf Android nicht.
+
+6. **GuardScreen** — Permission-Card ist jetzt eine 4-Zeilen-Checkliste
+   (Usage / Overlay / Instant detection / Unthrottled, grün=ON),
+   Segment-Wechsel gleitet (AnimatedContent fade+rise statt Hard-Cut),
+   Preset-Chips als 2×2-Grid (Detox-Umbruch gefixt).
+
+## Verifikation (S24, Android 16, 2026-07-14)
+- 176 Unit-Tests grün, assembleDebug grün, v2.20 installiert.
+- Instant: IG-Start 11:37:52.938 → Intercept 11:37:53.472 (534 ms), Fokus
+  = InterceptActivity; zweiter Lauf 740 ms.
+- Poll-Fallback: a11y tot → Wand ≤5 s (verifiziert, 11:29).
+- Self-Heal: nach install -r (entbindet) Rebind ohne Zutun in ≤20 s; nach
+  manueller Prüfung bindet ein Settings-Re-Add in 2 s.
+- Casino-Anzeigen: geseedeter Bonus 5 won + 8 cover → AppRow/Segment/Wand
+  zeigen die Aufteilung, Wand respektiert eff. Limit (kein Lock bei 4m/14m).
+- Cleanup: IG-Limit wieder 15 m, Seed-Bonus entfernt, Guard+a11y laufen.

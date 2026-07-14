@@ -14,6 +14,13 @@ import com.ascend.lifeos.data.Repo
 /** Home-screen widget: today's goal progress, streak, water and sets. */
 class AscendWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+        // Revive path: periodic widget updates reach a killed process — an
+        // armed guard rides back in with them.
+        runCatching {
+            if (com.ascend.lifeos.wellbeing.WellbeingStore.isEnabled(context)) {
+                com.ascend.lifeos.wellbeing.JarvisGuardService.start(context)
+            }
+        }
         for (id in ids) render(context, mgr, id)
     }
 

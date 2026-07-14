@@ -7,6 +7,13 @@ import android.content.Intent
 /** Fires a daily reminder notification. */
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
+        // Revive path: any alarm that still fires brings the guard back up
+        // after an OEM background kill (see BootReceiver for reboot/update).
+        runCatching {
+            if (com.ascend.lifeos.wellbeing.WellbeingStore.isEnabled(ctx)) {
+                com.ascend.lifeos.wellbeing.JarvisGuardService.start(ctx)
+            }
+        }
         val kind = intent.getStringExtra("kind") ?: "morning"
         // Smart reschedule (afternoon nudge + its 1-tap answers). All three need a
         // Room query, so run off the receiver thread with goAsync + runBlocking.

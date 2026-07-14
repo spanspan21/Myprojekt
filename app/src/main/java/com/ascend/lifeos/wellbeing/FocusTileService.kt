@@ -11,6 +11,9 @@ class FocusTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
+        // Revive path: the QS panel opening is one of the few system events
+        // that reaches a killed app — an armed guard never stays down for long.
+        runCatching { if (WellbeingStore.isEnabled(this)) JarvisGuardService.start(this) }
         refresh()
     }
 

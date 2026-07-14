@@ -90,8 +90,9 @@ internal fun BlackjackTable(pkg: String, stake: Int, deficitMin: Int, onResolved
             return@LaunchedEffect
         }
         // a win must also buy back the minutes already spent past the limit,
-        // otherwise "+5 min" reopens an app that re-locks on the next tick
-        CasinoStore.writePending(ctx, pkg, if (delta > 0) delta + deficitMin else delta)
+        // otherwise "+5 min" reopens an app that re-locks on the next tick —
+        // but the cover rides in its own slot so every display stays honest
+        CasinoStore.writePending(ctx, pkg, delta, if (delta > 0) deficitMin else 0)
         dealerShown = 2; delay(190); Haptics.tick(ctx); delay(310)   // hole flip — tick at the flip peak
         while (dealerShown < round.dealer.size) {                     // dealer draws
             dealerShown++; Haptics.tick(ctx); delay(500)
@@ -282,7 +283,7 @@ internal fun RouletteTable(pkg: String, stake: Int, deficitMin: Int, onResolved:
         val n = CasinoEngine.spin()
         val delta = CasinoEngine.rouletteDelta(b, n, stake, CasinoStore.winCapRest(ctx))
         // wins also cover the minutes already spent past the limit (see BJ table)
-        CasinoStore.writePending(ctx, pkg, if (delta > 0) delta + deficitMin else delta)
+        CasinoStore.writePending(ctx, pkg, delta, if (delta > 0) deficitMin else 0)
         val idx = CasinoEngine.WHEEL_ORDER.indexOf(n)
         val current = ((angle.value % 360f) + 360f) % 360f
         val targetNorm = ((-(idx * seg)) % 360f + 360f) % 360f

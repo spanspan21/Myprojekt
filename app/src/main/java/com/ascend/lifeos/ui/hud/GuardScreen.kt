@@ -1,8 +1,14 @@
 package com.ascend.lifeos.ui.hud
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -91,6 +97,7 @@ fun GuardScreen() {
 
     val usageOk = remember(tick) { DigitalWellbeingManager.hasUsageAccess(ctx) }
     val overlayOk = remember(tick) { DigitalWellbeingManager.canOverlay(ctx) }
+    val a11yOk = remember(tick) { com.ascend.lifeos.wellbeing.JarvisAccessibilityService.isEnabled(ctx) }
     val enabled = remember(tick) { WellbeingStore.isEnabled(ctx) }
     val limits = remember(tick) { WellbeingStore.limits(ctx) }
     val gates = remember(tick) { WellbeingStore.gateApps(ctx) }
@@ -188,8 +195,8 @@ fun GuardScreen() {
             }
         }
 
-        if (!usageOk || !overlayOk || !batteryOk) {
-            PermissionCard(usageOk, overlayOk, batteryOk, ctx)
+        if (!usageOk || !overlayOk || !batteryOk || !a11yOk) {
+            PermissionCard(usageOk, overlayOk, a11yOk, batteryOk, ctx)
             Spacer(Modifier.height(14.dp))
         }
 
@@ -218,6 +225,20 @@ fun GuardScreen() {
 
         if (usageOk) {
             val d = data
+
+            // Segment switch glides instead of snapping — one calm fade+rise.
+            // The lambda parameter deliberately shadows the state var so the
+            // gated sections below stay untouched (minimal-diff rule).
+            AnimatedContent(
+                targetState = segment,
+                transitionSpec = {
+                    (fadeIn(tween(200, delayMillis = 30)) +
+                        slideInVertically(tween(240, delayMillis = 30, easing = FastOutSlowInEasing)) { it / 28 })
+                        .togetherWith(fadeOut(tween(110)))
+                },
+                label = "guardSeg",
+            ) { segment ->
+            Column(Modifier.fillMaxWidth()) {
 
             // ── focus score hero — das Wappen trägt den Goldfaden ────
             if (segment == "insights") Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true) {
@@ -288,8 +309,9 @@ fun GuardScreen() {
                             JarvisGuardService.start(ctx)
                             tick++
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                            LimitChip("School day", false) {
+                        // 2×2 grid — four chips in one row used to wrap ("Detox" broke)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            PresetChip("School day", Modifier.weight(1f)) {
                                 WellbeingStore.setCategoryBudget(ctx, "social", 30)
                                 WellbeingStore.setMorningBlockUntil(ctx, 14 * 60)
                                 if (WellbeingStore.phoneFreeWindows(ctx).none { it.first == 20 * 60 + 30 }) {
@@ -297,15 +319,18 @@ fun GuardScreen() {
                                 }
                                 applied("School day")
                             }
-                            LimitChip("Deep work", false) {
+                            PresetChip("Deep work", Modifier.weight(1f)) {
                                 WellbeingStore.startFocus(ctx, 90)
                                 applied("Deep work")
                             }
-                            LimitChip("Weekend", false) {
+                        }
+                        Spacer(Modifier.height(7.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            PresetChip("Weekend", Modifier.weight(1f)) {
                                 WellbeingStore.setMorningBlockUntil(ctx, 0)
                                 applied("Weekend")
                             }
-                            LimitChip("Detox", false) {
+                            PresetChip("Detox", Modifier.weight(1f)) {
                                 WellbeingStore.limits(ctx).keys.forEach { WellbeingStore.setLimit(ctx, it, 15) }
                                 com.ascend.lifeos.data.casino.CasinoStore.setEnabled(ctx, false)
                                 applied("Detox")
@@ -503,7 +528,37 @@ fun GuardScreen() {
                                 LimitChip(l, cas.breakMode(ctx) == v) { cas.setBreakMode(ctx, v); tick++ }
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
+                        // Today at the tables — the won minutes finally have a
+                        // home ("ergambelte Zeit" was invisible outside the wall).
+                        val todayBonuses = remember(tick) { cas.bonusesToday(ctx) }
+                        val attemptsLeft = remember(tick) { cas.attemptsLeft(ctx) }
+                        Text(
+                            "Today: $attemptsLeft of ${cas.attemptsPerDay(ctx)} attempts left · won ${cas.wonToday(ctx)}m of ${cas.winCapDay(ctx)}m cap",
+                            color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        )
+                        if (todayBonuses.isNotEmpty()) {
+                            Spacer(Modifier.height(6.dp))
+                            todayBonuses.forEach { (pkg, tw) ->
+                                val (total, won) = tw
+                                val cover = total - won
+                                Text(
+                                    "· ${DigitalWellbeingManager.appLabel(ctx, pkg)}: +${won}m won" +
+                                        (if (cover > 0) " (+${cover}m overrun cleared)" else "") +
+                                        " — expires 06:00",
+                                    color = Champagne, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                                )
+                            }
+                        }
+                        val breakUntil = cas.breakUntil(ctx)
+                        if (breakUntil > System.currentTimeMillis()) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                "Tables closed until ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(breakUntil))}",
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                            )
+                        }
+                        Spacer(Modifier.height(10.dp))
                         Text(
                             "This month: you +${cas.statWon(ctx)}m · house +${cas.statLost(ctx)}m",
                             color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
@@ -561,9 +616,15 @@ fun GuardScreen() {
                 else -> {
                     val maxMs = d.apps.maxOf { it.ms }.coerceAtLeast(1)
                     d.apps.forEach { app ->
+                        val bonusPair = remember(app.pkg, tick) {
+                            com.ascend.lifeos.data.casino.CasinoStore.bonusMin(ctx, app.pkg) to
+                                com.ascend.lifeos.data.casino.CasinoStore.wonBonusMin(ctx, app.pkg)
+                        }
                         AppRow(
                             ctx = ctx, app = app, maxMs = maxMs,
                             limit = limits[app.pkg],
+                            bonusTotal = bonusPair.first,
+                            bonusWon = bonusPair.second,
                             gated = app.pkg in gates,
                             budget = openBudgets[app.pkg],
                             category = appCats[app.pkg],
@@ -610,6 +671,9 @@ fun GuardScreen() {
                 }
             }
             }
+
+            } // Column (segment content)
+            } // AnimatedContent
         }
     }
 }
@@ -858,6 +922,8 @@ private fun AppRow(
     app: AppUsage,
     maxMs: Long,
     limit: Int?,
+    bonusTotal: Int,
+    bonusWon: Int,
     gated: Boolean,
     budget: Pair<Int, Int>?,
     category: String?,
@@ -872,7 +938,10 @@ private fun AppRow(
     val icon = remember(app.pkg) {
         runCatching { DigitalWellbeingManager.appIcon(ctx, app.pkg)?.toBitmap(96, 96)?.asImageBitmap() }.getOrNull()
     }
-    val over = limit != null && app.ms >= limit * 60_000L
+    // The wall today = base limit + minutes won at the tables. Without the
+    // bonus the row kept shouting "reached" after every win (display bug).
+    val effLimit = limit?.plus(bonusTotal)
+    val over = effLimit != null && app.ms >= effLimit * 60_000L
     val opensOver = budget != null && opens > budget.first
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Column(
@@ -890,13 +959,21 @@ private fun AppRow(
                 Column(Modifier.weight(1f)) {
                     Text(app.label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold, maxLines = 1)
                     val sub = when {
-                        limit != null -> "Limit ${limit}m${if (over) " · reached" else ""}"
+                        limit != null ->
+                            "Limit ${limit}m" +
+                                (if (bonusWon > 0) " · +${bonusWon}m won" else "") +
+                                (if (bonusTotal > bonusWon) " · +${bonusTotal - bonusWon}m cover" else "") +
+                                (if (over) " · reached" else "")
                         gated -> "Gate · one breath to open"
                         budget != null -> "Budget · $opens/${budget.first} opens · ${budget.second}m each"
                         category != null -> "${category.replaceFirstChar { it.uppercase() }} pool"
                         else -> null
                     }
-                    if (sub != null) Text(sub, color = if (over || opensOver) Red else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold)
+                    if (sub != null) Text(
+                        sub,
+                        color = if (over || opensOver) Red else if (bonusWon > 0) Champagne else TextDim,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold,
+                    )
                 }
                 Text(fmtDur(app.ms), color = if (over) Red else TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
             }
@@ -1045,36 +1122,53 @@ private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlu
 }
 
 @Composable
-private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, batteryOk: Boolean, ctx: android.content.Context) {
+private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, a11yOk: Boolean, batteryOk: Boolean, ctx: android.content.Context) {
     GlassPanel(Modifier.fillMaxWidth(), line = Mod.Guard.copy(alpha = 0.35f)) {
         Column(Modifier.fillMaxWidth().padding(18.dp)) {
-            Text("Unlock access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold)
+            Text("Guard setup", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold)
             Text(
-                when {
-                    !usageOk || !overlayOk ->
-                        "Guard needs usage access (to read screen time) and the overlay permission (to intercept over other apps)."
-                    else ->
-                        "One UI throttles background apps. One tap keeps the watchdog awake through the whole day."
-                },
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, lineHeight = 17.sp,
+                "Every green row makes the wall harder to slip past.",
+                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, lineHeight = 16.sp,
             )
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (!usageOk) PillButton("Usage access", primary = true) { DigitalWellbeingManager.requestUsageAccess(ctx) }
-                if (!overlayOk) PillButton("Allow overlay", primary = true) { DigitalWellbeingManager.requestOverlay(ctx) }
-                if (usageOk && overlayOk && !batteryOk) {
-                    PillButton("Run unthrottled", primary = true) {
-                        runCatching {
-                            ctx.startActivity(
-                                android.content.Intent(
-                                    android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                                    android.net.Uri.parse("package:${ctx.packageName}"),
-                                ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
-                        }
-                    }
+            PermRow("Usage access", "reads real screen time", usageOk) { DigitalWellbeingManager.requestUsageAccess(ctx) }
+            PermRow("Display over apps", "raises the wall over the app", overlayOk) { DigitalWellbeingManager.requestOverlay(ctx) }
+            PermRow("Instant detection", "lock appears the moment an app opens", a11yOk) {
+                com.ascend.lifeos.wellbeing.JarvisAccessibilityService.openSettings(ctx)
+            }
+            PermRow("Run unthrottled", "One UI can't put the watchdog to sleep", batteryOk) {
+                runCatching {
+                    ctx.startActivity(
+                        android.content.Intent(
+                            android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            android.net.Uri.parse("package:${ctx.packageName}"),
+                        ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
+                .background(if (ok) Good else Crit.copy(alpha = 0.8f)),
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold)
+            Text(why, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+        }
+        if (ok) {
+            Text("ON", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        } else {
+            LimitChip("Grant", false, onGrant)
         }
     }
 }
@@ -1085,6 +1179,20 @@ private fun EmptyHint(text: String) {
         Box(Modifier.fillMaxWidth().padding(22.dp), contentAlignment = Alignment.Center) {
             Text(text, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5)
         }
+    }
+}
+
+@Composable
+private fun PresetChip(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(
+        modifier.pressScale(onClick)
+            .clip(RoundedCornerShape(11.dp))
+            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, HudLine, RoundedCornerShape(11.dp))
+            .padding(vertical = 9.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 

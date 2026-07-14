@@ -10,13 +10,15 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
 import android.os.Build
-import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.FrameLayout
 import androidx.compose.runtime.Recomposer
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.AndroidUiDispatcher
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.compositionContext
@@ -46,12 +48,7 @@ class JarvisGuardService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loop: Job? = null
     private var wm: WindowManager? = null
-    private var overlay: View? = null
-    private val cooldownUntil = HashMap<String, Long>()
-    private val passUntil = HashMap<String, Long>()   // gate passes ("Continue · 5 min")
-    private val lastSeenAt = HashMap<String, Long>()  // session continuity (M3/M4)
-    private var lastPkg: String? = null               // foreground-transition detection
-    private var sessionStart = 0L                     // start of the current continuous session
+    private var overlay: View? = null                 // window FALLBACK only
     private var lastHeavyCheck = 0L                   // throttles the event-stream walk
     private var lastBudgetCheck = 0L                  // throttles the global day-budget walk
     private var lastGrayWrite: Boolean? = null        // last grayscale state we wrote
@@ -67,7 +64,7 @@ class JarvisGuardService : Service() {
             when (intent?.action) {
                 Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> startLoop()
                 Intent.ACTION_SCREEN_OFF -> {
-                    lastPkg = null
+                    GuardRuntime.lastPkg = null
                     loop?.cancel()
                     loop = null
                 }
@@ -79,6 +76,7 @@ class JarvisGuardService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         power = getSystemService(Context.POWER_SERVICE) as? PowerManager
         createChannel()
@@ -103,18 +101,29 @@ class JarvisGuardService : Service() {
         return START_STICKY
     }
 
+    /**
+     * Instant path: the accessibility service saw a window change. Evaluates
+     * the rules for [pkg] right now — the wall beats the app's cold start
+     * instead of trailing it by a poll interval.
+     */
+    fun instantCheck(pkg: String) {
+        scope.launch { runCatching { tick(forcedFg = pkg) } }
+    }
+
     private fun startLoop() {
         if (loop?.isActive == true) return
         loop = scope.launch {
             while (isActive) {
                 // Screen off → stop polling entirely; the screen receiver revives us.
                 if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
-                    lastPkg = null
+                    GuardRuntime.lastPkg = null
                     break
                 }
                 runCatching { tick() }
-                // Fast cadence exists only to catch gate-app opens quickly.
-                val fast = runCatching {
+                // With instant detection bound, opens are event-driven and the
+                // loop only guards mid-session crossings — 5s always. Without
+                // it, the fast cadence exists to catch gate-app opens quickly.
+                val fast = !JarvisAccessibilityService.connected && runCatching {
                     WellbeingStore.gateApps(this@JarvisGuardService).isNotEmpty()
                 }.getOrDefault(false)
                 delay(if (fast) 2_000L else 5_000L)
@@ -122,16 +131,17 @@ class JarvisGuardService : Service() {
         }
     }
 
-    private suspend fun tick() {
+    private suspend fun tick(forcedFg: String? = null) {
         if (!WellbeingStore.isEnabled(this)) return
         // Crash-safe casino settlement: a result resolved before an animation
         // that never finished (force-kill) still lands (CASINO_GUARD_PLAN §18).
         runCatching { com.ascend.lifeos.data.casino.CasinoStore.settlePendingIfAny(this) }
         tickWindDown()
-        if (overlay != null) return
+        tickA11yRebind()
+        if (overlay != null || GuardRuntime.lockVisible || GuardRuntime.payload.value != null) return
         if (!DigitalWellbeingManager.hasUsageAccess(this) || !DigitalWellbeingManager.canOverlay(this)) return
         if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
-            lastPkg = null // screen off ends the session; next unlock counts as a new open
+            GuardRuntime.lastPkg = null // screen off ends the session; next unlock counts as a new open
             return
         }
 
@@ -167,22 +177,25 @@ class JarvisGuardService : Service() {
         // during continuous use the 10s event window goes quiet. The last known
         // package IS still in front until a real switch produces a new event —
         // without this, one dismissed overlay meant free scrolling forever.
-        val fg = DigitalWellbeingManager.foregroundApp(this) ?: lastPkg ?: return
+        val fg = forcedFg
+            ?: DigitalWellbeingManager.foregroundApp(this)
+            ?: GuardRuntime.lastPkg
+            ?: return
         val now = System.currentTimeMillis()
 
         // Foreground transition → maybe a new session. A return within 90s
         // continues the old session (M3: app-hopping reset) and does NOT count
         // a fresh open (M4: screen off/on burned an open per unlock).
-        if (fg != lastPkg) {
-            lastPkg = fg
+        if (fg != GuardRuntime.lastPkg) {
+            GuardRuntime.lastPkg = fg
             lastHeavyCheck = 0L // fast path (R1): a rule check runs this tick, not in ~5s
-            val gap = now - (lastSeenAt[fg] ?: 0L)
+            val gap = now - (GuardRuntime.lastSeenAt[fg] ?: 0L)
             if (gap > SESSION_CONTINUITY_MS) {
-                sessionStart = now
+                GuardRuntime.sessionStart = now
                 if (budgets.containsKey(fg)) runCatching { WellbeingStore.recordOpen(this, fg, todayKey()) }
             }
         }
-        lastSeenAt[fg] = now
+        GuardRuntime.lastSeenAt[fg] = now
         WellbeingStore.recordTick(this)
 
         val limitMin = limits[fg]
@@ -191,19 +204,18 @@ class JarvisGuardService : Service() {
         val category = appCats[fg]
         val catBudgetMin = category?.let { catBudgets[it] }
         if (limitMin == null && budget == null && !gated && catBudgetMin == null) return
-        if (now < (cooldownUntil[fg] ?: 0L)) return
+        if (now < (GuardRuntime.cooldownUntil[fg] ?: 0L)) return
 
         // Casino loss lockout — the extra pause a lost stake bought. Checked
         // before every other rule: the house is paid first (plan §19).
         val casLock = com.ascend.lifeos.data.casino.CasinoStore.lockoutUntil(this, fg)
         if (now < casLock) {
-            cooldownUntil[fg] = now + SHOW_GRACE_MS
-            WellbeingStore.recordIntercept(this)
             val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
             val hm = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(casLock))
-            showOverlay(
-                DigitalWellbeingManager.appLabel(this, fg), fg, usedNow, limitMin ?: 0,
+            showIntercept(
+                fg, InterceptMode.LIMIT, usedNow, limitMin ?: 0,
                 statusText = "House lockout · until $hm",
+                resetText = "the stake bought this pause",
             )
             return
         }
@@ -214,30 +226,27 @@ class JarvisGuardService : Service() {
             val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
             val window = runCatching { WellbeingStore.activePhoneFreeWindow(this, nowMin) }.getOrNull()
             if (window != null) {
-                cooldownUntil[fg] = now + SHOW_GRACE_MS
-                WellbeingStore.recordIntercept(this)
                 WellbeingStore.recordWindowViolation(this, todayKey())
                 val usedNow = (runCatching { DigitalWellbeingManager.usageTodayMs(this, fg) }.getOrDefault(0L) / 60_000L).toInt()
-                showOverlay(
-                    DigitalWellbeingManager.appLabel(this, fg), fg, usedNow, 0,
-                    mode = InterceptMode.FOCUS,
+                showIntercept(
+                    fg, InterceptMode.FOCUS, usedNow, 0,
                     statusText = "Phone-free window · until %02d:%02d".format(window.second / 60, window.second % 60),
+                    resetText = "unlocks at %02d:%02d".format(window.second / 60, window.second % 60),
                 )
                 return
             }
         }
 
         // 1. Pause gate — one breath before the app opens. Runs before any limit logic.
-        if (gated && now >= (passUntil[fg] ?: 0L)) {
-            WellbeingStore.recordIntercept(this)
-            showOverlay(DigitalWellbeingManager.appLabel(this, fg), fg, 0, 0, mode = InterceptMode.GATE)
+        if (gated && now >= (GuardRuntime.passUntil[fg] ?: 0L)) {
+            showIntercept(fg, InterceptMode.GATE, 0, 0)
             return
         }
         if (limitMin == null && budget == null && catBudgetMin == null) return
 
         // The full event-stream walk below is the expensive part — keep it at the
-        // normal ~5s cadence even while the gate loop runs fast. One walk covers
-        // both the per-app numbers and the category sums.
+        // normal ~5s cadence for the poll loop. Instant (event-driven) checks
+        // reset the throttle above, so an app OPEN is always evaluated now.
         if (now - lastHeavyCheck < 4_500L) return
         lastHeavyCheck = now
 
@@ -249,9 +258,12 @@ class JarvisGuardService : Service() {
 
         // 2. Focus session — every limited app is shut, no matter the budget.
         if (limitMin != null && WellbeingStore.inFocus(this)) {
-            cooldownUntil[fg] = now + SHOW_GRACE_MS
-            WellbeingStore.recordIntercept(this)
-            showOverlay(DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0, mode = InterceptMode.FOCUS)
+            val hm = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date(WellbeingStore.focusUntil(this)))
+            showIntercept(
+                fg, InterceptMode.FOCUS, usedMin, 0,
+                resetText = "focus ends at $hm",
+            )
             return
         }
 
@@ -261,12 +273,11 @@ class JarvisGuardService : Service() {
             val cal = java.util.Calendar.getInstance()
             val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
             if (nowMin < morningUntil) {
-                cooldownUntil[fg] = now + SHOW_GRACE_MS
-                WellbeingStore.recordIntercept(this)
                 WellbeingStore.recordWindowViolation(this, todayKey())
-                showOverlay(
-                    DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
+                showIntercept(
+                    fg, InterceptMode.LIMIT, usedMin, 0,
                     statusText = "Morning block · protected until %02d:%02d".format(morningUntil / 60, morningUntil % 60),
+                    resetText = "unlocks at %02d:%02d".format(morningUntil / 60, morningUntil % 60),
                 )
                 return
             }
@@ -277,14 +288,13 @@ class JarvisGuardService : Service() {
             val (opensPerDay, minutesPerOpen) = budget
             val opens = runCatching { WellbeingStore.opensToday(this, fg, todayKey()) }.getOrDefault(0)
             val overOpens = opens > opensPerDay
-            val overSession = now - sessionStart >= minutesPerOpen * 60_000L
+            val overSession = now - GuardRuntime.sessionStart >= minutesPerOpen * 60_000L
             if (overOpens || overSession) {
-                cooldownUntil[fg] = now + SHOW_GRACE_MS
-                WellbeingStore.recordIntercept(this)
-                showOverlay(
-                    DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
+                showIntercept(
+                    fg, InterceptMode.LIMIT, usedMin, 0,
                     statusText = if (overOpens) "Open budget reached · open $opens/$opensPerDay"
                     else "Session budget reached · open $opens/$opensPerDay",
+                    resetText = "opens reset at 06:00",
                 )
                 return
             }
@@ -294,14 +304,16 @@ class JarvisGuardService : Service() {
         //    plain LIMIT intercept is the only place the tables are offered.
         val casBonus = com.ascend.lifeos.data.casino.CasinoStore.bonusMin(this, fg)
         if (limitMin != null && usedMs >= (limitMin + casBonus) * 60_000L) {
-            cooldownUntil[fg] = now + SHOW_GRACE_MS
-            WellbeingStore.recordIntercept(this)
-            showOverlay(
-                DigitalWellbeingManager.appLabel(this, fg),
-                fg,
-                usedMin,
-                limitMin + casBonus,
+            val effLimit = limitMin + casBonus
+            // Ceil, not floor: a win must cover every second already burnt past
+            // the wall, or "+5 min" silently pays out 4.
+            val deficit = (((usedMs - effLimit * 60_000L) + 59_999L) / 60_000L).toInt().coerceAtLeast(0)
+            showIntercept(
+                fg, InterceptMode.LIMIT, usedMin, effLimit,
+                bonusWon = com.ascend.lifeos.data.casino.CasinoStore.wonBonusMin(this, fg),
                 casinoPkg = if (com.ascend.lifeos.data.casino.CasinoStore.offerAvailable(this, fg)) fg else null,
+                deficitMin = deficit,
+                resetText = "fresh minutes at 06:00",
             )
             return
         }
@@ -312,16 +324,63 @@ class JarvisGuardService : Service() {
                 .filter { it.value == category }
                 .sumOf { dayDurations[it.key] ?: 0L }
             if (catUsedMs >= catBudgetMin * 60_000L) {
-                cooldownUntil[fg] = now + SHOW_GRACE_MS
-                WellbeingStore.recordIntercept(this)
-                showOverlay(
-                    DigitalWellbeingManager.appLabel(this, fg), fg, usedMin, 0,
+                showIntercept(
+                    fg, InterceptMode.LIMIT, usedMin, 0,
                     statusText = "%s budget reached · %d/%dm".format(
                         category.replaceFirstChar { it.uppercase() },
                         (catUsedMs / 60_000L).toInt(),
                         catBudgetMin,
                     ),
+                    resetText = "pool resets at 06:00",
                 )
+            }
+        }
+    }
+
+    /**
+     * Instant detection self-heal. Verified live on the S24: a force-stop or
+     * app update unbinds the accessibility service and it never rebinds on its
+     * own — One UI can even prune the component from the enabled list. Both
+     * degrade walls to the 5s poll. With the WRITE_SECURE_SETTINGS grant the
+     * service list can be rewritten remove→wait→add, which forces a rebind
+     * (verified: a manual re-add binds within 2s).
+     *
+     * The dance runs under NonCancellable — a cancelled poll loop must never
+     * strand the half-done state with the service removed. Retries every 90s
+     * until `connected` flips; a no-op without the grant (poll keeps guarding).
+     * The a11yOpted pref distinguishes "system pruned it" (heal) from "never
+     * user-enabled" (hands off).
+     */
+    private var lastA11yKick = 0L
+    private suspend fun tickA11yRebind() {
+        val enabledInSettings = JarvisAccessibilityService.isEnabled(this)
+        if (JarvisAccessibilityService.connected || enabledInSettings) {
+            WellbeingStore.setA11yOpted(this, true)
+            if (JarvisAccessibilityService.connected) return
+        }
+        if (!enabledInSettings && !WellbeingStore.a11yOpted(this)) return
+        val now = System.currentTimeMillis()
+        if (now - lastA11yKick < 90_000L) return
+        val granted = runCatching {
+            checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+        }.getOrDefault(false)
+        if (!granted) return
+        lastA11yKick = now
+        withContext(kotlinx.coroutines.NonCancellable) {
+            runCatching {
+                val cr = contentResolver
+                val key = Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+                val flat = "$packageName/${JarvisAccessibilityService::class.java.name}"
+                val short = "$packageName/.wellbeing.JarvisAccessibilityService"
+                val others = (Settings.Secure.getString(cr, key) ?: "").split(':').filter {
+                    it.isNotBlank() && !it.equals(flat, true) && !it.equals(short, true)
+                }
+                if (enabledInSettings) {
+                    Settings.Secure.putString(cr, key, others.joinToString(":"))
+                    delay(800)
+                }
+                Settings.Secure.putString(cr, key, (others + flat).joinToString(":"))
+                Settings.Secure.putInt(cr, "accessibility_enabled", 1)
             }
         }
     }
@@ -355,18 +414,28 @@ class JarvisGuardService : Service() {
         }
     }
 
-    // ---- Compose overlay --------------------------------------------------------
+    // ---- the wall ----------------------------------------------------------------
 
-    private suspend fun showOverlay(
-        appLabel: String,
+    /**
+     * Builds the payload and raises the full-screen lock. Primary host is
+     * InterceptActivity (real full-screen, pauses the app underneath); if the
+     * launch is swallowed (OEM background-start quirk), the same composable
+     * goes up as a window overlay ~1s later. One UI, two transports.
+     */
+    private suspend fun showIntercept(
         pkg: String,
+        mode: InterceptMode,
         used: Int,
-        limit: Int,
-        mode: InterceptMode = InterceptMode.LIMIT,
+        effLimit: Int,
         statusText: String? = null,
+        resetText: String = "",
+        bonusWon: Int = 0,
         casinoPkg: String? = null,
+        deficitMin: Int = 0,
     ) {
-        if (overlay != null) return
+        if (overlay != null || GuardRuntime.lockVisible || GuardRuntime.payload.value != null) return
+
+        WellbeingStore.recordIntercept(this)
 
         // The gate view shows neither guilt bars nor the alt plan — skip that work
         // so the breathing screen appears fast. It gets one small offer instead.
@@ -407,6 +476,47 @@ class JarvisGuardService : Service() {
             }
         }
 
+        val p = GuardRuntime.InterceptPayload(
+            mode = mode,
+            pkg = pkg,
+            appLabel = DigitalWellbeingManager.appLabel(this, pkg),
+            usedMinutes = used,
+            limitMinutes = effLimit,
+            bonusWonMinutes = bonusWon,
+            statusText = statusText,
+            resetText = resetText,
+            skillMinutes = skillMin,
+            altText = altText,
+            offerText = offerText,
+            lockedOut = lockedOut,
+            snoozeCount = snoozes,
+            casinoPkg = casinoPkg,
+            deficitMin = deficitMin,
+            interceptNo = WellbeingStore.interceptsToday(this),
+        )
+        GuardRuntime.payload.value = p
+
+        runCatching {
+            startActivity(
+                Intent(this, InterceptActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION),
+            )
+        }
+
+        // Watchdog: if no host went visible, raise the window fallback.
+        scope.launch {
+            delay(900)
+            if (GuardRuntime.payload.value === p && !GuardRuntime.lockVisible && overlay == null) {
+                runCatching { showWindowFallback() }
+            }
+        }
+    }
+
+    // ---- window fallback (same composable, overlay transport) --------------------
+
+    private fun showWindowFallback() {
+        if (overlay != null) return
+
         val lifecycleOwner = OverlayLifecycleOwner()
         overlayLifecycle = lifecycleOwner
 
@@ -420,77 +530,39 @@ class JarvisGuardService : Service() {
             overlayRecomposeJob = scope.launch(AndroidUiDispatcher.CurrentThread) { recomposer.runRecomposeAndApplyChanges() }
 
             setContent {
+                val p by GuardRuntime.payload
+                val cur = p ?: return@setContent
+                val ctx = this@JarvisGuardService
                 JarvisInterceptScreen(
-                    appLabel = appLabel,
-                    usedMinutes = used,
-                    limitMinutes = limit,
-                    skillMinutes = skillMin,
-                    altText = altText,
-                    lockedOut = lockedOut,
-                    mode = mode,
-                    snoozeCount = snoozes,
-                    statusText = statusText,
-                    offerText = offerText,
-                    onOfferDone = {
-                        // "Done ✓" closes the overlay; nothing is recorded. A short
-                        // cooldown keeps the gate from re-firing mid-transition.
-                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
-                        removeOverlay()
-                    },
-                    onSnooze = {
-                        DoomscrollDetector.recordSnooze(this@JarvisGuardService, pkg)
-                        // "Later" is an explicit, bounded pass — not an implicit
-                        // side effect of the show-cooldown (M2).
-                        cooldownUntil[pkg] = System.currentTimeMillis() + SNOOZE_PASS_MS
-                        removeOverlay()
-                    },
-                    onSkill = {
-                        removeOverlay()
-                        runCatching {
-                            packageManager.getLaunchIntentForPackage(packageName)
-                                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                ?.let { startActivity(it) }
-                        }
-                    },
-                    onGateContinue = {
-                        val n = System.currentTimeMillis()
-                        passUntil[pkg] = n + GATE_PASS_MS
-                        cooldownUntil[pkg] = n + GATE_PASS_MS
-                        removeOverlay()
-                    },
-                    onGateExit = {
-                        // Short cooldown so the gate doesn't re-fire mid-exit.
-                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
-                        removeOverlay()
-                        runCatching {
-                            startActivity(
-                                Intent(Intent.ACTION_MAIN)
-                                    .addCategory(Intent.CATEGORY_HOME)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
-                        }
-                    },
-                    casinoPkg = casinoPkg,
-                    onCasinoWin = {
-                        // Bonus is committed — the raised limit lets the app pass.
-                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
-                        removeOverlay()
-                    },
-                    onCasinoLose = {
-                        // Lockout is committed — leave the table, leave the app.
-                        cooldownUntil[pkg] = System.currentTimeMillis() + 15_000L
-                        removeOverlay()
-                        runCatching {
-                            startActivity(
-                                Intent(Intent.ACTION_MAIN)
-                                    .addCategory(Intent.CATEGORY_HOME)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
-                        }
-                    },
+                    p = cur,
+                    onLater = { GuardRuntime.actLater(ctx, cur.pkg); removeOverlay() },
+                    onSkill = { GuardRuntime.actSkill(ctx, cur.pkg); removeOverlay() },
+                    onExit = { GuardRuntime.actExitHome(ctx, cur.pkg); removeOverlay() },
+                    onOfferDone = { GuardRuntime.actOfferDone(ctx, cur.pkg); removeOverlay() },
+                    onGateContinue = { GuardRuntime.actGatePass(ctx, cur.pkg); removeOverlay() },
+                    onCasinoWin = { GuardRuntime.actCasinoWin(ctx, cur.pkg); removeOverlay() },
+                    onCasinoLose = { GuardRuntime.actCasinoLose(ctx, cur.pkg); removeOverlay() },
                 )
             }
         }
+
+        // Hardware/gesture back leaves the app — never tunnels into it.
+        val frame = object : FrameLayout(this) {
+            override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+                if (event.keyCode == KeyEvent.KEYCODE_BACK) {
+                    if (event.action == KeyEvent.ACTION_UP) {
+                        GuardRuntime.payload.value?.let { GuardRuntime.actExitHome(context, it.pkg) }
+                        removeOverlay()
+                    }
+                    return true
+                }
+                return super.dispatchKeyEvent(event)
+            }
+        }
+        frame.addView(
+            composeView,
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT),
+        )
 
         lifecycleOwner.onCreate()
         lifecycleOwner.onResume()
@@ -501,18 +573,22 @@ class JarvisGuardService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
+            // Focusable on purpose: the wall owns back + touch while it stands.
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT,
         )
-        runCatching { wm?.addView(composeView, lp); overlay = composeView }
+        runCatching { wm?.addView(frame, lp) }
+            .onSuccess { overlay = frame; GuardRuntime.lockVisible = true }
     }
 
     private fun removeOverlay() {
         overlayLifecycle?.onDestroy()
         overlayLifecycle = null
-        overlay?.let { runCatching { wm?.removeView(it) } }
+        overlay?.let {
+            runCatching { wm?.removeView(it) }
+            GuardRuntime.lockVisible = false
+        }
         overlay = null
         // the recompose coroutine is per-overlay; without this every intercept
         // leaked a Recomposer + endless coroutine into the long-lived service
@@ -556,21 +632,19 @@ class JarvisGuardService : Service() {
         loop?.cancel()
         scope.cancel()
         runCatching { unregisterReceiver(screenReceiver) }
+        if (instance === this) instance = null
         super.onDestroy()
     }
 
     companion object {
         private const val CHANNEL = "jarvis_guard"
         private const val NOTIF_ID = 4711
-        private const val GATE_PASS_MS = 5 * 60_000L // "Continue · 5 min"
-        // M2 fix: the old 60–90s cooldown was set at SHOW time and kept running
-        // after dismiss — every intercept gifted a free scrolling window. Now:
-        // a short anti-flicker grace while the overlay stands, and explicit
-        // passes (snooze/gate) are the only way to buy real time.
-        private const val SHOW_GRACE_MS = 12_000L
-        private const val SNOOZE_PASS_MS = 3 * 60_000L // "Later" = 3 honest minutes
         private const val SESSION_CONTINUITY_MS = 90_000L // M3/M4: return <90s = same session
         const val ACTION_STOP = "com.ascend.lifeos.STOP_GUARD"
+
+        /** Same-process hook for the accessibility fast path. */
+        @Volatile var instance: JarvisGuardService? = null
+            private set
 
         fun start(ctx: Context) {
             val i = Intent(ctx, JarvisGuardService::class.java)

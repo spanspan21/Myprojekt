@@ -87,23 +87,43 @@ object CasinoStore {
     fun winCapRest(ctx: Context): Int = (winCapDay(ctx) - wonToday(ctx)).coerceAtLeast(0)
 
     // ── Per-app bonus & lockout ──────────────────────────────────────────────
+    // Stored as "day:total[:won]". `total` raises the wall (won minutes PLUS
+    // the overrun a win had to buy back); `won` is the honest display share —
+    // the reveal said "+5 MIN", so every surface must say 5, not 13.
 
-    /** Won minutes for [pkg] today — added on top of the wellbeing daily limit. */
-    fun bonusMin(ctx: Context, pkg: String): Int {
+    /** Effective extra minutes for [pkg] today — raises the wellbeing limit. */
+    fun bonusMin(ctx: Context, pkg: String): Int = bonusParts(ctx, pkg).first
+
+    /** The gambled share of today's bonus — what "+X won" displays everywhere. */
+    fun wonBonusMin(ctx: Context, pkg: String): Int = bonusParts(ctx, pkg).second
+
+    private fun bonusParts(ctx: Context, pkg: String): Pair<Int, Int> {
         val raw = sp(ctx).getString("cas_bonus_$pkg", "") ?: ""
-        val (day, min) = raw.split(':').let { (it.getOrNull(0) ?: "") to (it.getOrNull(1)?.toIntOrNull() ?: 0) }
-        return if (day == todayKey()) min else 0
+        val p = raw.split(':')
+        if ((p.getOrNull(0) ?: "") != todayKey()) return 0 to 0
+        val total = p.getOrNull(1)?.toIntOrNull() ?: 0
+        val won = p.getOrNull(2)?.toIntOrNull() ?: total // pre-v3 entries: all won
+        return total to won
     }
 
-    private fun addBonus(ctx: Context, pkg: String, minutes: Int) {
+    private fun addBonus(ctx: Context, pkg: String, wonMin: Int, coverMin: Int) {
         ensureDay(ctx)
-        val now = bonusMin(ctx, pkg)
+        val (total, won) = bonusParts(ctx, pkg)
         sp(ctx).edit()
-            .putString("cas_bonus_$pkg", "${todayKey()}:${now + minutes}")
-            .putInt("cas_won_today", sp(ctx).getInt("cas_won_today", 0) + minutes)
+            .putString("cas_bonus_$pkg", "${todayKey()}:${total + wonMin + coverMin}:${won + wonMin}")
+            // The daily win cap counts winnings only — covering an overrun is
+            // bookkeeping, not a prize, and must not eat the cap.
+            .putInt("cas_won_today", sp(ctx).getInt("cas_won_today", 0) + wonMin)
             .apply()
-        addStat(ctx, won = minutes, lost = 0)
+        addStat(ctx, won = wonMin, lost = 0)
     }
+
+    /** Apps with a bonus today, honest display share included: pkg → (total, won). */
+    fun bonusesToday(ctx: Context): Map<String, Pair<Int, Int>> =
+        sp(ctx).all.keys.filter { it.startsWith("cas_bonus_") }
+            .map { it.removePrefix("cas_bonus_") }
+            .associateWith { bonusParts(ctx, it) }
+            .filterValues { it.first > 0 }
 
     fun lockoutUntil(ctx: Context, pkg: String): Long = sp(ctx).getLong("cas_lockout_$pkg", 0L)
 
@@ -113,10 +133,12 @@ object CasinoStore {
     }
 
     // ── Crash-safe pending slot (resolve-then-animate, §18) ──────────────────
+    // Format "pkg|delta[|cover]": delta = the gambled result, cover = overrun
+    // minutes a win additionally buys back (kept apart so displays stay honest).
 
     /** Written the moment a result is final, BEFORE any animation plays. */
-    fun writePending(ctx: Context, pkg: String, deltaMin: Int) =
-        sp(ctx).edit().putString("cas_pending", "$pkg|$deltaMin").apply()
+    fun writePending(ctx: Context, pkg: String, deltaMin: Int, coverMin: Int = 0) =
+        sp(ctx).edit().putString("cas_pending", "$pkg|$deltaMin|$coverMin").apply()
 
     /** Normal path: the reveal finished on screen — apply and clear. */
     fun commitPending(ctx: Context) = settlePendingIfAny(ctx)
@@ -132,10 +154,12 @@ object CasinoStore {
         val raw = sp(ctx).getString("cas_pending", "") ?: ""
         if (raw.isBlank()) return
         clearPending(ctx)
-        val pkg = raw.substringBefore('|')
-        val delta = raw.substringAfter('|').toIntOrNull() ?: return
+        val parts = raw.split('|')
+        val pkg = parts.getOrNull(0) ?: return
+        val delta = parts.getOrNull(1)?.toIntOrNull() ?: return
+        val cover = parts.getOrNull(2)?.toIntOrNull() ?: 0
         when {
-            delta > 0 -> addBonus(ctx, pkg, delta)
+            delta > 0 -> addBonus(ctx, pkg, delta, cover)
             delta < 0 -> setLockout(ctx, pkg, CasinoEngine.lockoutMinutes(-delta, lossMult(ctx)))
         }
     }

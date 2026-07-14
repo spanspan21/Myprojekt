@@ -76,6 +76,13 @@ object HealthBridge {
         override suspend fun doWork(): Result {
             val ctx = applicationContext
             Log.i(TAG, "worker start (attempt $runAttemptCount)")
+            // Revive path: the hourly worker restarts a killed process — bring
+            // the guard (and its instant-detection self-heal) back with it.
+            runCatching {
+                if (com.ascend.lifeos.wellbeing.WellbeingStore.isEnabled(ctx)) {
+                    com.ascend.lifeos.wellbeing.JarvisGuardService.start(ctx)
+                }
+            }
             if (!HealthConnect.available(ctx)) {
                 Log.i(TAG, "skip: Health Connect unavailable")
                 return Result.success()

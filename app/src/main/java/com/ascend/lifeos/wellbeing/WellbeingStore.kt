@@ -75,6 +75,16 @@ object WellbeingStore {
         return if (raw.startsWith("$key|")) raw.substringAfter('|').toIntOrNull() ?: 0 else 0
     }
 
+    // ---- instant detection opt-in memory ----
+    // Once the accessibility service has been seen enabled, remember it: a
+    // force-stop or package update can make the SYSTEM prune the service from
+    // the enabled list — that prune must not read as "the user turned it off",
+    // or the self-heal would refuse to rebind (verified pathology on One UI).
+    fun a11yOpted(ctx: Context): Boolean = prefs(ctx).getBoolean("a11y_opted", false)
+    fun setA11yOpted(ctx: Context, on: Boolean) {
+        if (a11yOpted(ctx) != on) prefs(ctx).edit().putBoolean("a11y_opted", on).apply()
+    }
+
     // ---- liveness: the watchdog + "on guard" proof line (R3/R5) ----
     private var lastTickWrite = 0L
     fun recordTick(ctx: Context) {
