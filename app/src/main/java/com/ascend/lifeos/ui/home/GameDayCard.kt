@@ -64,7 +64,10 @@ fun GameDayCard(modifier: Modifier = Modifier) {
     val hydration = Repo.hydrationMl(Repo.today())
     val waterGoalMl = (p.waterGoal * 250).coerceAtLeast(1)
 
-    val sleptOk = sleepMin >= 450                       // ≥ 7h30
+    // learned personal need (Rise-style, strain/growth-aware) with the same
+    // 30-min grace the old fixed 450 gave an 8h default — personalizes as
+    // the app learns instead of judging everyone by 7h30
+    val sleptOk = sleepMin >= (Repo.sleepNeedMin() - 30).coerceAtLeast(330)
     val fueledOk = kcal >= p.kcalGoal * 0.4             // eaten a meaningful share pre-game
     val hydratedOk = hydration >= waterGoalMl * 0.6
     val greens = listOf(sleptOk, fueledOk, hydratedOk).count { it }
