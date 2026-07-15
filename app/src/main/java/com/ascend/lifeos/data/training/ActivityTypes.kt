@@ -117,6 +117,7 @@ data class SportDef(
     val emoji: String,
     val usesSeasons: Boolean,       // periodised team sports get OFF/PRE/IN/PLAYOFF
     val matchKeywords: List<String>,// calendar words that mean "my sport happens here"
+    val dayWord: String = "Game day", // what THE day is called in this sport's world
 )
 
 object SportCatalog {
@@ -124,14 +125,14 @@ object SportCatalog {
         SportDef("hockey", "Ice hockey", "🏒", true, listOf("eishockey", "hockey", "eistraining", "eiszeit")),
         SportDef("soccer", "Soccer", "⚽", true, listOf("fußball", "fussball", "soccer")),
         SportDef("basketball", "Basketball", "🏀", true, listOf("basketball")),
-        SportDef("racket", "Tennis/Padel", "🎾", false, listOf("tennis", "padel", "squash", "badminton")),
-        SportDef("martial", "Martial arts", "🥋", false, listOf("kampfsport", "boxen", "judo", "karate", "mma", "ringen", "kickboxen")),
-        SportDef("run", "Running", "🏃", false, listOf("laufen", "lauftraining", "joggen", "running")),
-        SportDef("swim", "Swimming", "🏊", false, listOf("schwimmen", "schwimmtraining", "swim")),
-        SportDef("climb", "Climbing", "🧗", false, listOf("klettern", "bouldern")),
-        SportDef("dance", "Dance", "💃", false, listOf("tanzen", "tanztraining", "ballett")),
-        SportDef("gym", "Gym/Strength", "🏋", false, emptyList()),
-        SportDef("none", "General health", "✦", false, emptyList()),
+        SportDef("racket", "Tennis/Padel", "🎾", false, listOf("tennis", "padel", "squash", "badminton"), dayWord = "Match day"),
+        SportDef("martial", "Martial arts", "🥋", false, listOf("kampfsport", "boxen", "judo", "karate", "mma", "ringen", "kickboxen"), dayWord = "Fight day"),
+        SportDef("run", "Running", "🏃", false, listOf("laufen", "lauftraining", "joggen", "running"), dayWord = "Race day"),
+        SportDef("swim", "Swimming", "🏊", false, listOf("schwimmen", "schwimmtraining", "swim"), dayWord = "Race day"),
+        SportDef("climb", "Climbing", "🧗", false, listOf("klettern", "bouldern"), dayWord = "Comp day"),
+        SportDef("dance", "Dance", "💃", false, listOf("tanzen", "tanztraining", "ballett"), dayWord = "Show day"),
+        SportDef("gym", "Gym/Strength", "🏋", false, emptyList(), dayWord = "Session day"),
+        SportDef("none", "General health", "✦", false, emptyList(), dayWord = "Event day"),
     )
 
     fun byId(id: String?): SportDef = ALL.firstOrNull { it.id == id } ?: ALL.first()

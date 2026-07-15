@@ -48,6 +48,10 @@ class ActivityLoadTest {
         assertTrue(SportCatalog.byId("hockey").usesSeasons)
         assertTrue(!SportCatalog.byId("run").usesSeasons)
         assertTrue(!SportCatalog.byId("none").usesSeasons)
+        // the big day speaks each sport's language
+        assertEquals("Game day", SportCatalog.byId("hockey").dayWord)
+        assertEquals("Race day", SportCatalog.byId("run").dayWord)
+        assertEquals("Fight day", SportCatalog.byId("martial").dayWord)
     }
 
     @Test

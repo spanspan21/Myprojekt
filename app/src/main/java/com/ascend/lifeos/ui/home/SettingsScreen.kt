@@ -282,7 +282,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         SettingsSection("Body") {
             ToggleRow("Illness early warning", "Resting-HR baseline watch", Prefs.SICKNESS_ALERT, true)
             ToggleRow("Learned sleep need", "From your free-day sleep instead of a fixed 8h", Prefs.SLEEP_NEED_AUTO, true)
-            ToggleRow("Hard-day sleep boost", "Training/hockey days raise the sleep target", Prefs.STRAIN_SLEEP_BOOST, true)
+            ToggleRow("Hard-day sleep boost", "Training and sport days raise the sleep target", Prefs.STRAIN_SLEEP_BOOST, true)
             ToggleRow("Growth tracking", "Height measurements + growth-spurt adjustments", Prefs.GROWTH_TRACKING, false)
         }
 

@@ -82,7 +82,7 @@ fun GameDayCard(modifier: Modifier = Modifier) {
 
     Panel(modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(16.dp)) {
-            SectionLabel("${sport.emoji} Game day · $startWord ${fmt(g.first)}", accent = Mod.Body)
+            SectionLabel("${sport.emoji} ${sport.dayWord} · $startWord ${fmt(g.first)}", accent = Mod.Body)
             Spacer(Modifier.height(10.dp))
             Check("Sleep", sleptOk, "${sleepMin / 60}h ${sleepMin % 60}m")
             Check("Fueled", fueledOk, "$kcal kcal")

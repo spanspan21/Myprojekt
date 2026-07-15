@@ -108,7 +108,10 @@ fun eventColor(t: EventType): Color = when (t) {
 }
 
 fun eventLabel(t: EventType): String = when (t) {
-    EventType.SCHOOL -> "School"; EventType.WORK -> "Work"; EventType.HOCKEY -> "Hockey"
+    EventType.SCHOOL -> "School"; EventType.WORK -> "Work"
+    // HOCKEY is the generic "my sport" block — the label follows the athlete
+    EventType.HOCKEY -> com.ascend.lifeos.data.training.SportCatalog
+        .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull()).label
     EventType.TRAINING -> "Training"; EventType.EXAM -> "Exam"; EventType.HOLIDAY -> "Holiday"
     EventType.PERSONAL -> "Personal"
 }
@@ -1217,9 +1220,12 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Device calendar", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        val sportWord = com.ascend.lifeos.data.training.SportCatalog
+                            .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull())
+                            .label.lowercase()
                         Text(
-                            if (calPermission) "Connected — hockey games merge automatically"
-                            else "Your hockey games appear automatically",
+                            if (calPermission) "Connected — $sportWord sessions merge automatically"
+                            else "Your $sportWord sessions appear automatically",
                             color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                         )
                     }

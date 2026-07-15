@@ -477,8 +477,13 @@ fun HomeScreen(
                             }
                             directives.forEach { (proto, text) ->
                                 sep()
+                                // the game-day chip speaks the athlete's sport (Race day, Fight day …)
+                                val chip = if (proto.id == "game_day") {
+                                    com.ascend.lifeos.data.training.SportCatalog
+                                        .byId(Repo.profile().sport).dayWord.uppercase()
+                                } else proto.title.uppercase()
                                 BriefRow(
-                                    dot = Mod.Home, overline = proto.title.uppercase(), text = text,
+                                    dot = Mod.Home, overline = chip, text = text,
                                     action = "✕",
                                 ) { com.ascend.lifeos.data.Protocols.dismissToday(ctx, proto.id); protoTick++ }
                             }

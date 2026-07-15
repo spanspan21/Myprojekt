@@ -39,8 +39,8 @@ object Protocols {
                 val sport = com.ascend.lifeos.data.training.SportCatalog
                     .byId(com.ascend.lifeos.data.Repo.data.profile.sport)
                 val start = if (sport.id == "hockey") "face-off" else "start"
-                val arena = if (sport.id == "hockey") "the ice" else "the game"
-                "Game day: $start ${CalendarRepo.fmtMin(it.startMin)}. Carbs at lunch, " +
+                val arena = if (sport.id == "hockey") "the ice" else "the $start"
+                "${sport.dayWord}: $start ${CalendarRepo.fmtMin(it.startMin)}. Carbs at lunch, " +
                     "hydrate now, no heavy legs before $arena."
             }
         },

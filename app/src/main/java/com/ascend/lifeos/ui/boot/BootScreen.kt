@@ -248,7 +248,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
                     notifLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
-            PermRow("Calendar", "hockey & school merge read-only", calOk) {
+            PermRow("Calendar", "your sport & school merge read-only", calOk) {
                 calLauncher.launch(android.Manifest.permission.READ_CALENDAR)
             }
             PermRow("Usage access", "screen-time guard", usageOk) {
