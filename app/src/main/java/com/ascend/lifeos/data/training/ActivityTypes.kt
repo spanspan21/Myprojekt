@@ -128,8 +128,12 @@ object SportCatalog {
         SportDef("racket", "Tennis/Padel", "🎾", false, listOf("tennis", "padel", "squash", "badminton"), dayWord = "Match day"),
         SportDef("martial", "Martial arts", "🥋", false, listOf("kampfsport", "boxen", "judo", "karate", "mma", "ringen", "kickboxen"), dayWord = "Fight day"),
         SportDef("run", "Running", "🏃", false, listOf("laufen", "lauftraining", "joggen", "running"), dayWord = "Race day"),
+        SportDef("ride", "Cycling", "🚴", false, listOf("radfahren", "radtour", "rennrad", "gravel", "cycling", "mtb"), dayWord = "Race day"),
         SportDef("swim", "Swimming", "🏊", false, listOf("schwimmen", "schwimmtraining", "swim"), dayWord = "Race day"),
+        SportDef("row", "Rowing", "🚣", false, listOf("rudern", "rowing", "paddeln", "kajak"), dayWord = "Race day"),
         SportDef("climb", "Climbing", "🧗", false, listOf("klettern", "bouldern"), dayWord = "Comp day"),
+        SportDef("ski", "Ski/Skate", "⛷", false, listOf("skifahren", "skitour", "langlauf", "snowboard"), dayWord = "Race day"),
+        SportDef("yoga", "Yoga/Mobility", "🧘", false, listOf("yoga", "pilates", "mobility"), dayWord = "Practice day"),
         SportDef("dance", "Dance", "💃", false, listOf("tanzen", "tanztraining", "ballett"), dayWord = "Show day"),
         SportDef("gym", "Gym/Strength", "🏋", false, emptyList(), dayWord = "Session day"),
         SportDef("none", "General health", "✦", false, emptyList(), dayWord = "Event day"),
@@ -149,15 +153,21 @@ object SportCatalog {
      * keeps its proven wider net (eis-prefix + spiel/game/match×eis/ice) so
      * existing installs classify exactly as before (review #4).
      */
+    // review r3 #4: everyday short words need EXACT-word matching — as prefixes
+    // they'd drag Laufzeitende, Radiologie, a Skizze or a Jogginghose into the
+    // athlete's training load. Compounds are covered by the wordStart keywords.
+    private val EXACT_WORDS = mapOf(
+        "run" to listOf("lauf", "jog", "jogging"),
+        "ride" to listOf("rad", "bike"),
+        "ski" to listOf("ski"),
+    )
+
     fun titleMatches(sport: SportDef, title: String): Boolean {
         val t = title.lowercase()
         fun wordStart(kw: String) = Regex("(^|[^\\p{L}])" + Regex.escape(kw)).containsMatchIn(t)
         fun wordExact(kw: String) = Regex("(^|[^\\p{L}])" + Regex.escape(kw) + "($|[^\\p{L}])").containsMatchIn(t)
         if (sport.matchKeywords.any { wordStart(it) }) return true
-        // review r3 #4: the everyday words "Lauf"/"Jog(ging)" need EXACT-word
-        // matching — as prefixes they'd drag Laufzeitende, Laufschuhe or a
-        // Jogginghose into the runner's training load
-        if (sport.id == "run" && listOf("lauf", "jog", "jogging").any { wordExact(it) }) return true
+        if (EXACT_WORDS[sport.id]?.any { wordExact(it) } == true) return true
         if (sport.id != "hockey") return false
         return wordStart("eis") ||
             (listOf("spiel", "game", "match", "training").any { it in t } &&
