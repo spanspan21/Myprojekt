@@ -86,6 +86,36 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             Spacer(Modifier.height(22.dp))
         }
 
+        // ── Activities: endurance volume + bests (the gym isn't the only work) ──
+        item {
+            val actCtx = androidx.compose.ui.platform.LocalContext.current
+            val actRev = com.ascend.lifeos.data.ActivityStore.rev
+            val acts = remember(actRev) { com.ascend.lifeos.data.ActivityStore.all(actCtx) }
+            if (acts.isNotEmpty()) {
+                Text("ACTIVITY LOAD (8 WEEKS)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                Spacer(Modifier.height(10.dp))
+                GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                    ActivityWeekBars(acts, Modifier.fillMaxWidth().height(120.dp).padding(16.dp))
+                }
+                Spacer(Modifier.height(12.dp))
+                // bests per type — the endurance answer to the PR list below
+                acts.map { it.type }.distinct().take(5).forEach { t ->
+                    val bests = ActivityBests.bestsFor(acts, t)
+                    if (bests.isNotEmpty()) {
+                        val ty = ActivityTypes.byId(t)
+                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text(
+                                bests.joinToString("  ") { "${it.emoji} ${it.value}" },
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(22.dp))
+            }
+        }
+
         // ── Recent PRs ─────────────────────────────────────────────
         if (prs.isNotEmpty()) {
             item {
@@ -102,6 +132,43 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     // tap any record → the exercise's deep dive (trend, PR timeline, sets)
     detailFor?.let { exId ->
         ExerciseDetailDialog(vm, exId) { detailFor = null }
+    }
+}
+
+// ─── Activity week bars (Foster sRPE load per ISO-ish week) ─────────────────
+
+@Composable
+private fun ActivityWeekBars(acts: List<com.ascend.lifeos.data.ActivityStore.Entry>, modifier: Modifier) {
+    // bucket by "weeks ago" so the newest bar is always this week
+    val today = java.time.LocalDate.now().toEpochDay()
+    val loads = FloatArray(8)
+    acts.forEach { e ->
+        val d = java.time.Instant.ofEpochMilli(e.ts).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+        val w = ((today - d) / 7).toInt()
+        if (w in 0..7) loads[7 - w] += com.ascend.lifeos.data.ActivityStore.loadOf(e).toFloat()
+    }
+    val maxV = loads.max().coerceAtLeast(1f)
+    Column(modifier) {
+        Canvas(Modifier.fillMaxWidth().weight(1f)) {
+            val gap = 8.dp.toPx()
+            val bw = (size.width - gap * 7) / 8
+            loads.forEachIndexed { i, v ->
+                val h = (v / maxV) * size.height
+                val col = if (i == 7) Mod.Train else Mod.Train.copy(alpha = 0.45f)
+                drawRoundRect(
+                    Brush.verticalGradient(listOf(col, col.copy(alpha = col.alpha * 0.55f))),
+                    topLeft = Offset(i * (bw + gap), size.height - h),
+                    size = Size(bw, h.coerceAtLeast(2.dp.toPx())),
+                    cornerRadius = CornerRadius(5f, 5f),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(Modifier.fillMaxWidth()) {
+            Text("7 wks ago", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9)
+            Spacer(Modifier.weight(1f))
+            Text("this week · load in hard-set units", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9)
+        }
     }
 }
 
