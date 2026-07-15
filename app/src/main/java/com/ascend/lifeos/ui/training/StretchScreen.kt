@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.training
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
+import com.ascend.lifeos.ui.motion.pressScale
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.compose.animation.core.*
@@ -105,7 +106,7 @@ fun StretchScreen(onBack: () -> Unit) {
             LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
                 items(routines, key = { it.id }) { routine ->
                     val isSuggested = routine.id in suggested
-                    GlassPanel(Modifier.fillMaxWidth().animateItem().clickable {
+                    GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale {
                         com.ascend.lifeos.data.Haptics.tick(ctx)
                         activeRoutine = routine; exIndex = 0; isSecondSide = false
                         remaining = routine.exercises.first().holdSec; running = true

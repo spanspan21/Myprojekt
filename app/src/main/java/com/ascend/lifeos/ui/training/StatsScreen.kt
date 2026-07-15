@@ -45,6 +45,7 @@ import java.util.*
 
 @Composable
 fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val sessions by vm.recentSessions.collectAsState()
     val prs by vm.recentPrs.collectAsState()
     val allExercises by vm.exercises.collectAsState()
@@ -56,7 +57,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onBack() })
                 Spacer(Modifier.width(12.dp))
                 Text("Statistics", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
             }

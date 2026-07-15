@@ -163,6 +163,18 @@ object Prefs {
     const val COOLDOWN_MIN = "cooldown_min"                   // 8 — cooldown block duration in session plan
     const val REST_COMPOUND_SEC = "rest_compound_sec"         // 165 — rest seconds for compound lifts
     const val REST_ACCESSORY_SEC = "rest_accessory_sec"       // 90 — rest seconds for accessories/holds
+    // TDEE
+    const val TDEE_MIN_LOGGED_KCAL = "tdee_min_logged_kcal"   // 800 — day must reach this to count as logged
+    const val TDEE_EWMA_ALPHA = "tdee_ewma_alpha"             // 25 — stored as hundredths (25 = 0.25)
+    // Recovery tuning
+    const val RECOVERY_SORENESS_PEN = "recovery_soreness_pen" // 8 — points subtracted for high soreness
+    const val RECOVERY_LOW_ENERGY_PEN = "recovery_low_energy" // 5 — points subtracted for low energy
+    const val RECOVERY_HIGH_ENERGY_BON = "recovery_high_energy" // 3 — points added for high energy
+    // Greeting
+    const val GREET_MORNING_START = "greet_morning_start"     // 5 — hour when morning greetings begin
+    const val GREET_DAY_START = "greet_day_start"             // 11 — hour when day greetings begin
+    const val GREET_EVE_START = "greet_eve_start"             // 17 — hour when evening greetings begin
+    const val GREET_NIGHT_START = "greet_night_start"         // 22 — hour when night greetings begin
     // Tour
     const val TOUR_SEEN = "tour_seen"                  // false — one-time feature tour after first boot
     // Notification times (minute-of-day; e.g. 420 = 07:00)

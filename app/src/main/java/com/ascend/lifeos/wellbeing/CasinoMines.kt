@@ -88,7 +88,7 @@ internal fun MinesTable(
                         Modifier.weight(1f).pressScale { mines = m }
                             .clip(RoundedCornerShape(11.dp))
                             .background(if (sel) CasAccent.copy(alpha = 0.16f) else CasPanel)
-                            .border(0.5.dp, if (sel) CasAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                            .border(0.5.dp, if (sel) CasAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("$m", color = if (sel) CasAccent else CasMuted, fontSize = FS.s13, fontWeight = FontWeight.ExtraBold) }
@@ -206,7 +206,7 @@ private fun MineTile(i: Int, game: CasinoEngine.MinesGame?, modifier: Modifier, 
     val border = when {
         isMine -> CasRed.copy(alpha = 0.6f)
         revealed -> CasGood.copy(alpha = 0.5f)
-        else -> Color.White.copy(alpha = 0.08f)
+        else -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)
     }
     Box(
         modifier.aspectRatio(1f)

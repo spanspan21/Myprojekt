@@ -135,7 +135,7 @@ internal fun BlackjackTable(
             if (dealerShown < 2) CasCard(round.dealer[1], hidden = true, index = 1)
         }
         Spacer(Modifier.height(12.dp))
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.10f)))
+        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f)))
         Spacer(Modifier.height(12.dp))
         RowLabel("YOU", scoreText(round.player))
         Spacer(Modifier.height(6.dp))
@@ -231,7 +231,7 @@ internal fun CasCard(card: CasinoEngine.Card, hidden: Boolean, index: Int) {
                 if (hidden) {
                     var x = -size.height
                     while (x < size.width) {
-                        drawLine(Color.White.copy(alpha = 0.07f), Offset(x, 0f), Offset(x + size.height, size.height), 1.5f)
+                        drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f), Offset(x, 0f), Offset(x + size.height, size.height), 1.5f)
                         x += 9.dp.toPx()
                     }
                 }
@@ -371,7 +371,7 @@ private fun NumCell(n: Int, sel: CasinoEngine.RouletteBet?, modifier: Modifier, 
     val bg = when { n == 0 -> CasAccent.copy(alpha = 0.20f); CasinoEngine.isRed(n) -> CasRed.copy(alpha = 0.28f); else -> CasBlackChip }
     Box(
         modifier.height(30.dp).clip(RoundedCornerShape(7.dp)).background(bg)
-            .border(if (isSel) 1.5.dp else 0.5.dp, if (isSel) CasAccent else Color.White.copy(alpha = 0.08f), RoundedCornerShape(7.dp))
+            .border(if (isSel) 1.5.dp else 0.5.dp, if (isSel) CasAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(7.dp))
             .clickable { onPick(n) },
         contentAlignment = Alignment.Center,
     ) {
@@ -401,8 +401,8 @@ private fun Wheel(angleDeg: Float, landed: Int?, modifier: Modifier) {
                 textPaint.textSize = 9.dp.toPx(); textPaint.color = CasInk.toArgb()
                 drawIntoCanvasNumbers(cx, cy, r * 0.84f, seg, textPaint)
                 drawCircle(CasVoid, r * 0.62f, Offset(cx, cy))
-                drawCircle(Color.White.copy(alpha = 0.12f), r * 0.62f, Offset(cx, cy), style = Stroke(1.5f))
-                drawCircle(Color.White.copy(alpha = 0.12f), r - 0.8f, Offset(cx, cy), style = Stroke(1.5f))
+                drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), r * 0.62f, Offset(cx, cy), style = Stroke(1.5f))
+                drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), r - 0.8f, Offset(cx, cy), style = Stroke(1.5f))
             }
             val p = Path().apply {
                 moveTo(cx - 7.dp.toPx(), cy - r - 2.dp.toPx())

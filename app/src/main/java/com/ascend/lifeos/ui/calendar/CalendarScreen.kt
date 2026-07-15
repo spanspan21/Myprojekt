@@ -188,7 +188,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                         Box(
                             Modifier.clip(RoundedCornerShape(9.dp)).background(c.copy(alpha = 0.12f))
                                 .border(0.5.dp, c.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .clickable { if (!b.fromDevice) detailBlock = b }
+                                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                         ) {
                             Text(b.title, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -218,7 +218,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 110.dp)
                 .size(54.dp).clip(CircleShape)
                 .background(Mod.Calendar)
-                .clickable { prefillStart = null; addOpen = true },
+                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); prefillStart = null; addOpen = true },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.Add, "Add event", tint = Void, modifier = Modifier.size(24.dp)) }
 
@@ -267,11 +267,12 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 
 @Composable
 private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSelect: (LocalDate) -> Unit) {
+    val wsCtx = LocalContext.current
     val weekStart = selected.with(DayOfWeek.MONDAY)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             Icons.Rounded.ChevronLeft, "Previous week", tint = TextDim,
-            modifier = Modifier.size(22.dp).clickable { onSelect(selected.minusWeeks(1)) },
+            modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
         )
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceEvenly) {
             for (i in 0..6) {
@@ -281,7 +282,7 @@ private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSel
         }
         Icon(
             Icons.Rounded.ChevronRight, "Next week", tint = TextDim,
-            modifier = Modifier.size(22.dp).clickable { onSelect(selected.plusWeeks(1)) },
+            modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
         )
     }
 }
@@ -447,6 +448,7 @@ private fun MonthDayCell(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    val mdcCtx = LocalContext.current
     val occurring = remember(d, entities) { entities.filter { CalendarRepo.occursOn(it, d) } }
     val isHoliday = occurring.any { it.type == EventType.HOLIDAY.name }
     // load = timed blocks; school doesn't count during holidays (the timeline suppresses it too)
@@ -475,7 +477,7 @@ private fun MonthDayCell(
                 },
                 RoundedCornerShape(11.dp),
             )
-            .clickable(onClick = onClick),
+            .clickable { com.ascend.lifeos.data.Haptics.tick(mdcCtx); onClick() },
     ) {
         if (hasHockey) {
             Box(
@@ -724,7 +726,6 @@ private fun DayTimelineView(
         }
 
         // free slots (ghost, tappable) — optionally tagged with the hour's weather
-        val ctx = androidx.compose.ui.platform.LocalContext.current
         val weatherOn = com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.WEATHER_SLOTS, true)
         LaunchedEffect(weatherOn, t.day) {
             if (weatherOn && t.day == LocalDate.now()) {
@@ -896,7 +897,7 @@ private fun QuickAddSheet(
                         Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (on) c.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                            .clickable { type = t }
+                            .clickable { com.ascend.lifeos.data.Haptics.tick(addCtx); type = t }
                             .padding(horizontal = 11.dp, vertical = 7.dp),
                     ) {
                         Text(eventLabel(t), color = if (on) c else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -946,7 +947,7 @@ private fun QuickAddSheet(
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-                            .clickable { holidayDays = (holidayDays - 1).coerceAtLeast(1) },
+                            .clickable { com.ascend.lifeos.data.Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
                     ) { Text("−", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
                     Text(
@@ -956,7 +957,7 @@ private fun QuickAddSheet(
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-                            .clickable { holidayDays += 1 },
+                            .clickable { com.ascend.lifeos.data.Haptics.tick(addCtx); holidayDays += 1 },
                         contentAlignment = Alignment.Center,
                     ) { Text("+", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
                 }
@@ -984,6 +985,7 @@ private fun QuickAddSheet(
 
 @Composable
 private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier, onValue: (Int) -> Unit) {
+    val tsCtx = LocalContext.current
     Column(modifier) {
         Text(
             label.uppercase(), color = TextDim, fontFamily = Display,
@@ -999,7 +1001,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
         ) {
             Text(
                 "−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(CircleShape).clickable { onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
             Text(
                 CalendarRepo.fmtMin(value), color = TextPrimary, style = metricStyle(16),
@@ -1007,7 +1009,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
             )
             Text(
                 "+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(CircleShape).clickable { onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
     }
@@ -1043,7 +1045,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                    .clickable { com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
+                    .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1065,7 +1067,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(Crit.copy(alpha = 0.10f))
                     .border(0.5.dp, Crit.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
-                    .clickable(onClick = onDelete)
+                    .clickable { com.ascend.lifeos.data.Haptics.warn(ctx); onDelete() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) {

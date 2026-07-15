@@ -165,7 +165,7 @@ private fun DirButton(label: String, sel: Boolean, modifier: Modifier, enabled: 
         modifier
             .clip(RoundedCornerShape(12.dp))
             .background(if (sel) CasAccent.copy(alpha = 0.16f) else CasPanel)
-            .border(0.5.dp, if (sel) CasAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .border(0.5.dp, if (sel) CasAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,

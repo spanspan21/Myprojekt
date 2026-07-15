@@ -124,7 +124,7 @@ internal fun BalanceHeader(
 
 @Composable
 private fun CasDivider() {
-    Box(Modifier.padding(horizontal = 10.dp).width(0.5.dp).height(26.dp).background(Color.White.copy(alpha = 0.10f)))
+    Box(Modifier.padding(horizontal = 10.dp).width(0.5.dp).height(26.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f)))
 }
 
 @Composable
@@ -133,7 +133,7 @@ internal fun AttemptDots(total: Int, left: Int) {
         repeat(total.coerceAtMost(8)) { i ->
             Box(
                 Modifier.size(9.dp).clip(CircleShape)
-                    .background(if (i < left) CasAccent else Color.White.copy(alpha = 0.10f)),
+                    .background(if (i < left) CasAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f)),
             )
         }
         if (total > 8) Text("+${total - 8}", color = CasDim, fontSize = FS.s9)
@@ -207,7 +207,7 @@ internal fun StakeChips(chips: List<Int>, stake: Int, accent: Color = CasAccent,
                 Modifier.weight(1f).pressScale { onStake(c) }
                     .clip(CircleShape)
                     .background(if (sel) accent else CasPanel)
-                    .border(0.5.dp, if (sel) accent else Color.White.copy(alpha = 0.10f), CircleShape)
+                    .border(0.5.dp, if (sel) accent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {

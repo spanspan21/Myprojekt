@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.training
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -562,7 +563,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                 } else {
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Train)
-                            .clickable { com.ascend.lifeos.data.Haptics.confirm(heroCtx); onStart() }.padding(vertical = 12.dp),
+                            .pressScale { com.ascend.lifeos.data.Haptics.confirm(heroCtx); onStart() }.padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -717,11 +718,12 @@ private fun dayLabel(d: java.time.LocalDate): String =
 
 @Composable
 private fun StepBox(label: String, onClick: () -> Unit) {
+    val sbCtx = LocalContext.current
     Box(
         Modifier.size(34.dp).clip(RoundedCornerShape(9.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(9.dp))
-            .clickable(onClick = onClick),
+            .clickable { com.ascend.lifeos.data.Haptics.tick(sbCtx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold) }
 }
@@ -835,12 +837,13 @@ private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOp
 
 @Composable
 private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
+    val stCtx = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).clickable(onClick = onMinus).padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
         Text(value, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.ExtraBold)
         Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).clickable(onClick = onPlus).padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
 
@@ -950,7 +953,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
 @Composable
 private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val qaCtx = LocalContext.current
-    GlassPanel(modifier.clickable { com.ascend.lifeos.data.Haptics.tick(qaCtx); onClick() }, corner = 16.dp) {
+    GlassPanel(modifier.pressScale { com.ascend.lifeos.data.Haptics.tick(qaCtx); onClick() }, corner = 16.dp) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, label, tint = Accent, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
@@ -963,7 +966,7 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = M
 private fun TemplateCard(modifier: Modifier = Modifier, tpl: WorkoutTemplate, onClick: () -> Unit) {
     val tcCtx = LocalContext.current
     val color = templateColor(tpl.split)
-    GlassPanel(modifier.width(155.dp).clickable { com.ascend.lifeos.data.Haptics.tick(tcCtx); onClick() }, corner = 16.dp) {
+    GlassPanel(modifier.width(155.dp).pressScale { com.ascend.lifeos.data.Haptics.tick(tcCtx); onClick() }, corner = 16.dp) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(color))
             Column(Modifier.padding(14.dp)) {
@@ -1210,6 +1213,7 @@ private fun ActivityQuickLog() {
                         Icon(
                             Icons.Rounded.Close, "Delete activity", tint = TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(14.dp).clickable {
+                                com.ascend.lifeos.data.Haptics.warn(ctx)
                                 com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
                                 celebrate = null
                                 com.ascend.lifeos.ui.kit.AppFeedback.show("Activity deleted")

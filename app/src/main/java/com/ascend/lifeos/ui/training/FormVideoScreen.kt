@@ -178,7 +178,14 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
         }
         Spacer(Modifier.height(16.dp))
 
-        if (clips.isNotEmpty()) {
+        if (clips.isEmpty()) {
+            com.ascend.lifeos.ui.kit.EmptyState(
+                icon = Icons.Rounded.PlayArrow,
+                title = "No form clips yet",
+                hint = "Record your first set to compare form over time",
+                accent = Mod.Train,
+            )
+        } else {
             SectionLabel("Saved clips · ${clips.size}")
             Spacer(Modifier.height(8.dp))
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 30.dp)) {

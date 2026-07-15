@@ -50,10 +50,13 @@ object RecoveryEngine {
         }
         val weightSum = parts.sumOf { it.first }
         var score = parts.sumOf { it.first * it.second } / weightSum * 100
-        // subjective morning check-ins nudge the score honestly
-        if (soreness == 3) score -= 8.0
-        if (morningEnergy == 1) score -= 5.0
-        if (morningEnergy == 3) score += 3.0
+        val ctx = com.ascend.lifeos.data.Repo.appContextOrNull()
+        val sorePen = ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RECOVERY_SORENESS_PEN, 8) } ?: 8
+        val lowEPen = ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RECOVERY_LOW_ENERGY_PEN, 5) } ?: 5
+        val highEBon = ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RECOVERY_HIGH_ENERGY_BON, 3) } ?: 3
+        if (soreness == 3) score -= sorePen.toDouble()
+        if (morningEnergy == 1) score -= lowEPen.toDouble()
+        if (morningEnergy == 3) score += highEBon.toDouble()
         return Math.round(score).toInt().coerceIn(5, 99)
     }
 

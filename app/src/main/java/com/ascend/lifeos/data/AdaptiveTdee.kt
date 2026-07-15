@@ -20,9 +20,9 @@ object AdaptiveTdee {
     fun compute(): Result? {
         val keys = Repo.lastDayKeys(28)
 
-        // intake series: only days with real logging (≥800 kcal counts as "logged the day")
+        val minKcal = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.TDEE_MIN_LOGGED_KCAL, 800) } ?: 800
         val intakes = keys.mapNotNull { k ->
-            Repo.dayFor(k)?.meals?.sumOf { it.kcal }?.takeIf { it >= 800 }
+            Repo.dayFor(k)?.meals?.sumOf { it.kcal }?.takeIf { it >= minKcal }
         }
 
         val cutoff = System.currentTimeMillis() - 28L * 86_400_000
@@ -47,7 +47,8 @@ object AdaptiveTdee {
 
         var ewmaStart = sorted.first().second
         var ewmaEnd = sorted.first().second
-        val alpha = 0.25
+        val alphaInt = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.TDEE_EWMA_ALPHA, 25) } ?: 25
+        val alpha = alphaInt / 100.0
         sorted.forEachIndexed { i, (_, kg) ->
             ewmaEnd = alpha * kg + (1 - alpha) * ewmaEnd
             if (i <= sorted.size / 3) ewmaStart = ewmaEnd

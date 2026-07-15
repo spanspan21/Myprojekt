@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.training
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
@@ -196,7 +197,7 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
                     }
                 }
                 items(exInCat, key = { it.id }) { ex ->
-                    GlassPanel(Modifier.animateItem().fillMaxWidth().clickable { detail = ex }, corner = 14.dp) {
+                    GlassPanel(Modifier.animateItem().fillMaxWidth().pressScale { detail = ex }, corner = 14.dp) {
                         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
@@ -362,7 +363,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
 
         LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
             items(filtered, key = { it.id }) { ex ->
-                GlassPanel(Modifier.fillMaxWidth().animateItem().clickable { onPicked(ex) }, corner = 14.dp) {
+                GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale { onPicked(ex) }, corner = 14.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))

@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -102,10 +103,12 @@ fun TimerScreen(onClose: () -> Unit) {
             ) {
                 listOf(TimerMode.STOPWATCH to "Stopwatch", TimerMode.COUNTDOWN to "Countdown").forEach { (m, label) ->
                     val sel = m == mode
+                    val bgClr by animateColorAsState(if (sel) TimerAccent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f), label = "tmBg$m")
+                    val txtClr by animateColorAsState(if (sel) TimerAccent else TextDim, label = "tmTx$m")
                     Box(
                         Modifier.weight(1f)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (sel) TimerAccent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f))
+                            .background(bgClr)
                             .clickable(enabled = !running) {
                                 mode = m; elapsedMs = 0; finished = false
                             }
@@ -114,7 +117,7 @@ fun TimerScreen(onClose: () -> Unit) {
                     ) {
                         Text(
                             label,
-                            color = if (sel) TimerAccent else TextDim,
+                            color = txtClr,
                             fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold,
                         )
                     }

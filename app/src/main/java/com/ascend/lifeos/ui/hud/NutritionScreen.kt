@@ -223,7 +223,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             Spacer(Modifier.height(14.dp))
 
             // ---- macro arc-reactor ----
-            GlassPanel(Modifier.fillMaxWidth().clickable { onMicros() }) {
+            GlassPanel(Modifier.fillMaxWidth().pressScale { onMicros() }) {
                 Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     MacroReactor(
                         pPct = fracRaw(totals.protein, p.proteinGoal),

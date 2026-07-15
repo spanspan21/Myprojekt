@@ -29,6 +29,15 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "Recovery tuning: soreness penalty, low-energy penalty, high-energy bonus are now Settings steppers — calibrate how your morning check-in nudges readiness",
+        "TDEE tuning: min logged kcal and trend smoothing alpha are now Settings steppers — fine-tune how your expenditure tracks",
+        "Greeting hour boundaries are configurable — morning, day, evening and night greetings start when YOU say",
+        "Dashboard vitals now animate smoothly — the mini rings fill on load instead of snapping",
+        "Start session, last session and quick-log buttons press down and spring back (pressScale) — key actions feel tactile",
+        "Timer mode picker cross-fades between stopwatch and countdown — no more instant color snaps",
+        "Form video clips show a helpful empty state when you haven't recorded yet — no more blank space",
+        "Color.White eradicated from Guard intercept and Casino screens — full Ivory/Void theme compliance everywhere",
+        "Haptics everywhere round 3: calendar chevrons, month grid, FAB, event chips, type picker, time/holiday steppers, weather toggle, delete, stats back, training steppers, habit completion",
         "Focus score ring now animates smoothly — progress fills and color transitions instead of snapping",
         "Completed goals glow green with a checkmark instead of showing '100' — achievement feels earned",
         "Tomorrow preview: after 20:00 the Next Up card peeks at tomorrow's first event so you know what's coming",

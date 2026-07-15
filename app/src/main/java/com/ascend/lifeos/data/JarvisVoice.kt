@@ -115,10 +115,15 @@ object JarvisVoice {
 
     fun greeting(name: String): String {
         val now = java.time.LocalDateTime.now()
+        val ctx = Repo.appContextOrNull()
+        val mStart = ctx?.let { Prefs.int(it, Prefs.GREET_MORNING_START, 5) } ?: 5
+        val dStart = ctx?.let { Prefs.int(it, Prefs.GREET_DAY_START, 11) } ?: 11
+        val eStart = ctx?.let { Prefs.int(it, Prefs.GREET_EVE_START, 17) } ?: 17
+        val nStart = ctx?.let { Prefs.int(it, Prefs.GREET_NIGHT_START, 22) } ?: 22
         val (bank, band) = when (now.hour) {
-            in 5..10 -> GREET_MORNING to 0
-            in 11..16 -> GREET_DAY to 1
-            in 17..21 -> GREET_EVENING to 2
+            in mStart until dStart -> GREET_MORNING to 0
+            in dStart until eStart -> GREET_DAY to 1
+            in eStart until nStart -> GREET_EVENING to 2
             else -> GREET_NIGHT to 3
         }
         // Seed = Tag × 4 + Stundenband — stabil im Moment, frisch am nächsten

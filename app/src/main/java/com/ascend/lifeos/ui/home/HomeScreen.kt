@@ -798,6 +798,7 @@ fun HomeScreen(
                                 .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                                 .clickable {
                                     if (!done) {
+                                        com.ascend.lifeos.data.Haptics.confirm(ctx)
                                         com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, h.id, dk, true)
                                     }
                                 }
@@ -900,7 +901,7 @@ fun HomeScreen(
                     }
                     val exercises = s.sets.map { it.exerciseName }.distinct().take(4)
                     Spacer(Modifier.height(18.dp))
-                    Panel(Modifier.fillMaxWidth().clickable(onClick = onOpenTrain), corner = 16.dp) {
+                    Panel(Modifier.fillMaxWidth().pressScale(onOpenTrain), corner = 16.dp) {
                         Column(Modifier.padding(14.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("LAST SESSION", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.weight(1f))
@@ -1064,7 +1065,7 @@ private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
         Box(
             Modifier.size(52.dp).clip(CircleShape)
                 .background(Mod.Home)
-                .clickable(onClick = onClick),
+                .pressScale(onClick),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.Add, "Quick log", tint = Void, modifier = Modifier.size(26.dp))
@@ -1292,6 +1293,7 @@ private fun MacroBar(label: String, current: Int, goal: Int, color: Color, modif
 
 @Composable
 private fun VitalMini(label: String, value: String, progress: Float, color: Color) {
+    val animP by androidx.compose.animation.core.animateFloatAsState(progress.coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "vital")
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
             androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
@@ -1304,7 +1306,7 @@ private fun VitalMini(label: String, value: String, progress: Float, color: Colo
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
                 )
                 drawArc(
-                    color = color, startAngle = -90f, sweepAngle = 360f * progress.coerceIn(0f, 1f),
+                    color = color, startAngle = -90f, sweepAngle = 360f * animP,
                     useCenter = false, topLeft = androidx.compose.ui.geometry.Offset(pad, pad), size = arc,
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
                 )

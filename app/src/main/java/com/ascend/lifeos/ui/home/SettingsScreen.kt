@@ -209,6 +209,22 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { protNudge = (protNudge - 15).coerceAtLeast(30); Prefs.setInt(ctx, Prefs.PROTEIN_NUDGE_MIN, protNudge) },
                 onInc = { protNudge = (protNudge + 15).coerceAtMost(180); Prefs.setInt(ctx, Prefs.PROTEIN_NUDGE_MIN, protNudge) },
             )
+            var gm by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GREET_MORNING_START, 5)) }
+            GoalStepperRow("Morning greets from", "${gm}:00",
+                onDec = { gm = (gm - 1).coerceAtLeast(3); Prefs.setInt(ctx, Prefs.GREET_MORNING_START, gm) },
+                onInc = { gm = (gm + 1).coerceAtMost(8); Prefs.setInt(ctx, Prefs.GREET_MORNING_START, gm) })
+            var gd by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GREET_DAY_START, 11)) }
+            GoalStepperRow("Day greets from", "${gd}:00",
+                onDec = { gd = (gd - 1).coerceAtLeast(9); Prefs.setInt(ctx, Prefs.GREET_DAY_START, gd) },
+                onInc = { gd = (gd + 1).coerceAtMost(14); Prefs.setInt(ctx, Prefs.GREET_DAY_START, gd) })
+            var ge by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GREET_EVE_START, 17)) }
+            GoalStepperRow("Evening greets from", "${ge}:00",
+                onDec = { ge = (ge - 1).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.GREET_EVE_START, ge) },
+                onInc = { ge = (ge + 1).coerceAtMost(20); Prefs.setInt(ctx, Prefs.GREET_EVE_START, ge) })
+            var gn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GREET_NIGHT_START, 22)) }
+            GoalStepperRow("Night greets from", "${gn}:00",
+                onDec = { gn = (gn - 1).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, gn) },
+                onInc = { gn = (gn + 1).coerceAtMost(24); Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, gn) })
         }
 
         // ── NOTIFICATIONS ────────────────────────────────────────────
@@ -481,6 +497,18 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
         }
 
+        // ── TDEE ─────────────────────────────────────────────────────
+        SettingsSection("TDEE tuning") {
+            var tdeeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_MIN_LOGGED_KCAL, 800)) }
+            GoalStepperRow("Min logged kcal", "$tdeeMin kcal",
+                onDec = { tdeeMin = (tdeeMin - 50).coerceAtLeast(400); Prefs.setInt(ctx, Prefs.TDEE_MIN_LOGGED_KCAL, tdeeMin) },
+                onInc = { tdeeMin = (tdeeMin + 50).coerceAtMost(1500); Prefs.setInt(ctx, Prefs.TDEE_MIN_LOGGED_KCAL, tdeeMin) })
+            var ewma by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_EWMA_ALPHA, 25)) }
+            GoalStepperRow("Trend smoothing", "0.${"%02d".format(ewma)}",
+                onDec = { ewma = (ewma - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.TDEE_EWMA_ALPHA, ewma) },
+                onInc = { ewma = (ewma + 5).coerceAtMost(50); Prefs.setInt(ctx, Prefs.TDEE_EWMA_ALPHA, ewma) })
+        }
+
         // ── FUEL ─────────────────────────────────────────────────────
         SettingsSection("Fuel") {
             val p = Repo.data.profile
@@ -653,6 +681,18 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { rdWarn = (rdWarn - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.READINESS_WARN, rdWarn) },
                 onInc = { rdWarn = (rdWarn + 5).coerceAtMost(rdGood - 5); Prefs.setInt(ctx, Prefs.READINESS_WARN, rdWarn) },
             )
+            var sorePen by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RECOVERY_SORENESS_PEN, 8)) }
+            GoalStepperRow("Soreness penalty", "$sorePen pts",
+                onDec = { sorePen = (sorePen - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.RECOVERY_SORENESS_PEN, sorePen) },
+                onInc = { sorePen = (sorePen + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.RECOVERY_SORENESS_PEN, sorePen) })
+            var lowEPen by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RECOVERY_LOW_ENERGY_PEN, 5)) }
+            GoalStepperRow("Low energy penalty", "$lowEPen pts",
+                onDec = { lowEPen = (lowEPen - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.RECOVERY_LOW_ENERGY_PEN, lowEPen) },
+                onInc = { lowEPen = (lowEPen + 1).coerceAtMost(10); Prefs.setInt(ctx, Prefs.RECOVERY_LOW_ENERGY_PEN, lowEPen) })
+            var highEBon by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RECOVERY_HIGH_ENERGY_BON, 3)) }
+            GoalStepperRow("High energy bonus", "$highEBon pts",
+                onDec = { highEBon = (highEBon - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.RECOVERY_HIGH_ENERGY_BON, highEBon) },
+                onInc = { highEBon = (highEBon + 1).coerceAtMost(10); Prefs.setInt(ctx, Prefs.RECOVERY_HIGH_ENERGY_BON, highEBon) })
             var debtWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60)) }
             GoalStepperRow("Sleep debt warning", "${debtWarn}m",
                 onDec = { debtWarn = (debtWarn - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.SLEEP_DEBT_WARN, debtWarn) },

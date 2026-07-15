@@ -320,7 +320,7 @@ private fun LimitLock(
                         Box(
                             Modifier.weight(1f)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Color.White.copy(alpha = 0.03f))
+                                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
                                 .border(0.5.dp, Hairline, RoundedCornerShape(14.dp))
                                 .clickable(enabled = !waiting, onClick = onLater)
                                 .padding(vertical = 13.dp),
@@ -447,7 +447,7 @@ private fun LockHero(
             val tl = Offset(inset, inset)
             val sz = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
             drawArc(
-                Color.White.copy(alpha = 0.05f), -90f, 360f, false,
+                com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), -90f, 360f, false,
                 topLeft = tl, size = sz,
                 style = androidx.compose.ui.graphics.drawscope.Stroke(strokePx, cap = androidx.compose.ui.graphics.StrokeCap.Round),
             )
@@ -471,7 +471,7 @@ private fun LockHero(
                 Box(
                     Modifier.size(56.dp).graphicsLayer { translationY = fy }
                         .clip(RoundedCornerShape(15.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, Hairline, RoundedCornerShape(15.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -542,8 +542,8 @@ private fun LockButton(label: String, primary: Boolean, onClick: () -> Unit) {
         Modifier.fillMaxWidth()
             .pressScale(onClick)
             .clip(RoundedCornerShape(15.dp))
-            .background(if (primary) Neon else Color.White.copy(alpha = 0.04f))
-            .then(if (primary) Modifier else Modifier.border(0.5.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(15.dp)))
+            .background(if (primary) Neon else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .then(if (primary) Modifier else Modifier.border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f), RoundedCornerShape(15.dp)))
             .padding(vertical = 15.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -675,7 +675,7 @@ private fun GateLock(
                 Box(
                     Modifier.weight(1f)
                         .clip(RoundedCornerShape(15.dp))
-                        .background(Color.White.copy(alpha = 0.03f))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
                         .border(0.5.dp, Hairline, RoundedCornerShape(15.dp))
                         .clickable(enabled = ready, onClick = onContinue)
                         .padding(vertical = 15.dp),

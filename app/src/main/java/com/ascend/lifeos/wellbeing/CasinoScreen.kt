@@ -237,7 +237,7 @@ private fun StakePhase(
                         Modifier.weight(1f).pressScale { onPairStake(s) }
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (sel) CasGold.copy(alpha = 0.16f) else CasPanel)
-                            .border(0.5.dp, if (sel) CasGold.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+                            .border(0.5.dp, if (sel) CasGold.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
                             .padding(vertical = 11.dp),
                         contentAlignment = Alignment.Center,
                     ) {
