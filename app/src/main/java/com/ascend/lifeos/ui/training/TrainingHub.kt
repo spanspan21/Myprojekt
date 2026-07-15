@@ -67,6 +67,7 @@ fun TrainingHub(
     // The assignment is the plan; templates + free workout are a deliberate
     // detour, collapsed by default so they aren't an equal-weight escape hatch.
     var offPlanOpen by remember { mutableStateOf(false) }
+    var historyEditorFor by remember { mutableStateOf<WorkoutSessionEntity?>(null) }
 
     LaunchedEffect(progs, profile != null) {
         if (profile != null) vm.regeneratePlan() else vm.refreshFreshness()
@@ -349,7 +350,7 @@ fun TrainingHub(
             }
             items(sessions.take(3), key = { it.session.id }) { sws ->
                 Column(Modifier.animateItem()) {
-                    SessionRow(sws)
+                    SessionRow(sws, onOpen = { historyEditorFor = sws.session })
                     Spacer(Modifier.height(8.dp))
                 }
             }
@@ -402,6 +403,11 @@ fun TrainingHub(
                 QuickAction(Icons.Rounded.Search, "Exercises", Modifier.weight(1f), onOpenExercises)
             }
         }
+    }
+
+    // tap a recent workout → edit its history (PRs reconcile automatically)
+    historyEditorFor?.let { s ->
+        SessionEditorDialog(vm, s) { historyEditorFor = null }
     }
 }
 
@@ -907,12 +913,12 @@ private fun TemplateCard(tpl: WorkoutTemplate, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SessionRow(sws: SessionWithSets) {
+private fun SessionRow(sws: SessionWithSets, onOpen: (() -> Unit)? = null) {
     val s = sws.session
     val date = java.text.SimpleDateFormat("dd.MM", java.util.Locale.getDefault()).format(java.util.Date(s.startedAt))
     val color = templateColor(s.templateName)
     GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
-        Row(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().let { m -> onOpen?.let { m.clickable(onClick = it) } ?: m }) {
             Box(Modifier.width(3.dp).fillMaxHeight().background(color))
             Row(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

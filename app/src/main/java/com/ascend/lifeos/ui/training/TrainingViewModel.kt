@@ -563,6 +563,46 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     fun dismissUndo() { lastDeletedSet = null }
 
+    // ── History editing (finished sessions) ─────────────────────────────────
+    // Strong/Hevy-class: mis-typed history is editable, but the PR ledger's
+    // honesty survives — after every change the exercise's records are checked
+    // against what is actually logged (PrReconcile) and floating PRs removed.
+
+    /** Bump to re-read a session's sets after an edit (dialog subscribes). */
+    var historyRev by mutableIntStateOf(0)
+        private set
+
+    fun deleteHistorySet(set: WorkoutSetEntity) = viewModelScope.launch(Dispatchers.IO) {
+        dao.deleteSet(set.id)
+        refreshSessionAggregates(set.sessionId)
+        reconcilePrs(set.exerciseId)
+        historyRev++
+    }
+
+    fun editHistorySet(set: WorkoutSetEntity, reps: Int, weight: Float?) = viewModelScope.launch(Dispatchers.IO) {
+        dao.upsertSet(set.copy(reps = reps.coerceAtLeast(if (set.holdSeconds != null) 0 else 1), weight = weight))
+        refreshSessionAggregates(set.sessionId)
+        reconcilePrs(set.exerciseId)
+        historyRev++
+    }
+
+    suspend fun setsOfSession(sessionId: String): List<WorkoutSetEntity> =
+        dao.setsForSessionOnce(sessionId)
+
+    private suspend fun refreshSessionAggregates(sessionId: String) {
+        val session = dao.sessionById(sessionId) ?: return
+        val sets = dao.setsForSessionOnce(sessionId)
+        dao.upsertSession(session.copy(totalSets = sets.size, totalReps = sets.sumOf { it.reps.coerceAtLeast(0) }))
+    }
+
+    private suspend fun reconcilePrs(exId: String) {
+        val sets = dao.allCountedSetsForExercise(exId)
+            .map { PrReconcile.SetFacts(it.reps, it.weight, it.holdSeconds) }
+        val prs = dao.prsForExercise(exId).first()
+            .map { PrReconcile.PrFacts(it.id, it.type, it.value) }
+        PrReconcile.stalePrIds(sets, prs).forEach { dao.deletePr(it) }
+    }
+
     // ── PR detection (Spec §4.1) ────────────────────────────────────────────
 
     private suspend fun checkAndRecordPr(

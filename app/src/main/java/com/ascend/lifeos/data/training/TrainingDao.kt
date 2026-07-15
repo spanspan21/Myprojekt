@@ -89,6 +89,16 @@ interface TrainingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPr(pr: PersonalRecordEntity)
 
+    @Query("DELETE FROM personal_records WHERE id = :id")
+    suspend fun deletePr(id: String)
+
+    /** Everything PR detection ever saw for this movement (history reconcile). */
+    @Query("SELECT * FROM workout_sets WHERE exerciseId = :exId AND setType IN ('NORMAL','FAILURE')")
+    suspend fun allCountedSetsForExercise(exId: String): List<WorkoutSetEntity>
+
+    @Query("SELECT * FROM workout_sessions WHERE id = :id")
+    suspend fun sessionById(id: String): WorkoutSessionEntity?
+
     // ── Progression ─────────────────────────────────────────────────────────
 
     @Query("SELECT * FROM user_progression")
