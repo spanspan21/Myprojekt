@@ -414,6 +414,32 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 startedAt = now, finishedAt = null, isComplete = false,
                 totalSets = 0, totalReps = 0, durationMinutes = 0,
             ))
+            // off-plan templates get the same antagonist pairing the generated
+            // plan enjoys (SupersetPlanner: push↔pull, quads↔hams — Weakley 2025
+            // time saving) — only when the template ships without groups, and
+            // the pairs land adjacent exactly like in the plan
+            if (template != null && activeExercises.size >= 3 &&
+                activeExercises.all { it.supersetGroup == null }
+            ) {
+                runCatching {
+                    val muscles = dao.allExercisesOnce().associateBy({ it.id }, { it.primaryMuscle })
+                    val planned = activeExercises.map {
+                        PlannedExercise(
+                            it.exerciseId, it.exerciseName, it.targetSets,
+                            it.targetReps, it.targetReps, null, null, false, it.restSeconds,
+                        )
+                    }
+                    val paired = SupersetPlanner.assign(planned) { exId -> muscles[exId] }
+                    val byId = activeExercises.associateBy { it.exerciseId }
+                    val reordered = paired.mapNotNull { pe ->
+                        byId[pe.exerciseId]?.also { it.supersetGroup = pe.supersetGroup }
+                    }
+                    if (reordered.size == activeExercises.size) {
+                        activeExercises.clear()
+                        activeExercises.addAll(reordered)
+                    }
+                }
+            }
         }
     }
 
