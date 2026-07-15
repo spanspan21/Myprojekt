@@ -350,7 +350,12 @@ fun TrainingHub(
             }
             items(sessions.take(3), key = { it.session.id }) { sws ->
                 Column(Modifier.animateItem()) {
-                    SessionRow(sws, onOpen = { historyEditorFor = sws.session })
+                    // only FINISHED sessions open the history editor — the live
+                    // session's sets belong to the logger (in-memory state would
+                    // race the DB edits)
+                    SessionRow(sws, onOpen = if (sws.session.isComplete) {
+                        { historyEditorFor = sws.session }
+                    } else null)
                     Spacer(Modifier.height(8.dp))
                 }
             }
