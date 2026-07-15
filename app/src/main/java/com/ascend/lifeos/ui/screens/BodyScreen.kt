@@ -510,9 +510,18 @@ fun BodyScreen() {
                         val weekAgo = log.lastOrNull { it.ts < System.currentTimeMillis() - 6L * 86_400_000 }?.kg
                         val delta = weekAgo?.let { latest - it }
                         Text("%.1f kg".format(latest), color = TextPrimary, style = metricStyle(20))
+                        // the scale line speaks the goal's language — a flat week
+                        // IS the recomp plan, not a stall (same story as the coach)
+                        val goal = com.ascend.lifeos.data.Repo.data.profile.dietGoal
                         Text(
-                            delta?.let { d -> "%.1f kg vs last week".format(d).let { s -> if (d >= 0) "+$s" else s } }
-                                ?: "tap to add today's weigh-in",
+                            delta?.let { d ->
+                                val s = "%.1f kg vs last week".format(d).let { t -> if (d >= 0) "+$t" else t }
+                                when {
+                                    goal == "recomp" && kotlin.math.abs(d) < 0.4 -> "$s — steady is the recomp plan"
+                                    goal == "fuel" && kotlin.math.abs(d) < 0.4 -> "$s — holding, fuelled"
+                                    else -> s
+                                }
+                            } ?: "tap to add today's weigh-in",
                             color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
                         )
                     }
