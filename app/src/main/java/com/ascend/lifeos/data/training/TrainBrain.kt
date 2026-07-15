@@ -151,6 +151,58 @@ object TrainBrain {
         lastRpe >= 9 -> "Close to failure — hold ${lastReps} or −1 rep"
         else -> "Solid effort — repeat $lastReps clean reps"
     }
+
+    /** One logged set, storage-free — what sessionTarget reasons over. */
+    data class SetSnapshot(val reps: Int, val weight: Float?, val rpe: Int?, val holdSeconds: Int?)
+
+    /**
+     * Session-over-session progression — the loop MacroFactor/Alpha run and a
+     * plain history display doesn't: double progression (fill the rep range
+     * at a load, THEN climb the load and reset the reps — Ratamess 2009)
+     * modulated by last session's RPE (Helms 2016: effort decides whether you
+     * push, consolidate, or back off). Shown as TODAY'S TARGET when an
+     * exercise opens, before the first set is logged.
+     */
+    fun sessionTarget(last: List<SetSnapshot>, isHold: Boolean, repHi: Int = 12): String? {
+        if (last.isEmpty()) return null
+        val eff = last.mapNotNull { it.rpe }.takeIf { it.isNotEmpty() }?.average()
+
+        if (isHold) {
+            val best = last.maxOf { maxOf(it.holdSeconds ?: 0, it.reps) }
+            if (best <= 0) return null
+            return if (eff != null && eff >= 9.5) {
+                "Today: hold ${best}s again — own it before adding time"
+            } else {
+                "Today: push the hold to ${best + 5}s"
+            }
+        }
+
+        val top = last.maxWithOrNull(compareBy({ it.weight ?: 0f }, { it.reps })) ?: return null
+        val w = top.weight
+        if (w == null || w <= 0f) {
+            // bodyweight: rep progression is the only axis
+            return if (eff != null && eff >= 9.5) {
+                "Today: repeat ${top.reps} clean reps — consolidate first"
+            } else {
+                "Today: beat ${top.reps} reps on your top set"
+            }
+        }
+
+        // Locale.ROOT: the app writes decimals with a point everywhere ("2.5 kg"),
+        // a German device default would flip this one line to "82,5"
+        fun fmtW(v: Float) = if (v % 1f == 0f) "${v.toInt()}" else String.format(java.util.Locale.ROOT, "%.1f", v)
+        val inc = if (w >= 60f) 2.5f else 1.25f     // smallest sensible plate jump
+        return when {
+            // last time was a grinder — earn it again with a rep in reserve
+            eff != null && eff >= 9.5 ->
+                "Today: ${fmtW(w)} kg × ${(top.reps - 1).coerceAtLeast(1)} — back off a rep, bank clean work"
+            // range filled at manageable effort → the load climbs
+            top.reps >= repHi && (eff == null || eff <= 8.5) ->
+                "Today: ${fmtW(w + inc)} kg — range filled, load climbs (double progression)"
+            else ->
+                "Today: ${fmtW(w)} kg × ${top.reps + 1} — one more rep than last time"
+        }
+    }
 }
 
 /** Fitbod-style warm-up: 2 mobility drills + one easier variant of the first lift. */

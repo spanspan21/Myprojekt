@@ -308,6 +308,7 @@ private fun ExerciseSetLogger(
     var holdSec by remember(ex.exerciseId) { mutableStateOf("") }
     var showAdvanced by remember(ex.exerciseId) { mutableStateOf(false) }
     var ghost by remember(ex.exerciseId) { mutableStateOf<String?>(null) }
+    var target by remember(ex.exerciseId) { mutableStateOf<String?>(null) }
 
     // Real category icon + unit ("sec" holds vs "reps") for this exercise.
     val exEntity by androidx.compose.runtime.produceState<com.ascend.lifeos.data.training.ExerciseEntity?>(null, ex.exerciseId) {
@@ -338,6 +339,13 @@ private fun ExerciseSetLogger(
                         last.rpe?.let { append(" · RPE $it") }
                     }
                 }
+                // session-over-session target: double progression + RPE over the
+                // FULL last session of this exercise, not just its final set
+                val lastSession = history.filter { it.sessionId == last.sessionId }
+                target = TrainBrain.sessionTarget(
+                    lastSession.map { TrainBrain.SetSnapshot(it.reps, it.weight, it.rpe, it.holdSeconds) },
+                    isHold,
+                )
             }
         }
     }
@@ -458,6 +466,17 @@ private fun ExerciseSetLogger(
             ghost?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, color = Accent.copy(alpha = 0.7f), fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            }
+            // before the first set: the session target (double progression);
+            // once sets land, live RPE autoregulation takes over the same slot
+            if (ex.loggedSets.isEmpty()) {
+                target?.let { t ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        t, color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+                    )
+                }
             }
             // live autoregulation: last set's RPE steers the next target
             ex.loggedSets.lastOrNull()?.let { last ->
