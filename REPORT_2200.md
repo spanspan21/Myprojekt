@@ -1,6 +1,6 @@
 # JARVIS — Tagesbericht 15.07.2026 · „NASA-Schicht bis 22 Uhr"
 
-**v2.24 → v2.27 (Code 29) · 14 App-Commits + 3 Dashboard-Deploys · 251 Unit-Tests grün (+21 neu) · jede Kern-Funktion live am Emulator bewiesen**
+**v2.24 → v2.27 (Code 29) · 16 App-Commits + 3 Dashboard-Deploys · 255 Unit-Tests grün (+25 neu) · 3 adversariale Review-Runden (15 Funde, alle gefixt) · jede Kern-Funktion live am Emulator bewiesen**
 
 Der Auftrag: die App immer wieder kritisch zerlegen (Design, Struktur, Funktion), andere Apps studieren und es besser machen, Flexibilität für **jeden Menschen, jede Sportart, jeden Lifestyle, jede Art von Ziel** — studienbasiert, mit Algorithmen, die andere Apps nicht haben.
 
@@ -77,6 +77,14 @@ Das Gym feiert PRs, geloggte Aktivitäten waren nur eine Liste. Jetzt:
 
 Zusätzlich vom Agenten **verifiziert als korrekt**: Band-/Raten-Mathe der neuen Phasen (von Hand nachgerechnet), Bestands-Nutzer-Verhalten (dein Hockey-Profil, alte Ziele), Compose-Keys, Web-Sync-Schemata.
 
+### Review-Runde 3 (dritter frischer Agent, über die späten Diffs) — 4 Minor-Funde, alle gefixt
+1. Wasser-Kredit-Lookup lief unmemoisiert in der Composition (Store-Scan pro Wasser-Tap) → memoisiert auf (Tag, Trainingsstatus, Store-Revision).
+2. `ActivityStore.dayKeyOf` war ein Kalender-Duplikat der kanonischen 6-Uhr-Funktion und wich in den zwei DST-Stunden pro Jahr ab → delegiert jetzt an `core.dayKeyOf`.
+3. Der neue Stats-Chart summierte die **rohe** Liste, während die Strain-Pipeline die **deduplizierte** nutzt — zwei „Load-Wahrheiten" in derselben Einheit → Chart liest jetzt dasselbe Ledger wie ATL/CTL; die Bests bleiben bewusst auf der vollen Liste (ein PR ist ein PR).
+4. „Lauf"/„Jog(ging)" als Wort-**Anfang** fing deutsche Komposita („Laufzeitende Handyvertrag", „Laufschuhe kaufen", „Jogginghose") → exaktes-Wort-Matching, testgepinnt.
+
+Zusätzlich in Runde 3 **geprüft und sauber**: kein Crash-Pfad im Chart, Wochen-Bucketing systemkonsistent, `rev`-Subscriptions korrekt, Voice-Konsumenten, und — am wichtigsten — **die v2.24→v2.27-Migration deines S24: keinerlei Schema-/Prefs-Änderung, ohne Activity-Logs identisches UI, Hockey-Klassifikation testgepinnt unverändert.**
+
 ### Live-Verifikations-Matrix (Emulator, headless)
 | Szenario | Beweis |
 |---|---|
@@ -98,8 +106,9 @@ Zusätzlich vom Agenten **verifiziert als korrekt**: Band-/Raten-Mathe der neuen
 
 ---
 
-## 4. Web-Dashboard (2 Deploys, 278 Vitest grün)
+## 4. Web-Dashboard (3 Deploys, 278 Vitest grün)
 - Fuel-Badge kennt Recomp & Fuel; %/Wo-Suffix nur noch bei Zielen mit Rate.
+- Makro-Reaktor erklärt die Phase in einem ehrlichen Satz (App-Parität zu GOAL_HINTS): Recomp-Nutzer lesen „Taille & Lifts zählen, die Waage nicht" direkt unterm Badge.
 - Training-Tile zeigt die Bests der Haupt-Aktivität (gleiche Regeln wie die App: Pace ab 2 km).
 
 ---
@@ -116,7 +125,8 @@ Zusätzlich vom Agenten **verifiziert als korrekt**: Band-/Raten-Mathe der neuen
 | `e8a2fc3` | Review-Runde 2: Plan-Range, Celebrate-State, Kalender-Label |
 | `55a1a61` | Wasser-Kredit sport-treu + „Lauf"-Keyword |
 | `b813ee4` | Statistics: 8-Wochen-Activity-Load + Bests je Typ |
-| `ae80831` | **v2.27 (Code 29) — finale Version für dein S24** |
+| `ae80831` | v2.27 (Code 29) Bump |
+| `8a7d02e` | **Review-Runde 3: vier Minors, alle gefixt — finale S24-Version** |
 
 ---
 
