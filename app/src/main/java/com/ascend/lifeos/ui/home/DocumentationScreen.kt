@@ -160,7 +160,7 @@ private val CHAPTERS: List<DocChapter> = listOf(
         listOf(
             DocTopic(
                 "The three daily missions",
-                "Train, Fuel and Water. Train completes when you log a workout or any sets. Fuel completes when the day's calories reach your goal. Water completes when you reach your glass target. Finishing all three keeps your streak alive.",
+                "Train, Fuel and Water. Train completes when you log a workout, any sets, or an activity (a run, ride, practice — every sport counts). Fuel completes when the day's calories reach your goal. Water completes when you reach your glass target. Finishing all three keeps your streak alive.",
             ),
             DocTopic(
                 "Streak",
@@ -264,7 +264,7 @@ private val CHAPTERS: List<DocChapter> = listOf(
             ),
             DocTopic(
                 "Calorie target (TDEE)",
-                "Your calorie goal comes from your body profile and activity; with adaptive TDEE on, it nudges based on your logged intake and weight trend so the target stays honest as your body changes.",
+                "Your calorie goal comes from your body profile, activity and goal type — Cut, Recomp, Maintain, Fuel or Build, each with its own study-anchored macro logic. With adaptive TDEE on, a weekly check-in measures what you really burn from logged intake and the weight trend, then proposes hedged adjustments (never more than 250 kcal per step) so the target stays honest as your body changes.",
             ),
             DocTopic(
                 "Hydration",
