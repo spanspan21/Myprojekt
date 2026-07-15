@@ -317,6 +317,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 "water 2 · 500 ml — hydration",
                 "71.5 kg — weigh-in",
                 "kcal 400 pizza — quick food log",
+                "lauf 45 · ride 90 rpe8 — activity log",
                 "focus 25 / 50 / 90 — hard-block session",
                 "${CommandEngine.sportHintWord()} tue 17-19 · exam fri 9 — calendar",
                 "train · fuel · body · skills · report — jump",
