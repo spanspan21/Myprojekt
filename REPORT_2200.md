@@ -161,6 +161,13 @@ Nach dem Feature-Block bin ich rotierend durch JEDEN Bereich: kritisch ansehen �
 
 Dazu Selbst-Review-Funde am History-Editor (nur abgeschlossene Sessions öffnen; Stepper delta-basiert gegen die DB — zwei schnelle Taps landen als −2) und Checks **ohne** Befund (Finance, Guard, Heatmap, Skills-Engine, Web-Muster — die eine `workoutDone`-Wahrheit deckt alles automatisch).
 
+**Runde 4/5 der Zyklen (die späten Züge):**
+- **Rezept-Fit-Score spricht die Ziel-Sprache**: Cut/Recomp gewichten Protein mit 45 %, Fuel gewichtet Carbs mit 30 % gegen das Rest-Carb-Budget des Tages — die Pasta-Bowl schlägt am Fuel-Tag endlich den Hähnchensalat.
+- **Frequenz-Kalender** (12-Wochen-Grid in Statistics) füllt Aktivitäts-Tage — das Trainingsjahr eines Läufers liest sich nicht mehr leer.
+- **WEEK-Kachel im Hub** zählt Einheiten = Sessions + Activities (dieselbe Zahl wie Dashboard und ShareCard).
+- **Palette-Hilfe-Karte** listet das Activity-Kommando („lauf 45 · ride 90 rpe8") — live bewiesen: `lauf 45 rpe7` → run/45/7 im Store.
+- **👑 Der Coach wird LAST-adaptiv (Gabbett × Helms)**: Der Wochen-Check-in liest jetzt dasselbe 60-Tage-Load-Ledger wie die Strain-Karte (nach `LoadLedger` extrahiert: Gym-Sätze + Kalender-Sportblöcke + Aktivitäten, dedupliziert). Eine ACWR-Gefahrenzonen-Woche (>1,5) ist das **dritte Strain-Signal** neben schlechter Recovery und Klausurwochen — ein Defizit auf einer Lastspitze kostet Muskel und lädt Verletzungen ein, also easet der Cut auf ×0,6 mit eigener Begründung („fuel the recovery, protect the tissue"). **Keine andere App koppelt Trainingslast-Wissenschaft mit Diät-Coaching.**
+
 ## 9. Backlog (ehrlich, priorisiert)
 - Wasser-Vereinheitlichung dynamisch überall (braucht Weather-Zugriff in 8 weiteren Oberflächen).
 - Superset-Presets im Template-Editor.
