@@ -134,13 +134,13 @@ Zusätzlich in Runde 3 **geprüft und sauber**: kein Crash-Pfad im Chart, Wochen
 **Handy anstecken → ich installiere v2.27.** Dein Profil bleibt exakt wie es ist (Hockey, deine Ziele, deine Historie) — du bekommst obendrauf: den Ziel-Picker mit 5 Typen, TODAY'S TARGET im Logger, Activity-Bests + Feiern, die Ausdauer-Statistik, den sport-treuen Wasser-Kredit und alle Review-Fixes.
 
 ## 7. Nachschlag nach dem ersten Berichtsstand (die Schicht lief weiter)
+- **History-Editor für abgeschlossene Sessions** (das letzte große Backlog-Item, Strong/Hevy-Klasse): Recent-Workout antippen → Reps/Gewicht Tage später korrigieren oder Phantom-Sätze löschen. Der harte Teil ist das PR-Ledger — es trägt jetzt eine Garantie (`PrReconcile`, pur + 6 Tests): **kein Rekord überlebt, den kein geloggter Satz mehr deckt** (Reps/Gewicht/e1RM/Hold/Volume je auf eigener Achse), und keiner wird rückwirkend erfunden. Live bewiesen: 12-Rep-Satz auf 11 editiert → Satz, Session-Aggregat und UI zeigen 11, der gestrandete MAX_REPS-12-Rekord war aus der Datenbank verschwunden.
 - **4 neue Hauptsportarten** (Cycling/Rowing/Ski/Yoga — Katalog 11 → 15, live verifiziert: 🚴/🚣-Chips in Settings).
 - **Superset-Atempause konfigurierbar** (Settings → Training: Off/30 s/60 s; Paz 2014 — bis 60 s zwischen Partnern erhält die Leistung bei vollem Zeitgewinn; Default Off = exakt das bisherige Verhalten; das Workout-Banner nennt den aktiven Modus). Live verifiziert.
 - Wasser-Semantik dokumentiert: `profile.waterGoal` = stabile Basis (Missionen/Streaks verschieben ihre Ziele nie untertags), die Fuel-Karte = dynamische Tagesempfehlung mit erklärten Boni. Bewusste Zwei-Ebenen-Architektur statt riskanter Vereinheitlichung.
 
 ## 8. Backlog (ehrlich, priorisiert)
 - Wasser-Vereinheitlichung dynamisch überall (braucht Weather-Zugriff in 8 weiteren Oberflächen).
-- History-Editor abgeschlossener Sessions (PR-Reconcile nötig).
 - Superset-Presets im Template-Editor.
 - Satz-Level-Cloud-Sync paginiert (64-KB-Cap).
 - Voll-Check-in erscheint auf deinem S24 nach ≥10 Log-Tagen + ≥4 Wiegungen — ab dann übernimmt die Coach-Engine wöchentlich.
