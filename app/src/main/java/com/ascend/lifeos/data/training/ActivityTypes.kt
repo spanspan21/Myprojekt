@@ -127,7 +127,7 @@ object SportCatalog {
         SportDef("basketball", "Basketball", "🏀", true, listOf("basketball")),
         SportDef("racket", "Tennis/Padel", "🎾", false, listOf("tennis", "padel", "squash", "badminton"), dayWord = "Match day"),
         SportDef("martial", "Martial arts", "🥋", false, listOf("kampfsport", "boxen", "judo", "karate", "mma", "ringen", "kickboxen"), dayWord = "Fight day"),
-        SportDef("run", "Running", "🏃", false, listOf("laufen", "lauftraining", "joggen", "running"), dayWord = "Race day"),
+        SportDef("run", "Running", "🏃", false, listOf("lauf", "laufen", "lauftraining", "joggen", "running", "jog"), dayWord = "Race day"),
         SportDef("swim", "Swimming", "🏊", false, listOf("schwimmen", "schwimmtraining", "swim"), dayWord = "Race day"),
         SportDef("climb", "Climbing", "🧗", false, listOf("klettern", "bouldern"), dayWord = "Comp day"),
         SportDef("dance", "Dance", "💃", false, listOf("tanzen", "tanztraining", "ballett"), dayWord = "Show day"),

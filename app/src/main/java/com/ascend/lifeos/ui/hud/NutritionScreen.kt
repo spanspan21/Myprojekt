@@ -260,7 +260,15 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                         val sp = com.ascend.lifeos.data.training.SportCatalog.byId(p.sport)
                         "${sp.emoji} ${sp.label} · +0.5 L"
                     }
-                    day.workoutDone -> "🏋 Training · +0.5 L"
+                    day.workoutDone -> {
+                        // if the day was earned by a logged activity, credit THAT
+                        val act = if (isToday) {
+                            com.ascend.lifeos.data.ActivityStore.all(ctx)
+                                .firstOrNull { com.ascend.lifeos.data.ActivityStore.dayKeyOf(it.ts) == dayKey }
+                                ?.let { com.ascend.lifeos.data.training.ActivityTypes.byId(it.type) }
+                        } else null
+                        if (act != null) "${act.emoji} ${act.label} · +0.5 L" else "🏋 Training · +0.5 L"
+                    }
                     else -> null
                 },
                 showHeat = isToday && !hasLoc,

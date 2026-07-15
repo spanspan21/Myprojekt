@@ -64,6 +64,7 @@ class ActivityLoadTest {
         assertTrue(!SportCatalog.titleMatches(swim, "Babyschwimmen"))
         assertTrue(SportCatalog.titleMatches(run, "Lauftraining Intervalle"))
         assertTrue(SportCatalog.titleMatches(run, "Joggen im Park"))
+        assertTrue(SportCatalog.titleMatches(run, "Lauf mo 18"))   // the everyday German word
         assertTrue(SportCatalog.titleMatches(swim, "Schwimmen 17:00"))
         // review #4: the legacy hockey titles must classify exactly as before
         assertTrue(SportCatalog.titleMatches(hockey, "Training Eishalle 19:00"))

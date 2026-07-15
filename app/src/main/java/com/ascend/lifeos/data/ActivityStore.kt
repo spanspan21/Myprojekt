@@ -97,7 +97,7 @@ object ActivityStore {
 
     private fun setEquivOf(e: Entry): Int = Math.round(loadOf(e)).toInt().coerceAtLeast(1)
 
-    private fun dayKeyOf(ts: Long): String {
+    fun dayKeyOf(ts: Long): String {
         // the app's 6am logical day
         val cal = java.util.Calendar.getInstance().apply { timeInMillis = ts; add(java.util.Calendar.HOUR_OF_DAY, -6) }
         return "%04d-%02d-%02d".format(
