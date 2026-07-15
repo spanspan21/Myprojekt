@@ -106,7 +106,11 @@ object FoodApi {
             val key = nd.offKey + "_100g"
             if (n.has(key)) {
                 val v = n.optDouble(key, -1.0)
-                if (v >= 0.0) per100[nd.id] = v
+                // physics guard: OFF crowd rows sometimes carry IU or mis-scaled
+                // vitamins — anything beyond the real-food ceiling is dropped
+                // (absence then triggers the honest staple estimate below)
+                val max = MICRO_PLAUSIBLE_MAX[nd.id]
+                if (v >= 0.0 && (max == null || v <= max)) per100[nd.id] = v
             }
         }
         // alcohol is not in NUTRIENTS but drives the food score hard-override

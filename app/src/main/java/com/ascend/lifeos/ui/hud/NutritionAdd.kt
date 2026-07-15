@@ -494,6 +494,9 @@ private fun defaultEntry(p: FoodApi.Product, meal: String): FoodEntry {
         microsEstimated = p.microsEstimated,
         volumeMl = if (po?.ml == true) grams else 0,
         approx = p.approx,
+        // quality signals must not depend on the log path (audit #9)
+        nova = p.nova,
+        additives = p.additives,
     )
 }
 

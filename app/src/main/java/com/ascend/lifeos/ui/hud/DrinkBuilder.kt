@@ -89,6 +89,36 @@ private data class DrinkBase(
 private val SIZES = listOf("S 150" to 150, "M 200" to 200, "L 300" to 300, "XL 400" to 400)
 private const val SHOT_KCAL = 2.0
 
+// audit #2: a latte IS milk — logging it micro-blank starved calcium/B2/B12.
+// Each formula component borrows its verified staple's micros, scaled to the
+// real amount; added sugar rides in "sugars". Estimated by construction.
+private val MILK_STAPLES = listOf(
+    "Milk (whole 3.5%)", "Milk (low-fat 1.5%)", "Oat drink", "Almond drink (unsweetened)", "Soy drink",
+)
+
+private fun drinkNutrients(
+    base: DrinkBase, ml: Int, milkIdx: Int, scoops: Int, sugarTsp: Int, sirup: Boolean,
+): Map<String, Double> {
+    val out = HashMap<String, Double>()
+    fun addFrom(stapleName: String, grams: Double) {
+        if (grams <= 0.0) return
+        val p = com.ascend.lifeos.data.BasicFoods.ALL.firstOrNull { it.name == stapleName } ?: return
+        p.per100.forEach { (k, v) ->
+            if (k in com.ascend.lifeos.data.MACRO_IDS) return@forEach
+            out.merge(k, v * grams / 100.0, Double::plus)
+        }
+    }
+    addFrom(MILK_STAPLES.getOrElse(milkIdx) { MILK_STAPLES[0] }, ml * base.milkShare)
+    when (base.name) {
+        "Apple spritzer" -> addFrom("Apple spritzer", ml.toDouble())
+        "Juice spritzer 1:1" -> addFrom("Apple juice", ml * 0.5)
+    }
+    if (base.scoop) addFrom("Whey protein (powder)", scoops * 30.0)
+    if (sugarTsp > 0) out.merge("sugars", sugarTsp * 4.0, Double::plus)
+    if (sirup) out.merge("sugars", 8.0, Double::plus)
+    return out
+}
+
 @Composable
 fun DrinkBuilderPane(
     meal: String,
@@ -212,11 +242,14 @@ fun DrinkBuilderPane(
     Spacer(Modifier.height(14.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         HudButton("Log · $kcalI kcal", Modifier.weight(1f)) {
+            val nut = drinkNutrients(base, ml, milkIdx, scoops, sugarTsp, sirup)
             Repo.addFood(
                 FoodEntry(
                     id = "", name = name, meal = meal, kcal = kcalI,
                     protein = prot.roundToInt(), carbs = carb.roundToInt(), fat = fat.roundToInt(),
                     grams = ml, volumeMl = ml,
+                    nutrients = nut,
+                    microsEstimated = nut.keys.any { it !in setOf("sugars") },
                 ),
                 dayKey,
             )
@@ -231,6 +264,7 @@ fun DrinkBuilderPane(
                         CustomFood(
                             id = "", name = name, servingG = ml, unit = "ml",
                             kcal = kcalI, protein = prot.roundToInt(), carbs = carb.roundToInt(), fat = fat.roundToInt(),
+                            micros = drinkNutrients(base, ml, milkIdx, scoops, sugarTsp, sirup),
                             favorite = true,
                         ),
                     )

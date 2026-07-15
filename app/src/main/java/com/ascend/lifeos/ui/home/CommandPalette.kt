@@ -91,6 +91,8 @@ object CommandEngine {
                     id = "", name = name.replaceFirstChar { it.uppercase() },
                     kcal = kcal, protein = 0, carbs = 0, fat = 0,
                     meal = defaultMealSlot(),
+                    // bare-kcal rows must wear the ◌ like every other quick add
+                    incomplete = true,
                 ),
             )
             return CmdResult.Done("Logged $kcal kcal")

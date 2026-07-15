@@ -68,6 +68,43 @@ val NUTRIENTS_BY_ID: Map<String, NutrientDef> = NUTRIENTS.associateBy { it.id }
 /** Ids stored via dedicated FoodEntry fields, not the nutrients map. */
 val MACRO_IDS = setOf("protein", "carbs", "fat")
 
+/**
+ * Per-100g plausibility ceilings in GRAMS — the top real food + headroom.
+ * Shared by the OFF parser (drops crowd-data unit garbage, e.g. vitamin A
+ * entered in IU) and the data-integrity test suite. A µg/mg mix-up is a
+ * factor-1000 error and slams into these immediately.
+ */
+val MICRO_PLAUSIBLE_MAX: Map<String, Double> = mapOf(
+    "sodium" to 8.0,         // soy sauce ~5.6 g/100g + headroom (pure table salt
+                             // would be ~39 — a scan claiming that is noise anyway)
+    "potassium" to 1.5,      // dried apricots 1.16 g
+    "calcium" to 1.4,        // parmesan 1.18 g
+    "magnesium" to 0.65,     // pumpkin seeds 0.59 g
+    "iron" to 0.05,          // liver ~30 mg
+    "zinc" to 0.08,          // oysters ~60 mg
+    "phosphorus" to 1.3,     // bran ~1 g
+    "vitaminA" to 0.012,     // liver ~7.7 mg
+    "vitaminC" to 0.6,       // rose hip ~426 mg
+    "vitaminD" to 0.0002,    // cod-liver territory
+    "vitaminE" to 0.2,       // wheat-germ oil ~149 mg
+    "vitaminK" to 0.002,     // kale ~700 µg
+    "vitaminB1" to 0.005,
+    "vitaminB2" to 0.005,
+    "vitaminB3" to 0.02,
+    "vitaminB6" to 0.005,
+    "vitaminB9" to 0.001,
+    "vitaminB12" to 0.0002,
+    "omega3" to 55.0,        // linseed oil
+    "omega6" to 70.0,
+    "cholesterol" to 0.5,
+)
+
+/** True when this logged row carries at least one vitamin/mineral datum. */
+fun FoodEntry.hasMicroData(): Boolean = nutrients.keys.any {
+    val g = NUTRIENTS_BY_ID[it]?.group
+    g == NGroup.VITAMIN || g == NGroup.MINERAL
+}
+
 /** Minerals lost through sweat — athletes (≥4 sessions/week) get a 15% bump. */
 private val SWEAT_MINERALS = setOf("magnesium", "zinc", "potassium")
 

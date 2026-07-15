@@ -934,7 +934,12 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                                 e.grams > 0 -> "${e.grams}g · "
                                 else -> ""
                             }
-                            Text(amountTxt + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+                            Text(
+                                amountTxt + (if (e.approx) "≈" else "") + "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}" +
+                                    // estimated vitamins/minerals stay visible AFTER logging too (audit #5)
+                                    (if (e.microsEstimated) " · ≈vit" else ""),
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                            )
                         }
                         // quality badge at a glance — ultra-processing + additives (MASTERY)
                         if (e.nova != null || e.additives.isNotEmpty()) {
@@ -1026,9 +1031,10 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
             )
         }
     }
-    // 1) Favoriten (eigene Foods mit Stern) — Portion wie definiert
+    // 1) Favoriten (eigene Foods mit Stern) — Portion wie definiert; ihre
+    //    Mikros (per serving) reisen mit (audit #6: wurden verworfen)
     Repo.customFoods().filter { it.favorite }.forEach { cf ->
-        consider(cf.name, cf.kcal, cf.protein, cf.carbs, cf.fat, cf.servingG, favorite = true, slotBias = 0.3)
+        consider(cf.name, cf.kcal, cf.protein, cf.carbs, cf.fat, cf.servingG, favorite = true, slotBias = 0.3, micros = cf.micros)
     }
     // 2) eigene Rezepte — 1 Portion (Reste!)
     OwnRecipes.asRecipes().forEach { r ->

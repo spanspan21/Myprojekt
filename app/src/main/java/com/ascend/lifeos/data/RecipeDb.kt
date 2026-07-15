@@ -28,7 +28,7 @@ object RecipeDb {
         val own: Boolean = false,
     )
 
-    private fun build(id: Long, title: String, meal: String, servings: Int, minutes: Int, parts: List<Ing>, steps: List<String>): Recipe {
+    internal fun build(id: Long, title: String, meal: String, servings: Int, minutes: Int, parts: List<Ing>, steps: List<String>): Recipe {
         var kc = 0.0; var p = 0.0; var c = 0.0; var f = 0.0
         for (i in parts) { val g = i.grams / 100.0; kc += i.kcal * g; p += i.p * g; c += i.c * g; f += i.f * g }
         val s = servings.coerceAtLeast(1)
@@ -251,6 +251,9 @@ object RecipeDb {
             ),
         ),
     )
+        // extension volumes (ids 100+ / 200+) — own files, zero merge friction
+        .plus(RecipesExt1.ALL)
+        .plus(RecipesExt2.ALL)
 
     fun byId(id: Long): Recipe? = CURATED.firstOrNull { it.id == id } ?: OwnRecipes.asRecipes().firstOrNull { it.id == id }
 
@@ -275,5 +278,52 @@ object RecipeDb {
         val rnd = Random(seed)
         val shuffledCurated = filtered.filter { !it.own }.shuffled(rnd)
         return (filtered.filter { it.own } + shuffledCurated).take(count)
+    }
+
+    // ── micro derivation (audit #1: logged recipes used to carry ZERO
+    //    vitamins/minerals — a recipe dinner starved the daily micro ledger) ──
+
+    /**
+     * Vitamins/minerals + fiber/sugars per SERVING, derived by matching every
+     * ingredient onto the verified staples. Estimated by construction — the
+     * log path flags the entry [FoodEntry.microsEstimated] accordingly.
+     * Unmatched ingredients contribute nothing (honest under-count, never
+     * invented numbers).
+     */
+    fun nutrientsPerServing(r: Recipe): Map<String, Double> {
+        val out = HashMap<String, Double>()
+        for (ing in r.parts) {
+            val prod = staple(ing.name) ?: continue
+            prod.per100.forEach { (k, v) ->
+                if (k in MACRO_IDS) return@forEach
+                out.merge(k, v * ing.grams / 100.0, Double::plus)
+            }
+        }
+        val s = r.servings.coerceAtLeast(1)
+        return out.mapValues { it.value / s }
+    }
+
+    /** Real plate weight of one serving — the row shows grams, not "0 g". */
+    fun servingGrams(r: Recipe): Int =
+        (r.parts.sumOf { it.grams } / r.servings.coerceAtLeast(1)).coerceAtLeast(0)
+
+    private fun norm(s: String): Set<String> =
+        s.lowercase().replace(Regex("[(),%]"), " ").split(Regex("\\s+")).filter { it.length > 1 }.toSet()
+
+    /** Exact name → full-token containment; the smaller token set must be covered. */
+    internal fun staple(name: String): FoodApi.Product? {
+        BasicFoods.ALL.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
+        val tokens = norm(name)
+        if (tokens.isEmpty()) return null
+        var best: FoodApi.Product? = null
+        var bestScore = 0
+        for (p in BasicFoods.ALL) {
+            val pt = norm(p.name)
+            val inter = (tokens intersect pt).size
+            if (inter == 0) continue
+            val smaller = minOf(tokens.size, pt.size)
+            if (inter == smaller && inter > bestScore) { bestScore = inter; best = p }
+        }
+        return best
     }
 }

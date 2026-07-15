@@ -438,7 +438,16 @@ private fun RecipeCard(
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     HudButton("Log 1 serving", Modifier.weight(1f)) {
-                        Repo.addFood(FoodEntry(id = "", name = r.title, meal = if (r.meal == "b") "b" else "d", kcal = r.kcal, protein = r.protein, carbs = r.carbs, fat = r.fat))
+                        // audit #1: derive the serving's vitamins/minerals from the
+                        // ingredients — a recipe dinner must feed the micro ledger
+                        val nut = com.ascend.lifeos.data.RecipeDb.nutrientsPerServing(r)
+                        Repo.addFood(FoodEntry(
+                            id = "", name = r.title, meal = if (r.meal == "b") "b" else "d",
+                            kcal = r.kcal, protein = r.protein, carbs = r.carbs, fat = r.fat,
+                            grams = com.ascend.lifeos.data.RecipeDb.servingGrams(r),
+                            nutrients = nut,
+                            microsEstimated = nut.isNotEmpty(),
+                        ))
                     }
                     HudButton("+ Shopping", Modifier.weight(1f), primary = false) {
                         // Kap. 41: Mengen überleben den Übertrag (P3-Fix)

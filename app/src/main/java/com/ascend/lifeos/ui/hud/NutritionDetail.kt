@@ -52,6 +52,7 @@ import com.ascend.lifeos.data.BasicFoods
 import com.ascend.lifeos.data.NUTRIENTS_BY_ID
 import com.ascend.lifeos.data.NutritionCalc
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.hasMicroData
 import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.data.targetFor
 import com.ascend.lifeos.ui.kit.JarvisSheet
@@ -100,13 +101,17 @@ fun MicrosView(onBack: () -> Unit) {
             Repo.nutrientTotals(listOf(todayKey()))
         } else {
             val keys = ArrayList<String>(7).apply { var k = todayKey(); repeat(7) { add(k); k = prevKey(k) } }
-            val daysWithFood = keys.count { Repo.dayFor(it)?.meals?.isNotEmpty() == true }.coerceAtLeast(1)
-            Repo.nutrientTotals(keys).mapValues { it.value / daysWithFood }
+            // audit #3: average over days that actually CARRY micro data — a
+            // quick-add-only day used to dilute the weekly average toward zero
+            val microDays = keys.count { k ->
+                Repo.dayFor(k)?.meals?.any { it.hasMicroData() } == true
+            }.coerceAtLeast(1)
+            Repo.nutrientTotals(keys).mapValues { it.value / microDays }
         }
     }
-    // Personalized D-A-CH targets (sex/age; ≥4 sessions/week = athlete bump).
+    // Personalized D-A-CH targets (sex/age; ≥4 sessions/week OR top activity = athlete bump).
     val prof = Repo.profile()
-    val athlete = prof.trainFreq >= 4
+    val athlete = prof.trainFreq >= 4 || prof.activity >= 5
     fun target(id: String): Double? =
         NUTRIENTS_BY_ID[id]?.let { targetFor(it, prof.sex, prof.age, athlete) }
     fun pct(id: String): Float {
@@ -323,10 +328,12 @@ fun StatsView(onBack: () -> Unit) {
     }
     val microGaps = remember(allDays) {
         val keys = ArrayList<String>(7).apply { var k = todayKey(); repeat(7) { add(k); k = prevKey(k) } }
-        val daysWithFood = keys.count { Repo.dayFor(it)?.meals?.isNotEmpty() == true }
-        if (daysWithFood == 0) emptyList() else {
-            val avgN = Repo.nutrientTotals(keys).mapValues { it.value / daysWithFood }
-            val prof = Repo.profile(); val athlete = prof.trainFreq >= 4
+        // audit #3: only micro-carrying days may vote, or recipe/drink weeks
+        // fire false <50% warnings
+        val microDays = keys.count { k -> Repo.dayFor(k)?.meals?.any { it.hasMicroData() } == true }
+        if (microDays == 0) emptyList() else {
+            val avgN = Repo.nutrientTotals(keys).mapValues { it.value / microDays }
+            val prof = Repo.profile(); val athlete = prof.trainFreq >= 4 || prof.activity >= 5
             MICRO_16.mapNotNull { id ->
                 val nd = NUTRIENTS_BY_ID[id] ?: return@mapNotNull null
                 if (nd.limit) return@mapNotNull null

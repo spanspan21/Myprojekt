@@ -956,6 +956,11 @@ object BasicFoods {
             portions = listOf(ml("1 shot", 40), ml("double", 80)),
         ),
     )
+        // the extension volumes (produce+ / protein+grains / German supermarket)
+        // live in their own files so they can grow without merge friction
+        .plus(FoodsExt1.ALL)
+        .plus(FoodsExt2.ALL)
+        .plus(FoodsExt3.ALL)
 
     /** German search aliases so muscle memory still works in an English app. */
     private val ALIASES: Map<String, List<String>> = mapOf(
@@ -1109,7 +1114,7 @@ object BasicFoods {
         "Popcorn (salted)" to listOf("popcorn"),
         "Ice cream scoop (vanilla)" to listOf("eis", "vanilleeis", "eiskugel"),
         "Apple cake slice" to listOf("apfelkuchen", "kuchen"),
-    )
+    ) + FoodsExt1.ALIASES + FoodsExt2.ALIASES + FoodsExt3.ALIASES
 
     fun aliasesOf(name: String): List<String> = ALIASES[name] ?: emptyList()
 
