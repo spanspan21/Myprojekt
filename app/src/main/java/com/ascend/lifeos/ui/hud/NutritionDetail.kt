@@ -618,8 +618,17 @@ private fun WeekBars(days: List<Pair<String, Int>>, goal: Int, modifier: Modifie
 // ---- Goal calculator (Mifflin–St Jeor) --------------------------------------
 
 // English UI labels; ids stay the ones NutritionCalc/Profile persist.
-private val ACTIVITY_LABELS = listOf("Sedentary", "Light", "Moderate", "Active", "Athlete")
-private val GOAL_LABELS = listOf("lose" to "Cut", "maintain" to "Maintain", "gain" to "Build")
+private val ACTIVITY_LABELS = NutritionCalc.ACTIVITY_LABELS
+private val GOAL_LABELS = NutritionCalc.GOAL_LABELS
+
+// one honest sentence per goal — what the numbers will DO
+private val GOAL_HINTS = mapOf(
+    "lose" to "Deficit at your chosen rate — muscle protected by protein + guardrails.",
+    "recomp" to "Maintenance kcal, 2.2 g/kg protein — waist and lifts move, the scale won't.",
+    "maintain" to "Hold the line. Calories follow your real expenditure.",
+    "fuel" to "Performance first: maintenance kcal, fat at the floor, carbs carry training.",
+    "gain" to "Lean surplus (0.25–0.5%/week) — size without the fat rebound.",
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -663,8 +672,12 @@ fun GoalsSheet(sheetState: SheetState, onDismiss: () -> Unit) {
             Spacer(Modifier.height(14.dp))
             Text("GOAL", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 GOAL_LABELS.forEach { (id, lbl) -> HudChip(lbl, goal == id) { goal = id } }
+            }
+            GOAL_HINTS[goal]?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, lineHeight = 15.sp)
             }
 
             Spacer(Modifier.height(18.dp))

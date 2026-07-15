@@ -582,8 +582,9 @@ private fun CoachCheckInCard() {
                     Text("⚠ $it", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
 
-                // rate dial — the evidence zone for this phase, one tap to retune
-                if (c.phase != com.ascend.lifeos.data.nutrition.DietPhase.MAINTAIN) {
+                // rate dial — the evidence zone for this phase, one tap to retune.
+                // Weight-holding phases (maintain/recomp/fuel) have no rate to dial.
+                if (!c.phase.holdsWeight) {
                     Spacer(Modifier.height(10.dp))
                     val zone = if (c.phase == com.ascend.lifeos.data.nutrition.DietPhase.CUT)
                         listOf(0.25, 0.5, 0.75, 1.0) else listOf(0.25, 0.35, 0.5)

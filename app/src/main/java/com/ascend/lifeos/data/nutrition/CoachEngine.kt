@@ -21,6 +21,11 @@ import kotlin.math.roundToInt
  *  - Diet breaks: cuts >8 weeks → 1–2 maintenance weeks (MATADOR, Byrne 2018).
  *  - Hedging: targets step ≤250 kcal per check-in — trends, not water, move
  *    the program (MacroFactor's "hedge its bets" behaviour).
+ *  - Recomp: maintenance kcal + ≥2.2 g/kg protein; progress lives in waist
+ *    and lifts, not the scale (Barakat 2020).
+ *  - Fuel: performance-first — hold expenditure, fat rides its floor so carbs
+ *    carry training (5–7 g/kg for moderate loads, Thomas/ACSM 2016); the
+ *    drift band doubles because athletes shouldn't chase scale noise.
  */
 enum class DietPhase(
     val id: String,            // maps 1:1 onto Profile.dietGoal — zero migration
@@ -30,8 +35,13 @@ enum class DietPhase(
     val zoneHi: Double,
 ) {
     CUT("lose", "Cut", 0.50, 0.25, 1.00),
+    RECOMP("recomp", "Recomp", 0.0, 0.0, 0.0),
     MAINTAIN("maintain", "Maintain", 0.0, 0.0, 0.0),
+    FUEL("fuel", "Fuel", 0.0, 0.0, 0.0),
     LEAN_BULK("gain", "Lean bulk", 0.35, 0.25, 0.50);
+
+    /** True for every phase whose energy target is the expenditure line itself. */
+    val holdsWeight: Boolean get() = this == RECOMP || this == MAINTAIN || this == FUEL
 
     companion object {
         fun fromGoal(goal: String): DietPhase = entries.firstOrNull { it.id == goal } ?: MAINTAIN
@@ -120,15 +130,18 @@ object CoachEngine {
         val targetRate = when (phase) {
             DietPhase.CUT -> -rate
             DietPhase.LEAN_BULK -> rate
-            DietPhase.MAINTAIN -> 0.0
+            else -> 0.0
         }
         val dailyOffset = targetRate / 100.0 * bw * KCAL_PER_KG / 7.0
         var ideal = expenditure + dailyOffset
 
         // dynamic maintenance: inside the band nothing moves; drifting out
-        // nudges 0.15 %BW/week back toward the line (MacroFactor's band logic)
-        if (phase == DietPhase.MAINTAIN) {
-            val driftBand = MAINT_BAND_PCT / 100.0 * bw   // kg/week of tolerated drift
+        // nudges 0.15 %BW/week back toward the line (MacroFactor's band logic).
+        // Fuel doubles the band — training weeks swing water/glycogen and an
+        // athlete's calories shouldn't chase that noise.
+        if (phase.holdsWeight) {
+            val bandPct = if (phase == DietPhase.FUEL) MAINT_BAND_PCT * 2 else MAINT_BAND_PCT
+            val driftBand = bandPct / 100.0 * bw          // kg/week of tolerated drift
             ideal = when {
                 trendKgPerWeek > driftBand -> expenditure - MAINT_BAND_PCT / 100.0 * bw * KCAL_PER_KG / 7.0
                 trendKgPerWeek < -driftBand -> expenditure + MAINT_BAND_PCT / 100.0 * bw * KCAL_PER_KG / 7.0
@@ -137,7 +150,13 @@ object CoachEngine {
             if (ideal != expenditure.toDouble()) {
                 why.add("Weight drifting ${fmtKg(trendKgPerWeek)}/week — small ${if (trendKgPerWeek > 0) "trim" else "lift"} steers you back.")
             } else {
-                why.add("Weight steady inside the band — holding your calories.")
+                why.add(
+                    when (phase) {
+                        DietPhase.RECOMP -> "Scale steady — exactly what recomp looks like; waist and lifts tell the story."
+                        DietPhase.FUEL -> "Weight inside the fuel band — calories hold, performance leads."
+                        else -> "Weight steady inside the band — holding your calories."
+                    }
+                )
             }
         }
 
@@ -152,16 +171,20 @@ object CoachEngine {
         val newKcal = ((currentKcal + step).roundToInt() / 10) * 10
 
         // ── 5) macros: protein first, fat floor, carbs are the remainder ─
-        val proteinPerKg = if (phase == DietPhase.CUT) 2.2 else 1.8
+        // Cut needs extra protein (Helms 2014); recomp lives on it (Barakat
+        // 2020 — muscle up + fat down at maintenance only works protein-first).
+        val proteinPerKg = if (phase == DietPhase.CUT || phase == DietPhase.RECOMP) 2.2 else 1.8
         val protein = ceil(proteinPerKg * bw).toInt()
         val fatFloor = (0.8 * bw).roundToInt()
         val fatFromPct = (newKcal * 0.25 / 9.0).roundToInt()
-        val fat = maxOf(fatFloor, fatFromPct)
+        // Fuel keeps fat AT the hormonal floor — every kcal above protein+fat
+        // becomes glycogen for training (Thomas/ACSM 2016)
+        val fat = if (phase == DietPhase.FUEL) fatFloor else maxOf(fatFloor, fatFromPct)
         val carbs = ((newKcal - protein * 4 - fat * 9) / 4.0).roundToInt().coerceAtLeast(0)
 
         // ── 6) the reasoning, in the user's language ─────────────────────
         why.add(0, "Real expenditure ≈$expenditure kcal ($daysOfData logged days, $confidence data).")
-        if (phase != DietPhase.MAINTAIN) {
+        if (phase == DietPhase.CUT || phase == DietPhase.LEAN_BULK) {
             why.add(
                 "Trend ${fmtKg(trendKgPerWeek)}/week · target ${fmtKg(targetRate / 100.0 * bw)}/week (${fmtPct(rate)} of bodyweight)."
             )
@@ -169,7 +192,16 @@ object CoachEngine {
         if (hedged) {
             why.add("Full correction would be ${fullDelta.roundToInt()} kcal — stepping $MAX_STEP_KCAL now, the rest next week if the trend holds.")
         }
-        why.add("Protein $protein g (${fmtG(proteinPerKg)} g/kg${if (phase == DietPhase.CUT) " — deficits need more, Helms 2014" else ", Morton 2018"}).")
+        why.add(
+            "Protein $protein g (${fmtG(proteinPerKg)} g/kg" + when (phase) {
+                DietPhase.CUT -> " — deficits need more, Helms 2014)."
+                DietPhase.RECOMP -> " — recomp is protein-driven, Barakat 2020)."
+                else -> ", Morton 2018)."
+            }
+        )
+        if (phase == DietPhase.FUEL) {
+            why.add("Carbs $carbs g (≈${fmtG(carbs.toDouble() / bw)} g/kg) — fat rides its floor so training stays fuelled (ACSM 2016).")
+        }
 
         // ── 7) diet-break rhythm (MATADOR) ───────────────────────────────
         if (phase == DietPhase.CUT && weeksInPhase >= 8) {
@@ -237,8 +269,8 @@ object CoachRitual {
             examSoon = examSoon,
             weeksInPhase = weeksInPhase,
         )
-        // a steady maintain week with nothing to say stays out of the way
-        if (checkIn.phase == DietPhase.MAINTAIN &&
+        // a steady weight-holding week with nothing to say stays out of the way
+        if (checkIn.phase.holdsWeight &&
             kotlin.math.abs(checkIn.newKcal - checkIn.prevKcal) < 30 &&
             checkIn.warnings.isEmpty()
         ) return null

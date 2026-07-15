@@ -116,6 +116,50 @@ class CoachEngineTest {
         assertEquals(DietPhase.CUT, DietPhase.fromGoal("lose"))
         assertEquals(DietPhase.LEAN_BULK, DietPhase.fromGoal("gain"))
         assertEquals(DietPhase.MAINTAIN, DietPhase.fromGoal("maintain"))
+        assertEquals(DietPhase.RECOMP, DietPhase.fromGoal("recomp"))
+        assertEquals(DietPhase.FUEL, DietPhase.fromGoal("fuel"))
         assertEquals(DietPhase.MAINTAIN, DietPhase.fromGoal("whatever"))
+    }
+
+    // ── the two new goal types (Barakat 2020 / ACSM 2016) ─────────────
+
+    @Test
+    fun `recomp holds maintenance kcal but eats like a cut`() {
+        val r = CoachEngine.checkIn(2800, "solid", 21, 0.02, 2800, 70, DietPhase.RECOMP)
+        assertEquals(2800, r.newKcal)                       // energy: maintenance
+        assertEquals(154, r.protein)                        // protein: 2.2 g/kg
+        assertTrue(r.why.any { it.contains("Barakat") })
+        assertTrue(r.why.any { it.contains("recomp", ignoreCase = true) })
+    }
+
+    @Test
+    fun `fuel keeps fat at the floor so carbs carry training`() {
+        val f = CoachEngine.checkIn(3200, "solid", 21, 0.02, 3200, 70, DietPhase.FUEL)
+        val m = CoachEngine.checkIn(3200, "solid", 21, 0.02, 3200, 70, DietPhase.MAINTAIN)
+        assertEquals(56, f.fat)                             // 0.8 g/kg floor exactly
+        assertTrue("fuel carbs ${f.carbs} vs maintain ${m.carbs}", f.carbs > m.carbs)
+        assertTrue(f.why.any { it.contains("ACSM") })
+    }
+
+    @Test
+    fun `fuel tolerates twice the weight drift before it trims`() {
+        // +0.18 kg/wk on 70 kg: outside maintain's 0.105 band, inside fuel's 0.21
+        val m = CoachEngine.checkIn(2800, "solid", 21, 0.18, 2800, 70, DietPhase.MAINTAIN)
+        val f = CoachEngine.checkIn(2800, "solid", 21, 0.18, 2800, 70, DietPhase.FUEL)
+        assertTrue(m.newKcal < 2800)
+        assertEquals(2800, f.newKcal)
+        // but real drift still gets steered
+        val heavy = CoachEngine.checkIn(2800, "solid", 21, 0.30, 2800, 70, DietPhase.FUEL)
+        assertTrue(heavy.newKcal < 2800)
+    }
+
+    @Test
+    fun `weight-holding phases never get cut-only machinery`() {
+        // no MATADOR nag, no trend-vs-target line for recomp/fuel at week 9
+        listOf(DietPhase.RECOMP, DietPhase.FUEL).forEach { ph ->
+            val c = CoachEngine.checkIn(2800, "solid", 21, 0.02, 2800, 70, ph, weeksInPhase = 9)
+            assertFalse("$ph got MATADOR", c.warnings.any { it.contains("MATADOR") })
+            assertFalse("$ph got a rate line", c.why.any { it.contains("target") && it.contains("bodyweight") })
+        }
     }
 }
