@@ -81,6 +81,7 @@ object Prefs {
     const val SLEEP_NEED_AUTO = "sleep_need_auto"      // true
     const val GROWTH_TRACKING = "growth_tracking"      // false
     const val STRAIN_SLEEP_BOOST = "strain_sleep_boost" // true
+    const val SS_INTRA_REST = "ss_intra_rest"          // 0 (seconds between superset partners; Paz 2014: 0–60s)
     // Calendar
     const val WEATHER_SLOTS = "weather_slots"          // true
     const val UNTIS_CHANGE_ALARM = "untis_change_alarm" // true

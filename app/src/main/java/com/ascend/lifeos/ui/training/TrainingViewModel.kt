@@ -465,8 +465,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-        // superset auto-advance: partners cycle without rest; the timer only
-        // starts when the group wraps back to its first exercise
+        // superset auto-advance: partners cycle; the FULL timer only starts when
+        // the group wraps back to its first exercise. Between partners an
+        // optional short breather runs (Paz 2014: 0–60 s intra-pair preserves
+        // the superset's time saving while protecting output; default 0 = classic)
         val group = ex.supersetGroup
         if (group != null) {
             val partners = activeExercises.withIndex().filter { it.value.supersetGroup == group }
@@ -474,7 +476,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 val pos = partners.indexOfFirst { it.value.exerciseId == exerciseId }
                 val next = partners[(pos + 1) % partners.size]
                 activeCurrentExIndex = next.index
-                if ((pos + 1) % partners.size != 0) return   // mid-group: no rest yet
+                if ((pos + 1) % partners.size != 0) {
+                    val intra = com.ascend.lifeos.data.Prefs.int(
+                        getApplication(), com.ascend.lifeos.data.Prefs.SS_INTRA_REST, 0,
+                    )
+                    if (intra > 0) startRestTimer(intra)
+                    return
+                }
             }
         }
 

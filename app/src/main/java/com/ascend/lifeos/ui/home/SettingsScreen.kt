@@ -264,6 +264,31 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
             }
+
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "SUPERSET PAIR REST", color = TextDim, fontFamily = Display,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(7.dp))
+            var ssRest by remember { mutableStateOf(Prefs.int(ctx, Prefs.SS_INTRA_REST, 0)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf(0 to "Off", 30 to "30s", 60 to "60s").forEach { (v, label) ->
+                    val on = ssRest == v
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .clickable { ssRest = v; Prefs.setInt(ctx, Prefs.SS_INTRA_REST, v) }
+                            .padding(horizontal = 9.dp, vertical = 6.dp),
+                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Breather between paired exercises. 0-60s keeps the time saving with full output (Paz 2014).",
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+            )
         }
 
         // ── FUEL ─────────────────────────────────────────────────────

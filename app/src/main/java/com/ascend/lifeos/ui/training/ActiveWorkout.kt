@@ -405,8 +405,13 @@ private fun ExerciseSetLogger(
                     }
                 }
                 Spacer(Modifier.height(4.dp))
+                val bannerCtx = androidx.compose.ui.platform.LocalContext.current
+                val intraRest = remember {
+                    com.ascend.lifeos.data.Prefs.int(bannerCtx, com.ascend.lifeos.data.Prefs.SS_INTRA_REST, 0)
+                }
                 Text(
-                    "Alternate sets — rest fires after the round, not between partners",
+                    if (intraRest > 0) "Alternate sets — ${intraRest}s breather between partners, full rest after the round"
+                    else "Alternate sets — rest fires after the round, not between partners",
                     color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                 )
             } else if (vm.activeExercises.size > 1) {
