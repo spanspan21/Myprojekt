@@ -434,7 +434,11 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     val reordered = paired.mapNotNull { pe ->
                         byId[pe.exerciseId]?.also { it.supersetGroup = pe.supersetGroup }
                     }
-                    if (reordered.size == activeExercises.size) {
+                    // reorder only while the session is still untouched — if a set
+                    // already landed in the ~100ms window, keep the user's ground
+                    if (reordered.size == activeExercises.size &&
+                        activeCurrentExIndex == 0 && activeExercises.all { it.loggedSets.isEmpty() }
+                    ) {
                         activeExercises.clear()
                         activeExercises.addAll(reordered)
                     }
