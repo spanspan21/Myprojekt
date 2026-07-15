@@ -162,6 +162,10 @@ object TrainBrain {
      * modulated by last session's RPE (Helms 2016: effort decides whether you
      * push, consolidate, or back off). Shown as TODAY'S TARGET when an
      * exercise opens, before the first set is logged.
+     *
+     * Layer note: the PLAN-side twin is domain/LoadProgression (PlanGenerator's
+     * prescription, no RPE input). Same principle, two different inputs —
+     * change the rule in one, check the other.
      */
     fun sessionTarget(last: List<SetSnapshot>, isHold: Boolean, repHi: Int = 12): String? {
         if (last.isEmpty()) return null

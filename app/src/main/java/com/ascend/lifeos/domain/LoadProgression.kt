@@ -5,7 +5,11 @@ package com.ascend.lifeos.domain
  * once bodyweight + vest are outgrown (audit F14). Classic double progression:
  * work a rep range at a fixed load; when the top of the range is reached for the
  * target sets, add a small increment and drop back to the bottom of the range.
- * Pure & testable; wiring into live prescriptions is a device-verified follow-up.
+ *
+ * Layer note: this drives the PLAN's prescription (PlanGenerator, ahead of the
+ * session). Its in-session twin is TrainBrain.sessionTarget, which reasons over
+ * what was actually logged last time (RPE-modulated). Same principle, two
+ * different inputs — change the rule in one, check the other.
  */
 object LoadProgression {
     data class Rx(

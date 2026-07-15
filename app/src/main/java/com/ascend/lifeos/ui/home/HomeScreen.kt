@@ -171,7 +171,13 @@ fun HomeScreen(
             waterGoal = profile.waterGoal,
             hockeyToday = dayContext.first,
             sportWord = com.ascend.lifeos.data.training.SportCatalog.byId(profile.sport)
-                .let { if (it.id == "hockey") "Ice" else "${it.label} session" },
+                .let {
+                    when (it.id) {
+                        "hockey" -> "Ice"                    // the proven voice for the default install
+                        "none", "gym" -> "Training session"  // "General health session" is nobody's language
+                        else -> "${it.label} session"
+                    }
+                },
             examSoon = dayContext.second,
             streak = profile.streak,
         ),
