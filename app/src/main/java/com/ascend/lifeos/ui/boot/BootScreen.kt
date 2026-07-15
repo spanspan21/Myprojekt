@@ -93,10 +93,11 @@ fun BootScreen() {
         }
     }
 
-    fun finish(sex: String, age: Int, heightCm: Int, weightKg: Int, objectives: List<String>) {
+    fun finish(sex: String, age: Int, heightCm: Int, weightKg: Int, goal: String, objectives: List<String>) {
         Repo.completeBoot(
             name = name.trim().ifBlank { DEFAULT_NAME },
             sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
+            goal = goal,
             objectives = objectives.ifEmpty { DEFAULT_OBJECTIVES },
         )
     }
@@ -126,7 +127,7 @@ fun BootScreen() {
 // ─── D · TUNE — the calibration card the targets are computed from ───────────
 
 @Composable
-private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
+private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) -> Unit) {
     val ctx = LocalContext.current
     val p = Repo.profile()
     // Recalibrate keeps your numbers; a fresh boot starts from the house defaults.
@@ -134,6 +135,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
     var age by remember { mutableStateOf(if (p.onboarded) p.age else 16) }
     var height by remember { mutableStateOf(p.heightCm) }
     var weight by remember { mutableStateOf(if (p.onboarded) p.weightKg else 70) }
+    var goal by remember { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
     val objectives = remember {
         mutableStateListOf<String>().apply { addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES }) }
     }
@@ -164,7 +166,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
             if (!com.ascend.lifeos.ui.motion.Motion.reduced(ctx)) {
                 curtain.animateTo(1f, tween(700, easing = com.ascend.lifeos.ui.motion.Motion.easeOut))
             }
-            onFinish(sex, age, height, weight, objectives.toList())
+            onFinish(sex, age, height, weight, goal, objectives.toList())
         }
     }
 
@@ -233,6 +235,20 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
                     sport = sp.id
                     com.ascend.lifeos.data.Repo.setSport(sp.id)
                 }
+            }
+        }
+
+        // …and which KIND of goal: weight is only one of five stories
+        Spacer(Modifier.height(14.dp))
+        Text("YOUR GOAL", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            com.ascend.lifeos.data.NutritionCalc.GOAL_LABELS.forEach { (id, label) ->
+                BootChip(label, goal == id) { goal = id }
             }
         }
         }

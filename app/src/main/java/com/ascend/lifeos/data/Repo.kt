@@ -244,15 +244,16 @@ object Repo {
         }
     }
 
-    /** System-boot onboarding: identity + calibration + objectives in one commit. */
-    fun completeBoot(name: String, sex: String, age: Int, heightCm: Int, weightKg: Int, objectives: List<String>) {
-        val t = NutritionCalc.compute(sex, age, heightCm, weightKg, activity = 3, goal = "maintain")
+    /** System-boot onboarding: identity + calibration + goal + objectives in one commit. */
+    fun completeBoot(name: String, sex: String, age: Int, heightCm: Int, weightKg: Int, goal: String = "maintain", objectives: List<String>) {
+        val t = NutritionCalc.compute(sex, age, heightCm, weightKg, activity = 3, goal = goal)
         updateProfile {
             it.copy(
                 name = name.trim(), sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
                 objectives = objectives, onboarded = true, reminders = true,
                 kcalGoal = t.kcal, proteinGoal = t.protein, carbGoal = t.carbs, fatGoal = t.fat,
                 waterGoal = WaterCalc.targetGlasses(weightKg, trainedToday = false),
+                dietGoal = goal, dietPhaseSince = todayKey(),
             )
         }
     }
