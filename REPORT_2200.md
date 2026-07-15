@@ -91,6 +91,7 @@ Zusätzlich vom Agenten **verifiziert als korrekt**: Band-/Raten-Mathe der neuen
 | Wasser-Kredit | „🏃 Running · +0.5 L" |
 | General-health-Boot | sport=none · neutrale Voice · kein Sport-Chrome |
 | ACWR-Schutz | „Acute load 3.79× chronic — injury window" für Frischling |
+| **Hockey-Regression auf v2.27** | Voice „Ice at 18:00" · „Game day: face-off … the ice" · „🏒 GAME DAY · PUCK DROP 18:00" — dein Erlebnis ist 1:1 unangetastet |
 | v2.27-Smoke | App startet sauber, versionName=2.27 |
 
 **Gefundene Locale-Falle** (deutsches Gerät): `"%.1f".format` schreibt „82,5" — im Trainer auf `Locale.ROOT` gepinnt, damit „82.5 kg" konsistent zu allen anderen Zahlen bleibt.
