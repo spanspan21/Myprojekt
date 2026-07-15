@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -194,7 +195,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                         items(hits, key = { it.name }) { bank ->
                             Row(
                                 Modifier.animateItem().fillMaxWidth().clip(RoundedCornerShape(11.dp))
-                                    .clickable {
+                                    .pressScale {
                                         scope.launch {
                                             runCatching { BankLink.startAuth(ctx, bank) }
                                                 .onSuccess { url ->

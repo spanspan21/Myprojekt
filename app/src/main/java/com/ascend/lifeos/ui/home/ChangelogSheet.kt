@@ -29,6 +29,13 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "Boot calibration now includes sleep target and bedtime — JARVIS measures sleep debt and night greetings from your actual schedule",
+        "WhyRow tap-to-explain: tap Sleep, Restorative or Resting HR on the Body screen to learn what each metric means and how it's scored",
+        "Fat multiplier configurable: standard and fuel-mode fat targets are now Settings steppers — tune your macro split per kg",
+        "Recovery formula exposed: restorative ceiling, RHR sensitivity, sleep quality duration target and share ceiling are now steppers — calibrate every factor",
+        "TDEE clamp range and confidence thresholds configurable — floor, ceiling, required days and weight entries are all steppers",
+        "Protein window tuning: lookback minutes and fill threshold in Settings — control exactly when the post-workout nudge fires",
+        "pressScale wave 2: finance cards, transactions, categories, export button, decisions, goals, habits, skills, focus sessions, training CTAs, weekly report, reschedule, school, documentation, nutrition and prime directives all press-and-spring",
         "First-day getting started card — three concrete actions to activate JARVIS when you're brand new",
         "Info tooltips: tap Recovery, Sleep score, Readiness or Strain target to learn what drives each number",
         "Focus score hero now shows 'Your score, decoded' above the breakdown — no more mystery numbers",

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -295,7 +296,7 @@ private fun HoldingRow(
     onDelete: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(onClick = onEdit)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).pressScale(onEdit)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -399,7 +400,7 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
             var armed by remember(hold.id) { mutableStateOf(false) }
             LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
             Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).clickable {
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).pressScale {
                     if (armed) {
                         FinanceStore.deleteHolding(ctx, hold.id)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Holding deleted")

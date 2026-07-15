@@ -142,6 +142,13 @@ fun HomeScreen(
     val screenMin = screenState.second
     val healthConnected = Repo.data.health != null && Repo.data.health?.sleepMin != null
 
+    LaunchedEffect(profile.streak) {
+        if (profile.streak == 7 && !com.ascend.lifeos.data.Prefs.bool(ctx, "hint_edit_dashboard", false)) {
+            com.ascend.lifeos.data.Prefs.setBool(ctx, "hint_edit_dashboard", true)
+            com.ascend.lifeos.ui.kit.AppFeedback.show("One week in — tap 'Edit dashboard' below to reorder or hide cards")
+        }
+    }
+
     // day context: today's ice block + imminent exam feed the Jarvis line
     val dayContext by produceState<Pair<String?, Pair<String, Int>?>>(null to null) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -1037,7 +1044,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable { editCards = true }
+                    .pressScale { editCards = true }
                     .padding(horizontal = 10.dp, vertical = 5.dp),
             )
 

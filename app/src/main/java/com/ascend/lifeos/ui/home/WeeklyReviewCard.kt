@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,7 +72,7 @@ fun WeeklyReviewCard(onOpenReport: () -> Unit, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(12.dp))
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(Ivory.copy(alpha = 0.06f)).clickable(onClick = onOpenReport)
+                    .background(Ivory.copy(alpha = 0.06f)).pressScale(onOpenReport)
                     .padding(vertical = 11.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {

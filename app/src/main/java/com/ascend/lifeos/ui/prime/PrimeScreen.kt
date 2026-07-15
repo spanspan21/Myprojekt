@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -122,7 +123,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                 // Tappable when the directive knows which module to act on — it
                 // deep-links there instead of being a dead-end poster (audit F1).
                 val rowMod = if (d.route != null)
-                    Modifier.fillMaxWidth().clickable { onNavigate(d.route) } else Modifier.fillMaxWidth()
+                    Modifier.fillMaxWidth().pressScale { onNavigate(d.route) } else Modifier.fillMaxWidth()
                 Panel(Modifier.fillMaxWidth()) {
                     Row(rowMod.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(

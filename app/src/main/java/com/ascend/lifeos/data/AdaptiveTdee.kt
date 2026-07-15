@@ -58,14 +58,20 @@ object AdaptiveTdee {
 
         val avgIntake = intakes.average()
         val expenditure = (avgIntake - deltaKg * 7700.0 / effectiveDays).toInt()
-        val exp = expenditure.coerceIn(1200, 5000)
+        val clampLo = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.TDEE_CLAMP_LO, 1200) } ?: 1200
+        val clampHi = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.TDEE_CLAMP_HI, 5000) } ?: 5000
+        val exp = expenditure.coerceIn(clampLo, clampHi)
         val trendPerWeek = deltaKg / effectiveDays * 7.0
 
         return Result(
             expenditure = exp,
             trendKgPerWeek = trendPerWeek,
             daysOfData = intakes.size,
-            confidence = if (intakes.size >= 18 && sorted.size >= 8) "solid" else "low",
+            confidence = run {
+                val confDays = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.TDEE_CONF_DAYS, 18) } ?: 18
+                val confWeights = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.TDEE_CONF_WEIGHTS, 8) } ?: 8
+                if (intakes.size >= confDays && sorted.size >= confWeights) "solid" else "low"
+            },
         )
     }
 

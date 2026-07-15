@@ -313,6 +313,41 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             }
         }
 
+        // sleep target — drives recovery scoring and sleep debt
+        Spacer(Modifier.height(14.dp))
+        Text("SLEEP", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(4.dp))
+        Text("Your target — JARVIS measures debt against this", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Spacer(Modifier.height(8.dp))
+        var sleepTarget by remember { mutableIntStateOf(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_TARGET_MIN, 0).let { if (it == 0) 480 else it }) }
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            listOf(390 to "6h30", 420 to "7h", 450 to "7h30", 480 to "8h", 510 to "8h30", 540 to "9h").forEach { (m, label) ->
+                BootChip(label, sleepTarget == m) {
+                    sleepTarget = m
+                    com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.SLEEP_TARGET_MIN, m)
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Text("Bedtime", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Spacer(Modifier.height(6.dp))
+        var bedtimeMin by remember { mutableIntStateOf(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GREET_NIGHT_START, 22) * 60) }
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            listOf(1260 to "21:00", 1290 to "21:30", 1320 to "22:00", 1350 to "22:30", 1380 to "23:00", 1410 to "23:30").forEach { (m, label) ->
+                BootChip(label, bedtimeMin == m) {
+                    bedtimeMin = m
+                    com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.GREET_NIGHT_START, m / 60)
+                }
+            }
+        }
+
         Spacer(Modifier.height(14.dp))
         com.ascend.lifeos.ui.home.Reveal(3) {
         Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,

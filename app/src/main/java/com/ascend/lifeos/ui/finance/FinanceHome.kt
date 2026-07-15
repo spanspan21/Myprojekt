@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -455,7 +456,7 @@ private fun AccountChip(a: Account, onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(14.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick)
             .padding(horizontal = 11.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -680,7 +681,7 @@ private fun BreakdownPanel(
 @Composable
 private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend: Long, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).pressScale(onClick)
             .padding(horizontal = 2.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -959,7 +960,7 @@ private fun DayHeader(label: String, netCents: Long) {
 @Composable
 private fun TxnRow(t: Txn, accountName: String?, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
+        modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).pressScale(onClick)
             .padding(horizontal = 2.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -991,7 +992,7 @@ private fun ExportCsvButton(count: Int, onClick: () -> Unit) {
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {

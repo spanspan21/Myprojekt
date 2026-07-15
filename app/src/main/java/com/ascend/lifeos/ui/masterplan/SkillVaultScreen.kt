@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.masterplan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -127,7 +128,7 @@ private fun DomainChip(
             .clip(RoundedCornerShape(13.dp))
             .background(if (selected) accent.copy(alpha = 0.18f) else GlassFill)
             .border(0.5.dp, if (selected) accent.copy(alpha = 0.5f) else GlassLine, RoundedCornerShape(13.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick)
             .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

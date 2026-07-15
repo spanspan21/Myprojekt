@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.school
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -531,7 +532,7 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (name.isNotBlank()) Mod.School else Mod.School.copy(alpha = 0.25f))
-                    .clickable(enabled = name.isNotBlank()) { SchoolStore.addSubject(ctx, name, points); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Subject added"); onSaved(); onDismiss() }
+                    .then(if (name.isNotBlank()) Modifier.pressScale { SchoolStore.addSubject(ctx, name, points); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Subject added"); onSaved(); onDismiss() } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Add subject", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -604,7 +605,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
 
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Mod.School)
-                    .clickable { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Grade added"); onSaved(); onDismiss() }
+                    .pressScale { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Grade added"); onSaved(); onDismiss() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save grade", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

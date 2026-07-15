@@ -175,6 +175,22 @@ object Prefs {
     const val GREET_DAY_START = "greet_day_start"             // 11 — hour when day greetings begin
     const val GREET_EVE_START = "greet_eve_start"             // 17 — hour when evening greetings begin
     const val GREET_NIGHT_START = "greet_night_start"         // 22 — hour when night greetings begin
+    // Fat & macro calc
+    const val FAT_MULT_STD = "fat_mult_std"              // 9 — fat g per 10 kg bodyweight, standard (0.9 g/kg)
+    const val FAT_MULT_FUEL = "fat_mult_fuel"            // 8 — fat g per 10 kg bodyweight, fuel mode (0.8 g/kg)
+    // Recovery tuning (formula internals)
+    const val RESTORATIVE_CEIL = "restorative_ceil"      // 45 — stored as % (0.45); full credit when deep+REM share reaches this
+    const val RHR_SENSITIVITY = "rhr_sensitivity"        // 10 — divisor for resting HR delta score
+    const val SLEEP_QUALITY_DUR = "sleep_quality_dur"    // 450 — minutes for 100% duration credit in sleep quality
+    const val SLEEP_QUALITY_SHARE = "sleep_quality_share"// 35 — stored as % (0.35); share ceiling in sleep quality formula
+    // TDEE clamp & confidence
+    const val TDEE_CLAMP_LO = "tdee_clamp_lo"            // 1200 — lower bound for TDEE output
+    const val TDEE_CLAMP_HI = "tdee_clamp_hi"            // 5000 — upper bound for TDEE output
+    const val TDEE_CONF_DAYS = "tdee_conf_days"          // 18 — intake days needed for "solid" confidence
+    const val TDEE_CONF_WEIGHTS = "tdee_conf_weights"    // 8 — weight entries needed for "solid" confidence
+    // Protein window
+    const val PROT_WINDOW_LOOKBACK = "prot_window_lookback" // 100 — minutes lookback for post-workout protein check
+    const val PROT_WINDOW_THRESH = "prot_window_thresh"     // 20 — grams protein to consider window filled
     // Tour
     const val TOUR_SEEN = "tour_seen"                  // false — one-time feature tour after first boot
     // Notification times (minute-of-day; e.g. 420 = 07:00)

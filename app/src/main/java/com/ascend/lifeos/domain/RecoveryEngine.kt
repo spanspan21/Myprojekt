@@ -33,13 +33,16 @@ object RecoveryEngine {
         if (sleepMin == null) return null
         val sleepPerf = (sleepMin / sleepTarget.coerceAtLeast(1).toDouble()).coerceIn(0.0, 1.0)
         // 45% deep+REM share = full credit; no stage data = missing signal, not 0%.
+        val ctx = com.ascend.lifeos.data.Repo.appContextOrNull()
+        val restCeil = (ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RESTORATIVE_CEIL, 45) } ?: 45) / 100.0
+        val rhrSens = (ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RHR_SENSITIVITY, 10) } ?: 10).toDouble()
         val restorative: Double? =
             if (sleepMin > 0 && remMin + deepMin > 0)
-                ((remMin + deepMin).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45
+                ((remMin + deepMin).toDouble() / sleepMin).coerceIn(0.0, restCeil) / restCeil
             else null
         val rhrScore: Double? =
             if (rhrBaseline != null && restingHr != null)
-                (0.5 - (restingHr - rhrBaseline) / 10.0).coerceIn(0.0, 1.0)
+                (0.5 - (restingHr - rhrBaseline) / rhrSens).coerceIn(0.0, 1.0)
             else null
 
         val parts = buildList {
@@ -50,7 +53,6 @@ object RecoveryEngine {
         }
         val weightSum = parts.sumOf { it.first }
         var score = parts.sumOf { it.first * it.second } / weightSum * 100
-        val ctx = com.ascend.lifeos.data.Repo.appContextOrNull()
         val sorePen = ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RECOVERY_SORENESS_PEN, 8) } ?: 8
         val lowEPen = ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RECOVERY_LOW_ENERGY_PEN, 5) } ?: 5
         val highEBon = ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.RECOVERY_HIGH_ENERGY_BON, 3) } ?: 3
@@ -68,9 +70,12 @@ object RecoveryEngine {
      */
     fun sleepQuality(sleepMin: Int?, remMin: Int, deepMin: Int, awakeMin: Int): Int? {
         if (sleepMin == null || sleepMin <= 0) return null
-        val duration = (sleepMin / 450.0).coerceIn(0.0, 1.0)
+        val sqCtx = com.ascend.lifeos.data.Repo.appContextOrNull()
+        val durTarget = (sqCtx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.SLEEP_QUALITY_DUR, 450) } ?: 450).toDouble()
+        val shareCeil = (sqCtx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.SLEEP_QUALITY_SHARE, 35) } ?: 35) / 100.0
+        val duration = (sleepMin / durTarget).coerceIn(0.0, 1.0)
         val share: Double? =
-            if (remMin + deepMin > 0) ((remMin + deepMin).toDouble() / sleepMin).coerceIn(0.0, 0.35) / 0.35 else null
+            if (remMin + deepMin > 0) ((remMin + deepMin).toDouble() / sleepMin).coerceIn(0.0, shareCeil) / shareCeil else null
         val awakeFrac = (awakeMin.toDouble() / (sleepMin + awakeMin).coerceAtLeast(1)).coerceIn(0.0, 0.25) / 0.25
         val score =
             if (share != null) (0.55 * duration + 0.30 * share + 0.15 * (1.0 - awakeFrac)) * 100

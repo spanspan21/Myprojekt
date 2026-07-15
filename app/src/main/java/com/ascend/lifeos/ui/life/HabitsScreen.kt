@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -96,7 +97,7 @@ fun HabitsScreen(onClose: () -> Unit) {
             Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                 .background(Mod.Mind.copy(alpha = 0.12f))
                 .border(0.5.dp, Mod.Mind.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
-                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); catalogOpen = true }
+                .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); catalogOpen = true }
                 .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -625,7 +626,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
                     .border(0.5.dp, Mod.Mind.copy(alpha = 0.3f), RoundedCornerShape(11.dp))
-                    .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onBuild() }.padding(vertical = 11.dp),
+                    .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onBuild() }.padding(vertical = 11.dp),
                 horizontalArrangement = Arrangement.Center,
             ) { Text("Build your own — schedule · quit · measurable →", color = Mod.Mind, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
             Spacer(Modifier.height(24.dp))

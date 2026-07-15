@@ -144,6 +144,13 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
     // "imports itself": throttled feed refresh on open (Room flows update the UI)
     LaunchedEffect(Unit) {
         runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(ctx) }
+        if (!com.ascend.lifeos.data.Prefs.bool(ctx, "hint_cal_ics", false)) {
+            val streak = com.ascend.lifeos.data.Repo.data.profile.streak
+            if (streak >= 3) {
+                com.ascend.lifeos.data.Prefs.setBool(ctx, "hint_cal_ics", true)
+                com.ascend.lifeos.ui.kit.AppFeedback.show("Tip: Add ICS feeds in Settings for automatic timetable sync")
+            }
+        }
     }
 
     Box(Modifier.fillMaxSize()) {

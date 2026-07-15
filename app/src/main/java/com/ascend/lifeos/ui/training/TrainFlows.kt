@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -129,7 +130,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         Spacer(Modifier.height(26.dp))
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ember)
-                .clickable { vm.dismissSummary(); onDone() }
+                .pressScale { vm.dismissSummary(); onDone() }
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Done", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
@@ -220,10 +221,10 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Modifier.fillMaxWidth().padding(bottom = 36.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (value > 0) ember else ember.copy(alpha = 0.2f))
-                        .clickable(enabled = value > 0) {
+                        .then(if (value > 0) Modifier.pressScale {
                             result = value >= target
                             if (value >= target) com.ascend.lifeos.data.Haptics.epic(ctx) else com.ascend.lifeos.data.Haptics.warn(ctx)
-                        }
+                        } else Modifier)
                         .padding(vertical = 15.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -259,7 +260,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Spacer(Modifier.height(36.dp))
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Good)
-                            .clickable { onDone() }.padding(vertical = 15.dp),
+                            .pressScale { onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Continue", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
                 }
@@ -285,7 +286,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
-                            .clickable { onDone() }.padding(vertical = 15.dp),
+                            .pressScale { onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Back to training", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
                 }

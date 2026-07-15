@@ -168,10 +168,10 @@ fun BodyScreen() {
                     Column(Modifier.weight(1f)) {
                         val sm = h?.sleepMin
                         if (sm != null) {
-                            WhyRow("Sleep", "${sm / 60}h ${sm % 60}m", (sm / Repo.sleepNeedMin().toFloat()).coerceIn(0f, 1f))
+                            WhyRow("Sleep", "${sm / 60}h ${sm % 60}m", (sm / Repo.sleepNeedMin().toFloat()).coerceIn(0f, 1f), "Total sleep vs your ${Repo.sleepNeedMin() / 60}h target. Biggest single factor for recovery.")
                             val restShare = if (sm > 0) (h.rem + h.deep) * 100 / sm else 0
                             val restTarget = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RESTORATIVE_PCT, 45)
-                            WhyRow("Restorative", "$restShare%", (restShare / restTarget.toFloat()).coerceIn(0f, 1f))
+                            WhyRow("Restorative", "$restShare%", (restShare / restTarget.toFloat()).coerceIn(0f, 1f), "Deep + REM as % of total sleep. Target: ${restTarget}%. These stages drive muscle repair and memory consolidation.")
                             val base = Repo.rhrBaseline()
                             val rhr = h.restingHr
                             if (rhr != null) {
@@ -180,6 +180,7 @@ fun BodyScreen() {
                                     "Resting HR",
                                     "$rhr bpm" + (delta?.let { d -> " (${if (d >= 0) "+" else ""}$d)" } ?: ""),
                                     if (delta == null) 0.6f else (0.5f - delta / 10f).coerceIn(0f, 1f),
+                                    "Resting heart rate vs your baseline${base?.let { " ($it bpm)" } ?: ""}. Lower = better recovered. Elevated RHR signals accumulated fatigue.",
                                 )
                             }
                             Repo.bodyDay()?.let { d ->
@@ -806,8 +807,12 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
 // ─── components ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun WhyRow(label: String, value: String, quality: Float) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun WhyRow(label: String, value: String, quality: Float, hint: String? = null) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            .then(if (hint != null) Modifier.clickable { com.ascend.lifeos.ui.kit.AppFeedback.show(hint) } else Modifier),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(label, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, modifier = Modifier.width(86.dp))
         Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
             Box(

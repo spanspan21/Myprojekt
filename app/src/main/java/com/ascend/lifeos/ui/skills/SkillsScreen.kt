@@ -10,6 +10,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -306,7 +307,7 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (expanded) 0.05f else 0.03f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onToggle)
+            .pressScale(onToggle)
             .padding(horizontal = 12.dp, vertical = 9.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -653,7 +654,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                             .background(accent.copy(alpha = 0.14f))
                             .border(0.5.dp, accent.copy(alpha = 0.45f), RoundedCornerShape(13.dp))
-                            .clickable {
+                            .pressScale {
                                 WellbeingStore.startFocus(ctx, 25)
                                 com.ascend.lifeos.wellbeing.JarvisGuardService.start(ctx)
                                 SkillMeta.addFocusMinutes(ctx, n.node.domainId, 25)

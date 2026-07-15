@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -359,7 +360,7 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
         line = if (isToday) Amber.copy(alpha = 0.3f) else HudLine,
     ) {
         Row(
-            Modifier.fillMaxWidth().clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(26.dp).clip(CircleShape).background(Amber.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {

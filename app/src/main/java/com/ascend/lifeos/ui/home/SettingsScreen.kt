@@ -507,6 +507,22 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             GoalStepperRow("Trend smoothing", "0.${"%02d".format(ewma)}",
                 onDec = { ewma = (ewma - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.TDEE_EWMA_ALPHA, ewma) },
                 onInc = { ewma = (ewma + 5).coerceAtMost(50); Prefs.setInt(ctx, Prefs.TDEE_EWMA_ALPHA, ewma) })
+            var clampLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_CLAMP_LO, 1200)) }
+            GoalStepperRow("TDEE floor", "$clampLo kcal",
+                onDec = { clampLo = (clampLo - 100).coerceAtLeast(800); Prefs.setInt(ctx, Prefs.TDEE_CLAMP_LO, clampLo) },
+                onInc = { clampLo = (clampLo + 100).coerceAtMost(2000); Prefs.setInt(ctx, Prefs.TDEE_CLAMP_LO, clampLo) })
+            var clampHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_CLAMP_HI, 5000)) }
+            GoalStepperRow("TDEE ceiling", "$clampHi kcal",
+                onDec = { clampHi = (clampHi - 250).coerceAtLeast(3000); Prefs.setInt(ctx, Prefs.TDEE_CLAMP_HI, clampHi) },
+                onInc = { clampHi = (clampHi + 250).coerceAtMost(7000); Prefs.setInt(ctx, Prefs.TDEE_CLAMP_HI, clampHi) })
+            var confDays by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_CONF_DAYS, 18)) }
+            GoalStepperRow("Confidence days", "$confDays",
+                onDec = { confDays = (confDays - 1).coerceAtLeast(7); Prefs.setInt(ctx, Prefs.TDEE_CONF_DAYS, confDays) },
+                onInc = { confDays = (confDays + 1).coerceAtMost(30); Prefs.setInt(ctx, Prefs.TDEE_CONF_DAYS, confDays) })
+            var confWeights by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_CONF_WEIGHTS, 8)) }
+            GoalStepperRow("Confidence weights", "$confWeights",
+                onDec = { confWeights = (confWeights - 1).coerceAtLeast(3); Prefs.setInt(ctx, Prefs.TDEE_CONF_WEIGHTS, confWeights) },
+                onInc = { confWeights = (confWeights + 1).coerceAtMost(20); Prefs.setInt(ctx, Prefs.TDEE_CONF_WEIGHTS, confWeights) })
         }
 
         // ── FUEL ─────────────────────────────────────────────────────
@@ -536,6 +552,22 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onToggle = { Repo.setKcalGoalAuto(it) },
             )
             ToggleRow("Protein window nudge", "90 min after training, with 1-tap log", Prefs.PROTEIN_NUDGE, true)
+            var protLookback by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROT_WINDOW_LOOKBACK, 100)) }
+            GoalStepperRow("Protein window", "${protLookback} min",
+                onDec = { protLookback = (protLookback - 10).coerceAtLeast(30); Prefs.setInt(ctx, Prefs.PROT_WINDOW_LOOKBACK, protLookback) },
+                onInc = { protLookback = (protLookback + 10).coerceAtMost(180); Prefs.setInt(ctx, Prefs.PROT_WINDOW_LOOKBACK, protLookback) })
+            var protThresh by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROT_WINDOW_THRESH, 20)) }
+            GoalStepperRow("Protein window fill", "${protThresh} g",
+                onDec = { protThresh = (protThresh - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.PROT_WINDOW_THRESH, protThresh) },
+                onInc = { protThresh = (protThresh + 5).coerceAtMost(50); Prefs.setInt(ctx, Prefs.PROT_WINDOW_THRESH, protThresh) })
+            var fatStd by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FAT_MULT_STD, 9)) }
+            GoalStepperRow("Fat target", "${fatStd / 10}.${fatStd % 10} g/kg",
+                onDec = { fatStd = (fatStd - 1).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.FAT_MULT_STD, fatStd) },
+                onInc = { fatStd = (fatStd + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.FAT_MULT_STD, fatStd) })
+            var fatFuel by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FAT_MULT_FUEL, 8)) }
+            GoalStepperRow("Fat target (fuel)", "${fatFuel / 10}.${fatFuel % 10} g/kg",
+                onDec = { fatFuel = (fatFuel - 1).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.FAT_MULT_FUEL, fatFuel) },
+                onInc = { fatFuel = (fatFuel + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.FAT_MULT_FUEL, fatFuel) })
             var ppm by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROTEIN_PER_MEAL, 20)) }
             GoalStepperRow("Protein per meal", "${ppm} g",
                 onDec = { ppm = (ppm - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.PROTEIN_PER_MEAL, ppm) },
@@ -693,6 +725,22 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             GoalStepperRow("High energy bonus", "$highEBon pts",
                 onDec = { highEBon = (highEBon - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.RECOVERY_HIGH_ENERGY_BON, highEBon) },
                 onInc = { highEBon = (highEBon + 1).coerceAtMost(10); Prefs.setInt(ctx, Prefs.RECOVERY_HIGH_ENERGY_BON, highEBon) })
+            var restCeil by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RESTORATIVE_CEIL, 45)) }
+            GoalStepperRow("Restorative ceiling", "$restCeil%",
+                onDec = { restCeil = (restCeil - 5).coerceAtLeast(25); Prefs.setInt(ctx, Prefs.RESTORATIVE_CEIL, restCeil) },
+                onInc = { restCeil = (restCeil + 5).coerceAtMost(65); Prefs.setInt(ctx, Prefs.RESTORATIVE_CEIL, restCeil) })
+            var rhrSens by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RHR_SENSITIVITY, 10)) }
+            GoalStepperRow("RHR sensitivity", "$rhrSens bpm",
+                onDec = { rhrSens = (rhrSens - 1).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.RHR_SENSITIVITY, rhrSens) },
+                onInc = { rhrSens = (rhrSens + 1).coerceAtMost(20); Prefs.setInt(ctx, Prefs.RHR_SENSITIVITY, rhrSens) })
+            var sqDur by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_QUALITY_DUR, 450)) }
+            GoalStepperRow("Sleep quality target", "${sqDur / 60}h ${sqDur % 60}m",
+                onDec = { sqDur = (sqDur - 15).coerceAtLeast(360); Prefs.setInt(ctx, Prefs.SLEEP_QUALITY_DUR, sqDur) },
+                onInc = { sqDur = (sqDur + 15).coerceAtMost(600); Prefs.setInt(ctx, Prefs.SLEEP_QUALITY_DUR, sqDur) })
+            var sqShare by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_QUALITY_SHARE, 35)) }
+            GoalStepperRow("Quality share ceil", "$sqShare%",
+                onDec = { sqShare = (sqShare - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.SLEEP_QUALITY_SHARE, sqShare) },
+                onInc = { sqShare = (sqShare + 5).coerceAtMost(55); Prefs.setInt(ctx, Prefs.SLEEP_QUALITY_SHARE, sqShare) })
             var debtWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60)) }
             GoalStepperRow("Sleep debt warning", "${debtWarn}m",
                 onDec = { debtWarn = (debtWarn - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.SLEEP_DEBT_WARN, debtWarn) },

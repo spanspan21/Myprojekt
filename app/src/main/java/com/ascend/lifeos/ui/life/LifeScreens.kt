@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.life
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -298,7 +299,7 @@ fun GoalsScreen(onClose: () -> Unit) {
                             }
                         }
                         Spacer(Modifier.width(13.dp))
-                        Column(Modifier.weight(1f).clickable { editGoalId = g.id }) {
+                        Column(Modifier.weight(1f).pressScale { editGoalId = g.id }) {
                             Text(g.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                             if (g.deadline.isNotBlank()) {
                                 val daysLeft = runCatching {

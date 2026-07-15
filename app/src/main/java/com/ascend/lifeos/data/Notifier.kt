@@ -341,8 +341,10 @@ object Notifier {
             }
 
             "protein" -> {
-                val recent = Repo.today().meals.filter { it.ts > System.currentTimeMillis() - 100 * 60_000L }
-                if (recent.sumOf { it.protein } >= 20) null  // already eaten — stay silent
+                val lookback = Prefs.int(ctx, Prefs.PROT_WINDOW_LOOKBACK, 100)
+                val thresh = Prefs.int(ctx, Prefs.PROT_WINDOW_THRESH, 20)
+                val recent = Repo.today().meals.filter { it.ts > System.currentTimeMillis() - lookback * 60_000L }
+                if (recent.sumOf { it.protein } >= thresh) null
                 else {
                     val top = Repo.profile().recentFoods.sortedByDescending { it.protein }.take(2)
                     val suggestion = top.joinToString(" or ") { it.name }.ifBlank { "Quark or eggs" }

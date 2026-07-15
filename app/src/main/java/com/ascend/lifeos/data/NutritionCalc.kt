@@ -42,7 +42,9 @@ object NutritionCalc {
         val protHigh = (ctx?.let { Prefs.int(it, Prefs.PROTEIN_MULT_HIGH, 22) } ?: 22) / 10.0
         val protLow = (ctx?.let { Prefs.int(it, Prefs.PROTEIN_MULT_LOW, 18) } ?: 18) / 10.0
         val protein = ((if (goal == "lose" || goal == "recomp") protHigh else protLow) * w).roundToInt()
-        val fat = ((if (goal == "fuel") 0.8 else 0.9) * w).roundToInt()
+        val fatStd = (ctx?.let { Prefs.int(it, Prefs.FAT_MULT_STD, 9) } ?: 9) / 10.0
+        val fatFuel = (ctx?.let { Prefs.int(it, Prefs.FAT_MULT_FUEL, 8) } ?: 8) / 10.0
+        val fat = ((if (goal == "fuel") fatFuel else fatStd) * w).roundToInt()
         val carbs = ((kcal - protein * 4 - fat * 9) / 4).roundToInt().coerceAtLeast(0)
         return Targets(kcal.roundToInt(), protein, carbs, fat)
     }

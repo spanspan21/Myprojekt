@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,7 +60,7 @@ fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier) 
             Spacer(Modifier.height(10.dp))
             directives.take(3).forEachIndexed { i, d ->
                 if (i > 0) Spacer(Modifier.height(10.dp))
-                val rowMod = if (d.route != null) Modifier.fillMaxWidth().clickable { onNavigate(d.route!!) }
+                val rowMod = if (d.route != null) Modifier.fillMaxWidth().pressScale { onNavigate(d.route!!) }
                 else Modifier.fillMaxWidth()
                 Row(rowMod, verticalAlignment = Alignment.CenterVertically) {
                     Box(

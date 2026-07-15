@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,7 +117,7 @@ private fun Pill(label: String, modifier: Modifier = Modifier, filled: Boolean =
         modifier
             .clip(RoundedCornerShape(12.dp))
             .background(if (filled) Mod.Train else Ivory.copy(alpha = 0.06f))
-            .clickable(onClick = onClick)
+            .pressScale(onClick)
             .padding(vertical = 11.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -159,7 +160,7 @@ private fun ReschedulePickSheet(
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Train)
-                    .clickable { onPick(start) }.padding(vertical = 14.dp),
+                    .pressScale { onPick(start) }.padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Schedule", color = Void, fontFamily = Body, fontSize = FS.s14_5, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(16.dp))

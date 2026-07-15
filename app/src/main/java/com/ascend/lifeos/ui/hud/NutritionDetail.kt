@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.hud
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -162,7 +163,7 @@ fun MicrosView(onBack: () -> Unit) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                                    .clickable { sourceFor = id }.padding(vertical = 3.dp),
+                                    .pressScale { sourceFor = id }.padding(vertical = 3.dp),
                             ) {
                                 Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                                 Text("${(p * 100).toInt()}% · fix it →", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
@@ -191,7 +192,7 @@ fun MicrosView(onBack: () -> Unit) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                            .clickable { sourceFor = id }.padding(vertical = 4.dp),
+                            .pressScale { sourceFor = id }.padding(vertical = 4.dp),
                     ) {
                         Text(nd.label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(120.dp))
                         NeonBar(p.coerceIn(0f, 1f), col, Modifier.weight(1f), height = 6.dp)
