@@ -8,8 +8,8 @@ Der Auftrag: die App immer wieder kritisch zerlegen (Design, Struktur, Funktion)
 
 ## 1. Der rote Faden: Eine App, die sich dem Menschen anpasst
 
-### Sport-Profil (vormittags gebaut, heute gehärtet)
-- `profile.sport` mit 11 Sportarten (Eishockey-Default = dein Gerät verhält sich exakt wie vorher).
+### Sport-Profil (vormittags gebaut, heute gehärtet und erweitert)
+- `profile.sport` mit **15 Sportarten** (Eishockey-Default = dein Gerät verhält sich exakt wie vorher). Nachmittags kamen Cycling, Rowing, Ski/Skate und Yoga/Mobility als wählbare Hauptsportarten dazu — vorher konnte ein Radfahrer eine Tour loggen, aber nicht Radfahrer *sein*. „Rad"/„Bike"/„Ski" matchen als exakte Wörter (ein Radiologie-Termin und eine Skizze werden nie Trainingslast — testgepinnt).
 - Kalender-Klassifikator, Muskel-Last-Modell, Voice, Game-Day-Karte, Wasser-Bonus, Saison-Maschinerie — alles folgt dem Sport.
 - **Neu heute Nachmittag — der große Tag spricht jede Sprache**: `dayWord` pro Sportart. Ein Läufer sieht **RACE DAY**, ein Kämpfer **FIGHT DAY**, eine Tänzerin **SHOW DAY**, du weiterhin **GAME DAY** mit Puck Drop. Live bewiesen: Profil auf Running gestellt → Voice „Running session at 17:00", Briefing-Chip „RACE DAY", Kalenderblock „17:00–19:00 · Running".
 - Kalender-Sync-Texte, Boot-Copy, Settings-Copy komplett ent-hockeyfiziert (nur dein Profil behält die Hockey-Sprache).
@@ -133,9 +133,14 @@ Zusätzlich in Runde 3 **geprüft und sauber**: kein Crash-Pfad im Chart, Wochen
 ## 6. Installation
 **Handy anstecken → ich installiere v2.27.** Dein Profil bleibt exakt wie es ist (Hockey, deine Ziele, deine Historie) — du bekommst obendrauf: den Ziel-Picker mit 5 Typen, TODAY'S TARGET im Logger, Activity-Bests + Feiern, die Ausdauer-Statistik, den sport-treuen Wasser-Kredit und alle Review-Fixes.
 
-## 7. Backlog (ehrlich, priorisiert)
-- Wasser-Ziel minutenskaliert (+0,25 L je weitere 60 Aktivitätsminuten, ACSM) — heute bewusst nicht: 3 Callsites, Prime nutzt noch das statische Ziel.
+## 7. Nachschlag nach dem ersten Berichtsstand (die Schicht lief weiter)
+- **4 neue Hauptsportarten** (Cycling/Rowing/Ski/Yoga — Katalog 11 → 15, live verifiziert: 🚴/🚣-Chips in Settings).
+- **Superset-Atempause konfigurierbar** (Settings → Training: Off/30 s/60 s; Paz 2014 — bis 60 s zwischen Partnern erhält die Leistung bei vollem Zeitgewinn; Default Off = exakt das bisherige Verhalten; das Workout-Banner nennt den aktiven Modus). Live verifiziert.
+- Wasser-Semantik dokumentiert: `profile.waterGoal` = stabile Basis (Missionen/Streaks verschieben ihre Ziele nie untertags), die Fuel-Karte = dynamische Tagesempfehlung mit erklärten Boni. Bewusste Zwei-Ebenen-Architektur statt riskanter Vereinheitlichung.
+
+## 8. Backlog (ehrlich, priorisiert)
+- Wasser-Vereinheitlichung dynamisch überall (braucht Weather-Zugriff in 8 weiteren Oberflächen).
 - History-Editor abgeschlossener Sessions (PR-Reconcile nötig).
-- Superset-Presets im Template-Editor; konfigurierbare Intra-Pair-Pause (0–60 s, Paz 2014).
+- Superset-Presets im Template-Editor.
 - Satz-Level-Cloud-Sync paginiert (64-KB-Cap).
 - Voll-Check-in erscheint auf deinem S24 nach ≥10 Log-Tagen + ≥4 Wiegungen — ab dann übernimmt die Coach-Engine wöchentlich.
