@@ -830,7 +830,7 @@ private fun TodayStrip(sets: Int, reps: Int, weekSessions: Int) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 15.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TickerStatBlock("SETS", sets, Accent)
                 TickerStatBlock("REPS", reps, Cyan)
-                StatBlock("WEEK", "$weekSessions workouts", Amber)
+                StatBlock("WEEK", "$weekSessions unit" + (if (weekSessions == 1) "" else "s"), Amber)
             }
         }
     }

@@ -115,7 +115,12 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         todaySets = dao.totalSetsSince(startOfDay)
         todayReps = dao.totalRepsSince(startOfDay)
         val startOfWeek = startOfWeek()
-        weekSessions = dao.sessionCountSince(startOfWeek)
+        // the week counts every unit — gym sessions AND logged activities
+        // (same number the dashboard header and the share card show)
+        val acts = runCatching {
+            com.ascend.lifeos.data.ActivityStore.since(getApplication(), startOfWeek).size
+        }.getOrDefault(0)
+        weekSessions = dao.sessionCountSince(startOfWeek) + acts
         checkDeload()
     }
 
