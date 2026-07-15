@@ -1026,7 +1026,8 @@ private fun ActivityQuickLog() {
     var minutes by remember { mutableStateOf(45) }
     var rpe by remember(typeId) { mutableStateOf(type.defaultRpe) }
     var km by remember(typeId) { mutableStateOf("") }
-    var celebrate by remember { mutableStateOf<String?>(null) }
+    // keyed on typeId: a run PR must not keep celebrating under the ride form
+    var celebrate by remember(typeId) { mutableStateOf<String?>(null) }
 
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Column(
@@ -1135,6 +1136,7 @@ private fun ActivityQuickLog() {
                             Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(14.dp).clickable {
                                 com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
+                                celebrate = null   // never keep celebrating a deleted entry
                             },
                         )
                     }

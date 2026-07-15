@@ -46,6 +46,21 @@ class SessionTargetTest {
     }
 
     @Test
+    fun `range top at honest effort consolidates instead of overshooting`() {
+        // review #1 follow-up: reps at the top + RPE 9 must NOT suggest reps
+        // above the range — own the top, then the load climbs
+        val t = TrainBrain.sessionTarget(listOf(s(12, 80f, 9)), isHold = false)!!
+        assertTrue(t, "80 kg × 12 again" in t)
+    }
+
+    @Test
+    fun `repHi follows the plan's range, not a hardcoded 12`() {
+        // 6-10 prescription: 10 clean reps at RPE 8 means the load climbs NOW
+        val t = TrainBrain.sessionTarget(listOf(s(10, 10f, 8)), isHold = false, repHi = 10)!!
+        assertTrue(t, "11.3 kg" in t)   // 10 + 1.25 small-plate jump
+    }
+
+    @Test
     fun `bodyweight work progresses on reps only`() {
         val push = TrainBrain.sessionTarget(listOf(s(14, null, 7)), isHold = false)!!
         assertTrue(push, "beat 14 reps" in push)

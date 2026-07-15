@@ -340,11 +340,14 @@ private fun ExerciseSetLogger(
                     }
                 }
                 // session-over-session target: double progression + RPE over the
-                // FULL last session of this exercise, not just its final set
+                // FULL last session of this exercise, not just its final set.
+                // repHi = the PLAN's range top (targetReps == pe.repsHigh), so the
+                // green line never contradicts the PRESCRIBED line above it
                 val lastSession = history.filter { it.sessionId == last.sessionId }
                 target = TrainBrain.sessionTarget(
                     lastSession.map { TrainBrain.SetSnapshot(it.reps, it.weight, it.rpe, it.holdSeconds) },
                     isHold,
+                    repHi = ex.targetReps.coerceAtLeast(6),
                 )
             }
         }

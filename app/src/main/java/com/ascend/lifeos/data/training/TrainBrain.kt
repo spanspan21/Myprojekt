@@ -203,6 +203,9 @@ object TrainBrain {
             // range filled at manageable effort → the load climbs
             top.reps >= repHi && (eff == null || eff <= 8.5) ->
                 "Today: ${fmtW(w + inc)} kg — range filled, load climbs (double progression)"
+            // range filled but the effort was honest work — own the top first
+            top.reps >= repHi ->
+                "Today: ${fmtW(w)} kg × $repHi again — own the range top, then the load climbs"
             else ->
                 "Today: ${fmtW(w)} kg × ${top.reps + 1} — one more rep than last time"
         }

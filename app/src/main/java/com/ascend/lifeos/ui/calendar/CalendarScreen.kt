@@ -109,9 +109,11 @@ fun eventColor(t: EventType): Color = when (t) {
 
 fun eventLabel(t: EventType): String = when (t) {
     EventType.SCHOOL -> "School"; EventType.WORK -> "Work"
-    // HOCKEY is the generic "my sport" block — the label follows the athlete
+    // HOCKEY is the generic "my sport" block — the label follows the athlete.
+    // "General health" is a profile, not a calendar category → neutral "Sport".
     EventType.HOCKEY -> com.ascend.lifeos.data.training.SportCatalog
-        .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull()).label
+        .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull())
+        .let { if (it.id == "none") "Sport" else it.label }
     EventType.TRAINING -> "Training"; EventType.EXAM -> "Exam"; EventType.HOLIDAY -> "Holiday"
     EventType.PERSONAL -> "Personal"
 }
