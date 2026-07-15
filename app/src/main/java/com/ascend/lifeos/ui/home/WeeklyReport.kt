@@ -39,6 +39,9 @@ data class WeekStats(
     val totalSets: Int,
     val totalReps: Int,
     val prCount: Int,
+    val activityCount: Int,      // logged runs/rides/practices this week
+    val activityMinutes: Int,
+    val activityKm: Double,
     val sleepAvgMin: Int?,
     val sleepSeries: List<Float>,
     val recoverySeries: List<Float>,
@@ -62,6 +65,11 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
     val prs = runCatching {
         dao.recentPrs(50).firstOrNull()?.count { it.date >= weekAgo } ?: 0
     }.getOrDefault(0)
+
+    // the universal activity log is part of the week's story too
+    val acts = runCatching { com.ascend.lifeos.data.ActivityStore.since(ctx, weekAgo) }.getOrDefault(emptyList())
+    val actMinutes = acts.sumOf { it.minutes }
+    val actKm = acts.sumOf { it.distanceKm ?: 0.0 }
 
     val keys = Repo.lastDayKeys(7)
     val sleepVals = keys.mapNotNull { Repo.bodyDay(it)?.sleepMin }
@@ -100,6 +108,7 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
 
     WeekStats(
         workouts, sets, reps, prs,
+        acts.size, actMinutes, actKm,
         sleepVals.takeIf { it.isNotEmpty() }?.average()?.toInt(),
         sleepSeries, recSeries,
         rhrVals.takeIf { it.isNotEmpty() }?.average()?.toInt(),
@@ -177,6 +186,19 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 RStat("${s.totalSets}", "SETS", Mod.Train)
                 RStat("${s.totalReps}", "REPS", Mod.Train)
                 RStat("${s.prCount}", "PRS", Amber)
+            }
+            if (s.activityCount > 0) {
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    RStat("${s.activityCount}", "ACTIVITIES", Mod.Train)
+                    RStat("${s.activityMinutes}", "ACTIVE MIN", Mod.Train)
+                    if (s.activityKm > 0.05) {
+                        RStat(
+                            if (s.activityKm % 1.0 < 0.05) "${s.activityKm.toInt()}" else String.format(java.util.Locale.ROOT, "%.1f", s.activityKm),
+                            "KM", Mod.Train,
+                        )
+                    }
+                }
             }
         }
 
