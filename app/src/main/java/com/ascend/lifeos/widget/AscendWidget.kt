@@ -50,7 +50,9 @@ class AscendWidget : AppWidgetProvider() {
             // mission count already goes through completion()/hydrationMl, so raw
             // day.water here would contradict its own progress bar on drink days.
             val waterGlassEq = Repo.hydrationMl(day) / com.ascend.lifeos.data.WaterCalc.GLASS_ML
-            views.setTextViewText(R.id.widget_sub, "Fuel $kcal kcal · Water $waterGlassEq/${p.waterGoal}")
+            // all three missions on the glanceable line — Train was missing
+            val trainMark = if (day.workoutDone || day.trainSets > 0) "✓" else "—"
+            views.setTextViewText(R.id.widget_sub, "Train $trainMark · Fuel $kcal · Water $waterGlassEq/${p.waterGoal}")
 
             var flags = PendingIntent.FLAG_UPDATE_CURRENT
             if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
