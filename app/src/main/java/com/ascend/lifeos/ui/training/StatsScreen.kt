@@ -91,11 +91,28 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             val actCtx = androidx.compose.ui.platform.LocalContext.current
             val actRev = com.ascend.lifeos.data.ActivityStore.rev
             val acts = remember(actRev) { com.ascend.lifeos.data.ActivityStore.all(actCtx) }
+            // review r3 #3: the CHART speaks the strain ledger's language, so it
+            // must use the same deduped view (a manual same-sport log on a
+            // calendar-block day counts once, exactly like ATL/CTL). The bests
+            // below stay on the full list — a PR is a PR wherever it happened.
+            val weekLoads by produceState(initialValue = FloatArray(8), actRev) {
+                value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val today = java.time.LocalDate.now().toEpochDay()
+                    val byDay = com.ascend.lifeos.data.ActivityStore
+                        .countedLoadByEpochDay(actCtx, today - 55, today)
+                    FloatArray(8).also { arr ->
+                        byDay.forEach { (d, load) ->
+                            val w = ((today - d) / 7).toInt()
+                            if (w in 0..7) arr[7 - w] += load.toFloat()
+                        }
+                    }
+                }
+            }
             if (acts.isNotEmpty()) {
                 Text("ACTIVITY LOAD (8 WEEKS)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(10.dp))
                 GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
-                    ActivityWeekBars(acts, Modifier.fillMaxWidth().height(120.dp).padding(16.dp))
+                    ActivityWeekBars(weekLoads, Modifier.fillMaxWidth().height(120.dp).padding(16.dp))
                 }
                 Spacer(Modifier.height(12.dp))
                 // bests per type — the endurance answer to the PR list below
@@ -135,18 +152,10 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     }
 }
 
-// ─── Activity week bars (Foster sRPE load per ISO-ish week) ─────────────────
+// ─── Activity week bars (Foster sRPE load, rolling 7-day buckets) ───────────
 
 @Composable
-private fun ActivityWeekBars(acts: List<com.ascend.lifeos.data.ActivityStore.Entry>, modifier: Modifier) {
-    // bucket by "weeks ago" so the newest bar is always this week
-    val today = java.time.LocalDate.now().toEpochDay()
-    val loads = FloatArray(8)
-    acts.forEach { e ->
-        val d = java.time.Instant.ofEpochMilli(e.ts).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
-        val w = ((today - d) / 7).toInt()
-        if (w in 0..7) loads[7 - w] += com.ascend.lifeos.data.ActivityStore.loadOf(e).toFloat()
-    }
+private fun ActivityWeekBars(loads: FloatArray, modifier: Modifier) {
     val maxV = loads.max().coerceAtLeast(1f)
     Column(modifier) {
         Canvas(Modifier.fillMaxWidth().weight(1f)) {

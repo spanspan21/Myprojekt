@@ -65,6 +65,12 @@ class ActivityLoadTest {
         assertTrue(SportCatalog.titleMatches(run, "Lauftraining Intervalle"))
         assertTrue(SportCatalog.titleMatches(run, "Joggen im Park"))
         assertTrue(SportCatalog.titleMatches(run, "Lauf mo 18"))   // the everyday German word
+        assertTrue(SportCatalog.titleMatches(run, "5k Jog"))
+        // review r3 #4: "Lauf" is exact-word — compounds are NOT training
+        assertTrue(!SportCatalog.titleMatches(run, "Laufzeitende Handyvertrag"))
+        assertTrue(!SportCatalog.titleMatches(run, "Laufschuhe kaufen"))
+        assertTrue(!SportCatalog.titleMatches(run, "Laufbahnberatung"))
+        assertTrue(!SportCatalog.titleMatches(run, "Jogginghose kaufen"))
         assertTrue(SportCatalog.titleMatches(swim, "Schwimmen 17:00"))
         // review #4: the legacy hockey titles must classify exactly as before
         assertTrue(SportCatalog.titleMatches(hockey, "Training Eishalle 19:00"))

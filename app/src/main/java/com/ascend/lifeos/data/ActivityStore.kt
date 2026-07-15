@@ -97,13 +97,9 @@ object ActivityStore {
 
     private fun setEquivOf(e: Entry): Int = Math.round(loadOf(e)).toInt().coerceAtLeast(1)
 
-    fun dayKeyOf(ts: Long): String {
-        // the app's 6am logical day
-        val cal = java.util.Calendar.getInstance().apply { timeInMillis = ts; add(java.util.Calendar.HOUR_OF_DAY, -6) }
-        return "%04d-%02d-%02d".format(
-            cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1, cal.get(java.util.Calendar.DAY_OF_MONTH),
-        )
-    }
+    // review r3 #2: delegate to the canonical 6am bucketing (audit C1) — the old
+    // Calendar-based copy diverged from todayKey() during the two DST hours/year
+    fun dayKeyOf(ts: Long): String = com.ascend.lifeos.core.dayKeyOf(ts)
 
     /** Foster session-RPE load in hard-set units. */
     fun loadOf(e: Entry): Double = TrainingLoad.sessionRpeLoad(e.minutes, e.rpe)

@@ -249,6 +249,16 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             // Ziel steigt nur an echten Belastungstagen: eigenes Training ODER Eishockey
             val hockeyToday = isToday && gameDay != null
             val trainingDay = day.workoutDone || hockeyToday
+            // review r3 #1: memoized — the store scan must not run on every
+            // water-tap recomposition (and never cold-inits the store mid-frame)
+            val actRev = com.ascend.lifeos.data.ActivityStore.rev
+            val todayActivity = remember(dayKey, day.workoutDone, actRev) {
+                if (isToday && day.workoutDone) {
+                    com.ascend.lifeos.data.ActivityStore.all(ctx)
+                        .firstOrNull { com.ascend.lifeos.data.ActivityStore.dayKeyOf(it.ts) == dayKey }
+                        ?.let { com.ascend.lifeos.data.training.ActivityTypes.byId(it.type) }
+                } else null
+            }
             HydrationCard(
                 glasses = day.water,
                 // eine Hydration-Wahrheit für Fuel UND Prime
@@ -260,15 +270,9 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                         val sp = com.ascend.lifeos.data.training.SportCatalog.byId(p.sport)
                         "${sp.emoji} ${sp.label} · +0.5 L"
                     }
-                    day.workoutDone -> {
+                    day.workoutDone ->
                         // if the day was earned by a logged activity, credit THAT
-                        val act = if (isToday) {
-                            com.ascend.lifeos.data.ActivityStore.all(ctx)
-                                .firstOrNull { com.ascend.lifeos.data.ActivityStore.dayKeyOf(it.ts) == dayKey }
-                                ?.let { com.ascend.lifeos.data.training.ActivityTypes.byId(it.type) }
-                        } else null
-                        if (act != null) "${act.emoji} ${act.label} · +0.5 L" else "🏋 Training · +0.5 L"
-                    }
+                        todayActivity?.let { "${it.emoji} ${it.label} · +0.5 L" } ?: "🏋 Training · +0.5 L"
                     else -> null
                 },
                 showHeat = isToday && !hasLoc,
