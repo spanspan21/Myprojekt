@@ -1026,6 +1026,7 @@ private fun ActivityQuickLog() {
     var minutes by remember { mutableStateOf(45) }
     var rpe by remember(typeId) { mutableStateOf(type.defaultRpe) }
     var km by remember(typeId) { mutableStateOf("") }
+    var celebrate by remember { mutableStateOf<String?>(null) }
 
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Column(
@@ -1076,16 +1077,42 @@ private fun ActivityQuickLog() {
                     Spacer(Modifier.height(10.dp))
                     GlassField("Distance km (optional)", km, KeyboardType.Decimal, Modifier.fillMaxWidth()) { km = it }
                 }
+                // the bests board for this type — what today's session is up against
+                val bests = remember(typeId, rev) {
+                    ActivityBests.bestsFor(com.ascend.lifeos.data.ActivityStore.all(ctx), typeId)
+                }
+                if (bests.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        bests.forEach { b ->
+                            Text(
+                                "${b.emoji} ${b.label} ${b.value}",
+                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                                fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 HudButton("Log ${type.emoji} ${type.label} · $minutes min", Modifier.fillMaxWidth()) {
-                    com.ascend.lifeos.data.ActivityStore.add(
+                    val before = com.ascend.lifeos.data.ActivityStore.all(ctx)
+                    val logged = com.ascend.lifeos.data.ActivityStore.add(
                         ctx, typeId, minutes, rpe,
                         km.replace(',', '.').toDoubleOrNull(),
                     )
+                    celebrate = ActivityBests.highlight(logged, before)
                     runCatching { com.ascend.lifeos.data.Haptics.confirm(ctx) }
                     km = ""
                     open = false
                 }
+            }
+
+            celebrate?.let { line ->
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "🏆 $line", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                    fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
             }
 
             // last three — proof it landed, one tap to undo a mislog

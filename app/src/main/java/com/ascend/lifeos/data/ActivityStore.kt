@@ -63,7 +63,7 @@ object ActivityStore {
     fun since(ctx: Context, sinceMs: Long): List<Entry> = all(ctx).filter { it.ts >= sinceMs }
 
     @Synchronized
-    fun add(ctx: Context, type: String, minutes: Int, rpe: Int, distanceKm: Double? = null, ts: Long = System.currentTimeMillis()) {
+    fun add(ctx: Context, type: String, minutes: Int, rpe: Int, distanceKm: Double? = null, ts: Long = System.currentTimeMillis()): Entry {
         init(ctx)
         val e = Entry(
             id = UUID.randomUUID().toString().take(12),
@@ -80,6 +80,7 @@ object ActivityStore {
         // strain line and widget honest (60 min RPE-8 play ≈ 5 hard sets)
         runCatching { Repo.markTrained(setEquivOf(e), dayKeyOf(e.ts)) }
             .onFailure { android.util.Log.e("ActivityStore", "markTrained failed", it) }
+        return e
     }
 
     /** review #2: deleting a mislog must UNDO what add() marked. */
