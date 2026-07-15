@@ -467,10 +467,14 @@ private val CATALOG = listOf(
         "Tracked automatically",
         listOf(
             Preset("10,000 steps", "🚶", autoMetric = "steps", threshold = 10_000),
-            Preset("Sleep 7 h+", "😴", autoMetric = "sleep", threshold = 420),
+            // sleep/protein/water thresholds are re-anchored to YOUR live goals
+            // at creation time (HabitMetrics.personalThreshold) — the numbers
+            // here are only the fallback for a fresh profile
+            Preset("Sleep need met", "😴", autoMetric = "sleep", threshold = 420),
             Preset("Train today", "🏋️", autoMetric = "trained", threshold = 1),
+            Preset("30 min movement", "🏃", autoMetric = "active", threshold = 30),
             Preset("Hit protein goal", "🥩", autoMetric = "protein", threshold = 130),
-            Preset("8 glasses water", "💧", autoMetric = "water", threshold = 8),
+            Preset("Water goal met", "💧", autoMetric = "water", threshold = 8),
         ),
     ),
     PGroup(
@@ -558,7 +562,11 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                             .background(if (added) Ivory.copy(alpha = 0.04f) else HabitAccent.copy(alpha = 0.10f))
                             .border(0.5.dp, if (added) Ivory.copy(alpha = 0.10f) else HabitAccent.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
                             .clickable(enabled = !added) {
-                                LifeStores.addHabit(ctx, p.title, 0b1111111, p.icon, p.autoMetric, p.threshold, p.target, p.unit, p.avoid)
+                                // the bar is YOUR current goal, not a catalog constant
+                                val thr = if (p.autoMetric.isNotBlank()) {
+                                    com.ascend.lifeos.data.life.HabitMetrics.personalThreshold(p.autoMetric, p.threshold)
+                                } else p.threshold
+                                LifeStores.addHabit(ctx, p.title, 0b1111111, p.icon, p.autoMetric, thr, p.target, p.unit, p.avoid)
                             }
                             .padding(horizontal = 11.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,

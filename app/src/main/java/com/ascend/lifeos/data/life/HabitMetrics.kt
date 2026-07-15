@@ -25,11 +25,25 @@ object HabitMetrics {
         MetricDef("steps", "Steps", "steps", 10_000),
         MetricDef("sleep", "Sleep", "min", 420),   // 7 h
         MetricDef("trained", "Trained", "", 1),
+        MetricDef("active", "Active minutes", "min", 30),  // WHO 150-300/wk ≈ 21-43/day
         MetricDef("protein", "Protein", "g", 130),
         MetricDef("water", "Water", "glasses", 8),
     )
 
     fun def(metric: String): MetricDef? = METRICS.firstOrNull { it.id == metric }
+
+    /**
+     * The threshold a preset should ADOPT at creation time — the user's live
+     * goal, not a catalog constant (protein 130 meant nothing to a recomp
+     * athlete at 154 g). A snapshot on purpose: a habit's bar must not move
+     * mid-streak when the coach retunes targets.
+     */
+    fun personalThreshold(metric: String, fallback: Int): Int = when (metric) {
+        "protein" -> Repo.data.profile.proteinGoal.takeIf { it > 0 } ?: fallback
+        "water" -> Repo.data.profile.waterGoal.takeIf { it > 0 } ?: fallback
+        "sleep" -> runCatching { Repo.sleepNeedMin() }.getOrDefault(fallback)
+        else -> fallback
+    }
 
     fun isAuto(h: Habit): Boolean = h.autoMetric.isNotBlank()
     fun isMeasurable(h: Habit): Boolean = h.autoMetric.isBlank() && h.target > 0
@@ -39,6 +53,14 @@ object HabitMetrics {
         "steps" -> Repo.bodyDay(dayKey)?.steps ?: 0
         "sleep" -> Repo.bodyDay(dayKey)?.sleepMin ?: 0
         "trained" -> Repo.dayFor(dayKey)?.let { if (it.workoutDone || it.trainSets > 0) 1 else 0 } ?: 0
+        // logged activity minutes on that logical day (runs, rides, practice…)
+        "active" -> runCatching {
+            com.ascend.lifeos.data.Repo.appContextOrNull()?.let { ctx ->
+                com.ascend.lifeos.data.ActivityStore.all(ctx)
+                    .filter { com.ascend.lifeos.data.ActivityStore.dayKeyOf(it.ts) == dayKey }
+                    .sumOf { it.minutes }
+            } ?: 0
+        }.getOrDefault(0)
         "protein" -> Repo.dayFor(dayKey)?.meals?.sumOf { it.protein } ?: 0
         "water" -> Repo.dayFor(dayKey)?.water ?: 0
         else -> 0

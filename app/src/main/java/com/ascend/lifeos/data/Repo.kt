@@ -37,6 +37,9 @@ object Repo {
     private lateinit var prefs: SharedPreferences
     private var filesDir: java.io.File? = null
     private var appCtx: Context? = null   // application context, for Prefs-gated features
+
+    /** Application context for engines that can't thread one through (nullable pre-init). */
+    fun appContextOrNull(): Context? = appCtx
     private val saveScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var saveJob: Job? = null
     private val idSeq = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis())
