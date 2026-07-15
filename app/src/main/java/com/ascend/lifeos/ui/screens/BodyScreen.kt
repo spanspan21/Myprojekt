@@ -374,9 +374,9 @@ fun BodyScreen() {
                             }
                         }
                     // manual activities (runs, rides, practice …) — Foster sRPE,
-                    // same hard-set unit, so every sport moves the same needle
+                    // same hard-set unit; deduped against same-sport block days
                     com.ascend.lifeos.data.ActivityStore
-                        .loadByEpochDay(ctx, today.toEpochDay() - 60, today.toEpochDay())
+                        .countedLoadByEpochDay(ctx, today.toEpochDay() - 60, today.toEpochDay())
                         .forEach { (d, l) -> byDay[d] = (byDay[d] ?: 0.0) + l }
                     val series = (59 downTo 0).map { back -> byDay[today.toEpochDay() - back] ?: 0.0 }
                     val st = com.ascend.lifeos.data.training.TrainingLoad.compute(series)

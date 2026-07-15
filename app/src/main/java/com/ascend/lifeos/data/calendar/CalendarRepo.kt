@@ -113,14 +113,14 @@ object CalendarRepo {
      * "Schwimmtraining" gets the same first-class treatment ice practice
      * always had. Falls back to hockey words when the profile is unreadable.
      */
-    private fun sportKeywords(): List<String> = runCatching {
-        com.ascend.lifeos.data.training.SportCatalog
-            .byId(com.ascend.lifeos.data.Repo.data.profile.sport).matchKeywords
-    }.getOrDefault(listOf("eishockey", "hockey", "eistraining", "eiszeit"))
-
     private fun guessDeviceType(title: String): EventType {
-        val t = title.lowercase()
-        return if (sportKeywords().any { it in t }) EventType.HOCKEY else EventType.PERSONAL
+        val sport = runCatching {
+            com.ascend.lifeos.data.training.SportCatalog
+                .byId(com.ascend.lifeos.data.Repo.data.profile.sport)
+        }.getOrElse { com.ascend.lifeos.data.training.SportCatalog.byId("hockey") }
+        return if (com.ascend.lifeos.data.training.SportCatalog.titleMatches(sport, title)) {
+            EventType.HOCKEY
+        } else EventType.PERSONAL
     }
 
     // ---- free slots ---------------------------------------------------------

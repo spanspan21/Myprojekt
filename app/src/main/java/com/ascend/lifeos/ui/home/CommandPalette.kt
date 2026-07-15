@@ -185,12 +185,13 @@ object CommandEngine {
 
         // "my sport" words follow the profile (a swimmer's "schwimmen 17-18"
         // types as the sport block, exactly like hockey always did)
-        val sportWords = runCatching {
+        val sportDef = runCatching {
             com.ascend.lifeos.data.training.SportCatalog
-                .byId(com.ascend.lifeos.data.Repo.data.profile.sport).matchKeywords
-        }.getOrDefault(listOf("hockey", "eis"))
+                .byId(com.ascend.lifeos.data.Repo.data.profile.sport)
+        }.getOrElse { com.ascend.lifeos.data.training.SportCatalog.byId("hockey") }
         val type = when {
-            sportWords.any { it in title } || "hockey" in title -> EventType.HOCKEY
+            com.ascend.lifeos.data.training.SportCatalog.titleMatches(sportDef, title) ||
+                "hockey" in title -> EventType.HOCKEY
             "school" in title || "schule" in title -> EventType.SCHOOL
             "work" in title || "arbeit" in title || "shift" in title -> EventType.WORK
             "exam" in title || "klausur" in title || "test" in title -> EventType.EXAM

@@ -51,6 +51,28 @@ class ActivityLoadTest {
     }
 
     @Test
+    fun `title matching is word-start, hockey keeps its proven net`() {
+        val run = SportCatalog.byId("run")
+        val swim = SportCatalog.byId("swim")
+        val hockey = SportCatalog.byId("hockey")
+        // review #5: substrings must not become training load
+        assertTrue(!SportCatalog.titleMatches(run, "Schlittschuhlaufen mit Anna"))
+        assertTrue(!SportCatalog.titleMatches(swim, "Babyschwimmen"))
+        assertTrue(SportCatalog.titleMatches(run, "Lauftraining Intervalle"))
+        assertTrue(SportCatalog.titleMatches(run, "Joggen im Park"))
+        assertTrue(SportCatalog.titleMatches(swim, "Schwimmen 17:00"))
+        // review #4: the legacy hockey titles must classify exactly as before
+        assertTrue(SportCatalog.titleMatches(hockey, "Training Eishalle 19:00"))
+        assertTrue(SportCatalog.titleMatches(hockey, "Spiel – Eisarena"))
+        assertTrue(SportCatalog.titleMatches(hockey, "Match ICE Arena"))
+        assertTrue(SportCatalog.titleMatches(hockey, "Eishockey Auswärts"))
+        assertTrue(SportCatalog.titleMatches(hockey, "Eiszeit U18"))
+        // and a hockey athlete's ice-cream date is still not load… acceptable
+        // trade-off: bare "Eis…" word-starts stay in hockey's net by design
+        assertTrue(!SportCatalog.titleMatches(hockey, "Kino mit Tom"))
+    }
+
+    @Test
     fun `activity types are honest - muscles, rpe, unique ids`() {
         val ids = ActivityTypes.ALL.map { it.id }
         assertEquals(ids.size, ids.toSet().size)

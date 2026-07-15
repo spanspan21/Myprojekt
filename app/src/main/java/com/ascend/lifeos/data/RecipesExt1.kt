@@ -78,7 +78,7 @@ internal object RecipesExt1 {
             104L, "Protein French toast", "b", servings = 1, minutes = 15,
             parts = listOf(
                 RecipeDb.Ing("Toast (white)", 265, 8.9, 49.0, 3.2, 100),
-                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 110),
+                RecipeDb.Ing("Eggs", 143, 12.6, 0.7, 9.5, 110),
                 RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 60),
                 RecipeDb.Ing("Butter", 741, 0.7, 0.6, 82.0, 8),
                 RecipeDb.Ing("Skyr", 63, 11.0, 4.0, 0.2, 100),
@@ -95,7 +95,7 @@ internal object RecipesExt1 {
         RecipeDb.build(
             105L, "Shakshuka with feta", "b", servings = 1, minutes = 25,
             parts = listOf(
-                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 165),
+                RecipeDb.Ing("Eggs", 143, 12.6, 0.7, 9.5, 165),
                 RecipeDb.Ing("Chopped tomatoes (canned)", 21, 1.0, 3.5, 0.2, 300),
                 RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 70),
                 RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 120),
@@ -113,7 +113,7 @@ internal object RecipesExt1 {
         RecipeDb.build(
             106L, "Mushroom & gouda omelette", "b", servings = 1, minutes = 12,
             parts = listOf(
-                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 165),
+                RecipeDb.Ing("Eggs", 143, 12.6, 0.7, 9.5, 165),
                 RecipeDb.Ing("Mushrooms", 22, 3.1, 3.3, 0.3, 150),
                 RecipeDb.Ing("Gouda", 356, 24.9, 2.2, 27.4, 30),
                 RecipeDb.Ing("Butter", 741, 0.7, 0.6, 82.0, 10),
@@ -165,7 +165,7 @@ internal object RecipesExt1 {
             109L, "Breakfast burrito", "b", servings = 1, minutes = 15,
             parts = listOf(
                 RecipeDb.Ing("Tortilla wrap", 310, 8.5, 50.0, 8.0, 65),
-                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 110),
+                RecipeDb.Ing("Eggs", 143, 12.6, 0.7, 9.5, 110),
                 RecipeDb.Ing("Cottage cheese", 98, 11.0, 3.4, 4.3, 80),
                 RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 80),
                 RecipeDb.Ing("Spinach (raw)", 23, 2.9, 3.6, 0.4, 40),
@@ -258,7 +258,7 @@ internal object RecipesExt1 {
             114L, "Veggie fried rice with egg", "main", servings = 2, minutes = 20,
             parts = listOf(
                 RecipeDb.Ing("Rice (cooked)", 130, 2.7, 28.0, 0.3, 400),
-                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 220),
+                RecipeDb.Ing("Eggs", 143, 12.6, 0.7, 9.5, 220),
                 RecipeDb.Ing("Peas (frozen)", 77, 5.2, 13.7, 0.4, 200),
                 RecipeDb.Ing("Carrot", 41, 0.9, 9.6, 0.2, 150),
                 RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 150),

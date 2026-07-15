@@ -130,7 +130,7 @@ object PrimeEngine {
         // manual activities (runs, rides, practice …) join the same load series —
         // an endurance athlete's ACR is finally real, not permanently "fresh"
         val actByDay = runCatching {
-            com.ascend.lifeos.data.ActivityStore.all(ctx)
+            com.ascend.lifeos.data.ActivityStore.countedEntries(ctx, since35)
                 .groupBy { dayDateOf(it.ts, zone) }
                 .mapValues { (_, es) -> es.sumOf { com.ascend.lifeos.data.ActivityStore.loadOf(it) } }
         }.getOrDefault(emptyMap())

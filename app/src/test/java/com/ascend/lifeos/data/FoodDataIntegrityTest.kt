@@ -114,6 +114,9 @@ class FoodDataIntegrityTest {
         }
         // unknown ingredients contribute NOTHING (never invented numbers)
         assertTrue(RecipeDb.staple("Unicorn dust") == null)
+        // review #8: whole eggs resolve to the whole egg, not the white —
+        // ties break toward the tightest staple name
+        assertTrue(RecipeDb.staple("Eggs")?.name == "Egg (boiled)")
     }
 
     @Test

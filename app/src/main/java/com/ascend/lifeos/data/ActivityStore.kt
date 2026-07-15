@@ -37,12 +37,18 @@ object ActivityStore {
 
     private const val PREF = "activities"
     private var prefs: SharedPreferences? = null
+
+    // review #6: first touch can happen on IO (Prime/CloudSync) while the user
+    // logs on Main — without volatile+synchronized the Main thread could see a
+    // stale empty cache and persist over the whole history
+    @Volatile
     private var cache: List<Entry> = emptyList()
 
     /** Bump-on-write revision — read it in composition to subscribe. */
     var rev by mutableIntStateOf(0)
         private set
 
+    @Synchronized
     fun init(ctx: Context) {
         if (prefs != null) return
         prefs = ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
@@ -56,6 +62,7 @@ object ActivityStore {
 
     fun since(ctx: Context, sinceMs: Long): List<Entry> = all(ctx).filter { it.ts >= sinceMs }
 
+    @Synchronized
     fun add(ctx: Context, type: String, minutes: Int, rpe: Int, distanceKm: Double? = null, ts: Long = System.currentTimeMillis()) {
         init(ctx)
         val e = Entry(
@@ -64,34 +71,78 @@ object ActivityStore {
             type = type,
             minutes = minutes.coerceIn(1, 24 * 60),
             rpe = rpe.coerceIn(1, 10),
-            distanceKm = distanceKm?.takeIf { it > 0.0 },
+            distanceKm = distanceKm?.takeIf { it.isFinite() && it > 0.0 },   // review #7
         )
         cache = (listOf(e) + cache).take(400)   // ~a year of daily logging
         persist()
         rev++
         // the day counts as trained — load in hard-set equivalents keeps the
         // strain line and widget honest (60 min RPE-8 play ≈ 5 hard sets)
-        val setEquiv = Math.round(loadOf(e)).toInt().coerceAtLeast(1)
-        runCatching { Repo.markTrained(setEquiv) }
+        runCatching { Repo.markTrained(setEquivOf(e), dayKeyOf(e.ts)) }
             .onFailure { android.util.Log.e("ActivityStore", "markTrained failed", it) }
     }
 
+    /** review #2: deleting a mislog must UNDO what add() marked. */
+    @Synchronized
     fun delete(ctx: Context, id: String) {
         init(ctx)
+        val e = cache.firstOrNull { it.id == id } ?: return
         cache = cache.filterNot { it.id == id }
         persist()
         rev++
+        runCatching { Repo.unmarkTrained(setEquivOf(e), dayKeyOf(e.ts)) }
+            .onFailure { android.util.Log.e("ActivityStore", "unmarkTrained failed", it) }
+    }
+
+    private fun setEquivOf(e: Entry): Int = Math.round(loadOf(e)).toInt().coerceAtLeast(1)
+
+    private fun dayKeyOf(ts: Long): String {
+        // the app's 6am logical day
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = ts; add(java.util.Calendar.HOUR_OF_DAY, -6) }
+        return "%04d-%02d-%02d".format(
+            cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1, cal.get(java.util.Calendar.DAY_OF_MONTH),
+        )
     }
 
     /** Foster session-RPE load in hard-set units. */
     fun loadOf(e: Entry): Double = TrainingLoad.sessionRpeLoad(e.minutes, e.rpe)
 
-    /** Day-bucketed loads for the ATL/CTL series (epochDay → hard sets). */
-    fun loadByEpochDay(ctx: Context, fromEpochDay: Long, toEpochDay: Long): Map<Long, Double> {
+    private fun epochDayOf(ts: Long): Long = java.time.Instant.ofEpochMilli(ts)
+        .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+
+    /**
+     * review #1: entries that count toward LOAD/RECOVERY. A calendar sport
+     * block already loads the day automatically — and the quick log
+     * pre-selects the profile sport, so double-logging the same practice is
+     * the DEFAULT accident. On block days the block wins; the manual
+     * same-sport entry is skipped here (streak/mission stays, the day IS
+     * trained — only the load ledger refuses to count it twice).
+     */
+    suspend fun countedEntries(ctx: Context, sinceMs: Long): List<Entry> {
+        val entries = since(ctx, sinceMs)
+        if (entries.isEmpty()) return entries
+        val sport = runCatching { Repo.data.profile.sport }.getOrDefault("hockey")
+        if (entries.none { it.type == sport }) return entries
+        val blockDays: Set<Long> = runCatching {
+            val today = java.time.LocalDate.now().toEpochDay()
+            val from = epochDayOf(sinceMs)
+            com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                .eventsInRangeOnce(from, today)
+                .filter { it.type == com.ascend.lifeos.data.calendar.EventType.HOCKEY.name && !it.allDay }
+                .flatMap { e -> (e.dayEpoch..e.endDayEpoch).toList() }
+                .toSet()
+        }.getOrDefault(emptySet())
+        if (blockDays.isEmpty()) return entries
+        return entries.filterNot { it.type == sport && epochDayOf(it.ts) in blockDays }
+    }
+
+    /** Day-bucketed DEDUPED loads for the ATL/CTL series (epochDay → hard sets). */
+    suspend fun countedLoadByEpochDay(ctx: Context, fromEpochDay: Long, toEpochDay: Long): Map<Long, Double> {
+        val fromMs = java.time.LocalDate.ofEpochDay(fromEpochDay)
+            .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
         val out = HashMap<Long, Double>()
-        for (e in all(ctx)) {
-            val d = java.time.Instant.ofEpochMilli(e.ts)
-                .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+        for (e in countedEntries(ctx, fromMs)) {
+            val d = epochDayOf(e.ts)
             if (d in fromEpochDay..toEpochDay) out.merge(d, loadOf(e), Double::plus)
         }
         return out
@@ -118,7 +169,7 @@ object ActivityStore {
                     type = o.optString("type"),
                     minutes = o.optInt("min"),
                     rpe = o.optInt("rpe", 6),
-                    distanceKm = o.optDouble("km").takeIf { !it.isNaN() && it > 0 },
+                    distanceKm = o.optDouble("km").takeIf { !it.isNaN() && it.isFinite() && it > 0 },
                 )
             }
         }.getOrDefault(emptyList())

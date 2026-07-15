@@ -318,19 +318,27 @@ object RecipeDb {
         s.lowercase().replace(Regex("[(),%]"), " ").split(Regex("\\s+"))
             .filter { it.length > 1 }.map { canon(it) }.toSet()
 
-    /** Exact name → full-token containment; the smaller token set must be covered. */
+    /**
+     * Exact name → full-token containment; the smaller token set must be
+     * covered. Ties break toward the TIGHTEST staple (fewest tokens) — review
+     * #8: "Eggs" must resolve to "Egg (boiled)" (the whole egg), never drift
+     * to "Egg white (raw)" just because it also contains the token.
+     */
     internal fun staple(name: String): FoodApi.Product? {
         BasicFoods.ALL.firstOrNull { it.name.equals(name, ignoreCase = true) }?.let { return it }
         val tokens = norm(name)
         if (tokens.isEmpty()) return null
         var best: FoodApi.Product? = null
         var bestScore = 0
+        var bestSize = Int.MAX_VALUE
         for (p in BasicFoods.ALL) {
             val pt = norm(p.name)
             val inter = (tokens intersect pt).size
             if (inter == 0) continue
             val smaller = minOf(tokens.size, pt.size)
-            if (inter == smaller && inter > bestScore) { bestScore = inter; best = p }
+            if (inter == smaller && (inter > bestScore || (inter == bestScore && pt.size < bestSize))) {
+                bestScore = inter; bestSize = pt.size; best = p
+            }
         }
         return best
     }

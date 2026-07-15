@@ -140,4 +140,21 @@ object SportCatalog {
     fun musclesFor(id: String?): Map<Muscle, Double> =
         ActivityTypes.byId(id ?: "")?.muscleUnitsPerHour
             ?: ActivityTypes.byId("team")!!.muscleUnitsPerHour
+
+    /**
+     * Does a calendar title mean "my sport happens here"? Word-START match,
+     * never substring — review #5: "Schlittschuhlaufen mit Anna" must not
+     * load a runner's quads, "Babyschwimmen" is not swim practice. Hockey
+     * keeps its proven wider net (eis-prefix + spiel/game/match×eis/ice) so
+     * existing installs classify exactly as before (review #4).
+     */
+    fun titleMatches(sport: SportDef, title: String): Boolean {
+        val t = title.lowercase()
+        fun wordStart(kw: String) = Regex("(^|[^\\p{L}])" + Regex.escape(kw)).containsMatchIn(t)
+        if (sport.matchKeywords.any { wordStart(it) }) return true
+        if (sport.id != "hockey") return false
+        return wordStart("eis") ||
+            (listOf("spiel", "game", "match", "training").any { it in t } &&
+                listOf("eis", "ice", "hockey").any { it in t })
+    }
 }

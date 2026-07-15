@@ -210,6 +210,26 @@ object Repo {
         refreshStreak()
     }
 
+    /**
+     * Inverse of [markTrained] for a deleted activity mislog (review #2):
+     * subtract its set-equivalents; the day stays "trained" only while other
+     * sources remain — their sets live in the same counter, so trainSets > 0
+     * is exactly "something else still trained today".
+     */
+    fun unmarkTrained(sets: Int, dayKey: String = todayKey()) {
+        val cur = data.days[dayKey] ?: return
+        val newSets = (cur.trainSets - sets).coerceAtLeast(0)
+        val still = newSets > 0
+        commit(
+            data.copy(
+                days = data.days + (dayKey to cur.copy(workoutDone = still, trainSets = newSets)),
+                profile = if (still) data.profile
+                else data.profile.copy(workoutDays = data.profile.workoutDays - dayKey),
+            ),
+        )
+        refreshStreak()
+    }
+
     /** One-minute journal: three lines + a mood tap. */
     fun setJournal(answers: List<String>, mood: Int?) {
         val k = todayKey()
@@ -440,7 +460,15 @@ object Repo {
     fun setDietRate(pct: Double?) = updateProfile { it.copy(dietRatePct = pct) }
 
     /** The athlete's primary sport (SportCatalog id) — the universality dial. */
-    fun setSport(id: String) = updateProfile { it.copy(sport = id) }
+    fun setSport(id: String) {
+        updateProfile { it.copy(sport = id) }
+        // review #3: a non-seasonal sport must not inherit a hidden IN/PLAYOFF
+        // phase — the UI disappears but PlanGenerator would keep capping the
+        // week at 2-3 sessions with no visible dial to undo it
+        if (!com.ascend.lifeos.data.training.SportCatalog.byId(id).usesSeasons) {
+            appCtx?.let { Prefs.setString(it, Prefs.SEASON_PHASE, "") }
+        }
+    }
 
     // Legacy calisthenics logging, the Repo txn/subs stores and day time-blocking
     // were removed in the 2026-07 audit (Welle 3): training lives in Room

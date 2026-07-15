@@ -147,8 +147,9 @@ object MuscleRecovery {
 
         // manual activities (runs, rides, swims, practice …) — same decay math,
         // muscles from the activity type, intensity from the logged session RPE
+        // (countedEntries dedupes a manual log against a same-sport block day)
         runCatching {
-            val acts = com.ascend.lifeos.data.ActivityStore.since(ctx, since)
+            val acts = com.ascend.lifeos.data.ActivityStore.countedEntries(ctx, since)
             for (a in acts) {
                 val type = ActivityTypes.byId(a.type) ?: continue
                 val ageH = ((now - a.ts).coerceAtLeast(0L)) / 3600_000.0

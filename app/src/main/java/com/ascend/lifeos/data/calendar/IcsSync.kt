@@ -198,12 +198,14 @@ object IcsSync {
 
     private fun guessType(summary: String): EventType {
         val s = summary.lowercase()
-        // "my sport" words follow the profile; the eis-prefix shortcut only
-        // makes sense for hockey athletes (a runner's "Eisdiele" is not load)
-        val sport = runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrDefault("hockey")
-        val words = com.ascend.lifeos.data.training.SportCatalog.byId(sport).matchKeywords
+        // "my sport" words follow the profile (word-start matched; hockey
+        // keeps its proven eis/combo net inside titleMatches)
+        val sport = runCatching {
+            com.ascend.lifeos.data.training.SportCatalog
+                .byId(com.ascend.lifeos.data.Repo.data.profile.sport)
+        }.getOrElse { com.ascend.lifeos.data.training.SportCatalog.byId("hockey") }
         return when {
-            words.any { it in s } || (sport == "hockey" && RE_EIS.containsMatchIn(s)) -> EventType.HOCKEY
+            com.ascend.lifeos.data.training.SportCatalog.titleMatches(sport, s) -> EventType.HOCKEY
             "klausur" in s || "exam" in s || "prüfung" in s || "pruefung" in s -> EventType.EXAM
             else -> EventType.SCHOOL
         }
