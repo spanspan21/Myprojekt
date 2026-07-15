@@ -295,6 +295,17 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
         val c = Calendar.getInstance().apply { timeInMillis = sws.session.startedAt }
         daySet.add(c.get(Calendar.DAY_OF_YEAR) + c.get(Calendar.YEAR) * 366)
     }
+    // logged activities are training days too — a runner's calendar must not
+    // read as 12 empty weeks
+    val freqCtx = androidx.compose.ui.platform.LocalContext.current
+    val actRev = com.ascend.lifeos.data.ActivityStore.rev
+    remember(actRev) {
+        com.ascend.lifeos.data.ActivityStore.all(freqCtx).forEach { e ->
+            val c = Calendar.getInstance().apply { timeInMillis = e.ts }
+            daySet.add(c.get(Calendar.DAY_OF_YEAR) + c.get(Calendar.YEAR) * 366)
+        }
+        daySet.size
+    }
 
     val weeks = 12
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
