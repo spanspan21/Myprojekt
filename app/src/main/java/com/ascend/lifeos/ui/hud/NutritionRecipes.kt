@@ -110,7 +110,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         if (pantry.isEmpty()) recipes
         else recipes.sortedWith(
             compareByDescending<RecipeDb.Recipe> { r -> r.parts.count { matchesPantry(it.name, pantry) } }
-                .thenByDescending { fitScore(it.kcal, it.protein, remainKcal, remainProt) },
+                .thenByDescending { fitScore(it, remainKcal, remainProt) },
         )
     }
 
@@ -307,7 +307,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         Spacer(Modifier.height(14.dp))
         val assignLabel = assignDay?.let { labelOf(it) }
         ranked.forEach { r ->
-            val fit = fitScore(r.kcal, r.protein, remainKcal, remainProt)
+            val fit = fitScore(r, remainKcal, remainProt)
             RecipeCard(
                 r, fit, pantry, expanded == r.id,
                 assignLabel = assignLabel,
@@ -319,10 +319,24 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     }
 }
 
-private fun fitScore(kcal: Int, protein: Int, remainKcal: Int, remainProt: Int): Int {
-    val within = if (kcal <= remainKcal) 1.0 else (remainKcal.toDouble() / kcal).coerceIn(0.0, 1.0)
-    val prot = if (remainProt > 0) (protein.toDouble() / remainProt).coerceAtMost(1.0) else 0.5
-    return ((0.7 * within + 0.3 * prot) * 100).roundToInt().coerceIn(0, 100)
+private fun fitScore(r: RecipeDb.Recipe, remainKcal: Int, remainProt: Int): Int {
+    val within = if (r.kcal <= remainKcal) 1.0 else (remainKcal.toDouble() / r.kcal).coerceIn(0.0, 1.0)
+    val prot = if (remainProt > 0) (r.protein.toDouble() / remainProt).coerceAtMost(1.0) else 0.5
+    // the goal decides what "fits" means: cut/recomp live on protein, fuel on
+    // carbs — the same phase logic the coach runs (Helms/Barakat/ACSM)
+    val goal = runCatching { com.ascend.lifeos.data.Repo.data.profile.dietGoal }.getOrDefault("maintain")
+    val score = when (goal) {
+        "lose", "recomp" -> 0.55 * within + 0.45 * prot
+        "fuel" -> {
+            val p = com.ascend.lifeos.data.Repo.profile()
+            val eaten = com.ascend.lifeos.data.Repo.today().meals.sumOf { it.carbs }
+            val remainCarbs = (p.carbGoal - eaten).coerceAtLeast(0)
+            val carb = if (remainCarbs > 0) (r.carbs.toDouble() / remainCarbs).coerceAtMost(1.0) else 0.5
+            0.55 * within + 0.15 * prot + 0.30 * carb
+        }
+        else -> 0.7 * within + 0.3 * prot
+    }
+    return (score * 100).roundToInt().coerceIn(0, 100)
 }
 
 /** Case-insensitive two-way contains against the ingredient's base name. */
