@@ -89,10 +89,15 @@ suspend fun renderWeekCard(ctx: Context): Uri? = withContext(Dispatchers.IO) {
 
         // ---- 2×2 module stats, big numbers in the module accents ----
         val colX = floatArrayOf(MARGIN, 570f)
+        // sessions + logged activities — the same "units" the dashboard counts
         statBlock(
             c, colX[0], 500f, chakra, manrope, Mod.Train.toArgb(),
-            "TRAIN", "${s.workouts}",
-            "${fmtNum(s.totalReps)} reps · ${s.prCount} PR" + if (s.prCount == 1) "" else "s",
+            "TRAIN", "${s.workouts + s.activityCount}",
+            buildString {
+                append("${fmtNum(s.totalReps)} reps · ${s.prCount} PR")
+                if (s.prCount != 1) append("s")
+                if (s.activityMinutes > 0) append(" · ${s.activityMinutes} active min")
+            },
         )
         statBlock(
             c, colX[1], 500f, chakra, manrope, Mod.Body.toArgb(),
