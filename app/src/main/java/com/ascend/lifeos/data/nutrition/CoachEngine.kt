@@ -101,8 +101,12 @@ object CoachEngine {
         val bw = bodyweightKg.coerceIn(30, 300)
 
         // ── 1) the rate, clamped into its evidence zone ──────────────────
+        // Weight-holding phases have no rate at all — a stale ratePctOfBw from
+        // a previous cut must neither warn nor clamp (their zone is 0..0).
         var rate = (ratePctOfBw ?: phase.defaultRate)
-        if (phase != DietPhase.MAINTAIN) {
+        if (phase.holdsWeight) {
+            rate = 0.0
+        } else {
             if (rate > phase.zoneHi) {
                 warnings.add(
                     if (phase == DietPhase.CUT)

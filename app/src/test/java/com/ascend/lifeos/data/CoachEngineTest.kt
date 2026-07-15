@@ -171,6 +171,15 @@ class CoachEngineTest {
     }
 
     @Test
+    fun `a stale cut rate never warns on a holding phase`() {
+        // boot/goal-switch edge: dietRatePct=0.5 left over from a cut must not
+        // produce 'Surplus beyond 0%/week' on recomp — the phase has no rate
+        val r = CoachEngine.checkIn(2800, "solid", 21, 0.02, 2800, 70, DietPhase.RECOMP, ratePctOfBw = 0.5)
+        assertTrue(r.warnings.isEmpty())
+        assertEquals(2800, r.newKcal)
+    }
+
+    @Test
     fun `weight-holding phases never get cut-only machinery`() {
         // no MATADOR nag, no trend-vs-target line for recomp/fuel at week 9
         listOf(DietPhase.RECOMP, DietPhase.FUEL).forEach { ph ->

@@ -254,6 +254,9 @@ object Repo {
                 kcalGoal = t.kcal, proteinGoal = t.protein, carbGoal = t.carbs, fatGoal = t.fat,
                 waterGoal = WaterCalc.targetGlasses(weightKg, trainedToday = false),
                 dietGoal = goal, dietPhaseSince = todayKey(),
+                // same rule as setBodyStats: a goal change resets the rate —
+                // a cut's 0.5%/wk means nothing to the new phase
+                dietRatePct = if (goal != it.dietGoal) null else it.dietRatePct,
             )
         }
     }
