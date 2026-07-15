@@ -145,7 +145,9 @@ fun HomeScreen(
                     .eventsInRangeOnce(today, today + 7)   // exams look a week ahead
                 val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
                 val hockey = events
-                    .filter { it.type == "HOCKEY" && it.dayEpoch == today && it.endMin > nowMin }
+                    // all-day blocks have no meaningful start — the voice would
+                    // announce "session at 00:00" (cycle pass, calendar)
+                    .filter { it.type == "HOCKEY" && it.dayEpoch == today && !it.allDay && it.endMin > nowMin }
                     .minByOrNull { it.startMin }
                     ?.let { "%02d:%02d".format(it.startMin / 60, it.startMin % 60) }
                 val exam = events
