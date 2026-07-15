@@ -579,10 +579,17 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         historyRev++
     }
 
-    fun editHistorySet(set: WorkoutSetEntity, reps: Int, weight: Float?) = viewModelScope.launch(Dispatchers.IO) {
-        dao.upsertSet(set.copy(reps = reps.coerceAtLeast(if (set.holdSeconds != null) 0 else 1), weight = weight))
-        refreshSessionAggregates(set.sessionId)
-        reconcilePrs(set.exerciseId)
+    /** Delta-based against the DB row, not the UI snapshot — two fast taps on
+     *  "−" must land as −2 even if the second fires before the list refreshes. */
+    fun editHistorySet(setId: String, repsDelta: Int, weightDelta: Float?) = viewModelScope.launch(Dispatchers.IO) {
+        val cur = dao.setById(setId) ?: return@launch
+        val newWeight = weightDelta?.let { d -> ((cur.weight ?: 0f) + d).coerceAtLeast(0f) } ?: cur.weight
+        dao.upsertSet(cur.copy(
+            reps = (cur.reps + repsDelta).coerceAtLeast(if (cur.holdSeconds != null) 0 else 1),
+            weight = newWeight,
+        ))
+        refreshSessionAggregates(cur.sessionId)
+        reconcilePrs(cur.exerciseId)
         historyRev++
     }
 

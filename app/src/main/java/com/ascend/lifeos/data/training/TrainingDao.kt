@@ -99,6 +99,9 @@ interface TrainingDao {
     @Query("SELECT * FROM workout_sessions WHERE id = :id")
     suspend fun sessionById(id: String): WorkoutSessionEntity?
 
+    @Query("SELECT * FROM workout_sets WHERE id = :id")
+    suspend fun setById(id: String): WorkoutSetEntity?
+
     // ── Progression ─────────────────────────────────────────────────────────
 
     @Query("SELECT * FROM user_progression")

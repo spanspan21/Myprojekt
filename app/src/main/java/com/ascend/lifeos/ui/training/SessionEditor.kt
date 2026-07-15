@@ -96,7 +96,7 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                         Spacer(Modifier.height(6.dp))
                     }
                     items(exSets.size, key = { i -> exSets[i].id }) { i ->
-                        HistorySetRow(exSets[i], onEdit = { r, w -> vm.editHistorySet(exSets[i], r, w) }) {
+                        HistorySetRow(exSets[i], onEdit = { dr, dw -> vm.editHistorySet(exSets[i].id, dr, dw) }) {
                             vm.deleteHistorySet(exSets[i])
                         }
                         Spacer(Modifier.height(6.dp))
@@ -138,16 +138,17 @@ private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, 
                 )
                 set.rpe?.let { Text("RPE $it", color = TextDim, fontSize = FS.s10, fontFamily = Body) }
             }
-            // reps steppers (holds stay read-only here — seconds live in the logger)
+            // reps steppers, DELTA-based — the VM re-reads the DB row so two fast
+            // taps land as −2 (holds stay read-only here; seconds live in the logger)
             if (!isHold) {
-                MiniStep("−") { onEdit((set.reps - 1).coerceAtLeast(1), set.weight) }
+                MiniStep("−") { onEdit(-1, null) }
                 Spacer(Modifier.width(4.dp))
-                MiniStep("+") { onEdit(set.reps + 1, set.weight) }
-                set.weight?.takeIf { it > 0f }?.let { w ->
+                MiniStep("+") { onEdit(+1, null) }
+                if ((set.weight ?: 0f) > 0f) {
                     Spacer(Modifier.width(10.dp))
-                    MiniStep("−kg") { onEdit(set.reps, (w - 2.5f).coerceAtLeast(0f)) }
+                    MiniStep("−kg") { onEdit(0, -2.5f) }
                     Spacer(Modifier.width(4.dp))
-                    MiniStep("+kg") { onEdit(set.reps, w + 2.5f) }
+                    MiniStep("+kg") { onEdit(0, +2.5f) }
                 }
             }
             Spacer(Modifier.width(10.dp))
