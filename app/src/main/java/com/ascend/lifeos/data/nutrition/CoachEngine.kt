@@ -79,6 +79,8 @@ object CoachEngine {
      * @param recovery    today's recovery score 0..100 (null = unknown)
      * @param examSoon    an exam inside 7 days (school mode eases the deficit)
      * @param weeksInPhase full weeks since the phase started (diet-break logic)
+     * @param loadSpike   ACWR in the Gabbett danger zone (>1.5) — a deficit on
+     *                    top of a load spike doubles the injury/muscle-loss risk
      */
     fun checkIn(
         expenditure: Int,
@@ -92,6 +94,7 @@ object CoachEngine {
         recovery: Int? = null,
         examSoon: Boolean = false,
         weeksInPhase: Int = 0,
+        loadSpike: Boolean = false,
     ): CheckIn {
         val why = ArrayList<String>(5)
         val warnings = ArrayList<String>(3)
@@ -112,15 +115,21 @@ object CoachEngine {
         }
 
         // ── 2) recovery-adaptive deficit (the JARVIS edge) ───────────────
+        // Three strain signals, one response: low recovery, an exam week, or a
+        // training-load spike (Gabbett ACWR >1.5) each ease the deficit — an
+        // energy hole on top of any of them costs muscle and invites injury.
         if (phase == DietPhase.CUT) {
-            val strained = (recovery != null && recovery < 50) || examSoon
+            val strained = (recovery != null && recovery < 50) || examSoon || loadSpike
             if (strained) {
                 val eased = maxOf(phase.zoneLo, rate * 0.6)
                 if (eased < rate) {
                     rate = eased
                     why.add(
-                        if (examSoon) "Exam week — deficit eased to ${fmtPct(rate)}/week so focus and muscle stay protected."
-                        else "Recovery is low — deficit eased to ${fmtPct(rate)}/week this week (muscle-sparing)."
+                        when {
+                            examSoon -> "Exam week — deficit eased to ${fmtPct(rate)}/week so focus and muscle stay protected."
+                            loadSpike -> "Training load spiked (ACWR in the danger zone) — deficit eased to ${fmtPct(rate)}/week; fuel the recovery, protect the tissue."
+                            else -> "Recovery is low — deficit eased to ${fmtPct(rate)}/week this week (muscle-sparing)."
+                        }
                     )
                 }
             }
@@ -255,6 +264,13 @@ object CoachRitual {
                 .any { it.type == com.ascend.lifeos.data.calendar.EventType.EXAM.name }
         }.getOrDefault(false)
         val weeksInPhase = p.dietPhaseSince?.let { daysBetween(it, today) / 7 } ?: 0
+        // the same load truth the strain card shows — a Gabbett danger-zone
+        // week eases a cut exactly like poor recovery does
+        val loadSpike = runCatching {
+            val st = com.ascend.lifeos.data.training.LoadLedger.state(ctx)
+            com.ascend.lifeos.data.training.TrainingLoad.verdict(st).zone ==
+                com.ascend.lifeos.data.training.TrainingLoad.Zone.BACK_OFF
+        }.getOrDefault(false)
 
         val checkIn = CoachEngine.checkIn(
             expenditure = r.expenditure,
@@ -268,6 +284,7 @@ object CoachRitual {
             recovery = recovery,
             examSoon = examSoon,
             weeksInPhase = weeksInPhase,
+            loadSpike = loadSpike,
         )
         // a steady weight-holding week with nothing to say stays out of the way
         if (checkIn.phase.holdsWeight &&

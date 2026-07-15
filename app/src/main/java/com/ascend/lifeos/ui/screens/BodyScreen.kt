@@ -354,31 +354,9 @@ fun BodyScreen() {
         val loadInfo by androidx.compose.runtime.produceState<Triple<com.ascend.lifeos.data.training.TrainingLoad.State, com.ascend.lifeos.data.training.TrainingLoad.Verdict, List<Double>>?>(null) {
             value = withContext(Dispatchers.IO) {
                 runCatching {
-                    val today = java.time.LocalDate.now()
-                    val since = System.currentTimeMillis() - 60L * 86_400_000
-                    val sets = com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao().setsLoggedSince(since)
-                    val byDay = HashMap<Long, Double>()
-                    sets.forEach { s ->
-                        val d = java.time.Instant.ofEpochMilli(s.loggedAt)
-                            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
-                        byDay[d] = (byDay[d] ?: 0.0) + com.ascend.lifeos.data.training.TrainingLoad.setLoad(s.rpe)
-                    }
-                    // calendar sport blocks count as load — no other app knows this
-                    val events = com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
-                        .eventsInRangeOnce(today.toEpochDay() - 60, today.toEpochDay())
-                    events.filter { it.type == com.ascend.lifeos.data.calendar.EventType.HOCKEY.name && !it.allDay }
-                        .forEach { e ->
-                            val mins = (e.endMin - e.startMin).coerceIn(0, 240)
-                            for (d in e.dayEpoch..e.endDayEpoch) {
-                                byDay[d] = (byDay[d] ?: 0.0) + com.ascend.lifeos.data.training.TrainingLoad.hockeyLoad(mins)
-                            }
-                        }
-                    // manual activities (runs, rides, practice …) — Foster sRPE,
-                    // same hard-set unit; deduped against same-sport block days
-                    com.ascend.lifeos.data.ActivityStore
-                        .countedLoadByEpochDay(ctx, today.toEpochDay() - 60, today.toEpochDay())
-                        .forEach { (d, l) -> byDay[d] = (byDay[d] ?: 0.0) + l }
-                    val series = (59 downTo 0).map { back -> byDay[today.toEpochDay() - back] ?: 0.0 }
+                    // the ONE load ledger (gym + sport blocks + activities),
+                    // shared with the weekly coach — see LoadLedger
+                    val series = com.ascend.lifeos.data.training.LoadLedger.series(ctx)
                     val st = com.ascend.lifeos.data.training.TrainingLoad.compute(series)
                     Triple(st, com.ascend.lifeos.data.training.TrainingLoad.verdict(st), series.takeLast(14))
                 }.getOrNull()

@@ -73,6 +73,23 @@ class CoachEngineTest {
     }
 
     @Test
+    fun `a training-load spike eases the deficit like poor recovery`() {
+        // Gabbett danger zone + energy hole = muscle loss and injury risk —
+        // the third strain signal, same 0.6x response, same floor
+        val spiked = CoachEngine.checkIn(
+            2800, "solid", 21, -0.30, 2500, 70, DietPhase.CUT,
+            ratePctOfBw = 0.5, loadSpike = true,
+        )
+        assertEquals(-0.21, spiked.targetKgPerWeek, 0.001)   // 0.5 × 0.6 = 0.30%/wk of 70 kg
+        assertTrue(spiked.why.any { it.contains("ACWR") })
+        // holding phases don't have a rate to ease — no spurious line
+        val fuelSpiked = CoachEngine.checkIn(
+            2800, "solid", 21, 0.0, 2800, 70, DietPhase.FUEL, loadSpike = true,
+        )
+        assertTrue(fuelSpiked.why.none { it.contains("ACWR") })
+    }
+
+    @Test
     fun `protein scales with the phase - cut higher than bulk`() {
         val c = cut(bw = 70)
         assertEquals(154, c.protein)   // 2.2 g/kg
