@@ -350,6 +350,9 @@ fun HomeScreen(
                             if (readiness == null) "CONNECT WATCH" else "READINESS",
                             color = TextDim, fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
+                            modifier = if (readiness != null) Modifier.clickable {
+                                com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep (40%) + deep/REM (20%) + resting HR (25%) + training load (15%) + morning check-in")
+                            } else Modifier,
                         )
                         Spacer(Modifier.height(9.dp))
                         val scanLine = remember(freshness) {
@@ -997,11 +1000,32 @@ fun HomeScreen(
                 // same story as Prime/Report. One synthesis surface, not four.
             }
 
+            // ── First-day getting started card ──
+            if (profile.streak == 0 && kcalToday == 0 && !trainedToday) {
+                Reveal(2) {
+                    Panel(Modifier.fillMaxWidth(), corner = 20.dp, fill = Mod.Home.copy(alpha = 0.06f), line = Mod.Home.copy(alpha = 0.25f)) {
+                        Column(Modifier.padding(18.dp)) {
+                            Text("YOUR FIRST DAY", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+                            Spacer(Modifier.height(6.dp))
+                            Text("Three steps to activate JARVIS", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(12.dp))
+                            FirstDayStep("1", "Log your first meal", "Tap + below or swipe to Fuel") { onOpenModule("fuel") }
+                            Spacer(Modifier.height(8.dp))
+                            FirstDayStep("2", "Start a workout", "Head to Training and hit Start") { onOpenModule("train") }
+                            Spacer(Modifier.height(8.dp))
+                            FirstDayStep("3", "Do your evening check-in", "Energy, soreness, mood — takes 10 seconds") { onOpenModule("body") }
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+            }
+
             // render in the saved order with a choreographed entrance;
             // key() keeps each card's state stable even when reordered
+            val offset = if (profile.streak == 0 && kcalToday == 0 && !trainedToday) 3 else 2
             cardOrder.forEachIndexed { i, k ->
                 androidx.compose.runtime.key(k) {
-                    Reveal(2 + i) { homeCards[k]?.invoke() }
+                    Reveal(offset + i) { homeCards[k]?.invoke() }
                 }
             }
 
@@ -1315,6 +1339,29 @@ private fun VitalMini(label: String, value: String, progress: Float, color: Colo
         }
         Spacer(Modifier.height(4.dp))
         Text(label, color = TextDim, fontFamily = Body, fontSize = FS.s8_5)
+    }
+}
+
+@Composable
+private fun FirstDayStep(num: String, title: String, hint: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .background(Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .pressScale(onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(26.dp).clip(CircleShape).background(Mod.Home.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) { Text(num, color = Mod.Home, fontFamily = Display, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(hint, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+        }
+        Icon(Icons.Rounded.ChevronRight, null, tint = TextDim.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
     }
 }
 

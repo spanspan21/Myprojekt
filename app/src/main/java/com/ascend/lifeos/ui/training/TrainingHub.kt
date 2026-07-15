@@ -105,11 +105,21 @@ fun TrainingHub(
                     }
                     Spacer(Modifier.height(3.dp))
                     val doneSets = vm.todaySetsLive // include the live session
+                    val strainLabel = if (doneSets > 0) "Strain: $doneSets/$lo–$hi sets today (recovery $rec)"
+                        else "Today's target: $lo–$hi sets (recovery $rec)"
+                    val strainZone = when {
+                        rec >= 75 -> "Full volume"
+                        rec >= 50 -> "Moderate"
+                        else -> "Light day"
+                    }
                     Text(
-                        if (doneSets > 0) "Strain: $doneSets/$lo–$hi sets today (recovery $rec)"
-                        else "Today's target: $lo–$hi sets (recovery $rec)",
+                        strainLabel,
                         color = if (doneSets > hi) Amber else TextDim,
                         fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable {
+                            com.ascend.lifeos.data.Haptics.tick(ctx)
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("$strainZone — recovery $rec%. Green ≥75: full volume, Amber ≥50: moderate, Red: light day")
+                        },
                     )
                 }
             }

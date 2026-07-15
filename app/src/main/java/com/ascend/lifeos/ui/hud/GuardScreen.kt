@@ -285,6 +285,8 @@ fun GuardScreen() {
                     }
                     Spacer(Modifier.width(18.dp))
                     Column(Modifier.weight(1f)) {
+                        Text("Your score, decoded:", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(3.dp))
                         ScoreRow("Budget", "${usedMin}m / ${budget}m", budgetPart / 45f)
                         ScoreRow("Unlocks", "$unlocks×", unlockPart / 20f)
                         ScoreRow(

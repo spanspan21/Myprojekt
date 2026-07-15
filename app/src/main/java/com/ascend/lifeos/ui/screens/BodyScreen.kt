@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.Icon
@@ -274,7 +275,16 @@ fun BodyScreen() {
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Sleep score", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Sleep score", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(
+                                        Icons.Rounded.Info, "Sleep score info", tint = TextDim.copy(alpha = 0.4f),
+                                        modifier = Modifier.size(13.dp).clickable {
+                                            com.ascend.lifeos.ui.kit.AppFeedback.show("Duration vs target (55%) + deep/REM share (30%) + wake penalty (15%)")
+                                        },
+                                    )
+                                }
                                 Text(
                                     "${sm / 60}h ${sm % 60}m total · night + naps",
                                     color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
@@ -287,6 +297,13 @@ fun BodyScreen() {
                             Spacer(Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Recovery", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                                Spacer(Modifier.width(4.dp))
+                                Icon(
+                                    Icons.Rounded.Info, "Recovery info", tint = TextDim.copy(alpha = 0.4f),
+                                    modifier = Modifier.size(13.dp).clickable {
+                                        com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep performance (40%) + deep/REM share (20%) + resting HR delta (25%) + training load (15%) + morning check-in")
+                                    },
+                                )
                                 Spacer(Modifier.weight(1f))
                                 val rColor = when {
                                     recScore >= com.ascend.lifeos.domain.RecoveryEngine.THRESHOLD_GREEN -> Good

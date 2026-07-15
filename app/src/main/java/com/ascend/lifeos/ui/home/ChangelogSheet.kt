@@ -29,6 +29,9 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "First-day getting started card — three concrete actions to activate JARVIS when you're brand new",
+        "Info tooltips: tap Recovery, Sleep score, Readiness or Strain target to learn what drives each number",
+        "Focus score hero now shows 'Your score, decoded' above the breakdown — no more mystery numbers",
         "Recovery tuning: soreness penalty, low-energy penalty, high-energy bonus are now Settings steppers — calibrate how your morning check-in nudges readiness",
         "TDEE tuning: min logged kcal and trend smoothing alpha are now Settings steppers — fine-tune how your expenditure tracks",
         "Greeting hour boundaries are configurable — morning, day, evening and night greetings start when YOU say",
