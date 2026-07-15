@@ -1,10 +1,6 @@
 package com.ascend.lifeos.ui.home
 
 import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -19,6 +15,7 @@ import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -176,7 +173,7 @@ private fun ActionsPane(
                 statColor = if (water >= waterGoal) Good else Mod.Body,
                 onClick = {
                     Repo.addWater(1)
-                    haptic(ctx, 18)
+                    com.ascend.lifeos.data.Haptics.tick(ctx)
                     waterTick++
                 },
             )
@@ -210,7 +207,7 @@ private fun ActionsPane(
                 if (fast.active) Good else Mod.Home,
                 onClick = {
                     if (fast.active) Repo.stopFast() else Repo.startFast(fast.protocol)
-                    haptic(ctx, 18)
+                    com.ascend.lifeos.data.Haptics.tick(ctx)
                 },
             )
         }
@@ -247,7 +244,7 @@ private fun RowScope.QlTile(
             .clip(RoundedCornerShape(16.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick)
             .padding(vertical = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -364,13 +361,11 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(15.dp))
                 .background(if (canSave) Mod.Finance else Mod.Finance.copy(alpha = 0.18f))
-                .clickable(enabled = canSave) {
-                    // one booking entry point: FinanceStore bumps its rev too,
-                    // so Finance UI refreshes without relying on double-subscribe
+                .then(if (canSave) Modifier.pressScale {
                     com.ascend.lifeos.data.finance.FinanceStore.bookTxn(ctx, -cents, cat ?: "Other", note)
-                    haptic(ctx, 24)
+                    com.ascend.lifeos.data.Haptics.confirm(ctx)
                     onSaved()
-                }
+                } else Modifier)
                 .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -410,9 +405,9 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(15.dp))
                 .background(Mod.Body)
-                .clickable {
+                .pressScale {
                     Repo.logWeight(kg)
-                    haptic(ctx, 24)
+                    com.ascend.lifeos.data.Haptics.confirm(ctx)
                     onSaved()
                 }
                 .padding(vertical = 14.dp),
@@ -442,7 +437,7 @@ private fun QlStep(label: String, onClick: () -> Unit) {
 private fun DonePane(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) {
-        haptic(ctx, 30)
+        com.ascend.lifeos.data.Haptics.success(ctx)
         delay(900)
         onDismiss()
     }
@@ -486,21 +481,6 @@ private fun DonePane(onDismiss: () -> Unit) {
 
 // ─── haptics — ActiveWorkout pattern, gated on the setting ───────────────────
 
-private fun haptic(ctx: Context, ms: Long) {
-    if (!Prefs.bool(ctx, Prefs.HAPTICS_ON, true)) return
-    try {
-        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (ctx.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            @Suppress("DEPRECATION") ctx.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION") vib.vibrate(ms)
-        }
-    } catch (_: Exception) {}
-}
 
 // ─── mood — five faces, one tap ─────────────────────────────────────────────
 
@@ -568,11 +548,11 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(15.dp))
                 .background(if (selected > 0) Mod.Mind else Mod.Mind.copy(alpha = 0.18f))
-                .clickable(enabled = selected > 0) {
+                .then(if (selected > 0) Modifier.pressScale {
                     Repo.logMood(selected, moodNote.trim())
-                    haptic(ctx, 24)
+                    com.ascend.lifeos.data.Haptics.confirm(ctx)
                     onSaved()
-                }
+                } else Modifier)
                 .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -610,11 +590,11 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(15.dp))
                 .background(if (filled) Mod.Mind else Mod.Mind.copy(alpha = 0.18f))
-                .clickable(enabled = filled) {
+                .then(if (filled) Modifier.pressScale {
                     Repo.setJournal(answers.map { it.trim() }, null)
-                    haptic(ctx, 24)
+                    com.ascend.lifeos.data.Haptics.confirm(ctx)
                     onSaved()
-                }
+                } else Modifier)
                 .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {

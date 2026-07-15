@@ -10,6 +10,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -156,7 +157,7 @@ fun BreathingScreen(onClose: () -> Unit) {
             JarvisHeader("Breathe", "${rounds} rounds", BreatheAccent) {
                 Icon(
                     Icons.Rounded.Close, "Close", tint = TextDim,
-                    modifier = Modifier.size(20.dp).clip(CircleShape).clickable(onClick = onClose),
+                    modifier = Modifier.size(20.dp).clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClose() },
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -172,10 +173,11 @@ fun BreathingScreen(onClose: () -> Unit) {
                         Modifier.weight(1f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (selected) BreatheAccent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f))
-                            .clickable(enabled = !running) {
+                            .then(if (!running) Modifier.pressScale {
+                                com.ascend.lifeos.data.Haptics.tick(ctx)
                                 pattern = p
                                 rounds = 0
-                            }
+                            } else Modifier)
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -302,7 +304,8 @@ fun BreathingScreen(onClose: () -> Unit) {
                 Modifier.size(72.dp)
                     .clip(CircleShape)
                     .background(if (running) Ivory.copy(alpha = 0.08f) else BreatheAccent)
-                    .clickable {
+                    .pressScale {
+                        com.ascend.lifeos.data.Haptics.tick(ctx)
                         running = !running
                         if (running) rounds = 0
                     },

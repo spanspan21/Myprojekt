@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,9 +83,10 @@ fun HiitTimerScreen(onBack: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
+        val hCtx = androidx.compose.ui.platform.LocalContext.current
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(hCtx); onBack() })
             Spacer(Modifier.width(12.dp))
             Text("HIIT Timer", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
         }
@@ -95,7 +97,8 @@ fun HiitTimerScreen(onBack: () -> Unit) {
             Text("PRESETS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
             ExerciseSeed.HIIT_PRESETS.forEach { p ->
-                GlassPanel(Modifier.fillMaxWidth().clickable {
+                GlassPanel(Modifier.fillMaxWidth().pressScale {
+                    com.ascend.lifeos.data.Haptics.confirm(hCtx)
                     preset = p; currentRound = 1; currentSet = 1; isWork = true
                     remaining = p.workSec; totalPhase = p.workSec; running = true
                 }, corner = 14.dp) {
@@ -165,13 +168,13 @@ fun HiitTimerScreen(onBack: () -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
                 Box(
                     Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                        .border(0.5.dp, HudLine, CircleShape).clickable { paused = !paused },
+                        .border(0.5.dp, HudLine, CircleShape).pressScale { com.ascend.lifeos.data.Haptics.tick(hCtx); paused = !paused },
                     contentAlignment = Alignment.Center,
                 ) { Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, if (paused) "Resume" else "Pause", tint = TextPrimary, modifier = Modifier.size(24.dp)) }
 
                 Box(
                     Modifier.size(56.dp).clip(CircleShape).background(Red.copy(alpha = 0.12f))
-                        .border(0.5.dp, Red.copy(alpha = 0.3f), CircleShape).clickable { running = false },
+                        .border(0.5.dp, Red.copy(alpha = 0.3f), CircleShape).pressScale { com.ascend.lifeos.data.Haptics.warn(hCtx); running = false },
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Stop, "Stop", tint = Red, modifier = Modifier.size(24.dp)) }
             }
