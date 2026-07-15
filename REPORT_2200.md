@@ -166,6 +166,9 @@ Dazu Selbst-Review-Funde am History-Editor (nur abgeschlossene Sessions öffnen;
 - **Frequenz-Kalender** (12-Wochen-Grid in Statistics) füllt Aktivitäts-Tage — das Trainingsjahr eines Läufers liest sich nicht mehr leer.
 - **WEEK-Kachel im Hub** zählt Einheiten = Sessions + Activities (dieselbe Zahl wie Dashboard und ShareCard).
 - **Palette-Hilfe-Karte** listet das Activity-Kommando („lauf 45 · ride 90 rpe8") — live bewiesen: `lauf 45 rpe7` → run/45/7 im Store.
+- **Satz-Level-Cloud-Sync, paginiert** (letztes Infra-Backlog-Item): die neuesten 10 Sessions tragen ihre Sätze inline (Kompakt-Keys, ~6 KB unterm 64-KB-Cap) — das Dashboard zeigt echte Top-Sätze („Top 80 kg × 8") statt nur Aggregate.
+- **Off-Plan-Templates bekommen die Antagonisten-Paarung des Plans** (letztes Feature-Backlog-Item): SupersetPlanner läuft jetzt auch beim Template-Start (Push↔Pull, Quads↔Hams, Paare adjazent; reine Push-Templates bleiben test-gepinnt ungepaart; Reorder nur solange die Session unberührt ist).
+- **Selbst-Review-Fänge**: Ein Boot-Zielwechsel behielt die alte Cut-Rate (→ absurde „Surplus beyond 0%"-Warnung wäre erreichbar geworden) — beidseitig gefixt und test-gepinnt; Pairing-Reorder-Guard.
 - **👑 Der Coach wird LAST-adaptiv (Gabbett × Helms)**: Der Wochen-Check-in liest jetzt dasselbe 60-Tage-Load-Ledger wie die Strain-Karte (nach `LoadLedger` extrahiert: Gym-Sätze + Kalender-Sportblöcke + Aktivitäten, dedupliziert). Eine ACWR-Gefahrenzonen-Woche (>1,5) ist das **dritte Strain-Signal** neben schlechter Recovery und Klausurwochen — ein Defizit auf einer Lastspitze kostet Muskel und lädt Verletzungen ein, also easet der Cut auf ×0,6 mit eigener Begründung („fuel the recovery, protect the tissue"). **Keine andere App koppelt Trainingslast-Wissenschaft mit Diät-Coaching.**
 
 ## 9. Backlog (ehrlich, priorisiert)
