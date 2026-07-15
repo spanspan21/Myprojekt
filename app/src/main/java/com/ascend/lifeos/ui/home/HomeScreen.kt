@@ -182,6 +182,9 @@ fun HomeScreen(
                 },
             examSoon = dayContext.second,
             streak = profile.streak,
+            proteinToday = day?.meals?.sumOf { it.protein } ?: 0,
+            proteinGoal = profile.proteinGoal,
+            dietGoal = profile.dietGoal,
         ),
     )
 

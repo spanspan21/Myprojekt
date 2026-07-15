@@ -24,6 +24,9 @@ object JarvisVoice {
         val sportWord: String = "Ice",       // "Ice" for hockey, "Soccer match" for others
         val examSoon: Pair<String, Int>? = null, // title to days-until (0 = today)
         val streak: Int = 0,
+        val proteinToday: Int = 0,
+        val proteinGoal: Int = 0,
+        val dietGoal: String = "maintain",
     )
 
     fun line(s: Snapshot): String {
@@ -70,6 +73,16 @@ object JarvisVoice {
         // 8. Evening hydration gap.
         if (hour >= 18 && s.waterGlasses < s.waterGoal / 2) {
             return "Hydration behind — ${s.waterGlasses}/${s.waterGoal} glasses. Catch up before tonight."
+        }
+        // 8a. Protein gap on the goals that live off it (cut protects muscle,
+        //     recomp is BUILT on protein — Helms 2014 / Barakat 2020).
+        if (hour >= 17 && s.proteinGoal > 0 && s.proteinToday < s.proteinGoal * 6 / 10 &&
+            (s.dietGoal == "lose" || s.dietGoal == "recomp")
+        ) {
+            return if (s.dietGoal == "recomp")
+                "Protein ${s.proteinToday}/${s.proteinGoal} g — recomp is built at dinner."
+            else
+                "Protein ${s.proteinToday}/${s.proteinGoal} g — protect the muscle, close the gap tonight."
         }
         // 9. Everything done — acknowledge the streak when it's real.
         if (s.trainedToday && s.kcalToday > 0) {
