@@ -80,6 +80,11 @@ object ActivityStore {
         // strain line and widget honest (60 min RPE-8 play ≈ 5 hard sets)
         runCatching { Repo.markTrained(setEquivOf(e), dayKeyOf(e.ts)) }
             .onFailure { android.util.Log.e("ActivityStore", "markTrained failed", it) }
+        // the protein window (Moore 2014) opens after a real session of ANY
+        // sport, not just the gym — a stroll doesn't need an alarm
+        if (e.minutes >= 30 && e.rpe >= 5) {
+            runCatching { Notifier.scheduleProteinNudge(ctx) }
+        }
         return e
     }
 
