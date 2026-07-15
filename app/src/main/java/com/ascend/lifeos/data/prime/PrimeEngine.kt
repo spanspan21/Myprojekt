@@ -127,17 +127,29 @@ object PrimeEngine {
         fun daySets(d: LocalDate): Int =
             (setsByDay[d]?.size ?: 0).takeIf { it > 0 } ?: (sessionsByDay[d]?.sumOf { it.totalSets } ?: 0)
         val today6am = todayDate()
+        // manual activities (runs, rides, practice …) join the same load series —
+        // an endurance athlete's ACR is finally real, not permanently "fresh"
+        val actByDay = runCatching {
+            com.ascend.lifeos.data.ActivityStore.all(ctx)
+                .groupBy { dayDateOf(it.ts, zone) }
+                .mapValues { (_, es) -> es.sumOf { com.ascend.lifeos.data.ActivityStore.loadOf(it) } }
+        }.getOrDefault(emptyMap())
         val loads = (34 downTo 0).map { off ->
             val d = today6am.minusDays(off.toLong())
             val setLoad = setsByDay[d]?.sumOf { TrainingLoad.setLoad(it.rpe) } ?: 0.0
-            if (setLoad > 0.0) setLoad else (sessionsByDay[d]?.sumOf { it.totalSets.toDouble() } ?: 0.0)
+            val base = if (setLoad > 0.0) setLoad else (sessionsByDay[d]?.sumOf { it.totalSets.toDouble() } ?: 0.0)
+            base + (actByDay[d] ?: 0.0)
         }
         val load = TrainingLoad.compute(loads)
         val verdict = TrainingLoad.verdict(load)
         val setsToday = daySets(today6am)
         // Include today (0..6), so today's session counts toward frequency — the fuel
-        // and hydration subscores already include today (audit C1-5).
-        val trainDays7 = (0..6).count { off -> daySets(today6am.minusDays(off.toLong())) > 0 }
+        // and hydration subscores already include today (audit C1-5). Manual
+        // activities make a day count too (a run IS training).
+        val trainDays7 = (0..6).count { off ->
+            val d = today6am.minusDays(off.toLong())
+            daySets(d) > 0 || (actByDay[d] ?: 0.0) > 0.0
+        }
         val freshness = runCatching { MuscleRecovery.compute(ctx) }.getOrNull()
         val tired = freshness?.tiredest?.takeIf { it.second < 0.55f }
 

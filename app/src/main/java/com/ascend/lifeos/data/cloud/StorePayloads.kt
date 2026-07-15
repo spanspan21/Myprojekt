@@ -220,7 +220,17 @@ object StorePayloads {
         val freshnessJson = JSONObject().apply {
             freshness?.map?.forEach { (m, f) -> put(m.name, Math.round(f * 100.0) / 100.0) }
         }
+        // universal activities (runs, rides, practice …) — 60 days for the web
+        val acts = com.ascend.lifeos.data.ActivityStore
+            .since(ctx, System.currentTimeMillis() - 60L * 86_400_000)
+        val actsJson = JSONArray().apply {
+            acts.forEach {
+                put(JSONObject().put("ts", it.ts).put("type", it.type)
+                    .put("min", it.minutes).put("rpe", it.rpe).put("km", it.distanceKm))
+            }
+        }
         JSONObject().put("sessions", sessionsJson).put("prs", prsJson).put("progression", progJson)
+            .put("activities", actsJson)
             .put("muscleFreshness", freshnessJson)
             .put("muscleFreshnessAt", System.currentTimeMillis())
     }

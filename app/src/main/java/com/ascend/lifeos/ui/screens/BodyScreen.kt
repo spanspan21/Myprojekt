@@ -363,7 +363,7 @@ fun BodyScreen() {
                             .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
                         byDay[d] = (byDay[d] ?: 0.0) + com.ascend.lifeos.data.training.TrainingLoad.setLoad(s.rpe)
                     }
-                    // hockey counts as leg/cardio load — no other app knows this
+                    // calendar sport blocks count as load — no other app knows this
                     val events = com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
                         .eventsInRangeOnce(today.toEpochDay() - 60, today.toEpochDay())
                     events.filter { it.type == com.ascend.lifeos.data.calendar.EventType.HOCKEY.name && !it.allDay }
@@ -373,6 +373,11 @@ fun BodyScreen() {
                                 byDay[d] = (byDay[d] ?: 0.0) + com.ascend.lifeos.data.training.TrainingLoad.hockeyLoad(mins)
                             }
                         }
+                    // manual activities (runs, rides, practice …) — Foster sRPE,
+                    // same hard-set unit, so every sport moves the same needle
+                    com.ascend.lifeos.data.ActivityStore
+                        .loadByEpochDay(ctx, today.toEpochDay() - 60, today.toEpochDay())
+                        .forEach { (d, l) -> byDay[d] = (byDay[d] ?: 0.0) + l }
                     val series = (59 downTo 0).map { back -> byDay[today.toEpochDay() - back] ?: 0.0 }
                     val st = com.ascend.lifeos.data.training.TrainingLoad.compute(series)
                     Triple(st, com.ascend.lifeos.data.training.TrainingLoad.verdict(st), series.takeLast(14))

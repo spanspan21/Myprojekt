@@ -120,8 +120,13 @@ object MuscleRecovery {
         }
         android.util.Log.i("MuscleRecovery", "sets=${sets.size} resolved=$resolved skipped=$skipped rescueSessions=$rescueSessions")
 
-        // hockey blocks (yesterday + today) = leg/core/cardio load
+        // calendar sport blocks (yesterday + today) — the coefficients follow the
+        // athlete's PRIMARY SPORT (hockey keeps its proven values; a runner's
+        // "Lauftraining" block loads legs, a swimmer's block loads lats/shoulders)
         runCatching {
+            val sportMuscles = SportCatalog.musclesFor(
+                runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrDefault("hockey"),
+            )
             val calDao = CalendarRepo.dao(ctx)
             val today = LocalDate.now()
             val entities = calDao.eventsInRangeOnce(today.minusDays(2).toEpochDay(), today.toEpochDay())
@@ -135,22 +140,21 @@ object MuscleRecovery {
                         .plusMinutes(b.endMin.toLong()).toInstant().toEpochMilli()
                     if (blockEndMillis > now) return@forEach // future game ≠ fatigue
                     val ageH = (now - blockEndMillis) / 3600_000.0
-                    // ×1.8 vs. the old coefficients to stay calibrated against the
-                    // doubled CAPACITY — otherwise hockey leg load reads too light
-                    add(Muscle.QUADS, durH * 4.3, ageH)
-                    add(Muscle.HAMSTRINGS, durH * 3.6, ageH)
-                    add(Muscle.GLUTES, durH * 3.6, ageH)
-                    add(Muscle.CALVES, durH * 2.5, ageH)
-                    add(Muscle.ABS, durH * 1.8, ageH)
-                    add(Muscle.LOWER_BACK, durH * 1.4, ageH)
-                    add(Muscle.HIP_FLEXORS, durH * 1.8, ageH)
-                    // light upper body: stick handling, shooting, checking
-                    add(Muscle.OBLIQUES, durH * 1.25, ageH)  // shot rotation
-                    add(Muscle.FOREARMS, durH * 1.1, ageH)   // grip on the stick
-                    add(Muscle.SHOULDERS, durH * 0.9, ageH)
-                    add(Muscle.LATS, durH * 0.55, ageH)
-                    add(Muscle.TRAPS, durH * 0.45, ageH)
+                    sportMuscles.forEach { (m, unitsPerHour) -> add(m, durH * unitsPerHour, ageH) }
                 }
+            }
+        }
+
+        // manual activities (runs, rides, swims, practice …) — same decay math,
+        // muscles from the activity type, intensity from the logged session RPE
+        runCatching {
+            val acts = com.ascend.lifeos.data.ActivityStore.since(ctx, since)
+            for (a in acts) {
+                val type = ActivityTypes.byId(a.type) ?: continue
+                val ageH = ((now - a.ts).coerceAtLeast(0L)) / 3600_000.0
+                val durH = a.minutes / 60.0
+                val intensity = TrainingLoad.setLoad(a.rpe)
+                type.muscleUnitsPerHour.forEach { (m, u) -> add(m, durH * u * intensity, ageH) }
             }
         }
 

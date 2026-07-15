@@ -256,7 +256,10 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 targetGlasses = WaterCalc.targetGlasses(p.weightKg, trainingDay, hot),
                 hot = hot, canEdit = isToday,
                 bonusReason = when {
-                    hockeyToday -> "🏒 Ice hockey · +0.5 L"
+                    hockeyToday -> {
+                        val sp = com.ascend.lifeos.data.training.SportCatalog.byId(p.sport)
+                        "${sp.emoji} ${sp.label} · +0.5 L"
+                    }
                     day.workoutDone -> "🏋 Training · +0.5 L"
                     else -> null
                 },

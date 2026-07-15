@@ -117,7 +117,10 @@ fun HomeScreen(
     val waterGoalMl = (profile.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML).coerceAtLeast(1)
     val waterDone = hydrationMl >= waterGoalMl
     val waterGlassEq = hydrationMl / com.ascend.lifeos.data.WaterCalc.GLASS_ML
-    val trainedToday = trainVm.todaySets > 0
+    // Train mission = the SAME truth the streak uses: Room sets OR the day
+    // record (activities/markTrained). Reading only todaySets meant a logged
+    // run — or a hockey day — never ticked the tile while streak counted it.
+    val trainedToday = trainVm.todaySets > 0 || day?.workoutDone == true || (day?.trainSets ?: 0) > 0
     val screenBudget = remember { com.ascend.lifeos.wellbeing.WellbeingStore.budgetMin(ctx) }
     // Usage-access check + the UsageStats aggregation (a per-app PackageManager
     // IPC walk) used to run synchronously in composition on the main thread —
@@ -167,6 +170,8 @@ fun HomeScreen(
             waterGlasses = waterGlassEq,
             waterGoal = profile.waterGoal,
             hockeyToday = dayContext.first,
+            sportWord = com.ascend.lifeos.data.training.SportCatalog.byId(profile.sport)
+                .let { if (it.id == "hockey") "Ice" else "${it.label} session" },
             examSoon = dayContext.second,
             streak = profile.streak,
         ),

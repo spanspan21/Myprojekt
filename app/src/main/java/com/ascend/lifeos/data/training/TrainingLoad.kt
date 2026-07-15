@@ -29,8 +29,16 @@ object TrainingLoad {
         else -> (0.7 + (rpe - 5).coerceIn(0, 5) * 0.1)
     }
 
-    /** Hockey ice time → equivalent hard sets. */
-    fun hockeyLoad(minutes: Int): Double = minutes / 12.0
+    /**
+     * Foster session-RPE (load = RPE × minutes, Foster 2001) mapped into hard
+     * sets: 60 min at RPE 8 ≈ 5 hard sets — the same calibration the hockey
+     * conversion always used, now for EVERY sport.
+     */
+    fun sessionRpeLoad(minutes: Int, rpe: Int): Double =
+        minutes * setLoad(rpe.coerceIn(1, 10)) / 12.0
+
+    /** Hockey ice time → equivalent hard sets (RPE-8 play by definition). */
+    fun hockeyLoad(minutes: Int): Double = sessionRpeLoad(minutes, 8)
 
     /**
      * [dailyLoads] oldest → newest, one entry per calendar day (0.0 = rest day).

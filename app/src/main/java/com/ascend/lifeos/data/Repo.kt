@@ -439,6 +439,9 @@ object Repo {
     /** Weekly-check-in rate dial (%BW/week) — clamping happens in CoachEngine. */
     fun setDietRate(pct: Double?) = updateProfile { it.copy(dietRatePct = pct) }
 
+    /** The athlete's primary sport (SportCatalog id) — the universality dial. */
+    fun setSport(id: String) = updateProfile { it.copy(sport = id) }
+
     // Legacy calisthenics logging, the Repo txn/subs stores and day time-blocking
     // were removed in the 2026-07 audit (Welle 3): training lives in Room
     // (data/training), money in LifeStores/FinanceStore, scheduling in the

@@ -178,7 +178,7 @@ object PlanGenerator {
 
         val note = when {
             examWeek -> "Exam week — volume trimmed 30% so school gets your focus. Still show up."
-            season == "IN" -> "In-season — maintain strength, stay sharp for the ice."
+            season == "IN" -> "In-season — maintain strength, stay sharp for match day."
             season == "PLAYOFF" -> "Playoffs — activation only. The games are the training."
             season == "PRE" -> "Pre-season — explosive quality over volume."
             // MEV→MRV volume + the honest, calculated readiness note
@@ -808,7 +808,7 @@ object PlanGenerator {
                     mk("cardio_rope", 3, 60, 30, "Light feet — springy ankles"),
                 )
                 else -> listOfNotNull( // off-season engine
-                    mk("cardio_burpee", 4, 12, 20, "40s on / 20s off — hockey engine"),
+                    mk("cardio_burpee", 4, 12, 20, "40s on / 20s off — engine work"),
                     mk("cardio_mountain", 4, 20, 20, "Fast knees, hips level"),
                 )
             }

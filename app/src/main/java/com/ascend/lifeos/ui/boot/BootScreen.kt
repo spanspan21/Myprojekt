@@ -20,8 +20,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -211,6 +213,25 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, List<String>) -> Unit) {
             listOf("learn" to "Learn skills", "focus" to "Screen focus").forEach { (id, label) ->
                 BootChip(label, id in objectives) {
                     if (id in objectives) objectives.remove(id) else objectives.add(id)
+                }
+            }
+        }
+
+        // the universality question: which sport is YOURS — calendar words,
+        // load model and game-day logic all follow this choice
+        Spacer(Modifier.height(14.dp))
+        Text("YOUR SPORT", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        var sport by remember { mutableStateOf(com.ascend.lifeos.data.Repo.data.profile.sport) }
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            com.ascend.lifeos.data.training.SportCatalog.ALL.forEach { sp ->
+                BootChip("${sp.emoji} ${sp.label}", sport == sp.id) {
+                    sport = sp.id
+                    com.ascend.lifeos.data.Repo.setSport(sp.id)
                 }
             }
         }

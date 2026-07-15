@@ -209,8 +209,37 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ToggleRow("Strain target", "Recovery-based set range on the hub", Prefs.STRAIN_TARGET_ON, true)
             ToggleRow("Camera rep counter", "Experimental — pose detection counts for you", Prefs.AUTO_COUNT, false)
             RescheduleSettings()
-            // season phase
+
+            // ── primary sport: the universality dial — calendar words, muscle
+            //    load, game-day fueling and the season machinery all follow it
             Spacer(Modifier.height(6.dp))
+            Text(
+                "YOUR SPORT", color = TextDim, fontFamily = Display,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(7.dp))
+            var sportId by remember { mutableStateOf(com.ascend.lifeos.data.Repo.data.profile.sport) }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                com.ascend.lifeos.data.training.SportCatalog.ALL.forEach { sp ->
+                    val on = sportId == sp.id
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .clickable { sportId = sp.id; com.ascend.lifeos.data.Repo.setSport(sp.id) }
+                            .padding(horizontal = 9.dp, vertical = 6.dp),
+                    ) { Text("${sp.emoji} ${sp.label}", color = if (on) Mod.Train else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Calendar blocks with your sport's words count as real training load.",
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+            )
+
+            // season phase — only meaningful for periodised team sports
+            if (com.ascend.lifeos.data.training.SportCatalog.byId(sportId).usesSeasons) {
+            Spacer(Modifier.height(10.dp))
             Text(
                 "SEASON PHASE", color = TextDim, fontFamily = Display,
                 fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
@@ -231,9 +260,10 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                "In-season keeps you fresh for the ice (2-3 short sessions); off-season builds.",
+                "In-season keeps you fresh for match day (2-3 short sessions); off-season builds.",
                 color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
+            }
         }
 
         // ── FUEL ─────────────────────────────────────────────────────

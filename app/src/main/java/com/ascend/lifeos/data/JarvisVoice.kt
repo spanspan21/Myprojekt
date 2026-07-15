@@ -20,7 +20,8 @@ object JarvisVoice {
         val waterGlasses: Int,
         val waterGoal: Int,
         // personal context — Jarvis should feel like it knows the day
-        val hockeyToday: String? = null,     // "18:30" start of today's ice block
+        val hockeyToday: String? = null,     // "18:30" start of today's sport block
+        val sportWord: String = "Ice",       // "Ice" for hockey, "Soccer match" for others
         val examSoon: Pair<String, Int>? = null, // title to days-until (0 = today)
         val streak: Int = 0,
     )
@@ -35,9 +36,9 @@ object JarvisVoice {
         // 2. Game day — the schedule outranks the gym.
         s.hockeyToday?.let { start ->
             return if (s.readiness != null && s.readiness >= 75)
-                "Ice at $start. Recovery ${s.readiness} — you're primed. Save the legs until then."
+                "${s.sportWord} at $start. Recovery ${s.readiness} — you're primed. Save the legs until then."
             else
-                "Ice at $start. Eat early, hydrate, keep the legs fresh."
+                "${s.sportWord} at $start. Eat early, hydrate, keep the legs fresh."
         }
         // 3. Exam pressure beats a training nudge.
         s.examSoon?.let { (title, days) ->

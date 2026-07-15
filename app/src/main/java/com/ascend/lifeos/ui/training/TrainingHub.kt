@@ -36,8 +36,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.text.input.KeyboardType
 import com.ascend.lifeos.data.training.*
+import com.ascend.lifeos.ui.hud.GlassField
 import com.ascend.lifeos.ui.hud.GlassPanel
+import com.ascend.lifeos.ui.hud.HudButton
+import com.ascend.lifeos.ui.hud.HudChip
 import com.ascend.lifeos.ui.hud.NeonBar
 import com.ascend.lifeos.ui.motion.sharedHero
 import com.ascend.lifeos.ui.theme.*
@@ -110,6 +115,12 @@ fun TrainingHub(
         item {
             TodayStrip(vm.todaySetsLive, vm.todayRepsLive, vm.weekSessions)
             Spacer(Modifier.height(18.dp))
+        }
+
+        // ── universal activity log: every sport counts (Foster sRPE) ────
+        item {
+            ActivityQuickLog()
+            Spacer(Modifier.height(14.dp))
         }
 
         // ── Deload warning ──────────────────────────────────────────────
@@ -990,4 +1001,138 @@ private fun progressionIcon(key: String): ImageVector = when (key) {
     "core" -> Icons.Rounded.Shield
     "grip" -> Icons.Rounded.FrontHand
     else -> Icons.Rounded.Stars
+}
+
+// ─── Universal activity log ─────────────────────────────────────────────────
+
+/**
+ * The 15-second log that opens JARVIS to every sport: type + minutes + session
+ * RPE (Foster 2001) → the SAME ledgers a planned workout feeds (streak,
+ * ATL/CTL load, per-muscle freshness). A runner, swimmer or soccer player is
+ * a first-class athlete here — no plan required.
+ */
+@Composable
+private fun ActivityQuickLog() {
+    val ctx = LocalContext.current
+    var open by remember { mutableStateOf(false) }
+    val rev = com.ascend.lifeos.data.ActivityStore.rev
+    var typeId by remember {
+        mutableStateOf(
+            com.ascend.lifeos.data.Repo.data.profile.sport
+                .takeIf { ActivityTypes.byId(it) != null } ?: "run",
+        )
+    }
+    val type = ActivityTypes.byId(typeId) ?: ActivityTypes.ALL.first()
+    var minutes by remember { mutableStateOf(45) }
+    var rpe by remember(typeId) { mutableStateOf(type.defaultRpe) }
+    var km by remember(typeId) { mutableStateOf("") }
+
+    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Column(
+            Modifier
+                .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth().clickable { open = !open },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("⚡", fontSize = com.ascend.lifeos.ui.theme.FS.s16)
+                Spacer(Modifier.width(9.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Log activity", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Run, ride, match, practice — every sport counts",
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                    )
+                }
+                Text(if (open) "▾" else "▸", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
+            }
+
+            if (open) {
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ActivityTypes.ALL.forEach { t ->
+                        HudChip("${t.emoji} ${t.label}", t.id == typeId) { typeId = t.id }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(20, 30, 45, 60, 90, 120).forEach { m ->
+                        HudChip("$m min", minutes == m) { minutes = m }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "EFFORT · RPE $rpe (${rpeWord(rpe)})",
+                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = Display,
+                    fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    (1..10).forEach { r -> HudChip("$r", rpe == r) { rpe = r } }
+                }
+                if (type.hasDistance) {
+                    Spacer(Modifier.height(10.dp))
+                    GlassField("Distance km (optional)", km, KeyboardType.Decimal, Modifier.fillMaxWidth()) { km = it }
+                }
+                Spacer(Modifier.height(12.dp))
+                HudButton("Log ${type.emoji} ${type.label} · $minutes min", Modifier.fillMaxWidth()) {
+                    com.ascend.lifeos.data.ActivityStore.add(
+                        ctx, typeId, minutes, rpe,
+                        km.replace(',', '.').toDoubleOrNull(),
+                    )
+                    runCatching { com.ascend.lifeos.data.Haptics.confirm(ctx) }
+                    km = ""
+                    open = false
+                }
+            }
+
+            // last three — proof it landed, one tap to undo a mislog
+            val recent = remember(rev) { com.ascend.lifeos.data.ActivityStore.all(ctx).take(3) }
+            if (recent.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                recent.forEach { e ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            com.ascend.lifeos.data.ActivityStore.label(e),
+                            color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
+                            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
+                        )
+                        Text(relDay(e.ts), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp).clickable {
+                                com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Foster CR-10 anchors, shortened. */
+private fun rpeWord(r: Int) = when {
+    r <= 2 -> "very easy"
+    r <= 4 -> "easy"
+    r == 5 -> "moderate"
+    r == 6 -> "somewhat hard"
+    r <= 8 -> "hard"
+    r == 9 -> "very hard"
+    else -> "maximal"
+}
+
+private fun relDay(ts: Long): String {
+    val days = ((System.currentTimeMillis() - ts) / 86_400_000L).toInt()
+    return when {
+        days <= 0 -> "today"
+        days == 1 -> "1d ago"
+        else -> "${days}d ago"
+    }
 }

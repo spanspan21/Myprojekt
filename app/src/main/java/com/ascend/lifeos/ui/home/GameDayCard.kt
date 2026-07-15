@@ -70,16 +70,19 @@ fun GameDayCard(modifier: Modifier = Modifier) {
     val greens = listOf(sleptOk, fueledOk, hydratedOk).count { it }
 
     fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
+    // the card speaks the athlete's sport: hockey keeps its puck drop
+    val sport = com.ascend.lifeos.data.training.SportCatalog.byId(p.sport)
+    val startWord = if (sport.id == "hockey") "puck drop" else "start"
     val cue = when {
         greens == 3 -> "Locked in — go win it."
         !sleptOk -> "Short on sleep — long warm-up, carbs by 2 h before, hydrate now."
-        !fueledOk -> "Top up carbs before puck drop — pasta/rice ~2–3 h out."
+        !fueledOk -> "Top up carbs before the $startWord — pasta/rice ~2–3 h out."
         else -> "Sip water steadily until warm-up, then taper."
     }
 
     Panel(modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(16.dp)) {
-            SectionLabel("Game day · puck drop ${fmt(g.first)}", accent = Mod.Body)
+            SectionLabel("${sport.emoji} Game day · $startWord ${fmt(g.first)}", accent = Mod.Body)
             Spacer(Modifier.height(10.dp))
             Check("Sleep", sleptOk, "${sleepMin / 60}h ${sleepMin % 60}m")
             Check("Fueled", fueledOk, "$kcal kcal")

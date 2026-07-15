@@ -106,15 +106,21 @@ object CalendarRepo {
         return DayTimeline(day, timed, allDays, freeSlots(timed), isHoliday)
     }
 
-    /** Ice hockey and similar sports words get typed as HOCKEY for the planner. */
+    /**
+     * The athlete's OWN sport words get typed as HOCKEY — which the whole app
+     * treats as "my sport block" (load, recovery, game-day fueling, plan
+     * placement). Keywords follow profile.sport, so a swimmer's
+     * "Schwimmtraining" gets the same first-class treatment ice practice
+     * always had. Falls back to hockey words when the profile is unreadable.
+     */
+    private fun sportKeywords(): List<String> = runCatching {
+        com.ascend.lifeos.data.training.SportCatalog
+            .byId(com.ascend.lifeos.data.Repo.data.profile.sport).matchKeywords
+    }.getOrDefault(listOf("eishockey", "hockey", "eistraining", "eiszeit"))
+
     private fun guessDeviceType(title: String): EventType {
         val t = title.lowercase()
-        return when {
-            listOf("hockey", "eishockey", "spiel", "game", "match", "training").any { it in t } &&
-                listOf("hockey", "eis", "ice").any { it in t } -> EventType.HOCKEY
-            "hockey" in t -> EventType.HOCKEY
-            else -> EventType.PERSONAL
-        }
+        return if (sportKeywords().any { it in t }) EventType.HOCKEY else EventType.PERSONAL
     }
 
     // ---- free slots ---------------------------------------------------------
