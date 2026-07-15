@@ -43,8 +43,8 @@ import java.time.LocalTime
 @Composable
 fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
-    // morning only — this is a start-the-day ritual, not an all-day panel
-    if (LocalTime.now().hour >= 12) return
+    val cutoff = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_CARD_CUTOFF, 12)
+    if (LocalTime.now().hour >= cutoff) return
 
     val directives by produceState<List<PrimeDirective>>(emptyList()) {
         value = withContext(Dispatchers.IO) {

@@ -93,10 +93,11 @@ fun BootScreen() {
         }
     }
 
-    fun finish(sex: String, age: Int, heightCm: Int, weightKg: Int, goal: String, objectives: List<String>) {
+    fun finish(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, goal: String, objectives: List<String>) {
         Repo.completeBoot(
             name = name.trim().ifBlank { DEFAULT_NAME },
             sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
+            activity = activity,
             goal = goal,
             objectives = objectives.ifEmpty { DEFAULT_OBJECTIVES },
         )
@@ -127,7 +128,7 @@ fun BootScreen() {
 // ─── D · TUNE — the calibration card the targets are computed from ───────────
 
 @Composable
-private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) -> Unit) {
+private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String>) -> Unit) {
     val ctx = LocalContext.current
     val p = Repo.profile()
     // Recalibrate keeps your numbers; a fresh boot starts from the house defaults.
@@ -135,6 +136,9 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) ->
     var age by remember { mutableStateOf(if (p.onboarded) p.age else 16) }
     var height by remember { mutableStateOf(p.heightCm) }
     var weight by remember { mutableStateOf(if (p.onboarded) p.weightKg else 70) }
+    var activity by remember { mutableIntStateOf(if (p.onboarded) p.activity else 3) }
+    var trainFreq by remember { mutableIntStateOf(p.trainFreq) }
+    var sessionLen by remember { mutableIntStateOf(p.sessionLen) }
     var goal by remember { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
     val objectives = remember {
         mutableStateListOf<String>().apply { addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES }) }
@@ -166,7 +170,8 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) ->
             if (!com.ascend.lifeos.ui.motion.Motion.reduced(ctx)) {
                 curtain.animateTo(1f, tween(700, easing = com.ascend.lifeos.ui.motion.Motion.easeOut))
             }
-            onFinish(sex, age, height, weight, goal, objectives.toList())
+            onFinish(sex, age, height, weight, activity, goal, objectives.toList())
+            com.ascend.lifeos.data.Repo.setTrainPrefs(trainFreq, sessionLen, com.ascend.lifeos.data.Repo.profile().hasVest)
         }
     }
 
@@ -238,6 +243,41 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) ->
             }
         }
 
+        // activity level — drives TDEE multiplier, was hardcoded to 3
+        Spacer(Modifier.height(14.dp))
+        Text("ACTIVITY LEVEL", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        val activityLabels = listOf(1 to "Sedentary", 2 to "Light", 3 to "Moderate", 4 to "Active", 5 to "Very active")
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            activityLabels.forEach { (id, label) ->
+                BootChip(label, activity == id) { activity = id }
+            }
+        }
+
+        // training schedule
+        Spacer(Modifier.height(14.dp))
+        Text("TRAINING", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        Text("Sessions per week", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Spacer(Modifier.height(5.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            (2..6).forEach { f -> BootChip("${f}×", trainFreq == f) { trainFreq = f } }
+        }
+        Spacer(Modifier.height(10.dp))
+        Text("Session length", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Spacer(Modifier.height(5.dp))
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            listOf(30, 45, 60, 75, 90).forEach { m -> BootChip("${m}m", sessionLen == m) { sessionLen = m } }
+        }
+
         // …and which KIND of goal: weight is only one of five stories
         Spacer(Modifier.height(14.dp))
         Text("YOUR GOAL", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
@@ -251,6 +291,26 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) ->
                 BootChip(label, goal == id) { goal = id }
             }
         }
+        }
+
+        // wake time — sets morning briefing notification
+        Spacer(Modifier.height(14.dp))
+        Text("WAKE TIME", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(4.dp))
+        Text("When JARVIS sends your morning briefing", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Spacer(Modifier.height(8.dp))
+        var wakeMin by remember { mutableIntStateOf(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.NOTIF_MORNING_MIN, 420)) }
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            listOf(300 to "5:00", 330 to "5:30", 360 to "6:00", 390 to "6:30", 420 to "7:00", 450 to "7:30", 480 to "8:00", 510 to "8:30", 540 to "9:00").forEach { (m, label) ->
+                BootChip(label, wakeMin == m) {
+                    wakeMin = m
+                    com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.NOTIF_MORNING_MIN, m)
+                }
+            }
         }
 
         Spacer(Modifier.height(14.dp))
@@ -280,8 +340,44 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, String, List<String>) ->
         )
         }
 
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(18.dp))
         com.ascend.lifeos.ui.home.Reveal(4) {
+        val bd = remember(sex, age, height, weight, activity, goal) {
+            com.ascend.lifeos.data.NutritionCalc.breakdown(sex, age, height, weight, activity, goal)
+        }
+        val targets = bd.targets
+        val waterMl = weight * com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.WATER_ML_PER_KG, 30)
+        Text("YOUR TARGETS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        BootPanel {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                TargetStat("${targets.kcal}", "KCAL", Mod.Fuel)
+                TargetStat("${targets.protein}g", "PROTEIN", Mod.Train)
+                TargetStat("${targets.carbs}g", "CARBS", Mod.Fuel)
+                TargetStat("${targets.fat}g", "FAT", com.ascend.lifeos.ui.theme.Amber)
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                TargetStat("${waterMl / 1000.0}L", "WATER", com.ascend.lifeos.ui.theme.Cyan)
+                TargetStat("${trainFreq}×", "SESSIONS", Mod.Train)
+                TargetStat("${sessionLen}m", "LENGTH", Mod.Train)
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "BMR ${bd.bmr} × ${bd.activityFactor} = TDEE ${bd.tdee} → ${bd.goalAdj}",
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
+        Text(
+            "Mifflin–St Jeor formula — adjusts as JARVIS learns you",
+            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+
+        Spacer(Modifier.height(22.dp))
         Box(
             Modifier.fillMaxWidth()
                 .pressScale { if (!leaving) leaving = true }
@@ -325,6 +421,7 @@ private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val bg by animateColorAsState(
         if (selected) Mod.Home.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
         tween(Motion.quick), label = "bcB",
@@ -339,7 +436,7 @@ private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
     )
     Box(
         Modifier
-            .pressScale(onClick)
+            .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() }
             .clip(RoundedCornerShape(11.dp))
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
@@ -367,13 +464,22 @@ private fun TuneStepper(label: String, value: Int, unit: String, onDelta: (Int) 
 
 @Composable
 private fun StepBtn(sign: String, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-            .clickable(onClick = onClick),
+            .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
+}
+
+@Composable
+private fun TargetStat(value: String, label: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.ExtraBold)
+        Text(label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+    }
 }
 
 @Composable

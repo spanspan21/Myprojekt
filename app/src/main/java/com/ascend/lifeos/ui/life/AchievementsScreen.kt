@@ -78,9 +78,23 @@ fun AchievementsScreen(onClose: () -> Unit) {
         runCatching { withContext(Dispatchers.IO) { Achievements.scan(ctx) } }
     }
 
-    val entries = Achievements.list(ctx)
+    val allEntries = Achievements.list(ctx)
+    var filter by remember { mutableStateOf<String?>(null) }
+    val entries = if (filter == null) allEntries else allEntries.filter { it.module == filter }
 
     LifeScaffold("Milestones", "Auto-detected — the life changelog", Mod.Home, onClose) {
+        if (allEntries.isNotEmpty()) {
+            val modules = allEntries.map { it.module }.distinct()
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(null, "All", filter == null) { filter = null }
+                modules.forEach { m ->
+                    FilterChip(m, m.replaceFirstChar { it.uppercase() }, filter == m) { filter = m }
+                }
+            }
+        }
         if (entries.isEmpty()) {
             EmptyState(
                 icon = Icons.Rounded.EmojiEvents,
@@ -130,7 +144,7 @@ private fun Plaque(a: Achievement) {
                 .border(0.5.dp, ChampagneDeep.copy(alpha = 0.55f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(moduleIcon(a.module), null, tint = moduleColor(a.module).copy(alpha = 0.85f), modifier = Modifier.size(22.dp))
+            Icon(moduleIcon(a.module), a.module, tint = moduleColor(a.module).copy(alpha = 0.85f), modifier = Modifier.size(22.dp))
         }
         Spacer(Modifier.height(6.dp))
         Text(
@@ -204,6 +218,20 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
                 Text(a.detail, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 16.sp)
             }
         }
+    }
+}
+
+@Composable
+private fun FilterChip(module: String?, label: String, selected: Boolean, onClick: () -> Unit) {
+    val c = if (module != null) moduleColor(module) else Mod.Home
+    Box(
+        Modifier.clip(RoundedCornerShape(10.dp))
+            .background(if (selected) c.copy(alpha = 0.18f) else Surface)
+            .border(0.5.dp, if (selected) c.copy(alpha = 0.5f) else Line2, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Text(label, color = if (selected) c else TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
 

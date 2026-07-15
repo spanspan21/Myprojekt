@@ -25,9 +25,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.MonitorWeight
+import androidx.compose.material.icons.rounded.Mood
 import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.SelfImprovement
 import androidx.compose.material.icons.rounded.ShoppingBag
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,9 +67,7 @@ import kotlin.math.roundToLong
 // Water: one tap per glass, sheet stays open. Meal jumps to Fuel. Weight is a
 // two-tap stepper. Everything haptic, everything under three seconds.
 
-private val FinAccent = Color(0xFF9CC24A)
-
-private enum class QlMode { ACTIONS, PURCHASE, WEIGHT, DONE }
+private enum class QlMode { ACTIONS, PURCHASE, WEIGHT, MOOD, JOURNAL, DONE }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,13 +89,15 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
                     when (mode) {
                         QlMode.PURCHASE -> "LOG PURCHASE"
                         QlMode.WEIGHT -> "LOG WEIGHT"
+                        QlMode.MOOD -> "HOW ARE YOU"
+                        QlMode.JOURNAL -> "JOURNAL"
                         else -> "QUICK LOG"
                     },
                     color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                 )
                 Spacer(Modifier.weight(1f))
-                if (mode == QlMode.PURCHASE || mode == QlMode.WEIGHT) {
+                if (mode == QlMode.PURCHASE || mode == QlMode.WEIGHT || mode == QlMode.MOOD || mode == QlMode.JOURNAL) {
                     Text(
                         "BACK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
@@ -115,9 +119,14 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
                         onPurchase = { mode = QlMode.PURCHASE },
                         onWeight = { mode = QlMode.WEIGHT },
                         onMeal = { onDismiss(); onOpenModule("fuel") },
+                        onMood = { mode = QlMode.MOOD },
+                        onJournal = { mode = QlMode.JOURNAL },
+                        onBreathe = { onDismiss(); onOpenModule("breathe") },
                     )
                     QlMode.PURCHASE -> PurchasePane(ctx) { mode = QlMode.DONE }
                     QlMode.WEIGHT -> WeightPane(ctx) { mode = QlMode.DONE }
+                    QlMode.MOOD -> MoodPane(ctx) { mode = QlMode.DONE }
+                    QlMode.JOURNAL -> JournalPane(ctx) { mode = QlMode.DONE }
                     QlMode.DONE -> DonePane(onDismiss)
                 }
             }
@@ -134,6 +143,9 @@ private fun ActionsPane(
     onPurchase: () -> Unit,
     onWeight: () -> Unit,
     onMeal: () -> Unit,
+    onMood: () -> Unit = {},
+    onJournal: () -> Unit = {},
+    onBreathe: () -> Unit = {},
 ) {
     val water = Repo.data.days[todayKey()]?.water ?: 0
     val waterGoal = Repo.data.profile.waterGoal
@@ -149,29 +161,74 @@ private fun ActionsPane(
         }
     }
 
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-        QlTile(
-            Icons.Rounded.ShoppingBag, "Purchase", "€", FinAccent,
-            onClick = onPurchase,
-        )
-        QlTile(
-            Icons.Rounded.WaterDrop, "Water +1", "$water/$waterGoal", Mod.Body,
-            iconScale = waterScale.value,
-            statColor = if (water >= waterGoal) Good else Mod.Body,
-            onClick = {
-                Repo.addWater(1)
-                haptic(ctx, 18)
-                waterTick++
-            },
-        )
-        QlTile(
-            Icons.Rounded.Restaurant, "Meal", "kcal", Mod.Fuel,
-            onClick = onMeal,
-        )
-        QlTile(
-            Icons.Rounded.MonitorWeight, "Weight", "%.1f kg".format(lastKg), Mod.Body,
-            onClick = onWeight,
-        )
+    val moodAvg = Repo.todayMoodAvg()
+    val moodStat = moodAvg?.let { "%.1f".format(it) } ?: "—"
+
+    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            QlTile(
+                Icons.Rounded.ShoppingBag, "Purchase", "€", Mod.Finance,
+                onClick = onPurchase,
+            )
+            QlTile(
+                Icons.Rounded.WaterDrop, "Water +1", "$water/$waterGoal", Mod.Body,
+                iconScale = waterScale.value,
+                statColor = if (water >= waterGoal) Good else Mod.Body,
+                onClick = {
+                    Repo.addWater(1)
+                    haptic(ctx, 18)
+                    waterTick++
+                },
+            )
+            QlTile(
+                Icons.Rounded.Restaurant, "Meal", "kcal", Mod.Fuel,
+                onClick = onMeal,
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            QlTile(
+                Icons.Rounded.MonitorWeight, "Weight", "%.1f kg".format(lastKg), Mod.Body,
+                onClick = onWeight,
+            )
+            QlTile(
+                Icons.Rounded.Mood, "Mood", moodStat, Mod.Mind,
+                statColor = when {
+                    moodAvg == null -> TextDim
+                    moodAvg >= 4f -> Good
+                    moodAvg >= 2.5f -> Mod.Mind
+                    else -> Warn
+                },
+                onClick = onMood,
+            )
+            val fast = Repo.data.fasting
+            val fastLabel = if (fast.active) {
+                val h = ((System.currentTimeMillis() - fast.startEpoch) / 3_600_000).toInt()
+                "${h}h"
+            } else fast.protocol
+            QlTile(
+                Icons.Rounded.Timer, if (fast.active) "End fast" else "Fast", fastLabel,
+                if (fast.active) Good else Mod.Home,
+                onClick = {
+                    if (fast.active) Repo.stopFast() else Repo.startFast(fast.protocol)
+                    haptic(ctx, 18)
+                },
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            val journal = Repo.data.days[todayKey()]?.journal ?: emptyList()
+            val journalStat = if (journal.isEmpty()) "—" else "${journal.size}/3"
+            QlTile(
+                Icons.Rounded.EditNote, "Journal", journalStat, Mod.Mind,
+                statColor = if (journal.size >= 3) Good else Mod.Mind,
+                onClick = onJournal,
+            )
+            val noteCount = remember { com.ascend.lifeos.data.life.LifeStores.notes(ctx).size }
+            QlTile(
+                Icons.Rounded.SelfImprovement, "Breathe", "", Good,
+                onClick = onBreathe,
+            )
+            Spacer(Modifier.weight(1f))
+        }
     }
 }
 
@@ -194,7 +251,7 @@ private fun RowScope.QlTile(
             .padding(vertical = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, null, tint = accent, modifier = Modifier.size(22.dp).scale(iconScale))
+        Icon(icon, label, tint = accent, modifier = Modifier.size(22.dp).scale(iconScale))
         Spacer(Modifier.height(9.dp))
         Text(
             label, color = TextPrimary, fontFamily = Body,
@@ -224,7 +281,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                .border(0.5.dp, if (cents > 0) FinAccent.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
+                .border(0.5.dp, if (cents > 0) Mod.Finance.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
                 .padding(vertical = 18.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -241,7 +298,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                         },
                         singleLine = true,
                         textStyle = metricStyle(34).copy(color = TextPrimary, textAlign = TextAlign.Center),
-                        cursorBrush = SolidColor(FinAccent),
+                        cursorBrush = SolidColor(Mod.Finance),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.widthIn(min = 96.dp, max = 200.dp).focusRequester(focus),
                     )
@@ -254,13 +311,13 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         Spacer(Modifier.height(12.dp))
 
         // category chips — Income excluded, this is the spend lane
-        LifeStores.CATEGORIES.filter { it != "Income" }.chunked(3).forEach { rowCats ->
+        LifeStores.categories(ctx).filter { it != "Income" }.chunked(3).forEach { rowCats ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowCats.forEach { c ->
                     val on = cat == c
-                    val bg by animateColorAsState(if (on) FinAccent.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
-                    val edge by animateColorAsState(if (on) FinAccent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
-                    val fg by animateColorAsState(if (on) FinAccent else TextMuted, tween(Motion.quick), label = "qcF")
+                    val bg by animateColorAsState(if (on) Mod.Finance.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
+                    val edge by animateColorAsState(if (on) Mod.Finance.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
+                    val fg by animateColorAsState(if (on) Mod.Finance else TextMuted, tween(Motion.quick), label = "qcF")
                     Box(
                         Modifier.weight(1f)
                             .pressScale { cat = c }
@@ -293,10 +350,10 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
             BasicTextField(
                 value = note,
-                onValueChange = { if (it.length <= 60) note = it },
+                onValueChange = { if (it.length <= com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.QUICK_NOTE_LIMIT, 60)) note = it },
                 singleLine = true,
                 textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium),
-                cursorBrush = SolidColor(FinAccent),
+                cursorBrush = SolidColor(Mod.Finance),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -306,7 +363,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         Box(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(15.dp))
-                .background(if (canSave) FinAccent else FinAccent.copy(alpha = 0.18f))
+                .background(if (canSave) Mod.Finance else Mod.Finance.copy(alpha = 0.18f))
                 .clickable(enabled = canSave) {
                     // one booking entry point: FinanceStore bumps its rev too,
                     // so Finance UI refreshes without relying on double-subscribe
@@ -383,19 +440,47 @@ private fun QlStep(label: String, onClick: () -> Unit) {
 
 @Composable
 private fun DonePane(onDismiss: () -> Unit) {
-    LaunchedEffect(Unit) { delay(650); onDismiss() }
+    val ctx = LocalContext.current
+    LaunchedEffect(Unit) {
+        haptic(ctx, 30)
+        delay(900)
+        onDismiss()
+    }
+    val scale = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { scale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) }
+    val glow = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { glow.animateTo(1f, tween(500)); glow.animateTo(0.3f, tween(400)) }
     Column(
         Modifier.fillMaxWidth().padding(vertical = 26.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            Modifier.size(52.dp).clip(CircleShape)
-                .background(Good.copy(alpha = 0.14f))
-                .border(0.5.dp, Good.copy(alpha = 0.4f), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) { Text("✓", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size(72.dp).scale(scale.value * 1.3f)
+                    .background(
+                        androidx.compose.ui.graphics.Brush.radialGradient(
+                            listOf(Good.copy(alpha = 0.25f * glow.value), Color.Transparent),
+                        ),
+                        CircleShape,
+                    ),
+            )
+            Box(
+                Modifier.size(52.dp).scale(scale.value).clip(CircleShape)
+                    .background(Good.copy(alpha = 0.14f))
+                    .border(0.5.dp, Good.copy(alpha = 0.4f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Text("✓", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
+        }
         Spacer(Modifier.height(10.dp))
-        Text("Logged ✓", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+        val comp = Repo.completion()
+        Text("Logged", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+        if (comp.done < comp.total) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                "${comp.done}/${comp.total} missions today",
+                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+            )
+        }
     }
 }
 
@@ -415,6 +500,131 @@ private fun haptic(ctx: Context, ms: Long) {
             @Suppress("DEPRECATION") vib.vibrate(ms)
         }
     } catch (_: Exception) {}
+}
+
+// ─── mood — five faces, one tap ─────────────────────────────────────────────
+
+private val MOOD_LEVELS = listOf(
+    1 to "Awful",
+    2 to "Low",
+    3 to "Okay",
+    4 to "Good",
+    5 to "Great",
+)
+private val MOOD_EMOJIS = listOf("😣", "😕", "😐", "🙂", "😊")
+private val MOOD_COLORS @Composable get() = listOf(Crit, Orange, Warn, Good, Cyan)
+
+@Composable
+private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
+    var selected by remember { mutableIntStateOf(0) }
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "How are you feeling right now?",
+            color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+        )
+        Spacer(Modifier.height(20.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            MOOD_LEVELS.forEachIndexed { i, (level, label) ->
+                val on = selected == level
+                val bg by animateColorAsState(
+                    if (on) MOOD_COLORS[i].copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+                    tween(Motion.quick), label = "mbg$i",
+                )
+                val edge by animateColorAsState(
+                    if (on) MOOD_COLORS[i].copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+                    tween(Motion.quick), label = "medge$i",
+                )
+                Column(
+                    Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(bg)
+                        .border(0.5.dp, edge, RoundedCornerShape(14.dp))
+                        .clickable { selected = level }
+                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(MOOD_EMOJIS[i], fontSize = com.ascend.lifeos.ui.theme.FS.s22)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        label, color = if (on) MOOD_COLORS[i] else TextDim,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        var moodNote by remember { mutableStateOf("") }
+        androidx.compose.material3.OutlinedTextField(
+            value = moodNote, onValueChange = { moodNote = it.take(120) },
+            placeholder = { Text("What's behind this feeling?", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12),
+        )
+        Spacer(Modifier.height(12.dp))
+        Box(
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(15.dp))
+                .background(if (selected > 0) Mod.Mind else Mod.Mind.copy(alpha = 0.18f))
+                .clickable(enabled = selected > 0) {
+                    Repo.logMood(selected, moodNote.trim())
+                    haptic(ctx, 24)
+                    onSaved()
+                }
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "Log mood", color = if (selected > 0) Void else TextDim,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
+    val existing = Repo.data.days[todayKey()]?.journal ?: emptyList()
+    val prompts = listOf("Best thing today?", "What annoyed you?", "What are you grateful for?")
+    var answers by remember { mutableStateOf(List(3) { existing.getOrElse(it) { "" } }) }
+
+    Column(Modifier.fillMaxWidth()) {
+        prompts.forEachIndexed { i, prompt ->
+            Text(prompt, color = Mod.Mind, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(4.dp))
+            androidx.compose.material3.OutlinedTextField(
+                value = answers[i],
+                onValueChange = { v -> answers = answers.toMutableList().also { it[i] = v.take(100) } },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13),
+                placeholder = { Text("…", color = TextDim, fontFamily = Body) },
+            )
+            Spacer(Modifier.height(10.dp))
+        }
+        Spacer(Modifier.height(6.dp))
+        val filled = answers.any { it.isNotBlank() }
+        Box(
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(15.dp))
+                .background(if (filled) Mod.Mind else Mod.Mind.copy(alpha = 0.18f))
+                .clickable(enabled = filled) {
+                    Repo.setJournal(answers.map { it.trim() }, null)
+                    haptic(ctx, 24)
+                    onSaved()
+                }
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (existing.isEmpty()) "Save journal" else "Update journal",
+                color = if (filled) Void else TextDim,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+            )
+        }
+    }
 }
 
 /** Cross-screen signals into Home (widget deep link → quick-log sheet). */

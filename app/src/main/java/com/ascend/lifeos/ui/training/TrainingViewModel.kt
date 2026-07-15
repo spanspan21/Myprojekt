@@ -86,6 +86,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     val todayRepsLive: Int get() = todayReps + activeExercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps } }
     var weekSessions by mutableIntStateOf(0)
         private set
+    var weekDoneNames by mutableStateOf<Set<String>>(emptySet())
+        private set
 
     // ── Deload state ────────────────────────────────────────────────────────
 
@@ -121,6 +123,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             com.ascend.lifeos.data.ActivityStore.since(getApplication(), startOfWeek).size
         }.getOrDefault(0)
         weekSessions = dao.sessionCountSince(startOfWeek) + acts
+        weekDoneNames = dao.sessionsSince(startOfWeek)
+            .filter { it.session.isComplete }
+            .map { it.session.templateName }
+            .toSet()
         checkDeload()
     }
 
@@ -206,6 +212,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val primary: Set<Muscle>,
         val secondary: Set<Muscle>,
         val repsVsLast: Int?,   // percent, e.g. +12
+        val tonnageKg: Int = 0,
     )
 
     var lastSummary by mutableStateOf<WorkoutSummary?>(null)
@@ -455,9 +462,12 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         activeExercises.add(ActiveExercise(
             exerciseId = ex.id, exerciseName = ex.name,
             targetSets = 3, targetReps = if (ex.unit == "sec") 30 else 10,
-            restSeconds = 90, supersetGroup = null,
+            restSeconds = defaultRestSec(), supersetGroup = null,
         ))
     }
+
+    private fun defaultRestSec(): Int =
+        com.ascend.lifeos.data.Prefs.int(getApplication(), com.ascend.lifeos.data.Prefs.DEFAULT_REST_SEC, 90)
 
     fun setCurrentExercise(index: Int) {
         activeCurrentExIndex = index.coerceIn(0, (activeExercises.size - 1).coerceAtLeast(0))
@@ -785,6 +795,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val now = System.currentTimeMillis()
         val totalSets = activeExercises.sumOf { it.loggedSets.size }
         val totalReps = activeExercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps } }
+        val tonnage = activeExercises.sumOf { ex -> ex.loggedSets.sumOf { ((it.weight ?: 0f) * it.reps).toInt() } }
         val durMin = ((now - activeStartedAt) / 60_000).toInt()
         val sessionName = activeTemplateName
 
@@ -807,7 +818,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             val sessionPrs = runCatching {
                 dao.recentPrs(10).first().filter { it.sessionId == sid }
             }.getOrDefault(emptyList())
-            lastSummary = WorkoutSummary(sessionName, totalSets, totalReps, durMin, sessionPrs, prim, sec, delta)
+            lastSummary = WorkoutSummary(sessionName, totalSets, totalReps, durMin, sessionPrs, prim, sec, delta, tonnage)
             if (sessionPrs.isNotEmpty()) {
                 runCatching { com.ascend.lifeos.data.SoundFx.levelUp(getApplication()) }
             } else if (totalSets > 0) {
@@ -868,7 +879,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     exerciseName = logged.first().exerciseName,
                     targetSets = maxOf(3, logged.size),
                     targetReps = logged.lastOrNull()?.reps ?: 10,
-                    restSeconds = 90,
+                    restSeconds = defaultRestSec(),
                     supersetGroup = logged.firstOrNull()?.supersetGroup,
                 )
                 ex.loggedSets.addAll(logged)

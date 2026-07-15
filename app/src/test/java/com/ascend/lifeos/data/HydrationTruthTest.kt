@@ -16,13 +16,13 @@ class HydrationTruthTest {
 
     @Test
     fun `water taps alone`() {
-        assertEquals(4 * WaterCalc.GLASS_ML, Repo.hydrationMl(DayData(water = 4)))
+        assertEquals(4 * WaterCalc.DEFAULT_GLASS_ML, Repo.hydrationMl(DayData(water = 4)))
     }
 
     @Test
     fun `an explicit bottle volume adds to hydration`() {
         val day = DayData(water = 2, meals = listOf(drink("Wasser", volumeMl = 500)))
-        assertEquals(2 * WaterCalc.GLASS_ML + 500, Repo.hydrationMl(day))
+        assertEquals(2 * WaterCalc.DEFAULT_GLASS_ML + 500, Repo.hydrationMl(day))
     }
 
     @Test
@@ -33,7 +33,7 @@ class HydrationTruthTest {
     @Test
     fun `solid food is not hydration`() {
         val day = DayData(water = 1, meals = listOf(FoodEntry(id = "1", name = "Egg", grams = 200, kcal = 155)))
-        assertEquals(WaterCalc.GLASS_ML, Repo.hydrationMl(day))
+        assertEquals(WaterCalc.DEFAULT_GLASS_ML, Repo.hydrationMl(day))
     }
 
     @Test

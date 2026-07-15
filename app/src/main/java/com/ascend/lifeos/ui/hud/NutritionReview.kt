@@ -66,8 +66,11 @@ fun WeeklyFuelReview(isToday: Boolean) {
 
     val avgK = days.filter { it.logged }.map { it.kcal }.average().roundToInt()
     val avgP = days.filter { it.logged }.map { it.protein }.average().roundToInt()
-    val protHit = days.count { it.logged && it.protein >= p.proteinGoal * 0.9 }
-    val kcalHit = days.count { it.logged && p.kcalGoal > 0 && abs(it.kcal - p.kcalGoal) <= p.kcalGoal * 0.10 }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val protPct = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_HIT_PCT, 90) / 100.0
+    val kcalPct = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.KCAL_ADHERENCE_PCT, 10) / 100.0
+    val protHit = days.count { it.logged && it.protein >= p.proteinGoal * protPct }
+    val kcalHit = days.count { it.logged && p.kcalGoal > 0 && abs(it.kcal - p.kcalGoal) <= p.kcalGoal * kcalPct }
     val score = (40.0 * logged / 7 + 30.0 * protHit / logged + 30.0 * kcalHit / logged).roundToInt()
     val scoreColor = when { score >= 80 -> Good; score >= 55 -> Amber; else -> Warn }
 
@@ -86,7 +89,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
                     val frac = if (p.kcalGoal > 0) (d.kcal.toFloat() / (p.kcalGoal * 1.3f)).coerceIn(0.06f, 1f) else 0.06f
                     val c = when {
                         !d.logged -> Ivory.copy(alpha = 0.06f)
-                        abs(d.kcal - p.kcalGoal) <= p.kcalGoal * 0.10 -> Good
+                        abs(d.kcal - p.kcalGoal) <= p.kcalGoal * kcalPct -> Good
                         d.kcal > p.kcalGoal -> Warn.copy(alpha = 0.8f)
                         else -> Amber.copy(alpha = 0.8f)
                     }

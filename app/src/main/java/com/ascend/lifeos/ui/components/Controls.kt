@@ -53,6 +53,6 @@ fun CheckBox(checked: Boolean, onClick: () -> Unit, dashed: Boolean = false) {
             .clickable { onClick() },
         contentAlignment = Alignment.Center,
     ) {
-        if (checked) Icon(Icons.Rounded.Check, null, tint = Bg, modifier = Modifier.size(15.dp))
+        if (checked) Icon(Icons.Rounded.Check, "Checked", tint = Bg, modifier = Modifier.size(15.dp))
     }
 }

@@ -70,7 +70,7 @@ class AdaptiveTdeeTest {
     @Test
     fun implausiblyLowExpenditureIsClamped() {
         val r = AdaptiveTdee.computeFrom(intakes(10, kcal = 900), steadyWeights())!!
-        assertEquals(1400, r.expenditure)
+        assertEquals(1200, r.expenditure)
     }
 
     @Test

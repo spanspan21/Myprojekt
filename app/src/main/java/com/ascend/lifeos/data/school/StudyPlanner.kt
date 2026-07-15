@@ -27,9 +27,10 @@ object StudyPlanner {
             val n = (daysUntil / 2).coerceIn(1, 4)   // 1 block per ~2 days out, capped
             val deadline = (ex.dayEpoch - 1).coerceAtLeast(today)  // finish studying by the day before
             repeat(n) { i ->
+                val studyMin = Prefs.int(ctx, Prefs.STUDY_BLOCK_MIN, 45)
                 TaskBlocks.add(
                     ctx, title = "Study: ${ex.title} (${i + 1}/$n)",
-                    priority = 3, deadlineEpochDay = deadline, durationMin = 45,
+                    priority = 3, deadlineEpochDay = deadline, durationMin = studyMin,
                 )
             }
             Prefs.setBool(ctx, flag, true)

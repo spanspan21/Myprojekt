@@ -161,11 +161,11 @@ object MonthlyPdf {
             val x = 48f + i * (499f / keys.size)
             c.drawRect(x, barBottom - h, x + w - 2f, barBottom, accent)
         }
-        // 8h reference
-        val ref = barBottom - (480f / 600f * 90f)
+        val sleepRef = Repo.sleepNeedMin().toFloat()
+        val ref = barBottom - (sleepRef / 600f * 90f)
         val dash = Paint(line).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 4f), 0f) }
         c.drawLine(48f, ref, 547f, ref, dash)
-        c.drawText("8h", 550f - 18f, ref - 3f, dim.sized(8f))
+        c.drawText("${(sleepRef / 60).toInt()}h", 550f - 18f, ref - 3f, dim.sized(8f))
 
         c.drawText("JARVIS — offline-first · no cloud · generated on device", 48f, 810f, dim.sized(8f))
     }

@@ -40,7 +40,13 @@ data class Kr(
     val targetKg: Double = 0.0,
 )
 
-data class Goal(val id: String, val title: String, val krs: List<Kr>)
+data class Goal(
+    val id: String,
+    val title: String,
+    val krs: List<Kr>,
+    val deadline: String = "",
+    val archived: Boolean = false,
+)
 
 /**
  * A recurring habit. [daysMask] bit0 = Monday … bit6 = Sunday.
@@ -66,10 +72,26 @@ data class Habit(
 object LifeStores {
     private const val PREF = "life"
 
-    /** Fixed transaction categories. "Income" flips the sign. */
-    val CATEGORIES = listOf("Food", "Fun", "Clothes", "Tech", "Transport", "Other", "Income")
+    private val DEFAULT_CATEGORIES = listOf("Food", "Fun", "Clothes", "Tech", "Transport", "Other", "Income")
 
-    const val MAX_GOALS = 3
+    fun categories(ctx: Context): List<String> {
+        val raw = prefs(ctx).getString("fin_categories", null) ?: return DEFAULT_CATEGORIES
+        val list = raw.split("|").filter { it.isNotBlank() }.toMutableList()
+        if ("Income" !in list) list.add("Income")
+        return list
+    }
+
+    fun setCategories(ctx: Context, cats: List<String>) {
+        val clean = cats.filter { it.isNotBlank() }.toMutableList()
+        if ("Income" !in clean) clean.add("Income")
+        prefs(ctx).edit().putString("fin_categories", clean.joinToString("|")).apply()
+        touch()
+    }
+
+    @Deprecated("Use categories(ctx) instead", ReplaceWith("categories(ctx)"))
+    val CATEGORIES get() = DEFAULT_CATEGORIES
+
+    const val MAX_GOALS = 10
 
     /** Bump-on-write revision — read it in composition to subscribe to changes. */
     var rev by mutableIntStateOf(0)
@@ -235,13 +257,20 @@ object LifeStores {
         val krsArr = JSONArray()
         krs.forEach { krsArr.put(it.toJson()) }
         return JSONObject().put("id", id).put("title", title).put("krs", krsArr)
+            .put("deadline", deadline).put("archived", archived)
     }
 
     private fun goalFrom(o: JSONObject): Goal {
         val krsArr = o.optJSONArray("krs") ?: JSONArray()
         val krs = ArrayList<Kr>(krsArr.length())
         for (i in 0 until krsArr.length()) krs.add(krFrom(krsArr.getJSONObject(i)))
-        return Goal(o.optString("id"), o.optString("title"), krs)
+        return Goal(
+            id = o.optString("id"),
+            title = o.optString("title"),
+            krs = krs,
+            deadline = o.optString("deadline", ""),
+            archived = o.optBoolean("archived", false),
+        )
     }
 
     fun goals(ctx: Context): List<Goal> {
@@ -279,6 +308,18 @@ object LifeStores {
             })
         }
         writeGoals(ctx, next)
+    }
+
+    fun updateGoal(ctx: Context, id: String, title: String? = null, deadline: String? = null, archived: Boolean? = null, krs: List<Kr>? = null) {
+        writeGoals(ctx, goals(ctx).map { g ->
+            if (g.id != id) g
+            else g.copy(
+                title = title?.takeIf { it.isNotBlank() } ?: g.title,
+                deadline = deadline ?: g.deadline,
+                archived = archived ?: g.archived,
+                krs = krs?.map { it.copy(id = it.id.ifBlank { newId("kr") }) } ?: g.krs,
+            )
+        })
     }
 
     fun deleteGoal(ctx: Context, id: String) = writeGoals(ctx, goals(ctx).filter { it.id != id })
@@ -458,5 +499,43 @@ object LifeStores {
             day = day.minusDays(1)
         }
         return streak
+    }
+
+    // ─── Quick Notes ───────────────────────────────────────────────────────
+
+    fun notes(ctx: Context): List<Triple<String, String, Long>> {
+        val raw = prefs(ctx).getString("notes", null) ?: return emptyList()
+        return runCatching {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                Triple(o.optString("id"), o.optString("text"), o.optLong("ts"))
+            }.sortedByDescending { it.third }
+        }.getOrDefault(emptyList())
+    }
+
+    fun addNote(ctx: Context, text: String) {
+        if (text.isBlank()) return
+        val list = notes(ctx).toMutableList()
+        list.add(0, Triple(newId("n"), text.trim(), System.currentTimeMillis()))
+        writeNotes(ctx, list)
+    }
+
+    fun editNote(ctx: Context, id: String, newText: String) {
+        if (newText.isBlank()) return
+        writeNotes(ctx, notes(ctx).map { if (it.first == id) Triple(it.first, newText.trim(), it.third) else it })
+    }
+
+    fun deleteNote(ctx: Context, id: String) {
+        writeNotes(ctx, notes(ctx).filter { it.first != id })
+    }
+
+    private fun writeNotes(ctx: Context, notes: List<Triple<String, String, Long>>) {
+        val arr = JSONArray()
+        notes.forEach { (id, text, ts) ->
+            arr.put(JSONObject().put("id", id).put("text", text).put("ts", ts))
+        }
+        prefs(ctx).edit().putString("notes", arr.toString()).apply()
+        touch()
     }
 }

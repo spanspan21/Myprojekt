@@ -56,6 +56,7 @@ private val UNITS = listOf("g", "ml", "pcs", "serving")
  */
 @Composable
 fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var serving by remember { mutableStateOf((existing?.servingG ?: 100).toString()) }
     var unit by remember { mutableStateOf(existing?.unit ?: "g") }
@@ -80,7 +81,7 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Custom food", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
             Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { favorite = !favorite }, contentAlignment = Alignment.Center) {
-                Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, null, tint = if (favorite) Amber else TextDim, modifier = Modifier.size(20.dp))
+                Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, if (favorite) "Remove from favorites" else "Add to favorites", tint = if (favorite) Amber else TextDim, modifier = Modifier.size(20.dp))
             }
         }
         if (barcode.isNotBlank()) Text("Barcode $barcode", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
@@ -144,6 +145,8 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
                     micros = microG, barcode = barcode, favorite = favorite,
                 ),
             )
+            com.ascend.lifeos.data.Haptics.confirm(ctx)
+            com.ascend.lifeos.ui.kit.AppFeedback.show("Food saved")
             onDone()
         }
         Spacer(Modifier.height(6.dp))

@@ -35,9 +35,19 @@ data class DayTimeline(
 
 object CalendarRepo {
 
-    const val WAKE_START = 7 * 60        // free-slot window 07:00…
-    const val WAKE_END = 22 * 60 + 30    // …22:30
-    const val MIN_SLOT = 40              // minutes worth calling "free"
+    const val DEF_WAKE_START = 7 * 60
+    const val DEF_WAKE_END = 22 * 60 + 30
+    const val DEF_MIN_SLOT = 40
+
+    fun wakeStart(): Int = com.ascend.lifeos.data.Repo.appContextOrNull()?.let {
+        com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.CAL_WAKE_START, DEF_WAKE_START)
+    } ?: DEF_WAKE_START
+    fun wakeEnd(): Int = com.ascend.lifeos.data.Repo.appContextOrNull()?.let {
+        com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.CAL_WAKE_END, DEF_WAKE_END)
+    } ?: DEF_WAKE_END
+    fun minSlot(): Int = com.ascend.lifeos.data.Repo.appContextOrNull()?.let {
+        com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.CAL_MIN_SLOT, DEF_MIN_SLOT)
+    } ?: DEF_MIN_SLOT
 
     fun dao(ctx: Context): CalendarDao = CalendarDatabase.get(ctx).dao()
 
@@ -136,20 +146,20 @@ object CalendarRepo {
     }
 
     fun freeSlots(timedBlocks: List<TimelineBlock>): List<FreeSlot> {
-        // a cancelled lesson IS free time — that's the whole point of seeing it
+        val ws = wakeStart(); val we = wakeEnd(); val ms = minSlot()
         val busy = timedBlocks.filterNot { it.cancelled }.map {
             val (pre, post) = buffers(it.type)
-            (it.startMin - pre).coerceAtLeast(WAKE_START) to (it.endMin + post).coerceAtMost(WAKE_END)
+            (it.startMin - pre).coerceAtLeast(ws) to (it.endMin + post).coerceAtMost(we)
         }
             .filter { it.second > it.first }
             .sortedBy { it.first }
         val slots = ArrayList<FreeSlot>()
-        var cursor = WAKE_START
+        var cursor = ws
         for ((s, e) in busy) {
-            if (s - cursor >= MIN_SLOT) slots.add(FreeSlot(cursor, s))
+            if (s - cursor >= ms) slots.add(FreeSlot(cursor, s))
             cursor = maxOf(cursor, e)
         }
-        if (WAKE_END - cursor >= MIN_SLOT) slots.add(FreeSlot(cursor, WAKE_END))
+        if (we - cursor >= ms) slots.add(FreeSlot(cursor, we))
         return slots
     }
 

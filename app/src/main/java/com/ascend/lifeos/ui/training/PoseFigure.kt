@@ -262,7 +262,7 @@ private fun fig(pose: Pose): Fig = when (pose) {
 fun PoseFigure(
     pose: Pose,
     modifier: Modifier = Modifier,
-    color: Color = Color.White,
+    color: Color = com.ascend.lifeos.ui.theme.Ivory,
 ) {
     val f = fig(pose)
     Canvas(modifier) {

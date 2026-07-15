@@ -51,7 +51,8 @@ object MuscleRecovery {
 
     suspend fun compute(ctx: Context): Freshness {
         val now = System.currentTimeMillis()
-        val since = now - 72L * 3600_000
+        val lookbackH = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RECOVERY_LOOKBACK_H, 72)
+        val since = now - lookbackH.toLong() * 3600_000
 
         val dao = TrainingDatabase.get(ctx).dao()
         var sets = runCatching { dao.setsLoggedSince(since) }.getOrDefault(emptyList())

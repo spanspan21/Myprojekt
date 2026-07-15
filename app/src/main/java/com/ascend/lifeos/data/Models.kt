@@ -127,6 +127,14 @@ data class AppData(
     val bodyDays: Map<String, BodyDay> = emptyMap(), // per-day health history for trends & baselines
 )
 
+/** A single mood entry on the timeline — minute-of-day + 1..5 level + optional note. */
+@Serializable
+data class MoodEntry(
+    val minuteOfDay: Int,         // 0..1439
+    val level: Int,               // 1 awful · 2 low · 3 okay · 4 good · 5 great
+    val note: String = "",
+)
+
 /** One day of body signals — written on every Health Connect sync + check-ins. */
 @Serializable
 data class BodyDay(
@@ -147,6 +155,11 @@ data class BodyDay(
     val fAlcohol: Boolean? = null,
     val fLateMeal: Boolean? = null,
     val fScreenLate: Boolean? = null,
+    val fMeditation: Boolean? = null,
+    val fSupplements: Boolean? = null,
+    val fLateExercise: Boolean? = null,
+    // mood timeline: multiple entries per day (old single `mood` is the legacy fallback)
+    val moodTimeline: List<MoodEntry> = emptyList(),
 )
 
 @Serializable

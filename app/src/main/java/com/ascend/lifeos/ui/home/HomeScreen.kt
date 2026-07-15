@@ -1,6 +1,8 @@
 package com.ascend.lifeos.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.flow.firstOrNull
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -22,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.FitnessCenter
@@ -29,7 +32,10 @@ import androidx.compose.material.icons.rounded.Hexagon
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Psychology
 import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.SelfImprovement
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.Icon
@@ -114,9 +120,9 @@ fun HomeScreen(
     val water = day?.water ?: 0
     // Hydration truth incl. logged drinks (matches Repo.completion + Prime + Fuel).
     val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
-    val waterGoalMl = (profile.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML).coerceAtLeast(1)
+    val waterGoalMl = (profile.waterGoal * com.ascend.lifeos.data.WaterCalc.glassMl()).coerceAtLeast(1)
     val waterDone = hydrationMl >= waterGoalMl
-    val waterGlassEq = hydrationMl / com.ascend.lifeos.data.WaterCalc.GLASS_ML
+    val waterGlassEq = hydrationMl / com.ascend.lifeos.data.WaterCalc.glassMl()
     // Train mission = the SAME truth the streak uses: Room sets OR the day
     // record (activities/markTrained). Reading only todaySets meant a logged
     // run — or a hockey day — never ticked the tile while streak counted it.
@@ -261,6 +267,40 @@ fun HomeScreen(
                 }
             }
 
+            if (profile.sickMode) {
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                        .background(Warn.copy(alpha = 0.12f))
+                        .border(0.5.dp, Warn.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .clickable { Repo.setSickMode(false) }
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        "🤒 Sick mode — tap to deactivate",
+                        color = Warn, fontFamily = Body,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            val deloadUntil = remember { com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0).toLong() }
+            if (deloadUntil > 0 && deloadUntil >= LocalDate.now().toEpochDay()) {
+                val daysLeft = (deloadUntil - LocalDate.now().toEpochDay()).toInt()
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                        .background(Cyan.copy(alpha = 0.10f))
+                        .border(0.5.dp, Cyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        "🧊 Deload week — $daysLeft day${if (daysLeft != 1) "s" else ""} left · reduced volume",
+                        color = Cyan, fontFamily = Body,
+                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+
             Spacer(Modifier.height(18.dp))
 
             // ── BODY SCAN — your muscle map, swept by the scanner ────────
@@ -270,10 +310,12 @@ fun HomeScreen(
                         runCatching { com.ascend.lifeos.data.training.MuscleRecovery.compute(ctx).map }.getOrNull()
                     }
                 }
+                val rGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_GOOD, 75)
+                val rWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_WARN, 50)
                 val rColor = when {
                     readiness == null -> TextDim
-                    readiness >= 75 -> Good
-                    readiness >= 50 -> Warn
+                    readiness >= rGood -> Good
+                    readiness >= rWarn -> Warn
                     else -> Crit
                 }
                 // readiness counts up while the scanner makes its first pass
@@ -315,7 +357,8 @@ fun HomeScreen(
                             when {
                                 f.isNullOrEmpty() -> "Scan idle — log sets to light it up"
                                 else -> {
-                                    val tired = f.filterValues { it < 0.45f }.keys.take(2)
+                                    val freshThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FRESHNESS_THRESHOLD, 45) / 100f
+                                    val tired = f.filterValues { it < freshThresh }.keys.take(2)
                                     if (tired.isEmpty()) "All systems fresh — full send"
                                     else "Recovering: " + tired.joinToString(" · ") {
                                         it.name.lowercase().replaceFirstChar(Char::uppercase).replace('_', ' ')
@@ -383,13 +426,20 @@ fun HomeScreen(
                             // a demoralising "day one" if you've actually been showing
                             // up — surface the forgiving 30-day consistency instead.
                             val habit = remember(profile.streak, missionsDone) { Repo.habitStrength() }
+                            val consistThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.HABIT_CONSIST_THRESH, 40)
+                            val atRisk = profile.streak > 0 && missionsDone < 3 && java.time.LocalTime.now().hour >= 18
                             Text(
                                 when {
+                                    profile.streak > 0 && atRisk -> "${profile.streak} days · at risk"
                                     profile.streak > 0 -> "${profile.streak} days"
-                                    habit >= 40 -> "$habit% consistent"
+                                    habit >= consistThresh -> "$habit% consistent"
                                     else -> "day one"
                                 },
-                                color = if (profile.streak > 0 || habit >= 40) Champagne else TextMuted,
+                                color = when {
+                                    atRisk -> Warn
+                                    profile.streak > 0 || habit >= consistThresh -> Champagne
+                                    else -> TextMuted
+                                },
                                 fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
                             )
                         }
@@ -409,7 +459,7 @@ fun HomeScreen(
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Rounded.Bolt, null, tint = Mod.Home, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Bolt, "Speak briefing", tint = Mod.Home, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(7.dp))
                     Text("Speak briefing", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
@@ -467,7 +517,22 @@ fun HomeScreen(
                 val exam = if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.EXAM_COUNTDOWN, true)) dayContext.second else null
 
                 val ins = insight?.takeIf { !insightDismissed }
-                val hasAny = directives.isNotEmpty() || customFired.isNotEmpty() || ins != null || exam != null
+
+                val goalDeadlines = remember {
+                    val now = java.time.LocalDate.now()
+                    com.ascend.lifeos.data.life.LifeStores.goals(ctx)
+                        .filter { !it.archived && it.deadline.isNotBlank() }
+                        .mapNotNull { g ->
+                            runCatching {
+                                val dl = java.time.LocalDate.parse(g.deadline)
+                                val days = java.time.temporal.ChronoUnit.DAYS.between(now, dl).toInt()
+                                if (days in 0..7) Triple(g.title, days, dl) else null
+                            }.getOrNull()
+                        }
+                        .sortedBy { it.second }
+                }
+
+                val hasAny = directives.isNotEmpty() || customFired.isNotEmpty() || ins != null || exam != null || goalDeadlines.isNotEmpty()
                 if (hasAny) {
                     Spacer(Modifier.height(24.dp))
                     SectionLabel("Daily briefing")
@@ -483,6 +548,14 @@ fun HomeScreen(
                                 BriefRow(
                                     dot = if (days <= 1) Crit else Warn,
                                     overline = if (days <= 0) "EXAM · TODAY" else "EXAM · IN ${days}D",
+                                    text = title,
+                                )
+                            }
+                            goalDeadlines.forEach { (title, days, _) ->
+                                sep()
+                                BriefRow(
+                                    dot = if (days <= 1) Crit else Warn,
+                                    overline = if (days <= 0) "GOAL · TODAY" else "GOAL · IN ${days}D",
                                     text = title,
                                 )
                             }
@@ -664,7 +737,230 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(), onClick = onOpenSkills,
                 )
             }
+
+            // ── macro bar: P / C / F progress when food is logged ──────
+            if (kcalToday > 0) {
+                val proteinToday = day?.meals?.sumOf { it.protein } ?: 0
+                val carbsToday = day?.meals?.sumOf { it.carbs } ?: 0
+                val fatToday = day?.meals?.sumOf { it.fat } ?: 0
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    MacroBar("P", proteinToday, profile.proteinGoal, Cyan, Modifier.weight(1f))
+                    MacroBar("C", carbsToday, profile.carbGoal, Amber, Modifier.weight(1f))
+                    MacroBar("F", fatToday, profile.fatGoal, Crit, Modifier.weight(1f))
+                }
             }
+
+            // quick actions: +water without leaving Home
+            if (!waterDone) {
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                        .background(Mod.Body.copy(alpha = 0.08f))
+                        .clickable {
+                            Repo.addWater(1)
+                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        }
+                        .padding(horizontal = 14.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Rounded.WaterDrop, "Add water", tint = Mod.Body, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("+ Water", color = Mod.Body, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    Text("$waterGlassEq/${profile.waterGoal}", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            // habit strip: due habits as tappable chips (mark done without leaving Home)
+            val habitRev = com.ascend.lifeos.data.life.LifeStores.rev
+            val todayHabits = remember(habitRev) {
+                val todayDate = java.time.LocalDate.now()
+                val dk = com.ascend.lifeos.core.todayKey()
+                com.ascend.lifeos.data.life.LifeStores.habits(ctx)
+                    .filter { com.ascend.lifeos.data.life.HabitMetrics.scheduledOn(it, todayDate) }
+                    .filter { !com.ascend.lifeos.data.life.HabitMetrics.skipped(ctx, it, dk) }
+                    .filter { !com.ascend.lifeos.data.life.HabitMetrics.isAuto(it) }
+            }
+            if (todayHabits.isNotEmpty()) {
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    val dk = com.ascend.lifeos.core.todayKey()
+                    todayHabits.forEach { h ->
+                        val done = com.ascend.lifeos.data.life.HabitMetrics.done(ctx, h, dk)
+                        val icon = h.icon.ifBlank { "•" }
+                        Box(
+                            Modifier.clip(RoundedCornerShape(10.dp))
+                                .background(if (done) Good.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.04f))
+                                .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                .clickable {
+                                    if (!done) {
+                                        com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, h.id, dk, true)
+                                    }
+                                }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        ) {
+                            Text(
+                                "$icon ${h.title}",
+                                color = if (done) Good else TextMuted,
+                                fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                                fontWeight = if (done) FontWeight.Bold else FontWeight.Medium,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+            }
+            }
+            }
+
+            // ── WEEKLY RECAP — at-a-glance summary + last week delta ────
+            homeCards["weekRecap"] = {
+                data class WeekStat(val value: Int, val label: String, val prev: Int)
+                val weekData = remember(Repo.data.hashCode()) {
+                    data class ScanResult(val train: Int, val avgKcal: Int, val water: Int, val avgSleep: Int)
+                    fun scan(monday: java.time.LocalDate, until: java.time.LocalDate): ScanResult {
+                        var train = 0; var kcal = 0; var water = 0; var days = 0
+                        val sleepVals = mutableListOf<Int>()
+                        var d = monday
+                        while (!d.isAfter(until)) {
+                            val key = d.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+                            val dd = Repo.data.days[key]
+                            if (dd != null) {
+                                days++
+                                if (dd.workoutDone || dd.trainSets > 0) train++
+                                kcal += dd.meals.sumOf { it.kcal }
+                                water += dd.water
+                            }
+                            Repo.bodyDay(key)?.sleepMin?.let { if (it > 0) sleepVals.add(it) }
+                            d = d.plusDays(1)
+                        }
+                        val avg = if (days > 0) kcal / days else 0
+                        val sleepAvg = if (sleepVals.isNotEmpty()) sleepVals.average().toInt() / 60 else 0
+                        return ScanResult(train, avg, water, sleepAvg)
+                    }
+                    val now = java.time.LocalDate.now()
+                    val monday = now.with(java.time.DayOfWeek.MONDAY)
+                    val prevMonday = monday.minusWeeks(1)
+                    val prevSunday = monday.minusDays(1)
+                    val cur = scan(monday, now)
+                    val prev = scan(prevMonday, prevSunday)
+                    val streak = Repo.profile().streak
+                    listOf(
+                        WeekStat(cur.train, "train", prev.train),
+                        WeekStat(cur.avgKcal, "kcal/d", prev.avgKcal),
+                        WeekStat(cur.avgSleep, "sleep h", prev.avgSleep),
+                        WeekStat(streak, "streak", streak),
+                    )
+                }
+                if (weekData.any { it.value > 0 }) {
+                    Spacer(Modifier.height(18.dp))
+                    Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+                        Column(Modifier.padding(14.dp)) {
+                            Text("WEEK RECAP", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                            Spacer(Modifier.height(10.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                                weekData.forEach { stat ->
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(stat.value.toString(), color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold)
+                                        Text(stat.label, color = TextDim, fontSize = FS.s8_5, fontFamily = Body)
+                                        if (stat.prev > 0 && stat.label != "streak") {
+                                            val delta = stat.value - stat.prev
+                                            val sign = if (delta > 0) "↑" else if (delta < 0) "↓" else "="
+                                            val c = if (delta > 0) Good else if (delta < 0) Crit else TextDim
+                                            Text("$sign${kotlin.math.abs(delta)}", color = c, fontSize = FS.s8, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── LAST SESSION — what you did last time in the gym ──
+            homeCards["lastSession"] = {
+                val dao = remember { com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao() }
+                val lastSess by produceState<com.ascend.lifeos.data.training.SessionWithSets?>(null) {
+                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        runCatching { dao.recentSessions(1).firstOrNull()?.firstOrNull() }.getOrNull()
+                    }
+                }
+                val s = lastSess
+                if (s != null && s.session.isComplete) {
+                    val ago = System.currentTimeMillis() - (s.session.finishedAt ?: s.session.startedAt)
+                    val agoText = when {
+                        ago < 3_600_000 -> "${(ago / 60_000).toInt()} min ago"
+                        ago < 86_400_000 -> "${(ago / 3_600_000).toInt()}h ago"
+                        ago < 172_800_000 -> "Yesterday"
+                        else -> "${(ago / 86_400_000).toInt()} days ago"
+                    }
+                    val exercises = s.sets.map { it.exerciseName }.distinct().take(4)
+                    Spacer(Modifier.height(18.dp))
+                    Panel(Modifier.fillMaxWidth().clickable(onClick = onOpenTrain), corner = 16.dp) {
+                        Column(Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("LAST SESSION", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.weight(1f))
+                                Text(agoText, color = Mod.Train, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(s.session.templateName, color = TextPrimary, fontFamily = Display, fontSize = FS.s16, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("${s.session.totalSets} sets", color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                                Text("${s.session.totalReps} reps", color = TextMuted, fontSize = FS.s12, fontFamily = Body)
+                                Text("${s.session.durationMinutes} min", color = TextMuted, fontSize = FS.s12, fontFamily = Body)
+                            }
+                            if (exercises.isNotEmpty()) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(exercises.joinToString(" · "), color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── VITALS GLANCE — compact body snapshot without leaving Home ──
+            homeCards["vitals"] = {
+                val health = Repo.data.health
+                val bd = Repo.bodyDay()
+                val sleepMin = health?.sleepMin
+                val steps = health?.steps
+                val rhr = bd?.restingHr ?: health?.restingHr
+                val weightPts = Repo.weightLog()
+                val lastWeight = weightPts.lastOrNull()?.kg
+                val needMin = runCatching { Repo.sleepNeedMin() }.getOrDefault(480)
+                if (sleepMin != null || steps != null || rhr != null || lastWeight != null) {
+                    Spacer(Modifier.height(18.dp))
+                    Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = onOpenBody) {
+                        Column(Modifier.padding(14.dp)) {
+                            Text("VITALS", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                            Spacer(Modifier.height(10.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                                sleepMin?.let { sm ->
+                                    VitalMini("Sleep", "${sm / 60}h${"%02d".format(sm % 60)}", sm / needMin.toFloat(), Mod.Body)
+                                }
+                                readiness?.let { r ->
+                                    val rG = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_GOOD, 75)
+                                    val rW = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_WARN, 50)
+                                    VitalMini("Recovery", "$r%", r / 100f, when {
+                                        r >= rG -> Good; r >= rW -> Warn; else -> Crit
+                                    })
+                                }
+                                steps?.let { s ->
+                                    val stepGoal = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STEP_GOAL, 10000)
+                                    VitalMini("Steps", if (s >= 1000) "${s / 1000}k" else "$s", (s / stepGoal.toFloat()).coerceAtMost(1f), Mod.Train)
+                                }
+                                rhr?.let { hr ->
+                                    VitalMini("RHR", "$hr", ((80f - hr.coerceIn(40, 80)) / 40f), Mod.Body)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // ── SYSTEMS — rituals & archives as an orb row (the hub, distilled)
@@ -680,9 +976,21 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Automations", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Notes", Icons.Rounded.EditNote, Mod.Skills) { onOpenModule("notes") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") } }
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") } }
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Automations", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Breathe", Icons.Rounded.SelfImprovement, Good) { onOpenModule("breathe") } }
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Timer", Icons.Rounded.Timer, Crit) { onOpenModule("timer") } }
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Wind Down", Icons.Rounded.Bedtime, Mod.Mind) { onOpenModule("winddown") } }
+                    Box(Modifier.weight(1f)) {}
+                    Box(Modifier.weight(1f)) {}
                 }
                 // Wave F: "Wrapped" removed — once-a-year vanity that re-told the
                 // same story as Prime/Report. One synthesis surface, not four.
@@ -839,9 +1147,10 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
     val current = blocks.firstOrNull { it.startMin <= nowMin }
     val next = blocks.firstOrNull { it.startMin > nowMin }
     // first free slot from now that fits a session
+    val minSlot = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.CAL_MIN_SLOT, 40)
     val slot = timeline?.freeSlots.orEmpty()
         .map { s -> if (s.startMin < nowMin) s.copy(startMin = nowMin) else s }
-        .firstOrNull { it.endMin > nowMin && it.durationMin >= 45 }
+        .firstOrNull { it.endMin > nowMin && it.durationMin >= minSlot }
 
     // no flash of wrong advice: shimmer until the timeline actually loaded
     if (timeline == null) { ShimmerPanel(height = 74.dp, corner = 20.dp); return }
@@ -858,7 +1167,7 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                         Spacer(Modifier.height(12.dp))
                         HairLine()
                         Spacer(Modifier.height(12.dp))
-                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~45 min", Mod.Train, onClick = onOpenTrain)
+                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
                     }
                 }
                 !trainedToday && slot != null && (next == null || slot.startMin < next.startMin) -> {
@@ -879,11 +1188,32 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                         Spacer(Modifier.height(12.dp))
                         HairLine()
                         Spacer(Modifier.height(12.dp))
-                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~45 min", Mod.Train, onClick = onOpenTrain)
+                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
                     }
                 }
-                !trainedToday -> EventLine("READY NOW", split, "clear schedule · ~45 min", Mod.Train, onClick = onOpenTrain)
+                !trainedToday -> EventLine("READY NOW", split, "clear schedule · open", Mod.Train, onClick = onOpenTrain)
                 else -> EventLine("DONE", "Training complete", "recovery is the mission now", Good, onClick = onOpenTrain)
+            }
+            if (nowMin >= 20 * 60 && (next == null || next.endMin <= nowMin)) {
+                val tomorrow = java.time.LocalDate.now().plusDays(1)
+                val firstTomorrow by produceState<com.ascend.lifeos.data.calendar.TimelineBlock?>(null, tomorrow) {
+                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        runCatching {
+                            val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
+                            val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
+                            com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, tomorrow, entities).blocks.firstOrNull()
+                        }.getOrNull()
+                    }
+                }
+                if (firstTomorrow != null) {
+                    Spacer(Modifier.height(10.dp))
+                    HairLine()
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "Tomorrow · ${firstTomorrow!!.title} at ${fmt(firstTomorrow!!.startMin)}",
+                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                    )
+                }
             }
         }
     }
@@ -909,7 +1239,7 @@ private fun EventLine(tag: String, title: String, sub: String, color: Color, onC
             Text(title, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1)
             Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, maxLines = 1)
         }
-        Icon(Icons.Rounded.Bolt, null, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
+        Icon(Icons.Rounded.Bolt, title, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
     }
 }
 
@@ -934,6 +1264,58 @@ private fun HairLine() {
     Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
 }
 
+@Composable
+private fun MacroBar(label: String, current: Int, goal: Int, color: Color, modifier: Modifier = Modifier) {
+    val frac = if (goal > 0) (current / goal.toFloat()).coerceIn(0f, 1.2f) else 0f
+    Row(
+        modifier.clip(RoundedCornerShape(8.dp))
+            .background(Ivory.copy(alpha = 0.04f))
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = color, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.width(6.dp))
+        Box(
+            Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp))
+                .background(Ivory.copy(alpha = 0.06f)),
+        ) {
+            Box(
+                Modifier.fillMaxHeight().fillMaxWidth(frac.coerceAtMost(1f))
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(if (frac > 1f) Warn else color),
+            )
+        }
+        Spacer(Modifier.width(6.dp))
+        Text("$current", color = if (frac >= 1f) color else TextDim, fontFamily = Body, fontSize = FS.s8_5, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun VitalMini(label: String, value: String, progress: Float, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                val stroke = 3.dp.toPx()
+                val pad = stroke / 2
+                val arc = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
+                drawArc(
+                    color = color.copy(alpha = 0.12f), startAngle = -90f, sweepAngle = 360f,
+                    useCenter = false, topLeft = androidx.compose.ui.geometry.Offset(pad, pad), size = arc,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                )
+                drawArc(
+                    color = color, startAngle = -90f, sweepAngle = 360f * progress.coerceIn(0f, 1f),
+                    useCenter = false, topLeft = androidx.compose.ui.geometry.Offset(pad, pad), size = arc,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                )
+            }
+            Text(value, color = TextPrimary, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(label, color = TextDim, fontFamily = Body, fontSize = FS.s8_5)
+    }
+}
+
 // ─── configurable dashboard (PDF: anpassbares Dashboard) ─────────────────────
 
 internal object HomeCards {
@@ -941,6 +1323,9 @@ internal object HomeCards {
         "briefing" to "Daily briefing",
         "nextup" to "Next up",
         "missions" to "Today's missions",
+        "weekRecap" to "Weekly recap",
+        "lastSession" to "Last session",
+        "vitals" to "Vitals glance",
         "systems" to "Systems row",
     )
     private val DEFAULT = ALL.map { it.first }

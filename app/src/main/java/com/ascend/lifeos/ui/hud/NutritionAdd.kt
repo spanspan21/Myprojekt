@@ -220,7 +220,7 @@ private fun SearchPane(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f)) { GlassField("Search — Latte, Döner or 450", query, KeyboardType.Text, focus = focusReq) { onQuery(it) } }
         Spacer(Modifier.width(10.dp))
-        SquareIcon(Icons.Rounded.QrCodeScanner, onScan)
+        SquareIcon(Icons.Rounded.QrCodeScanner, "Scan barcode", onScan)
     }
 
     Spacer(Modifier.height(12.dp))
@@ -265,10 +265,16 @@ private fun SearchPane(
                         Repo.profile().recentFoods.sortedByDescending { if (it.meal == meal) 1 else 0 }
                     }
                     if (recents.isEmpty()) {
-                        Text("Nothing logged yet — type in the search above or scan.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, lineHeight = 18.sp)
+                        com.ascend.lifeos.ui.kit.EmptyState(
+                            icon = androidx.compose.material.icons.Icons.Rounded.Search,
+                            title = "Nothing logged yet",
+                            hint = "Type in the search above or scan a barcode",
+                            accent = Mod.Fuel,
+                        )
                     } else {
                         Section("RECENT — 1 TAP LOGS, ＋ COLLECTS")
-                        recents.take(12).forEach { e ->
+                        val recentCount = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RECENT_FOODS_COUNT, 12)
+                        recents.take(recentCount).forEach { e ->
                             ResultRow(
                                 e.name, "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", "",
                                 onLong = { pseudoProduct(e)?.let(onPick) },
@@ -385,7 +391,7 @@ private fun SearchPane(
                 Text("Searching…", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
             } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
                 Column {
-                    Text("No results.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+                    com.ascend.lifeos.ui.kit.EmptyState(Icons.Rounded.Search, "No results", "Try a different name or add your own below", Mod.Fuel)
                     // Kap. 35: drei Wege statt Sackgasse
                     val dym = remember(query) { com.ascend.lifeos.data.BasicFoods.didYouMean(query) }
                     if (dym != null) {
@@ -521,12 +527,12 @@ private fun Section(title: String) {
 }
 
 @Composable
-private fun SquareIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+private fun SquareIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String = "", onClick: () -> Unit) {
     Box(
         Modifier.size(48.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).clickable { onClick() },
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, tint = Mod.Fuel, modifier = Modifier.size(22.dp)) }
+    ) { Icon(icon, label.ifBlank { null }, tint = Mod.Fuel, modifier = Modifier.size(22.dp)) }
 }
 
 @Composable
@@ -535,7 +541,7 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
         modifier.clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).clickable { onClick() }.padding(vertical = 13.dp),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, null, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
+        Icon(icon, label, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
         Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
@@ -574,7 +580,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
                     Modifier.size(30.dp).clip(CircleShape).background(Mod.Fuel.copy(alpha = 0.14f))
                         .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), CircleShape).clickable { onPlus() },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.Add, null, tint = Mod.Fuel, modifier = Modifier.size(16.dp)) }
+                ) { Icon(Icons.Rounded.Add, "Add to basket", tint = Mod.Fuel, modifier = Modifier.size(16.dp)) }
             }
         }
     }
@@ -591,7 +597,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+            Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

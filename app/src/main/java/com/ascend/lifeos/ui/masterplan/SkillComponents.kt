@@ -214,7 +214,7 @@ fun ResourceRow(r: ResourceEntity, accent: Color) {
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(iconFor(r.kind), null, tint = accent, modifier = Modifier.size(17.dp))
+        Icon(iconFor(r.kind), r.title, tint = accent, modifier = Modifier.size(17.dp))
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(r.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.SemiBold)
@@ -223,7 +223,7 @@ fun ResourceRow(r: ResourceEntity, accent: Color) {
             }
         }
         Spacer(Modifier.width(8.dp))
-        Icon(Icons.Rounded.OpenInNew, null, tint = TextDim, modifier = Modifier.size(14.dp))
+        Icon(Icons.Rounded.OpenInNew, "Open link", tint = TextDim, modifier = Modifier.size(14.dp))
     }
 }
 

@@ -57,8 +57,7 @@ object AdaptiveTdee {
 
         val avgIntake = intakes.average()
         val expenditure = (avgIntake - deltaKg * 7700.0 / effectiveDays).toInt()
-        // sanity clamp — nobody's TDEE is 900 or 6000
-        val exp = expenditure.coerceIn(1400, 4500)
+        val exp = expenditure.coerceIn(1200, 5000)
         val trendPerWeek = deltaKg / effectiveDays * 7.0
 
         return Result(

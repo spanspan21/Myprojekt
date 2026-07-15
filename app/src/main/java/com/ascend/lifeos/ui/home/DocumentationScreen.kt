@@ -106,8 +106,9 @@ private fun DocRow(topic: DocTopic, accent: Color) {
     var open by remember { mutableStateOf(false) }
     val rot by animateFloatAsState(if (open) 180f else 0f, label = "chev")
     Column(Modifier.fillMaxWidth().animateContentSize()) {
+        val ctx = androidx.compose.ui.platform.LocalContext.current
         Row(
-            Modifier.fillMaxWidth().clickable { open = !open }.padding(vertical = 11.dp),
+            Modifier.fillMaxWidth().clickable { com.ascend.lifeos.data.Haptics.tick(ctx); open = !open }.padding(vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -116,7 +117,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
             )
             Spacer(Modifier.width(10.dp))
             Icon(
-                Icons.Rounded.KeyboardArrowDown, null, tint = if (open) accent else TextMuted,
+                Icons.Rounded.KeyboardArrowDown, if (open) "Collapse" else "Expand", tint = if (open) accent else TextMuted,
                 modifier = Modifier.size(20.dp).rotate(rot),
             )
         }
@@ -186,7 +187,7 @@ private val CHAPTERS: List<DocChapter> = listOf(
             ),
             DocTopic(
                 "What each subsystem scores",
-                "Fuel: per logged day, 55% calories-vs-goal (a deficit is judged gently, not as a disaster) + 45% protein-vs-goal, protein only counted on days you logged it. Training: training days in the last 7 vs your weekly frequency target. Sleep: 7-night average total sleep vs an 8h (480 min) target. Hydration: total ml (water + detected drinks) vs your goal. Focus: screen time under budget (less is better). Logging: how many of the last 7 days you logged anything.",
+                "Fuel: per logged day, 55% calories-vs-goal (a deficit is judged gently, not as a disaster) + 45% protein-vs-goal, protein only counted on days you logged it. Training: training days in the last 7 vs your weekly frequency target. Sleep: 7-night average total sleep vs your learned sleep need (default 8h). Hydration: total ml (water + detected drinks) vs your goal. Focus: screen time under budget (less is better). Logging: how many of the last 7 days you logged anything.",
             ),
             DocTopic(
                 "The directives (next actions)",

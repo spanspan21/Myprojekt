@@ -125,7 +125,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
         Spacer(Modifier.height(18.dp))
 
@@ -221,7 +221,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     color = if (armed) Crit else TextDim,
                     fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp))
-                        .clickable { if (armed) onDelete() else armed = true }
+                        .clickable { if (armed) { onDelete(); com.ascend.lifeos.ui.kit.AppFeedback.show("Rule deleted") } else armed = true }
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }

@@ -81,11 +81,93 @@ object Prefs {
     const val SLEEP_NEED_AUTO = "sleep_need_auto"      // true
     const val GROWTH_TRACKING = "growth_tracking"      // false
     const val STRAIN_SLEEP_BOOST = "strain_sleep_boost" // true
+    const val SLEEP_TARGET_MIN = "sleep_target_min"    // 0 = auto (use learned or 8h default)
     const val SS_INTRA_REST = "ss_intra_rest"          // 0 (seconds between superset partners; Paz 2014: 0–60s)
+    const val GLASS_ML = "glass_ml"                    // 250 — water glass size in ml
+    const val BOTTLE_ML = "bottle_ml"                  // 500 — water bottle size in ml (long-press)
+    const val WATER_TRAIN_BONUS = "water_train_bonus"  // 500 — extra ml on training days
+    const val WATER_HEAT_BONUS = "water_heat_bonus"    // 300 — extra ml on hot days (>30°C)
+    const val WATER_ML_PER_KG = "water_ml_per_kg"      // 30 — base ml per kg bodyweight
+    const val KCAL_TOLERANCE = "kcal_tolerance"          // 150 — kcal margin before adherence shows amber
+    const val GAP_FILLER_HOUR = "gap_filler_hour"      // 17 — hour from which gap-filler suggestions appear
+    const val GAP_PROT_THRESH = "gap_prot_thresh"      // 25 — grams protein left to trigger gap-filler
+    const val GAP_KCAL_THRESH = "gap_kcal_thresh"      // 300 — kcal left to trigger gap-filler
+    const val GAP_KCAL_MIN = "gap_kcal_min"            // 120 — minimum kcal remaining for gap-filler to show
+    const val FRESHNESS_THRESHOLD = "freshness_thresh" // 45 (stored as int %, used as 0.45f) — muscle recovery threshold
+    const val PROTEIN_PER_MEAL = "protein_per_meal"    // 20 — grams per meal for "good" protein distribution
+    const val FREEZE_PER_WEEK = "freeze_per_week"      // 1 — streak freezes that reset weekly
+    const val BACKDATE_DAYS = "backdate_days"          // 30 — max days to backdate nutrition logs
+    const val DEFAULT_REST_SEC = "default_rest_sec"    // 90 — default rest timer for exercises without a specific value
+    const val STEP_GOAL = "step_goal"                  // 10000 — daily step goal
+    const val CUT_DEFICIT_PCT = "cut_deficit_pct"      // 20 — deficit % for cut goal
+    const val BULK_SURPLUS_PCT = "bulk_surplus_pct"    // 15 — surplus % for build goal
+    const val PROTEIN_MULT_HIGH = "protein_mult_high"  // 22 — protein g/10kg for cut/recomp (2.2 g/kg stored as *10)
+    const val PROTEIN_MULT_LOW = "protein_mult_low"    // 18 — protein g/10kg for maintain/build (1.8 g/kg stored as *10)
+    const val NOTE_CHAR_LIMIT = "note_char_limit"       // 1000 — max characters per note
+    const val RECENT_FOODS_COUNT = "recent_foods_count" // 12 — number of recent foods shown in NutritionAdd
+    const val QUICK_NOTE_LIMIT = "quick_note_limit"    // 60 — max chars for quick-log finance note
+    const val PRIME_DIRECTIVE_COUNT = "prime_dir_count" // 3 — max Prime directives shown
+    const val CHECKIN_SWITCH_HOUR = "checkin_switch_hr" // 15 — hour when morning check-in becomes evening
+    const val STRAIN_GREEN_LO = "strain_green_lo"      // 14 — green recovery set range low
+    const val STRAIN_GREEN_HI = "strain_green_hi"      // 20 — green recovery set range high
+    const val STRAIN_AMBER_LO = "strain_amber_lo"      // 10 — amber recovery set range low
+    const val STRAIN_AMBER_HI = "strain_amber_hi"      // 14 — amber recovery set range high
+    const val STRAIN_RED_LO = "strain_red_lo"          // 4 — red recovery set range low
+    const val STRAIN_RED_HI = "strain_red_hi"          // 8 — red recovery set range high
     // Calendar
+    const val CAL_HOUR_START = "cal_hour_start"        // 6 — timeline day start hour
+    const val CAL_HOUR_END = "cal_hour_end"            // 23 — timeline day end hour
+    const val CAL_WAKE_START = "cal_wake_start"        // 420 (07:00) — free-slot window start (min of day)
+    const val CAL_WAKE_END = "cal_wake_end"            // 1350 (22:30) — free-slot window end
+    const val CAL_MIN_SLOT = "cal_min_slot"            // 40 — minimum free slot minutes
     const val WEATHER_SLOTS = "weather_slots"          // true
     const val UNTIS_CHANGE_ALARM = "untis_change_alarm" // true
     // School
     const val HOMEWORK_PROMPT = "homework_prompt"      // true
     const val EXAM_COUNTDOWN = "exam_countdown"        // true
+    // Tour
+    // Guard score thresholds
+    const val FOCUS_GOOD = "focus_good"                // 70 — focus score >= this → Good color
+    const val FOCUS_WARN = "focus_warn"                // 45 — focus score >= this → Warn color (below = Crit)
+    const val SLEEP_DEBT_WARN = "sleep_debt_warn"      // 60 — sleep debt > this (minutes) shows warning
+    // Body readiness thresholds
+    const val READINESS_GOOD = "readiness_good"        // 75 — readiness >= this → Good
+    const val READINESS_WARN = "readiness_warn"        // 50 — readiness >= this → Warn (below = Crit)
+    const val HABIT_CONSIST_THRESH = "habit_consist_thresh" // 40 — % above which streak fallback shows consistency
+    const val SPREAD_FULL_G = "spread_full_g"              // 30 — grams per meal that count as a "full" protein serving
+    const val FOCUS_CUSTOM_MIN = "focus_custom_min"          // 45 — custom focus session duration
+    const val PICKUP_HOUR_GOOD = "pickup_hour_good"        // 8 — first pickup at or after this hour → full 10 pts
+    const val PICKUP_HOUR_OK = "pickup_hour_ok"            // 7 — first pickup at or after this hour → 7 pts
+    const val PICKUP_HOUR_LATE = "pickup_hour_late"        // 6 — first pickup at or after this hour → 3 pts
+    const val RESTORATIVE_PCT = "restorative_pct"          // 45 — % of total sleep that counts as "full" restorative
+    const val SLEEP_CONSIST_TIGHT = "sleep_consist_tight"  // 30 — spread ≤ this → TIGHT (Good)
+    const val SLEEP_CONSIST_OK = "sleep_consist_ok"        // 60 — spread ≤ this → OK (Warn), above = DRIFTING (Crit)
+    const val BUDGET_WARN_PCT = "budget_warn_pct"          // 75 — % of budget at which bar turns amber
+    const val SLEEP_SCORE_GOOD = "sleep_score_good"        // 75 — sleep score >= this → Good
+    const val SLEEP_SCORE_WARN = "sleep_score_warn"        // 55 — sleep score >= this → Warn
+    const val SLEEP_EFF_GOOD = "sleep_eff_good"            // 90 — sleep efficiency >= this → Good
+    const val SLEEP_EFF_WARN = "sleep_eff_warn"            // 85 — sleep efficiency >= this → Warn
+    // Timing
+    const val LATE_MEAL_HOUR = "late_meal_hour"          // 21 — eating after this hour tags "lateMeal" recovery factor
+    const val FOCUS_CARD_CUTOFF = "focus_card_cutoff"    // 12 — hour after which Today's Focus card hides
+    const val PROTEIN_NUDGE_MIN = "protein_nudge_min"    // 90 — minutes after workout for protein reminder
+    const val WORKOUT_HEADSUP_MIN = "workout_headsup_min" // 30 — minutes before scheduled session for heads-up
+    const val STUDY_BLOCK_MIN = "study_block_min"        // 45 — duration of auto-scheduled study blocks
+    const val PANIC_FOCUS_MIN = "panic_focus_min"        // 30 — default panic focus duration
+    const val DOOMSCROLL_SNOOZES = "doomscroll_snoozes"  // 2 — max snoozes before lockout
+    const val PROTEIN_HIT_PCT = "protein_hit_pct"        // 90 — % of protein goal to count a "protein hit" day
+    const val KCAL_ADHERENCE_PCT = "kcal_adherence_pct"  // 10 — % tolerance band for kcal adherence
+    const val DOOMSCROLL_WINDOW_MIN = "doomscroll_window_min" // 5 — snooze window in minutes
+    const val RECOVERY_LOOKBACK_H = "recovery_lookback_h"     // 72 — hours of fatigue lookback for muscle map
+    const val WARMUP_MIN = "warmup_min"                       // 10 — warm-up block duration in session plan
+    const val COOLDOWN_MIN = "cooldown_min"                   // 8 — cooldown block duration in session plan
+    const val REST_COMPOUND_SEC = "rest_compound_sec"         // 165 — rest seconds for compound lifts
+    const val REST_ACCESSORY_SEC = "rest_accessory_sec"       // 90 — rest seconds for accessories/holds
+    // Tour
+    const val TOUR_SEEN = "tour_seen"                  // false — one-time feature tour after first boot
+    // Notification times (minute-of-day; e.g. 420 = 07:00)
+    const val NOTIF_MORNING_MIN = "notif_morning_min"  // 420 (07:00)
+    const val NOTIF_FUEL_MIN = "notif_fuel_min"        // 780 (13:00)
+    const val NOTIF_EVENING_MIN = "notif_evening_min"  // 1230 (20:30)
+    const val NOTIF_WEEKLY_MIN = "notif_weekly_min"    // 1140 (19:00)
 }

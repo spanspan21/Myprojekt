@@ -76,7 +76,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                             }
                         }
                         Icon(
-                            Icons.Rounded.Close, null, tint = TextMuted,
+                            Icons.Rounded.Close, "Close", tint = TextMuted,
                             modifier = Modifier.size(22.dp).clickable(onClick = onClose),
                         )
                     }
@@ -141,9 +141,11 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                         Text("PR TIMELINE", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                         Spacer(Modifier.height(10.dp))
                     }
-                    items(prs.sortedByDescending { it.date }.take(12)) { pr ->
-                        PrTimelineRow(pr)
-                        Spacer(Modifier.height(6.dp))
+                    items(prs.sortedByDescending { it.date }.take(12), key = { it.id }) { pr ->
+                        Column(Modifier.animateItem()) {
+                            PrTimelineRow(pr)
+                            Spacer(Modifier.height(6.dp))
+                        }
                     }
                     item { Spacer(Modifier.height(12.dp)) }
                 }
@@ -154,9 +156,11 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                         Text("RECENT SETS", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                         Spacer(Modifier.height(10.dp))
                     }
-                    items(sets.take(15)) { s ->
-                        RecentSetRow(s)
-                        Spacer(Modifier.height(5.dp))
+                    items(sets.take(15), key = { it.id }) { s ->
+                        Column(Modifier.animateItem()) {
+                            RecentSetRow(s)
+                            Spacer(Modifier.height(5.dp))
+                        }
                     }
                 }
 

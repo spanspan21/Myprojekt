@@ -108,11 +108,12 @@ object SkillMeta {
         grade: Int,
         pathId: String? = null,
         now: Long = System.currentTimeMillis(),
-    ) {
+    ): Int {
         val s = readSrs(ctx, nodeId) ?: Srs(now, START_INTERVAL, START_EASE)
         val next = Sm2.next(grade, s.intervalDays, s.easeFactor)
         writeSrs(ctx, nodeId, Srs(now + (next.intervalDays * DAY_MS).toLong(), next.intervalDays, next.ease))
         if (pathId != null) bumpMonthlyReviews(ctx, pathId, now)
+        return next.intervalDays.toInt().coerceAtLeast(1)
     }
 
     // ---- reviews graded per month (XP source) -----------------------------------

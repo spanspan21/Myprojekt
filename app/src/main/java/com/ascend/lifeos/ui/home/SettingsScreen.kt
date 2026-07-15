@@ -11,7 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,9 +28,11 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Backup
 import com.ascend.lifeos.data.CrashLog
 import com.ascend.lifeos.data.JarvisSpeech
+import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Protocols
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
@@ -36,7 +40,7 @@ import kotlinx.coroutines.launch
 
 // ─── SETTINGS — every dial of the system, one screen ─────────────────────────
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     val ctx = LocalContext.current
@@ -88,6 +92,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 val ok = Backup.runNow(ctx)
                 backupState = if (ok) "Backup written ✓" else "Folder set — backup failed"
+                if (ok) com.ascend.lifeos.ui.kit.AppFeedback.show("Backup saved successfully")
             }
         }
     }
@@ -116,7 +121,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
         Spacer(Modifier.height(18.dp))
 
@@ -184,20 +189,77 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             }
             ToggleRow("Protocols", "WHEN→THEN rules across all modules", Prefs.PROTOCOLS_ON, true)
             ToggleRow("Daily insights", "One evidence-backed pattern per day", Prefs.INSIGHTS_ON, true)
+            var focusCutoff by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FOCUS_CARD_CUTOFF, 12)) }
+            GoalStepperRow("Focus card until", "${focusCutoff}:00",
+                onDec = { focusCutoff = (focusCutoff - 1).coerceAtLeast(8); Prefs.setInt(ctx, Prefs.FOCUS_CARD_CUTOFF, focusCutoff) },
+                onInc = { focusCutoff = (focusCutoff + 1).coerceAtMost(18); Prefs.setInt(ctx, Prefs.FOCUS_CARD_CUTOFF, focusCutoff) },
+            )
+            var lateMeal by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.LATE_MEAL_HOUR, 21)) }
+            GoalStepperRow("Late meal after", "${lateMeal}:00",
+                onDec = { lateMeal = (lateMeal - 1).coerceAtLeast(19); Prefs.setInt(ctx, Prefs.LATE_MEAL_HOUR, lateMeal) },
+                onInc = { lateMeal = (lateMeal + 1).coerceAtMost(23); Prefs.setInt(ctx, Prefs.LATE_MEAL_HOUR, lateMeal) },
+            )
+            var headsUp by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.WORKOUT_HEADSUP_MIN, 30)) }
+            GoalStepperRow("Workout heads-up", "${headsUp} min",
+                onDec = { headsUp = (headsUp - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.WORKOUT_HEADSUP_MIN, headsUp) },
+                onInc = { headsUp = (headsUp + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.WORKOUT_HEADSUP_MIN, headsUp) },
+            )
+            var protNudge by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROTEIN_NUDGE_MIN, 90)) }
+            GoalStepperRow("Protein nudge after", "${protNudge} min",
+                onDec = { protNudge = (protNudge - 15).coerceAtLeast(30); Prefs.setInt(ctx, Prefs.PROTEIN_NUDGE_MIN, protNudge) },
+                onInc = { protNudge = (protNudge + 15).coerceAtMost(180); Prefs.setInt(ctx, Prefs.PROTEIN_NUDGE_MIN, protNudge) },
+            )
         }
 
         // ── NOTIFICATIONS ────────────────────────────────────────────
         SettingsSection("Notifications") {
-            ToggleRow("Morning briefing", "07:00 — recovery + plan", Prefs.NOTIF_MORNING, true)
-            ToggleRow("Fuel check", "13:00 — only if nothing is logged", Prefs.NOTIF_FUEL, true)
-            ToggleRow("Evening review", "20:30 — with 1-tap check-in", Prefs.NOTIF_EVENING, true)
-            ToggleRow("Weekly report", "Sunday 19:00", Prefs.NOTIF_WEEKLY, true)
+            NotifToggleRow("Morning briefing", "recovery + plan", Prefs.NOTIF_MORNING, true, Prefs.NOTIF_MORNING_MIN, 420)
+            NotifToggleRow("Fuel check", "only if nothing is logged", Prefs.NOTIF_FUEL, true, Prefs.NOTIF_FUEL_MIN, 780)
+            NotifToggleRow("Evening review", "with 1-tap check-in", Prefs.NOTIF_EVENING, true, Prefs.NOTIF_EVENING_MIN, 1230)
+            NotifToggleRow("Weekly report", "Sunday", Prefs.NOTIF_WEEKLY, true, Prefs.NOTIF_WEEKLY_MIN, 1140)
         }
 
         // ── FINANCE ──────────────────────────────────────────────────
         SettingsSection("Finance") {
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
-            ToggleRow("Round-up savings", "Round each expense up to the euro into your first goal", Prefs.ROUNDUP_ON, false)
+            ToggleRow("Round-up savings", "Round each expense up to the euro into a savings goal", Prefs.ROUNDUP_ON, false)
+            if (Prefs.bool(ctx, Prefs.ROUNDUP_ON, false)) {
+                val goals = remember { com.ascend.lifeos.data.finance.FinanceStore.saveGoals(ctx) }
+                if (goals.size > 1) {
+                    var selGoal by remember { mutableStateOf(Prefs.string(ctx, Prefs.ROUNDUP_GOAL_ID, goals.first().id)) }
+                    Row(Modifier.fillMaxWidth().padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Round-up target", color = TextDim, fontSize = FS.s11, fontFamily = Body)
+                        Spacer(Modifier.weight(1f))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            goals.forEach { g ->
+                                val sel = g.id == selGoal
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(10.dp))
+                                        .background(if (sel) Mod.Finance.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                                        .clickable { selGoal = g.id; Prefs.setString(ctx, Prefs.ROUNDUP_GOAL_ID, g.id) }
+                                        .padding(horizontal = 8.dp, vertical = 5.dp),
+                                ) {
+                                    Text(
+                                        g.title.take(12), color = if (sel) Mod.Finance else TextDim,
+                                        fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            CategoryEditor()
+            var budgetWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.BUDGET_WARN_PCT, 75)) }
+            GoalStepperRow("Budget warning", "$budgetWarn%",
+                onDec = { budgetWarn = (budgetWarn - 5).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.BUDGET_WARN_PCT, budgetWarn) },
+                onInc = { budgetWarn = (budgetWarn + 5).coerceAtMost(95); Prefs.setInt(ctx, Prefs.BUDGET_WARN_PCT, budgetWarn) },
+            )
+            var qNoteLimit by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.QUICK_NOTE_LIMIT, 60)) }
+            GoalStepperRow("Quick-log note limit", "$qNoteLimit chars",
+                onDec = { qNoteLimit = (qNoteLimit - 10).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.QUICK_NOTE_LIMIT, qNoteLimit) },
+                onInc = { qNoteLimit = (qNoteLimit + 10).coerceAtMost(200); Prefs.setInt(ctx, Prefs.QUICK_NOTE_LIMIT, qNoteLimit) },
+            )
             ActionRow("Import bank CSV", csvImportState ?: "Load a transaction export from your bank (any format)") {
                 if (csvImportState != "Importing…") runCatching { csvPicker.launch("*/*") }
             }
@@ -206,8 +268,108 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── TRAINING ─────────────────────────────────────────────────
         SettingsSection("Training") {
             ToggleRow("Rest timer notification", "Countdown continues off-screen", Prefs.REST_NOTIFICATION, true)
+            var restSec by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.DEFAULT_REST_SEC, 90)) }
+            GoalStepperRow("Default rest", "${restSec}s",
+                onDec = { restSec = (restSec - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.DEFAULT_REST_SEC, restSec) },
+                onInc = { restSec = (restSec + 15).coerceAtMost(300); Prefs.setInt(ctx, Prefs.DEFAULT_REST_SEC, restSec) },
+            )
             ToggleRow("Strain target", "Recovery-based set range on the hub", Prefs.STRAIN_TARGET_ON, true)
+            if (Prefs.bool(ctx, Prefs.STRAIN_TARGET_ON, true)) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "SET RANGES BY RECOVERY ZONE", color = TextDim, fontFamily = Display,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                )
+                Spacer(Modifier.height(4.dp))
+                var gLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14)) }
+                var gHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_GREEN_HI, 20)) }
+                GoalStepperRow("Green (≥75)", "$gLo–$gHi sets",
+                    onDec = { gLo = (gLo - 1).coerceAtLeast(4); Prefs.setInt(ctx, Prefs.STRAIN_GREEN_LO, gLo) },
+                    onInc = { gHi = (gHi + 1).coerceAtMost(30); Prefs.setInt(ctx, Prefs.STRAIN_GREEN_HI, gHi) },
+                )
+                var aLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10)) }
+                var aHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_AMBER_HI, 14)) }
+                GoalStepperRow("Amber (≥50)", "$aLo–$aHi sets",
+                    onDec = { aLo = (aLo - 1).coerceAtLeast(2); Prefs.setInt(ctx, Prefs.STRAIN_AMBER_LO, aLo) },
+                    onInc = { aHi = (aHi + 1).coerceAtMost(25); Prefs.setInt(ctx, Prefs.STRAIN_AMBER_HI, aHi) },
+                )
+                var rLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_RED_LO, 4)) }
+                var rHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_RED_HI, 8)) }
+                GoalStepperRow("Red (<50)", "$rLo–$rHi sets",
+                    onDec = { rLo = (rLo - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.STRAIN_RED_LO, rLo) },
+                    onInc = { rHi = (rHi + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.STRAIN_RED_HI, rHi) },
+                )
+            }
+            var freshPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FRESHNESS_THRESHOLD, 45)) }
+            GoalStepperRow("Freshness threshold", "${freshPct}%",
+                onDec = { freshPct = (freshPct - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.FRESHNESS_THRESHOLD, freshPct) },
+                onInc = { freshPct = (freshPct + 5).coerceAtMost(80); Prefs.setInt(ctx, Prefs.FRESHNESS_THRESHOLD, freshPct) },
+            )
+            var recoveryH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RECOVERY_LOOKBACK_H, 72)) }
+            GoalStepperRow("Recovery lookback", "${recoveryH}h",
+                onDec = { recoveryH = (recoveryH - 12).coerceAtLeast(24); Prefs.setInt(ctx, Prefs.RECOVERY_LOOKBACK_H, recoveryH) },
+                onInc = { recoveryH = (recoveryH + 12).coerceAtMost(120); Prefs.setInt(ctx, Prefs.RECOVERY_LOOKBACK_H, recoveryH) },
+            )
+            var restComp by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.REST_COMPOUND_SEC, 165)) }
+            GoalStepperRow("Plan rest (compound)", "${restComp}s",
+                onDec = { restComp = (restComp - 15).coerceAtLeast(60); Prefs.setInt(ctx, Prefs.REST_COMPOUND_SEC, restComp) },
+                onInc = { restComp = (restComp + 15).coerceAtMost(300); Prefs.setInt(ctx, Prefs.REST_COMPOUND_SEC, restComp) },
+            )
+            var restAcc by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.REST_ACCESSORY_SEC, 90)) }
+            GoalStepperRow("Plan rest (accessory)", "${restAcc}s",
+                onDec = { restAcc = (restAcc - 15).coerceAtLeast(30); Prefs.setInt(ctx, Prefs.REST_ACCESSORY_SEC, restAcc) },
+                onInc = { restAcc = (restAcc + 15).coerceAtMost(180); Prefs.setInt(ctx, Prefs.REST_ACCESSORY_SEC, restAcc) },
+            )
+            var warmup by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.WARMUP_MIN, 10)) }
+            GoalStepperRow("Warm-up block", "${warmup} min",
+                onDec = { warmup = (warmup - 1).coerceAtLeast(3); Prefs.setInt(ctx, Prefs.WARMUP_MIN, warmup) },
+                onInc = { warmup = (warmup + 1).coerceAtMost(20); Prefs.setInt(ctx, Prefs.WARMUP_MIN, warmup) },
+            )
+            var cooldown by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.COOLDOWN_MIN, 8)) }
+            GoalStepperRow("Cooldown block", "${cooldown} min",
+                onDec = { cooldown = (cooldown - 1).coerceAtLeast(3); Prefs.setInt(ctx, Prefs.COOLDOWN_MIN, cooldown) },
+                onInc = { cooldown = (cooldown + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.COOLDOWN_MIN, cooldown) },
+            )
             ToggleRow("Camera rep counter", "Experimental — pose detection counts for you", Prefs.AUTO_COUNT, false)
+            ToggleRow(
+                "Weight vest", "Include vest exercises in plans",
+                on = Repo.profile().hasVest,
+                onToggle = { Repo.setTrainPrefs(Repo.profile().trainFreq, Repo.profile().sessionLen, it) },
+            )
+            var freq by remember { mutableIntStateOf(Repo.profile().trainFreq) }
+            GoalStepperRow("Sessions / week", "${freq}×",
+                onDec = { freq = (freq - 1).coerceAtLeast(2); Repo.setTrainPrefs(freq, Repo.profile().sessionLen, Repo.profile().hasVest) },
+                onInc = { freq = (freq + 1).coerceAtMost(6); Repo.setTrainPrefs(freq, Repo.profile().sessionLen, Repo.profile().hasVest) },
+            )
+            var sLen by remember { mutableIntStateOf(Repo.profile().sessionLen) }
+            GoalStepperRow("Session length", "${sLen}m",
+                onDec = { sLen = (sLen - 15).coerceAtLeast(20); Repo.setTrainPrefs(Repo.profile().trainFreq, sLen, Repo.profile().hasVest) },
+                onInc = { sLen = (sLen + 15).coerceAtMost(120); Repo.setTrainPrefs(Repo.profile().trainFreq, sLen, Repo.profile().hasVest) },
+            )
+            ToggleRow("Auto-schedule sessions", "JARVIS places sessions on your calendar vs you choose", Prefs.TRAIN_AUTO_SCHEDULE, true)
+            var barId by remember { mutableStateOf(Prefs.string(ctx, Prefs.PLATE_BAR, "belt")) }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Default bar", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("For the plate calculator", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    com.ascend.lifeos.data.training.PlateMath.BARS.forEach { bar ->
+                        val sel = bar.id == barId
+                        Box(
+                            Modifier.clip(RoundedCornerShape(10.dp))
+                                .background(if (sel) com.ascend.lifeos.ui.theme.Mod.Train.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                                .clickable { barId = bar.id; Prefs.setString(ctx, Prefs.PLATE_BAR, bar.id) }
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                        ) {
+                            Text(
+                                bar.label.take(8), color = if (sel) com.ascend.lifeos.ui.theme.Mod.Train else TextDim,
+                                fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
             RescheduleSettings()
 
             // ── primary sport: the universality dial — calendar words, muscle
@@ -291,16 +453,168 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             )
         }
 
+        // ── ACTIVITY LEVEL ────────────────────────────────────────────
+        SettingsSection("Activity level") {
+            var actLevel by remember { mutableIntStateOf(Repo.profile().activity) }
+            Text("Drives your TDEE multiplier for calorie targets", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+            Spacer(Modifier.height(6.dp))
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                listOf(1 to "Sedentary", 2 to "Light", 3 to "Moderate", 4 to "Active", 5 to "Very active").forEach { (id, label) ->
+                    val on = actLevel == id
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .clickable {
+                                actLevel = id
+                                val p = Repo.profile()
+                                Repo.setBodyStats(p.sex, p.age, p.heightCm, p.weightKg, id, p.dietGoal)
+                                val t = com.ascend.lifeos.data.NutritionCalc.compute(p.sex, p.age, p.heightCm, p.weightKg, id, p.dietGoal)
+                                Repo.setNutritionGoals(t.kcal, t.protein, t.carbs, t.fat)
+                            }
+                            .padding(horizontal = 11.dp, vertical = 7.dp),
+                    ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+        }
+
         // ── FUEL ─────────────────────────────────────────────────────
         SettingsSection("Fuel") {
-            // wired to the profile flag AdaptiveTdee actually reads — the old
-            // Prefs.TDEE_AUTO key was written here but read nowhere
+            val p = Repo.data.profile
+            val phaseLabel = when (p.dietGoal) { "lose" -> "Cut"; "gain" -> "Build"; "fuel" -> "Fuel"; "recomp" -> "Recomp"; else -> "Maintain" }
+            val phaseDays = p.dietPhaseSince?.let {
+                runCatching { (java.time.LocalDate.now().toEpochDay() - java.time.LocalDate.parse(it).toEpochDay()).toInt() }.getOrNull()
+            }
+            Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Diet phase", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "$phaseLabel${phaseDays?.let { " · day $it" } ?: ""}",
+                    color = Mod.Fuel, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
+            }
+            GoalStepperRow("Calorie goal", "${p.kcalGoal} kcal",
+                onDec = { Repo.setKcalGoal(p.kcalGoal - 100) },
+                onInc = { Repo.setKcalGoal(p.kcalGoal + 100) })
+            GoalStepperRow("Water goal", "${p.waterGoal} glasses",
+                onDec = { Repo.setWaterGoal(p.waterGoal - 1) },
+                onInc = { Repo.setWaterGoal(p.waterGoal + 1) })
             ToggleRow(
                 "Adaptive calorie goal", "Weekly recalibration from your real expenditure",
-                on = Repo.data.profile.kcalGoalAuto,
+                on = p.kcalGoalAuto,
                 onToggle = { Repo.setKcalGoalAuto(it) },
             )
             ToggleRow("Protein window nudge", "90 min after training, with 1-tap log", Prefs.PROTEIN_NUDGE, true)
+            var ppm by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROTEIN_PER_MEAL, 20)) }
+            GoalStepperRow("Protein per meal", "${ppm} g",
+                onDec = { ppm = (ppm - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.PROTEIN_PER_MEAL, ppm) },
+                onInc = { ppm = (ppm + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.PROTEIN_PER_MEAL, ppm) },
+            )
+            var spreadG by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SPREAD_FULL_G, 30)) }
+            GoalStepperRow("Spread bar full at", "${spreadG} g",
+                onDec = { spreadG = (spreadG - 5).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.SPREAD_FULL_G, spreadG) },
+                onInc = { spreadG = (spreadG + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.SPREAD_FULL_G, spreadG) },
+            )
+            var glassMl by remember { mutableIntStateOf(com.ascend.lifeos.data.WaterCalc.glassMl()) }
+            GoalStepperRow("Glass size", "${glassMl} ml",
+                onDec = { glassMl = (glassMl - 50).coerceAtLeast(150); Prefs.setInt(ctx, Prefs.GLASS_ML, glassMl) },
+                onInc = { glassMl = (glassMl + 50).coerceAtMost(500); Prefs.setInt(ctx, Prefs.GLASS_ML, glassMl) },
+            )
+            var bottleMl by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.BOTTLE_ML, 500)) }
+            GoalStepperRow("Bottle size (long-press)", "${bottleMl} ml",
+                onDec = { bottleMl = (bottleMl - 100).coerceAtLeast(200); Prefs.setInt(ctx, Prefs.BOTTLE_ML, bottleMl) },
+                onInc = { bottleMl = (bottleMl + 100).coerceAtMost(1500); Prefs.setInt(ctx, Prefs.BOTTLE_ML, bottleMl) },
+            )
+            var mlPerKg by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.WATER_ML_PER_KG, 30)) }
+            GoalStepperRow("Base hydration", "$mlPerKg ml/kg",
+                onDec = { mlPerKg = (mlPerKg - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.WATER_ML_PER_KG, mlPerKg) },
+                onInc = { mlPerKg = (mlPerKg + 5).coerceAtMost(50); Prefs.setInt(ctx, Prefs.WATER_ML_PER_KG, mlPerKg) },
+            )
+            var trainBonus by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.WATER_TRAIN_BONUS, 500)) }
+            GoalStepperRow("Training bonus", "$trainBonus ml",
+                onDec = { trainBonus = (trainBonus - 100).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.WATER_TRAIN_BONUS, trainBonus) },
+                onInc = { trainBonus = (trainBonus + 100).coerceAtMost(1000); Prefs.setInt(ctx, Prefs.WATER_TRAIN_BONUS, trainBonus) },
+            )
+            var kcalTol by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.KCAL_TOLERANCE, 150)) }
+            GoalStepperRow("Calorie tolerance", "$kcalTol kcal",
+                onDec = { kcalTol = (kcalTol - 25).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.KCAL_TOLERANCE, kcalTol) },
+                onInc = { kcalTol = (kcalTol + 25).coerceAtMost(400); Prefs.setInt(ctx, Prefs.KCAL_TOLERANCE, kcalTol) },
+            )
+            var gapHour by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GAP_FILLER_HOUR, 17)) }
+            GoalStepperRow("Gap filler from", "${gapHour}:00",
+                onDec = { gapHour = (gapHour - 1).coerceAtLeast(12); Prefs.setInt(ctx, Prefs.GAP_FILLER_HOUR, gapHour) },
+                onInc = { gapHour = (gapHour + 1).coerceAtMost(22); Prefs.setInt(ctx, Prefs.GAP_FILLER_HOUR, gapHour) },
+            )
+            var gapProt by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GAP_PROT_THRESH, 25)) }
+            GoalStepperRow("Gap protein trigger", "$gapProt g",
+                onDec = { gapProt = (gapProt - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.GAP_PROT_THRESH, gapProt) },
+                onInc = { gapProt = (gapProt + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.GAP_PROT_THRESH, gapProt) },
+            )
+            var gapKcal by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GAP_KCAL_THRESH, 300)) }
+            GoalStepperRow("Gap kcal trigger", "$gapKcal kcal",
+                onDec = { gapKcal = (gapKcal - 25).coerceAtLeast(100); Prefs.setInt(ctx, Prefs.GAP_KCAL_THRESH, gapKcal) },
+                onInc = { gapKcal = (gapKcal + 25).coerceAtMost(600); Prefs.setInt(ctx, Prefs.GAP_KCAL_THRESH, gapKcal) },
+            )
+            var gapMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GAP_KCAL_MIN, 120)) }
+            GoalStepperRow("Gap min kcal left", "$gapMin kcal",
+                onDec = { gapMin = (gapMin - 10).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.GAP_KCAL_MIN, gapMin) },
+                onInc = { gapMin = (gapMin + 10).coerceAtMost(300); Prefs.setInt(ctx, Prefs.GAP_KCAL_MIN, gapMin) },
+            )
+            var recentCount by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RECENT_FOODS_COUNT, 12)) }
+            GoalStepperRow("Recent foods shown", "$recentCount",
+                onDec = { recentCount = (recentCount - 2).coerceAtLeast(4); Prefs.setInt(ctx, Prefs.RECENT_FOODS_COUNT, recentCount) },
+                onInc = { recentCount = (recentCount + 2).coerceAtMost(30); Prefs.setInt(ctx, Prefs.RECENT_FOODS_COUNT, recentCount) },
+            )
+            var backDays by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.BACKDATE_DAYS, 30)) }
+            GoalStepperRow("Max backdate", "$backDays days",
+                onDec = { backDays = (backDays - 5).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.BACKDATE_DAYS, backDays) },
+                onInc = { backDays = (backDays + 5).coerceAtMost(90); Prefs.setInt(ctx, Prefs.BACKDATE_DAYS, backDays) },
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "CALORIE FORMULA", color = TextDim, fontFamily = Display,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            var cutPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CUT_DEFICIT_PCT, 20)) }
+            GoalStepperRow("Cut deficit", "$cutPct%",
+                onDec = { cutPct = (cutPct - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.CUT_DEFICIT_PCT, cutPct) },
+                onInc = { cutPct = (cutPct + 5).coerceAtMost(35); Prefs.setInt(ctx, Prefs.CUT_DEFICIT_PCT, cutPct) },
+            )
+            var bulkPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.BULK_SURPLUS_PCT, 15)) }
+            GoalStepperRow("Build surplus", "$bulkPct%",
+                onDec = { bulkPct = (bulkPct - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.BULK_SURPLUS_PCT, bulkPct) },
+                onInc = { bulkPct = (bulkPct + 5).coerceAtMost(30); Prefs.setInt(ctx, Prefs.BULK_SURPLUS_PCT, bulkPct) },
+            )
+            var protHigh by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROTEIN_MULT_HIGH, 22)) }
+            GoalStepperRow("Protein (cut/recomp)", "${"%.1f".format(protHigh / 10.0)} g/kg",
+                onDec = { protHigh = (protHigh - 1).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.PROTEIN_MULT_HIGH, protHigh) },
+                onInc = { protHigh = (protHigh + 1).coerceAtMost(30); Prefs.setInt(ctx, Prefs.PROTEIN_MULT_HIGH, protHigh) },
+            )
+            var protLow by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROTEIN_MULT_LOW, 18)) }
+            GoalStepperRow("Protein (build/maintain)", "${"%.1f".format(protLow / 10.0)} g/kg",
+                onDec = { protLow = (protLow - 1).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.PROTEIN_MULT_LOW, protLow) },
+                onInc = { protLow = (protLow + 1).coerceAtMost(25); Prefs.setInt(ctx, Prefs.PROTEIN_MULT_LOW, protLow) },
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "WEEKLY REVIEW", color = TextDim, fontFamily = Display,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            var protHitPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PROTEIN_HIT_PCT, 90)) }
+            GoalStepperRow("Protein hit", "${protHitPct}%",
+                onDec = { protHitPct = (protHitPct - 5).coerceAtLeast(70); Prefs.setInt(ctx, Prefs.PROTEIN_HIT_PCT, protHitPct) },
+                onInc = { protHitPct = (protHitPct + 5).coerceAtMost(100); Prefs.setInt(ctx, Prefs.PROTEIN_HIT_PCT, protHitPct) },
+            )
+            var kcalAdh by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.KCAL_ADHERENCE_PCT, 10)) }
+            GoalStepperRow("Kcal tolerance", "±${kcalAdh}%",
+                onDec = { kcalAdh = (kcalAdh - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.KCAL_ADHERENCE_PCT, kcalAdh) },
+                onInc = { kcalAdh = (kcalAdh + 5).coerceAtMost(25); Prefs.setInt(ctx, Prefs.KCAL_ADHERENCE_PCT, kcalAdh) },
+            )
         }
 
         // ── BODY ─────────────────────────────────────────────────────
@@ -308,11 +622,137 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ToggleRow("Illness early warning", "Resting-HR baseline watch", Prefs.SICKNESS_ALERT, true)
             ToggleRow("Learned sleep need", "From your free-day sleep instead of a fixed 8h", Prefs.SLEEP_NEED_AUTO, true)
             ToggleRow("Hard-day sleep boost", "Training and sport days raise the sleep target", Prefs.STRAIN_SLEEP_BOOST, true)
+            var sleepTarget by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_TARGET_MIN, 0)) }
+            GoalStepperRow(
+                "Sleep target",
+                if (sleepTarget == 0) "Auto" else "${sleepTarget / 60}h ${sleepTarget % 60}m",
+                onDec = { sleepTarget = (sleepTarget - 30).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, sleepTarget) },
+                onInc = {
+                    sleepTarget = if (sleepTarget == 0) 420 else (sleepTarget + 30).coerceAtMost(660)
+                    Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, sleepTarget)
+                },
+            )
             ToggleRow("Growth tracking", "Height measurements + growth-spurt adjustments", Prefs.GROWTH_TRACKING, false)
+            var checkInHour by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CHECKIN_SWITCH_HOUR, 15)) }
+            GoalStepperRow("Check-in switches at", "%02d:00".format(checkInHour),
+                onDec = { checkInHour = (checkInHour - 1).coerceAtLeast(12); Prefs.setInt(ctx, Prefs.CHECKIN_SWITCH_HOUR, checkInHour) },
+                onInc = { checkInHour = (checkInHour + 1).coerceAtMost(18); Prefs.setInt(ctx, Prefs.CHECKIN_SWITCH_HOUR, checkInHour) },
+            )
+            var stepGoal by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STEP_GOAL, 10000)) }
+            GoalStepperRow("Step goal", "${stepGoal / 1000}k",
+                onDec = { stepGoal = (stepGoal - 1000).coerceAtLeast(3000); Prefs.setInt(ctx, Prefs.STEP_GOAL, stepGoal) },
+                onInc = { stepGoal = (stepGoal + 1000).coerceAtMost(25000); Prefs.setInt(ctx, Prefs.STEP_GOAL, stepGoal) },
+            )
+            var rdGood by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.READINESS_GOOD, 75)) }
+            GoalStepperRow("Readiness green", "$rdGood%",
+                onDec = { rdGood = (rdGood - 5).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.READINESS_GOOD, rdGood) },
+                onInc = { rdGood = (rdGood + 5).coerceAtMost(95); Prefs.setInt(ctx, Prefs.READINESS_GOOD, rdGood) },
+            )
+            var rdWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.READINESS_WARN, 50)) }
+            GoalStepperRow("Readiness amber", "$rdWarn%",
+                onDec = { rdWarn = (rdWarn - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.READINESS_WARN, rdWarn) },
+                onInc = { rdWarn = (rdWarn + 5).coerceAtMost(rdGood - 5); Prefs.setInt(ctx, Prefs.READINESS_WARN, rdWarn) },
+            )
+            var debtWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60)) }
+            GoalStepperRow("Sleep debt warning", "${debtWarn}m",
+                onDec = { debtWarn = (debtWarn - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.SLEEP_DEBT_WARN, debtWarn) },
+                onInc = { debtWarn = (debtWarn + 15).coerceAtMost(180); Prefs.setInt(ctx, Prefs.SLEEP_DEBT_WARN, debtWarn) },
+            )
+            var restPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RESTORATIVE_PCT, 45)) }
+            GoalStepperRow("Restorative target", "$restPct%",
+                onDec = { restPct = (restPct - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.RESTORATIVE_PCT, restPct) },
+                onInc = { restPct = (restPct + 5).coerceAtMost(70); Prefs.setInt(ctx, Prefs.RESTORATIVE_PCT, restPct) },
+            )
+            var consTight by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_CONSIST_TIGHT, 30)) }
+            GoalStepperRow("Timing tight", "${consTight}m",
+                onDec = { consTight = (consTight - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.SLEEP_CONSIST_TIGHT, consTight) },
+                onInc = { consTight = (consTight + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.SLEEP_CONSIST_TIGHT, consTight) },
+            )
+            var consOk by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_CONSIST_OK, 60)) }
+            GoalStepperRow("Timing drifting", "${consOk}m",
+                onDec = { consOk = (consOk - 5).coerceAtLeast(consTight + 5); Prefs.setInt(ctx, Prefs.SLEEP_CONSIST_OK, consOk) },
+                onInc = { consOk = (consOk + 5).coerceAtMost(120); Prefs.setInt(ctx, Prefs.SLEEP_CONSIST_OK, consOk) },
+            )
+            var ssGood by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_SCORE_GOOD, 75)) }
+            GoalStepperRow("Sleep score green", "$ssGood",
+                onDec = { ssGood = (ssGood - 5).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.SLEEP_SCORE_GOOD, ssGood) },
+                onInc = { ssGood = (ssGood + 5).coerceAtMost(95); Prefs.setInt(ctx, Prefs.SLEEP_SCORE_GOOD, ssGood) },
+            )
+            var ssWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_SCORE_WARN, 55)) }
+            GoalStepperRow("Sleep score amber", "$ssWarn",
+                onDec = { ssWarn = (ssWarn - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.SLEEP_SCORE_WARN, ssWarn) },
+                onInc = { ssWarn = (ssWarn + 5).coerceAtMost(ssGood - 5); Prefs.setInt(ctx, Prefs.SLEEP_SCORE_WARN, ssWarn) },
+            )
+            var seGood by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_EFF_GOOD, 90)) }
+            GoalStepperRow("Efficiency green", "$seGood%",
+                onDec = { seGood = (seGood - 5).coerceAtLeast(70); Prefs.setInt(ctx, Prefs.SLEEP_EFF_GOOD, seGood) },
+                onInc = { seGood = (seGood + 5).coerceAtMost(98); Prefs.setInt(ctx, Prefs.SLEEP_EFF_GOOD, seGood) },
+            )
+            var seWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_EFF_WARN, 85)) }
+            GoalStepperRow("Efficiency amber", "$seWarn%",
+                onDec = { seWarn = (seWarn - 5).coerceAtLeast(60); Prefs.setInt(ctx, Prefs.SLEEP_EFF_WARN, seWarn) },
+                onInc = { seWarn = (seWarn + 5).coerceAtMost(seGood - 5); Prefs.setInt(ctx, Prefs.SLEEP_EFF_WARN, seWarn) },
+            )
+            var focGood by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FOCUS_GOOD, 70)) }
+            GoalStepperRow("Focus green", "$focGood",
+                onDec = { focGood = (focGood - 5).coerceAtLeast(40); Prefs.setInt(ctx, Prefs.FOCUS_GOOD, focGood) },
+                onInc = { focGood = (focGood + 5).coerceAtMost(95); Prefs.setInt(ctx, Prefs.FOCUS_GOOD, focGood) },
+            )
+            var focWarn by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FOCUS_WARN, 45)) }
+            GoalStepperRow("Focus amber", "$focWarn",
+                onDec = { focWarn = (focWarn - 5).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.FOCUS_WARN, focWarn) },
+                onInc = { focWarn = (focWarn + 5).coerceAtMost(focGood - 5); Prefs.setInt(ctx, Prefs.FOCUS_WARN, focWarn) },
+            )
+            var puGood by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PICKUP_HOUR_GOOD, 8)) }
+            GoalStepperRow("First pickup 10 pts", "${puGood}:00",
+                onDec = { puGood = (puGood - 1).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_GOOD, puGood) },
+                onInc = { puGood = (puGood + 1).coerceAtMost(12); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_GOOD, puGood) },
+            )
+            var focCustom by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FOCUS_CUSTOM_MIN, 45)) }
+            GoalStepperRow("Focus middle chip", "${focCustom} min",
+                onDec = { focCustom = (focCustom - 5).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.FOCUS_CUSTOM_MIN, focCustom) },
+                onInc = { focCustom = (focCustom + 5).coerceAtMost(120); Prefs.setInt(ctx, Prefs.FOCUS_CUSTOM_MIN, focCustom) },
+            )
+            var panicMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PANIC_FOCUS_MIN, 30)) }
+            GoalStepperRow("Panic focus", "${panicMin} min",
+                onDec = { panicMin = (panicMin - 5).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.PANIC_FOCUS_MIN, panicMin) },
+                onInc = { panicMin = (panicMin + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.PANIC_FOCUS_MIN, panicMin) },
+            )
+            var dsSnoozes by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.DOOMSCROLL_SNOOZES, 2)) }
+            GoalStepperRow("Doomscroll snoozes", "$dsSnoozes",
+                onDec = { dsSnoozes = (dsSnoozes - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.DOOMSCROLL_SNOOZES, dsSnoozes) },
+                onInc = { dsSnoozes = (dsSnoozes + 1).coerceAtMost(5); Prefs.setInt(ctx, Prefs.DOOMSCROLL_SNOOZES, dsSnoozes) },
+            )
+            var dsWindow by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.DOOMSCROLL_WINDOW_MIN, 5)) }
+            GoalStepperRow("Snooze window", "$dsWindow min",
+                onDec = { dsWindow = (dsWindow - 1).coerceAtLeast(2); Prefs.setInt(ctx, Prefs.DOOMSCROLL_WINDOW_MIN, dsWindow) },
+                onInc = { dsWindow = (dsWindow + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.DOOMSCROLL_WINDOW_MIN, dsWindow) },
+            )
         }
 
         // ── SCHOOL & CALENDAR ────────────────────────────────────────
         SettingsSection("School & Calendar") {
+            var calStart by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_HOUR_START, 6)) }
+            GoalStepperRow("Timeline start", "%02d:00".format(calStart),
+                onDec = { calStart = (calStart - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.CAL_HOUR_START, calStart) },
+                onInc = { calStart = (calStart + 1).coerceAtMost(10); Prefs.setInt(ctx, Prefs.CAL_HOUR_START, calStart) },
+            )
+            var calEnd by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_HOUR_END, 23)) }
+            GoalStepperRow("Timeline end", "%02d:00".format(calEnd),
+                onDec = { calEnd = (calEnd - 1).coerceAtLeast(18); Prefs.setInt(ctx, Prefs.CAL_HOUR_END, calEnd) },
+                onInc = { calEnd = (calEnd + 1).coerceAtMost(24); Prefs.setInt(ctx, Prefs.CAL_HOUR_END, calEnd) },
+            )
+            var minSlot by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_MIN_SLOT, 40)) }
+            GoalStepperRow("Min free slot", "${minSlot}m",
+                onDec = { minSlot = (minSlot - 10).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.CAL_MIN_SLOT, minSlot) },
+                onInc = { minSlot = (minSlot + 10).coerceAtMost(90); Prefs.setInt(ctx, Prefs.CAL_MIN_SLOT, minSlot) },
+            )
+            var studyMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STUDY_BLOCK_MIN, 45)) }
+            GoalStepperRow("Study block", "${studyMin} min",
+                onDec = { studyMin = (studyMin - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.STUDY_BLOCK_MIN, studyMin) },
+                onInc = { studyMin = (studyMin + 5).coerceAtMost(90); Prefs.setInt(ctx, Prefs.STUDY_BLOCK_MIN, studyMin) },
+            )
+            ToggleRow("Homework prompt", "Reminder after school to review the day's material", Prefs.HOMEWORK_PROMPT, true)
             ToggleRow("Exam countdown", "Home card from 7 days out", Prefs.EXAM_COUNTDOWN, true)
             ToggleRow("Timetable change alarm", "New cancellations become training suggestions", Prefs.UNTIS_CHANGE_ALARM, true)
             ToggleRow("Weather on free slots", "Sun glyph on outdoor-worthy slots", Prefs.WEATHER_SLOTS, true)
@@ -437,6 +877,26 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
             )
             Spacer(Modifier.height(10.dp))
+            var freezes by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FREEZE_PER_WEEK, 1)) }
+            GoalStepperRow("Streak freezes / week", "$freezes",
+                onDec = { freezes = (freezes - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.FREEZE_PER_WEEK, freezes) },
+                onInc = { freezes = (freezes + 1).coerceAtMost(3); Prefs.setInt(ctx, Prefs.FREEZE_PER_WEEK, freezes) },
+            )
+            var consistThresh by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.HABIT_CONSIST_THRESH, 40)) }
+            GoalStepperRow("Consistency threshold", "$consistThresh%",
+                onDec = { consistThresh = (consistThresh - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.HABIT_CONSIST_THRESH, consistThresh) },
+                onInc = { consistThresh = (consistThresh + 5).coerceAtMost(80); Prefs.setInt(ctx, Prefs.HABIT_CONSIST_THRESH, consistThresh) },
+            )
+            var dirCount by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PRIME_DIRECTIVE_COUNT, 3)) }
+            GoalStepperRow("Prime directives", "$dirCount",
+                onDec = { dirCount = (dirCount - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.PRIME_DIRECTIVE_COUNT, dirCount) },
+                onInc = { dirCount = (dirCount + 1).coerceAtMost(7); Prefs.setInt(ctx, Prefs.PRIME_DIRECTIVE_COUNT, dirCount) },
+            )
+            var screenBudget by remember { mutableIntStateOf(com.ascend.lifeos.wellbeing.WellbeingStore.budgetMin(ctx)) }
+            GoalStepperRow("Screen time budget", "${screenBudget / 60}h ${screenBudget % 60}m",
+                onDec = { screenBudget = (screenBudget - 30).coerceAtLeast(30); com.ascend.lifeos.wellbeing.WellbeingStore.setBudgetMin(ctx, screenBudget) },
+                onInc = { screenBudget = (screenBudget + 30).coerceAtMost(600); com.ascend.lifeos.wellbeing.WellbeingStore.setBudgetMin(ctx, screenBudget) },
+            )
             ToggleRow("Sounds", "PR, level-up and focus chimes", Prefs.SOUNDS_ON, true)
             ToggleRow("Haptics", "The tactile language of the app", Prefs.HAPTICS_ON, true)
             ActionRow("Live wallpaper", "Breathing JARVIS nebula for the home screen") {
@@ -481,6 +941,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             { "Synced ✓ ($it sections) — open your dashboard" },
                             { "Failed: ${it.message?.take(80)}" },
                         )
+                        r.onSuccess { com.ascend.lifeos.ui.kit.AppFeedback.show("Synced $it sections to dashboard") }
                     }
                 }
             }
@@ -494,6 +955,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                         val ok = Backup.runNow(ctx)
                         backupState = if (ok) "Backup written ✓" else "Backup failed"
+                    if (ok) com.ascend.lifeos.ui.kit.AppFeedback.show("Backup saved successfully")
                     }
                 } else runCatching { folderPicker.launch(null) }
             }
@@ -571,6 +1033,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 }
                 ActionRow("Clear crash logs", "Removes all stored reports") {
                     CrashLog.clear(ctx); crashStamp = null
+                    com.ascend.lifeos.ui.kit.AppFeedback.show("Crash logs cleared")
                 }
             }
         }
@@ -650,6 +1113,100 @@ private fun StepBtn(label: String, onClick: () -> Unit) {
 }
 
 @Composable
+private fun GoalStepperRow(label: String, value: String, onDec: () -> Unit, onInc: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        StepBtn("−", onDec)
+        Text(value, color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+            textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 80.dp).padding(horizontal = 6.dp))
+        StepBtn("+", onInc)
+    }
+}
+
+@Composable
+private fun CategoryEditor() {
+    val ctx = LocalContext.current
+    var cats by remember { mutableStateOf(LifeStores.categories(ctx).filter { it != "Income" }) }
+    var adding by remember { mutableStateOf(false) }
+    var newCat by remember { mutableStateOf("") }
+
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Text("Spending categories", color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+        Text("Tap × to remove, + to add", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            cats.forEach { c ->
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(c, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            "×", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                            modifier = Modifier.clip(CircleShape).clickable {
+                                cats = cats - c
+                                LifeStores.setCategories(ctx, cats + "Income")
+                            }.padding(horizontal = 2.dp),
+                        )
+                    }
+                }
+            }
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Mod.Finance.copy(alpha = 0.12f))
+                    .border(0.5.dp, Mod.Finance.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                    .clickable { adding = true }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text("+", color = Mod.Finance, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+            }
+        }
+        if (adding) {
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = newCat, onValueChange = { newCat = it.take(20) },
+                    placeholder = { Text("New category", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12) },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13),
+                )
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Mod.Finance.copy(alpha = 0.18f))
+                        .clickable {
+                            val name = newCat.trim()
+                            if (name.isNotBlank() && name !in cats) {
+                                cats = cats + name
+                                LifeStores.setCategories(ctx, cats + "Income")
+                            }
+                            newCat = ""
+                            adding = false
+                        }
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                ) {
+                    Text("Add", color = Mod.Finance, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     SectionLabel(title)
     Spacer(Modifier.height(8.dp))
@@ -664,6 +1221,52 @@ private fun ToggleRow(title: String, sub: String, key: String, default: Boolean)
     val ctx = LocalContext.current
     val on = Prefs.bool(ctx, key, default)
     ToggleRow(title, sub, on = on, onToggle = { Prefs.setBool(ctx, key, it) })
+}
+
+@Composable
+private fun NotifToggleRow(
+    title: String, sub: String, toggleKey: String, toggleDefault: Boolean,
+    timeKey: String, timeDefault: Int,
+) {
+    val ctx = LocalContext.current
+    val on = Prefs.bool(ctx, toggleKey, toggleDefault)
+    var minuteOfDay by remember { mutableIntStateOf(Prefs.int(ctx, timeKey, timeDefault)) }
+    var picking by remember { mutableStateOf(false) }
+    val hh = "%02d".format(minuteOfDay / 60)
+    val mm = "%02d".format(minuteOfDay % 60)
+    Row(
+        Modifier.fillMaxWidth().clickable { Prefs.setBool(ctx, toggleKey, !on) }.padding(vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = if (on) TextPrimary else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+        }
+        if (on) {
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Mod.Home.copy(alpha = 0.12f))
+                    .border(0.5.dp, Mod.Home.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                    .clickable { picking = true }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            ) {
+                Text("$hh:$mm", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Display, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.width(10.dp))
+        }
+        TogglePill(on)
+    }
+    if (picking) {
+        TimePickerSheet(minuteOfDay) { chosen ->
+            picking = false
+            if (chosen != null) {
+                minuteOfDay = chosen
+                Prefs.setInt(ctx, timeKey, chosen)
+                Notifier.schedule(ctx)
+            }
+        }
+    }
 }
 
 @Composable
@@ -706,6 +1309,71 @@ private fun ActionRow(title: String, sub: String, onClick: () -> Unit) {
             Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
         }
         Text("→", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14)
+    }
+}
+
+// ─── time picker sheet ──────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimePickerSheet(currentMin: Int, onResult: (Int?) -> Unit) {
+    var hour by remember { mutableIntStateOf(currentMin / 60) }
+    var minute by remember { mutableIntStateOf(currentMin % 60) }
+    ModalBottomSheet(
+        onDismissRequest = { onResult(null) },
+        containerColor = com.ascend.lifeos.ui.theme.Void,
+        scrimColor = com.ascend.lifeos.ui.theme.Void.copy(alpha = 0.5f),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "SET TIME", color = TextDim, fontFamily = Display,
+                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+            )
+            Spacer(Modifier.height(20.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TimeStepper(hour, 0, 23) { hour = it }
+                Text(" : ", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontFamily = Display, fontWeight = FontWeight.Bold)
+                TimeStepper(minute, 0, 59, step = 5) { minute = it }
+            }
+            Spacer(Modifier.height(24.dp))
+            Box(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Mod.Home)
+                    .clickable { onResult(hour * 60 + minute) }
+                    .padding(vertical = 13.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Save", color = com.ascend.lifeos.ui.theme.Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange: (Int) -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                .clickable { onChange((value + step).coerceAtMost(max)) },
+            contentAlignment = Alignment.Center,
+        ) { Text("▲", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14) }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "%02d".format(value), color = TextPrimary,
+            fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontFamily = Display, fontWeight = FontWeight.Bold,
+        )
+        Spacer(Modifier.height(6.dp))
+        Box(
+            Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                .clickable { onChange((value - step).coerceAtLeast(min)) },
+            contentAlignment = Alignment.Center,
+        ) { Text("▼", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14) }
     }
 }
 

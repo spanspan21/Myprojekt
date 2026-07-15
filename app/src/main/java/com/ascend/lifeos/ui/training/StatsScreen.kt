@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -34,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.HudChip
+import com.ascend.lifeos.ui.hud.HudFill
+import com.ascend.lifeos.ui.hud.HudLine
 import com.ascend.lifeos.ui.kit.endpointHalo
 import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.theme.*
@@ -53,7 +56,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
                 Spacer(Modifier.width(12.dp))
                 Text("Statistics", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
             }
@@ -139,9 +142,11 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                 Text("RECENT RECORDS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(10.dp))
             }
-            items(prs) { pr ->
-                PrRow(pr) { detailFor = pr.exerciseId }
-                Spacer(Modifier.height(6.dp))
+            items(prs, key = { it.id }) { pr ->
+                Column(Modifier.animateItem()) {
+                    PrRow(pr) { detailFor = pr.exerciseId }
+                    Spacer(Modifier.height(6.dp))
+                }
             }
         }
     }
@@ -186,9 +191,13 @@ private fun ActivityWeekBars(loads: FloatArray, modifier: Modifier) {
 @Composable
 private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
     if (sessions.isEmpty()) {
-        Box(modifier, contentAlignment = Alignment.Center) {
-            Text("No data yet", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
-        }
+        com.ascend.lifeos.ui.kit.EmptyState(
+            icon = Icons.Rounded.FitnessCenter,
+            title = "No volume data yet",
+            hint = "Complete your first workout to see progress",
+            accent = Mod.Train,
+            modifier = modifier,
+        )
         return
     }
     val volumes = sessions.map { it.session.totalReps.toFloat() }
@@ -263,7 +272,7 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>, allExercises: List<Ex
                 val color = when {
                     frac > 0.7f -> Good
                     frac > 0.3f -> Amber
-                    frac > 0f -> Color(0xFFFF6B6B)
+                    frac > 0f -> Crit
                     else -> TextDim.copy(alpha = 0.3f)
                 }
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -277,8 +286,12 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>, allExercises: List<Ex
                 }
             }
             if (muscleMap.isEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                Text("No data yet this week", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                com.ascend.lifeos.ui.kit.EmptyState(
+                    icon = Icons.Rounded.FitnessCenter,
+                    title = "No sets this week",
+                    hint = "Muscle volume appears here after your first session",
+                    accent = Mod.Train,
+                )
             }
         }
     }
@@ -319,9 +332,11 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
                         val dayOffset = (weeks - 1 - w) * 7 + (6 - d)
                         val dayKey = today - dayOffset
                         val trained = dayKey in daySet
+                        val isToday = dayOffset == 0
                         Box(
                             Modifier.size(12.dp).clip(RoundedCornerShape(2.dp))
-                                .background(if (trained) Accent.copy(alpha = 0.7f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)),
+                                .background(if (trained) Accent.copy(alpha = 0.7f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                                .then(if (isToday) Modifier.border(1.dp, Accent.copy(alpha = 0.6f), RoundedCornerShape(2.dp)) else Modifier),
                         )
                     }
                 }
@@ -334,10 +349,16 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
 
 @Composable
 private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val date = SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(Date(pr.date))
-    GlassPanel(Modifier.fillMaxWidth(), corner = 12.dp) {
+    val isToday = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).let { it.format(Date(pr.date)) == it.format(Date()) }
+    GlassPanel(
+        Modifier.fillMaxWidth(), corner = 12.dp,
+        fill = if (isToday) Amber.copy(alpha = 0.04f) else HudFill,
+        line = if (isToday) Amber.copy(alpha = 0.3f) else HudLine,
+    ) {
         Row(
-            Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(26.dp).clip(CircleShape).background(Amber.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
@@ -345,7 +366,13 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(pr.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(pr.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                    if (isToday) {
+                        Spacer(Modifier.width(6.dp))
+                        Text("NEW", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                    }
+                }
                 Text(prLabel(pr.type), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
             }
             Column(horizontalAlignment = Alignment.End) {

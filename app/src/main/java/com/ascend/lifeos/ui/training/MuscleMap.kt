@@ -27,8 +27,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.remember
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.Muscle
+import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.TextDim
+import com.ascend.lifeos.ui.theme.Warn
 
 // ─── JARVIS muscle map ───────────────────────────────────────────────────────
 // Real anatomical line art (front + back), rendered from MIT-licensed SVG
@@ -133,8 +135,8 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
         val f = freshness?.get(m)?.coerceIn(0f, 1f) ?: return null
         return when {
             f >= 0.72f -> null                                    // fresh → clean
-            f >= 0.45f -> Color(0xFFF5C451).copy(alpha = 0.16f)   // working on it
-            else -> Color(0xFFFF6169).copy(alpha = 0.22f)         // needs rest
+            f >= 0.45f -> Warn.copy(alpha = 0.16f)
+            else -> Crit.copy(alpha = 0.22f)
         }
     }
 
@@ -185,7 +187,7 @@ fun MuscleHeatMap(
     modifier: Modifier = Modifier,
 ) {
     val fresh = com.ascend.lifeos.ui.theme.Good
-    val fried = Color(0xFFFF6169)
+    val fried = Crit
     fun tint(m: Muscle): Color? {
         val f = freshness[m]?.coerceIn(0f, 1f) ?: return null
         return androidx.compose.ui.graphics.lerp(fried, fresh, f)

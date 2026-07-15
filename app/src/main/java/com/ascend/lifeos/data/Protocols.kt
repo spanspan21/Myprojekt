@@ -88,8 +88,8 @@ object Protocols {
                 // Count logged drinks too (hydrationMl), matching completion()/Home —
                 // otherwise a 1.5 L bottle day still nags "water is at 0".
                 val hydrationMl = Repo.hydrationMl(day)
-                if (hydrationMl * 2 < p.waterGoal * WaterCalc.GLASS_ML && LocalTime.now().hour >= 15) {
-                    "You trained but water is at ${hydrationMl / WaterCalc.GLASS_ML}/${p.waterGoal} — two glasses now."
+                if (hydrationMl * 2 < p.waterGoal * WaterCalc.glassMl() && LocalTime.now().hour >= 15) {
+                    "You trained but water is at ${hydrationMl / WaterCalc.glassMl()}/${p.waterGoal} — two glasses now."
                 } else null
             } else null
         },

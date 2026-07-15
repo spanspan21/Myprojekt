@@ -103,8 +103,8 @@ private fun DrawScope.drawCrystal(accent: Color, light: Float, glowI: Float) {
     val c = center
     val R = size.minDimension * 0.40f
     val N = 6
-    val light2 = lerp(accent, Color.White, 0.62f)
-    val deep = lerp(accent, Color.Black, 0.10f)
+    val light2 = lerp(accent, com.ascend.lifeos.ui.theme.Ivory, 0.62f)
+    val deep = lerp(accent, com.ascend.lifeos.ui.theme.Void, 0.10f)
 
     // 1 · glow halo behind the gem
     drawCircle(
@@ -145,7 +145,7 @@ private fun DrawScope.drawCrystal(accent: Color, light: Float, glowI: Float) {
     drawPath(
         tablePath,
         Brush.radialGradient(
-            listOf(lerp(light2, Color.White, 0.35f), light2),
+            listOf(lerp(light2, com.ascend.lifeos.ui.theme.Ivory, 0.35f), light2),
             center = c, radius = R * 0.6f,
         ),
     )
@@ -154,7 +154,7 @@ private fun DrawScope.drawCrystal(accent: Color, light: Float, glowI: Float) {
     fun edge(a: Offset, b: Offset, w: Float, col: Color) =
         drawLine(col, a, b, strokeWidth = w, cap = StrokeCap.Round)
     val glowCol = accent.copy(alpha = 0.5f * glowI)
-    val crisp = lerp(accent, Color.White, 0.15f)
+    val crisp = lerp(accent, com.ascend.lifeos.ui.theme.Ivory, 0.15f)
     for (i in 0 until N) {
         val o0 = outer[i]; val o1 = outer[(i + 1) % N]
         edge(o0, o1, 6f, glowCol); edge(o0, o1, 2.2f, crisp)                       // outer rim
@@ -166,6 +166,6 @@ private fun DrawScope.drawCrystal(accent: Color, light: Float, glowI: Float) {
     val ch = R * 0.22f
     val cy = c.y - ch * 0.3f
     val p1 = Offset(c.x - ch, cy); val p2 = Offset(c.x, cy + ch); val p3 = Offset(c.x + ch, cy)
-    edge(p1, p2, 7f, Color.White.copy(alpha = 0.6f * glowI)); edge(p2, p3, 7f, Color.White.copy(alpha = 0.6f * glowI))
-    edge(p1, p2, 2.6f, Color.White); edge(p2, p3, 2.6f, Color.White)
+    edge(p1, p2, 7f, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.6f * glowI)); edge(p2, p3, 7f, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.6f * glowI))
+    edge(p1, p2, 2.6f, com.ascend.lifeos.ui.theme.Ivory); edge(p2, p3, 2.6f, com.ascend.lifeos.ui.theme.Ivory)
 }

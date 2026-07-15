@@ -19,14 +19,29 @@ object NutritionCalc {
         "gain" to "Build",
     )
 
+    data class Breakdown(val bmr: Int, val activityFactor: Double, val tdee: Int, val goalAdj: String, val targets: Targets)
+
+    fun breakdown(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, goal: String): Breakdown {
+        val w = weightKg.coerceIn(30, 300)
+        val bmr = 10.0 * w + 6.25 * heightCm.coerceIn(120, 230) - 5.0 * age.coerceIn(12, 100) + if (sex == "f") -161 else 5
+        val af = when (activity) { 1 -> 1.2; 2 -> 1.375; 3 -> 1.55; 4 -> 1.725; else -> 1.9 }
+        val tdee = (bmr * af).roundToInt()
+        val adj = when (goal) { "lose" -> "−deficit"; "gain" -> "+surplus"; else -> "maintenance" }
+        return Breakdown(bmr.roundToInt(), af, tdee, adj, compute(sex, age, heightCm, weightKg, activity, goal))
+    }
+
     fun compute(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, goal: String): Targets {
         val w = weightKg.coerceIn(30, 300)
         val bmr = 10.0 * w + 6.25 * heightCm.coerceIn(120, 230) - 5.0 * age.coerceIn(12, 100) + if (sex == "f") -161 else 5
         val af = when (activity) { 1 -> 1.2; 2 -> 1.375; 3 -> 1.55; 4 -> 1.725; else -> 1.9 }
         var kcal = bmr * af
-        // recomp/fuel hold maintenance — their edge is macro split, not the budget
-        kcal += when (goal) { "lose" -> -0.20 * kcal; "gain" -> 0.15 * kcal; else -> 0.0 }
-        val protein = ((if (goal == "lose" || goal == "recomp") 2.2 else 1.8) * w).roundToInt()
+        val ctx = Repo.appContextOrNull()
+        val cutPct = (ctx?.let { Prefs.int(it, Prefs.CUT_DEFICIT_PCT, 20) } ?: 20) / 100.0
+        val bulkPct = (ctx?.let { Prefs.int(it, Prefs.BULK_SURPLUS_PCT, 15) } ?: 15) / 100.0
+        kcal += when (goal) { "lose" -> -cutPct * kcal; "gain" -> bulkPct * kcal; else -> 0.0 }
+        val protHigh = (ctx?.let { Prefs.int(it, Prefs.PROTEIN_MULT_HIGH, 22) } ?: 22) / 10.0
+        val protLow = (ctx?.let { Prefs.int(it, Prefs.PROTEIN_MULT_LOW, 18) } ?: 18) / 10.0
+        val protein = ((if (goal == "lose" || goal == "recomp") protHigh else protLow) * w).roundToInt()
         val fat = ((if (goal == "fuel") 0.8 else 0.9) * w).roundToInt()
         val carbs = ((kcal - protein * 4 - fat * 9) / 4).roundToInt().coerceAtLeast(0)
         return Targets(kcal.roundToInt(), protein, carbs, fat)

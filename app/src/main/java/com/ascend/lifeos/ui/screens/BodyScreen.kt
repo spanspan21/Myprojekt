@@ -107,17 +107,19 @@ fun BodyScreen() {
 
     val h = Repo.data.health
     val score = Repo.recoveryScoreV2(h)
+    val rdGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_GOOD, 75)
+    val rdWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_WARN, 50)
     val scoreColor = when {
         score == null -> TextDim
-        score >= 75 -> Good
-        score >= 50 -> Warn
+        score >= rdGood -> Good
+        score >= rdWarn -> Warn
         else -> Crit
     }
     val directive = when {
         score == null && hcLinked == true -> "Linked — waiting for tonight's sleep"
         score == null -> "No sleep signal — connect your watch"
-        score >= 75 -> "Green — full send today"
-        score >= 50 -> "Amber — train, but keep headroom"
+        score >= rdGood -> "Green — full send today"
+        score >= rdWarn -> "Amber — train, but keep headroom"
         else -> "Red — recovery is the workout"
     }
 
@@ -165,9 +167,10 @@ fun BodyScreen() {
                     Column(Modifier.weight(1f)) {
                         val sm = h?.sleepMin
                         if (sm != null) {
-                            WhyRow("Sleep", "${sm / 60}h ${sm % 60}m", (sm / 480f).coerceIn(0f, 1f))
+                            WhyRow("Sleep", "${sm / 60}h ${sm % 60}m", (sm / Repo.sleepNeedMin().toFloat()).coerceIn(0f, 1f))
                             val restShare = if (sm > 0) (h.rem + h.deep) * 100 / sm else 0
-                            WhyRow("Restorative", "$restShare%", (restShare / 45f).coerceIn(0f, 1f))
+                            val restTarget = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RESTORATIVE_PCT, 45)
+                            WhyRow("Restorative", "$restShare%", (restShare / restTarget.toFloat()).coerceIn(0f, 1f))
                             val base = Repo.rhrBaseline()
                             val rhr = h.restingHr
                             if (rhr != null) {
@@ -240,9 +243,11 @@ fun BodyScreen() {
                             color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                         )
                     }
-                    val c = when { spread <= 30 -> Good; spread <= 60 -> Warn; else -> Crit }
+                    val cTight = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_CONSIST_TIGHT, 30)
+                    val cOk = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_CONSIST_OK, 60)
+                    val c = when { spread <= cTight -> Good; spread <= cOk -> Warn; else -> Crit }
                     Text(
-                        when { spread <= 30 -> "TIGHT"; spread <= 60 -> "OK"; else -> "DRIFTING" },
+                        when { spread <= cTight -> "TIGHT"; spread <= cOk -> "OK"; else -> "DRIFTING" },
                         color = c, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                     )
@@ -277,6 +282,20 @@ fun BodyScreen() {
                             }
                             Text("$sScore", color = sColor, style = metricStyle(26))
                         }
+                        val recScore = Repo.recoveryScore(h)
+                        if (recScore != null) {
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Recovery", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                                Spacer(Modifier.weight(1f))
+                                val rColor = when {
+                                    recScore >= com.ascend.lifeos.domain.RecoveryEngine.THRESHOLD_GREEN -> Good
+                                    recScore >= com.ascend.lifeos.domain.RecoveryEngine.THRESHOLD_RED -> Warn
+                                    else -> Crit
+                                }
+                                Text("$recScore", color = rColor, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Display, fontWeight = FontWeight.ExtraBold)
+                            }
+                        }
                         Spacer(Modifier.height(12.dp))
                         Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)))
                         Spacer(Modifier.height(12.dp))
@@ -286,6 +305,23 @@ fun BodyScreen() {
                     StageBar("Deep", h.deep, total, Blue)
                     StageBar("Light", h.light, total, Mod.Body)
                     StageBar("Awake", h.awake, total, TextDim)
+                    val debt = Repo.sleepDebtMin()
+                    if (debt != 0) {
+                        Spacer(Modifier.height(10.dp))
+                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)))
+                        Spacer(Modifier.height(10.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("14-night debt", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                            Spacer(Modifier.weight(1f))
+                            val absDebt = kotlin.math.abs(debt)
+                            val debtWarnMin = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_DEBT_WARN, 60) / 2
+                            Text(
+                                "${if (debt > 0) "+" else "−"}${absDebt / 60}h ${absDebt % 60}m",
+                                color = if (debt > debtWarnMin) Crit else if (debt > 0) Warn else Good,
+                                fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -311,7 +347,7 @@ fun BodyScreen() {
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (sel) Mod.Body.copy(alpha = 0.14f) else Color.Transparent)
-                        .clickable { trendDays = d }
+                        .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); trendDays = d }
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                 )
             }
@@ -465,6 +501,9 @@ fun BodyScreen() {
             Spacer(Modifier.height(20.dp))
         }
 
+        // ── mood timeline (today's logged moods) ─────────────────────
+        MoodTimelineCard()
+
         // ── journal factor impacts (Whoop 5+5 rule) ──────────────────
         JournalImpactCards()
 
@@ -477,7 +516,7 @@ fun BodyScreen() {
         val log = Repo.weightLog()
         Panel(Modifier.fillMaxWidth(), corner = 18.dp, onClick = { weightOpen = true }) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.MonitorWeight, null, tint = Mod.Body, modifier = Modifier.size(20.dp))
+                Icon(Icons.Rounded.MonitorWeight, "Weight log", tint = Mod.Body, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     if (log.isEmpty()) {
@@ -487,10 +526,36 @@ fun BodyScreen() {
                         val latest = log.last().kg
                         val weekAgo = log.lastOrNull { it.ts < System.currentTimeMillis() - 6L * 86_400_000 }?.kg
                         val delta = weekAgo?.let { latest - it }
-                        Text("%.1f kg".format(latest), color = TextPrimary, style = metricStyle(20))
-                        // the scale line speaks the goal's language — a flat week
-                        // IS the recomp plan, not a stall (same story as the coach)
+                        val heightM = Repo.data.profile.heightCm / 100.0
+                        val bmi = if (heightM > 0) latest / (heightM * heightM) else null
                         val goal = com.ascend.lifeos.data.Repo.data.profile.dietGoal
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text("%.1f kg".format(latest), color = TextPrimary, style = metricStyle(20))
+                            if (delta != null) {
+                                Spacer(Modifier.width(6.dp))
+                                val arrow = when { delta > 0.15 -> "↑"; delta < -0.15 -> "↓"; else -> "→" }
+                                val arrowColor = when (goal) {
+                                    "lose" -> if (delta < -0.15) Good else if (delta > 0.15) Warn else Amber
+                                    "gain" -> if (delta > 0.15) Good else if (delta < -0.15) Warn else Amber
+                                    else -> if (kotlin.math.abs(delta) < 0.4) Good else Amber
+                                }
+                                Text(arrow, color = arrowColor, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
+                            }
+                            if (bmi != null) {
+                                Spacer(Modifier.width(8.dp))
+                                val bmiColor = when {
+                                    bmi < 18.5 -> Warn
+                                    bmi < 25.0 -> Good
+                                    bmi < 30.0 -> Warn
+                                    else -> Crit
+                                }
+                                Text(
+                                    "BMI ${"%.1f".format(bmi)}",
+                                    color = bmiColor, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                                    fontFamily = Body, fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
                         Text(
                             delta?.let { d ->
                                 val s = "%.1f kg vs last week".format(d).let { t -> if (d >= 0) "+$t" else t }
@@ -513,6 +578,65 @@ fun BodyScreen() {
             }
         }
 
+        // ── weight trend detail (rate of change) ──────────────────
+        if (log.size >= 7) {
+            Spacer(Modifier.height(12.dp))
+            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Weight trend", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    val now = System.currentTimeMillis()
+                    val week1 = log.filter { it.ts > now - 7L * 86_400_000 }
+                    val week2 = log.filter { it.ts in (now - 14L * 86_400_000)..(now - 7L * 86_400_000) }
+                    val avg1 = week1.takeIf { it.isNotEmpty() }?.map { it.kg }?.average()
+                    val avg2 = week2.takeIf { it.isNotEmpty() }?.map { it.kg }?.average()
+                    if (avg1 != null) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("This week", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                                Text("%.1f kg".format(avg1), color = TextPrimary, style = metricStyle(16))
+                            }
+                            if (avg2 != null) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Last week", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                                    Text("%.1f kg".format(avg2), color = TextPrimary, style = metricStyle(16))
+                                }
+                                val rate = avg1 - avg2
+                                val rColor = when {
+                                    kotlin.math.abs(rate) < 0.2 -> Good
+                                    else -> Warn
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Rate", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                                    Text(
+                                        (if (rate >= 0) "+" else "") + "%.1f kg/wk".format(rate),
+                                        color = rColor, style = metricStyle(16),
+                                    )
+                                }
+                            }
+                        }
+                        if (avg2 != null) {
+                            val rate = avg1 - avg2
+                            val goal = Repo.data.profile.dietGoal
+                            val commentary = when {
+                                goal == "lose" && rate < -0.3 -> "On track — losing at a healthy pace"
+                                goal == "lose" && rate > 0.1 -> "Weight trending up during a cut — review intake"
+                                goal == "gain" && rate > 0.2 && rate < 0.6 -> "Lean gaining — right on target"
+                                goal == "gain" && rate > 0.6 -> "Gaining fast — consider dialing back slightly"
+                                goal == "recomp" && kotlin.math.abs(rate) < 0.3 -> "Holding steady — body recomp in action"
+                                kotlin.math.abs(rate) < 0.1 -> "Perfectly stable"
+                                else -> null
+                            }
+                            commentary?.let {
+                                Spacer(Modifier.height(8.dp))
+                                Text(it, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // tape-measure progress — arms, chest, waist, thigh
         MeasurementsCard()
     }
@@ -523,6 +647,7 @@ fun BodyScreen() {
 
 @Composable
 private fun SleepSheet(onDismiss: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var minutes by remember { mutableStateOf(Repo.bodyDay()?.sleepMin?.takeIf { it > 0 } ?: 450) }
     JarvisSheet(onDismiss = onDismiss) {
         Column(
@@ -550,7 +675,7 @@ private fun SleepSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
-                    .clickable { Repo.logManualSleep(minutes); onDismiss() }
+                    .clickable { Repo.logManualSleep(minutes); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep logged"); onDismiss() }
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -614,6 +739,7 @@ private fun MeasurementsCard() {
 
 @Composable
 private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var cm by remember {
         mutableStateOf(
             Repo.data.profile.measurements[key]?.lastOrNull()?.cm
@@ -648,6 +774,8 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
                     .clickable {
                         Repo.logMeasurement(key, cm)
+                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show("Measurement saved")
                         onDismiss()
                     }
                     .padding(vertical = 14.dp),
@@ -715,9 +843,11 @@ private fun TrendTile(label: String, values: List<Float>, color: Color, modifier
 
 @Composable
 private fun CheckInCard() {
+    val ctx = LocalContext.current
     val hour = LocalTime.now().hour
     val d = Repo.bodyDay()
-    val morning = hour < 15
+    val switchHour = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.CHECKIN_SWITCH_HOUR, 15)
+    val morning = hour < switchHour
 
     val morningDone = d?.morningEnergy != null && d.soreness != null
     val eveningDone = d?.eveningStress != null
@@ -796,6 +926,12 @@ private fun CheckInCard() {
                     FactorChip("Late meal", d?.fLateMeal == true) { on -> Repo.setJournalFactor(lateMeal = on) }
                     FactorChip("Screen in bed", d?.fScreenLate == true) { on -> Repo.setJournalFactor(screenLate = on) }
                 }
+                Spacer(Modifier.height(7.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    FactorChip("Meditation", d?.fMeditation == true) { on -> Repo.setJournalFactor(meditation = on) }
+                    FactorChip("Supplements", d?.fSupplements == true) { on -> Repo.setJournalFactor(supplements = on) }
+                    FactorChip("Late exercise", d?.fLateExercise == true) { on -> Repo.setJournalFactor(lateExercise = on) }
+                }
             }
             }
         }
@@ -807,11 +943,12 @@ private fun CheckInCard() {
 
 @Composable
 private fun FactorChip(label: String, on: Boolean, onToggle: (Boolean) -> Unit) {
+    val ctx = LocalContext.current
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) Mod.Body.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) Mod.Body.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .clickable { onToggle(!on) }
+            .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onToggle(!on) }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) Mod.Body else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -825,6 +962,9 @@ private fun JournalImpactCards() {
             "Late caffeine" to Repo.journalImpact { it.fCaffeineLate },
             "Late meals" to Repo.journalImpact { it.fLateMeal },
             "Screen in bed" to Repo.journalImpact { it.fScreenLate },
+            "Meditation" to Repo.journalImpact { it.fMeditation },
+            "Supplements" to Repo.journalImpact { it.fSupplements },
+            "Late exercise" to Repo.journalImpact { it.fLateExercise },
         ).mapNotNull { (name, v) -> v?.let { name to it } }
             .filter { kotlin.math.abs(it.second) >= 2.0 }
     }
@@ -851,6 +991,7 @@ private fun JournalImpactCards() {
 
 @Composable
 private fun SickModeRow() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val sick = Repo.data.profile.sickMode
     Panel(
         Modifier.fillMaxWidth(), corner = 16.dp,
@@ -873,7 +1014,11 @@ private fun SickModeRow() {
                 Modifier.clip(RoundedCornerShape(11.dp))
                     .background(if (sick) Crit.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                     .border(0.5.dp, if (sick) Crit.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                    .clickable { Repo.setSickMode(!sick) }
+                    .clickable {
+                        Repo.setSickMode(!sick)
+                        com.ascend.lifeos.data.Haptics.warn(ctx)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show(if (!sick) "Sick mode on — streak paused" else "Sick mode off — back to normal")
+                    }
                     .padding(horizontal = 13.dp, vertical = 8.dp),
             ) {
                 Text(
@@ -888,11 +1033,12 @@ private fun SickModeRow() {
 
 @Composable
 private fun CheckChip(label: String, color: Color, onClick: () -> Unit) {
+    val ccCtx = LocalContext.current
     Box(
         Modifier.clip(RoundedCornerShape(11.dp))
             .background(color.copy(alpha = 0.10f))
             .border(0.5.dp, color.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-            .clickable(onClick = onClick)
+            .clickable { com.ascend.lifeos.data.Haptics.tick(ccCtx); onClick() }
             .padding(horizontal = 15.dp, vertical = 9.dp),
     ) { Text(label, color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -992,6 +1138,7 @@ private fun CorrelationCard() {
 
 @Composable
 private fun WeightSheet(onDismiss: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var kg by remember {
         mutableStateOf(Repo.weightLog().lastOrNull()?.kg ?: Repo.data.profile.weightKg.toDouble())
     }
@@ -1023,12 +1170,68 @@ private fun WeightSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
                     .clickable {
                         Repo.logWeight(kg)
+                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show("Weight logged")
                         onDismiss()
                     }
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+// ─── mood timeline card — today's logged moods as a mini-chart ──────────────
+
+private val MOOD_DOT_COLORS @Composable get() = listOf(Crit, Orange, Warn, Good, Cyan)
+
+@Composable
+private fun MoodTimelineCard() {
+    val entries = Repo.bodyDay()?.moodTimeline.orEmpty()
+    if (entries.isEmpty()) return
+    val avg = entries.map { it.level }.average()
+
+    Spacer(Modifier.height(12.dp))
+    Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Mood today", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "Ø %.1f".format(avg), fontFamily = Body,
+                    color = MOOD_DOT_COLORS[(avg - 1).toInt().coerceIn(0, 4)],
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.ExtraBold,
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(
+                Modifier.fillMaxWidth().height(36.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                entries.forEach { e ->
+                    val color = MOOD_DOT_COLORS[(e.level - 1).coerceIn(0, 4)]
+                    val h = (8 + (e.level - 1) * 7).dp
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f, fill = false)) {
+                        Box(
+                            Modifier.width(6.dp).height(h).clip(RoundedCornerShape(3.dp)).background(color),
+                        )
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            "%02d:%02d".format(e.minuteOfDay / 60, e.minuteOfDay % 60),
+                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontFamily = Body,
+                        )
+                        if (e.note.isNotBlank()) {
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                e.note, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s7_5,
+                                fontFamily = Body, maxLines = 1, textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

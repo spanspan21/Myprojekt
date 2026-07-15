@@ -119,8 +119,8 @@ object PlanGenerator {
         // note was a lie. Sick mode returns early above, so it isn't a factor here.
         val extScale = seasonScale * detrainScale * (if (examWeek) 0.70 else 1.0)
 
-        // BIG units: sessions are 60–120 min structured blocks
-        val len = sessionLen.coerceIn(60, 120)
+        // BIG units: sessions are 30–120 min structured blocks
+        val len = sessionLen.coerceIn(30, 120)
         val isDeload = deload || mesoDeload
         val seasonWord = when (season) {
             "OFF" -> "off-season build"
@@ -322,7 +322,7 @@ object PlanGenerator {
                 val dayTl = CalendarRepo.timelineFor(ctx, d, entities)
                 val hockeyDay = dayTl.blocks.any { it.type == EventType.HOCKEY }
                 if (hockeyDay) continue
-                val minStart = if (d == today) nowMin + 15 else CalendarRepo.WAKE_START
+                val minStart = if (d == today) nowMin + 15 else CalendarRepo.wakeStart()
                 for (s in dayTl.freeSlots) {
                     var start = maxOf(s.startMin, minStart)
                     // shift past ranges claimed earlier in this run (sorted → one pass)
@@ -407,15 +407,17 @@ object PlanGenerator {
 
         // Rest by load: heavy chain compounds / near-failure work want full ATP-PC
         // recovery (evidence favours 2–3 min for strength); accessories 60–90 s.
-        fun restFor(isCompound: Boolean, isHold: Boolean): Int = when {
-            isHold -> 90
-            isCompound -> 165
-            else -> 90
+        fun restFor(isCompound: Boolean, isHold: Boolean): Int {
+            val ctx = com.ascend.lifeos.data.Repo.appContextOrNull()
+            return when {
+                isHold -> ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.REST_ACCESSORY_SEC, 90) } ?: 90
+                isCompound -> ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.REST_COMPOUND_SEC, 165) } ?: 165
+                else -> ctx?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.REST_ACCESSORY_SEC, 90) } ?: 90
+            }
         }
 
-        // block minute budgets for a normal day
-        val warmMin = 10
-        val coolMin = 8
+        val warmMin get() = com.ascend.lifeos.data.Repo.appContextOrNull()?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.WARMUP_MIN, 10) } ?: 10
+        val coolMin get() = com.ascend.lifeos.data.Repo.appContextOrNull()?.let { com.ascend.lifeos.data.Prefs.int(it, com.ascend.lifeos.data.Prefs.COOLDOWN_MIN, 8) } ?: 8
         val skillMin get() = when { len >= 100 -> 25; len >= 75 -> 20; else -> 15 }
         val finisherMin get() = if (season == "PRE") 12 else 10
         val includeFinisher get() = !deload && season != "PLAYOFF" && len >= 75

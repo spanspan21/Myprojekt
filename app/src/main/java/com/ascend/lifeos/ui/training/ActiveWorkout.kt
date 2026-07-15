@@ -101,7 +101,7 @@ fun ActiveWorkoutScreen(
                         Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
                             .clickable { formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
-                    ) { Icon(Icons.Rounded.Videocam, null, tint = TextMuted, modifier = Modifier.size(16.dp)) }
+                    ) { Icon(Icons.Rounded.Videocam, "Form video", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     // experimental rep counter (Settings → Training)
                     if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.AUTO_COUNT, false)) {
                         Spacer(Modifier.width(8.dp))
@@ -109,7 +109,7 @@ fun ActiveWorkoutScreen(
                             Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
                                 .clickable { repCounterOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
-                        ) { Icon(Icons.Rounded.Visibility, null, tint = TextMuted, modifier = Modifier.size(16.dp)) }
+                        ) { Icon(Icons.Rounded.Visibility, "Rep counter", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     }
                     Spacer(Modifier.width(8.dp))
                     Box(
@@ -143,7 +143,7 @@ fun ActiveWorkoutScreen(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, HudLine, RoundedCornerShape(11.dp)).clickable(onClick = onAddExercise)
                             .padding(horizontal = 10.dp, vertical = 8.dp),
-                    ) { Icon(Icons.Rounded.Add, null, tint = TextDim, modifier = Modifier.size(16.dp)) }
+                    ) { Icon(Icons.Rounded.Add, "Add exercise", tint = TextDim, modifier = Modifier.size(16.dp)) }
                 }
                 Spacer(Modifier.height(18.dp))
             }
@@ -241,8 +241,12 @@ fun ActiveWorkoutScreen(
                 // der teuerste Moment im Kraftsport: der letzte Satz (Kap. 22) —
                 // eine Information, kein Nag
                 val toTarget = com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
-                    val lo = when { rec >= 75 -> 14; rec >= 50 -> 10; else -> 4 }
-                    lo - vm.todaySetsLive // count what you've already logged this session
+                    val lo = when {
+                        rec >= 75 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_GREEN_LO, 14)
+                        rec >= 50 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_AMBER_LO, 10)
+                        else -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_RED_LO, 4)
+                    }
+                    lo - vm.todaySetsLive
                 }
                 if (toTarget != null && toTarget in 1..2) {
                     Text(
@@ -253,6 +257,7 @@ fun ActiveWorkoutScreen(
                 }
                 val btnText = if (totalSets > 0) "Finish workout ($totalSets sets)" else "Finish workout"
                 HudButton(btnText, Modifier.fillMaxWidth(), enabled = totalSets > 0) {
+                    com.ascend.lifeos.data.Haptics.success(ctx)
                     vm.finishWorkout(); onFinish()
                 }
             }
@@ -660,7 +665,7 @@ private fun SetRow(
                     if (set.isPersonalRecord) {
                         Text("PR", color = ChampagneDeep, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
                     }
-                    Icon(Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
+                    Icon(Icons.Rounded.Close, "Delete set", tint = TextDim.copy(alpha = 0.5f),
                         modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
                 }
             }
@@ -715,7 +720,7 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onUndo).padding(horizontal = 12.dp, vertical = 8.dp),
             )
             Icon(
-                Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
+                Icons.Rounded.Close, "Dismiss", tint = TextDim.copy(alpha = 0.5f),
                 modifier = Modifier.size(16.dp).clickable(onClick = onDismiss),
             )
         }
@@ -726,7 +731,7 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
 
 @Composable
 private fun RestTimerCard(vm: TrainingViewModel) {
-    GlassPanel(Modifier.fillMaxWidth(), corner = 20.dp, fill = Color(0xFF0A0A0C).copy(alpha = 0.95f)) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = 20.dp, fill = Void.copy(alpha = 0.95f)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                 val fraction = if (vm.restTimerTotal > 0) (vm.restTimerRemaining.toFloat() / vm.restTimerTotal).coerceIn(0f, 1f) else 0f
@@ -753,10 +758,26 @@ private fun RestTimerCard(vm: TrainingViewModel) {
                 Text("${vm.restTimerTotal}s total", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MiniBtn("-15") { vm.adjustRestTimer(-15) }
-                MiniBtn("+15") { vm.adjustRestTimer(15) }
-                MiniBtn("Skip") { vm.skipRestTimer() }
+            Column(horizontalAlignment = Alignment.End) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MiniBtn("-15") { vm.adjustRestTimer(-15) }
+                    MiniBtn("+15") { vm.adjustRestTimer(15) }
+                    MiniBtn("Skip") { vm.skipRestTimer() }
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(60, 90, 120, 180).forEach { sec ->
+                        val sel = vm.restTimerTotal == sec
+                        Box(
+                            Modifier.clip(RoundedCornerShape(8.dp))
+                                .background(if (sel) Accent.copy(alpha = 0.16f) else Color.Transparent)
+                                .clickable { vm.adjustRestTimer(sec - vm.restTimerTotal) }
+                                .padding(horizontal = 7.dp, vertical = 3.dp),
+                        ) {
+                            Text("${sec}s", color = if (sel) Accent else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
     }
@@ -792,7 +813,7 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
     }
 
     Box(
-        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)).clickable(onClick = onDismiss),
+        Modifier.fillMaxSize().background(Void.copy(alpha = 0.6f)).clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
         GlassPanel(
@@ -914,7 +935,7 @@ private fun PlateChip(p: Double) {
         PlateMath.PlateColor.WHITE -> Color(0xFFE9EDF2)
         PlateMath.PlateColor.DARK -> Color(0xFF585F68)
     }
-    val fg = if (PlateMath.colorOf(p) == PlateMath.PlateColor.WHITE) Color(0xFF20242B) else Color.White
+    val fg = if (PlateMath.colorOf(p) == PlateMath.PlateColor.WHITE) Color(0xFF20242B) else Ivory
     Box(
         Modifier.size(26.dp).clip(CircleShape).background(bg.copy(alpha = 0.92f)),
         contentAlignment = Alignment.Center,

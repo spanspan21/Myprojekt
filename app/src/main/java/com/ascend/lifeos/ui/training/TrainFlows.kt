@@ -37,7 +37,7 @@ import kotlinx.coroutines.delay
 fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
     val s = vm.lastSummary
     if (s == null) { onDone(); return }
-    val ember = Color(0xFFFF6B35)
+    val ember = Orange
 
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
@@ -56,6 +56,10 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
             SumStat("${s.sets}", "SETS", ember)
             SumStat("${s.reps}", "REPS", Cyan)
             SumStat("${s.durMin}", "MIN", Amber)
+            if (s.tonnageKg > 0) {
+                val ton = if (s.tonnageKg >= 1000) "%.1fk".format(s.tonnageKg / 1000f) else "${s.tonnageKg}"
+                SumStat(ton, "KG VOL", Good)
+            }
         }
         s.repsVsLast?.let { d ->
             Spacer(Modifier.height(10.dp))
@@ -144,7 +148,7 @@ private fun SumStat(value: String, label: String, color: Color) {
 
 @Composable
 fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, onBack: () -> Unit) {
-    val ember = Color(0xFFFF6B35)
+    val ember = Orange
     val progs by vm.progressions.collectAsState()
     val chain = remember(groupKey) {
         com.ascend.lifeos.data.training.ExerciseSeed.PROGRESSIONS.find { it.groupKey == groupKey }
@@ -155,6 +159,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
     val isHold = level.unlockHoldSecs != null
     val target = level.unlockHoldSecs ?: level.unlockReps ?: 10
 
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var value by remember { mutableIntStateOf(0) }
     var result by remember { mutableStateOf<Boolean?>(null) }
 
@@ -162,7 +167,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted,
+                Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
                 modifier = Modifier.size(22.dp).clickable(onClick = onBack),
             )
             Spacer(Modifier.weight(1f))
@@ -215,7 +220,10 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Modifier.fillMaxWidth().padding(bottom = 36.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (value > 0) ember else ember.copy(alpha = 0.2f))
-                        .clickable(enabled = value > 0) { result = value >= target }
+                        .clickable(enabled = value > 0) {
+                            result = value >= target
+                            if (value >= target) com.ascend.lifeos.data.Haptics.epic(ctx) else com.ascend.lifeos.data.Haptics.warn(ctx)
+                        }
                         .padding(vertical = 15.dp),
                     contentAlignment = Alignment.Center,
                 ) {

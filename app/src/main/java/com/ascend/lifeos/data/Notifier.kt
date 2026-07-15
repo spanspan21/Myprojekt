@@ -51,10 +51,14 @@ object Notifier {
 
     fun schedule(ctx: Context) {
         ensureChannel(ctx)
-        scheduleDaily(ctx, REQ_MORNING, 7, 0, "morning")
-        scheduleDaily(ctx, REQ_FUEL, 13, 0, "fuel")
-        scheduleDaily(ctx, REQ_EVENING, 20, 30, "evening")
-        scheduleWeekly(ctx, REQ_WEEKLY, Calendar.SUNDAY, 19, "weekly")
+        val mMorn = Prefs.int(ctx, Prefs.NOTIF_MORNING_MIN, 420)
+        val mFuel = Prefs.int(ctx, Prefs.NOTIF_FUEL_MIN, 780)
+        val mEve  = Prefs.int(ctx, Prefs.NOTIF_EVENING_MIN, 1230)
+        val mWeek = Prefs.int(ctx, Prefs.NOTIF_WEEKLY_MIN, 1140)
+        scheduleDaily(ctx, REQ_MORNING, mMorn / 60, mMorn % 60, "morning")
+        scheduleDaily(ctx, REQ_FUEL, mFuel / 60, mFuel % 60, "fuel")
+        scheduleDaily(ctx, REQ_EVENING, mEve / 60, mEve % 60, "evening")
+        scheduleWeekly(ctx, REQ_WEEKLY, Calendar.SUNDAY, mWeek / 60, mWeek % 60, "weekly")
         // afternoon check: if a morning session was missed, nudge to reschedule it
         if (Prefs.bool(ctx, Prefs.RESCHEDULE_ON, true)) {
             scheduleDaily(ctx, REQ_RESCHEDULE, Prefs.int(ctx, Prefs.RESCHEDULE_HOUR, 15), 0, "reschedule")
@@ -72,7 +76,7 @@ object Notifier {
         val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, startMin / 60); set(Calendar.MINUTE, startMin % 60)
             set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-            add(Calendar.MINUTE, -30)
+            add(Calendar.MINUTE, -Prefs.int(ctx, Prefs.WORKOUT_HEADSUP_MIN, 30))
         }
         if (cal.timeInMillis <= System.currentTimeMillis()) return
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -102,7 +106,8 @@ object Notifier {
             Intent(ctx, ReminderReceiver::class.java).putExtra("kind", "protein"),
             flags,
         )
-        runCatching { am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 90L * 60_000, pi) }
+        val delayMin = Prefs.int(ctx, Prefs.PROTEIN_NUDGE_MIN, 90).toLong()
+        runCatching { am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMin * 60_000, pi) }
     }
 
     /** One-shot wind-down reminder at [hour]:[minute] today (or tomorrow if past). */
@@ -164,12 +169,12 @@ object Notifier {
         am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.timeInMillis, AlarmManager.INTERVAL_DAY, pending(ctx, req, kind))
     }
 
-    private fun scheduleWeekly(ctx: Context, req: Int, weekday: Int, hour: Int, kind: String) {
+    private fun scheduleWeekly(ctx: Context, req: Int, weekday: Int, hour: Int, minute: Int, kind: String) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val now = System.currentTimeMillis()
         val cal = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_WEEK, weekday)
-            set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
             if (timeInMillis <= now) add(Calendar.WEEK_OF_YEAR, 1)
         }
         am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.timeInMillis, AlarmManager.INTERVAL_DAY * 7, pending(ctx, req, kind))
@@ -307,7 +312,7 @@ object Notifier {
             "evening" -> {
                 // hydration in glass-equivalents (logged drinks included), matching
                 // completion()/Home — not raw water taps, which under-report
-                val water = Repo.hydrationMl(day) / WaterCalc.GLASS_ML
+                val water = Repo.hydrationMl(day) / WaterCalc.glassMl()
                 val parts = buildList {
                     add(if (kcal > 0) "$kcal kcal logged" else "no food logged")
                     add("water $water/${p.waterGoal}")
@@ -321,7 +326,7 @@ object Notifier {
             "workout_soon" -> {
                 val start = todaysTrainingStartMin(ctx) ?: return null
                 if (Repo.today().workoutDone) null
-                else "Training in ~30 minutes" to
+                else "Training in ~${Prefs.int(ctx, Prefs.WORKOUT_HEADSUP_MIN, 30)} minutes" to
                     "Scheduled %02d:%02d. Water bottle, vest, playlist — see you at the bar, %s."
                         .format(start / 60, start % 60, name)
             }

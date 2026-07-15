@@ -300,7 +300,7 @@ fun FinanceHome(onClose: () -> Unit) {
                 }
             } else {
                 items(goals, key = { "goal_${it.id}" }) { g ->
-                    GoalCard(g)
+                    GoalCard(g, Modifier.animateItem())
                     Spacer(Modifier.height(8.dp))
                 }
                 item(key = "goals_add") {
@@ -343,7 +343,7 @@ fun FinanceHome(onClose: () -> Unit) {
                         DayHeader(dayGroupLabel(day, today), list.sumOf { it.amountCents })
                     }
                     items(list, key = { "tx_${it.id}" }) { t ->
-                        TxnRow(t, accountNames[txnAccMap[t.id]]) { detailTxn = t }
+                        TxnRow(t, accountNames[txnAccMap[t.id]], Modifier.animateItem()) { detailTxn = t }
                     }
                 }
                 item(key = "export") {
@@ -440,7 +440,7 @@ private fun BalanceHero(
                 contentAlignment = Alignment.Center,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Add, null, tint = FinAccent, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Add, "Add account", tint = FinAccent, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(5.dp))
                     Text("Account", color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
@@ -489,7 +489,7 @@ private fun RowScope.QuickAction(icon: ImageVector, label: String, onClick: () -
             Modifier.fillMaxWidth().padding(vertical = 13.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(icon, null, tint = FinAccent, modifier = Modifier.size(19.dp))
+            Icon(icon, label, tint = FinAccent, modifier = Modifier.size(19.dp))
             Spacer(Modifier.height(6.dp))
             Text(
                 label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
@@ -527,8 +527,10 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
             if (totalBudget > 0) {
                 Spacer(Modifier.height(10.dp))
                 val ratio = spend.toFloat() / totalBudget
+                val bCtx = androidx.compose.ui.platform.LocalContext.current
+                val bWarn = com.ascend.lifeos.data.Prefs.int(bCtx, com.ascend.lifeos.data.Prefs.BUDGET_WARN_PCT, 75) / 100f
                 val barColor = when {
-                    ratio < 0.75f -> FinAccent
+                    ratio < bWarn -> FinAccent
                     ratio < 1f -> Warn
                     else -> Crit
                 }
@@ -692,8 +694,9 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
             if (budget != null) {
                 Spacer(Modifier.height(4.dp))
                 val ratio = cents.toFloat() / budget
+                val bWarn2 = com.ascend.lifeos.data.Prefs.int(androidx.compose.ui.platform.LocalContext.current, com.ascend.lifeos.data.Prefs.BUDGET_WARN_PCT, 75) / 100f
                 val barColor = when {
-                    ratio < 0.75f -> FinAccent
+                    ratio < bWarn2 -> FinAccent
                     ratio < 1f -> Warn
                     else -> Crit
                 }
@@ -873,12 +876,12 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
 // ─── 7 · Savings goals ───────────────────────────────────────────────────────
 
 @Composable
-private fun GoalCard(g: SaveGoal) {
+private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val progress = if (g.targetCents > 0) g.savedCents.toFloat() / g.targetCents else 0f
     val done = g.savedCents >= g.targetCents
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.padding(14.dp)) {
+    Panel(modifier.fillMaxWidth(), corner = 20.dp) {
+        Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Ring(progress = progress, color = if (done) Good else FinAccent, modifier = Modifier.size(58.dp), stroke = 5.dp) {
                     Text("${(progress * 100).roundToInt().coerceAtMost(999)}%", color = TextPrimary, style = metricStyle(12))
@@ -921,7 +924,7 @@ private fun GoalCard(g: SaveGoal) {
                             Modifier.clip(RoundedCornerShape(9.dp))
                                 .background(FinAccent.copy(alpha = 0.10f))
                                 .border(0.5.dp, FinAccent.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .clickable { FinanceStore.addToGoal(ctx, g.id, c) }
+                                .clickable { FinanceStore.addToGoal(ctx, g.id, c); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("+${c / 100} € saved") }
                                 .padding(horizontal = 11.dp, vertical = 6.dp),
                         ) {
                             Text(
@@ -954,9 +957,9 @@ private fun DayHeader(label: String, netCents: Long) {
 }
 
 @Composable
-private fun TxnRow(t: Txn, accountName: String?, onClick: () -> Unit) {
+private fun TxnRow(t: Txn, accountName: String?, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
+        modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
             .padding(horizontal = 2.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -993,7 +996,7 @@ private fun ExportCsvButton(count: Int, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Share, null, tint = FinAccent, modifier = Modifier.size(14.dp))
+            Icon(Icons.Rounded.Share, "Export CSV", tint = FinAccent, modifier = Modifier.size(14.dp))
             Spacer(Modifier.width(7.dp))
             Text(
                 "Export CSV · $count transactions",

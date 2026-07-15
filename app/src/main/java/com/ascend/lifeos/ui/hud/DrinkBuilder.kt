@@ -170,7 +170,7 @@ fun DrinkBuilderPane(
             Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() },
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
+        ) { Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         Spacer(Modifier.width(12.dp))
         Text("Build a drink", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
     }
@@ -253,6 +253,7 @@ fun DrinkBuilderPane(
                 ),
                 dayKey,
             )
+            com.ascend.lifeos.ui.kit.AppFeedback.show("$name logged")
             onAdded()
         }
         Box(
@@ -270,9 +271,10 @@ fun DrinkBuilderPane(
                     )
                     starred = true
                     com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    com.ascend.lifeos.ui.kit.AppFeedback.show("Saved as favorite")
                 },
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Rounded.Star, null, tint = Amber, modifier = Modifier.size(20.dp)) }
+        ) { Icon(Icons.Rounded.Star, if (starred) "Saved as favorite" else "Save as favorite", tint = Amber, modifier = Modifier.size(20.dp)) }
     }
     Spacer(Modifier.height(4.dp))
     Text(

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,7 +109,7 @@ internal fun NetWorthSection() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         if (up) Icons.AutoMirrored.Rounded.TrendingUp else Icons.AutoMirrored.Rounded.TrendingDown,
-                        null, tint = if (up) Good else Crit, modifier = Modifier.size(15.dp),
+                        if (up) "Trending up" else "Trending down", tint = if (up) Good else Crit, modifier = Modifier.size(15.dp),
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
@@ -384,18 +385,29 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
         ActionButton(if (existing != null) "Save" else "Add", enabled = valid) {
             val u = if (priced) (unitsVal ?: 0.0) else 1.0
             val price = if (priced) (amountCents ?: 0L) else (valueCents ?: 0L)
-            if (existing != null) FinanceStore.updateHolding(ctx, existing.id, name, u, price)
-            else FinanceStore.addHolding(ctx, kind, name, u, price)
+            if (existing != null) {
+                FinanceStore.updateHolding(ctx, existing.id, name, u, price)
+                com.ascend.lifeos.ui.kit.AppFeedback.show("Holding updated")
+            } else {
+                FinanceStore.addHolding(ctx, kind, name, u, price)
+                com.ascend.lifeos.ui.kit.AppFeedback.show("Holding added")
+            }
             onDismiss()
         }
-        existing?.let {
+        existing?.let { hold ->
             Spacer(Modifier.height(8.dp))
+            var armed by remember(hold.id) { mutableStateOf(false) }
+            LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).clickable {
-                    FinanceStore.deleteHolding(ctx, it.id); onDismiss()
+                    if (armed) {
+                        FinanceStore.deleteHolding(ctx, hold.id)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show("Holding deleted")
+                        onDismiss()
+                    } else armed = true
                 }.padding(vertical = 11.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Delete", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            ) { Text(if (armed) "Tap again to delete" else "Delete", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
     }
 }

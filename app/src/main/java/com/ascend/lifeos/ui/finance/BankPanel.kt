@@ -83,7 +83,7 @@ internal fun BankPanel() {
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Sync, null, tint = FinAccent, modifier = Modifier.size(13.dp))
+                            Icon(Icons.Rounded.Sync, "Sync bank", tint = FinAccent, modifier = Modifier.size(13.dp))
                             Spacer(Modifier.width(5.dp))
                             Text(
                                 if (busy) "läuft…" else "Sync",
@@ -188,12 +188,12 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                     if (q.isEmpty()) all else all.filter { it.name.lowercase().contains(q) }
                 }
                 if (hits.isEmpty()) {
-                    Text("Keine Treffer — anders schreiben?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
+                    com.ascend.lifeos.ui.kit.EmptyState(androidx.compose.material.icons.Icons.Rounded.AccountBalance, "Keine Treffer", "Anders schreiben?", com.ascend.lifeos.ui.theme.Mod.Finance)
                 } else {
                     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
                         items(hits, key = { it.name }) { bank ->
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                                Modifier.animateItem().fillMaxWidth().clip(RoundedCornerShape(11.dp))
                                     .clickable {
                                         scope.launch {
                                             runCatching { BankLink.startAuth(ctx, bank) }
@@ -209,7 +209,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                                     .padding(horizontal = 6.dp, vertical = 11.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Icon(Icons.Rounded.AccountBalance, null, tint = TextDim, modifier = Modifier.size(15.dp))
+                                Icon(Icons.Rounded.AccountBalance, bank.name, tint = TextDim, modifier = Modifier.size(15.dp))
                                 Spacer(Modifier.width(10.dp))
                                 Text(bank.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             }

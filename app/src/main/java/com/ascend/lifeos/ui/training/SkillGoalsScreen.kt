@@ -62,7 +62,7 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted,
+                Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
                 modifier = Modifier.size(22.dp).clickable(onClick = onBack),
             )
             Spacer(Modifier.width(12.dp))
@@ -101,7 +101,11 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                 }
                 items(skills, key = { it.id }) { skill ->
-                    SkillCard(skill, profile, adherence, skill.id in selected) { Repo.toggleSkillGoal(skill.id) }
+                    SkillCard(skill, profile, adherence, skill.id in selected, Modifier.animateItem()) {
+                        val wasSelected = skill.id in selected
+                        Repo.toggleSkillGoal(skill.id)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show(if (wasSelected) "Target removed" else "Target added")
+                    }
                     Spacer(Modifier.height(8.dp))
                 }
             }
@@ -110,13 +114,13 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Float, selected: Boolean, onToggle: () -> Unit) {
+private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Float, selected: Boolean, modifier: Modifier = Modifier, onToggle: () -> Unit) {
     val inReach = SkillCatalog.inReach(skill, profile)
     val eta = SkillCatalog.etaWeeks(skill, profile)
     val etaRange = SkillCatalog.etaRangeWeeks(skill, profile, adherence)
 
     Panel(
-        Modifier.fillMaxWidth(),
+        modifier.fillMaxWidth(),
         corner = 16.dp,
         fill = if (selected) Mod.Train.copy(alpha = 0.07f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f),
         line = if (selected) Mod.Train.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),

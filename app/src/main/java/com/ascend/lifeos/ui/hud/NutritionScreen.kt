@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.hud
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -106,7 +108,8 @@ import kotlin.math.sin
 private enum class NView { DASH, MICROS, STATS, FASTING, RECIPES, SHOPPING }
 
 /** How far back the day cursor can travel for backdated logging. */
-private const val MAX_BACKDATE_DAYS = 30
+private fun maxBackdateDays(ctx: android.content.Context): Int =
+    com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.BACKDATE_DAYS, 30)
 
 /**
  * FUEL — the full nutrition cockpit. A macro arc-reactor, dynamic hydration,
@@ -213,7 +216,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             Spacer(Modifier.height(12.dp))
             DayCursor(
                 offset = dayOffset, dayKey = dayKey,
-                onPrev = { if (dayOffset < MAX_BACKDATE_DAYS) { dayOffset++; expanded = null } },
+                onPrev = { if (dayOffset < maxBackdateDays(ctx)) { dayOffset++; expanded = null } },
                 onNext = { if (dayOffset > 0) { dayOffset--; expanded = null } },
             )
 
@@ -236,7 +239,98 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                         Spacer(Modifier.height(9.dp))
                         MacroLegend("Fat", totals.fat, p.fatGoal, Purple)
                         Spacer(Modifier.height(10.dp))
-                        Text("View micros →", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
+                        if (isToday && totals.protein >= p.proteinGoal && totals.carbs >= p.carbGoal && totals.fat >= p.fatGoal && totals.kcal >= p.kcalGoal * 0.9) {
+                            Text("All macros hit ✓", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
+                        } else {
+                            Text("View micros →", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // ---- 7-day kcal adherence strip ----
+            if (isToday) {
+                val weekKeys = Repo.lastDayKeys(7)
+                val weekKcals = weekKeys.map { (Repo.dayFor(it)?.meals?.sumOf { m -> m.kcal } ?: 0) }
+                val weekProt = weekKeys.map { (Repo.dayFor(it)?.meals?.sumOf { m -> m.protein } ?: 0) }
+                if (weekKcals.count { it > 0 } >= 2) {
+                    Spacer(Modifier.height(10.dp))
+                    GlassPanel(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("7-day adherence", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.weight(1f))
+                                val avg = weekKcals.filter { it > 0 }.average().toInt()
+                                val diff = avg - p.kcalGoal
+                                Text(
+                                    "Ø $avg kcal (${if (diff >= 0) "+" else ""}$diff)",
+                                    color = if (kotlin.math.abs(diff) < com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.KCAL_TOLERANCE, 150)) Good else Warn,
+                                    fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.ExtraBold,
+                                )
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            val dayLabels = weekKeys.map { k ->
+                                runCatching { java.time.LocalDate.parse(k).dayOfWeek.name.take(2) }.getOrDefault("")
+                            }
+                            Box(Modifier.fillMaxWidth().height(28.dp)) {
+                                val peak = (weekKcals.max().coerceAtLeast(p.kcalGoal)).coerceAtLeast(1).toFloat()
+                                val goalFrac = p.kcalGoal / peak
+                                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
+                                    weekKcals.forEach { k ->
+                                        val frac = k / peak
+                                        val overGoal = k > p.kcalGoal
+                                        Box(
+                                            Modifier.weight(1f).padding(horizontal = 2.dp)
+                                                .height((26 * frac).dp.coerceAtLeast(2.dp))
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(if (k == 0) Ivory.copy(alpha = 0.06f) else if (overGoal) Warn.copy(alpha = 0.7f) else Mod.Fuel.copy(alpha = 0.7f)),
+                                        )
+                                    }
+                                }
+                                // goal line
+                                if (p.kcalGoal > 0) {
+                                    Box(
+                                        Modifier.fillMaxWidth()
+                                            .offset(y = (26 * (1f - goalFrac)).dp)
+                                            .height(1.dp)
+                                            .background(Ivory.copy(alpha = 0.25f))
+                                    )
+                                }
+                            }
+                            // day labels
+                            Row(Modifier.fillMaxWidth()) {
+                                dayLabels.forEach { label ->
+                                    Text(label, Modifier.weight(1f), color = TextMuted.copy(alpha = 0.5f), fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = com.ascend.lifeos.ui.theme.Body, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                }
+                            }
+                            // protein row
+                            if (p.proteinGoal > 0) {
+                                Spacer(Modifier.height(6.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Protein", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = com.ascend.lifeos.ui.theme.Body)
+                                    Spacer(Modifier.weight(1f))
+                                    val protAvg = weekProt.filter { it > 0 }.let { if (it.isEmpty()) 0 else it.average().toInt() }
+                                    val protDiff = protAvg - p.proteinGoal
+                                    Text(
+                                        "Ø ${protAvg}g (${if (protDiff >= 0) "+" else ""}$protDiff)",
+                                        color = if (protDiff >= 0) Good else Warn,
+                                        fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                                Row(Modifier.fillMaxWidth().height(14.dp), verticalAlignment = Alignment.Bottom) {
+                                    val protPeak = (weekProt.max().coerceAtLeast(p.proteinGoal)).coerceAtLeast(1).toFloat()
+                                    weekProt.forEach { pr ->
+                                        val frac = pr / protPeak
+                                        Box(
+                                            Modifier.weight(1f).padding(horizontal = 2.dp)
+                                                .height((12 * frac).dp.coerceAtLeast(1.dp))
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(if (pr == 0) Ivory.copy(alpha = 0.06f) else if (pr >= p.proteinGoal) Good.copy(alpha = 0.6f) else Mod.Fuel.copy(alpha = 0.5f)),
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -259,6 +353,8 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                         ?.let { com.ascend.lifeos.data.training.ActivityTypes.byId(it.type) }
                 } else null
             }
+            val trainBonusL = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.WATER_TRAIN_BONUS, 500) / 1000f
+            val bonusLabel = "+%.1f L".format(trainBonusL)
             HydrationCard(
                 glasses = day.water,
                 // eine Hydration-Wahrheit für Fuel UND Prime
@@ -268,11 +364,10 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 bonusReason = when {
                     hockeyToday -> {
                         val sp = com.ascend.lifeos.data.training.SportCatalog.byId(p.sport)
-                        "${sp.emoji} ${sp.label} · +0.5 L"
+                        "${sp.emoji} ${sp.label} · $bonusLabel"
                     }
                     day.workoutDone ->
-                        // if the day was earned by a logged activity, credit THAT
-                        todayActivity?.let { "${it.emoji} ${it.label} · +0.5 L" } ?: "🏋 Training · +0.5 L"
+                        todayActivity?.let { "${it.emoji} ${it.label} · $bonusLabel" } ?: "🏋 Training · $bonusLabel"
                     else -> null
                 },
                 showHeat = isToday && !hasLoc,
@@ -322,7 +417,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 22.dp, bottom = 96.dp)
                 .size(58.dp).clip(CircleShape).background(Mod.Fuel).clickable { addOpen = true },
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Rounded.Add, null, tint = Color(0xFF0A1204), modifier = Modifier.size(28.dp)) }
+        ) { Icon(Icons.Rounded.Add, "Add food", tint = Void, modifier = Modifier.size(28.dp)) }
     }
 
     if (addOpen) AddFoodSheet(sheetState = addState, dayKey = dayKey, onDismiss = { addOpen = false })
@@ -369,13 +464,18 @@ private fun JarvisReactionBanner() {
     }
 }
 
-private fun contextLine(kcal: Int, goal: Int, isToday: Boolean): String = when {
-    !isToday && kcal == 0 -> "Nothing logged this day"
-    !isToday -> "$kcal / $goal kcal logged"
-    kcal == 0 -> "0 kcal — time to fuel up"
-    kcal > goal -> "${kcal - goal} kcal over target"
-    kcal > goal * 0.75 -> "${goal - kcal} kcal left — keep it light"
-    else -> "${goal - kcal} kcal remaining today"
+private fun contextLine(kcal: Int, goal: Int, isToday: Boolean): String {
+    val hour = java.time.LocalTime.now().hour
+    return when {
+        !isToday && kcal == 0 -> "Nothing logged this day"
+        !isToday -> "$kcal / $goal kcal logged"
+        kcal == 0 && hour >= 14 -> "Nothing logged yet — catch up before the day slips"
+        kcal == 0 && hour >= 12 -> "0 kcal — don't forget to log lunch"
+        kcal == 0 -> "0 kcal — time to fuel up"
+        kcal > goal -> "${kcal - goal} kcal over target"
+        kcal > goal * 0.75 -> "${goal - kcal} kcal left — keep it light"
+        else -> "${goal - kcal} kcal remaining today"
+    }
 }
 
 private fun frac(v: Int, goal: Int): Float = if (goal > 0) (v.toFloat() / goal).coerceIn(0f, 1f) else 0f
@@ -396,7 +496,7 @@ private fun dayLabel(offset: Int, key: String): String = when (offset) {
 @Composable
 private fun DayCursor(offset: Int, dayKey: String, onPrev: () -> Unit, onNext: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        CursorArrow(Icons.Rounded.ChevronLeft, enabled = offset < MAX_BACKDATE_DAYS, onClick = onPrev)
+        CursorArrow(Icons.Rounded.ChevronLeft, "Previous day", enabled = offset < maxBackdateDays(androidx.compose.ui.platform.LocalContext.current), onClick = onPrev)
         Text(
             dayLabel(offset, dayKey).uppercase(),
             color = if (offset == 0) TextPrimary else Mod.Fuel,
@@ -405,19 +505,19 @@ private fun DayCursor(offset: Int, dayKey: String, onPrev: () -> Unit, onNext: (
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
         // Hidden at today — you can't log the future.
-        CursorArrow(Icons.Rounded.ChevronRight, enabled = offset > 0, onClick = onNext)
+        CursorArrow(Icons.Rounded.ChevronRight, "Next day", enabled = offset > 0, onClick = onNext)
     }
 }
 
 @Composable
-private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, onClick: () -> Unit) {
+private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.size(32.dp).clip(CircleShape)
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (enabled) 0.05f else 0.02f))
             .border(0.5.dp, if (enabled) HudLine else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, tint = if (enabled) TextPrimary else TextDim.copy(alpha = 0.35f), modifier = Modifier.size(18.dp)) }
+    ) { Icon(icon, label, tint = if (enabled) TextPrimary else TextDim.copy(alpha = 0.35f), modifier = Modifier.size(18.dp)) }
 }
 
 // ---- macro reactor v2 (Kap. 39): eine Metapher, echte Mitte ---------------------
@@ -563,7 +663,7 @@ private fun CoachCheckInCard() {
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                        .clickable { com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
+                        .clickable { com.ascend.lifeos.data.Haptics.tick(cctx); com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text("Okay", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
             } else if (c != null) {
@@ -618,8 +718,10 @@ private fun CoachCheckInCard() {
                             .background(Mod.Fuel.copy(alpha = 0.16f))
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(11.dp))
                             .clickable {
+                                com.ascend.lifeos.data.Haptics.confirm(cctx)
                                 com.ascend.lifeos.data.nutrition.CoachRitual.adopt(c)
                                 gone = true
+                                com.ascend.lifeos.ui.kit.AppFeedback.show("Targets adopted")
                             }
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                     ) { Text("Adopt ${c.newKcal} kcal · P${c.protein}", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
@@ -638,12 +740,13 @@ private fun CoachCheckInCard() {
     }
 }
 
-private const val SPREAD_FULL_G = 30f
-
 @Composable
 private fun ProteinSpread(day: DayData) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val ppmThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_PER_MEAL, 20)
+    val spreadFull = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SPREAD_FULL_G, 30).toFloat()
     val perSlot = MEAL_SLOTS.map { (code, _) -> code to day.meals.filter { it.meal == code }.sumOf { it.protein } }
-    val hit = perSlot.count { it.second >= 20 }
+    val hit = perSlot.count { it.second >= ppmThresh }
     GlassPanel(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 15.dp),
@@ -654,8 +757,8 @@ private fun ProteinSpread(day: DayData) {
             Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                 perSlot.forEach { (code, grams) ->
                     val col = when {
-                        grams >= 20 -> Good
-                        grams >= 10 -> Warn
+                        grams >= ppmThresh -> Good
+                        grams >= ppmThresh / 2 -> Warn
                         else -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.28f)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -664,7 +767,7 @@ private fun ProteinSpread(day: DayData) {
                             contentAlignment = Alignment.BottomCenter,
                         ) {
                             if (grams > 0) {
-                                val fill = (grams / SPREAD_FULL_G).coerceIn(0f, 1f)
+                                val fill = (grams / spreadFull).coerceIn(0f, 1f)
                                 Box(Modifier.width(7.dp).height((24 * fill).dp.coerceAtLeast(3.dp)).clip(RoundedCornerShape(3.5.dp)).background(col))
                             }
                         }
@@ -674,7 +777,7 @@ private fun ProteinSpread(day: DayData) {
                 }
             }
             Spacer(Modifier.weight(1f))
-            Text("$hit/4 meals ≥20g", color = if (hit == 4) Good else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold)
+            Text("$hit/4 meals ≥${ppmThresh}g", color = if (hit == 4) Good else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -693,8 +796,8 @@ private fun HydrationCard(
     hot: Boolean, canEdit: Boolean, bonusReason: String?, showHeat: Boolean, onEnableHeat: () -> Unit,
 ) {
     val hCtx = androidx.compose.ui.platform.LocalContext.current
-    val totalMl = glasses * WaterCalc.GLASS_ML + drinkMl
-    val targetMl = (targetGlasses * WaterCalc.GLASS_ML).coerceAtLeast(1)
+    val totalMl = glasses * WaterCalc.glassMl() + drinkMl
+    val targetMl = (targetGlasses * WaterCalc.glassMl()).coerceAtLeast(1)
     val fraction = (totalMl.toFloat() / targetMl).coerceIn(0f, 1f)
     val goalReached = totalMl >= targetMl
     // Wasser bleibt IMMER blau (Wasser ist blau) — „voll“ feiert in Champagne, nie grün
@@ -795,13 +898,18 @@ private fun HydrationCard(
                 Spacer(Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        bonusReason ?: "$glasses glasses · hold ＋ for a bottle",
+                        bonusReason ?: run {
+                            val gml = WaterCalc.glassMl()
+                            if (gml != 250) "$glasses × ${gml}ml · hold ＋ for a bottle"
+                            else "$glasses glasses · hold ＋ for a bottle"
+                        },
                         color = if (bonusReason != null) Ivory.copy(alpha = 0.9f) else Ivory.copy(alpha = 0.62f),
                         fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
                         maxLines = 1, style = shadow,
                     )
                     if (hot) {
-                        Spacer(Modifier.width(7.dp)); Text("🔥 +0.3 L", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow)
+                        val heatBonusL = com.ascend.lifeos.data.Prefs.int(hCtx, com.ascend.lifeos.data.Prefs.WATER_HEAT_BONUS, 300) / 1000f
+                        Spacer(Modifier.width(7.dp)); Text("🔥 +%.1f L".format(heatBonusL), color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow)
                     }
                     if (showHeat) {
                         Spacer(Modifier.width(7.dp))
@@ -810,21 +918,23 @@ private fun HydrationCard(
                 }
             }
             if (canEdit) {
-                WaterButton(Icons.Rounded.Remove, 40.dp, Cyan, filled = false) {
+                WaterButton(Icons.Rounded.Remove, "Remove water", 40.dp, Cyan, filled = false) {
                     if (glasses > 0) { Repo.addWater(-1); com.ascend.lifeos.data.Haptics.tick(hCtx) }
                 }
                 Spacer(Modifier.width(11.dp))
                 WaterButton(
-                    Icons.Rounded.Add, 56.dp, Cyan, filled = true,
+                    Icons.Rounded.Add, "Add water", 56.dp, Cyan, filled = true,
                     // Long-press logs a 0.5 L bottle (2 glasses) in one go — big-bottle
                     // drinkers shouldn't tap three times for one bottle.
                     onLongClick = {
-                        Repo.addWater(2)
+                        val bottleMl = com.ascend.lifeos.data.Prefs.int(hCtx, com.ascend.lifeos.data.Prefs.BOTTLE_ML, 500)
+                        val bottleGlasses = (bottleMl / WaterCalc.glassMl()).coerceAtLeast(1)
+                        Repo.addWater(bottleGlasses)
                         com.ascend.lifeos.data.Haptics.success(hCtx)
                     },
                 ) {
                     Repo.addWater(1)
-                    if (totalMl + WaterCalc.GLASS_ML >= targetMl) com.ascend.lifeos.data.Haptics.success(hCtx)
+                    if (totalMl + WaterCalc.glassMl() >= targetMl) com.ascend.lifeos.data.Haptics.success(hCtx)
                     else com.ascend.lifeos.data.Haptics.confirm(hCtx)
                 }
             }
@@ -837,6 +947,7 @@ private fun HydrationCard(
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 private fun WaterButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
     size: androidx.compose.ui.unit.Dp,
     tint: Color,
     filled: Boolean,
@@ -857,7 +968,7 @@ private fun WaterButton(
             .border(0.8.dp, tint.copy(alpha = if (filled) 0.6f else 0.35f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = if (filled) Color.White else tint, modifier = Modifier.size(size * 0.42f))
+        Icon(icon, label, tint = if (filled) Ivory else tint, modifier = Modifier.size(size * 0.42f))
     }
 }
 
@@ -896,7 +1007,7 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
             Spacer(Modifier.weight(1f))
         }
         Spacer(Modifier.width(8.dp))
-        Icon(Icons.Rounded.ChevronRight, null, tint = TextDim, modifier = Modifier.size(16.dp))
+        Icon(Icons.Rounded.ChevronRight, "Open fasting details", tint = TextDim, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -905,17 +1016,28 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
 @Composable
 private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.data.FoodEntry>, expanded: Boolean, dayKey: String, onToggle: () -> Unit) {
     val kcal = meals.sumOf { it.kcal }
+    val logged = meals.isNotEmpty()
     val ctx = androidx.compose.ui.platform.LocalContext.current
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Column(
             Modifier.fillMaxWidth().animateContentSize(Motion.springSmoothOf()),
         ) {
             Row(
-                Modifier.fillMaxWidth().clickable { if (meals.isNotEmpty()) onToggle() }.padding(horizontal = 15.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().clickable { if (logged) onToggle() }.padding(horizontal = 15.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                if (logged) {
+                    Box(Modifier.width(3.dp).height(18.dp).clip(RoundedCornerShape(2.dp)).background(Mod.Fuel.copy(alpha = 0.6f)))
+                    Spacer(Modifier.width(10.dp))
+                }
+                Text(name, color = if (logged) TextPrimary else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 if (meals.isNotEmpty()) {
+                    val protTotal = meals.sumOf { it.protein }
+                    val protThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_PER_MEAL, 20)
+                    if (protTotal >= protThresh) {
+                        Box(Modifier.size(6.dp).clip(CircleShape).background(Good))
+                        Spacer(Modifier.width(6.dp))
+                    }
                     Text("${meals.size} · ", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
                     Text("$kcal kcal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
                 } else {
@@ -931,7 +1053,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                             },
                         )
                     } else {
-                        Text("empty", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
+                        Text("tap to add", color = TextDim.copy(alpha = 0.5f), fontSize = com.ascend.lifeos.ui.theme.FS.s11)
                     }
                 }
             }
@@ -971,13 +1093,21 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                             ) { Text(txt, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold) }
                             Spacer(Modifier.width(6.dp))
                         }
-                        Box(Modifier.size(30.dp).clip(CircleShape).clickable { Repo.removeFood(e.id, dayKey) }, contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Close, null, tint = TextDim, modifier = Modifier.size(15.dp))
+                        var armed by remember(e.id) { mutableStateOf(false) }
+                        LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
+                        Box(
+                            Modifier.size(30.dp).clip(CircleShape).clickable {
+                                if (armed) { Repo.removeFood(e.id, dayKey); com.ascend.lifeos.ui.kit.AppFeedback.show("Entry removed") }
+                                else armed = true
+                            },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Rounded.Close, if (armed) "Tap again to delete" else "Remove entry", tint = if (armed) Crit else TextDim, modifier = Modifier.size(15.dp))
                         }
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 15.dp, end = 15.dp, bottom = 12.dp)) {
-                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { Repo.saveMeal(name, meals) })
+                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { Repo.saveMeal(name, meals); com.ascend.lifeos.ui.kit.AppFeedback.show("Meal saved") })
                 }
             }
         }
@@ -996,7 +1126,12 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
     val kcalLeft = p.kcalGoal - totals.kcal
     val protLeft = p.proteinGoal - totals.protein
     val hour = java.time.LocalTime.now().hour
-    val show = isToday && hour >= 17 && (protLeft >= 25 || kcalLeft >= 300) && kcalLeft > 120
+    val gCtx = androidx.compose.ui.platform.LocalContext.current
+    val gapHour = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_FILLER_HOUR, 17)
+    val gapProt = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_PROT_THRESH, 25)
+    val gapKcal = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_KCAL_THRESH, 300)
+    val gapMin = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_KCAL_MIN, 120)
+    val show = isToday && hour >= gapHour && (protLeft >= gapProt || kcalLeft >= gapKcal) && kcalLeft > gapMin
     if (!show) return
 
     val hCtx = androidx.compose.ui.platform.LocalContext.current

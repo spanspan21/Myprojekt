@@ -96,10 +96,12 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                         Spacer(Modifier.height(6.dp))
                     }
                     items(exSets.size, key = { i -> exSets[i].id }) { i ->
-                        HistorySetRow(exSets[i], onEdit = { dr, dw -> vm.editHistorySet(exSets[i].id, dr, dw) }) {
-                            vm.deleteHistorySet(exSets[i])
+                        Column(Modifier.animateItem()) {
+                            HistorySetRow(exSets[i], onEdit = { dr, dw -> vm.editHistorySet(exSets[i].id, dr, dw) }) {
+                                vm.deleteHistorySet(exSets[i])
+                            }
+                            Spacer(Modifier.height(6.dp))
                         }
-                        Spacer(Modifier.height(6.dp))
                     }
                     item(key = "sp-$exName") { Spacer(Modifier.height(10.dp)) }
                 }

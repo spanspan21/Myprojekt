@@ -44,6 +44,7 @@ import com.ascend.lifeos.ui.theme.*
 
 @Composable
 fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var step by remember { mutableIntStateOf(0) }
     val results = remember {
         mutableStateMapOf<String, Int>().apply {
@@ -60,7 +61,7 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted,
+                Icons.AutoMirrored.Rounded.ArrowBack, if (step == 0) "Go back" else "Previous step", tint = TextMuted,
                 modifier = Modifier.size(22.dp).clickable { if (step == 0) onBack() else step-- },
             )
             Spacer(Modifier.weight(1f))
@@ -260,6 +261,7 @@ private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit)
 
 @Composable
 private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val profile = TrainBrain.profile(results)
     val prescribed = prescribedMobility(results)
     Column(Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState())) {
@@ -316,7 +318,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         Box(
             Modifier.fillMaxWidth().padding(bottom = 36.dp)
                 .clip(RoundedCornerShape(16.dp)).background(Mod.Train)
-                .clickable(onClick = onDone).padding(vertical = 15.dp),
+                .clickable { com.ascend.lifeos.data.Haptics.epic(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Profile saved"); onDone() }.padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Save profile", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
     }

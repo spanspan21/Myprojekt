@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.kit
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
@@ -142,7 +144,7 @@ fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
                 Modifier.fillMaxSize().background(
                     Brush.radialGradient(
                         0.55f to Color.Transparent,
-                        1f to Color.Black.copy(alpha = spec.vignette),
+                        1f to Void.copy(alpha = spec.vignette),
                     ),
                 ),
             )
@@ -353,7 +355,7 @@ fun Ring(
                 val r = (size.minDimension - inset * 2) / 2f
                 val end = Offset(center.x + kotlin.math.cos(ang).toFloat() * r, center.y + kotlin.math.sin(ang).toFloat() * r)
                 drawCircle(color.copy(alpha = 0.35f), stroke.toPx() * 1.5f, end)
-                drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.45f), stroke.toPx() * 0.72f, end)
+                drawCircle(androidx.compose.ui.graphics.lerp(color, Ivory, 0.45f), stroke.toPx() * 0.72f, end)
             }
         }
         content()
@@ -460,7 +462,17 @@ fun EmptyState(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
-    Column(modifier.fillMaxWidth().padding(vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    val offsetY = remember { androidx.compose.animation.core.Animatable(18f) }
+    LaunchedEffect(Unit) {
+        launch { alpha.animateTo(1f, tween(400)) }
+        offsetY.animateTo(0f, tween(500, easing = FastOutSlowInEasing))
+    }
+    Column(
+        modifier.fillMaxWidth().padding(vertical = 28.dp)
+            .graphicsLayer { this.alpha = alpha.value; translationY = offsetY.value * density },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Box(
             Modifier.size(52.dp).clip(RoundedCornerShape(16.dp))
                 .background(accent.copy(alpha = 0.08f))
@@ -534,7 +546,7 @@ fun MissionChip(
     Panel(modifier, corner = 16.dp, onClick = onClick) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = if (done) color else TextMuted, modifier = Modifier.size(15.dp))
+                Icon(icon, label, tint = if (done) color else TextMuted, modifier = Modifier.size(15.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(
                     label, color = if (done) color else TextMuted, fontFamily = Body,

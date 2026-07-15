@@ -78,19 +78,22 @@ internal val FinAccent: Color get() = com.ascend.lifeos.ui.theme.Mod.Finance
 internal val FinShades: List<Color> get() {
     val base = com.ascend.lifeos.ui.theme.Mod.Finance
     return listOf(
-        androidx.compose.ui.graphics.lerp(base, Color.White, 0.52f),
-        androidx.compose.ui.graphics.lerp(base, Color.White, 0.28f),
+        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Ivory, 0.52f),
+        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Ivory, 0.28f),
         base,
-        androidx.compose.ui.graphics.lerp(base, Color.Black, 0.20f),
-        androidx.compose.ui.graphics.lerp(base, Color.Black, 0.38f),
-        androidx.compose.ui.graphics.lerp(base, Color.Black, 0.54f),
+        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Void, 0.20f),
+        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Void, 0.38f),
+        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Void, 0.54f),
     )
 }
 
 /** Shade follows the category (entity), never its rank this month. */
 internal fun shadeFor(category: String): Color {
-    val i = LifeStores.CATEGORIES.indexOf(category)
-    return if (i in FinShades.indices) FinShades[i] else FinShades.last()
+    val known = listOf("Food", "Fun", "Clothes", "Tech", "Transport", "Other", "Income")
+    val i = known.indexOf(category)
+    if (i in FinShades.indices) return FinShades[i]
+    val hash = category.hashCode().and(0x7FFFFFFF) % FinShades.size
+    return FinShades[hash]
 }
 
 // ---- money ------------------------------------------------------------------
@@ -188,7 +191,7 @@ internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () 
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Add, null, tint = accent, modifier = Modifier.size(15.dp))
+            Icon(Icons.Rounded.Add, label, tint = accent, modifier = Modifier.size(15.dp))
             Spacer(Modifier.width(7.dp))
             Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
         }
@@ -201,7 +204,7 @@ internal fun ArmedDelete(modifier: Modifier = Modifier, onDelete: () -> Unit) {
     var armed by remember { mutableStateOf(false) }
     LaunchedEffect(armed) { if (armed) { delay(2500); armed = false } }
     Icon(
-        Icons.Rounded.Delete, null,
+        Icons.Rounded.Delete, if (armed) "Tap again to delete" else "Delete",
         tint = if (armed) Crit else TextDim,
         modifier = modifier.size(16.dp).clickable { if (armed) onDelete() else armed = true },
     )

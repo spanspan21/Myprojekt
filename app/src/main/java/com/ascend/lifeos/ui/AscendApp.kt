@@ -49,6 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.finance.FinanceInsights
+import com.ascend.lifeos.data.finance.FinanceStore
+import com.ascend.lifeos.data.life.HabitMetrics
+import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.ShellMotion
 import com.ascend.lifeos.ui.motion.pressScale
@@ -61,6 +65,7 @@ import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.skills.SkillsScreen
 import com.ascend.lifeos.ui.theme.Body
+import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.LocalModuleAccent
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
@@ -129,6 +134,17 @@ fun AscendApp() {
     }
 
     val ctx = androidx.compose.ui.platform.LocalContext.current
+
+    // one-time feature tour after first boot
+    var tourSeen by rememberSaveable { mutableStateOf(Prefs.bool(ctx, Prefs.TOUR_SEEN, false)) }
+    if (!tourSeen) {
+        com.ascend.lifeos.ui.boot.FeatureTour(onComplete = {
+            Prefs.setBool(ctx, Prefs.TOUR_SEEN, true)
+            tourSeen = true
+        })
+        return
+    }
+
     LaunchedEffect(Unit) { ShellMode.current.value = Prefs.string(ctx, Prefs.CONTEXT_MODE, "normal") }
 
     var sub by rememberSaveable { mutableStateOf(Sub.HOME) }
@@ -164,7 +180,7 @@ fun AscendApp() {
         // the overlay (Weekly Report, heatmap, palette…) hovers over the freshly
         // swapped screen underneath it (audit: nav edge case).
         paletteOpen = false
-        if (target !in setOf("report", "heatmap", "achievements", "decisions", "rules")) {
+        if (target !in setOf("report", "heatmap", "achievements", "decisions", "rules", "breathe", "timer")) {
             overlay = null
             reportOpen = false
         }
@@ -183,7 +199,7 @@ fun AscendApp() {
             "prime" -> open(Sub.PRIME)
             "settings" -> open(Sub.SETTINGS)
             "report" -> reportOpen = true
-            "heatmap", "achievements", "decisions", "rules" -> overlay = target
+            "heatmap", "achievements", "decisions", "rules", "notes", "breathe", "timer", "winddown" -> overlay = target
             "quicklog" -> { open(Sub.HOME); com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
         }
     }
@@ -327,10 +343,47 @@ fun AscendApp() {
                         "achievements" -> com.ascend.lifeos.ui.life.AchievementsScreen(onClose = { overlay = null })
                         "decisions" -> com.ascend.lifeos.ui.life.DecisionJournalScreen(onClose = { overlay = null })
                         "rules" -> com.ascend.lifeos.ui.home.RuleBuilderScreen(onClose = { overlay = null })
+                        "notes" -> com.ascend.lifeos.ui.life.NotesScreen(onClose = { overlay = null })
+                        "breathe" -> com.ascend.lifeos.ui.screens.BreathingScreen(onClose = { overlay = null })
+                        "timer" -> com.ascend.lifeos.ui.screens.TimerScreen(onClose = { overlay = null })
+                        "winddown" -> com.ascend.lifeos.ui.screens.WindDownScreen(
+                            onClose = { overlay = null },
+                            onOpenBreathe = { overlay = "breathe" },
+                        )
                     }
                 }
             }
         }
+
+        com.ascend.lifeos.ui.kit.FeedbackHost(Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+// ─── Dock badges — urgent-item counts per Group ─────────────────────────────
+@Composable
+private fun badgeCount(g: Group): Int {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    @Suppress("UNUSED_VARIABLE") val lRev = LifeStores.rev
+    @Suppress("UNUSED_VARIABLE") val fRev = FinanceStore.rev
+    @Suppress("UNUSED_VARIABLE") val rRev = Repo.data.hashCode()
+    return when (g) {
+        Group.TODAY -> {
+            val c = Repo.completion()
+            c.total - c.done
+        }
+        Group.BODY -> 0
+        Group.LIFE -> {
+            val dk = com.ascend.lifeos.core.todayKey()
+            val today = java.time.LocalDate.parse(dk)
+            val dueHabits = LifeStores.habits(ctx).count { h ->
+                HabitMetrics.scheduledOn(h, today)
+                    && !HabitMetrics.done(ctx, h, dk)
+                    && !HabitMetrics.skipped(ctx, h, dk)
+            }
+            val dueSubs = FinanceInsights.dueRecurrings(ctx).size
+            dueHabits + dueSubs
+        }
+        Group.SYSTEM -> 0
     }
 }
 
@@ -469,6 +522,7 @@ private fun MorphingDock(
                             val fg by animateColorAsState(
                                 if (selected) accent else TextDim, tween(220), label = "grpFg",
                             )
+                            val badge = badgeCount(g)
                             Column(
                                 Modifier
                                     .pressScale {
@@ -480,11 +534,33 @@ private fun MorphingDock(
                                     .padding(horizontal = 15.dp, vertical = 6.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Icon(
-                                    g.icon, contentDescription = g.label,
-                                    tint = fg,
-                                    modifier = Modifier.size(21.dp),
-                                )
+                                Box {
+                                    Icon(
+                                        g.icon, contentDescription = g.label,
+                                        tint = fg,
+                                        modifier = Modifier.size(21.dp),
+                                    )
+                                    if (badge > 0) {
+                                        Box(
+                                            Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(0.dp)
+                                                .size(14.dp)
+                                                .clip(CircleShape)
+                                                .background(Crit),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                if (badge > 9) "9+" else badge.toString(),
+                                                color = com.ascend.lifeos.ui.theme.Ivory,
+                                                fontSize = 8.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = Body,
+                                                lineHeight = 8.sp,
+                                            )
+                                        }
+                                    }
+                                }
                                 Spacer(Modifier.height(3.dp))
                                 Text(
                                     g.label,

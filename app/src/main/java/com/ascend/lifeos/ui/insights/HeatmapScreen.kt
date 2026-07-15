@@ -165,7 +165,7 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
         val kcal = day?.meals?.sumOf { it.kcal } ?: 0
         // hydration in ml (logged drinks + taps); glass-equivalent for the cell
         val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
-        val water = hydrationMl / com.ascend.lifeos.data.WaterCalc.GLASS_ML
+        val water = hydrationMl / com.ascend.lifeos.data.WaterCalc.glassMl()
         val isTrained = key in trained
         // a day with zero app activity stays honestly empty, not "0/3"
         val missions = if (day == null && !isTrained) null else {
@@ -175,7 +175,7 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
             // too (hydrationMl), not just water taps — otherwise the heatmap cell
             // disagrees with the streak it claims to mirror on drink-heavy days
             if (kcal >= profile.kcalGoal) done++
-            if (hydrationMl >= profile.waterGoal * com.ascend.lifeos.data.WaterCalc.GLASS_ML) done++
+            if (hydrationMl >= profile.waterGoal * com.ascend.lifeos.data.WaterCalc.glassMl()) done++
             if (isTrained) done++
             done / 3f
         }
@@ -183,7 +183,7 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
         facts[key] = DayFacts(
             key = key, col = col, row = row,
             missions = missions,
-            sleep = body?.sleepMin?.let { (it / 480f).coerceIn(0f, 1f) },
+            sleep = body?.sleepMin?.let { (it / Repo.sleepNeedMin().toFloat()).coerceIn(0f, 1f) },
             screen = screenMin?.let { (1f - it / budget.toFloat()).coerceIn(0f, 1f) },
             mood = body?.mood?.let { (it / 3f).coerceIn(0f, 1f) },
             kcal = kcal, water = water, trained = isTrained,

@@ -151,7 +151,7 @@ object Repo {
         // Hydration counts logged drinks too — the ONE hydration truth, so the
         // mission/streak agree with Prime and the Fuel card (audit: glasses vs
         // drinks disagreed across screens).
-        if (hydrationMl(day) >= p.waterGoal * WaterCalc.GLASS_ML) done++
+        if (hydrationMl(day) >= p.waterGoal * WaterCalc.glassMl()) done++
         return CompletionInfo(done, total)
     }
 
@@ -172,7 +172,7 @@ object Repo {
     }
 
     /** The ONE hydration truth in ml: water glasses + logged drinks. Shared by Fuel + Prime. */
-    fun hydrationMl(day: DayData): Int = day.water * WaterCalc.GLASS_ML + drinkMl(day)
+    fun hydrationMl(day: DayData): Int = day.water * WaterCalc.glassMl() + drinkMl(day)
 
     // ---- mutations ----
     private fun updateDay(block: (DayData) -> DayData) {
@@ -244,12 +244,35 @@ object Repo {
         }
     }
 
+    fun logMood(level: Int, note: String = "") {
+        val k = todayKey()
+        val prev = data.bodyDays[k] ?: BodyDay()
+        val now = java.util.Calendar.getInstance()
+        val minuteOfDay = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
+        val entry = MoodEntry(minuteOfDay = minuteOfDay, level = level.coerceIn(1, 5), note = note)
+        commit(
+            data.copy(
+                bodyDays = data.bodyDays + (k to prev.copy(
+                    mood = level.coerceIn(1, 3),
+                    moodTimeline = prev.moodTimeline + entry,
+                )),
+            ),
+        )
+    }
+
+    fun todayMoodAvg(): Float? {
+        val entries = (data.bodyDays[todayKey()] ?: return null).moodTimeline
+        if (entries.isEmpty()) return null
+        return entries.map { it.level.toFloat() }.average().toFloat()
+    }
+
     /** System-boot onboarding: identity + calibration + goal + objectives in one commit. */
-    fun completeBoot(name: String, sex: String, age: Int, heightCm: Int, weightKg: Int, goal: String = "maintain", objectives: List<String>) {
-        val t = NutritionCalc.compute(sex, age, heightCm, weightKg, activity = 3, goal = goal)
+    fun completeBoot(name: String, sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int = 3, goal: String = "maintain", objectives: List<String>) {
+        val t = NutritionCalc.compute(sex, age, heightCm, weightKg, activity = activity, goal = goal)
         updateProfile {
             it.copy(
                 name = name.trim(), sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
+                activity = activity,
                 objectives = objectives, onboarded = true, reminders = true,
                 kcalGoal = t.kcal, proteinGoal = t.protein, carbGoal = t.carbs, fatGoal = t.fat,
                 waterGoal = WaterCalc.targetGlasses(weightKg, trainedToday = false),
@@ -296,7 +319,8 @@ object Repo {
         if (dayKey == todayKey()) {
             if (FoodScore.nameLooksAlcoholic(e.name)) setJournalFactor(alcohol = true)
             val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-            if (hour >= 21 || hour < 4) setJournalFactor(lateMeal = true)
+            val lateMealHour = appContextOrNull()?.let { Prefs.int(it, Prefs.LATE_MEAL_HOUR, 21) } ?: 21
+            if (hour >= lateMealHour || hour < 4) setJournalFactor(lateMeal = true)
             if (e.kcal > 0) jarvisReaction.value = foodReactionLine(e)
         }
         refreshStreak()
@@ -542,7 +566,12 @@ object Repo {
     }
 
     /** Whoop-style journal factors for tonight; alcohol/late meal can be auto-tagged from Fuel. */
-    fun setJournalFactor(caffeineLate: Boolean? = null, alcohol: Boolean? = null, lateMeal: Boolean? = null, screenLate: Boolean? = null) {
+    fun setJournalFactor(
+        caffeineLate: Boolean? = null, alcohol: Boolean? = null,
+        lateMeal: Boolean? = null, screenLate: Boolean? = null,
+        meditation: Boolean? = null, supplements: Boolean? = null,
+        lateExercise: Boolean? = null,
+    ) {
         val k = todayKey()
         val prev = data.bodyDays[k] ?: BodyDay()
         commit(
@@ -552,6 +581,9 @@ object Repo {
                     fAlcohol = alcohol ?: prev.fAlcohol,
                     fLateMeal = lateMeal ?: prev.fLateMeal,
                     fScreenLate = screenLate ?: prev.fScreenLate,
+                    fMeditation = meditation ?: prev.fMeditation,
+                    fSupplements = supplements ?: prev.fSupplements,
+                    fLateExercise = lateExercise ?: prev.fLateExercise,
                 )),
             ),
         )
@@ -571,7 +603,7 @@ object Repo {
             val next = data.bodyDays[keys[i + 1]] ?: continue
             val sleepMin = next.sleepMin ?: continue
             // reconstruct a pure sleep-driven score for the following night
-            val perf = (sleepMin / 480.0).coerceIn(0.0, 1.0)
+            val perf = (sleepMin / sleepNeedMin().toDouble()).coerceIn(0.0, 1.0)
             val rest = if (sleepMin > 0) ((next.rem + next.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45 else 0.5
             val score = ((0.65 * perf + 0.35 * rest) * 100).toInt()
             if (flag) withR.add(score) else withoutR.add(score)
@@ -589,6 +621,7 @@ object Repo {
 
     fun setKcalGoal(kcal: Int) = updateProfile { it.copy(kcalGoal = kcal.coerceIn(1200, 6000)) }
     fun setKcalGoalAuto(on: Boolean) = updateProfile { it.copy(kcalGoalAuto = on) }
+    fun setWaterGoal(glasses: Int) = updateProfile { it.copy(waterGoal = glasses.coerceIn(1, 20)) }
     fun markTdeeSuggested() = updateProfile { it.copy(tdeeLastSuggest = todayKey()) }
 
     /**
@@ -597,6 +630,8 @@ object Repo {
      * Falls back to 8h until ≥5 such nights exist. Clamped 6:30–9:00.
      */
     fun sleepNeedMin(): Int {
+        val customTarget = appCtx?.let { Prefs.int(it, Prefs.SLEEP_TARGET_MIN, 0) } ?: 0
+        if (customTarget > 0) return customTarget
         // Repo gathers; the pure median+boost math lives in domain.SleepMath.
         val learnOn = appCtx?.let { Prefs.bool(it, Prefs.SLEEP_NEED_AUTO, true) } ?: true
         val boostOn = appCtx?.let { Prefs.bool(it, Prefs.STRAIN_SLEEP_BOOST, true) } ?: true
@@ -702,6 +737,7 @@ object Repo {
             trainingLoad = trainingLoad(),
             soreness = checkins?.soreness,
             morningEnergy = checkins?.morningEnergy,
+            sleepTarget = sleepNeedMin(),
         )
     }
 
@@ -749,7 +785,8 @@ object Repo {
         val day = data.days[k] ?: DayData()
         var p = data.profile
         val wk = isoWeek()
-        if (p.freezeWeek != wk) p = p.copy(freezeWeek = wk, freezeAvail = 1)
+        val maxFreeze = appContextOrNull()?.let { Prefs.int(it, Prefs.FREEZE_PER_WEEK, 1) } ?: 1
+        if (p.freezeWeek != wk) p = p.copy(freezeWeek = wk, freezeAvail = maxFreeze)
         val c = completion(day, p)
         val full = c.pct >= 1f
         if (full && p.lastFullKey != k) {

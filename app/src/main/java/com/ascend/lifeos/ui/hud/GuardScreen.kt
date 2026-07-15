@@ -148,22 +148,31 @@ fun GuardScreen() {
     val windowViolations = remember(tick) { WellbeingStore.windowViolationsToday(ctx, com.ascend.lifeos.core.todayKey()) }
     val budgetPart = (45f * (1f - usedMin.toFloat() / budget)).coerceIn(0f, 45f)
     val unlockPart = (20f * (1f - unlocks / 60f)).coerceIn(0f, 20f)
+    val puGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PICKUP_HOUR_GOOD, 8)
+    val puOk = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PICKUP_HOUR_OK, 7)
+    val puLate = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PICKUP_HOUR_LATE, 6)
     val pickupPart = when {
         firstPickup == null -> 7f
-        firstPickup!! >= 8 * 60 -> 10f
-        firstPickup!! >= 7 * 60 -> 7f
-        firstPickup!! >= 6 * 60 -> 3f
+        firstPickup!! >= puGood * 60 -> 10f
+        firstPickup!! >= puOk * 60 -> 7f
+        firstPickup!! >= puLate * 60 -> 3f
         else -> 0f
     }
     val doomPart = (15f - dsSnoozes * 5f).coerceIn(0f, 15f)
     val schedulePart = (10f - windowViolations * 5f).coerceIn(0f, 10f)
     val focusScore = if (data == null) null else (budgetPart + unlockPart + pickupPart + doomPart + schedulePart).toInt()
-    val scoreColor = when {
+    val focusGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_GOOD, 70)
+    val focusWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_WARN, 45)
+    val rawScoreColor = when {
         focusScore == null -> TextDim
-        focusScore >= 70 -> Good
-        focusScore >= 45 -> Warn
+        focusScore >= focusGood -> Good
+        focusScore >= focusWarn -> Warn
         else -> Crit
     }
+    val scoreColor by animateColorAsState(rawScoreColor, label = "focusClr")
+    val animProg by androidx.compose.animation.core.animateFloatAsState(
+        (focusScore ?: 0) / 100f, com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "focusProg",
+    )
 
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
@@ -258,7 +267,7 @@ fun GuardScreen() {
             if (segment == "insights") Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Ring(
-                        progress = (focusScore ?: 0) / 100f, color = scoreColor,
+                        progress = animProg, color = scoreColor,
                         modifier = Modifier.size(92.dp), stroke = 7.dp,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -391,7 +400,18 @@ fun GuardScreen() {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("Morning block", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Text("No limited apps before 12:00", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                            Text(
+                                if (morningUntil > 0) "No limited apps before ${morningUntil / 60}:${"%02d".format(morningUntil % 60)}"
+                                else "Off", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                            )
+                        }
+                        if (morningUntil > 0) {
+                            Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; com.ascend.lifeos.data.Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                            Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; com.ascend.lifeos.data.Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                            Spacer(Modifier.width(6.dp))
                         }
                         TogglePill(morningUntil > 0) {
                             WellbeingStore.setMorningBlockUntil(ctx, if (morningUntil > 0) 0 else 12 * 60)
@@ -426,12 +446,38 @@ fun GuardScreen() {
                     // grayscale wind-down
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Grayscale wind-down · 22:00", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            val wdH = if (windDown > 0) windDown / 60 else 22
+                            val wdM = if (windDown > 0) windDown % 60 else 0
+                            Text(
+                                "Grayscale wind-down · %02d:%02d".format(wdH, wdM),
+                                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+                                fontFamily = Body, fontWeight = FontWeight.Bold,
+                            )
                             Text("Screen drains to gray at night — scrolling loses its pull", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
                         }
                         TogglePill(windDown > 0) {
                             WellbeingStore.setWindDownStartMin(ctx, if (windDown > 0) 0 else 22 * 60)
                             tick++
+                        }
+                    }
+                    if (windDown > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(20 * 60, 21 * 60, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60).forEach { m ->
+                                val h = m / 60; val mm = m % 60
+                                val sel = windDown == m
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(10.dp))
+                                        .background(if (sel) Mod.Guard.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                                        .clickable { WellbeingStore.setWindDownStartMin(ctx, m); tick++; com.ascend.lifeos.data.Haptics.tick(ctx) }
+                                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                                ) {
+                                    Text(
+                                        "%d:%02d".format(h, mm), color = if (sel) Mod.Guard else TextDim,
+                                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
                         }
                     }
                     if (!secureOk) {
@@ -750,8 +796,7 @@ private val CasinoViolet = Color(0xFF9B8CFF)
  */
 @Composable
 private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -> Unit) {
-    // own countdown clock: refreshes the "resumes in Xm" line and flips the
-    // card back to idle the moment the pause expires — no screen tick needed
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var now by remember { mutableStateOf(System.currentTimeMillis()) }
     LaunchedEffect(pausedUntil) {
         now = System.currentTimeMillis()
@@ -779,7 +824,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                     Text(
                         "Resume now",
                         color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onResume)
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onResume(); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard resumed") }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
@@ -795,9 +840,9 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
             } else {
                 Spacer(Modifier.height(7.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    HudChip("15m", selected = false) { onPause(now + 15 * 60_000L) }
-                    HudChip("1h", selected = false) { onPause(now + 60 * 60_000L) }
-                    HudChip("Rest of day", selected = false) { onPause(next6amMs()) }
+                    HudChip("15m", selected = false) { onPause(now + 15 * 60_000L); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard paused for 15 min") }
+                    HudChip("1h", selected = false) { onPause(now + 60 * 60_000L); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard paused for 1 hour") }
+                    HudChip("Rest of day", selected = false) { onPause(next6amMs()); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard paused until tomorrow") }
                 }
                 Spacer(Modifier.height(5.dp))
                 Text(
@@ -856,7 +901,7 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(Crit.copy(alpha = 0.12f))
                             .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                            .clickable { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis() }
+                            .clickable { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Focus session ended") }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
                     ) { Text("End early", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -867,14 +912,17 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                     color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body,
                 )
                 Spacer(Modifier.height(10.dp))
+                val customMin = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_CUSTOM_MIN, 45)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(25, 50, 90).forEach { min ->
+                    listOf(25, customMin, 90).forEach { min ->
                         Box(
                             Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Guard.copy(alpha = 0.12f))
                                 .border(0.5.dp, Mod.Guard.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
                                 .clickable(enabled = overlayOk) {
                                     WellbeingStore.startFocus(ctx, min)
                                     if (!guardEnabled) onArm()
+                                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Focus: $min min — apps locked")
                                 }
                                 .padding(horizontal = 16.dp, vertical = 9.dp),
                         ) { Text("$min min", color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -922,7 +970,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                         }
                         Spacer(Modifier.weight(1f))
                         Icon(
-                            Icons.Rounded.Close, null, tint = TextDim,
+                            Icons.Rounded.Close, "Remove window", tint = TextDim,
                             modifier = Modifier.size(18.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .clickable {

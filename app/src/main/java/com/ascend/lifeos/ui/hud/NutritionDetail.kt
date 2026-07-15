@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -81,7 +82,7 @@ private val RADAR_6 = listOf("vitaminC", "iron", "calcium", "magnesium", "potass
 private fun SubHeader(title: String, onBack: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
         Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
         Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
@@ -225,7 +226,7 @@ private fun TopSourcesSheet(nutrientId: String, onDismiss: () -> Unit) {
             Text("Most ${nd.label} per 100 kcal — density, not portion size.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
             Spacer(Modifier.height(14.dp))
             if (top.isEmpty()) {
-                Text("No staple-food data for this nutrient yet.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5)
+                com.ascend.lifeos.ui.kit.EmptyState(Icons.Rounded.Search, "No data yet", "Log foods with ${nd.label} to see top sources", com.ascend.lifeos.ui.theme.Mod.Fuel)
             } else {
                 top.forEachIndexed { i, (name, dense, kcal) ->
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp)) {

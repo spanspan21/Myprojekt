@@ -222,7 +222,7 @@ fun SkillNetworkCanvas(
                 .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
                 .clickable { scale = initialScale; pan = initialPan },
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Rounded.CenterFocusStrong, null, tint = TextPrimary, modifier = Modifier.size(20.dp)) }
+        ) { Icon(Icons.Rounded.CenterFocusStrong, "Reset view", tint = TextPrimary, modifier = Modifier.size(20.dp)) }
         }
     }
 }

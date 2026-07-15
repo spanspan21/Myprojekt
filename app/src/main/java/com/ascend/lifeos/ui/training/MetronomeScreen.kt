@@ -47,7 +47,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
 
     val parts = remember(tempo) { tempo.split("-").mapNotNull { it.trim().toIntOrNull() } }
     val phaseNames = listOf("Eccentric", "Pause", "Concentric", "Pause")
-    val phaseColors = listOf(Cyan, TextDim, Color(0xFFFF6B6B), TextDim)
+    val phaseColors = listOf(Cyan, TextDim, Crit, TextDim)
 
     LaunchedEffect(running) {
         if (!running || parts.size != 4) return@LaunchedEffect
@@ -72,7 +72,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Metronome", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
         }
@@ -127,7 +127,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    if (running) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, null,
+                    if (running) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, if (running) "Pause" else "Play",
                     tint = if (running) Red else Accent, modifier = Modifier.size(28.dp),
                 )
             }

@@ -77,7 +77,7 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
     val recSeries = keys.map { k ->
         val d = Repo.bodyDay(k) ?: return@map 0f
         val sm = d.sleepMin ?: return@map 0f
-        val perf = (sm / 480.0).coerceIn(0.0, 1.0)
+        val perf = (sm / Repo.sleepNeedMin().toDouble()).coerceIn(0.0, 1.0)
         val rest = if (sm > 0) ((d.rem + d.deep).toDouble() / sm).coerceIn(0.0, 0.45) / 0.45 else 0.5
         ((0.65 * perf + 0.35 * rest) * 100).toFloat()
     }
@@ -146,6 +146,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(enabled = !sharing) {
                         sharing = true
+                        com.ascend.lifeos.data.Haptics.confirm(ctx)
                         scope.launch {
                             runCatching {
                                 com.ascend.lifeos.ui.insights.renderWeekCard(ctx)?.let {
@@ -169,7 +170,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
         Spacer(Modifier.height(18.dp))
 

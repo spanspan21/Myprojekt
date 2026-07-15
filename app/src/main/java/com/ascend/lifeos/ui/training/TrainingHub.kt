@@ -2,7 +2,9 @@ package com.ascend.lifeos.ui.training
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -43,6 +45,7 @@ import com.ascend.lifeos.ui.hud.GlassField
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.HudButton
 import com.ascend.lifeos.ui.hud.HudChip
+import com.ascend.lifeos.ui.hud.HudFill
 import com.ascend.lifeos.ui.hud.NeonBar
 import com.ascend.lifeos.ui.motion.sharedHero
 import com.ascend.lifeos.ui.theme.*
@@ -95,9 +98,9 @@ fun TrainingHub(
             if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.STRAIN_TARGET_ON, true)) {
                 com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
                     val (lo, hi) = when {
-                        rec >= 75 -> 14 to 20
-                        rec >= 50 -> 10 to 14
-                        else -> 4 to 8
+                        rec >= 75 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_GREEN_LO, 14) to com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_GREEN_HI, 20)
+                        rec >= 50 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_AMBER_LO, 10) to com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_AMBER_HI, 14)
+                        else -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_RED_LO, 4) to com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_RED_HI, 8)
                     }
                     Spacer(Modifier.height(3.dp))
                     val doneSets = vm.todaySetsLive // include the live session
@@ -128,7 +131,7 @@ fun TrainingHub(
         item {
             AnimatedVisibility(vm.deloadRecommended && !vm.deloadActive) {
                 Column {
-                    GlassPanel(Modifier.fillMaxWidth().clickable { vm.activateDeload() }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
+                    GlassPanel(Modifier.fillMaxWidth().clickable { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.activateDeload(); com.ascend.lifeos.ui.kit.AppFeedback.show("Deload activated") }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
                         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("Deload recommended", color = Orange, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
@@ -145,7 +148,7 @@ fun TrainingHub(
                             Text("Deload week active", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Text("End", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
-                                modifier = Modifier.clickable { vm.endDeload() })
+                                modifier = Modifier.clickable { com.ascend.lifeos.data.Haptics.tick(ctx); vm.endDeload(); com.ascend.lifeos.ui.kit.AppFeedback.show("Deload ended") })
                         }
                     }
                     Spacer(Modifier.height(14.dp))
@@ -171,11 +174,11 @@ fun TrainingHub(
                         }
                         Text(
                             "Resume", color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
+                            modifier = Modifier.clickable { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
                         )
                         Text(
                             "Close", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
-                            modifier = Modifier.clickable { vm.dismissAbandoned() }.padding(6.dp),
+                            modifier = Modifier.clickable { com.ascend.lifeos.data.Haptics.tick(ctx); vm.dismissAbandoned() }.padding(6.dp),
                         )
                     }
                 }
@@ -219,9 +222,7 @@ fun TrainingHub(
                 Spacer(Modifier.height(10.dp))
                 val plan = vm.weekPlan
                 if (plan == null || plan.sessions.isEmpty()) {
-                    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                        Text("Assembling your week…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, modifier = Modifier.padding(16.dp))
-                    }
+                    com.ascend.lifeos.ui.kit.ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
                 } else {
                     plan.note?.let {
                         Text(it, color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
@@ -231,6 +232,7 @@ fun TrainingHub(
                     NextSessionHero(
                         session = hero,
                         placement = vm.placements.find { it.session.index == hero.index },
+                        done = hero.name in vm.weekDoneNames,
                     ) { vm.startPlannedSession(hero); onStartWorkout() }
                 }
                 Spacer(Modifier.height(18.dp))
@@ -239,13 +241,28 @@ fun TrainingHub(
             val rest = vm.weekPlan?.sessions?.drop(1).orEmpty()
             if (rest.isNotEmpty()) {
                 item {
-                    Text("YOUR WEEK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    val allSessions = vm.weekPlan?.sessions.orEmpty()
+                    val weekDone = allSessions.count { it.name in vm.weekDoneNames }
+                    val weekTotal = allSessions.size
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("YOUR WEEK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
+                        Text("$weekDone / $weekTotal", color = if (weekDone >= weekTotal) Good else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    val weekProg = if (weekTotal > 0) weekDone.toFloat() / weekTotal else 0f
+                    val animProg by animateFloatAsState(weekProg, com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "wp")
+                    val barColor by animateColorAsState(if (weekDone >= weekTotal) Good else Mod.Train, label = "wc")
+                    Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(animProg).clip(RoundedCornerShape(2.dp)).background(barColor))
+                    }
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 32.dp)) {
                         items(rest, key = { it.index }) { session ->
                             WeekSessionCard(
+                                modifier = Modifier.animateItem(),
                                 session = session,
                                 placement = vm.placements.find { it.session.index == session.index },
+                                done = session.name in vm.weekDoneNames,
                             ) { vm.startPlannedSession(session); onStartWorkout() }
                         }
                     }
@@ -273,7 +290,7 @@ fun TrainingHub(
                             Modifier.clip(RoundedCornerShape(11.dp))
                                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                                .clickable { vm.regeneratePlan() }
+                                .clickable { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.regeneratePlan(); com.ascend.lifeos.ui.kit.AppFeedback.show("Plan regenerated") }
                                 .padding(horizontal = 13.dp, vertical = 8.dp),
                         ) {
                             Text("Re-plan now", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -286,6 +303,7 @@ fun TrainingHub(
                         CustomPlaceRow(
                             session = session,
                             placement = vm.placements.find { it.session.index == session.index },
+                            done = session.name in vm.weekDoneNames,
                             onPlace = { d, m -> vm.placeSessionManually(session, d, m) },
                         )
                         Spacer(Modifier.height(8.dp))
@@ -323,7 +341,7 @@ fun TrainingHub(
                             Spacer(Modifier.width(6.dp))
                             Text("fresh", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
                             Spacer(Modifier.width(14.dp))
-                            Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFFF6169)))
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(Crit))
                             Spacer(Modifier.width(6.dp))
                             Text("recovering", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
                             Spacer(Modifier.weight(1f))
@@ -382,8 +400,8 @@ fun TrainingHub(
                     )
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 32.dp)) {
-                        items(ExerciseSeed.TEMPLATES) { tpl ->
-                            TemplateCard(tpl) { vm.startWorkout(tpl); onStartWorkout() }
+                        items(ExerciseSeed.TEMPLATES, key = { it.name }) { tpl ->
+                            TemplateCard(Modifier.animateItem(), tpl) { vm.startWorkout(tpl); onStartWorkout() }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -434,7 +452,7 @@ private fun blockColor(t: BlockType): Color = when (t) {
     BlockType.SKILL -> Purple
     BlockType.STRENGTH -> Mod.Train
     BlockType.FINISHER -> Amber
-    BlockType.COOLDOWN -> Color(0xFF4CD4C4)
+    BlockType.COOLDOWN -> Good
 }
 
 @Composable
@@ -471,15 +489,26 @@ private fun placementLabel(p: Placement): String {
 }
 
 @Composable
-private fun NextSessionHero(session: PlannedSession, placement: Placement?, onStart: () -> Unit) {
-    // der lux-Moment des Screens: die eine Champagne-Hairline (Kap. 14)
-    GlassPanel(Modifier.fillMaxWidth(), corner = 20.dp, line = ChampagneLine) {
+private fun NextSessionHero(session: PlannedSession, placement: Placement?, done: Boolean = false, onStart: () -> Unit) {
+    val heroCtx = LocalContext.current
+    val accent = if (done) Good else Mod.Train
+    GlassPanel(
+        Modifier.fillMaxWidth(), corner = 20.dp,
+        line = if (done) Good.copy(alpha = 0.3f) else ChampagneLine,
+        fill = if (done) Good.copy(alpha = 0.04f) else HudFill,
+    ) {
         Column {
-            Box(Modifier.fillMaxWidth().height(3.dp).background(Mod.Train))
+            Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
             Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f)) {
-                        Text(session.name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s21, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (done) {
+                                Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(6.dp))
+                            }
+                            Text(session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s21, fontWeight = FontWeight.Bold)
+                        }
                         Text(session.focus, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
                         placement?.let {
                             Spacer(Modifier.height(4.dp))
@@ -520,15 +549,27 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, onSt
                 }
 
                 Spacer(Modifier.height(14.dp))
-                Box(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Train)
-                        .clickable(onClick = onStart).padding(vertical = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.PlayArrow, null, tint = Void, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Start session", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold)
+                if (done) {
+                    Box(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
+                            .background(Good.copy(alpha = 0.12f))
+                            .border(0.5.dp, Good.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
+                            .clickable { com.ascend.lifeos.data.Haptics.tick(heroCtx); onStart() }.padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("✓ Complete — tap to redo", color = Good, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Box(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Train)
+                            .clickable { com.ascend.lifeos.data.Haptics.confirm(heroCtx); onStart() }.padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.PlayArrow, "Start session", tint = Void, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Start session", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold)
+                        }
                     }
                 }
             }
@@ -537,14 +578,25 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, onSt
 }
 
 @Composable
-private fun WeekSessionCard(session: PlannedSession, placement: Placement?, onStart: () -> Unit) {
-    GlassPanel(Modifier.width(250.dp).clickable(onClick = onStart), corner = 16.dp) {
+private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSession, placement: Placement?, done: Boolean = false, onStart: () -> Unit) {
+    val wscCtx = LocalContext.current
+    val accent = if (done) Good else Mod.Train
+    GlassPanel(
+        modifier.width(250.dp).then(if (done) Modifier else Modifier.clickable { com.ascend.lifeos.data.Haptics.tick(wscCtx); onStart() }),
+        corner = 16.dp,
+        fill = if (done) Good.copy(alpha = 0.04f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+        line = if (done) Good.copy(alpha = 0.25f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f),
+    ) {
         Column {
-            Box(Modifier.fillMaxWidth().height(3.dp).background(Mod.Train.copy(alpha = 0.55f)))
+            Box(Modifier.fillMaxWidth().height(3.dp).background(accent.copy(alpha = if (done) 0.7f else 0.55f)))
             Column(Modifier.padding(13.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(session.name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("~${session.estMin} min", color = Mod.Train, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
+                    if (done) {
+                        Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(5.dp))
+                    }
+                    Text(session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("~${session.estMin} min", color = accent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
                 }
                 Text(
                     placement?.let { placementLabel(it) } ?: session.focus,
@@ -562,10 +614,14 @@ private fun WeekSessionCard(session: PlannedSession, placement: Placement?, onSt
                     Text(session.why, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.height(7.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.PlayArrow, null, tint = Mod.Train, modifier = Modifier.size(15.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Start", color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
+                if (done) {
+                    Text("✓ Complete", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.PlayArrow, "Start", tint = Mod.Train, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Start", color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -600,7 +656,7 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(progressionIcon(focused.chain.groupKey), null, tint = if (testReady) Amber else Mod.Train, modifier = Modifier.size(20.dp))
+                Icon(progressionIcon(focused.chain.groupKey), focused.chain.groupName, tint = if (testReady) Amber else Mod.Train, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(focused.chain.groupName, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontWeight = FontWeight.Bold)
@@ -675,6 +731,7 @@ private fun StepBox(label: String, onClick: () -> Unit) {
 private fun CustomPlaceRow(
     session: com.ascend.lifeos.data.training.PlannedSession,
     placement: com.ascend.lifeos.data.training.Placement?,
+    done: Boolean = false,
     onPlace: (java.time.LocalDate, Int) -> Unit,
 ) {
     val today = remember { java.time.LocalDate.now() }
@@ -688,10 +745,14 @@ private fun CustomPlaceRow(
                 Modifier.fillMaxWidth().clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(session.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                if (done) {
+                    Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(5.dp))
+                }
+                Text(session.name, color = if (done) Good else TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text(
-                    placement?.let { "${dayLabel(it.day)} ${fmt(it.startMin)}" } ?: "not placed",
-                    color = if (placement != null) Mod.Train else Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    if (done) "✓ done" else (placement?.let { "${dayLabel(it.day)} ${fmt(it.startMin)}" } ?: "not placed"),
+                    color = if (done) Good else if (placement != null) Mod.Train else Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(if (expanded) "▾" else "▸", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
@@ -749,10 +810,10 @@ private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOp
                     onPlus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq + 1, p.sessionLen, p.hasVest); vm.regeneratePlan() },
                 )
                 Spacer(Modifier.weight(1f))
-                val len = p.sessionLen.coerceIn(60, 120)
+                val len = p.sessionLen.coerceIn(30, 120)
                 Stepper(
                     value = "~$len min",
-                    onMinus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq, (len - 15).coerceAtLeast(60), p.hasVest); vm.regeneratePlan() },
+                    onMinus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq, (len - 15).coerceAtLeast(30), p.hasVest); vm.regeneratePlan() },
                     onPlus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq, (len + 15).coerceAtMost(120), p.hasVest); vm.regeneratePlan() },
                 )
             }
@@ -803,7 +864,7 @@ private fun CalibrateCta(onOpenAssess: () -> Unit) {
                 Modifier.size(42.dp).clip(RoundedCornerShape(13.dp))
                     .background(Mod.Train.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Speed, null, tint = Mod.Train, modifier = Modifier.size(22.dp)) }
+            ) { Icon(Icons.Rounded.Speed, "Calibration", tint = Mod.Train, modifier = Modifier.size(22.dp)) }
             Spacer(Modifier.width(13.dp))
             Column(Modifier.weight(1f)) {
                 Text("Run calibration protocol", color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold)
@@ -857,6 +918,7 @@ private fun TickerStatBlock(label: String, value: Int, color: Color) {
 
 @Composable
 private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
+    val swCtx = LocalContext.current
     val glow = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
         0.18f, 0.35f, 2200, RepeatMode.Reverse, still = 0.26f, label = "startGlow",
     )
@@ -866,7 +928,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.horizontalGradient(listOf(Accent.copy(alpha = glow), Cyan.copy(alpha = glow * 0.7f))))
             .border(1.dp, Accent.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
+            .clickable { com.ascend.lifeos.data.Haptics.confirm(swCtx); onClick() }
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -875,7 +937,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
                 Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(Accent.copy(alpha = 0.22f))
                     .border(0.5.dp, Accent.copy(alpha = 0.5f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.PlayArrow, null, tint = Accent, modifier = Modifier.size(24.dp)) }
+            ) { Icon(Icons.Rounded.PlayArrow, "Start session", tint = Accent, modifier = Modifier.size(24.dp)) }
             Spacer(Modifier.width(14.dp))
             Column {
                 Text("Start $name", color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.ExtraBold)
@@ -887,9 +949,10 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
 
 @Composable
 private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    GlassPanel(modifier.clickable(onClick = onClick), corner = 16.dp) {
+    val qaCtx = LocalContext.current
+    GlassPanel(modifier.clickable { com.ascend.lifeos.data.Haptics.tick(qaCtx); onClick() }, corner = 16.dp) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = Accent, modifier = Modifier.size(18.dp))
+            Icon(icon, label, tint = Accent, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -897,14 +960,15 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = M
 }
 
 @Composable
-private fun TemplateCard(tpl: WorkoutTemplate, onClick: () -> Unit) {
+private fun TemplateCard(modifier: Modifier = Modifier, tpl: WorkoutTemplate, onClick: () -> Unit) {
+    val tcCtx = LocalContext.current
     val color = templateColor(tpl.split)
-    GlassPanel(Modifier.width(155.dp).clickable(onClick = onClick), corner = 16.dp) {
+    GlassPanel(modifier.width(155.dp).clickable { com.ascend.lifeos.data.Haptics.tick(tcCtx); onClick() }, corner = 16.dp) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(color))
             Column(Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(templateIcon(tpl.split), null, tint = color, modifier = Modifier.size(16.dp))
+                    Icon(templateIcon(tpl.split), tpl.name, tint = color, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(tpl.name, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
@@ -1144,10 +1208,11 @@ private fun ActivityQuickLog() {
                         Text(relDay(e.ts), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
                         Spacer(Modifier.width(8.dp))
                         Icon(
-                            Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
+                            Icons.Rounded.Close, "Delete activity", tint = TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(14.dp).clickable {
                                 com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
-                                celebrate = null   // never keep celebrating a deleted entry
+                                celebrate = null
+                                com.ascend.lifeos.ui.kit.AppFeedback.show("Activity deleted")
                             },
                         )
                     }

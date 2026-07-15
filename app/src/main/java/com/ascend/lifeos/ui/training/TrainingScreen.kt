@@ -150,7 +150,7 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Exercises", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.weight(1f))
@@ -196,9 +196,9 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
                     }
                 }
                 items(exInCat, key = { it.id }) { ex ->
-                    GlassPanel(Modifier.fillMaxWidth().clickable { detail = ex }, corner = 14.dp) {
+                    GlassPanel(Modifier.animateItem().fillMaxWidth().clickable { detail = ex }, corner = 14.dp) {
                         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(catIcon(ex.category), null, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                            Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(ex.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
@@ -339,7 +339,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Add exercise", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.ExtraBold)
         }
@@ -364,7 +364,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
             items(filtered, key = { it.id }) { ex ->
                 GlassPanel(Modifier.fillMaxWidth().animateItem().clickable { onPicked(ex) }, corner = 14.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(catIcon(ex.category), null, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                        Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(ex.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)

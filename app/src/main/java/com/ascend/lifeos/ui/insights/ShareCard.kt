@@ -119,11 +119,11 @@ suspend fun renderWeekCard(ctx: Context): Uri? = withContext(Dispatchers.IO) {
         c.drawText("SLEEP · LAST 7 NIGHTS", MARGIN, 1210f, textPaint(Mod.Body.toArgb(), 26f, chakra, ls = 0.2f))
         val baseY = 1520f
         val maxBarH = 240f
-        val maxV = maxOf(s.sleepSeries.maxOrNull() ?: 0f, 480f)
+        val sleepRef = com.ascend.lifeos.data.Repo.sleepNeedMin().toFloat()
+        val maxV = maxOf(s.sleepSeries.maxOrNull() ?: 0f, sleepRef)
         val barW = 92f
         val gap = ((RIGHT - MARGIN) - 7 * barW) / 6f
-        // 8h reference line
-        val refY = baseY - 480f / maxV * maxBarH
+        val refY = baseY - sleepRef / maxV * maxBarH
         c.drawLine(
             MARGIN, refY, RIGHT, refY,
             Paint(Paint.ANTI_ALIAS_FLAG).apply {

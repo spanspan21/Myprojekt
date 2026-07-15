@@ -41,7 +41,7 @@ val ChampagneLine: Color get() = themeSpec.value.metal.copy(alpha = 0.45f)
 val accentState = mutableStateOf(Color(0xFF2563FF))
 val Accent: Color get() = accentState.value
 val AccentSoft: Color get() = accentState.value.copy(alpha = 0.15f)
-val AccentDim: Color get() = lerp(accentState.value, Color.Black, 0.45f)
+val AccentDim: Color get() = lerp(accentState.value, Void, 0.45f)
 
 fun applyAccent(color: Long) { accentState.value = Color(color) }
 

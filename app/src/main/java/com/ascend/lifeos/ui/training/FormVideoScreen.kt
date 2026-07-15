@@ -94,7 +94,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable { recording?.stop(); onClose() },
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
         Spacer(Modifier.height(14.dp))
 
@@ -138,9 +138,9 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                             .padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(7.dp).clip(CircleShape).background(Color.White))
+                        Box(Modifier.size(7.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory))
                         Spacer(Modifier.width(6.dp))
-                        Text("REC %d:%02d".format(elapsed / 60, elapsed % 60), color = Color.White, style = metricStyle(12))
+                        Text("REC %d:%02d".format(elapsed / 60, elapsed % 60), color = com.ascend.lifeos.ui.theme.Ivory, style = metricStyle(12))
                     }
                 }
                 // record orb
@@ -165,7 +165,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                     Box(
                         Modifier.size(if (recording != null) 22.dp else 30.dp)
                             .clip(if (recording != null) RoundedCornerShape(5.dp) else CircleShape)
-                            .background(if (recording != null) Color.White else Crit),
+                            .background(if (recording != null) com.ascend.lifeos.ui.theme.Ivory else Crit),
                     )
                 }
             }
@@ -183,9 +183,9 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 30.dp)) {
                 items(clips, key = { it.absolutePath }) { f ->
-                    Panel(Modifier.fillParentMaxWidth(), corner = 14.dp, onClick = { playing = f }) {
+                    Panel(Modifier.animateItem().fillParentMaxWidth(), corner = 14.dp, onClick = { playing = f }) {
                         Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.PlayArrow, null, tint = Mod.Train, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.PlayArrow, "Play video", tint = Mod.Train, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(11.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(clipLabel(f), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -196,7 +196,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                                 )
                             }
                             Icon(
-                                Icons.Rounded.Delete, null, tint = TextDim.copy(alpha = 0.6f),
+                                Icons.Rounded.Delete, "Delete video", tint = TextDim.copy(alpha = 0.6f),
                                 modifier = Modifier.size(16.dp).clickable { f.delete(); clips = listClips(dir) },
                             )
                         }

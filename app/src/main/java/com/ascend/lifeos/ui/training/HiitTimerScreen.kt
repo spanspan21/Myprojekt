@@ -57,11 +57,11 @@ fun HiitTimerScreen(onBack: () -> Unit) {
     var totalPhase by remember { mutableIntStateOf(0) }
     val ctx = LocalContext.current
 
-    // Custom config state
-    var cWork by remember { mutableStateOf("30") }
-    var cRest by remember { mutableStateOf("15") }
-    var cRounds by remember { mutableStateOf("8") }
-    var cSets by remember { mutableStateOf("3") }
+    // Custom config state — persisted so last-used values survive screen re-entry
+    var cWork by remember { mutableStateOf(com.ascend.lifeos.data.Prefs.int(ctx, "hiit_work", 30).toString()) }
+    var cRest by remember { mutableStateOf(com.ascend.lifeos.data.Prefs.int(ctx, "hiit_rest", 15).toString()) }
+    var cRounds by remember { mutableStateOf(com.ascend.lifeos.data.Prefs.int(ctx, "hiit_rounds", 8).toString()) }
+    var cSets by remember { mutableStateOf(com.ascend.lifeos.data.Prefs.int(ctx, "hiit_sets", 3).toString()) }
 
     LaunchedEffect(running, paused) {
         if (!running || paused) return@LaunchedEffect
@@ -84,7 +84,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("HIIT Timer", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
         }
@@ -104,7 +104,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                             Text(p.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
                             Text("${p.workSec}s/${p.restSec}s · ${p.rounds}×${p.sets}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
                         }
-                        Icon(Icons.Rounded.PlayArrow, null, tint = Accent, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Rounded.PlayArrow, "Start preset", tint = Accent, modifier = Modifier.size(20.dp))
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -121,7 +121,13 @@ fun HiitTimerScreen(onBack: () -> Unit) {
             }
             Spacer(Modifier.height(14.dp))
             HudButton("Start", Modifier.fillMaxWidth()) {
-                val p = HiitPreset("Custom", cWork.toIntOrNull() ?: 30, cRest.toIntOrNull() ?: 15, cRounds.toIntOrNull() ?: 8, cSets.toIntOrNull() ?: 3)
+                val w = cWork.toIntOrNull() ?: 30; val r = cRest.toIntOrNull() ?: 15
+                val rn = cRounds.toIntOrNull() ?: 8; val st = cSets.toIntOrNull() ?: 3
+                com.ascend.lifeos.data.Prefs.setInt(ctx, "hiit_work", w)
+                com.ascend.lifeos.data.Prefs.setInt(ctx, "hiit_rest", r)
+                com.ascend.lifeos.data.Prefs.setInt(ctx, "hiit_rounds", rn)
+                com.ascend.lifeos.data.Prefs.setInt(ctx, "hiit_sets", st)
+                val p = HiitPreset("Custom", w, r, rn, st)
                 preset = p; currentRound = 1; currentSet = 1; isWork = true
                 remaining = p.workSec; totalPhase = p.workSec; running = true
             }
@@ -148,7 +154,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                     ))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (isWork) "WORK" else "REST", color = if (isWork) Color(0xFFFF6B6B) else Cyan, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
+                    Text(if (isWork) "WORK" else "REST", color = if (isWork) Crit else Cyan, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
                     Text("$remaining", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s64, fontWeight = FontWeight.ExtraBold)
                     Text("Round $currentRound/${preset?.rounds ?: 0} · Set $currentSet/${preset?.sets ?: 0}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
                 }
@@ -161,13 +167,13 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                     Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, HudLine, CircleShape).clickable { paused = !paused },
                     contentAlignment = Alignment.Center,
-                ) { Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, tint = TextPrimary, modifier = Modifier.size(24.dp)) }
+                ) { Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, if (paused) "Resume" else "Pause", tint = TextPrimary, modifier = Modifier.size(24.dp)) }
 
                 Box(
                     Modifier.size(56.dp).clip(CircleShape).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), CircleShape).clickable { running = false },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.Stop, null, tint = Red, modifier = Modifier.size(24.dp)) }
+                ) { Icon(Icons.Rounded.Stop, "Stop", tint = Red, modifier = Modifier.size(24.dp)) }
             }
             Spacer(Modifier.weight(0.4f))
         }

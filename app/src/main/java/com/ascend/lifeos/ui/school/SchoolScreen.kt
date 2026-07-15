@@ -58,11 +58,18 @@ import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.Good
 import com.ascend.lifeos.ui.theme.Ivory
+import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
 import com.ascend.lifeos.ui.theme.Void
 import com.ascend.lifeos.ui.theme.Warn
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -72,7 +79,6 @@ import java.util.Locale
 // Subjects, each on its own grade system (Noten 1–6 or Punkte 0–15). Grades are
 // written or oral and weighed single or double. Everything is a Notenschnitt.
 
-private val SchoolAccent = Color(0xFF5B9DFF)
 private val DF_DM = DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)
 
 private fun fmt1(v: Double) = String.format(Locale.ENGLISH, "%.1f", v)
@@ -92,11 +98,11 @@ private fun gradeColor(grade: Double?): Color = when {
 private fun pill(text: String, on: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (on) SchoolAccent.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, if (on) SchoolAccent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+            .background(if (on) Mod.School.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, if (on) Mod.School.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center,
-    ) { Text(text, color = if (on) SchoolAccent else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+    ) { Text(text, color = if (on) Mod.School else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -127,13 +133,13 @@ fun SchoolScreen(onClose: () -> Unit) {
     }
 
     Box(Modifier.fillMaxSize().background(Void)) {
-        ModuleBackground(SchoolAccent)
+        ModuleBackground(Mod.School)
         LazyColumn(
             Modifier.fillMaxSize().statusBarsPadding(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 120.dp),
         ) {
             item(key = "header") {
-                JarvisHeader("School", context, SchoolAccent) {}
+                JarvisHeader("School", context, Mod.School) {}
                 Spacer(Modifier.height(18.dp))
             }
 
@@ -146,7 +152,7 @@ fun SchoolScreen(onClose: () -> Unit) {
 
             if (exams.isNotEmpty()) {
                 item(key = "exams_label") {
-                    SectionLabel("Upcoming exams", accent = SchoolAccent)
+                    SectionLabel("Upcoming exams", accent = Mod.School)
                     Spacer(Modifier.height(8.dp))
                 }
                 itemsIndexed(exams, key = { _, it -> "exam_${it.title}_${it.dayEpoch}" }) { i, ex ->
@@ -166,19 +172,19 @@ fun SchoolScreen(onClose: () -> Unit) {
                     if (i == 0) {
                         // The nearest exam is the highest-stakes item on the screen —
                         // give it a real countdown hero, not a flat text line.
-                        Panel(Modifier.fillMaxWidth(), line = SchoolAccent.copy(alpha = 0.4f)) {
+                        Panel(Modifier.animateItem().fillMaxWidth(), line = Mod.School.copy(alpha = 0.4f)) {
                             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(76.dp)) {
                                     Text(
                                         if (daysLeft <= 0) "!" else "$daysLeft",
-                                        color = SchoolAccent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold,
+                                        color = Mod.School, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold,
                                     )
                                     Text(if (daysLeft == 1) "DAY" else "DAYS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
                                 }
                                 Spacer(Modifier.width(16.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(ex.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
-                                    Text(whenTxt, color = SchoolAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                                    Text(whenTxt, color = Mod.School, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                                     needTxt?.let {
                                         Spacer(Modifier.height(2.dp))
                                         Text(it, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
@@ -187,7 +193,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                             }
                         }
                     } else {
-                        Panel(Modifier.fillMaxWidth()) {
+                        Panel(Modifier.animateItem().fillMaxWidth()) {
                             Column(Modifier.fillMaxWidth().padding(14.dp)) {
                                 Text(ex.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.height(2.dp))
@@ -203,7 +209,7 @@ fun SchoolScreen(onClose: () -> Unit) {
             }
 
             item(key = "subjects_label") {
-                SectionLabel(if (subjects.isEmpty()) "Subjects" else "Subjects · ${subjects.size}", accent = SchoolAccent)
+                SectionLabel(if (subjects.isEmpty()) "Subjects" else "Subjects · ${subjects.size}", accent = Mod.School)
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -214,7 +220,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                             Icons.Rounded.School,
                             "No subjects yet",
                             "Add a subject, pick its grade system, then log grades — your Ø appears here.",
-                            SchoolAccent,
+                            Mod.School,
                             actionLabel = "Add subject",
                             onAction = { addSubject = true },
                         )
@@ -226,16 +232,25 @@ fun SchoolScreen(onClose: () -> Unit) {
                         subject = s,
                         tick = tick,
                         expanded = expanded == s.id,
+                        modifier = Modifier.animateItem(),
                         onToggle = { expanded = if (expanded == s.id) null else s.id },
                         onAddGrade = { addGradeFor = s },
-                        onDeleteGrade = { g -> SchoolStore.deleteGrade(ctx, g.id); tick++ },
-                        onDeleteSubject = { SchoolStore.deleteSubject(ctx, s.id); tick++ },
+                        onDeleteGrade = { g ->
+                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            SchoolStore.deleteGrade(ctx, g.id); tick++
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("Grade deleted")
+                        },
+                        onDeleteSubject = {
+                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            SchoolStore.deleteSubject(ctx, s.id); tick++
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("Subject deleted")
+                        },
                     )
                     Spacer(Modifier.height(8.dp))
                 }
                 item(key = "add_subject") {
                     Spacer(Modifier.height(4.dp))
-                    AddRowButton("Add subject", accent = SchoolAccent) { addSubject = true }
+                    AddRowButton("Add subject", accent = Mod.School) { addSubject = true }
                 }
             }
         }
@@ -253,7 +268,7 @@ fun SchoolScreen(onClose: () -> Unit) {
 private fun GradeHero(overall: Double, subjectCount: Int) {
     Panel(
         Modifier.fillMaxWidth(), corner = 20.dp,
-        fill = SchoolAccent.copy(alpha = 0.05f), line = SchoolAccent.copy(alpha = 0.25f),
+        fill = Mod.School.copy(alpha = 0.05f), line = Mod.School.copy(alpha = 0.25f),
     ) {
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             // ring fills as the grade approaches 1.0 (best)
@@ -285,6 +300,7 @@ private fun SubjectCard(
     subject: Subject,
     tick: Int,
     expanded: Boolean,
+    modifier: Modifier = Modifier,
     onToggle: () -> Unit,
     onAddGrade: () -> Unit,
     onDeleteGrade: (Grade) -> Unit,
@@ -295,7 +311,7 @@ private fun SubjectCard(
     val avg = remember(tick, subject.id) { SchoolStore.avgFor(ctx, subject.id) }
     val grade = remember(tick, subject.id) { SchoolStore.subjectGrade(ctx, subject) }
 
-    Panel(Modifier.fillMaxWidth(), corner = 14.dp, onClick = onToggle) {
+    Panel(modifier.fillMaxWidth(), corner = 14.dp, onClick = onToggle) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -329,10 +345,14 @@ private fun SubjectCard(
                     SplitStat("schriftlich", written, subject, Modifier.weight(1f))
                     SplitStat("mündlich", oral, subject, Modifier.weight(1f))
                 }
+                if (grades.size >= 2) {
+                    Spacer(Modifier.height(10.dp))
+                    GradeTrendChart(grades, subject.points)
+                }
                 Spacer(Modifier.height(12.dp))
 
                 if (grades.isEmpty()) {
-                    Text("No grades yet — add the first one.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
+                    EmptyState(Icons.Rounded.School, "No grades yet", "Add the first one", Mod.School)
                 } else {
                     grades.forEach { g ->
                         GradeRow(subject, g) { onDeleteGrade(g) }
@@ -344,18 +364,24 @@ private fun SubjectCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
-                            .background(SchoolAccent.copy(alpha = 0.12f))
-                            .border(0.5.dp, SchoolAccent.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
+                            .background(Mod.School.copy(alpha = 0.12f))
+                            .border(0.5.dp, Mod.School.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
                             .clickable(onClick = onAddGrade).padding(vertical = 11.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("+ Add grade", color = SchoolAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text("+ Add grade", color = Mod.School, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    var armed by remember { mutableStateOf(false) }
+                    LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
-                            .background(Crit.copy(alpha = 0.10f))
-                            .border(0.5.dp, Crit.copy(alpha = 0.3f), RoundedCornerShape(11.dp))
-                            .clickable(onClick = onDeleteSubject).padding(horizontal = 14.dp, vertical = 11.dp),
+                            .background(Crit.copy(alpha = if (armed) 0.22f else 0.10f))
+                            .border(0.5.dp, Crit.copy(alpha = if (armed) 0.6f else 0.3f), RoundedCornerShape(11.dp))
+                            .clickable { if (armed) onDeleteSubject() else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
+                            .padding(horizontal = 14.dp, vertical = 11.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Icon(Icons.Rounded.Delete, null, tint = Crit, modifier = Modifier.size(16.dp)) }
+                    ) {
+                        if (armed) Text("Sure?", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        else Icon(Icons.Rounded.Delete, "Delete subject", tint = Crit, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
         }
@@ -379,6 +405,70 @@ private fun SplitStat(label: String, avg: Double?, subject: Subject, modifier: M
 }
 
 @Composable
+private fun GradeTrendChart(grades: List<Grade>, isPoints: Boolean) {
+    val sorted = remember(grades) { grades.sortedBy { it.ts } }
+    val minVal = if (isPoints) 0.0 else 1.0
+    val maxVal = if (isPoints) 15.0 else 6.0
+    val lineColor = Mod.School
+    val dotColor = Mod.School
+    val gridColor = Ivory.copy(alpha = 0.06f)
+
+    val running = remember(sorted) {
+        var wSum = 0.0; var wCount = 0
+        sorted.map { g ->
+            wSum += g.value * g.weight; wCount += g.weight
+            wSum / wCount
+        }
+    }
+
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .background(Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.07f), RoundedCornerShape(12.dp))
+            .padding(12.dp),
+    ) {
+        Text("TREND", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        Spacer(Modifier.height(6.dp))
+        Canvas(Modifier.fillMaxWidth().height(80.dp)) {
+            val w = size.width; val h = size.height
+            val pad = 8f
+            val chartW = w - 2 * pad; val chartH = h - 2 * pad
+            val range = maxVal - minVal
+
+            for (i in 0..4) {
+                val y = pad + chartH * i / 4
+                drawLine(gridColor, Offset(pad, y), Offset(w - pad, y), strokeWidth = 0.5f)
+            }
+
+            if (running.size < 2) return@Canvas
+
+            val path = Path()
+            val points = running.mapIndexed { i, v ->
+                val x = pad + chartW * i / (running.size - 1).coerceAtLeast(1)
+                val normY = if (isPoints) (1.0 - (v - minVal) / range) else ((v - minVal) / range)
+                val y = pad + chartH * normY.toFloat()
+                Offset(x, y)
+            }
+
+            path.moveTo(points[0].x, points[0].y)
+            for (i in 1 until points.size) path.lineTo(points[i].x, points[i].y)
+            drawPath(path, lineColor.copy(alpha = 0.7f), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
+
+            points.forEach { p -> drawCircle(dotColor, radius = 3.5f, center = p) }
+        }
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            val firstDate = Instant.ofEpochMilli(sorted.first().ts).atZone(ZoneId.systemDefault()).toLocalDate()
+            val lastDate = Instant.ofEpochMilli(sorted.last().ts).atZone(ZoneId.systemDefault()).toLocalDate()
+            val fmt = DateTimeFormatter.ofPattern("dd.MM", Locale.getDefault())
+            Text(firstDate.format(fmt), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontFamily = Body)
+            Text("running Ø ${fmt1(running.last())}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+            Text(lastDate.format(fmt), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontFamily = Body)
+        }
+    }
+}
+
+@Composable
 private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ivory.copy(alpha = 0.04f))
@@ -398,7 +488,7 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
                 )
                 if (g.weight == SchoolStore.WEIGHT_DOUBLE) {
                     Spacer(Modifier.width(6.dp))
-                    Text("×2", color = SchoolAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("×2", color = Mod.School, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
             if (g.note.isNotBlank() || g.ts > 0) {
@@ -427,10 +517,10 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
             Text("New subject", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
-            LifeField("Name (e.g. Mathe)", name, SchoolAccent) { name = it }
+            LifeField("Name (e.g. Mathe)", name, Mod.School) { name = it }
             Spacer(Modifier.height(14.dp))
 
-            SectionLabel("Grade system", accent = SchoolAccent)
+            SectionLabel("Grade system", accent = Mod.School)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pill("Punkte 0–15", points, Modifier.weight(1f)) { points = true }
@@ -440,8 +530,8 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
 
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(if (name.isNotBlank()) SchoolAccent else SchoolAccent.copy(alpha = 0.25f))
-                    .clickable(enabled = name.isNotBlank()) { SchoolStore.addSubject(ctx, name, points); onSaved(); onDismiss() }
+                    .background(if (name.isNotBlank()) Mod.School else Mod.School.copy(alpha = 0.25f))
+                    .clickable(enabled = name.isNotBlank()) { SchoolStore.addSubject(ctx, name, points); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Subject added"); onSaved(); onDismiss() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Add subject", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -474,7 +564,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
             Text(subject.name, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
             Spacer(Modifier.height(14.dp))
 
-            SectionLabel("Grade  ·  $preview", accent = SchoolAccent)
+            SectionLabel("Grade  ·  $preview", accent = Mod.School)
             Spacer(Modifier.height(8.dp))
             if (subject.points) {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -493,7 +583,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
             }
             Spacer(Modifier.height(14.dp))
 
-            SectionLabel("Type", accent = SchoolAccent)
+            SectionLabel("Type", accent = Mod.School)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pill("schriftlich", !oral, Modifier.weight(1f)) { oral = false; weight = SchoolStore.WEIGHT_DOUBLE }
@@ -501,7 +591,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
             }
             Spacer(Modifier.height(14.dp))
 
-            SectionLabel("Weight", accent = SchoolAccent)
+            SectionLabel("Weight", accent = Mod.School)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pill("einfach ×1", weight == SchoolStore.WEIGHT_SINGLE, Modifier.weight(1f)) { weight = SchoolStore.WEIGHT_SINGLE }
@@ -509,12 +599,12 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
             }
             Spacer(Modifier.height(14.dp))
 
-            LifeField("Note (optional, e.g. Klausur 1)", note, SchoolAccent) { note = it }
+            LifeField("Note (optional, e.g. Klausur 1)", note, Mod.School) { note = it }
             Spacer(Modifier.height(18.dp))
 
             Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(SchoolAccent)
-                    .clickable { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); onSaved(); onDismiss() }
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Mod.School)
+                    .clickable { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Grade added"); onSaved(); onDismiss() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save grade", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

@@ -184,7 +184,7 @@ private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: 
                 items(filtered, key = { it.id }) { b ->
                     Text(
                         b.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5,
-                        modifier = Modifier.fillMaxWidth().clickable { onPick(b) }.padding(vertical = 12.dp),
+                        modifier = Modifier.animateItem().fillMaxWidth().clickable { onPick(b) }.padding(vertical = 12.dp),
                     )
                 }
             }

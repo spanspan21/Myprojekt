@@ -97,7 +97,7 @@ fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
                         .clickable { constellation = false },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(19.dp)) }
+                ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(19.dp)) }
             }
         }
     }
@@ -175,7 +175,7 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
                 }
             }
             items(domains, key = { it.domain.id }) { d ->
-                PathCard(d, metaTick) { onOpen(d.domain.id) }
+                PathCard(d, metaTick, Modifier.animateItem()) { onOpen(d.domain.id) }
                 Spacer(Modifier.height(12.dp))
             }
         }
@@ -190,6 +190,7 @@ private fun FocusNowCard(
     minutes: Int,
     onMinutes: (Int) -> Unit,
 ) {
+    val ctx = LocalContext.current
     Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             SectionLabel(
@@ -203,7 +204,7 @@ private fun FocusNowCard(
                     Box(
                         Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (sel) Mod.Skills else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                            .clickable { onMinutes(m) }
+                            .clickable { onMinutes(m); com.ascend.lifeos.data.Haptics.tick(ctx) }
                             .padding(horizontal = 14.dp, vertical = 7.dp),
                     ) {
                         Text(
@@ -287,9 +288,11 @@ private fun ReviewQueue(due: List<DueReview>, onGraded: () -> Unit) {
                     expanded = openId == r.nodeId,
                     onToggle = { openId = if (openId == r.nodeId) null else r.nodeId },
                     onGrade = { g ->
-                        SkillMeta.grade(ctx, r.nodeId, g, r.pathId)
+                        val days = SkillMeta.grade(ctx, r.nodeId, g, r.pathId)
                         openId = null
                         onGraded()
+                        val label = if (days == 1) "tomorrow" else "in $days days"
+                        com.ascend.lifeos.ui.kit.AppFeedback.show("Next review $label")
                     },
                 )
             }
@@ -325,9 +328,10 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
             )
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GradeChip("Again", TextMuted) { onGrade(SkillMeta.GRADE_AGAIN) }
-                GradeChip("Good", Mod.Skills) { onGrade(SkillMeta.GRADE_GOOD) }
-                GradeChip("Easy", Good) { onGrade(SkillMeta.GRADE_EASY) }
+                val gradeCtx = LocalContext.current
+                GradeChip("Again", TextMuted) { onGrade(SkillMeta.GRADE_AGAIN); com.ascend.lifeos.data.Haptics.tick(gradeCtx) }
+                GradeChip("Good", Mod.Skills) { onGrade(SkillMeta.GRADE_GOOD); com.ascend.lifeos.data.Haptics.confirm(gradeCtx) }
+                GradeChip("Easy", Good) { onGrade(SkillMeta.GRADE_EASY); com.ascend.lifeos.data.Haptics.confirm(gradeCtx) }
             }
         }
     }
@@ -351,7 +355,7 @@ private fun RowScope.GradeChip(label: String, color: Color, onClick: () -> Unit)
 }
 
 @Composable
-private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, onOpen: () -> Unit) {
+private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, modifier: Modifier = Modifier, onOpen: () -> Unit) {
     val ctx = LocalContext.current
     val accent = Color(d.domain.accentColor)
     val next = currentNode(d)
@@ -363,7 +367,7 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, onOpen: () -> Unit) 
         SkillMeta.pathXp(ctx, d.domain.id, d.nodes.sumOf { it.doneCount }, proofs)
     }
 
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp, onClick = onOpen) {
+    Panel(modifier.fillMaxWidth(), corner = 20.dp, onClick = onOpen) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Ring(
@@ -440,7 +444,7 @@ private fun PathDetail(d: DomainWithGraph, vm: MasterPlanViewModel, onBack: () -
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted,
+                    Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
                     modifier = Modifier.size(22.dp).clickable(onClick = onBack),
                 )
                 Spacer(Modifier.width(12.dp))
@@ -462,8 +466,10 @@ private fun PathDetail(d: DomainWithGraph, vm: MasterPlanViewModel, onBack: () -
                 isUnlocked(n, done) -> NodeState.READY
                 else -> NodeState.LOCKED
             }
-            MilestoneRow(n, state, accent, vm)
-            Spacer(Modifier.height(8.dp))
+            Column(Modifier.animateItem()) {
+                MilestoneRow(n, state, accent, vm)
+                Spacer(Modifier.height(8.dp))
+            }
         }
     }
 }
@@ -570,11 +576,19 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                         Row(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                                 .clickable {
-                                    // checking the last open task completes the node → first review tomorrow
                                     val completesNode = !doneTask &&
                                         n.tasks.all { it.id == t.id || it.status == TaskStatus.DONE }
                                     vm.setTaskDone(t.id, !doneTask)
-                                    if (completesNode) SkillMeta.scheduleInitial(ctx, n.node.id)
+                                    if (completesNode) {
+                                        SkillMeta.scheduleInitial(ctx, n.node.id)
+                                        com.ascend.lifeos.data.Haptics.epic(ctx)
+                                        AppFeedback.show("Milestone complete — review scheduled")
+                                    } else if (!doneTask) {
+                                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                        AppFeedback.show("Task done")
+                                    } else {
+                                        com.ascend.lifeos.data.Haptics.tick(ctx)
+                                    }
                                 }
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -643,12 +657,14 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                                 WellbeingStore.startFocus(ctx, 25)
                                 com.ascend.lifeos.wellbeing.JarvisGuardService.start(ctx)
                                 SkillMeta.addFocusMinutes(ctx, n.node.domainId, 25)
+                                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                AppFeedback.show("Focus session started — 25 min")
                             }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Timer, null, tint = accent, modifier = Modifier.size(15.dp))
+                            Icon(Icons.Rounded.Timer, "Start focus session", tint = accent, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 "Start 25-min focus session",
@@ -684,7 +700,7 @@ private fun ResourceRowMini(r: ResourceEntity, accent: Color) {
             Text(r.title, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(r.provider, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
         }
-        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = accent.copy(alpha = 0.7f), modifier = Modifier.size(13.dp))
+        Icon(Icons.AutoMirrored.Rounded.OpenInNew, "Open resource", tint = accent.copy(alpha = 0.7f), modifier = Modifier.size(13.dp))
     }
 }
 

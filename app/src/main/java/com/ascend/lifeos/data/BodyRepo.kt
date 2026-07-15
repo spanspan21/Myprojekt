@@ -22,8 +22,12 @@ object BodyRepo {
 
     fun setCheckIn(morningEnergy: Int? = null, soreness: Int? = null, eveningStress: Int? = null) =
         Repo.setCheckIn(morningEnergy, soreness, eveningStress)
-    fun setJournalFactor(caffeineLate: Boolean? = null, alcohol: Boolean? = null, lateMeal: Boolean? = null, screenLate: Boolean? = null) =
-        Repo.setJournalFactor(caffeineLate, alcohol, lateMeal, screenLate)
+    fun setJournalFactor(
+        caffeineLate: Boolean? = null, alcohol: Boolean? = null,
+        lateMeal: Boolean? = null, screenLate: Boolean? = null,
+        meditation: Boolean? = null, supplements: Boolean? = null,
+        lateExercise: Boolean? = null,
+    ) = Repo.setJournalFactor(caffeineLate, alcohol, lateMeal, screenLate, meditation, supplements, lateExercise)
     fun journalImpact(selector: (BodyDay) -> Boolean?) = Repo.journalImpact(selector)
 
     fun rhrBaseline() = Repo.rhrBaseline()

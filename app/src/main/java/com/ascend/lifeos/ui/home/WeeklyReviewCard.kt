@@ -43,7 +43,8 @@ import java.time.LocalDate
  */
 @Composable
 fun WeeklyReviewCard(onOpenReport: () -> Unit, modifier: Modifier = Modifier) {
-    if (LocalDate.now().dayOfWeek != DayOfWeek.SUNDAY) return
+    val dow = LocalDate.now().dayOfWeek
+    if (dow != DayOfWeek.SUNDAY && dow != DayOfWeek.MONDAY) return
     val ctx = LocalContext.current
 
     val stats by produceState<Triple<Int, Int, Int>?>(null) {

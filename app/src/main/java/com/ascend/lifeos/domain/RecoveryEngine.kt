@@ -8,6 +8,9 @@ package com.ascend.lifeos.domain
  */
 object RecoveryEngine {
 
+    const val THRESHOLD_GREEN = 75
+    const val THRESHOLD_RED = 50
+
     /**
      * Recovery v2 — sleep performance (40%) + restorative share (20%) +
      * resting-HR delta vs baseline (25%) + training-load headroom (15%).
@@ -25,9 +28,10 @@ object RecoveryEngine {
         trainingLoad: Double,
         soreness: Int? = null,
         morningEnergy: Int? = null,
+        sleepTarget: Int = 480,
     ): Int? {
         if (sleepMin == null) return null
-        val sleepPerf = (sleepMin / 480.0).coerceIn(0.0, 1.0)
+        val sleepPerf = (sleepMin / sleepTarget.coerceAtLeast(1).toDouble()).coerceIn(0.0, 1.0)
         // 45% deep+REM share = full credit; no stage data = missing signal, not 0%.
         val restorative: Double? =
             if (sleepMin > 0 && remMin + deepMin > 0)

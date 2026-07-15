@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.life.Goal
 import com.ascend.lifeos.data.life.Kr
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.kit.JarvisSheet
@@ -36,8 +38,6 @@ import com.ascend.lifeos.ui.kit.Ring
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
-
-private val MindAccent = Color(0xFF7C8CF8)
 
 // ─── shared scaffold (used by LifeScreens, DecisionScreen, AchievementsScreen) ─
 
@@ -58,7 +58,7 @@ internal fun LifeScaffold(title: String, context: String, accent: Color, onClose
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Close, null, tint = TextPrimary, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
         Spacer(Modifier.height(18.dp))
         content()
@@ -104,22 +104,22 @@ fun MindScreen(onClose: () -> Unit) {
         s
     }
 
-    LifeScaffold("Mind", "journal streak $streak", MindAccent, onClose) {
+    LifeScaffold("Mind", "journal streak $streak", Mod.Mind, onClose) {
         SectionLabel("One-minute journal")
         Spacer(Modifier.height(8.dp))
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
             Column(Modifier.padding(16.dp)) {
                 Text("Best moment today?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(5.dp))
-                LifeField("one line is enough", a1, MindAccent) { a1 = it; saved = false }
+                LifeField("one line is enough", a1, Mod.Mind) { a1 = it; saved = false }
                 Spacer(Modifier.height(10.dp))
                 Text("What drained you?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(5.dp))
-                LifeField("name it, then let it go", a2, MindAccent) { a2 = it; saved = false }
+                LifeField("name it, then let it go", a2, Mod.Mind) { a2 = it; saved = false }
                 Spacer(Modifier.height(10.dp))
                 Text("Grateful for?", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(5.dp))
-                LifeField("small counts", a3, MindAccent) { a3 = it; saved = false }
+                LifeField("small counts", a3, Mod.Mind) { a3 = it; saved = false }
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(1 to "Rough", 2 to "OK", 3 to "Great").forEach { (v, label) ->
@@ -129,17 +129,19 @@ fun MindScreen(onClose: () -> Unit) {
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (on) c.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                                .clickable { mood = v; saved = false }
+                                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); mood = v; saved = false }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) { Text(label, color = if (on) c else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                     Spacer(Modifier.weight(1f))
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
-                            .background(if (saved) Good.copy(alpha = 0.14f) else MindAccent)
+                            .background(if (saved) Good.copy(alpha = 0.14f) else Mod.Mind)
                             .clickable {
+                                com.ascend.lifeos.data.Haptics.confirm(ctx)
                                 Repo.setJournal(listOf(a1, a2, a3), mood)
                                 saved = true
+                                com.ascend.lifeos.ui.kit.AppFeedback.show("Journal saved")
                             }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
@@ -163,7 +165,7 @@ fun MindScreen(onClose: () -> Unit) {
             ).forEach { (preset, label) ->
                 Panel(Modifier.weight(1f), corner = 14.dp, onClick = { breathing = preset }) {
                     Text(
-                        label, color = MindAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        label, color = Mod.Mind, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 13.dp).fillMaxWidth(), textAlign = TextAlign.Center,
                     )
                 }
@@ -180,7 +182,7 @@ fun MindScreen(onClose: () -> Unit) {
             archive.forEach { (k, lines) ->
                 Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
                     Column(Modifier.padding(13.dp)) {
-                        Text(k, color = MindAccent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                        Text(k, color = Mod.Mind, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         lines.filter { it.isNotBlank() }.forEach {
                             Text("· $it", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp)
                         }
@@ -239,13 +241,13 @@ private fun BreathingOverlay(inhale: Int, hold: Int, exhale: Int, onClose: () ->
             Box(Modifier.size(240.dp), contentAlignment = Alignment.Center) {
                 Box(
                     Modifier.size(220.dp * scale).clip(CircleShape)
-                        .background(MindAccent.copy(alpha = 0.12f))
-                        .border(1.dp, MindAccent.copy(alpha = 0.5f), CircleShape),
+                        .background(Mod.Mind.copy(alpha = 0.12f))
+                        .border(1.dp, Mod.Mind.copy(alpha = 0.5f), CircleShape),
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         when (phase) { 0 -> "BREATHE IN"; 1 -> "HOLD"; else -> "BREATHE OUT" },
-                        color = MindAccent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                        color = Mod.Mind, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
                     )
                     Text("$secondsLeft", color = TextPrimary, style = metricStyle(44))
@@ -270,28 +272,57 @@ fun GoalsScreen(onClose: () -> Unit) {
         "Q${(d.monthValue - 1) / 3 + 1} ${d.year}"
     }
 
-    LifeScaffold("Goals", "$quarter · ${goals.size}/${LifeStores.MAX_GOALS} goals", Mod.Home, onClose) {
-        goals.forEach { g ->
+    var editGoalId by remember { mutableStateOf<String?>(null) }
+    val active = goals.filter { !it.archived }
+    val archived = goals.filter { it.archived }
+
+    var armedGoal by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(armedGoal) { if (armedGoal != null) { kotlinx.coroutines.delay(2500); armedGoal = null } }
+
+    LifeScaffold("Goals", "$quarter · ${active.size} active", Mod.Home, onClose) {
+        active.forEach { g ->
             val progress = g.krs.map { krProgress(it, ctx) }.average().toFloat().takeIf { !it.isNaN() } ?: 0f
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            val complete = progress >= 1f
+            Panel(
+                Modifier.fillMaxWidth(), corner = 18.dp,
+                fill = if (complete) Good.copy(alpha = 0.04f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+                line = if (complete) Good.copy(alpha = 0.25f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f),
+            ) {
                 Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Ring(progress = progress, color = Mod.Home, modifier = Modifier.size(46.dp), stroke = 4.dp) {
-                            Text("${(progress * 100).toInt()}", color = Mod.Home, style = metricStyle(13))
+                        Ring(progress = progress, color = if (complete) Good else Mod.Home, modifier = Modifier.size(46.dp), stroke = 4.dp) {
+                            if (complete) {
+                                Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(18.dp))
+                            } else {
+                                Text("${(progress * 100).toInt()}", color = Mod.Home, style = metricStyle(13))
+                            }
                         }
                         Spacer(Modifier.width(13.dp))
-                        Column(Modifier.weight(1f)) {
+                        Column(Modifier.weight(1f).clickable { editGoalId = g.id }) {
                             Text(g.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
-                            val (paceText, onCourse) = quarterPaceLine(progress)
-                            Text(
-                                paceText,
-                                color = if (onCourse) Good else Warn,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
-                            )
+                            if (g.deadline.isNotBlank()) {
+                                val daysLeft = runCatching {
+                                    java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), java.time.LocalDate.parse(g.deadline))
+                                }.getOrNull()
+                                val dlText = if (daysLeft != null && daysLeft >= 0) "${daysLeft}d left" else if (daysLeft != null) "overdue" else g.deadline
+                                val dlColor = if (daysLeft != null && daysLeft < 7) Warn else TextDim
+                                Text(dlText, color = dlColor, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                            } else {
+                                val (paceText, onCourse) = quarterPaceLine(progress)
+                                Text(
+                                    paceText,
+                                    color = if (onCourse) Good else Warn,
+                                    fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                                )
+                            }
                         }
                         Icon(
-                            Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
-                            modifier = Modifier.size(15.dp).clickable { LifeStores.deleteGoal(ctx, g.id) },
+                            Icons.Rounded.Close, "Delete goal",
+                            tint = if (armedGoal == g.id) Crit else TextDim.copy(alpha = 0.5f),
+                            modifier = Modifier.size(15.dp).clickable {
+                                if (armedGoal == g.id) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.deleteGoal(ctx, g.id); armedGoal = null; com.ascend.lifeos.ui.kit.AppFeedback.show("Goal deleted") }
+                                else { com.ascend.lifeos.data.Haptics.warn(ctx); armedGoal = g.id }
+                            },
                         )
                     }
                     Spacer(Modifier.height(10.dp))
@@ -308,11 +339,11 @@ fun GoalsScreen(onClose: () -> Unit) {
                                 Spacer(Modifier.width(10.dp))
                                 Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).clickable {
-                                        LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
+                                        com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
                                     }.padding(horizontal = 7.dp))
                                 Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).clickable {
-                                        LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
+                                        com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
                                     }.padding(horizontal = 7.dp))
                             } else {
                                 Spacer(Modifier.width(10.dp))
@@ -325,19 +356,39 @@ fun GoalsScreen(onClose: () -> Unit) {
             Spacer(Modifier.height(12.dp))
         }
 
-        if (goals.size < LifeStores.MAX_GOALS) {
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = { addOpen = true }) {
+        if (active.size < LifeStores.MAX_GOALS) {
+            Panel(Modifier.fillMaxWidth(), corner = 18.dp, onClick = { addOpen = true }) {
                 Text(
-                    "+ Add quarter goal", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    "+ Add goal", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
                 )
             }
             Spacer(Modifier.height(16.dp))
         }
-        // Habits moved to their own module (replaces Mind) — see HabitsScreen.
+
+        if (archived.isNotEmpty()) {
+            SectionLabel("Archived")
+            Spacer(Modifier.height(8.dp))
+            archived.forEach { g ->
+                Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(g.title, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, modifier = Modifier.weight(1f))
+                        Text("Restore", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { LifeStores.updateGoal(ctx, g.id, archived = false); com.ascend.lifeos.ui.kit.AppFeedback.show("Goal restored") }.padding(horizontal = 6.dp))
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+            Spacer(Modifier.height(16.dp))
+        }
     }
 
     if (addOpen) AddGoalSheet(onDone = { addOpen = false })
+
+    editGoalId?.let { gid ->
+        val g = goals.firstOrNull { it.id == gid }
+        if (g != null) EditGoalSheet(g, onDone = { editGoalId = null })
+    }
 }
 
 /**
@@ -384,17 +435,23 @@ private fun HabitsBlock() {
     var title by remember { mutableStateOf("") }
     val today = todayKey()
     val todayBit = 1 shl (java.time.LocalDate.now().dayOfWeek.value - 1)
+    var armedHabit by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(armedHabit) { if (armedHabit != null) { kotlinx.coroutines.delay(2500); armedHabit = null } }
 
     habits.forEach { h ->
         val scheduled = h.daysMask and todayBit != 0
         val done = LifeStores.habitDone(ctx, h.id, today)
         Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
-            Row(Modifier.padding(horizontal = 13.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(20.dp).clip(CircleShape)
                         .background(if (done) Mod.Home else Color.Transparent)
                         .border(1.dp, if (done) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
-                        .clickable(enabled = scheduled) { LifeStores.setHabitDone(ctx, h.id, today, !done) },
+                        .clickable(enabled = scheduled) {
+                            LifeStores.setHabitDone(ctx, h.id, today, !done)
+                            if (!done) com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            else com.ascend.lifeos.data.Haptics.tick(ctx)
+                        },
                     contentAlignment = Alignment.Center,
                 ) { if (done) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(11.dp))
@@ -407,8 +464,12 @@ private fun HabitsBlock() {
                     )
                 }
                 Icon(
-                    Icons.Rounded.Close, null, tint = TextDim.copy(alpha = 0.5f),
-                    modifier = Modifier.size(14.dp).clickable { LifeStores.deleteHabit(ctx, h.id) },
+                    Icons.Rounded.Close, "Delete habit",
+                    tint = if (armedHabit == h.id) Crit else TextDim.copy(alpha = 0.5f),
+                    modifier = Modifier.size(14.dp).clickable {
+                        if (armedHabit == h.id) { LifeStores.deleteHabit(ctx, h.id); armedHabit = null; com.ascend.lifeos.ui.kit.AppFeedback.show("Habit deleted") }
+                        else armedHabit = h.id
+                    },
                 )
             }
         }
@@ -424,6 +485,8 @@ private fun HabitsBlock() {
                 .clickable(enabled = title.isNotBlank()) {
                     LifeStores.addHabit(ctx, title, 0b1111111)
                     title = ""
+                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added")
                 }
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -436,6 +499,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
     var title by remember { mutableStateOf("") }
     var kr1 by remember { mutableStateOf("") }
     var kr2 by remember { mutableStateOf("") }
+    var deadline by remember { mutableStateOf("") }
     var weightBind by remember { mutableStateOf(false) }
     var targetKg by remember { mutableStateOf("") }
 
@@ -444,6 +508,8 @@ private fun AddGoalSheet(onDone: () -> Unit) {
             Text("NEW GOAL", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
             Spacer(Modifier.height(12.dp))
             LifeField("Goal title (e.g. Muscle-up by October)", title, Mod.Home) { title = it }
+            Spacer(Modifier.height(8.dp))
+            LifeField("Deadline (YYYY-MM-DD, optional)", deadline, Mod.Home) { deadline = it.filter { c -> c.isDigit() || c == '-' }.take(10) }
             Spacer(Modifier.height(8.dp))
             LifeField("Key result 1", kr1, Mod.Home) { kr1 = it }
             Spacer(Modifier.height(8.dp))
@@ -477,11 +543,57 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                             }
                         }
                         LifeStores.addGoal(ctx, title, krs)
+                        if (deadline.length == 10) LifeStores.updateGoal(ctx, LifeStores.goals(ctx).last().id, deadline = deadline)
+                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show("Goal created")
                         onDone()
                     }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Create goal", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun EditGoalSheet(goal: Goal, onDone: () -> Unit) {
+    val ctx = LocalContext.current
+    var title by remember { mutableStateOf(goal.title) }
+    var deadline by remember { mutableStateOf(goal.deadline) }
+
+    JarvisSheet(onDismiss = onDone) {
+        Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
+            Text("EDIT GOAL", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+            Spacer(Modifier.height(12.dp))
+            LifeField("Title", title, Mod.Home) { title = it }
+            Spacer(Modifier.height(8.dp))
+            LifeField("Deadline (YYYY-MM-DD)", deadline, Mod.Home) { deadline = it.filter { c -> c.isDigit() || c == '-' }.take(10) }
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(
+                    Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
+                        .background(Mod.Home)
+                        .clickable {
+                            LifeStores.updateGoal(ctx, goal.id, title = title, deadline = deadline)
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("Goal saved")
+                            onDone()
+                        }
+                        .padding(vertical = 13.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+                Box(
+                    Modifier.clip(RoundedCornerShape(14.dp))
+                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                        .clickable {
+                            LifeStores.updateGoal(ctx, goal.id, archived = true)
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("Goal archived")
+                            onDone()
+                        }
+                        .padding(horizontal = 18.dp, vertical = 13.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text("Archive", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            }
             Spacer(Modifier.height(16.dp))
         }
     }

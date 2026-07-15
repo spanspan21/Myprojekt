@@ -94,6 +94,22 @@ object SleepStore {
         upsertLog(ctx, n.copy(isNap = true, bedGiven = true))
     }
 
+    fun logNap(ctx: Context, durationMin: Int) {
+        val now = java.time.LocalTime.now()
+        val startMin = now.hour * 60 + now.minute - durationMin
+        val endMin = now.hour * 60 + now.minute
+        upsertLog(ctx, NightLog(
+            dayKey = com.ascend.lifeos.core.todayKey(),
+            bedMin = startMin.coerceAtLeast(0),
+            sleepOnsetMin = 0,
+            nightWakeMin = 0,
+            finalWakeMin = endMin,
+            outOfBedMin = endMin,
+            bedGiven = true,
+            isNap = true,
+        ))
+    }
+
     /**
      * Auto-import nights from the watch (Repo.bodyDays via Health Connect) —
      * the user shouldn't type what the sensor already knows. Existing entries

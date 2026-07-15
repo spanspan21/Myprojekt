@@ -137,7 +137,7 @@ object GuardRuntime {
     }
 
     /** Panic focus — the user asked for the door to slam (plan §18). */
-    fun actPanicFocus(ctx: Context, pkg: String, minutes: Int = 30) {
+    fun actPanicFocus(ctx: Context, pkg: String, minutes: Int = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PANIC_FOCUS_MIN, 30)) {
         bookAccepted(ctx)
         WellbeingStore.startFocus(ctx, minutes)
         cooldownUntil[pkg] = System.currentTimeMillis() + REARM_GRACE_MS

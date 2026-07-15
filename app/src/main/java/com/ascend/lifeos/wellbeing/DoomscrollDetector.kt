@@ -12,15 +12,15 @@ import com.ascend.lifeos.core.todayKey
  */
 object DoomscrollDetector {
 
-    private const val MAX_SNOOZES = 2
-    private const val WINDOW_MS = 5 * 60_000L // 5 minutes
+    private fun maxSnoozes(ctx: Context) = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.DOOMSCROLL_SNOOZES, 2)
+    private fun windowMs(ctx: Context) = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.DOOMSCROLL_WINDOW_MIN, 5) * 60_000L
 
     private fun sp(ctx: Context) = ctx.getSharedPreferences("wellbeing", Context.MODE_PRIVATE)
 
     private fun window(ctx: Context, pkg: String, now: Long): List<Long> =
         (sp(ctx).getString("dsw_$pkg", "") ?: "")
             .split(',').mapNotNull { it.toLongOrNull() }
-            .filter { now - it <= WINDOW_MS }
+            .filter { now - it <= windowMs(ctx) }
 
     fun recordSnooze(ctx: Context, pkg: String) {
         val now = System.currentTimeMillis()
@@ -30,7 +30,7 @@ object DoomscrollDetector {
     }
 
     fun isLockedOut(ctx: Context, pkg: String): Boolean =
-        window(ctx, pkg, System.currentTimeMillis()).size >= MAX_SNOOZES
+        window(ctx, pkg, System.currentTimeMillis()).size >= maxSnoozes(ctx)
 
     /** Snoozes taken for [pkg] since the day rolled over — drives escalation friction. */
     fun snoozesToday(ctx: Context, pkg: String): Int =

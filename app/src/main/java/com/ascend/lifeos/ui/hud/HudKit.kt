@@ -106,7 +106,7 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
     ) {
         Text(
             label,
-            color = if (primary) Color(0xFF06110C) else com.ascend.lifeos.ui.theme.TextMuted,
+            color = if (primary) com.ascend.lifeos.ui.theme.Void else com.ascend.lifeos.ui.theme.TextMuted,
             fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
         )
     }

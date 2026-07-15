@@ -79,10 +79,14 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pill("Fits", filled = true, modifier = Modifier.weight(1f)) {
                     scope.launch { TrainingReschedule.accept(ctx, s); dismissed = true }
+                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    com.ascend.lifeos.ui.kit.AppFeedback.show("Session rescheduled")
                 }
                 Pill("Other time", modifier = Modifier.weight(1f)) { pickOpen = true }
                 Pill("Skip", modifier = Modifier.weight(1f)) {
                     TrainingReschedule.skip(ctx); dismissed = true
+                    com.ascend.lifeos.data.Haptics.tick(ctx)
+                    com.ascend.lifeos.ui.kit.AppFeedback.show("Session skipped")
                 }
             }
         }
@@ -99,6 +103,8 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
                     TrainingReschedule.accept(ctx, s.copy(startMin = start, endMin = start + len))
                     pickOpen = false; dismissed = true
                 }
+                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                com.ascend.lifeos.ui.kit.AppFeedback.show("Session moved")
             },
         )
     }

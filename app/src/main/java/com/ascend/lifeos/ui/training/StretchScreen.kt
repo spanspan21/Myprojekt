@@ -81,7 +81,11 @@ fun StretchScreen(onBack: () -> Unit) {
                     isSecondSide = false
                     if (exIndex < routine.exercises.size - 1) {
                         exIndex++; remaining = routine.exercises[exIndex].holdSec
-                    } else { running = false }
+                    } else {
+                        running = false
+                        com.ascend.lifeos.data.Haptics.success(ctx)
+                        com.ascend.lifeos.ui.kit.AppFeedback.show("Stretch complete")
+                    }
                 }
             }
         }
@@ -90,7 +94,7 @@ fun StretchScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Stretching", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
         }
@@ -99,9 +103,10 @@ fun StretchScreen(onBack: () -> Unit) {
         if (!running) {
             // ── Routine picker ──────────────────────────────────────
             LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-                items(routines) { routine ->
+                items(routines, key = { it.id }) { routine ->
                     val isSuggested = routine.id in suggested
-                    GlassPanel(Modifier.fillMaxWidth().clickable {
+                    GlassPanel(Modifier.fillMaxWidth().animateItem().clickable {
+                        com.ascend.lifeos.data.Haptics.tick(ctx)
                         activeRoutine = routine; exIndex = 0; isSecondSide = false
                         remaining = routine.exercises.first().holdSec; running = true
                     }, corner = 16.dp) {
@@ -186,18 +191,19 @@ fun StretchScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, HudLine, CircleShape).clickable {
+                            com.ascend.lifeos.data.Haptics.tick(ctx)
                             isSecondSide = false
                             if (exIndex < routine.exercises.size - 1) {
                                 exIndex++; remaining = routine.exercises[exIndex].holdSec
                             } else { running = false }
                         },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.SkipNext, null, tint = TextPrimary, modifier = Modifier.size(24.dp)) }
+                ) { Icon(Icons.Rounded.SkipNext, "Skip exercise", tint = TextPrimary, modifier = Modifier.size(24.dp)) }
 
                 Box(
                     Modifier.clip(RoundedCornerShape(16.dp)).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .clickable { running = false }.padding(horizontal = 20.dp, vertical = 16.dp),
+                        .clickable { running = false; com.ascend.lifeos.ui.kit.AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
                 ) { Text("End", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.weight(0.3f))

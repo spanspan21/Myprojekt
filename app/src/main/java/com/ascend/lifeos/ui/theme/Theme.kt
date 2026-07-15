@@ -17,7 +17,7 @@ fun AscendTheme(content: @Composable () -> Unit) {
     val light = themeSpec.value.light
     val scheme = if (light) {
         lightColorScheme(
-            primary = Accent, onPrimary = Color.White, secondary = Blue,
+            primary = Accent, onPrimary = Ivory, secondary = Blue,
             background = Bg, onBackground = TextPrimary,
             surface = Surface, onSurface = TextPrimary,
             surfaceVariant = SurfaceHi, onSurfaceVariant = TextMuted,

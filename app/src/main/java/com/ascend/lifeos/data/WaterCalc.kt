@@ -14,11 +14,21 @@ import kotlin.math.ceil
  * context in 8 more surfaces; revisit only with that plumbing in place.
  */
 object WaterCalc {
-    const val GLASS_ML = 250
+    const val DEFAULT_GLASS_ML = 250
 
-    fun targetMl(weightKg: Int, trainedToday: Boolean, hot: Boolean = false): Int =
-        (30 * weightKg.coerceIn(30, 300)) + (if (trainedToday) 500 else 0) + (if (hot) 300 else 0)
+    fun glassMl(): Int {
+        val ctx = Repo.appContextOrNull() ?: return DEFAULT_GLASS_ML
+        return Prefs.int(ctx, Prefs.GLASS_ML, DEFAULT_GLASS_ML)
+    }
+
+    fun targetMl(weightKg: Int, trainedToday: Boolean, hot: Boolean = false): Int {
+        val ctx = Repo.appContextOrNull()
+        val mlPerKg = ctx?.let { Prefs.int(it, Prefs.WATER_ML_PER_KG, 30) } ?: 30
+        val trainBonus = ctx?.let { Prefs.int(it, Prefs.WATER_TRAIN_BONUS, 500) } ?: 500
+        val heatBonus = ctx?.let { Prefs.int(it, Prefs.WATER_HEAT_BONUS, 300) } ?: 300
+        return (mlPerKg * weightKg.coerceIn(30, 300)) + (if (trainedToday) trainBonus else 0) + (if (hot) heatBonus else 0)
+    }
 
     fun targetGlasses(weightKg: Int, trainedToday: Boolean, hot: Boolean = false): Int =
-        ceil(targetMl(weightKg, trainedToday, hot) / GLASS_ML.toDouble()).toInt().coerceIn(4, 24)
+        ceil(targetMl(weightKg, trainedToday, hot) / glassMl().toDouble()).toInt().coerceIn(4, 24)
 }
