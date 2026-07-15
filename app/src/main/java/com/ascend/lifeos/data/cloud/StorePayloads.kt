@@ -189,17 +189,32 @@ object StorePayloads {
         val sessions = dao.sessionsSince(0L)
         val prs = dao.recentPrs(Int.MAX_VALUE).first()
         val prog = dao.allProgressions().first()
+        // set-level sync, PAGINATED: only the newest sessions carry their sets
+        // inline (compact keys: n/r/w/p) — ~10×15×40 B ≈ 6 KB, far under the
+        // 64 KB store cap; older sessions stay aggregate-only
+        val setsBudget = sessions.sortedByDescending { it.session.startedAt }
+            .take(10).map { it.session.id }.toSet()
         val sessionsJson = JSONArray().apply {
             sessions.forEach { sw ->
                 val s = sw.session
-                // compact superset signal (full sets would blow the store size cap):
+                // compact superset signal (full sets everywhere would blow the cap):
                 // distinct pair groups in this session — the web shows it as a badge
                 val ssGroups = sw.sets.mapNotNull { it.supersetGroup }.distinct().size
-                put(JSONObject().put("id", s.id).put("templateName", s.templateName)
+                val o = JSONObject().put("id", s.id).put("templateName", s.templateName)
                     .put("startedAt", s.startedAt).put("finishedAt", s.finishedAt)
                     .put("isComplete", s.isComplete).put("totalSets", s.totalSets)
                     .put("totalReps", s.totalReps).put("durationMinutes", s.durationMinutes)
-                    .put("supersets", ssGroups))
+                    .put("supersets", ssGroups)
+                if (s.id in setsBudget && sw.sets.isNotEmpty()) {
+                    o.put("sets", JSONArray().apply {
+                        sw.sets.forEach { st ->
+                            put(JSONObject().put("n", st.exerciseName).put("r", st.reps)
+                                .apply { st.weight?.let { put("w", it.toDouble()) } }
+                                .apply { st.rpe?.let { put("p", it) } })
+                        }
+                    })
+                }
+                put(o)
             }
         }
         val prsJson = JSONArray().apply {
