@@ -1150,7 +1150,7 @@ object BasicFoods {
         val q = FoodRank.normalize(query)
         if (q.isBlank()) return emptyList()
         return ALL.mapNotNull { p ->
-            val mq = FoodRank.matchQuality(p.name, aliasesOf(p.name), q)
+            val mq = FoodRank.matchQuality(p.name, aliasesOf(p.name), q, queryRaw = query)
             if (mq == 0) null else Triple(p, mq, FoodRank.brevity(p.name))
         }
             .sortedWith(compareByDescending<Triple<FoodApi.Product, Int, Int>> { it.second }

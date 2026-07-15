@@ -77,7 +77,7 @@ val MACRO_IDS = setOf("protein", "carbs", "fat")
 val MICRO_PLAUSIBLE_MAX: Map<String, Double> = mapOf(
     "sodium" to 8.0,         // soy sauce ~5.6 g/100g + headroom (pure table salt
                              // would be ~39 — a scan claiming that is noise anyway)
-    "potassium" to 1.5,      // dried apricots 1.16 g
+    "potassium" to 2.6,      // textured soy ~2.4 g, dried apricots 1.16 g
     "calcium" to 1.4,        // parmesan 1.18 g
     "magnesium" to 0.65,     // pumpkin seeds 0.59 g
     "iron" to 0.05,          // liver ~30 mg
@@ -96,7 +96,7 @@ val MICRO_PLAUSIBLE_MAX: Map<String, Double> = mapOf(
     "vitaminB12" to 0.0002,
     "omega3" to 55.0,        // linseed oil
     "omega6" to 70.0,
-    "cholesterol" to 0.5,
+    "cholesterol" to 1.5,    // isolated egg yolk ~1.09 g
 )
 
 /** True when this logged row carries at least one vitamin/mineral datum. */

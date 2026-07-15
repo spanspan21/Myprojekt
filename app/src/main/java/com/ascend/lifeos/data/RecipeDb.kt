@@ -307,8 +307,16 @@ object RecipeDb {
     fun servingGrams(r: Recipe): Int =
         (r.parts.sumOf { it.grams } / r.servings.coerceAtLeast(1)).coerceAtLeast(0)
 
+    // light plural canon so "Eggs"/"Oats"/"Tomatoes" still hit their staples
+    private fun canon(t: String): String = when {
+        t.endsWith("oes") -> t.dropLast(2)
+        t.endsWith("s") && !t.endsWith("ss") -> t.dropLast(1)
+        else -> t
+    }
+
     private fun norm(s: String): Set<String> =
-        s.lowercase().replace(Regex("[(),%]"), " ").split(Regex("\\s+")).filter { it.length > 1 }.toSet()
+        s.lowercase().replace(Regex("[(),%]"), " ").split(Regex("\\s+"))
+            .filter { it.length > 1 }.map { canon(it) }.toSet()
 
     /** Exact name → full-token containment; the smaller token set must be covered. */
     internal fun staple(name: String): FoodApi.Product? {

@@ -94,7 +94,8 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     var expanded by remember { mutableStateOf<Long?>(null) }
     @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.OwnRecipes.rev
     var editorOpen by remember { mutableStateOf(false) }
-    val recipes = remember(filter, seed, com.ascend.lifeos.data.OwnRecipes.rev) { RecipeDb.suggest(seed, filter, remainKcal, 18) }
+    // 64 curated volumes now — show a real library slice, still day-rotated
+    val recipes = remember(filter, seed, com.ascend.lifeos.data.OwnRecipes.rev) { RecipeDb.suggest(seed, filter, remainKcal, 40) }
 
     // ---- pantry: "cook with what I have" ----
     var pantry by remember { mutableStateOf(listOf<String>()) }

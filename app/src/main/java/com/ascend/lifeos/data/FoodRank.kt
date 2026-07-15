@@ -14,21 +14,30 @@ object FoodRank {
         .replace("é", "e").replace("è", "e").replace("á", "a")
 
     /**
-     * 100 exakter Name · 80 Name beginnt mit q · 60 ein WORT beginnt mit q ·
-     * 45 Alias EXAKT · 40 Alias-Prefix · 30 Substring · 0 kein Treffer.
-     * (Exakt > Prefix: „milch" gehört der Milch, nicht der Milchschokolade.)
+     * 100 exakter Name · 86 Name beginnt mit q UMLAUT-TREU · 80 Name beginnt
+     * mit q (gefaltet) · 70 Alias EXAKT · 60 ein WORT beginnt mit q ·
+     * 40 Alias-Prefix · 30 Substring · 0 kein Treffer.
+     * Zwei Lehren der 200-Einträge-Erweiterung: (1) ein EXAKTER Alias ist der
+     * deutsche NAME des Produkts — „milch" gehört der Milch, nicht dem
+     * Milchbrötchen-Wortanfang; (2) wer „dö" MIT Umlaut tippt, meint Döner,
+     * nicht Donut — die umlaut-treue Übereinstimmung schlägt die gefaltete.
      */
-    fun matchQuality(name: String, aliases: List<String>, queryNorm: String): Int {
+    fun matchQuality(name: String, aliases: List<String>, queryNorm: String, queryRaw: String = queryNorm): Int {
         if (queryNorm.isBlank()) return 0
         val n = normalize(name)
         if (n == queryNorm) return 100
-        if (n.startsWith(queryNorm)) return 80
+        if (n.startsWith(queryNorm)) {
+            val rawQ = queryRaw.trim().lowercase()
+            val umlautTrue = rawQ != queryNorm && name.trim().lowercase().startsWith(rawQ)
+            return if (umlautTrue) 86 else 80
+        }
+        for (a in aliases) {
+            if (normalize(a) == queryNorm) return 70
+        }
         if (n.split(' ', '-', '(', ',').any { it.startsWith(queryNorm) }) return 60
         var alias = 0
         for (a in aliases) {
-            val an = normalize(a)
-            if (an == queryNorm) return 45
-            if (an.startsWith(queryNorm)) alias = maxOf(alias, 40)
+            if (normalize(a).startsWith(queryNorm)) alias = maxOf(alias, 40)
         }
         if (alias > 0) return alias
         if (n.contains(queryNorm)) return 30

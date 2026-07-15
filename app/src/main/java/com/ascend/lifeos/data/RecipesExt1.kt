@@ -1,0 +1,453 @@
+package com.ascend.lifeos.data
+
+/**
+ * RecipeDb extension I — breakfast & meal-prep (ids 100..199). Same contract
+ * as the curated base: macros PER SERVING are derived by RecipeDb.build from
+ * the TOTAL ingredient amounts; every line cookable, every amount shoppable.
+ */
+internal object RecipesExt1 {
+
+    val ALL: List<RecipeDb.Recipe> = listOf(
+        // ---------- Breakfast (b) ----------
+        RecipeDb.build(
+            100L, "Banana peanut porridge", "b", servings = 1, minutes = 10,
+            parts = listOf(
+                RecipeDb.Ing("Oats (rolled)", 372, 13.5, 58.7, 7.0, 60),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 250),
+                RecipeDb.Ing("Banana", 89, 1.1, 20.0, 0.3, 100),
+                RecipeDb.Ing("Peanut butter", 598, 26.1, 11.6, 50.0, 15),
+                RecipeDb.Ing("Whey protein (powder)", 380, 78.0, 6.0, 5.0, 30),
+            ),
+            steps = listOf(
+                "Simmer oats in milk 5 min, stirring.",
+                "Stir in whey off the heat.",
+                "Top with sliced banana and peanut butter.",
+            ),
+        ),
+        RecipeDb.build(
+            101L, "Apple cinnamon porridge", "b", servings = 1, minutes = 10,
+            parts = listOf(
+                RecipeDb.Ing("Oats (rolled)", 372, 13.5, 58.7, 7.0, 60),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 300),
+                RecipeDb.Ing("Apple", 52, 0.3, 13.8, 0.2, 120),
+                RecipeDb.Ing("Whey protein (powder)", 380, 78.0, 6.0, 5.0, 25),
+                RecipeDb.Ing("Walnuts", 654, 15.2, 13.7, 65.2, 10),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 10),
+            ),
+            steps = listOf(
+                "Grate half the apple, dice the rest.",
+                "Simmer oats and apple in milk 5 min.",
+                "Stir in whey and plenty of cinnamon off the heat.",
+                "Top with walnuts and honey.",
+            ),
+        ),
+        RecipeDb.build(
+            102L, "Chocolate cherry porridge", "b", servings = 1, minutes = 12,
+            parts = listOf(
+                RecipeDb.Ing("Oats (rolled)", 372, 13.5, 58.7, 7.0, 65),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 300),
+                RecipeDb.Ing("Sour cherries (frozen)", 46, 0.9, 11.0, 0.4, 150),
+                RecipeDb.Ing("Cocoa powder (unsweetened)", 228, 19.6, 57.9, 13.7, 10),
+                RecipeDb.Ing("Whey protein (powder)", 380, 78.0, 6.0, 5.0, 30),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 15),
+            ),
+            steps = listOf(
+                "Simmer oats in milk 5 min.",
+                "Stir in cocoa, then whey off the heat.",
+                "Warm cherries briefly in a small pot.",
+                "Spoon cherries on top, drizzle with honey.",
+            ),
+        ),
+        RecipeDb.build(
+            103L, "Blueberry protein oatmeal", "b", servings = 1, minutes = 10,
+            parts = listOf(
+                RecipeDb.Ing("Oats (rolled)", 372, 13.5, 58.7, 7.0, 70),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 250),
+                RecipeDb.Ing("Blueberries", 57, 0.7, 14.5, 0.3, 125),
+                RecipeDb.Ing("Whey protein (powder)", 380, 78.0, 6.0, 5.0, 35),
+                RecipeDb.Ing("Almonds", 579, 21.2, 21.6, 49.9, 10),
+            ),
+            steps = listOf(
+                "Cook oats in milk 5 min until creamy.",
+                "Whisk in whey off the heat.",
+                "Fold in half the blueberries, top with the rest.",
+                "Finish with chopped almonds.",
+            ),
+        ),
+        RecipeDb.build(
+            104L, "Protein French toast", "b", servings = 1, minutes = 15,
+            parts = listOf(
+                RecipeDb.Ing("Toast (white)", 265, 8.9, 49.0, 3.2, 100),
+                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 110),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 60),
+                RecipeDb.Ing("Butter", 741, 0.7, 0.6, 82.0, 8),
+                RecipeDb.Ing("Skyr", 63, 11.0, 4.0, 0.2, 100),
+                RecipeDb.Ing("Strawberries", 32, 0.7, 7.7, 0.3, 100),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 10),
+            ),
+            steps = listOf(
+                "Whisk eggs, milk and a pinch of cinnamon.",
+                "Soak toast slices 30 s per side.",
+                "Fry in butter 2-3 min per side until golden.",
+                "Serve with skyr, strawberries and honey.",
+            ),
+        ),
+        RecipeDb.build(
+            105L, "Shakshuka with feta", "b", servings = 1, minutes = 25,
+            parts = listOf(
+                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 165),
+                RecipeDb.Ing("Chopped tomatoes (canned)", 21, 1.0, 3.5, 0.2, 300),
+                RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 70),
+                RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 120),
+                RecipeDb.Ing("Feta", 264, 14.2, 4.1, 21.3, 40),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 8),
+                RecipeDb.Ing("Whole-grain bread", 220, 8.0, 39.0, 2.5, 40),
+            ),
+            steps = listOf(
+                "Saute onion and pepper in oil 4 min.",
+                "Add tomatoes, paprika and cumin; simmer 8 min.",
+                "Make 3 wells, crack in the eggs, lid on 6 min.",
+                "Crumble feta over, scoop up with bread.",
+            ),
+        ),
+        RecipeDb.build(
+            106L, "Mushroom & gouda omelette", "b", servings = 1, minutes = 12,
+            parts = listOf(
+                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 165),
+                RecipeDb.Ing("Mushrooms", 22, 3.1, 3.3, 0.3, 150),
+                RecipeDb.Ing("Gouda", 356, 24.9, 2.2, 27.4, 30),
+                RecipeDb.Ing("Butter", 741, 0.7, 0.6, 82.0, 10),
+                RecipeDb.Ing("Whole-grain bread", 220, 8.0, 39.0, 2.5, 60),
+            ),
+            steps = listOf(
+                "Saute sliced mushrooms in half the butter; set aside.",
+                "Whisk eggs with salt, pour into the buttered pan.",
+                "Scatter mushrooms and gouda over, fold when just set.",
+                "Serve with the bread.",
+            ),
+        ),
+        RecipeDb.build(
+            107L, "Bircher muesli with walnuts", "b", servings = 1, minutes = 10,
+            parts = listOf(
+                RecipeDb.Ing("Oats (rolled)", 372, 13.5, 58.7, 7.0, 60),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 150),
+                RecipeDb.Ing("Skyr", 63, 11.0, 4.0, 0.2, 150),
+                RecipeDb.Ing("Apple", 52, 0.3, 13.8, 0.2, 100),
+                RecipeDb.Ing("Raisins", 299, 3.1, 79.2, 0.5, 15),
+                RecipeDb.Ing("Walnuts", 654, 15.2, 13.7, 65.2, 15),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 10),
+            ),
+            steps = listOf(
+                "Stir oats, milk, skyr and raisins in a jar.",
+                "Chill overnight.",
+                "Grate in the apple in the morning.",
+                "Top with walnuts and honey.",
+            ),
+        ),
+        RecipeDb.build(
+            108L, "Quark bowl with nuts", "b", servings = 1, minutes = 5,
+            parts = listOf(
+                RecipeDb.Ing("Quark (low-fat)", 67, 12.0, 4.0, 0.3, 250),
+                RecipeDb.Ing("Milk (low-fat 1.5%)", 47, 3.4, 4.9, 1.5, 50),
+                RecipeDb.Ing("Blueberries", 57, 0.7, 14.5, 0.3, 100),
+                RecipeDb.Ing("Almonds", 579, 21.2, 21.6, 49.9, 20),
+                RecipeDb.Ing("Walnuts", 654, 15.2, 13.7, 65.2, 10),
+                RecipeDb.Ing("Oats (rolled)", 372, 13.5, 58.7, 7.0, 20),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 15),
+            ),
+            steps = listOf(
+                "Stir quark smooth with the milk.",
+                "Top with blueberries, chopped nuts and oats.",
+                "Drizzle with honey.",
+            ),
+        ),
+        RecipeDb.build(
+            109L, "Breakfast burrito", "b", servings = 1, minutes = 15,
+            parts = listOf(
+                RecipeDb.Ing("Tortilla wrap", 310, 8.5, 50.0, 8.0, 65),
+                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 110),
+                RecipeDb.Ing("Cottage cheese", 98, 11.0, 3.4, 4.3, 80),
+                RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 80),
+                RecipeDb.Ing("Spinach (raw)", 23, 2.9, 3.6, 0.4, 40),
+                RecipeDb.Ing("Gouda", 356, 24.9, 2.2, 27.4, 20),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 5),
+            ),
+            steps = listOf(
+                "Saute pepper strips in oil 3 min, add spinach to wilt.",
+                "Scramble the eggs into the veg until just set.",
+                "Spread cottage cheese on the warmed wrap.",
+                "Fill with eggs and gouda, roll tight, halve.",
+            ),
+        ),
+        // ---------- Meal-prep & mains ----------
+        RecipeDb.build(
+            110L, "Chicken burrito bowl (prep)", "main", servings = 4, minutes = 35,
+            parts = listOf(
+                RecipeDb.Ing("Chicken breast (cooked)", 165, 31.0, 0.0, 3.6, 500),
+                RecipeDb.Ing("Rice (cooked)", 130, 2.7, 28.0, 0.3, 600),
+                RecipeDb.Ing("Kidney beans (canned)", 84, 5.2, 12.0, 0.6, 400),
+                RecipeDb.Ing("Corn (canned)", 81, 2.6, 15.0, 1.2, 200),
+                RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 200),
+                RecipeDb.Ing("Avocado", 160, 2.0, 8.5, 14.7, 150),
+                RecipeDb.Ing("Greek yogurt (10%)", 121, 6.4, 3.9, 10.0, 150),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 15),
+            ),
+            steps = listOf(
+                "Cook rice; season with lime and salt.",
+                "Sear diced chicken in oil with paprika and cumin.",
+                "Rinse beans and corn, dice the pepper.",
+                "Layer rice, chicken, beans, corn and pepper into 4 boxes.",
+                "Add yogurt and diced avocado just before eating.",
+            ),
+        ),
+        RecipeDb.build(
+            111L, "Teriyaki salmon with rice", "main", servings = 2, minutes = 25,
+            parts = listOf(
+                RecipeDb.Ing("Salmon (cooked)", 206, 22.0, 0.0, 12.5, 300),
+                RecipeDb.Ing("Rice (cooked)", 130, 2.7, 28.0, 0.3, 400),
+                RecipeDb.Ing("Broccoli (cooked)", 35, 2.4, 7.2, 0.4, 300),
+                RecipeDb.Ing("Teriyaki sauce", 89, 5.9, 15.6, 0.0, 50),
+                RecipeDb.Ing("Sesame seeds", 573, 17.7, 23.4, 49.7, 10),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Cook rice; steam broccoli 5 min.",
+                "Sear salmon in oil 3 min per side.",
+                "Glaze with teriyaki sauce, 1 min more.",
+                "Plate on rice, sprinkle with sesame.",
+            ),
+        ),
+        RecipeDb.build(
+            112L, "Creamy turkey & mushroom skillet", "main", servings = 3, minutes = 30,
+            parts = listOf(
+                RecipeDb.Ing("Turkey breast", 111, 24.0, 0.0, 1.0, 600),
+                RecipeDb.Ing("Mushrooms", 22, 3.1, 3.3, 0.3, 300),
+                RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 100),
+                RecipeDb.Ing("Cooking cream (15%)", 162, 2.5, 4.0, 15.0, 200),
+                RecipeDb.Ing("Vegetable broth", 4, 0.2, 0.6, 0.1, 150),
+                RecipeDb.Ing("Rice (cooked)", 130, 2.7, 28.0, 0.3, 450),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 15),
+            ),
+            steps = listOf(
+                "Slice turkey into strips, sear hot in oil; set aside.",
+                "Brown mushrooms and onion in the same pan.",
+                "Deglaze with broth, stir in cream, simmer 5 min.",
+                "Return turkey, season; serve over rice - 3 boxes.",
+            ),
+        ),
+        RecipeDb.build(
+            113L, "Potato & beef gratin (prep)", "main", servings = 4, minutes = 50,
+            parts = listOf(
+                RecipeDb.Ing("Potatoes (boiled)", 86, 1.9, 20.0, 0.1, 800),
+                RecipeDb.Ing("Ground beef (cooked)", 250, 26.0, 0.0, 15.4, 500),
+                RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 120),
+                RecipeDb.Ing("Chopped tomatoes (canned)", 21, 1.0, 3.5, 0.2, 400),
+                RecipeDb.Ing("Cooking cream (15%)", 162, 2.5, 4.0, 15.0, 150),
+                RecipeDb.Ing("Gouda", 356, 24.9, 2.2, 27.4, 120),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Boil potatoes 15 min, slice.",
+                "Brown beef with onion in oil; add tomatoes, simmer 5 min.",
+                "Layer potatoes and beef in a baking dish.",
+                "Pour cream over, top with gouda.",
+                "Bake at 200 C for 20 min until golden.",
+            ),
+        ),
+        RecipeDb.build(
+            114L, "Veggie fried rice with egg", "main", servings = 2, minutes = 20,
+            parts = listOf(
+                RecipeDb.Ing("Rice (cooked)", 130, 2.7, 28.0, 0.3, 400),
+                RecipeDb.Ing("Egg (raw)", 143, 12.6, 0.7, 9.5, 220),
+                RecipeDb.Ing("Peas (frozen)", 77, 5.2, 13.7, 0.4, 200),
+                RecipeDb.Ing("Carrot", 41, 0.9, 9.6, 0.2, 150),
+                RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 150),
+                RecipeDb.Ing("Soy sauce", 53, 5.6, 6.7, 0.1, 30),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 15),
+            ),
+            steps = listOf(
+                "Use cold day-old rice if you can.",
+                "Stir-fry diced carrot and pepper in oil 4 min; add peas.",
+                "Push aside, scramble the eggs in the pan.",
+                "Add rice and soy sauce, toss on high heat 3 min.",
+            ),
+        ),
+        RecipeDb.build(
+            115L, "Couscous salad with feta & chickpeas", "main", servings = 2, minutes = 20,
+            parts = listOf(
+                RecipeDb.Ing("Couscous (cooked)", 112, 3.8, 23.2, 0.2, 400),
+                RecipeDb.Ing("Chickpeas (cooked)", 164, 8.9, 27.4, 2.6, 300),
+                RecipeDb.Ing("Feta", 264, 14.2, 4.1, 21.3, 120),
+                RecipeDb.Ing("Cucumber", 15, 0.7, 3.6, 0.1, 200),
+                RecipeDb.Ing("Tomato", 18, 0.9, 3.9, 0.2, 200),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 20),
+            ),
+            steps = listOf(
+                "Prepare couscous, fluff and cool slightly.",
+                "Dice cucumber and tomato, rinse chickpeas.",
+                "Toss everything with oil, lemon juice, salt and mint.",
+                "Crumble feta over - keeps 2 days chilled.",
+            ),
+        ),
+        RecipeDb.build(
+            116L, "Lentil bolognese with pasta (prep)", "main", servings = 3, minutes = 30,
+            parts = listOf(
+                RecipeDb.Ing("Pasta (cooked)", 158, 5.8, 31.0, 0.9, 600),
+                RecipeDb.Ing("Lentils (cooked)", 116, 9.0, 20.1, 0.4, 400),
+                RecipeDb.Ing("Chopped tomatoes (canned)", 21, 1.0, 3.5, 0.2, 500),
+                RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 100),
+                RecipeDb.Ing("Carrot", 41, 0.9, 9.6, 0.2, 120),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 20),
+            ),
+            steps = listOf(
+                "Saute onion and grated carrot in oil 4 min.",
+                "Add lentils and tomatoes, simmer 15 min.",
+                "Season with oregano, salt and a dash of balsamic.",
+                "Serve over pasta - 3 servings.",
+            ),
+        ),
+        RecipeDb.build(
+            117L, "Chicken fajita wraps", "main", servings = 2, minutes = 25,
+            parts = listOf(
+                RecipeDb.Ing("Chicken breast (cooked)", 165, 31.0, 0.0, 3.6, 300),
+                RecipeDb.Ing("Tortilla wrap", 310, 8.5, 50.0, 8.0, 130),
+                RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 200),
+                RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 100),
+                RecipeDb.Ing("Greek yogurt (10%)", 121, 6.4, 3.9, 10.0, 100),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Slice chicken, pepper and onion into strips.",
+                "Sear chicken in oil with fajita spice; add veg 4 min.",
+                "Warm the wraps in a dry pan.",
+                "Fill with chicken, veg and yogurt; roll up.",
+            ),
+        ),
+        RecipeDb.build(
+            118L, "Roast vegetables with halloumi", "main", servings = 2, minutes = 35,
+            parts = listOf(
+                RecipeDb.Ing("Halloumi", 321, 21.0, 2.2, 25.0, 250),
+                RecipeDb.Ing("Sweet potato (cooked)", 90, 2.0, 20.7, 0.2, 400),
+                RecipeDb.Ing("Zucchini", 19, 1.6, 2.2, 0.4, 250),
+                RecipeDb.Ing("Red bell pepper", 31, 1.0, 6.0, 0.3, 200),
+                RecipeDb.Ing("Onion", 40, 1.1, 9.0, 0.1, 100),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 20),
+            ),
+            steps = listOf(
+                "Oven to 220 C; chop all vegetables chunky.",
+                "Toss veg with oil, salt and paprika on a tray.",
+                "Roast 20 min.",
+                "Add halloumi slices, roast 8 min more until golden.",
+            ),
+        ),
+        RecipeDb.build(
+            119L, "Korean beef rice bowls (prep)", "main", servings = 3, minutes = 25,
+            parts = listOf(
+                RecipeDb.Ing("Ground beef (cooked)", 250, 26.0, 0.0, 15.4, 400),
+                RecipeDb.Ing("Rice (cooked)", 130, 2.7, 28.0, 0.3, 600),
+                RecipeDb.Ing("Broccoli (cooked)", 35, 2.4, 7.2, 0.4, 400),
+                RecipeDb.Ing("Carrot", 41, 0.9, 9.6, 0.2, 150),
+                RecipeDb.Ing("Soy sauce", 53, 5.6, 6.7, 0.1, 40),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 15),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Cook rice; steam broccoli.",
+                "Brown beef in oil; add grated carrot.",
+                "Stir in soy sauce, honey, garlic and chili flakes.",
+                "Divide over rice with broccoli - 3 boxes.",
+            ),
+        ),
+        RecipeDb.build(
+            120L, "Creamy chicken spinach pasta (prep)", "main", servings = 3, minutes = 25,
+            parts = listOf(
+                RecipeDb.Ing("Pasta (cooked)", 158, 5.8, 31.0, 0.9, 600),
+                RecipeDb.Ing("Chicken breast (cooked)", 165, 31.0, 0.0, 3.6, 450),
+                RecipeDb.Ing("Spinach (raw)", 23, 2.9, 3.6, 0.4, 150),
+                RecipeDb.Ing("Cooking cream (15%)", 162, 2.5, 4.0, 15.0, 200),
+                RecipeDb.Ing("Parmesan", 431, 38.5, 4.1, 28.6, 40),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Cook pasta al dente.",
+                "Sear diced chicken in oil until golden.",
+                "Add cream and parmesan, melt into a sauce.",
+                "Fold in spinach and pasta; season with pepper.",
+            ),
+        ),
+        RecipeDb.build(
+            121L, "Crispy tofu quinoa bowl", "main", servings = 2, minutes = 30,
+            parts = listOf(
+                RecipeDb.Ing("Tofu", 76, 8.0, 1.9, 4.8, 400),
+                RecipeDb.Ing("Quinoa (cooked)", 120, 4.4, 21.3, 1.9, 400),
+                RecipeDb.Ing("Broccoli (cooked)", 35, 2.4, 7.2, 0.4, 300),
+                RecipeDb.Ing("Carrot", 41, 0.9, 9.6, 0.2, 100),
+                RecipeDb.Ing("Peanut butter", 598, 26.1, 11.6, 50.0, 30),
+                RecipeDb.Ing("Soy sauce", 53, 5.6, 6.7, 0.1, 30),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 10),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Press tofu, cube, fry in oil until crisp all over.",
+                "Cook quinoa; steam broccoli.",
+                "Whisk peanut butter, soy, honey and warm water into a dressing.",
+                "Bowl up quinoa, veg and tofu; drizzle the sauce.",
+            ),
+        ),
+        RecipeDb.build(
+            122L, "Greek chicken bulgur bowls (prep)", "main", servings = 4, minutes = 30,
+            parts = listOf(
+                RecipeDb.Ing("Chicken breast (cooked)", 165, 31.0, 0.0, 3.6, 500),
+                RecipeDb.Ing("Bulgur (cooked)", 83, 3.1, 18.6, 0.2, 600),
+                RecipeDb.Ing("Cucumber", 15, 0.7, 3.6, 0.1, 300),
+                RecipeDb.Ing("Tomato", 18, 0.9, 3.9, 0.2, 300),
+                RecipeDb.Ing("Feta", 264, 14.2, 4.1, 21.3, 150),
+                RecipeDb.Ing("Greek yogurt (10%)", 121, 6.4, 3.9, 10.0, 200),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 20),
+            ),
+            steps = listOf(
+                "Cook bulgur, fluff and cool.",
+                "Sear chicken strips in oil with oregano and lemon.",
+                "Dice cucumber and tomato.",
+                "Pack bulgur, chicken, veg and feta into 4 boxes.",
+                "Spoon yogurt on top just before eating.",
+            ),
+        ),
+        RecipeDb.build(
+            123L, "Tuna pasta salad (prep)", "main", servings = 3, minutes = 20,
+            parts = listOf(
+                RecipeDb.Ing("Pasta (cooked)", 158, 5.8, 31.0, 0.9, 500),
+                RecipeDb.Ing("Tuna (in water)", 116, 26.0, 0.0, 1.0, 280),
+                RecipeDb.Ing("Corn (canned)", 81, 2.6, 15.0, 1.2, 200),
+                RecipeDb.Ing("Tomato", 18, 0.9, 3.9, 0.2, 200),
+                RecipeDb.Ing("Cucumber", 15, 0.7, 3.6, 0.1, 150),
+                RecipeDb.Ing("Greek yogurt (10%)", 121, 6.4, 3.9, 10.0, 150),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 10),
+            ),
+            steps = listOf(
+                "Cook pasta, rinse cold.",
+                "Drain tuna and corn; dice tomato and cucumber.",
+                "Stir yogurt with oil, mustard, salt and pepper.",
+                "Toss everything; chill - good for 2 days.",
+            ),
+        ),
+        RecipeDb.build(
+            124L, "Honey mustard chicken tray", "main", servings = 2, minutes = 40,
+            parts = listOf(
+                RecipeDb.Ing("Chicken breast (cooked)", 165, 31.0, 0.0, 3.6, 400),
+                RecipeDb.Ing("Potatoes (boiled)", 86, 1.9, 20.0, 0.1, 600),
+                RecipeDb.Ing("Carrot", 41, 0.9, 9.6, 0.2, 200),
+                RecipeDb.Ing("Zucchini", 19, 1.6, 2.2, 0.4, 200),
+                RecipeDb.Ing("Honey", 304, 0.3, 82.0, 0.0, 20),
+                RecipeDb.Ing("Mustard", 66, 4.4, 5.8, 3.3, 20),
+                RecipeDb.Ing("Olive oil", 884, 0.0, 0.0, 100.0, 20),
+            ),
+            steps = listOf(
+                "Oven to 200 C; parboil potato chunks 8 min.",
+                "Whisk honey, mustard and oil into a glaze.",
+                "Toss chicken and vegetables in the glaze on a tray.",
+                "Roast 25 min, turning once.",
+            ),
+        ),
+    )
+}
