@@ -107,6 +107,14 @@ object CommandEngine {
             return CmdResult.Done("Focus session armed · $min min")
         }
 
+        // ---- activity quick log: "lauf 45", "ride 90 rpe8", "yoga 30" ------
+        // the fastest log in the app — one line, day counts as trained
+        parseActivity(q)?.let { (typeId, minutes, rpe) ->
+            val t = com.ascend.lifeos.data.training.ActivityTypes.byId(typeId) ?: return@let
+            com.ascend.lifeos.data.ActivityStore.add(ctx, typeId, minutes, rpe ?: t.defaultRpe)
+            return CmdResult.Done("${t.emoji} ${t.label} · $minutes min logged — day counts as trained")
+        }
+
         // ---- navigation ----------------------------------------------------
         val navTargets = mapOf(
             "train" to "train", "training" to "train", "workout" to "train",
@@ -128,7 +136,7 @@ object CommandEngine {
             return CmdResult.Done("${title.replaceFirstChar { it.uppercase() }} → ${day.format(fmt)} ${CalendarRepo.fmtMin(start)}–${CalendarRepo.fmtMin(end)}")
         }
 
-        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · focus 50 · ${sportHintWord()} tue 17-19 · report")
+        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · lauf 45 · focus 50 · ${sportHintWord()} tue 17-19 · report")
     }
 
     private fun defaultMealSlot(): String {
@@ -141,6 +149,33 @@ object CommandEngine {
         com.ascend.lifeos.data.training.SportCatalog
             .byId(Repo.data.profile.sport).matchKeywords.firstOrNull()
     }.getOrNull() ?: "hockey"
+
+    /** Sport words the one-line activity log understands (word → ActivityType id). */
+    private val ACTIVITY_WORDS = mapOf(
+        "run" to "run", "lauf" to "run", "laufen" to "run", "joggen" to "run", "jog" to "run",
+        "ride" to "ride", "rad" to "ride", "bike" to "ride", "cycling" to "ride",
+        "swim" to "swim", "schwimmen" to "swim",
+        "walk" to "walk", "spaziergang" to "walk", "hike" to "walk",
+        "yoga" to "yoga", "row" to "row", "rudern" to "row", "ski" to "ski",
+        "hiit" to "hiit", "dance" to "dance", "tanzen" to "dance",
+        "climb" to "climb", "klettern" to "climb", "bouldern" to "climb",
+    )
+
+    /**
+     * "<sport-word> <minutes>[m|min] [rpe N]" → one-line activity log.
+     * A bare 5–23 number reads as CLOCK TIME ("yoga 18" = 18:00) and falls
+     * through to the calendar parser; add "m"/"min" to force minutes there.
+     */
+    internal fun parseActivity(q: String): Triple<String, Int, Int?>? {
+        val m = Regex("^([a-zäöüß]+) (\\d{1,3})( ?(?:m|min))?( rpe ?(\\d{1,2}))?$").find(q) ?: return null
+        val typeId = ACTIVITY_WORDS[m.groupValues[1]] ?: return null
+        val minutes = m.groupValues[2].toIntOrNull() ?: return null
+        if (minutes !in 10..600) return null
+        val explicitUnit = m.groupValues[3].isNotBlank()
+        if (!explicitUnit && minutes in 5..23) return null   // ambiguous with a start hour
+        val rpe = m.groupValues[5].toIntOrNull()?.coerceIn(1, 10)
+        return Triple(typeId, minutes, rpe)
+    }
 
     /** "<title words> <day?> <hh(:mm)?(-hh(:mm)?)?>" → calendar block. */
     private fun parseCalendar(q: String): CalCmd? {
