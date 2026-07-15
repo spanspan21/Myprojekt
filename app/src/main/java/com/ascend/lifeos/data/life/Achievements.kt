@@ -112,6 +112,28 @@ object Achievements {
             }
         }
 
+        // Endurance distance marks — the activity log's milestone system. Every
+        // full 5 km of a type's LONGEST session is a badge (a runner's first
+        // 5k/10k matter exactly like a lifter's PR); idempotent per mark.
+        runCatching {
+            val acts = com.ascend.lifeos.data.ActivityStore.all(ctx)
+            acts.groupBy { it.type }.forEach { (type, list) ->
+                val t = com.ascend.lifeos.data.training.ActivityTypes.byId(type) ?: return@forEach
+                val maxKm = list.mapNotNull { it.distanceKm }.maxOrNull() ?: return@forEach
+                var mark = 5.0
+                while (mark <= maxKm + 1e-9) {
+                    val hit = list.firstOrNull { (it.distanceKm ?: 0.0) >= mark - 1e-9 }
+                    val newHit = add(
+                        ctx, "act_${type}_km_${num(mark)}", "train",
+                        "${t.label} ${num(mark)} km", "Longest ${t.label.lowercase(Locale.US)} reached ${num(mark)} km",
+                        ts = hit?.ts ?: System.currentTimeMillis(),
+                    )
+                    if (newHit) added++
+                    mark += 5.0
+                }
+            }
+        }
+
         // Day-streak marks — current or longest, whichever reached further.
         runCatching {
             val p = Repo.profile()
