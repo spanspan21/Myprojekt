@@ -27,7 +27,7 @@ object Protocols {
     val ALL: List<Protocol> = listOf(
         Protocol(
             "game_day", "Game day",
-            "Hockey today → carbs at lunch, hydrate early, legs stay fresh",
+            "Sport block today → carbs at lunch, hydrate early, legs stay fresh",
         ) { ctx ->
             val today = LocalDate.now()
             val dao = CalendarRepo.dao(ctx)
@@ -35,8 +35,13 @@ object Protocols {
             val tl = CalendarRepo.timelineFor(ctx, today, entities)
             val game = tl.blocks.firstOrNull { it.type == EventType.HOCKEY }
             game?.let {
-                "Game day: face-off ${CalendarRepo.fmtMin(it.startMin)}. Carbs at lunch, " +
-                    "hydrate now, no heavy legs before the ice."
+                // the directive speaks the athlete's sport (hockey keeps face-off)
+                val sport = com.ascend.lifeos.data.training.SportCatalog
+                    .byId(com.ascend.lifeos.data.Repo.data.profile.sport)
+                val start = if (sport.id == "hockey") "face-off" else "start"
+                val arena = if (sport.id == "hockey") "the ice" else "the game"
+                "Game day: $start ${CalendarRepo.fmtMin(it.startMin)}. Carbs at lunch, " +
+                    "hydrate now, no heavy legs before $arena."
             }
         },
         Protocol(

@@ -128,13 +128,19 @@ object CommandEngine {
             return CmdResult.Done("${title.replaceFirstChar { it.uppercase() }} → ${day.format(fmt)} ${CalendarRepo.fmtMin(start)}–${CalendarRepo.fmtMin(end)}")
         }
 
-        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · focus 50 · hockey tue 17-19 · report")
+        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · focus 50 · ${sportHintWord()} tue 17-19 · report")
     }
 
     private fun defaultMealSlot(): String {
         val h = java.time.LocalTime.now().hour
         return when (h) { in 4..10 -> "b"; in 11..14 -> "l"; in 17..21 -> "d"; else -> "s" }
     }
+
+    /** The calendar example speaks the athlete's sport ("fussball tue 17-19"). */
+    fun sportHintWord(): String = runCatching {
+        com.ascend.lifeos.data.training.SportCatalog
+            .byId(Repo.data.profile.sport).matchKeywords.firstOrNull()
+    }.getOrNull() ?: "hockey"
 
     /** "<title words> <day?> <hh(:mm)?(-hh(:mm)?)?>" → calendar block. */
     private fun parseCalendar(q: String): CalCmd? {
@@ -229,7 +235,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                         .border(0.5.dp, Mod.Home.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
                         .padding(horizontal = 15.dp, vertical = 13.dp),
                 ) {
-                    if (input.isEmpty()) Text("water 2 · 71.5 kg · focus 50 · hockey tue 17-19", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+                    if (input.isEmpty()) Text("water 2 · 71.5 kg · focus 50 · ${CommandEngine.sportHintWord()} tue 17-19", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
                     BasicTextField(
                         value = input, onValueChange = { input = it }, singleLine = true,
                         textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold),
@@ -276,7 +282,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 "71.5 kg — weigh-in",
                 "kcal 400 pizza — quick food log",
                 "focus 25 / 50 / 90 — hard-block session",
-                "hockey tue 17-19 · exam fri 9 — calendar",
+                "${CommandEngine.sportHintWord()} tue 17-19 · exam fri 9 — calendar",
                 "train · fuel · body · skills · report — jump",
             ).forEach {
                 Text("· $it", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 18.sp)
