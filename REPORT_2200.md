@@ -1,6 +1,6 @@
 # JARVIS — Tagesbericht 15.07.2026 · „NASA-Schicht bis 22 Uhr"
 
-**v2.24 → v2.27 (Code 29) · 16 App-Commits + 3 Dashboard-Deploys · 255 Unit-Tests grün (+25 neu) · 3 adversariale Review-Runden (15 Funde, alle gefixt) · jede Kern-Funktion live am Emulator bewiesen**
+**v2.24 → v2.27 (Code 29) · 46 App-Commits + 4 Dashboard-Deploys · 260 Unit-Tests grün (+30 neu) · 3 adversariale Agenten-Reviews + fortlaufender Selbst-Review (19 Funde, alle gefixt) · 15 Sportarten · 5 Zieltypen · jede Kern-Funktion live am Emulator bewiesen**
 
 Der Auftrag: die App immer wieder kritisch zerlegen (Design, Struktur, Funktion), andere Apps studieren und es besser machen, Flexibilität für **jeden Menschen, jede Sportart, jeden Lifestyle, jede Art von Ziel** — studienbasiert, mit Algorithmen, die andere Apps nicht haben.
 
@@ -139,7 +139,29 @@ Zusätzlich in Runde 3 **geprüft und sauber**: kein Crash-Pfad im Chart, Wochen
 - **Superset-Atempause konfigurierbar** (Settings → Training: Off/30 s/60 s; Paz 2014 — bis 60 s zwischen Partnern erhält die Leistung bei vollem Zeitgewinn; Default Off = exakt das bisherige Verhalten; das Workout-Banner nennt den aktiven Modus). Live verifiziert.
 - Wasser-Semantik dokumentiert: `profile.waterGoal` = stabile Basis (Missionen/Streaks verschieben ihre Ziele nie untertags), die Fuel-Karte = dynamische Tagesempfehlung mit erklärten Boni. Bewusste Zwei-Ebenen-Architektur statt riskanter Vereinheitlichung.
 
-## 8. Backlog (ehrlich, priorisiert)
+## 8. Die Iterationszyklen (dein „immer und immer wieder" — 14 Umsetzungen quer durch die App)
+Nach dem Feature-Block bin ich rotierend durch JEDEN Bereich: kritisch ansehen → Ideen → umsetzen → beweisen. Ergebnis:
+
+| Bereich | Verbesserung |
+|---|---|
+| Sleep | Game-Day-Schlafcheck nutzt dein **gelerntes Schlafbedürfnis** statt hart 7 h 30 (gleiche 30-min-Kulanz — Default-Verhalten identisch, personalisiert sich mit dem Lernen) |
+| Habits | Neue Auto-Metrik **„Active minutes"** + „30 min movement"-Preset (WHO 150–300 min/Wo) — der Habit-Loop sieht endlich das Aktivitäts-Log (live: „45 / 30 min · auto") |
+| Habits | **Presets übernehmen DEINE Ziele** beim Anlegen: Protein → dein Ziel (Recomp: 154 statt Katalog-130), Sleep → gelerntes Need, Water → dein Ziel |
+| Kalender | Voice überspringt All-Day-Blöcke — kein „session at 00:00" mehr |
+| Wochenreport | zählt Activities: neue Zeile **ACTIVITIES · ACTIVE MIN · KM** |
+| Notifications | Das Protein-Fenster (Moore 2014) öffnet nach **jeder** echten Einheit (≥30 min, RPE ≥5) — nicht nur nach dem Gym |
+| Palette | **„lauf 45"** — der schnellste Log der App (DE/EN-Sportwörter + Minuten + optional rpe; „yoga 18" bleibt korrekt ein 18-Uhr-Termin — testgepinnt, live bewiesen) |
+| ShareCard | Der teilbare Wochen-Card zählt Einheiten = Sessions + Activities |
+| Body | Die Waagen-Zeile spricht die Ziel-Sprache: eine flache Recomp-Woche heißt **„steady is the recomp plan"**, nicht Stillstand |
+| Boot | **YOUR GOAL** (Cut/Recomp/Maintain/Fuel/Build) direkt in der Kalibrierung — live bewiesen: Recomp im Boot → 154 g Protein + Phasen-Stempel ab Tag 1 |
+| Voice | Abend-Protein-Zeile für Cut/Recomp („recomp is built at dinner", Prio 8a — andere Ziele bleiben unbehelligt) |
+| Docs | Missions- und Kalorien-Kapitel kennen Activities und die 5 Zieltypen |
+| Widget | **Train ✓** auf der Glance-Zeile — alle drei Missionen sichtbar |
+| Milestones | **Ausdauer-Distanz-Marken**: jede volle 5 km der längsten Einheit eines Typs ist ein Badge — der erste 5k/10k zählt wie ein Hantel-PR |
+
+Dazu Selbst-Review-Funde am History-Editor (nur abgeschlossene Sessions öffnen; Stepper delta-basiert gegen die DB — zwei schnelle Taps landen als −2) und Checks **ohne** Befund (Finance, Guard, Heatmap, Skills-Engine, Web-Muster — die eine `workoutDone`-Wahrheit deckt alles automatisch).
+
+## 9. Backlog (ehrlich, priorisiert)
 - Wasser-Vereinheitlichung dynamisch überall (braucht Weather-Zugriff in 8 weiteren Oberflächen).
 - Superset-Presets im Template-Editor.
 - Satz-Level-Cloud-Sync paginiert (64-KB-Cap).
