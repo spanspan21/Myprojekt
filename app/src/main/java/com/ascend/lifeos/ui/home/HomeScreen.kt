@@ -280,7 +280,7 @@ fun HomeScreen(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(Warn.copy(alpha = 0.12f))
                         .border(0.5.dp, Warn.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .pressScale { Repo.setSickMode(false) }
+                        .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); Repo.setSickMode(false) }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Text(
@@ -465,7 +465,7 @@ fun HomeScreen(
                     Modifier.clip(RoundedCornerShape(10.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                        .pressScale { com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
+                        .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

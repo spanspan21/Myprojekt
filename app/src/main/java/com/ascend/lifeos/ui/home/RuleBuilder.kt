@@ -138,7 +138,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
             var on by remember(p.id) { mutableStateOf(com.ascend.lifeos.data.Protocols.enabled(ctx, p.id)) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .pressScale { on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
+                    .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
                     .padding(vertical = 8.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

@@ -350,6 +350,7 @@ fun FinanceHome(onClose: () -> Unit) {
                 item(key = "export") {
                     Spacer(Modifier.height(10.dp))
                     ExportCsvButton(count = txns.size) {
+                        com.ascend.lifeos.data.Haptics.tick(ctx)
                         val send = Intent(Intent.ACTION_SEND).apply {
                             type = "text/csv"
                             putExtra(Intent.EXTRA_SUBJECT, "JARVIS finance export")
