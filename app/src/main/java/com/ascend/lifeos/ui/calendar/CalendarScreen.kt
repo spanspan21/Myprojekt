@@ -612,10 +612,14 @@ private fun IcsFeedRow() {
                         "Paste ICS URL (https:// or webcal://)",
                         color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
                     )
+                    val icsFm = androidx.compose.ui.platform.LocalFocusManager.current
                     BasicTextField(
                         input, { input = it }, singleLine = true,
                         textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium),
-                        cursorBrush = SolidColor(Mod.Calendar), modifier = Modifier.fillMaxWidth(),
+                        cursorBrush = SolidColor(Mod.Calendar),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { icsFm.clearFocus() }),
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 Spacer(Modifier.height(10.dp))
@@ -894,10 +898,14 @@ private fun QuickAddSheet(
                     if (isHoliday) "Holiday name (e.g. Summer break)" else "Title (e.g. School, Shift, Practice)",
                     color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body,
                 )
+                val titleFm = androidx.compose.ui.platform.LocalFocusManager.current
                 BasicTextField(
                     title, { title = it }, singleLine = true,
                     textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold),
-                    cursorBrush = SolidColor(Mod.Calendar), modifier = Modifier.fillMaxWidth(),
+                    cursorBrush = SolidColor(Mod.Calendar),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { titleFm.clearFocus() }),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -1077,18 +1085,26 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 )
             }
             Spacer(Modifier.height(12.dp))
+            var armedDelete by remember { mutableStateOf(false) }
+            LaunchedEffect(armedDelete) { if (armedDelete) { kotlinx.coroutines.delay(2500); armedDelete = false } }
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                    .background(Crit.copy(alpha = 0.10f))
-                    .border(0.5.dp, Crit.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
-                    .pressScale { com.ascend.lifeos.data.Haptics.warn(ctx); onDelete() }
+                    .background(Crit.copy(alpha = if (armedDelete) 0.20f else 0.10f))
+                    .border(0.5.dp, Crit.copy(alpha = if (armedDelete) 0.6f else 0.35f), RoundedCornerShape(14.dp))
+                    .pressScale {
+                        if (armedDelete) { com.ascend.lifeos.data.Haptics.confirm(ctx); onDelete() }
+                        else { com.ascend.lifeos.data.Haptics.warn(ctx); armedDelete = true }
+                    }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.Delete, "Delete event", tint = Crit, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Remove from timeline", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (armedDelete) "Tap again to confirm" else "Remove from timeline",
+                        color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    )
                 }
             }
             Spacer(Modifier.height(18.dp))
@@ -1338,10 +1354,13 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 if (title.isEmpty()) Text("Task title…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body)
+                val taskFm = androidx.compose.ui.platform.LocalFocusManager.current
                 androidx.compose.foundation.text.BasicTextField(
                     value = title, onValueChange = { title = it.take(60) }, singleLine = true,
                     textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14),
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(Mod.Calendar),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { taskFm.clearFocus() }),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

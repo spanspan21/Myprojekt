@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.EditNote
@@ -287,6 +288,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                     if (amount.isEmpty()) {
                         Text("0.00", color = TextDim, style = metricStyle(34))
                     }
+                    val fm = androidx.compose.ui.platform.LocalFocusManager.current
                     BasicTextField(
                         value = amount,
                         onValueChange = { raw ->
@@ -296,7 +298,8 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                         singleLine = true,
                         textStyle = metricStyle(34).copy(color = TextPrimary, textAlign = TextAlign.Center),
                         cursorBrush = SolidColor(Mod.Finance),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { fm.clearFocus() }),
                         modifier = Modifier.widthIn(min = 96.dp, max = 200.dp).focusRequester(focus),
                     )
                 }
@@ -345,12 +348,15 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                 .padding(horizontal = 14.dp, vertical = 11.dp),
         ) {
             if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
+            val noteFm = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value = note,
                 onValueChange = { if (it.length <= com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.QUICK_NOTE_LIMIT, 60)) note = it },
                 singleLine = true,
                 textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium),
                 cursorBrush = SolidColor(Mod.Finance),
+                keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { noteFm.clearFocus() }),
                 modifier = Modifier.fillMaxWidth(),
             )
         }

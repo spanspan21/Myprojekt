@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -91,7 +92,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
 
         if (!running) {
             // ── Preset selection ────────────────────────────────────
-            Text("PRESETS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Presets", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             ExerciseSeed.HIIT_PRESETS.forEach { p ->
                 GlassPanel(Modifier.fillMaxWidth().pressScale {
@@ -111,7 +112,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("CUSTOM", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Custom", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GlassField("Work", cWork, KeyboardType.Number, Modifier.weight(1f)) { cWork = it }

@@ -32,6 +32,7 @@ import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.kit.endpointHalo
 import com.ascend.lifeos.ui.kit.smoothPath
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -138,7 +139,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                 // ── PR timeline ─────────────────────────────────────────
                 if (prs.isNotEmpty()) {
                     item {
-                        Text("PR TIMELINE", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                        SectionLabel("Pr timeline", accent = Mod.Train)
                         Spacer(Modifier.height(10.dp))
                     }
                     items(prs.sortedByDescending { it.date }.take(12), key = { it.id }) { pr ->
@@ -153,7 +154,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                 // ── raw recent sets ─────────────────────────────────────
                 if (sets.isNotEmpty()) {
                     item {
-                        Text("RECENT SETS", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                        SectionLabel("Recent sets", accent = Mod.Train)
                         Spacer(Modifier.height(10.dp))
                     }
                     items(sets.take(15), key = { it.id }) { s ->

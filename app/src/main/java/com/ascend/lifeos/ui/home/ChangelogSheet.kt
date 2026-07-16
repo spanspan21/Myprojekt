@@ -29,6 +29,12 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "Keyboard Done button on all text fields: GlassField, LifeField, FinanceField, RuleBuilder, QuickLog spend/note, BootScreen name, CalendarScreen URL/title/task — tapping Done dismisses the keyboard",
+        "TickerNumber odometer on exam countdown and nutrition weekly score — numbers roll in with animated digit transitions",
+        "UX safety wave 4: calendar event delete and budget remove now require double-tap confirmation",
+        "pressScale wave 5: journal save, habit add, goal create, add account, book recurring, savings +€, share report and EmptyState action button upgraded",
+        "Close button sizes unified: 18dp in glass pills, 20dp standalone — no more 19dp/24dp outliers",
+        "Visual consistency wave 2: 13 section headers across ExerciseDetail, Stats, Fasting, HIIT, Metronome, Assessment and NutritionDetail converted to SectionLabel — unified accent bars and typography everywhere",
         "Haptic feedback on major CTAs: boot launch, Quick-log FAB, rep counter use, workout done, test day pass/fail, rule save/delete — every key action now buzzes",
         "UX safety wave 3: cancel workout, activity log delete and phone-free window remove now require double-tap confirmation",
         "UX safety wave 2: grade delete, task delete and shopping-list clear now require double-tap confirmation — no more accidental data loss",

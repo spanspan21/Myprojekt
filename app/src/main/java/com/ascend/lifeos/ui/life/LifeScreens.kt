@@ -68,6 +68,7 @@ internal fun LifeScaffold(title: String, context: String, accent: Color, onClose
 
 @Composable
 internal fun LifeField(placeholder: String, value: String, accent: Color, onValue: (String) -> Unit) {
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
@@ -78,7 +79,10 @@ internal fun LifeField(placeholder: String, value: String, accent: Color, onValu
         BasicTextField(
             value, onValue, singleLine = true,
             textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold),
-            cursorBrush = SolidColor(accent), modifier = Modifier.fillMaxWidth(),
+            cursorBrush = SolidColor(accent),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -138,7 +142,7 @@ fun MindScreen(onClose: () -> Unit) {
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(if (saved) Good.copy(alpha = 0.14f) else Mod.Mind)
-                            .clickable {
+                            .pressScale {
                                 com.ascend.lifeos.data.Haptics.confirm(ctx)
                                 Repo.setJournal(listOf(a1, a2, a3), mood)
                                 saved = true
@@ -485,12 +489,12 @@ private fun HabitsBlock() {
         Box(
             Modifier.clip(RoundedCornerShape(11.dp))
                 .background(if (title.isNotBlank()) Mod.Home else Mod.Home.copy(alpha = 0.25f))
-                .clickable(enabled = title.isNotBlank()) {
+                .then(if (title.isNotBlank()) Modifier.pressScale {
                     LifeStores.addHabit(ctx, title, 0b1111111)
                     title = ""
                     com.ascend.lifeos.data.Haptics.confirm(ctx)
                     com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added")
-                }
+                } else Modifier)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
     }
@@ -535,7 +539,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(if (title.isNotBlank() && kr1.isNotBlank()) Mod.Home else Mod.Home.copy(alpha = 0.25f))
-                    .clickable(enabled = title.isNotBlank() && kr1.isNotBlank()) {
+                    .then(if (title.isNotBlank() && kr1.isNotBlank()) Modifier.pressScale {
                         val krs = buildList {
                             add(Kr(id = "kr${System.nanoTime()}", label = kr1))
                             if (kr2.isNotBlank()) add(Kr(id = "kr${System.nanoTime() + 1}", label = kr2))
@@ -550,7 +554,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Goal created")
                         onDone()
-                    }
+                    } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Create goal", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

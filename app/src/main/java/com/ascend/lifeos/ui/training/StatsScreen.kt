@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -140,7 +141,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
         // ── Recent PRs ─────────────────────────────────────────────
         item {
-            Text("RECENT RECORDS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Recent records", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
         }
         if (prs.isEmpty()) {

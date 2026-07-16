@@ -87,7 +87,8 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                             modifier = Modifier.size(80.dp), stroke = 6.dp,
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(sleepScore?.toString() ?: "—", color = sColor, style = metricStyle(26))
+                                sleepScore?.let { com.ascend.lifeos.ui.kit.TickerNumber(it, 26, sColor) }
+                                    ?: Text("—", color = sColor, style = metricStyle(26))
                                 Text("SCORE", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s7_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                             }
                         }

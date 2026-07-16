@@ -437,7 +437,7 @@ private fun BalanceHero(
                 Modifier.clip(RoundedCornerShape(14.dp))
                     .background(FinAccent.copy(alpha = 0.08f))
                     .border(0.5.dp, FinAccent.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
-                    .clickable(onClick = onAddAccount)
+                    .pressScale(onClick = onAddAccount)
                     .padding(horizontal = 13.dp, vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -863,7 +863,7 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
                     Modifier.clip(RoundedCornerShape(8.dp))
                         .background(FinAccent.copy(alpha = 0.14f))
                         .border(0.5.dp, FinAccent.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                        .clickable(onClick = onBook)
+                        .pressScale(onClick = onBook)
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                 ) {
                     Text("Book now", color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -926,7 +926,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                             Modifier.clip(RoundedCornerShape(9.dp))
                                 .background(FinAccent.copy(alpha = 0.10f))
                                 .border(0.5.dp, FinAccent.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .clickable { FinanceStore.addToGoal(ctx, g.id, c); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("+${c / 100} € saved") }
+                                .pressScale { FinanceStore.addToGoal(ctx, g.id, c); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("+${c / 100} € saved") }
                                 .padding(horizontal = 11.dp, vertical = 6.dp),
                         ) {
                             Text(

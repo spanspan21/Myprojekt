@@ -840,6 +840,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
 
         if (editing) {
             LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+            val bootFm = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value = name,
                 onValueChange = { if (it.length <= 24) onName(it) },
@@ -849,6 +850,8 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                     fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                 ),
                 cursorBrush = SolidColor(Mod.Home),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { bootFm.clearFocus(); editing = false }),
                 modifier = Modifier.fillMaxWidth().focusRequester(focus),
             )
         } else {

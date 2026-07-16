@@ -922,7 +922,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Custom recipe", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(24.dp).clickable { onClose() })
+                Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(20.dp).clickable { onClose() })
             }
             Spacer(Modifier.height(14.dp))
             GlassField("Title", title, KeyboardType.Text, Modifier.fillMaxWidth()) { title = it.take(48) }

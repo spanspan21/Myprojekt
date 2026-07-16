@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.ui.hud.*
 import com.ascend.lifeos.ui.motion.pressScale
@@ -76,7 +77,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(24.dp))
 
         // ── Presets ─────────────────────────────────────────────────
-        Text("PRESETS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        SectionLabel("Presets", accent = Mod.Train)
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ExerciseSeed.TEMPO_PRESETS.forEach { tp ->

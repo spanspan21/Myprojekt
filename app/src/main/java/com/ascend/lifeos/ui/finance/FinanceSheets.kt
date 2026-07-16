@@ -262,12 +262,17 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
         }
         if (existing != null) {
             Spacer(Modifier.height(10.dp))
+            var armedRemoveBudget by remember { mutableStateOf(false) }
+            LaunchedEffect(armedRemoveBudget) { if (armedRemoveBudget) { kotlinx.coroutines.delay(2500); armedRemoveBudget = false } }
             Text(
-                "Remove budget",
+                if (armedRemoveBudget) "Tap again to confirm" else "Remove budget",
                 color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(10.dp))
-                    .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); FinanceStore.setBudget(ctx, category, 0); com.ascend.lifeos.ui.kit.AppFeedback.show("Budget removed"); onDismiss() }
+                    .clickable {
+                        if (armedRemoveBudget) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.setBudget(ctx, category, 0); com.ascend.lifeos.ui.kit.AppFeedback.show("Budget removed"); onDismiss() }
+                        else { com.ascend.lifeos.data.Haptics.warn(ctx); armedRemoveBudget = true }
+                    }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             )
         }

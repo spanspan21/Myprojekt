@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.hud
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.kit.SectionLabel
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FastingCalc
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.theme.Accent
+import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
 import com.ascend.lifeos.ui.theme.TextPrimary
@@ -124,7 +126,7 @@ fun FastingScreen(onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(22.dp))
-        Text("ZONES", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        SectionLabel("Zones", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
         GlassPanel(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -142,7 +144,7 @@ fun FastingScreen(onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(16.dp))
-        Text("STATS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        SectionLabel("Stats", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
         GlassPanel(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(18.dp)) {

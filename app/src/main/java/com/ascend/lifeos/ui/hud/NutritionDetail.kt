@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.hud
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +62,7 @@ import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.endpointHalo
 import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.theme.Accent
+import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.BgElevated
 import com.ascend.lifeos.ui.theme.Cyan
@@ -464,7 +466,7 @@ fun StatsView(onBack: () -> Unit) {
 
         // Correlations
         Spacer(Modifier.height(16.dp))
-        Text("CORRELATIONS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        SectionLabel("Correlations", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
         GlassPanel(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -476,7 +478,7 @@ fun StatsView(onBack: () -> Unit) {
 
         // Weight log
         Spacer(Modifier.height(16.dp))
-        Text("LOG WEIGHT", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        SectionLabel("Log weight", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) { GlassField("kg", weight, KeyboardType.Number) { weight = it.filter { c -> c.isDigit() || c == '.' }.take(5) } }

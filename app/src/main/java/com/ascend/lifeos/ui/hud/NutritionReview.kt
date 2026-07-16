@@ -79,7 +79,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("WEEKLY REVIEW", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
-                Text("$score", color = scoreColor, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)
+                com.ascend.lifeos.ui.kit.TickerNumber(score, 22, scoreColor)
                 Text(" / 100", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))

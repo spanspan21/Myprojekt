@@ -411,6 +411,7 @@ private fun Stepper(value: Int, unit: String, step: Int, onChange: (Int) -> Unit
 
 @Composable
 private fun GlassField(placeholder: String, value: String, onValue: (String) -> Unit) {
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
@@ -421,7 +422,10 @@ private fun GlassField(placeholder: String, value: String, onValue: (String) -> 
         BasicTextField(
             value, onValue, singleLine = true,
             textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold),
-            cursorBrush = SolidColor(Mod.Home), modifier = Modifier.fillMaxWidth(),
+            cursorBrush = SolidColor(Mod.Home),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.school
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -176,10 +177,11 @@ fun SchoolScreen(onClose: () -> Unit) {
                         Panel(Modifier.animateItem().fillMaxWidth(), line = Mod.School.copy(alpha = 0.4f)) {
                             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(76.dp)) {
-                                    Text(
-                                        if (daysLeft <= 0) "!" else "$daysLeft",
-                                        color = Mod.School, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold,
-                                    )
+                                    if (daysLeft > 0) {
+                                        TickerNumber(daysLeft, 34, Mod.School, fontFamily = Display)
+                                    } else {
+                                        Text("!", color = Mod.School, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s34, fontWeight = FontWeight.ExtraBold)
+                                    }
                                     Text(if (daysLeft == 1) "DAY" else "DAYS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
                                 }
                                 Spacer(Modifier.width(16.dp))

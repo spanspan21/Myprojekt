@@ -232,13 +232,15 @@ internal fun GlassField(
         if (value.isEmpty()) {
             Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body)
         }
+        val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
         BasicTextField(
             value, onChange, singleLine = singleLine,
             textStyle = TextStyle(
                 color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body,
                 fontWeight = FontWeight.SemiBold, lineHeight = 19.sp,
             ),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboard),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = if (singleLine) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Default),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
             cursorBrush = SolidColor(accent),
             modifier = Modifier.fillMaxWidth(),
         )

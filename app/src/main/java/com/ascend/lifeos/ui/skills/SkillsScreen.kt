@@ -98,7 +98,7 @@ fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
                         .clickable { constellation = false },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(19.dp)) }
+                ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
             }
         }
     }

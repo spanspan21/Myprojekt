@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -114,7 +117,8 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
 
 /** Dark glass input field with placeholder. */
 @Composable
-fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modifier: Modifier = Modifier, focus: FocusRequester? = null, onValue: (String) -> Unit) {
+fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modifier: Modifier = Modifier, focus: FocusRequester? = null, imeAction: ImeAction = ImeAction.Done, onValue: (String) -> Unit) {
+    val focusManager = LocalFocusManager.current
     Box(
         modifier
             .clip(RoundedCornerShape(13.dp))
@@ -127,7 +131,8 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
             value = value, onValueChange = onValue, singleLine = true,
             textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(LocalModuleAccent.current),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboard),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = imeAction),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             modifier = if (focus != null) Modifier.fillMaxWidth().focusRequester(focus) else Modifier.fillMaxWidth(),
         )
     }

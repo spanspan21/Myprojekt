@@ -488,7 +488,7 @@ fun EmptyState(
             Box(
                 Modifier.clip(RoundedCornerShape(12.dp)).background(accent.copy(alpha = 0.14f))
                     .border(0.5.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = onAction).padding(horizontal = 16.dp, vertical = 9.dp),
+                    .pressScale(onClick = onAction).padding(horizontal = 16.dp, vertical = 9.dp),
             ) { Text(actionLabel, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
     }

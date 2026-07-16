@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.data.training.ASSESS_TESTS
 import com.ascend.lifeos.data.training.ATHLETE_METRICS
 import com.ascend.lifeos.data.training.MOBILITY_CHECKS
@@ -198,7 +199,7 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
     var rating by remember(check.id) { mutableIntStateOf(current ?: 0) }
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.height(44.dp))
-        Text("CALIBRATION · MOBILITY", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+        SectionLabel("Calibration · Mobility", accent = Mod.Body)
         Spacer(Modifier.height(8.dp))
         Text(check.name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
         Spacer(Modifier.height(10.dp))
@@ -294,7 +295,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         val perf = ATHLETE_METRICS.mapNotNull { m -> results[m.id]?.takeIf { it > 0 }?.let { m to it } }
         if (perf.isNotEmpty()) {
             Spacer(Modifier.height(18.dp))
-            Text("PERFORMANCE", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            SectionLabel("Performance", accent = Mod.Train)
             Spacer(Modifier.height(8.dp))
             perf.forEach { (m, v) ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -306,7 +307,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
 
         // prescribed mobility
         Spacer(Modifier.height(18.dp))
-        Text("MOBILITY PRESCRIPTION", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+        SectionLabel("Mobility prescription", accent = Mod.Body)
         Spacer(Modifier.height(8.dp))
         if (prescribed.isEmpty()) {
             Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 17.sp)

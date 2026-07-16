@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -144,7 +145,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable(enabled = !sharing) {
+                    .then(if (!sharing) Modifier.pressScale {
                         sharing = true
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         scope.launch {
@@ -155,7 +156,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                             }
                             sharing = false
                         }
-                    },
+                    } else Modifier),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
