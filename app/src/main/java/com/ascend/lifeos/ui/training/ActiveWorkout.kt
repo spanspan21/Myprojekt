@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -120,7 +121,7 @@ fun ActiveWorkoutScreen(
                             .background(Red.copy(alpha = if (armedCancel) 0.25f else 0.12f))
                             .border(0.5.dp, Red.copy(alpha = if (armedCancel) 0.6f else 0.3f), RoundedCornerShape(12.dp))
                             .pressScale {
-                                if (armedCancel) { vm.cancelWorkout(); onFinish() }
+                                if (armedCancel) { Haptics.confirm(ctx); vm.cancelWorkout(); onFinish() }
                                 else { Haptics.warn(ctx); armedCancel = true }
                             }.padding(horizontal = 14.dp, vertical = 9.dp),
                     ) { Text(if (armedCancel) "Sure?" else "Cancel", color = Red, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -406,7 +407,7 @@ private fun ExerciseSetLogger(
                         "Unlink",
                         color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                            .pressScale { vm.unlinkSuperset(vm.activeCurrentExIndex) }
+                            .pressScale { Haptics.tick(ctx); vm.unlinkSuperset(vm.activeCurrentExIndex) }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
                     )
                 }
@@ -719,6 +720,7 @@ private fun SetRow(
 
 @Composable
 private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
     GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
@@ -734,7 +736,7 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
             Text(
                 "Rückgängig",
                 color = Accent, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onUndo() }.padding(horizontal = 12.dp, vertical = 8.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.tick(ctx); onUndo() }.padding(horizontal = 12.dp, vertical = 8.dp),
             )
             Icon(
                 Icons.Rounded.Close, "Dismiss", tint = TextDim.copy(alpha = 0.5f),
@@ -830,7 +832,7 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
     }
 
     Box(
-        Modifier.fillMaxSize().background(Void.copy(alpha = 0.6f)).clickable(onClick = onDismiss),
+        Modifier.fillMaxSize().background(Void.copy(alpha = 0.6f)).clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {
         GlassPanel(

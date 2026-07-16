@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,7 +80,7 @@ internal fun BankPanel() {
                     Box(
                         Modifier.clip(CircleShape)
                             .background(FinAccent.copy(alpha = if (busy) 0.06f else 0.14f))
-                            .then(if (!busy) Modifier.pressScale { BankLink.requestSync(ctx) } else Modifier)
+                            .then(if (!busy) Modifier.pressScale { Haptics.tick(ctx); BankLink.requestSync(ctx) } else Modifier)
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -142,7 +143,7 @@ internal fun BankPanel() {
                 Text(
                     "Trennen",
                     color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.then(if (!busy) Modifier.pressScale { BankLink.unlink(ctx) } else Modifier).padding(vertical = 4.dp),
+                    modifier = Modifier.then(if (!busy) Modifier.pressScale { Haptics.warn(ctx); BankLink.unlink(ctx) } else Modifier).padding(vertical = 4.dp),
                 )
             }
 

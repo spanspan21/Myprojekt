@@ -169,7 +169,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.Rounded.IosShare, null,
+                    Icons.Rounded.IosShare, "Share",
                     tint = if (sharing) TextDim else TextPrimary, modifier = Modifier.size(17.dp),
                 )
             }

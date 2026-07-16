@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -158,7 +159,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
     val elapsedSec = if (running) ((now - timerStart) / 1000L).coerceAtLeast(0L) else 0L
     // tap opens detail; long-press skips/unskips today (streak freeze)
     Panel(
-        Modifier.fillMaxWidth().combinedClickable(onClick = onTap, onLongClick = { Haptics.tick(ctx); LifeStores.toggleHabitSkip(ctx, h.id, today) }),
+        Modifier.fillMaxWidth().combinedClickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onTap, onLongClick = { Haptics.tick(ctx); LifeStores.toggleHabitSkip(ctx, h.id, today) }),
         corner = 14.dp,
     ) {
         Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {

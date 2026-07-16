@@ -80,7 +80,7 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp).padding(bottom = 20.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Custom food", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-            Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f)).pressScale { favorite = !favorite }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f)).pressScale { Haptics.tick(ctx); favorite = !favorite }, contentAlignment = Alignment.Center) {
                 Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, if (favorite) "Remove from favorites" else "Add to favorites", tint = if (favorite) Amber else TextDim, modifier = Modifier.size(20.dp))
             }
         }

@@ -498,7 +498,7 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
             }
         }
         Icon(
-            Icons.Rounded.Delete, null, tint = if (armed) Crit else TextDim,
+            Icons.Rounded.Delete, "Delete", tint = if (armed) Crit else TextDim,
             modifier = Modifier.size(16.dp).pressScale {
                 if (armed) onDelete() else armed = true
             },

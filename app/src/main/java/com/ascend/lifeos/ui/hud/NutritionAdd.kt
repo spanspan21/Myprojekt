@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -566,7 +567,7 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
 @Composable
 private fun ResultRow(title: String, sub: String, score: String = "", verified: Boolean = false, onLong: (() -> Unit)? = null, onPlus: (() -> Unit)? = null, onClick: () -> Unit) {
     GlassPanel(
-        Modifier.fillMaxWidth().combinedClickable(onClick = onClick, onLongClick = onLong),
+        Modifier.fillMaxWidth().combinedClickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick, onLongClick = onLong),
         corner = 14.dp,
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {

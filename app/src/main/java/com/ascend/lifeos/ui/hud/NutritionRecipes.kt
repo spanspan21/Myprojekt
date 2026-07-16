@@ -493,6 +493,7 @@ private fun RecipeCard(
                         color = if (armed) Crit else Red,
                         fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale {
+                            Haptics.warn(ctx)
                             if (armed) {
                                 Haptics.confirm(ctx)
                                 OwnRecipes.delete(r.id)
@@ -852,7 +853,7 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(r.title, color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2)
                 Icon(
-                    Icons.Rounded.Close, null, tint = TextMuted,
+                    Icons.Rounded.Close, "Close", tint = TextMuted,
                     modifier = Modifier.size(26.dp).pressScale { onClose() },
                 )
             }
@@ -944,7 +945,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
                     Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
                     Icon(
-                        Icons.Rounded.Close, null, tint = TextDim,
+                        Icons.Rounded.Close, "Remove", tint = TextDim,
                         modifier = Modifier.size(16.dp).pressScale { parts = parts.filterIndexed { j, _ -> j != i } },
                     )
                 }
@@ -973,7 +974,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
                     Text("${i + 1}. $s", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
                     Icon(
-                        Icons.Rounded.Close, null, tint = TextDim,
+                        Icons.Rounded.Close, "Remove", tint = TextDim,
                         modifier = Modifier.size(16.dp).pressScale { steps = steps.filterIndexed { j, _ -> j != i } },
                     )
                 }
