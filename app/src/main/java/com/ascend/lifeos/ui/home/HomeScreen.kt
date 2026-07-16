@@ -280,7 +280,7 @@ fun HomeScreen(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(Warn.copy(alpha = 0.12f))
                         .border(0.5.dp, Warn.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .clickable { Repo.setSickMode(false) }
+                        .pressScale { Repo.setSickMode(false) }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Text(
@@ -465,7 +465,7 @@ fun HomeScreen(
                     Modifier.clip(RoundedCornerShape(10.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                        .clickable { com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
+                        .pressScale { com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -767,7 +767,7 @@ fun HomeScreen(
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(Mod.Body.copy(alpha = 0.08f))
-                        .clickable {
+                        .pressScale {
                             Repo.addWater(1)
                             com.ascend.lifeos.data.Haptics.confirm(ctx)
                         }
@@ -806,12 +806,10 @@ fun HomeScreen(
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (done) Good.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                                .clickable {
-                                    if (!done) {
-                                        com.ascend.lifeos.data.Haptics.confirm(ctx)
-                                        com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, h.id, dk, true)
-                                    }
-                                }
+                                .then(if (!done) Modifier.pressScale {
+                                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                    com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, h.id, dk, true)
+                                } else Modifier)
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
                             Text(
@@ -1140,7 +1138,7 @@ private fun SleepConfirmCard(
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                             .background(accent.copy(alpha = 0.10f))
                             .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
-                            .clickable { onConfirm(mins) }
+                            .pressScale { onConfirm(mins) }
                             .padding(vertical = 9.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }

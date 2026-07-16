@@ -1,10 +1,5 @@
 package com.ascend.lifeos.ui.training
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -37,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.HiitPreset
 import com.ascend.lifeos.ui.hud.*
@@ -70,7 +66,8 @@ fun HiitTimerScreen(onBack: () -> Unit) {
         while (running && !paused) {
             delay(1000)
             remaining--
-            if (remaining == 3 || remaining == 0) vibrate(ctx, if (remaining == 0) 300L else 100L)
+            if (remaining == 3) Haptics.tick(ctx)
+            if (remaining == 0) Haptics.epic(ctx)
             if (remaining <= 0) {
                 if (isWork) {
                     if (p.restSec > 0) { isWork = false; remaining = p.restSec; totalPhase = p.restSec }
@@ -198,17 +195,4 @@ private fun nextRound(
         setSet(currentSet + 1); setRound(1)
         setIsWork(true); setRemaining(p.workSec); setTotal(p.workSec)
     } else stop()
-}
-
-private fun vibrate(ctx: Context, ms: Long) {
-    try {
-        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (ctx.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            @Suppress("DEPRECATION") ctx.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else { @Suppress("DEPRECATION") vib.vibrate(ms) }
-    } catch (_: Exception) {}
 }

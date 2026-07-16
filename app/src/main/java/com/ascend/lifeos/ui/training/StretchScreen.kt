@@ -1,11 +1,6 @@
 package com.ascend.lifeos.ui.training
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
 import com.ascend.lifeos.ui.motion.pressScale
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -33,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.StretchRoutine
 import com.ascend.lifeos.ui.hud.*
@@ -72,9 +68,9 @@ fun StretchScreen(onBack: () -> Unit) {
         while (running) {
             delay(1000)
             remaining--
-            if (remaining == 3) stretchVibrate(ctx, 80L)
+            if (remaining == 3) Haptics.warn(ctx)
             if (remaining <= 0) {
-                stretchVibrate(ctx, 200L)
+                Haptics.epic(ctx)
                 val ex = routine.exercises.getOrNull(exIndex)
                 if (ex != null && ex.hasSides && !isSecondSide) {
                     isSecondSide = true; remaining = ex.holdSec
@@ -210,17 +206,4 @@ fun StretchScreen(onBack: () -> Unit) {
             Spacer(Modifier.weight(0.3f))
         }
     }
-}
-
-private fun stretchVibrate(ctx: Context, ms: Long) {
-    try {
-        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (ctx.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            @Suppress("DEPRECATION") ctx.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else { @Suppress("DEPRECATION") vib.vibrate(ms) }
-    } catch (_: Exception) {}
 }

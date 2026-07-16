@@ -1,10 +1,5 @@
 package com.ascend.lifeos.ui.training
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -56,7 +51,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
         phase = 0; remaining = parts[0]
         while (running) {
             if (remaining > 0) {
-                metroVibrate(ctx, 40L)
+                Haptics.warn(ctx)
                 delay(1000)
                 remaining--
             } else {
@@ -66,7 +61,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
                     phase = (phase + 1) % 4
                     remaining = parts[phase]
                 }
-                metroVibrate(ctx, 120L)
+                Haptics.tick(ctx)
             }
         }
     }
@@ -136,17 +131,4 @@ fun MetronomeScreen(onBack: () -> Unit) {
         }
         Spacer(Modifier.weight(0.3f))
     }
-}
-
-private fun metroVibrate(ctx: Context, ms: Long) {
-    try {
-        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (ctx.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            @Suppress("DEPRECATION") ctx.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else { @Suppress("DEPRECATION") vib.vibrate(ms) }
-    } catch (_: Exception) {}
 }

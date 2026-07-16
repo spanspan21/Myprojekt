@@ -246,7 +246,7 @@ private fun ExpandedBody(d: Decision) {
             fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                .clickable { if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); Decisions.delete(ctx, d.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Decision deleted") } else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
+                .pressScale { if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); Decisions.delete(ctx, d.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Decision deleted") } else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
                 .padding(vertical = 6.dp),
         )
     }
@@ -258,7 +258,7 @@ private fun DecideButton(label: String, modifier: Modifier = Modifier, onClick: 
         modifier.clip(RoundedCornerShape(11.dp))
             .background(Mod.Home.copy(alpha = 0.12f))
             .border(0.5.dp, Mod.Home.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -299,7 +299,7 @@ private fun AddFactorForm(d: Decision) {
             Box(
                 Modifier.clip(RoundedCornerShape(11.dp))
                     .background(if (name.isNotBlank()) Mod.Home else Mod.Home.copy(alpha = 0.25f))
-                    .clickable(enabled = name.isNotBlank()) {
+                    .then(if (name.isNotBlank()) Modifier.pressScale {
                         Decisions.upsert(
                             ctx,
                             d.copy(factors = d.factors + Factor(Decisions.newId("f"), name.trim(), weight, scoreA, scoreB)),
@@ -307,7 +307,7 @@ private fun AddFactorForm(d: Decision) {
                         com.ascend.lifeos.data.Haptics.tick(ctx)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Factor added")
                         name = ""; weight = 3; scoreA = 3; scoreB = 3
-                    }
+                    } else Modifier)
                     .padding(horizontal = 14.dp, vertical = 9.dp),
             ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
         }
@@ -375,7 +375,7 @@ private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (ready) Mod.Home else Mod.Home.copy(alpha = 0.25f))
-                    .clickable(enabled = ready) {
+                    .then(if (ready) Modifier.pressScale {
                         val id = Decisions.newId("d")
                         Decisions.upsert(
                             ctx,
@@ -387,7 +387,7 @@ private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Decision created")
                         onCreate(id)
-                    }
+                    } else Modifier)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Create decision", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

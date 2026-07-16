@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.finance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -214,7 +215,7 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
                     .background(Crit.copy(alpha = if (deleteArmed) 0.22f else 0.10f))
                     .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(15.dp))
-                    .clickable {
+                    .pressScale {
                         if (deleteArmed) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.deleteAccount(ctx, existing.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Account deleted"); onDismiss() } else { com.ascend.lifeos.data.Haptics.warn(ctx); deleteArmed = true }
                     }
                     .padding(vertical = 12.dp),
@@ -373,10 +374,10 @@ internal fun ScanSheet(onDismiss: () -> Unit) {
                                 if (done) Good.copy(alpha = 0.4f) else FinAccent.copy(alpha = 0.4f),
                                 RoundedCornerShape(10.dp),
                             )
-                            .clickable(enabled = !done) {
+                            .then(if (!done) Modifier.pressScale {
                                 FinanceStore.addRecurring(ctx, s.name, s.amountCents, s.category, s.dayOfMonth)
                                 added = added + s.name
-                            }
+                            } else Modifier)
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) {
                         Text(
@@ -481,7 +482,7 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
             Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
                 .background(Crit.copy(alpha = if (deleteArmed) 0.22f else 0.10f))
                 .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(15.dp))
-                .clickable {
+                .pressScale {
                     if (deleteArmed) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.deleteTxn(ctx, txn.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Transaction deleted"); onDismiss() } else { com.ascend.lifeos.data.Haptics.warn(ctx); deleteArmed = true }
                 }
                 .padding(vertical = 12.dp),

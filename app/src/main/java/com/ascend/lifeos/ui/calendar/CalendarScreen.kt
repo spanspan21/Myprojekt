@@ -195,7 +195,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                         Box(
                             Modifier.clip(RoundedCornerShape(9.dp)).background(c.copy(alpha = 0.12f))
                                 .border(0.5.dp, c.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
+                                .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                         ) {
                             Text(b.title, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -225,7 +225,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 110.dp)
                 .size(54.dp).clip(CircleShape)
                 .background(Mod.Calendar)
-                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); prefillStart = null; addOpen = true },
+                .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); prefillStart = null; addOpen = true },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.Add, "Add event", tint = Void, modifier = Modifier.size(24.dp)) }
 
@@ -616,7 +616,7 @@ private fun IcsFeedRow() {
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Mod.Calendar.copy(alpha = if (syncing) 0.55f else 1f))
-                            .clickable(enabled = !syncing) {
+                            .then(if (!syncing) Modifier.pressScale {
                                 val url = input.trim()
                                 when {
                                     url.isBlank() -> error = "paste a feed URL first"
@@ -627,7 +627,7 @@ private fun IcsFeedRow() {
                                         runSync(firstAttempt = true)
                                     }
                                 }
-                            }
+                            } else Modifier)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Text(
@@ -653,7 +653,7 @@ private fun IcsFeedRow() {
         // no feed → subtle invite
         else -> Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                .clickable { expanded = true }
+                .pressScale { expanded = true }
                 .padding(horizontal = 2.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -974,7 +974,7 @@ private fun QuickAddSheet(
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
                     .background(Mod.Calendar)
-                    .clickable {
+                    .pressScale {
                         com.ascend.lifeos.data.Haptics.confirm(addCtx)
                         onSave(
                             title, type, day,
@@ -1052,7 +1052,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                    .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
+                    .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1074,7 +1074,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(Crit.copy(alpha = 0.10f))
                     .border(0.5.dp, Crit.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
-                    .clickable { com.ascend.lifeos.data.Haptics.warn(ctx); onDelete() }
+                    .pressScale { com.ascend.lifeos.data.Haptics.warn(ctx); onDelete() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -1171,10 +1171,10 @@ private fun UntisRow() {
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(if (user.isNotBlank() && pass.isNotBlank()) Mod.Calendar else Mod.Calendar.copy(alpha = 0.25f))
-                        .clickable(enabled = user.isNotBlank() && pass.isNotBlank() && !syncing) {
+                        .then(if (user.isNotBlank() && pass.isNotBlank() && !syncing) Modifier.pressScale {
                             UntisSync.save(ctx, host, school, user, pass)
                             runSync()
-                        }
+                        } else Modifier)
                         .padding(vertical = 11.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -1387,13 +1387,13 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                     .background(if (title.isBlank()) Mod.Calendar.copy(alpha = 0.25f) else Mod.Calendar)
-                    .clickable(enabled = title.isNotBlank()) {
+                    .then(if (title.isNotBlank()) Modifier.pressScale {
                         com.ascend.lifeos.data.calendar.TaskBlocks.add(
                             ctx, title, prio,
                             java.time.LocalDate.now().plusDays(deadlineDays.toLong()).toEpochDay(), durMin,
                         )
                         title = ""
-                    }
+                    } else Modifier)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Add task", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -1450,7 +1450,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Mod.Calendar.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
-                    .clickable(enabled = tasks.any { !it.done }) {
+                    .then(if (tasks.any { !it.done }) Modifier.pressScale {
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         planNote = "Planning…"
                         scope.launch {
@@ -1462,7 +1462,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                             }
                             planNote = "$placed placed into free slots ✓"
                         }
-                    }
+                    } else Modifier)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {

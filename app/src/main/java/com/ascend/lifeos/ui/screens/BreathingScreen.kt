@@ -32,12 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.compose.ui.platform.LocalContext
-import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.kit.Panel
@@ -69,18 +65,6 @@ private enum class BreathePhase(val label: String) {
     IDLE("Ready"),
 }
 
-private fun breatheHaptic(ctx: android.content.Context, ms: Long = 18) {
-    if (!Prefs.bool(ctx, Prefs.HAPTICS_ON, true)) return
-    runCatching {
-        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (ctx.getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            @Suppress("DEPRECATION") ctx.getSystemService(android.content.Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
-    }
-}
-
 @Composable
 fun BreathingScreen(onClose: () -> Unit) {
     val BreatheAccent = Good
@@ -109,7 +93,7 @@ fun BreathingScreen(onClose: () -> Unit) {
         while (isActive && running) {
             // Inhale — animate circle expanding while counting down
             phase = BreathePhase.INHALE
-            breatheHaptic(ctx, 25)
+            Haptics.confirm(ctx)
             phaseSeconds = pattern.inhale
             coroutineScope {
                 launch { progress.animateTo(1f, tween(pattern.inhale * 1000, easing = LinearEasing)) }
@@ -120,14 +104,14 @@ fun BreathingScreen(onClose: () -> Unit) {
             // Hold in
             if (pattern.holdIn > 0) {
                 phase = BreathePhase.HOLD_IN
-                breatheHaptic(ctx, 15)
+                Haptics.tick(ctx)
                 countDown(pattern.holdIn)
             }
             if (!running) break
 
             // Exhale — animate circle shrinking while counting down
             phase = BreathePhase.EXHALE
-            breatheHaptic(ctx, 25)
+            Haptics.confirm(ctx)
             phaseSeconds = pattern.exhale
             coroutineScope {
                 launch { progress.animateTo(0.25f, tween(pattern.exhale * 1000, easing = LinearEasing)) }
@@ -138,7 +122,7 @@ fun BreathingScreen(onClose: () -> Unit) {
             // Hold out
             if (pattern.holdOut > 0) {
                 phase = BreathePhase.HOLD_OUT
-                breatheHaptic(ctx, 15)
+                Haptics.tick(ctx)
                 countDown(pattern.holdOut)
             }
             if (!running) break

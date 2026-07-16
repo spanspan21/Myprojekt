@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
@@ -118,12 +119,12 @@ fun NotesScreen(onClose: () -> Unit) {
                         Box(
                             Modifier.clip(RoundedCornerShape(12.dp))
                                 .background(if (newText.isNotBlank()) Mod.Skills else Mod.Skills.copy(alpha = 0.25f))
-                                .clickable(enabled = newText.isNotBlank()) {
+                                .then(if (newText.isNotBlank()) Modifier.pressScale {
                                     LifeStores.addNote(ctx, newText)
                                     newText = ""
                                     com.ascend.lifeos.data.Haptics.confirm(ctx)
                                     com.ascend.lifeos.ui.kit.AppFeedback.show("Note saved")
-                                }
+                                } else Modifier)
                                 .padding(horizontal = 16.dp, vertical = 10.dp),
                         ) { Text("Save", color = Void, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.ExtraBold) }
                     }
@@ -158,7 +159,7 @@ fun NotesScreen(onClose: () -> Unit) {
                                     Box(
                                         Modifier.clip(RoundedCornerShape(10.dp))
                                             .background(Mod.Skills)
-                                            .clickable {
+                                            .pressScale {
                                                 LifeStores.editNote(ctx, id, editText)
                                                 editingId = null
                                                 com.ascend.lifeos.ui.kit.AppFeedback.show("Note updated")
@@ -168,7 +169,7 @@ fun NotesScreen(onClose: () -> Unit) {
                                     Box(
                                         Modifier.clip(RoundedCornerShape(10.dp))
                                             .background(Ivory.copy(alpha = 0.06f))
-                                            .clickable { editingId = null }
+                                            .pressScale { editingId = null }
                                             .padding(horizontal = 14.dp, vertical = 8.dp),
                                     ) { Text("Cancel", color = TextDim, fontFamily = Body, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
                                 }

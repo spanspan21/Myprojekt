@@ -903,7 +903,7 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(Crit.copy(alpha = 0.12f))
                             .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                            .clickable { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Focus session ended") }
+                            .pressScale { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Focus session ended") }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
                     ) { Text("End early", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -920,12 +920,12 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                         Box(
                             Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Guard.copy(alpha = 0.12f))
                                 .border(0.5.dp, Mod.Guard.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                                .clickable(enabled = overlayOk) {
+                                .then(if (overlayOk) Modifier.pressScale {
                                     WellbeingStore.startFocus(ctx, min)
                                     if (!guardEnabled) onArm()
                                     com.ascend.lifeos.data.Haptics.confirm(ctx)
                                     com.ascend.lifeos.ui.kit.AppFeedback.show("Focus: $min min — apps locked")
-                                }
+                                } else Modifier)
                                 .padding(horizontal = 16.dp, vertical = 9.dp),
                         ) { Text("$min min", color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
@@ -1135,7 +1135,7 @@ private fun AppRow(
         Column(
             Modifier.fillMaxWidth()
                 .animateContentSize(Motion.springSmoothOf())
-                .clickable { onToggle() }
+                .pressScale { onToggle() }
                 .padding(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1404,6 +1404,6 @@ private fun PillButton(label: String, primary: Boolean, onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(13.dp))
             .background(if (primary) Mod.Guard.copy(alpha = 0.18f) else HudFill)
             .border(0.5.dp, if (primary) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(13.dp))
-            .clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 11.dp),
+            .pressScale(onClick = onClick).padding(horizontal = 16.dp, vertical = 11.dp),
     ) { Text(label, color = if (primary) Mod.Guard else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold) }
 }

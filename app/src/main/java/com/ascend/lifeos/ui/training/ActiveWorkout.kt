@@ -1,10 +1,7 @@
 package com.ascend.lifeos.ui.training
 
 import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -232,7 +229,7 @@ fun ActiveWorkoutScreen(
                 LaunchedEffect(del) { delay(5000); vm.dismissUndo() }
                 UndoDeleteBar(
                     reps = del.set.reps,
-                    onUndo = { vm.undoDeleteSet(); haptic(ctx, 12) },
+                    onUndo = { vm.undoDeleteSet(); Haptics.tick(ctx) },
                     onDismiss = { vm.dismissUndo() },
                 )
                 Spacer(Modifier.height(12.dp))
@@ -956,19 +953,3 @@ private fun prTypeLabel(t: PrType) = when (t) {
     PrType.LONGEST_HOLD -> "Longest hold"
 }
 
-private fun haptic(ctx: Context, ms: Long) {
-    // Respect the global Settings → Haptics toggle (QuickLog already does).
-    if (!com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.HAPTICS_ON, true)) return
-    try {
-        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (ctx.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            @Suppress("DEPRECATION") ctx.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION") vib.vibrate(ms)
-        }
-    } catch (_: Exception) {}
-}

@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -530,7 +531,7 @@ private fun Section(title: String) {
 private fun SquareIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String = "", onClick: () -> Unit) {
     Box(
         Modifier.size(48.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
-            .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).clickable { onClick() },
+            .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).pressScale { onClick() },
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label.ifBlank { null }, tint = Mod.Fuel, modifier = Modifier.size(22.dp)) }
 }
@@ -538,7 +539,7 @@ private fun SquareIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, la
 @Composable
 private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
     Row(
-        modifier.clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).clickable { onClick() }.padding(vertical = 13.dp),
+        modifier.clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).pressScale { onClick() }.padding(vertical = 13.dp),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, label, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
@@ -596,7 +597,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     val eval = remember(product) { FoodScore.evaluate(product) }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
             Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(12.dp))

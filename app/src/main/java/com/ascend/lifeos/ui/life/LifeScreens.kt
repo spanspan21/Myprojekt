@@ -216,12 +216,7 @@ private fun BreathingOverlay(inhale: Int, hold: Int, exhale: Int, onClose: () ->
                 if (next == 0) cycles++
                 phase = next
                 secondsLeft = when (next) { 0 -> inhale; 1 -> hold; else -> exhale }
-                if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.HAPTICS_ON, true)) {
-                    runCatching {
-                        val vib = androidx.core.content.ContextCompat.getSystemService(ctx, android.os.Vibrator::class.java)
-                        vib?.vibrate(android.os.VibrationEffect.createOneShot(35, 120))
-                    }
-                }
+                com.ascend.lifeos.data.Haptics.success(ctx)
             }
         }
     }

@@ -368,7 +368,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(if (hasReminder) Mod.Mind.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, if (hasReminder) Mod.Mind.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                        .clickable {
+                        .pressScale {
                             val init = if (hasReminder) h.reminderMin else 8 * 60
                             android.app.TimePickerDialog(
                                 ctx,
@@ -391,7 +391,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                            .clickable { LifeStores.setHabitReminder(ctx, h.id, -1); HabitReminders.reschedule(ctx) }
+                            .pressScale { LifeStores.setHabitReminder(ctx, h.id, -1); HabitReminders.reschedule(ctx) }
                             .padding(horizontal = 14.dp, vertical = 10.dp),
                     ) { Text("Off", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
                 }
@@ -405,7 +405,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                             .background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                            .clickable { LifeStores.moveHabit(ctx, h.id, up) }
+                            .pressScale { LifeStores.moveHabit(ctx, h.id, up) }
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(lbl, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
@@ -419,7 +419,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(Crit.copy(alpha = if (armed) 0.18f else 0.10f))
                     .border(0.5.dp, Crit.copy(alpha = if (armed) 0.5f else 0.3f), RoundedCornerShape(12.dp))
-                    .clickable {
+                    .pressScale {
                         if (armed) {
                             com.ascend.lifeos.data.Haptics.confirm(ctx)
                             LifeStores.deleteHabit(ctx, h.id)
@@ -589,7 +589,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(if (added) Ivory.copy(alpha = 0.04f) else Mod.Mind.copy(alpha = 0.10f))
                             .border(0.5.dp, if (added) Ivory.copy(alpha = 0.10f) else Mod.Mind.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
-                            .clickable(enabled = !added) {
+                            .then(if (!added) Modifier.pressScale {
                                 // the bar is YOUR current goal, not a catalog constant
                                 val thr = if (p.autoMetric.isNotBlank()) {
                                     com.ascend.lifeos.data.life.HabitMetrics.personalThreshold(p.autoMetric, p.threshold)
@@ -597,7 +597,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                                 LifeStores.addHabit(ctx, p.title, 0b1111111, p.icon, p.autoMetric, thr, p.target, p.unit, p.avoid)
                                 com.ascend.lifeos.data.Haptics.confirm(ctx)
                                 com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added")
-                            }
+                            } else Modifier)
                             .padding(horizontal = 11.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -618,7 +618,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(if (custom.isNotBlank()) Mod.Mind else Mod.Mind.copy(alpha = 0.25f))
-                        .clickable(enabled = custom.isNotBlank()) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.addHabit(ctx, custom, 0b1111111); custom = ""; com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added") }
+                        .then(if (custom.isNotBlank()) Modifier.pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.addHabit(ctx, custom, 0b1111111); custom = ""; com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added") } else Modifier)
                         .padding(horizontal = 14.dp, vertical = 11.dp),
                 ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             }
@@ -730,12 +730,12 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (name.isNotBlank() && mask != 0) Mod.Mind else Mod.Mind.copy(alpha = 0.25f))
-                    .clickable(enabled = name.isNotBlank() && mask != 0) {
+                    .then(if (name.isNotBlank() && mask != 0) Modifier.pressScale {
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         LifeStores.addHabit(ctx, name, mask, emoji, "", 0, if (measurable) target else 0, if (measurable) unit else "", avoid)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Habit created")
                         onDismiss()
-                    }
+                    } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Create habit", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

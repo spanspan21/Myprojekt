@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.finance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -169,7 +170,7 @@ internal fun ActionButton(label: String, enabled: Boolean = true, accent: Color 
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
             .background(if (enabled) accent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .clickable(enabled = enabled, onClick = onClick)
+            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -186,7 +187,7 @@ internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () 
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
             .background(accent.copy(alpha = 0.08f))
             .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
