@@ -57,16 +57,7 @@ import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
-import com.ascend.lifeos.ui.theme.metricStyle
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
 // ─── Rule builder ────────────────────────────────────────────────────────────
@@ -116,16 +107,16 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Automations", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold)
+                Text("Automations", color = TextPrimary, fontFamily = Display, fontSize = FS.s24, fontWeight = FontWeight.Bold)
                 Text(
                     "Built-in protocols + ${rules.size} custom rule${if (rules.size == 1) "" else "s"} · one home",
-                    color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = Mod.Home, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -145,15 +136,15 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(p.title, color = if (on) TextPrimary else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    Text(p.description, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, lineHeight = 14.sp)
+                    Text(p.title, color = if (on) TextPrimary else TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(p.description, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp)
                 }
                 Spacer(Modifier.width(10.dp))
                 Box(
                     Modifier.clip(RoundedCornerShape(10.dp))
-                        .background(if (on) Good.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                        .background(if (on) Good.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f))
                         .padding(horizontal = 10.dp, vertical = 5.dp),
-                ) { Text(if (on) "ON" else "OFF", color = if (on) Good else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold) }
+                ) { Text(if (on) "ON" else "OFF", color = if (on) Good else TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
             }
         }
         Spacer(Modifier.height(20.dp))
@@ -186,7 +177,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
         if (!editorOpen && rules.isNotEmpty()) {
             Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = { editorOpen = true }) {
                 Text(
-                    "+ New rule", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    "+ New rule", color = Mod.Home, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
                 )
             }
@@ -209,13 +200,13 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     rule.name, color = if (rule.enabled) TextPrimary else TextDim,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                 )
                 Text(
                     if (rule.enabled) "ON" else "OFF",
                     color = if (rule.enabled) Mod.Home else TextDim,
-                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                    fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale(onClick = onToggle)
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
@@ -223,14 +214,14 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                 Text(
                     if (armed) "Sure?" else "Delete",
                     color = if (armed) Crit else TextDim,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp))
                         .pressScale { if (armed) { Haptics.warn(ctx); onDelete(); AppFeedback.show("Rule deleted") } else armed = true }
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }
             Spacer(Modifier.height(4.dp))
-            Text(conditionLine(rule), color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 16.sp)
+            Text(conditionLine(rule), color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp)
         }
     }
 }
@@ -253,11 +244,11 @@ private fun RuleEditor(onDone: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "NEW RULE", color = Mod.Home, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
+                    fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    "Cancel", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    "Cancel", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable(onClick = onDone)
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
@@ -281,7 +272,7 @@ private fun RuleEditor(onDone: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             if (!second) {
                 Text(
-                    "+ Second condition", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
+                    "+ Second condition", color = Mod.Home, fontSize = FS.s12, fontFamily = Body,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { second = true }
                         .padding(vertical = 3.dp),
@@ -295,7 +286,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                     Stepper(threshold2, metric2.unit, stepFor(metric2)) { threshold2 = it }
                     Spacer(Modifier.weight(1f))
                     Text(
-                        "Remove", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        "Remove", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable { second = false }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
                     )
@@ -334,7 +325,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                     } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Save rule", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Save rule", color = Void, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
         }
     }
 }
@@ -345,10 +336,10 @@ private fun RuleEditor(onDone: () -> Unit) {
 private fun Chip(label: String, on: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (on) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (on) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+                if (on) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
             .pressScale(onClick = onClick)
@@ -356,7 +347,7 @@ private fun Chip(label: String, on: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             label, color = if (on) Mod.Home else TextMuted,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+            fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -392,11 +383,11 @@ private fun ActionChips(selected: RAction, onSelect: (RAction) -> Unit) {
 private fun StepOrb(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(30.dp).clip(CircleShape)
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), CircleShape)
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -405,7 +396,7 @@ private fun Stepper(value: Int, unit: String, step: Int, onChange: (Int) -> Unit
         StepOrb("−") { onChange((value - step).coerceAtLeast(0)) }
         Column(Modifier.widthIn(min = 64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("$value", color = TextPrimary, style = metricStyle(18))
-            if (unit.isNotEmpty()) Text(unit, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = Body)
+            if (unit.isNotEmpty()) Text(unit, color = TextDim, fontSize = FS.s9, fontFamily = Body)
         }
         StepOrb("+") { onChange(value + step) }
     }
@@ -416,14 +407,14 @@ private fun GlassField(placeholder: String, value: String, onValue: (String) -> 
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
             .padding(horizontal = 13.dp, vertical = 11.dp),
     ) {
-        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = FS.s13, fontFamily = Body)
         BasicTextField(
             value, onValue, singleLine = true,
-            textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold),
+            textStyle = TextStyle(color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(Mod.Home),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),

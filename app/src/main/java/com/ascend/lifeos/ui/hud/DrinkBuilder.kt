@@ -37,11 +37,7 @@ import com.ascend.lifeos.data.CustomFood
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.kit.AppFeedback
-import com.ascend.lifeos.ui.theme.Amber
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 import kotlin.math.roundToInt
 
 // ─── Der Getränke-Builder (FUEL-Masterplan Kap. 36) ─────────────────────────
@@ -171,11 +167,11 @@ fun DrinkBuilderPane(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { onBack() },
+                .background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         Spacer(Modifier.width(12.dp))
-        Text("Build a drink", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
+        Text("Build a drink", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
     }
 
     Spacer(Modifier.height(12.dp))
@@ -185,14 +181,14 @@ fun DrinkBuilderPane(
     }
 
     Spacer(Modifier.height(12.dp))
-    Text("BASE", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("BASE", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(7.dp))
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         bases.forEachIndexed { i, b -> HudChip(b.name, baseIdx == i) { baseIdx = i; shots = b.shots } }
     }
 
     Spacer(Modifier.height(10.dp))
-    Text("SIZE", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("SIZE", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(7.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         SIZES.forEachIndexed { i, (label, _) -> HudChip("$label ml", sizeIdx == i) { sizeIdx = i } }
@@ -200,7 +196,7 @@ fun DrinkBuilderPane(
 
     if (base.milkShare > 0.0) {
         Spacer(Modifier.height(10.dp))
-        Text("MILK", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        Text("MILK", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(7.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             MILKS.forEachIndexed { i, (label, _) -> HudChip(label, milkIdx == i) { milkIdx = i } }
@@ -208,7 +204,7 @@ fun DrinkBuilderPane(
     }
 
     Spacer(Modifier.height(10.dp))
-    Text("EXTRAS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("EXTRAS", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(7.dp))
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         if (tab == 0 && !base.scoop) {
@@ -228,11 +224,11 @@ fun DrinkBuilderPane(
     Spacer(Modifier.height(14.dp))
     GlassPanel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(14.dp)) {
-            Text(name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.Bold, maxLines = 2)
+            Text(name, color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.Bold, maxLines = 2)
             Spacer(Modifier.height(4.dp))
             Text(
                 "$kcalI kcal · ${prot.roundToInt()} P · ${carb.roundToInt()} C · ${fat.roundToInt()} F · $ml ml",
-                color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                color = Mod.Fuel, fontSize = FS.s12, fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -282,7 +278,7 @@ fun DrinkBuilderPane(
     Spacer(Modifier.height(4.dp))
     Text(
         if (starred) "Saved — now under Favorites" else "★ saves as a favorite — tomorrow in 2 taps",
-        color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+        color = TextMuted, fontSize = FS.s10_5,
     )
     Spacer(Modifier.height(6.dp))
 }

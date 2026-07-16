@@ -28,6 +28,7 @@ import com.ascend.lifeos.data.Repo
 import kotlinx.coroutines.flow.firstOrNull
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.kit.ShimmerPanel
 import com.ascend.lifeos.ui.kit.Spark
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
@@ -178,7 +179,10 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
 
         val s = stats
         if (s == null) {
-            Text("Crunching the week…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+            repeat(3) {
+                ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
+                Spacer(Modifier.height(12.dp))
+            }
             return@Column
         }
 

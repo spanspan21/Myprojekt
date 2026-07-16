@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.FitnessCenter
+import com.ascend.lifeos.ui.kit.EmptyState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -167,11 +169,12 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
 
                 if (sets.isEmpty()) {
                     item {
-                        Spacer(Modifier.height(30.dp))
-                        Text(
-                            "No sets logged yet — the story starts with set one.",
-                            color = TextDim, fontSize = FS.s12,
-                            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+                        Spacer(Modifier.height(16.dp))
+                        EmptyState(
+                            icon = Icons.Rounded.FitnessCenter,
+                            title = "No sets logged yet",
+                            hint = "Your set history will appear here",
+                            accent = Mod.Train,
                         )
                     }
                 }

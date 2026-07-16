@@ -32,6 +32,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,22 +57,13 @@ import com.ascend.lifeos.data.prime.PrimeReport
 import com.ascend.lifeos.ui.hud.NeonBar
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.kit.TickerNumber
-import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.Amber
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Champagne
+import com.ascend.lifeos.ui.theme.*
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Warn
 
 // ─── PRIME — der Kopf über allen Modulen ─────────────────────────────────────
 // Ein Screen, der alles zusammendenkt: Index-Hero mit Subsystemen, die drei
@@ -130,13 +122,13 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                             Modifier.size(26.dp).clip(CircleShape).background(Accent.copy(alpha = 0.14f)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("${i + 1}", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                            Text("${i + 1}", color = Accent, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(d.text, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
+                            Text(d.text, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
                             Spacer(Modifier.height(2.dp))
-                            Text(d.why, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, lineHeight = 15.sp)
+                            Text(d.why, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp)
                         }
                         if (d.route != null) {
                             Spacer(Modifier.width(8.dp))
@@ -168,9 +160,9 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                     }
                     Panel(Modifier.weight(1f), onClick = route?.let { r -> { onNavigate(r) } }) {
                         Column(Modifier.fillMaxWidth().padding(13.dp)) {
-                            Text(g.label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                            Text(g.label, color = TextDim, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                             Spacer(Modifier.height(5.dp))
-                            Text(g.value, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                            Text(g.value, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1)
                             Spacer(Modifier.height(7.dp))
                             if (g.score != null) {
                                 NeonBar(g.score, color = if (g.score >= 0.99f) Good else Accent, modifier = Modifier.fillMaxWidth(), height = 4.dp)
@@ -178,7 +170,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                                 Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f)))
                             }
                             Spacer(Modifier.height(5.dp))
-                            Text(g.hint, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, maxLines = 1)
+                            Text(g.hint, color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1)
                         }
                     }
                 }
@@ -195,7 +187,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
             Panel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.anomalies.forEachIndexed { i, a ->
-                        Text(a, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                        Text(a, color = TextPrimary, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
                         if (i != r.anomalies.lastIndex) Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -211,8 +203,8 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.insights.forEachIndexed { i, s ->
                         Row {
-                            Text("◆ ", color = Champagne, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
-                            Text(s, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                            Text("◆ ", color = Champagne, fontSize = FS.s11)
+                            Text(s, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
                         }
                         if (i != r.insights.lastIndex) Spacer(Modifier.height(8.dp))
                     }
@@ -228,7 +220,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
             Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.forecasts.forEachIndexed { i, f ->
-                        Text(f, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                        Text(f, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
                         if (i != r.forecasts.lastIndex) Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -238,7 +230,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
         Spacer(Modifier.height(14.dp))
         Text(
             "PRIME runs only on your own logged data — every line names its reason.",
-            color = TextDim.copy(alpha = 0.7f), fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, lineHeight = 14.sp,
+            color = TextDim.copy(alpha = 0.7f), fontSize = FS.s10, fontFamily = Body, lineHeight = 14.sp,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
         }
@@ -277,7 +269,7 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
             Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (com.ascend.lifeos.ui.theme.isLight) {
+            if (isLight) {
                 // LUMEN: the signature Crystal is the index — breathing, glowing,
                 // its intensity driven by the score; the number counts up below.
                 com.ascend.lifeos.ui.kit.LumenCrystal(
@@ -297,15 +289,15 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
                         val shown = com.ascend.lifeos.ui.kit.countUp(index, durationMs = 1100)
                         Text(
                             "$shown", color = TextPrimary, fontFamily = Display,
-                            fontStyle = com.ascend.lifeos.ui.theme.DisplayItalic,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s56, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
+                            fontStyle = DisplayItalic,
+                            fontSize = FS.s56, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
                         )
                         Text(
-                            tierLabel, color = tier, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
+                            tierLabel, color = tier, fontFamily = MicroLabel,
+                            fontSize = FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
                         )
                     }
-                    else -> Text("—", color = TextMuted, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s46, fontWeight = FontWeight.ExtraBold)
+                    else -> Text("—", color = TextMuted, fontFamily = Display, fontSize = FS.s46, fontWeight = FontWeight.ExtraBold)
                 }
             } else Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
@@ -344,29 +336,21 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
                     if (index != null) {
                         TickerNumber(index, fontSize = 62, color = TextPrimary)
                         Text(
-                            tierLabel, color = tier, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                            tierLabel, color = tier, fontFamily = Display, fontSize = FS.s10,
                             fontWeight = FontWeight.Bold, letterSpacing = 3.sp,
                         )
                     } else {
-                        Text("—", color = TextMuted, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s46, fontWeight = FontWeight.ExtraBold)
-                        Text(
-                            "NO DATA YET", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8,
-                            fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                        EmptyState(
+                            Icons.Rounded.Insights, "No data yet",
+                            "Your Prime analytics will appear after the first full day", Cyan,
                         )
                     }
                 }
             }
             Text(
-                "PRIME INDEX", color = Champagne, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+                "PRIME INDEX", color = Champagne, fontFamily = Display, fontSize = FS.s9,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp, modifier = Modifier.padding(top = 8.dp),
             )
-            if (index == null && !loading) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "A few logged days and it's set.",
-                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
-                )
-            }
             when {
                 loading -> {
                     Spacer(Modifier.height(20.dp))
@@ -441,18 +425,18 @@ private fun AnimatedSubBar(name: String, score: Int, why: String, indexInList: I
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(
-                name.uppercase(), color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
+                name.uppercase(), color = TextDim, fontFamily = Display, fontSize = FS.s8_5,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp, modifier = Modifier.width(82.dp),
             )
             Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))) {
                 Box(Modifier.fillMaxWidth(fill).fillMaxHeight().clip(CircleShape).background(c))
             }
             Spacer(Modifier.width(10.dp))
-            Text("$score", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+            Text("$score", color = TextPrimary, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
         }
         androidx.compose.animation.AnimatedVisibility(open) {
             Text(
-                why, color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                why, color = TextMuted, fontFamily = Body, fontSize = FS.s10,
                 lineHeight = 13.sp, modifier = Modifier.padding(start = 82.dp, top = 4.dp, bottom = 2.dp),
             )
         }

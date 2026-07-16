@@ -37,10 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.masterplan.DomainWithGraph
-import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 
 /**
  * SKILL VAULT — the constellation. A dark void star-map of the selected domain's
@@ -73,16 +70,16 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
         } else {
             VoidBackground(Accent)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Loading constellations…", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14)
+                Text("Loading constellations…", color = TextMuted, fontSize = FS.s14)
             }
         }
 
         // Floating header + domain switcher over the map.
         Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 18.dp, vertical = 12.dp)) {
-            Text("SKILL VAULT", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Text("SKILL VAULT", color = TextMuted, fontSize = FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
             if (active != null) {
                 Spacer(Modifier.height(2.dp))
-                Text(active.domain.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
+                Text(active.domain.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))
             Row(
@@ -134,8 +131,8 @@ private fun DomainChip(
     ) {
         Box(Modifier.width(7.dp).height(7.dp).clip(RoundedCornerShape(4.dp)).background(accent))
         Spacer(Modifier.width(8.dp))
-        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold)
+        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = FS.s13, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.width(8.dp))
-        Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
+        Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold)
     }
 }

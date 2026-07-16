@@ -45,11 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FastingCalc
 import com.ascend.lifeos.data.Repo
-import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
@@ -74,11 +70,11 @@ fun FastingScreen(onBack: () -> Unit) {
             .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 18.dp)) {
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(14.dp))
-            Text("Fasting", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
+            Text("Fasting", color = TextPrimary, fontSize = FS.s24, fontWeight = FontWeight.ExtraBold)
         }
 
         // protocol picker
@@ -95,7 +91,7 @@ fun FastingScreen(onBack: () -> Unit) {
             Canvas(Modifier.size(260.dp)) {
                 val sw = 16.dp.toPx()
                 val inset = sw / 2
-                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), -90f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw, cap = StrokeCap.Round))
+                drawArc(Ivory.copy(alpha = 0.06f), -90f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw, cap = StrokeCap.Round))
                 if (state.active) {
                     drawArc(zone.color.copy(alpha = 0.25f), -90f, 360f, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw))
                     drawArc(zone.color, -90f, 360f * progress, false, topLeft = Offset(inset, inset), size = Size(size.width - sw, size.height - sw), style = Stroke(sw, cap = StrokeCap.Round))
@@ -103,18 +99,18 @@ fun FastingScreen(onBack: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (state.active) {
-                    Text(hm(elapsed), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s42, fontWeight = FontWeight.ExtraBold)
-                    Text("/ ${target.toInt()}h · ${protocol.id}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                    Text(hm(elapsed), color = TextPrimary, fontSize = FS.s42, fontWeight = FontWeight.ExtraBold)
+                    Text("/ ${target.toInt()}h · ${protocol.id}", color = TextMuted, fontSize = FS.s13, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     Box(Modifier.clip(RoundedCornerShape(9.dp)).background(zone.color.copy(alpha = 0.16f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Text(zone.label, color = zone.color, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                        Text(zone.label, color = zone.color, fontSize = FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     val remaining = (target - elapsed).coerceAtLeast(0.0)
-                    Text(if (remaining <= 0) "Eating window open ✓" else "${hm(remaining)} to go", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12)
+                    Text(if (remaining <= 0) "Eating window open ✓" else "${hm(remaining)} to go", color = TextDim, fontSize = FS.s12)
                 } else {
-                    Text("Ready", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontWeight = FontWeight.ExtraBold)
-                    Text("${protocol.id} · ${protocol.desc}", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold)
+                    Text("Ready", color = TextPrimary, fontSize = FS.s30, fontWeight = FontWeight.ExtraBold)
+                    Text("${protocol.id} · ${protocol.desc}", color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -136,9 +132,9 @@ fun FastingScreen(onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 5.dp)) {
                         Box(Modifier.size(10.dp).clip(CircleShape).background(z.color))
                         Spacer(Modifier.width(12.dp))
-                        Text(z.label, color = if (active) z.color else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text(z.label, color = if (active) z.color else TextMuted, fontSize = FS.s13, fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         val to = FastingCalc.ZONES.getOrNull(i + 1)?.fromH
-                        Text(if (to != null) "${z.fromH.toInt()}–${to.toInt()}h" else "${z.fromH.toInt()}h+", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+                        Text(if (to != null) "${z.fromH.toInt()}–${to.toInt()}h" else "${z.fromH.toInt()}h+", color = TextDim, fontSize = FS.s11)
                     }
                 }
             }
@@ -166,7 +162,7 @@ private fun hm(hours: Double): String {
 @Composable
 private fun FastStat(value: String, label: String, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.ExtraBold)
-        Text(label.uppercase(), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(value, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold)
+        Text(label.uppercase(), color = TextDim, fontSize = FS.s8, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
     }
 }

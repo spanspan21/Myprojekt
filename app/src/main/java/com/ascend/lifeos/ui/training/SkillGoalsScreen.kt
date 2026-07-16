@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.TrackChanges
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.VerdictPill
 import com.ascend.lifeos.ui.theme.*
@@ -78,9 +80,9 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         }
         Spacer(Modifier.height(6.dp))
         if (profile == null) {
-            Text(
-                "No calibration yet — ETAs appear after you run the protocol.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
+            EmptyState(
+                Icons.Rounded.TrackChanges, "No calibration yet",
+                "Complete a skill assessment to set baselines", Mod.Skills,
             )
         } else {
             Text(

@@ -65,14 +65,7 @@ import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.kit.SectionLabel
-import com.ascend.lifeos.ui.theme.Amber
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.Red
-import com.ascend.lifeos.ui.theme.Void
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -172,7 +165,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 14.dp)) {
             BackBox(onBack)
             Spacer(Modifier.width(14.dp))
-            Text("Recipes", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            Text("Recipes", color = TextPrimary, fontSize = FS.s24, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
             // Kap. 41 (P19-Fix): eigene Rezepte anlegen
             Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { editorOpen = true }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.Add, "Add recipe", tint = Mod.Fuel, modifier = Modifier.size(20.dp))
@@ -195,7 +188,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         }
         importError?.let { err ->
             Spacer(Modifier.height(8.dp))
-            Text(err, color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold)
+            Text(err, color = Red, fontSize = FS.s12, fontWeight = FontWeight.SemiBold)
         }
         imported?.let { r ->
             Spacer(Modifier.height(10.dp))
@@ -203,8 +196,8 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(r.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold, maxLines = 2)
-                            Text("${r.ingredients.size} ingredients found", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
+                            Text(r.name, color = TextPrimary, fontSize = FS.s15, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Text("${r.ingredients.size} ingredients found", color = TextDim, fontSize = FS.s11_5)
                         }
                         Spacer(Modifier.width(10.dp))
                         Icon(Icons.Rounded.Close, "Dismiss import", tint = TextDim, modifier = Modifier.size(18.dp).clickable { imported = null })
@@ -212,9 +205,9 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     r.ingredients.forEach { ing ->
                         Row(Modifier.padding(vertical = 2.dp)) {
-                            Text("✓", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+                            Text("✓", color = Mod.Fuel, fontSize = FS.s12, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(8.dp))
-                            Text(ing, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5)
+                            Text(ing, color = TextMuted, fontSize = FS.s12_5)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -234,10 +227,10 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                 .pressScale { planOpen = !planOpen; if (!planOpen) assignDay = null }.padding(vertical = 4.dp),
         ) {
-            Text(if (planOpen) "PLAN ▾" else "PLAN ▸", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Text(if (planOpen) "PLAN ▾" else "PLAN ▸", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             if (planned.isNotEmpty()) {
                 Spacer(Modifier.width(8.dp))
-                Text("${planned.size} day${if (planned.size == 1) "" else "s"} planned", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold)
+                Text("${planned.size} day${if (planned.size == 1) "" else "s"} planned", color = Mod.Fuel, fontSize = FS.s10, fontWeight = FontWeight.Bold)
             }
         }
         if (planOpen) {
@@ -251,7 +244,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             }
             assignDay?.let { d ->
                 Spacer(Modifier.height(8.dp))
-                Text("Assign mode — tap \"→ ${labelOf(d)}\" on a recipe below.", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold)
+                Text("Assign mode — tap \"→ ${labelOf(d)}\" on a recipe below.", color = Mod.Fuel, fontSize = FS.s11, fontWeight = FontWeight.SemiBold)
             }
             if (planned.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
@@ -259,13 +252,13 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
                         planned.forEach { row ->
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                                Text(row.label, color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold, modifier = Modifier.width(38.dp))
+                                Text(row.label, color = Mod.Fuel, fontSize = FS.s11, fontWeight = FontWeight.Bold, modifier = Modifier.width(38.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(row.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Medium, maxLines = 1)
+                                    Text(row.title, color = TextPrimary, fontSize = FS.s12_5, fontWeight = FontWeight.Medium, maxLines = 1)
                                     val rec = row.recipe
                                     if (rec != null) {
                                         Text(
-                                            "Missing → shopping", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
+                                            "Missing → shopping", color = Mod.Fuel, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
                                             modifier = Modifier.pressScale {
                                                 val missing = rec.parts.filter { !matchesPantry(it.name, pantry) }
                                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = rec.title) })
@@ -309,7 +302,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             FILTERS.forEach { (id, label) -> HudChip(label, filter == id) { filter = id } }
         }
         Spacer(Modifier.height(6.dp))
-        Text("$remainKcal kcal left in today's budget", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
+        Text("$remainKcal kcal left in today's budget", color = TextDim, fontSize = FS.s11_5)
 
         Spacer(Modifier.height(14.dp))
         if (ranked.isEmpty()) {
@@ -366,13 +359,13 @@ private fun matchesPantry(partName: String, pantry: List<String>): Boolean {
 @Composable
 private fun IngredientField(value: String, onValue: (String) -> Unit, onAdd: () -> Unit, modifier: Modifier) {
     Box(
-        modifier.clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+        modifier.clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
-        if (value.isEmpty()) Text("Type an ingredient you have…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5)
+        if (value.isEmpty()) Text("Type an ingredient you have…", color = TextDim, fontSize = FS.s13_5)
         BasicTextField(
             value = value, onValueChange = onValue, singleLine = true,
-            textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.SemiBold),
+            textStyle = TextStyle(color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(Mod.Fuel),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onAdd() }),
@@ -389,7 +382,7 @@ private fun PantryChip(label: String, onRemove: () -> Unit) {
             .pressScale { onRemove() }.padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+        Text(label, color = Mod.Fuel, fontSize = FS.s12, fontWeight = FontWeight.Bold)
         Spacer(Modifier.width(6.dp))
         Icon(Icons.Rounded.Close, "Remove filter", tint = Mod.Fuel, modifier = Modifier.size(12.dp))
     }
@@ -409,18 +402,18 @@ private fun RecipeCard(
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (r.own) {
-                            Text("★ ", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+                            Text("★ ", color = Amber, fontSize = FS.s13)
                         }
-                        Text(r.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold, maxLines = 2)
+                        Text(r.title, color = TextPrimary, fontSize = FS.s15, fontWeight = FontWeight.Bold, maxLines = 2)
                     }
                     // Kap. 41: pro Portion + Portionenzahl + Zeit — kochbare Wahrheit
                     Text(
                         "${r.kcal} kcal/serving · P${r.protein} C${r.carbs} F${r.fat}" +
                             " · ${r.servings} serving${if (r.servings > 1) "s" else ""}" + (r.minutes?.let { " · $it min" } ?: ""),
-                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                        color = TextDim, fontSize = FS.s11_5,
                     )
                     if (pantryActive) {
-                        Text("$matched/${r.parts.size} ingredients", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold)
+                        Text("$matched/${r.parts.size} ingredients", color = Mod.Fuel, fontSize = FS.s11, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(Modifier.width(10.dp))
@@ -429,39 +422,39 @@ private fun RecipeCard(
                         Modifier.clip(RoundedCornerShape(9.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(9.dp))
                             .pressScale { onAssign() }.padding(horizontal = 9.dp, vertical = 6.dp),
-                    ) { Text("→ $assignLabel", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
+                    ) { Text("→ $assignLabel", color = Mod.Fuel, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(8.dp))
                 }
                 val c = if (fit >= 75) Mod.Fuel else if (fit >= 50) Amber else Red
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("$fit%", color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.ExtraBold)
-                    Text("fit", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                    Text("$fit%", color = c, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold)
+                    Text("fit", color = TextDim, fontSize = FS.s8, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                 }
             }
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "INGREDIENTS — for ${r.servings} serving${if (r.servings > 1) "s" else ""}",
-                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+                    color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.height(6.dp))
                 r.parts.forEach { ing ->
                     val have = pantryActive && matchesPantry(ing.name, pantry)
                     Text(
                         (if (have) "✓ " else "· ") + "${ing.name} — ${ing.grams} g",
-                        color = if (have) Mod.Fuel else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12,
+                        color = if (have) Mod.Fuel else TextMuted, fontSize = FS.s12,
                         modifier = Modifier.padding(vertical = 1.dp),
                     )
                 }
                 // Kap. 41: die Zubereitung — vorher gab es nur Namen (P10-Fix)
                 if (r.steps.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
-                    Text("METHOD", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                    Text("METHOD", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                     Spacer(Modifier.height(6.dp))
                     r.steps.forEachIndexed { i, step ->
                         Row(Modifier.padding(vertical = 2.dp)) {
-                            Text("${i + 1}.", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp))
-                            Text(step, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, lineHeight = 17.sp)
+                            Text("${i + 1}.", color = Mod.Fuel, fontSize = FS.s12, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp))
+                            Text(step, color = TextMuted, fontSize = FS.s12, lineHeight = 17.sp)
                         }
                     }
                 }
@@ -493,7 +486,7 @@ private fun RecipeCard(
                     Text(
                         if (armed) "Tap again to delete" else "Delete recipe",
                         color = if (armed) Crit else Red,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale {
                             if (armed) {
                                 Haptics.confirm(ctx)
@@ -510,7 +503,7 @@ private fun RecipeCard(
                         Spacer(Modifier.height(10.dp))
                         Text(
                             "Add ${missing.size} missing → shopping list",
-                            color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                            color = Mod.Fuel, fontSize = FS.s12, fontWeight = FontWeight.Bold,
                             modifier = Modifier.pressScale {
                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
                                 AppFeedback.show("${missing.size} items added to list")
@@ -577,9 +570,9 @@ fun ShoppingView(onBack: () -> Unit) {
             BackBox(onBack)
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("Shopping list", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
+                Text("Shopping list", color = TextPrimary, fontSize = FS.s24, fontWeight = FontWeight.ExtraBold)
                 if (items.isNotEmpty()) {
-                    Text("${items.size} items · $done checked", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
+                    Text("${items.size} items · $done checked", color = TextDim, fontSize = FS.s11_5)
                 }
             }
             if (items.isNotEmpty()) {
@@ -642,7 +635,7 @@ fun ShoppingView(onBack: () -> Unit) {
                                 Spacer(Modifier.width(12.dp))
                                 Text(
                                     it.name + shopQtyLabel(it),
-                                    color = if (it.checked) TextDim else TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Medium,
+                                    color = if (it.checked) TextDim else TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Medium,
                                     textDecoration = if (it.checked) TextDecoration.LineThrough else TextDecoration.None,
                                 )
                             }
@@ -655,7 +648,7 @@ fun ShoppingView(onBack: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 if (done > 0) {
-                    Text("Clear checked", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
+                    Text("Clear checked", color = Mod.Fuel, fontSize = FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
                         Haptics.tick(ctx)
                         Repo.clearShoppingChecked()
                         AppFeedback.show("Checked items cleared")
@@ -666,7 +659,7 @@ fun ShoppingView(onBack: () -> Unit) {
                 Text(
                     if (armedClearAll) "Tap again to clear" else "Clear all",
                     color = if (armedClearAll) Crit else TextDim,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s13, fontWeight = FontWeight.Bold,
                     modifier = Modifier.pressScale {
                         if (armedClearAll) {
                             Haptics.confirm(ctx)
@@ -683,7 +676,7 @@ fun ShoppingView(onBack: () -> Unit) {
 
 @Composable
 private fun BackBox(onBack: () -> Unit) {
-    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
+    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
         Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
     }
 }
@@ -811,8 +804,8 @@ private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planne
     }
     val bg = when {
         active -> Mod.Fuel.copy(alpha = 0.18f)
-        isToday -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)
-        else -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)
+        isToday -> Ivory.copy(alpha = 0.07f)
+        else -> Ivory.copy(alpha = 0.04f)
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -820,7 +813,7 @@ private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planne
             .border(if (active) 1.dp else 0.5.dp, borderColor, RoundedCornerShape(11.dp))
             .pressScale { onClick() }.padding(horizontal = 13.dp, vertical = 7.dp),
     ) {
-        Text(label, color = if (active || isToday) Mod.Fuel else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+        Text(label, color = if (active || isToday) Mod.Fuel else TextMuted, fontSize = FS.s12, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(3.dp))
         Box(Modifier.size(3.dp).clip(RoundedCornerShape(2.dp)).background(if (planned) Mod.Fuel else Color.Transparent))
     }
@@ -852,7 +845,7 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             verticalArrangement = Arrangement.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(r.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2)
+                Text(r.title, color = TextPrimary, fontSize = FS.s18, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2)
                 Icon(
                     Icons.Rounded.Close, null, tint = TextMuted,
                     modifier = Modifier.size(26.dp).clickable { onClose() },
@@ -861,26 +854,26 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "Step ${step + 1} of ${r.steps.size}",
-                color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+                color = Mod.Fuel, fontSize = FS.s12, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
             )
             Spacer(Modifier.height(20.dp))
             Box(
                 Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(22.dp))
-                    .background(com.ascend.lifeos.ui.theme.Surface)
+                    .background(Surface)
                     .border(0.5.dp, HudLine, RoundedCornerShape(22.dp))
                     .padding(26.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     r.steps.getOrElse(step) { "" },
-                    color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp,
+                    color = TextPrimary, fontSize = FS.s22, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp,
                 )
             }
             Spacer(Modifier.height(14.dp))
             // Zutaten-Spickzettel — immer sichtbar
             Text(
                 r.parts.joinToString("  ·  ") { "${it.name} ${it.grams}g" },
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, lineHeight = 16.sp, maxLines = 3,
+                color = TextDim, fontSize = FS.s11, lineHeight = 16.sp, maxLines = 3,
             )
             Spacer(Modifier.height(18.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -922,7 +915,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             Modifier.fillMaxSize().background(Void).verticalScroll(rememberScrollState()).padding(22.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Custom recipe", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                Text("Custom recipe", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
                 Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(20.dp).clickable { onClose() })
             }
             Spacer(Modifier.height(14.dp))
@@ -933,18 +926,18 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                 HudChip("Breakfast", isBreakfast) { isBreakfast = true }
                 Spacer(Modifier.weight(1f))
                 HudChip("-", false) { servings = (servings - 1).coerceAtLeast(1) }
-                Text("$servings serving${if (servings > 1) "s" else ""}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                Text("$servings serving${if (servings > 1) "s" else ""}", color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.Bold)
                 HudChip("+", false) { servings = (servings + 1).coerceAtMost(12) }
             }
             Spacer(Modifier.height(10.dp))
             Box(Modifier.width(140.dp)) { GlassField("Minutes", minutes, KeyboardType.Number) { minutes = it.filter(Char::isDigit).take(3) } }
 
             Spacer(Modifier.height(16.dp))
-            Text("INGREDIENTS (total)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text("INGREDIENTS (total)", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(6.dp))
             parts.forEachIndexed { i, ing ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                    Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, modifier = Modifier.weight(1f))
+                    Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = FS.s12_5, modifier = Modifier.weight(1f))
                     Icon(
                         Icons.Rounded.Close, null, tint = TextDim,
                         modifier = Modifier.size(16.dp).clickable { parts = parts.filterIndexed { j, _ -> j != i } },
@@ -959,7 +952,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             ingHits.forEach { p ->
                 Text(
                     "+ ${p.name}",
-                    color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold,
+                    color = Mod.Fuel, fontSize = FS.s12_5, fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth().pressScale {
                         val g = ingGrams.toIntOrNull() ?: 100
                         parts = parts + RecipeDb.Ing(p.name, p.kcal100, p.protein100, p.carbs100, p.fat100, g)
@@ -969,11 +962,11 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("METHOD", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+            Text("METHOD", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(6.dp))
             steps.forEachIndexed { i, s ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                    Text("${i + 1}. $s", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, modifier = Modifier.weight(1f))
+                    Text("${i + 1}. $s", color = TextMuted, fontSize = FS.s12_5, modifier = Modifier.weight(1f))
                     Icon(
                         Icons.Rounded.Close, null, tint = TextDim,
                         modifier = Modifier.size(16.dp).clickable { steps = steps.filterIndexed { j, _ -> j != i } },

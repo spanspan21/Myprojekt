@@ -49,12 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.masterplan.EnergyLevel
 import com.ascend.lifeos.data.masterplan.NodeWithChildren
-import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.Bg
-import com.ascend.lifeos.ui.theme.SurfaceHi
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 import kotlin.math.abs
 
 // World geometry. The graph lives in this dp canvas; pan/zoom moves the viewport
@@ -167,7 +162,7 @@ fun SkillNetworkCanvas(
                                 drawLine(accent, a, b, 1.4.dp.toPx(), StrokeCap.Round)
                             }
                             live -> drawLine(accent.copy(alpha = 0.45f), a, b, 0.5.dp.toPx(), StrokeCap.Round)
-                            else -> drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), a, b, 0.5.dp.toPx(), StrokeCap.Round)
+                            else -> drawLine(Ivory.copy(alpha = 0.06f), a, b, 0.5.dp.toPx(), StrokeCap.Round)
                         }
                     }
                 }
@@ -190,8 +185,8 @@ fun SkillNetworkCanvas(
                             drawCircle(accent.copy(alpha = 0.10f), r * 0.7f, c)
                         }
                         NodeState.LOCKED -> {
-                            drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), r * 0.9f, c)
-                            drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.14f), r * 0.9f, c, style = Stroke(1.dp.toPx()))
+                            drawCircle(Ivory.copy(alpha = 0.05f), r * 0.9f, c)
+                            drawCircle(Ivory.copy(alpha = 0.14f), r * 0.9f, c, style = Stroke(1.dp.toPx()))
                         }
                     }
                 }
@@ -219,7 +214,7 @@ fun SkillNetworkCanvas(
                 .size(44.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(SurfaceHi)
-                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
+                .border(0.5.dp, Ivory.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
                 .clickable { scale = initialScale; pan = initialPan },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.CenterFocusStrong, "Reset view", tint = TextPrimary, modifier = Modifier.size(20.dp)) }
@@ -249,7 +244,7 @@ private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: 
         Text(
             text = star.node.node.title,
             color = labelColor,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s11,
+            fontSize = FS.s11,
             lineHeight = 13.sp,
             fontWeight = if (star.state == NodeState.LOCKED) FontWeight.Medium else FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -260,7 +255,7 @@ private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: 
             Text(
                 text = "${star.node.doneCount}/${star.node.tasks.size} · ${star.node.node.estimatedMinutes}m",
                 color = TextMuted,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+                fontSize = FS.s9,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.offset(y = star.radius * 2 + 34.dp),
             )

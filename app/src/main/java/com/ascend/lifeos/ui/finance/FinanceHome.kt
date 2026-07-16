@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material.icons.rounded.Radar
@@ -75,16 +76,7 @@ import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.kit.VerdictPill
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
-import com.ascend.lifeos.ui.theme.Warn
-import com.ascend.lifeos.ui.theme.metricStyle
+import com.ascend.lifeos.ui.theme.*
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -335,10 +327,9 @@ fun FinanceHome(onClose: () -> Unit) {
                 }
                 if (filtered.isEmpty()) {
                     item(key = "history_nomatch") {
-                        Text(
-                            "No matches for \"${search.trim()}\".",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
-                            modifier = Modifier.padding(vertical = 14.dp),
+                        EmptyState(
+                            Icons.Rounded.SearchOff, "No matches",
+                            "Try a different search term", FinAccent,
                         )
                     }
                 }
@@ -414,18 +405,18 @@ private fun BalanceHero(
                         if (income > 0) {
                             Text(
                                 "+${euros(income)} in", color = Good,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                             Spacer(Modifier.width(10.dp))
                         }
                         if (spend > 0) {
                             Text(
                                 "−${euros(spend)} out", color = TextMuted,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                             Spacer(Modifier.width(10.dp))
                         }
-                        Text("this month", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
+                        Text("this month", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
                     }
                 }
             }
@@ -447,7 +438,7 @@ private fun BalanceHero(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.Add, "Add account", tint = FinAccent, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(5.dp))
-                    Text("Account", color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("Account", color = FinAccent, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -458,8 +449,8 @@ private fun BalanceHero(
 private fun AccountChip(a: Account, onClick: () -> Unit) {
     Row(
         Modifier.clip(RoundedCornerShape(14.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
+            .background(Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
             .pressScale(onClick)
             .padding(horizontal = 11.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -471,13 +462,13 @@ private fun AccountChip(a: Account, onClick: () -> Unit) {
             Text(
                 a.icon.ifBlank { a.name.take(1) }.take(3).uppercase(Locale.ENGLISH),
                 color = FinAccent, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp,
+                fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp,
             )
         }
         Spacer(Modifier.width(8.dp))
         Column {
             Text(
-                a.name, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                a.name, color = TextMuted, fontSize = FS.s10_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
             )
             Text(euros(a.balanceCents), color = TextPrimary, style = metricStyle(12))
@@ -497,7 +488,7 @@ private fun RowScope.QuickAction(icon: ImageVector, label: String, onClick: () -
             Icon(icon, label, tint = FinAccent, modifier = Modifier.size(19.dp))
             Spacer(Modifier.height(6.dp))
             Text(
-                label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                label, color = TextMuted, fontSize = FS.s10_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
             )
         }
@@ -539,7 +530,7 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
                     ratio < 1f -> Warn
                     else -> Crit
                 }
-                Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
+                Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))) {
                     Box(Modifier.fillMaxWidth(ratio.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(barColor))
                 }
                 Spacer(Modifier.height(5.dp))
@@ -547,7 +538,7 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
                     if (spend <= totalBudget) "${euros(totalBudget - spend)} left of the ${euros(totalBudget)} budget"
                     else "${euros(spend - totalBudget)} over the ${euros(totalBudget)} budget",
                     color = if (spend <= totalBudget) TextDim else Crit,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
             }
 
@@ -555,11 +546,11 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
             val maxFlow = maxOf(income, spend, 1L)
             FlowBar("In", income, maxFlow, Good)
             Spacer(Modifier.height(6.dp))
-            FlowBar("Out", spend, maxFlow, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.30f))
+            FlowBar("Out", spend, maxFlow, Ivory.copy(alpha = 0.30f))
 
             if (spend > 0) {
                 Spacer(Modifier.height(12.dp))
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
+                Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(10.dp))
                 val monthEnd = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -571,14 +562,14 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
                     Column {
                         Text(
                             "Projected ${euros(projected)} by ${monthEnd.format(DF_DM)}",
-                            color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                         if (totalBudget > 0) {
                             Text(
                                 if (projected <= totalBudget) "under your ${euros(totalBudget)} cap"
                                 else "over your ${euros(totalBudget)} cap",
                                 color = if (projected <= totalBudget) Good else Crit,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -593,10 +584,10 @@ private fun FlowBar(label: String, cents: Long, maxCents: Long, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             label.uppercase(), color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
+            fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
             modifier = Modifier.width(30.dp),
         )
-        Box(Modifier.weight(1f).height(5.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
+        Box(Modifier.weight(1f).height(5.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))) {
             val frac = (cents.toFloat() / maxCents).coerceIn(0f, 1f)
             if (frac > 0f) Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(CircleShape).background(color))
         }
@@ -638,7 +629,7 @@ private fun BreakdownPanel(
                             Text(euros(spend), color = TextPrimary, style = metricStyle(15))
                             Text(
                                 "SPENT", color = TextDim, fontFamily = Display,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s7_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                                fontSize = FS.s7_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                             )
                         }
                     }
@@ -651,7 +642,7 @@ private fun BreakdownPanel(
                                 Box(Modifier.size(8.dp).clip(CircleShape).background(shadeFor(c)))
                                 Spacer(Modifier.width(7.dp))
                                 Text(
-                                    c, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                                    c, color = TextMuted, fontSize = FS.s11_5,
                                     fontFamily = Body, fontWeight = FontWeight.Bold,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f),
@@ -665,7 +656,7 @@ private fun BreakdownPanel(
                     }
                 }
                 Spacer(Modifier.height(14.dp))
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
+                Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(6.dp))
             }
 
@@ -673,9 +664,9 @@ private fun BreakdownPanel(
 
             if (budgets.isEmpty()) {
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    "Tap a category to set a monthly cap.",
-                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                EmptyState(
+                    Icons.Rounded.PieChart, "No budgets set",
+                    "Tap a category to set a monthly cap", FinAccent,
                 )
             }
         }
@@ -693,7 +684,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
         Spacer(Modifier.width(9.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                category, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                category, color = TextPrimary, fontSize = FS.s13,
                 fontFamily = Body, fontWeight = FontWeight.Bold,
             )
             if (budget != null) {
@@ -707,7 +698,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
                 }
                 Box(
                     Modifier.fillMaxWidth(0.72f).height(3.dp)
-                        .clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)),
+                        .clip(CircleShape).background(Ivory.copy(alpha = 0.06f)),
                 ) {
                     Box(Modifier.fillMaxWidth(ratio.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(barColor))
                 }
@@ -723,7 +714,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
                         append("cap ${euros(budget)}")
                     }
                 }.ifEmpty { "no spend yet" },
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                color = TextDim, fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
             )
         }
     }
@@ -765,7 +756,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
                     Text(
                         label.uppercase(Locale.ENGLISH),
                         color = if (i == series.lastIndex) FinAccent else TextDim,
-                        fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
+                        fontFamily = Display, fontSize = FS.s8_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f),
@@ -774,7 +765,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
             }
             if (insights.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
+                Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(10.dp))
                 insights.forEachIndexed { i, line ->
                     if (i > 0) Spacer(Modifier.height(7.dp))
@@ -782,7 +773,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
                         Box(Modifier.size(4.dp).clip(CircleShape).background(FinAccent))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            line, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                            line, color = TextMuted, fontSize = FS.s11_5,
                             fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -810,7 +801,7 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
     Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
             recurrings.forEachIndexed { i, r ->
-                if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f)))
+                if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.06f)))
                 RecurringRow(
                     r,
                     onToggle = { FinanceStore.setRecurringActive(ctx, r.id, !r.active) },
@@ -829,7 +820,7 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
         Box(
             Modifier.size(18.dp).clip(CircleShape)
                 .background(if (r.active) FinAccent.copy(alpha = 0.18f) else Color.Transparent)
-                .border(1.dp, if (r.active) FinAccent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.20f), CircleShape)
+                .border(1.dp, if (r.active) FinAccent else Ivory.copy(alpha = 0.20f), CircleShape)
                 .clickable(onClick = onToggle),
             contentAlignment = Alignment.Center,
         ) {
@@ -839,14 +830,14 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
         Column(Modifier.weight(1f)) {
             Text(
                 r.name, color = if (r.active) TextPrimary else TextDim,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Text(
                 if (!r.active) "paused · day ${r.dayOfMonth}"
                 else "${r.category} · ${dueInLabel(FinanceStore.nextDueEpochDay(r))}",
                 color = if (due && r.active) Warn else TextDim,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                fontSize = FS.s10_5, fontFamily = Body,
             )
         }
         Spacer(Modifier.width(8.dp))
@@ -869,7 +860,7 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
                         .pressScale(onClick = onBook)
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                 ) {
-                    Text("Book now", color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("Book now", color = FinAccent, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -894,14 +885,14 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        g.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14,
+                        g.title, color = TextPrimary, fontSize = FS.s14,
                         fontFamily = Body, fontWeight = FontWeight.Bold,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
                         "${euros(g.savedCents)} of ${euros(g.targetCents)}",
-                        color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                     val pace = FinanceStore.goalWeeklyPace(ctx, g.id)
                     if (!done && pace > 0) {
@@ -910,7 +901,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                         Text(
                             if (weeks <= 12) "≈ $weeks wk at current pace"
                             else "≈ ${(weeks / 4.35).roundToInt()} mo at current pace",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                         )
                     }
                 }
@@ -934,7 +925,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                         ) {
                             Text(
                                 "+${c / 100} €", color = FinAccent,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -954,7 +945,7 @@ private fun DayHeader(label: String, netCents: Long) {
     ) {
         Text(
             label.uppercase(Locale.ENGLISH), color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            fontSize = FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             modifier = Modifier.weight(1f),
         )
         Text(signedEuros(netCents), color = TextDim, style = metricStyle(10, FontWeight.SemiBold))
@@ -973,12 +964,12 @@ private fun TxnRow(t: Txn, accountName: String?, modifier: Modifier = Modifier, 
         Column(Modifier.weight(1f)) {
             Text(
                 t.note.ifBlank { t.category }, color = TextPrimary,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Text(
                 t.category + (accountName?.let { " · $it" } ?: ""),
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
         }
         Spacer(Modifier.width(10.dp))
@@ -994,8 +985,8 @@ private fun TxnRow(t: Txn, accountName: String?, modifier: Modifier = Modifier, 
 private fun ExportCsvButton(count: Int, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
+            .background(Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
             .pressScale(onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
@@ -1005,7 +996,7 @@ private fun ExportCsvButton(count: Int, onClick: () -> Unit) {
             Spacer(Modifier.width(7.dp))
             Text(
                 "Export CSV · $count transactions",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
         }
     }

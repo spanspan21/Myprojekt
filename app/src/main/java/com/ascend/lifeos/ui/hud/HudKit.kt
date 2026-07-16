@@ -40,8 +40,7 @@ import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.LocalModuleAccent
+import com.ascend.lifeos.ui.theme.*
 
 // The single HUD design language: deepest void, hairline neon edges, glassmorphism,
 // glowing meters. Every rebuilt screen composes from these — no grey Material cards.
@@ -55,7 +54,7 @@ val HudLine = Ivory.copy(alpha = 0.09f)
 @Composable
 fun GlassPanel(
     modifier: Modifier = Modifier,
-    corner: Dp = com.ascend.lifeos.ui.theme.RCard,
+    corner: Dp = RCard,
     fill: Color = HudFill,
     line: Color = HudLine,
     content: @Composable () -> Unit,
@@ -68,7 +67,7 @@ fun GlassPanel(
 fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val accent = LocalModuleAccent.current
     val bg by animateColorAsState(
-        if (selected) accent.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+        if (selected) accent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f),
         tween(Motion.quick), label = "chipBg",
     )
     val edge by animateColorAsState(
@@ -76,7 +75,7 @@ fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onC
         tween(Motion.quick), label = "chipEdge",
     )
     val fg by animateColorAsState(
-        if (selected) accent else com.ascend.lifeos.ui.theme.TextMuted,
+        if (selected) accent else TextMuted,
         tween(Motion.quick), label = "chipFg",
     )
     Box(
@@ -86,7 +85,7 @@ fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onC
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
-    ) { Text(label, color = fg, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = fg, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
 }
 
 /** Filled/ghost neon action button — tinted in the current module's accent. */
@@ -109,8 +108,8 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
     ) {
         Text(
             label,
-            color = if (primary) com.ascend.lifeos.ui.theme.Void else com.ascend.lifeos.ui.theme.TextMuted,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
+            color = if (primary) Void else TextMuted,
+            fontSize = FS.s14, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -122,14 +121,14 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
     Box(
         modifier
             .clip(RoundedCornerShape(13.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+            .background(Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, HudLine, RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 13.dp),
     ) {
-        if (value.isEmpty()) Text(placeholder, color = com.ascend.lifeos.ui.theme.TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14)
+        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = FS.s14)
         BasicTextField(
             value = value, onValueChange = onValue, singleLine = true,
-            textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold),
+            textStyle = TextStyle(color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(LocalModuleAccent.current),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = imeAction),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }, onSearch = { focusManager.clearFocus() }),
@@ -161,7 +160,7 @@ fun NeonBar(
             Box(
                 Modifier.fillMaxHeight().fillMaxWidth(p.coerceIn(0f, 1f))
                     .clip(CircleShape)
-                    .background(color.copy(alpha = 0.20f * com.ascend.lifeos.ui.theme.themeSpec.value.glow.coerceAtLeast(0.3f))),
+                    .background(color.copy(alpha = 0.20f * themeSpec.value.glow.coerceAtLeast(0.3f))),
             )
         }
         Box(

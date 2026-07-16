@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,17 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.data.finance.Account
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.data.life.Txn
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.metricStyle
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
@@ -138,7 +135,7 @@ internal fun MoveSheet(accounts: List<Account>, onDismiss: () -> Unit) {
         if (accounts.size < 2) {
             Text(
                 "Moving needs two accounts — add a second one first (Cash, Bank, PayPal…).",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body,
+                color = TextMuted, fontSize = FS.s13, fontFamily = Body,
             )
         } else {
             Overline("From")
@@ -163,7 +160,7 @@ internal fun MoveSheet(accounts: List<Account>, onDismiss: () -> Unit) {
             }
             if (fromId != null && fromId == toId) {
                 Spacer(Modifier.height(8.dp))
-                Text("Pick two different accounts.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
+                Text("Pick two different accounts.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
             }
         }
     }
@@ -193,7 +190,7 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "Setting the balance overwrites the running total — use it to correct drift.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body,
             )
         }
         Spacer(Modifier.height(18.dp))
@@ -225,13 +222,13 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
             ) {
                 Text(
                     if (deleteArmed) "Tap again to delete" else "Delete account",
-                    color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = Crit, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
             Spacer(Modifier.height(4.dp))
             Text(
                 "Its transactions stay in the history, just without an account.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
         }
     }
@@ -251,7 +248,7 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
     SheetShell("$category budget", onDismiss) {
         Text(
             "Spent ${euros(spentCents)} in $category this month.",
-            color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+            color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(12.dp))
         GlassField(amount, { amount = it }, "Monthly cap in € — e.g. 50", keyboard = KeyboardType.Decimal)
@@ -268,7 +265,7 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
             LaunchedEffect(armedRemoveBudget) { if (armedRemoveBudget) { kotlinx.coroutines.delay(2500); armedRemoveBudget = false } }
             Text(
                 if (armedRemoveBudget) "Tap again to confirm" else "Remove budget",
-                color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = Crit, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(10.dp))
                     .pressScale {
@@ -317,7 +314,7 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
             StepperOrb("−") { day = (day - 1).coerceAtLeast(1) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("$day", color = TextPrimary, style = metricStyle(28))
-                Text("of the month", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                Text("of the month", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
             }
             StepperOrb("+") { day = (day + 1).coerceAtMost(31) }
         }
@@ -340,19 +337,14 @@ internal fun ScanSheet(onDismiss: () -> Unit) {
 
     SheetShell("Scan recurring", onDismiss) {
         if (suggestions.isEmpty()) {
-            Text(
-                "Nothing detected yet.",
-                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Log the same note and a similar amount in two consecutive months — patterns show up here as one-tap suggestions.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
+            EmptyState(
+                Icons.Rounded.Autorenew, "Nothing detected yet",
+                "Recurring transactions will appear after more data", FinAccent,
             )
         } else {
             Text(
                 "${suggestions.size} pattern${if (suggestions.size == 1) "" else "s"} found in your history:",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(10.dp))
             suggestions.forEach { s ->
@@ -363,13 +355,13 @@ internal fun ScanSheet(onDismiss: () -> Unit) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            s.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+                            s.name, color = TextPrimary, fontSize = FS.s13_5,
                             fontFamily = Body, fontWeight = FontWeight.Bold,
                             maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             "${s.months} months · ~${euros(kotlin.math.abs(s.amountCents))} · day ${s.dayOfMonth} · ${s.category}",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                         )
                     }
                     Spacer(Modifier.width(10.dp))
@@ -390,7 +382,7 @@ internal fun ScanSheet(onDismiss: () -> Unit) {
                         Text(
                             if (done) "Added" else "Add",
                             color = if (done) Good else FinAccent,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -445,7 +437,7 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
             Spacer(Modifier.height(3.dp))
             Text(
                 Instant.ofEpochMilli(txn.ts).atZone(ZoneId.systemDefault()).format(DF_FULL),
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body,
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -497,7 +489,7 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
         ) {
             Text(
                 if (deleteArmed) "Tap again to delete" else "Delete transaction",
-                color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = Crit, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
         }
     }

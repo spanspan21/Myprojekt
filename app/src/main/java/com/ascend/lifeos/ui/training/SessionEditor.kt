@@ -21,7 +21,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Delete
+import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.theme.Good
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,9 +120,11 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
 
                 if (sets.isEmpty()) {
                     item {
-                        Text(
-                            "No sets left in this session.",
-                            color = TextDim, fontSize = FS.s12, fontFamily = Body,
+                        EmptyState(
+                            icon = Icons.Rounded.CheckCircle,
+                            title = "Session complete",
+                            hint = "All sets have been finished",
+                            accent = Good,
                         )
                     }
                 }

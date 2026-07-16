@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Subscriptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -20,14 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.finance.AboRadar
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Warn
-import com.ascend.lifeos.ui.theme.metricStyle
+import com.ascend.lifeos.ui.theme.*
 import java.util.Locale
 import kotlin.math.abs
 
@@ -57,11 +55,11 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
             Column(Modifier.padding(16.dp)) {
                 if (subs.isEmpty()) {
-                    Text(
-                        "No recurring charges detected yet",
-                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
-                        textAlign = TextAlign.Center,
+                    EmptyState(
+                        icon = Icons.Rounded.Subscriptions,
+                        title = "No recurring charges detected",
+                        hint = "Transactions will be scanned for patterns",
+                        accent = Mod.Finance,
                     )
                 } else {
                     subs.forEachIndexed { i, s ->
@@ -69,14 +67,14 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(
-                                    s.payee, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                                    s.payee, color = TextPrimary, fontSize = FS.s13,
                                     fontFamily = Body, fontWeight = FontWeight.Bold,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 )
                                 if (s.priceIncreased && s.previousAmountCents != null) {
                                     Text(
                                         "↑ price up from ${eur(s.previousAmountCents)}",
-                                        color = Warn, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                                        color = Warn, fontSize = FS.s10_5,
                                         fontFamily = Body, fontWeight = FontWeight.Bold,
                                     )
                                 }
@@ -95,7 +93,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                         val more = if (dups.size > 1) " · +${dups.size - 1} more" else ""
                         Text(
                             "${a.payee} + ${b.payee} overlap — one may be enough$more",
-                            color = Warn, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
+                            color = Warn, fontSize = FS.s11_5, fontFamily = Body,
                             fontWeight = FontWeight.Bold, lineHeight = 16.sp,
                         )
                     }
@@ -103,7 +101,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                     Spacer(Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "Monthly total", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                            "Monthly total", color = TextMuted, fontSize = FS.s11_5,
                             fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f),
                         )

@@ -49,14 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.life.LifeStores
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
-import com.ascend.lifeos.ui.theme.metricStyle
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -69,7 +62,7 @@ import kotlin.math.roundToLong
 // finance surface composes from. Same idiom as the School/Settings screens.
 
 /** Finance module accent — the world's finance jewel (emerald in AZURE). */
-internal val FinAccent: Color get() = com.ascend.lifeos.ui.theme.Mod.Finance
+internal val FinAccent: Color get() = Mod.Finance
 
 /**
  * Lightness ramp for the donut, derived from the world's finance jewel so the
@@ -78,14 +71,14 @@ internal val FinAccent: Color get() = com.ascend.lifeos.ui.theme.Mod.Finance
  * category keeps its shade regardless of this month's ranking.
  */
 internal val FinShades: List<Color> get() {
-    val base = com.ascend.lifeos.ui.theme.Mod.Finance
+    val base = Mod.Finance
     return listOf(
-        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Ivory, 0.52f),
-        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Ivory, 0.28f),
+        androidx.compose.ui.graphics.lerp(base, Ivory, 0.52f),
+        androidx.compose.ui.graphics.lerp(base, Ivory, 0.28f),
         base,
-        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Void, 0.20f),
-        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Void, 0.38f),
-        androidx.compose.ui.graphics.lerp(base, com.ascend.lifeos.ui.theme.Void, 0.54f),
+        androidx.compose.ui.graphics.lerp(base, Void, 0.20f),
+        androidx.compose.ui.graphics.lerp(base, Void, 0.38f),
+        androidx.compose.ui.graphics.lerp(base, Void, 0.54f),
     )
 }
 
@@ -141,8 +134,8 @@ internal fun dueInLabel(epochDay: Long): String {
 @Composable
 internal fun Overline(text: String, color: Color = TextDim) {
     Text(
-        text.uppercase(), color = color, fontFamily = com.ascend.lifeos.ui.theme.MicroLabel,
-        fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 1.6.sp,
+        text.uppercase(), color = color, fontFamily = MicroLabel,
+        fontSize = FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 1.6.sp,
     )
 }
 
@@ -150,10 +143,10 @@ internal fun Overline(text: String, color: Color = TextDim) {
 internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
-            .background(if (selected) accent.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .background(if (selected) accent.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) accent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+                if (selected) accent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
             .pressScale(onClick = onClick)
@@ -161,7 +154,7 @@ internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent
     ) {
         Text(
             label, color = if (selected) accent else TextMuted,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
+            fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
         )
     }
 }
@@ -170,14 +163,14 @@ internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent
 internal fun ActionButton(label: String, enabled: Boolean = true, accent: Color = FinAccent, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-            .background(if (enabled) accent else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+            .background(if (enabled) accent else Ivory.copy(alpha = 0.06f))
             .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             label, color = if (enabled) Void else TextDim,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+            fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
         )
     }
 }
@@ -195,7 +188,7 @@ internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Add, label, tint = accent, modifier = Modifier.size(15.dp))
             Spacer(Modifier.width(7.dp))
-            Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(label, color = accent, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -230,18 +223,18 @@ internal fun GlassField(
     Box(
         Modifier.fillMaxWidth().heightIn(min = minHeight)
             .clip(RoundedCornerShape(13.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) {
-            Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body)
+            Text(placeholder, color = TextDim, fontSize = FS.s13_5, fontFamily = Body)
         }
         val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
         BasicTextField(
             value, onChange, singleLine = singleLine,
             textStyle = TextStyle(
-                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body,
+                color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body,
                 fontWeight = FontWeight.SemiBold, lineHeight = 19.sp,
             ),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = if (singleLine) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Default),
@@ -257,8 +250,8 @@ internal fun GlassField(
 internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder: String) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -266,13 +259,13 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
         Spacer(Modifier.width(9.dp))
         Box(Modifier.weight(1f)) {
             if (value.isEmpty()) {
-                Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+                Text(placeholder, color = TextDim, fontSize = FS.s13, fontFamily = Body)
             }
             val searchFm = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value, onChange, singleLine = true,
                 textStyle = TextStyle(
-                    color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
                 keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { searchFm.clearFocus() }),
@@ -282,7 +275,7 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
         }
         if (value.isNotEmpty()) {
             Text(
-                "Clear", color = FinAccent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                "Clear", color = FinAccent, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onChange("") }.padding(4.dp),
             )
         }
@@ -299,8 +292,8 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+                .background(Ivory.copy(alpha = 0.04f))
+                .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -321,7 +314,7 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
         Text(
             if (parsed != null) "= ${euros(parsed)}" else "Amount in €",
             color = if (parsed != null) FinAccent else TextDim,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+            fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -331,11 +324,11 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
 internal fun StepperOrb(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(40.dp).clip(CircleShape)
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s18, fontWeight = FontWeight.Bold) }
 }
 
 /** Standard finance bottom sheet: dark glass, no drag handle, lime overline. */
@@ -346,7 +339,7 @@ internal fun SheetShell(title: String, onDismiss: () -> Unit, content: @Composab
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding().imePadding()) {
             Text(
                 title.uppercase(), color = FinAccent, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
             )
             Spacer(Modifier.height(14.dp))
             content()

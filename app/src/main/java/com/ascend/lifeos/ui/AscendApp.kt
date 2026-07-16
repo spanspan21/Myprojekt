@@ -64,14 +64,7 @@ import com.ascend.lifeos.ui.hud.NutritionScreen
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.skills.SkillsScreen
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.LocalModuleAccent
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
+import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.ui.training.TrainingScreen
 
 // ─── JARVIS shell v3 — three levels, one thumb ───────────────────────────────
@@ -413,14 +406,14 @@ private fun MorphingDock(
                 .clip(RoundedCornerShape(28.dp))
                 // Cockpit-Konsole: warmes Obsidian + Elfenbein-Kante mit
                 // Specular oben — die höchste ständige Ebene (Kap. 16)
-                .background(com.ascend.lifeos.ui.theme.BgElevated.copy(alpha = 0.92f))
+                .background(BgElevated.copy(alpha = 0.92f))
                 .background(
                     androidx.compose.ui.graphics.Brush.verticalGradient(
-                        0f to com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.045f),
+                        0f to Ivory.copy(alpha = 0.045f),
                         0.5f to Color.Transparent,
                     ),
                 )
-                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(28.dp))
+                .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(28.dp))
                 .padding(horizontal = 8.dp, vertical = 6.dp),
         ) {
             // The clean morph: outgoing state snaps away fast, incoming state
@@ -472,12 +465,12 @@ private fun MorphingDock(
                                 modifier = Modifier.size(19.dp),
                             )
                             Text(
-                                "▾", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s7, fontWeight = FontWeight.Bold,
+                                "▾", color = TextDim, fontSize = FS.s7, fontWeight = FontWeight.Bold,
                             )
                         }
                         Box(
                             Modifier.padding(horizontal = 2.dp).size(0.5.dp, 26.dp)
-                                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f)),
+                                .background(Ivory.copy(alpha = 0.12f)),
                         )
                         subs.forEach { s ->
                             val selected = s == current
@@ -503,7 +496,7 @@ private fun MorphingDock(
                                 Text(
                                     s.label,
                                     color = fg,
-                                    fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
+                                    fontFamily = Body, fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Box(Modifier.size(3.5.dp).clip(CircleShape).background(dot))
@@ -552,7 +545,7 @@ private fun MorphingDock(
                                         ) {
                                             Text(
                                                 if (badge > 9) "9+" else badge.toString(),
-                                                color = com.ascend.lifeos.ui.theme.Ivory,
+                                                color = Ivory,
                                                 fontSize = 8.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 fontFamily = Body,
@@ -565,7 +558,7 @@ private fun MorphingDock(
                                 Text(
                                     g.label,
                                     color = fg,
-                                    fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold,
+                                    fontFamily = Body, fontSize = FS.s8_5, fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp, maxLines = 1, softWrap = false,
                                     lineHeight = 11.sp,
                                 )

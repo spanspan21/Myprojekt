@@ -47,17 +47,7 @@ import com.ascend.lifeos.data.finance.FinanceStore.HoldingKind
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.MicroLabel
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.metricStyle
-import com.ascend.lifeos.ui.theme.themeSpec
+import com.ascend.lifeos.ui.theme.*
 import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -117,10 +107,10 @@ internal fun NetWorthSection() {
                     Text(
                         "${signedEuros(delta)}  ·  ${if (up) "+" else "−"}${"%.1f".format(abs(pct))}%",
                         color = if (up) Good else Crit,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text(range.label, color = TextDim, fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, letterSpacing = 1.sp)
+                    Text(range.label, color = TextDim, fontFamily = MicroLabel, fontSize = FS.s10, letterSpacing = 1.sp)
                 }
             }
 
@@ -155,7 +145,7 @@ private fun NwStat(label: String, value: String, modifier: Modifier = Modifier) 
         Spacer(Modifier.height(3.dp))
         Text(
             label.uppercase(), color = TextDim, fontFamily = MicroLabel,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.Medium, letterSpacing = 1.sp,
+            fontSize = FS.s8, fontWeight = FontWeight.Medium, letterSpacing = 1.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
     }
@@ -228,7 +218,7 @@ internal fun AllocationSection() {
                     Text(euros(total), color = TextPrimary, style = metricStyle(14))
                     Text(
                         "TOTAL", color = TextDim, fontFamily = MicroLabel,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s7_5, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
+                        fontSize = FS.s7_5, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                     )
                 }
             }
@@ -239,7 +229,7 @@ internal fun AllocationSection() {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(allocColors[i % allocColors.size]))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            name, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12,
+                            name, color = TextMuted, fontSize = FS.s12,
                             fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
                         )
                         Text("${(v * 100.0 / total).roundToInt()}%", color = TextDim, style = metricStyle(11))
@@ -308,14 +298,14 @@ private fun HoldingRow(
         ) {
             Text(
                 h.name.take(4).uppercase(), color = FinAccent, fontFamily = MicroLabel,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp,
+                fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp,
                 maxLines = 1,
             )
         }
         Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                h.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+                h.name, color = TextPrimary, fontSize = FS.s13_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             val sub = when (kind) {
@@ -324,7 +314,7 @@ private fun HoldingRow(
                 else -> null
             }
             if (sub != null) {
-                Text(sub, color = TextDim, fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, letterSpacing = 0.3.sp)
+                Text(sub, color = TextDim, fontFamily = MicroLabel, fontSize = FS.s10, letterSpacing = 0.3.sp)
             }
         }
         Spacer(Modifier.width(10.dp))
@@ -380,7 +370,7 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
         Text(
             if (valueCents != null) "= ${if (kind == HoldingKind.DEBT) "−" else ""}${euros(valueCents)}" else "Manual value — no live prices",
             color = if (valueCents != null) FinAccent else TextDim,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+            fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -409,7 +399,7 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
                     } else armed = true
                 }.padding(vertical = 11.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text(if (armed) "Tap again to delete" else "Delete", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            ) { Text(if (armed) "Tap again to delete" else "Delete", color = Crit, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
     }
 }

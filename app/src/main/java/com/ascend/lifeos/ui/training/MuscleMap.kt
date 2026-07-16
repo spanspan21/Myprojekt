@@ -27,10 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.remember
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.Muscle
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.Warn
+import com.ascend.lifeos.ui.theme.*
 
 // ─── JARVIS muscle map ───────────────────────────────────────────────────────
 // Real anatomical line art (front + back), rendered from MIT-licensed SVG
@@ -75,16 +72,16 @@ private fun DrawScope.drawBody(front: Boolean, fillFor: (Muscle) -> Color?) {
                         drawPath(p, fill.copy(alpha = (fill.alpha + 0.25f).coerceAtMost(1f)), style = Stroke(regionW))
                     } else {
                         // resting region — barely-there interior line work
-                        drawPath(p, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f), style = Stroke(regionW))
+                        drawPath(p, Ivory.copy(alpha = 0.15f), style = Stroke(regionW))
                     }
                 }
             }
             // head + neck structure, same line language as the outline
             structure.forEach { p ->
-                drawPath(p, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.48f), style = Stroke(outlineW * 0.75f))
+                drawPath(p, Ivory.copy(alpha = 0.48f), style = Stroke(outlineW * 0.75f))
             }
             // the clean ivory body line — Line-Art im Uhrensalon (Kap. 17)
-            drawPath(outline, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.60f), style = Stroke(outlineW))
+            drawPath(outline, Ivory.copy(alpha = 0.60f), style = Stroke(outlineW))
         }
     }
 }
@@ -98,7 +95,7 @@ private fun BodyFigure(front: Boolean, fillFor: (Muscle) -> Color?, modifier: Mo
         Spacer(Modifier.height(6.dp))
         Text(
             if (front) "FRONT" else "BACK",
-            color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
+            color = TextDim, fontFamily = Display, fontSize = FS.s8_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
         )
     }
@@ -160,7 +157,7 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
             drawRect(
                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     0f to Color.Transparent,
-                    1f to com.ascend.lifeos.ui.theme.Champagne.copy(alpha = 0.10f),
+                    1f to Champagne.copy(alpha = 0.10f),
                     startY = (y - size.height * 0.10f).coerceAtLeast(0f),
                     endY = y,
                 ),
@@ -168,7 +165,7 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
                 size = androidx.compose.ui.geometry.Size(size.width, (size.height * 0.10f).coerceAtMost(y)),
             )
             drawLine(
-                color = com.ascend.lifeos.ui.theme.Champagne.copy(alpha = 0.60f),
+                color = Champagne.copy(alpha = 0.60f),
                 start = androidx.compose.ui.geometry.Offset(0f, y),
                 end = androidx.compose.ui.geometry.Offset(size.width, y),
                 strokeWidth = 2f,
@@ -186,7 +183,7 @@ fun MuscleHeatMap(
     freshness: Map<Muscle, Float>,
     modifier: Modifier = Modifier,
 ) {
-    val fresh = com.ascend.lifeos.ui.theme.Good
+    val fresh = Good
     val fried = Crit
     fun tint(m: Muscle): Color? {
         val f = freshness[m]?.coerceIn(0f, 1f) ?: return null

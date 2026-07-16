@@ -57,15 +57,7 @@ import com.ascend.lifeos.R
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.kit.Panel
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.Purple
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.metricStyle
+import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.wellbeing.WellbeingStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -223,11 +215,11 @@ fun HeatmapScreen(onClose: () -> Unit) {
         ) {
             Text(
                 "LIFE HEATMAP", color = metric.tint, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Text(
                 "The last 365 days", color = TextPrimary, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold,
+                fontSize = FS.s24, fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(end = 52.dp),
             )
             Spacer(Modifier.height(16.dp))
@@ -244,7 +236,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                 Spacer(Modifier.height(16.dp))
                 com.ascend.lifeos.ui.kit.ShimmerPanel(height = 180.dp)
                 Spacer(Modifier.height(10.dp))
-                Text("Painting the year…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+                Text("Painting the year…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
                 return@Column
             }
 
@@ -256,7 +248,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                     append("${filled.size} of 365 days with data")
                     avgPct?.let { append(" · Ø $it%") }
                 },
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
+                color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
             )
             Spacer(Modifier.height(14.dp))
 
@@ -311,7 +303,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                                 m.facts.values.forEach { f ->
                                     val v = f.metricValue(metric)
                                     val color =
-                                        if (v == null) com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f)
+                                        if (v == null) Ivory.copy(alpha = 0.03f)
                                         else metric.tint.copy(alpha = 0.08f + 0.8f * v.coerceIn(0f, 1f))
                                     val tl = Offset(f.col * step, labelH + f.row * step)
                                     drawRoundRect(color, tl, Size(cellPx, cellPx), corner)
@@ -323,7 +315,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                                     }
                                     if (f.key == selected) {
                                         drawRoundRect(
-                                            com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.85f), tl, Size(cellPx, cellPx),
+                                            Ivory.copy(alpha = 0.85f), tl, Size(cellPx, cellPx),
                                             corner, style = Stroke(1.2.dp.toPx()),
                                         )
                                     }
@@ -334,7 +326,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         LegendLabel("LESS")
-                        LegendCell(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
+                        LegendCell(Ivory.copy(alpha = 0.03f))
                         listOf(0.25f, 0.5f, 0.75f, 1f).forEach { v ->
                             LegendCell(metric.tint.copy(alpha = 0.08f + 0.8f * v))
                         }
@@ -351,7 +343,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                     Column(Modifier.padding(14.dp)) {
                         Text(
                             LocalDate.parse(f.key).format(DateTimeFormatter.ofPattern("EEE · d MMM yyyy", Locale.ENGLISH)),
-                            color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
+                            color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(10.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -370,7 +362,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                 }
             } else {
                 Spacer(Modifier.height(12.dp))
-                Text("Tap a cell for that day's numbers.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
+                Text("Tap a cell for that day's numbers.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
             }
         }
         CloseOrb(onClose)
@@ -383,10 +375,10 @@ fun HeatmapScreen(onClose: () -> Unit) {
 private fun MetricChip(m: HeatMetric, selected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(11.dp))
-            .background(if (selected) m.tint.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .background(if (selected) m.tint.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
             .border(
                 0.5.dp,
-                if (selected) m.tint.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+                if (selected) m.tint.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(11.dp),
             )
             .clickable(onClick = onClick)
@@ -394,7 +386,7 @@ private fun MetricChip(m: HeatMetric, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             m.label, color = if (selected) m.tint else TextMuted, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
         )
     }
 }
@@ -407,7 +399,7 @@ private fun LegendCell(color: Color) {
 @Composable
 private fun LegendLabel(text: String) {
     Text(
-        text, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8,
+        text, color = TextDim, fontFamily = Display, fontSize = FS.s8,
         fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         modifier = Modifier.padding(horizontal = 2.dp),
     )
@@ -423,7 +415,7 @@ private fun MiniPill(text: String, done: Boolean) {
     ) {
         Text(
             text, color = tint, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            fontSize = FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
         )
     }
 }
@@ -435,7 +427,7 @@ private fun DetailStat(label: String, value: String) {
         Spacer(Modifier.height(2.dp))
         Text(
             label, color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
+            fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
         )
     }
 }

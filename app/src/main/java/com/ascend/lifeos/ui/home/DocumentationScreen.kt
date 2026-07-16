@@ -43,12 +43,7 @@ import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
+import com.ascend.lifeos.ui.theme.*
 
 // ─── DOCUMENTATION — the complete manual ─────────────────────────────────────
 // Every module, tool and algorithm, plain-language and honest — the depth the
@@ -77,7 +72,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                 Text(
                     "Nothing is hidden. Every score, every tool and every algorithm is spelled out below — " +
                         "the app stays quiet so this stays complete. Tap any topic to open it.",
-                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, lineHeight = 20.sp,
+                    color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 20.sp,
                 )
                 Spacer(Modifier.height(22.dp))
             }
@@ -87,7 +82,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                         Column(Modifier.padding(horizontal = 15.dp, vertical = 12.dp)) {
-                            Text(ch.lead, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 19.sp)
+                            Text(ch.lead, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 19.sp)
                             Spacer(Modifier.height(6.dp))
                             ch.topics.forEachIndexed { i, t ->
                                 if (i == 0) Spacer(Modifier.height(4.dp))
@@ -114,7 +109,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                topic.q, color = if (open) accent else TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+                topic.q, color = if (open) accent else TextPrimary, fontSize = FS.s13_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(10.dp))
@@ -125,7 +120,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
         }
         if (open) {
             Text(
-                topic.a, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, lineHeight = 20.sp,
+                topic.a, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 20.sp,
                 modifier = Modifier.padding(bottom = 12.dp, end = 26.dp),
             )
         }
