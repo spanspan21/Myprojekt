@@ -86,7 +86,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
-                        .pressScale { permLauncher.launch(android.Manifest.permission.CAMERA) }
+                        .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); permLauncher.launch(android.Manifest.permission.CAMERA) }
                         .padding(20.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }

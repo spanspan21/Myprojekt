@@ -274,7 +274,7 @@ fun HomeScreen(
                 }
             }
 
-            if (profile.sickMode) {
+            if (profile.sickMode) Reveal(0) {
                 Spacer(Modifier.height(10.dp))
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -293,18 +293,20 @@ fun HomeScreen(
             val deloadUntil = remember { com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0).toLong() }
             if (deloadUntil > 0 && deloadUntil >= LocalDate.now().toEpochDay()) {
                 val daysLeft = (deloadUntil - LocalDate.now().toEpochDay()).toInt()
-                Spacer(Modifier.height(10.dp))
-                Box(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                        .background(Cyan.copy(alpha = 0.10f))
-                        .border(0.5.dp, Cyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                ) {
-                    Text(
-                        "🧊 Deload week — $daysLeft day${if (daysLeft != 1) "s" else ""} left · reduced volume",
-                        color = Cyan, fontFamily = Body,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
-                    )
+                Reveal(0) {
+                    Spacer(Modifier.height(10.dp))
+                    Box(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(Cyan.copy(alpha = 0.10f))
+                            .border(0.5.dp, Cyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            "🧊 Deload week — $daysLeft day${if (daysLeft != 1) "s" else ""} left · reduced volume",
+                            color = Cyan, fontFamily = Body,
+                            fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
             }
 

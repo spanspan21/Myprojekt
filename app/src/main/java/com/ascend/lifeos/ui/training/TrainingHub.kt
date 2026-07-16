@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.training
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
+import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -229,7 +230,7 @@ fun TrainingHub(
         } else {
             // ── Next session hero + week strip (generated plan) ─────────
             item {
-                Text("NEXT SESSION", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                SectionLabel("Next session", accent = Mod.Train)
                 Spacer(Modifier.height(10.dp))
                 val plan = vm.weekPlan
                 if (plan == null || plan.sessions.isEmpty()) {
@@ -256,7 +257,7 @@ fun TrainingHub(
                     val weekDone = allSessions.count { it.name in vm.weekDoneNames }
                     val weekTotal = allSessions.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("YOUR WEEK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
+                        SectionLabel("Your week", accent = Mod.Train, modifier = Modifier.weight(1f))
                         Text("$weekDone / $weekTotal", color = if (weekDone >= weekTotal) Good else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                     Spacer(Modifier.height(6.dp))
@@ -327,7 +328,7 @@ fun TrainingHub(
 
             // ── Skill focus: the chain you're closest to levelling ──────
             item {
-                Text("SKILL FOCUS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                SectionLabel("Skill focus", accent = Mod.Skills)
                 Spacer(Modifier.height(10.dp))
                 SkillFocusCard(progs, onOpenTestDay)
                 Spacer(Modifier.height(22.dp))
@@ -337,7 +338,7 @@ fun TrainingHub(
         // ── Muscle status (Fitbod-style recovery map) ───────────────────
         vm.muscleFreshness?.let { fresh ->
             item {
-                Text("MUSCLE STATUS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                SectionLabel("Muscle status", accent = Mod.Body)
                 Spacer(Modifier.height(10.dp))
                 GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
                     Column(Modifier.padding(14.dp)) {
@@ -373,7 +374,7 @@ fun TrainingHub(
 
         // ── Recent workouts ─────────────────────────────────────────────
         item {
-            Text("RECENT WORKOUTS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Recent workouts", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
         }
         if (sessions.isEmpty()) {
@@ -403,7 +404,7 @@ fun TrainingHub(
                     .clickable { offPlanOpen = !offPlanOpen }.padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("OFF-PLAN · EXTRA", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                SectionLabel("Off-plan · Extra", accent = Mod.Train)
                 Spacer(Modifier.width(8.dp))
                 Text(if (offPlanOpen) "▾" else "▸  templates & free workout", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
             }
@@ -429,7 +430,7 @@ fun TrainingHub(
 
         // ── Tools ───────────────────────────────────────────────────────
         item {
-            Text("TOOLS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Tools", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 QuickAction(Icons.Rounded.SelfImprovement, "Stretch", Modifier.weight(1f), onOpenStretch)

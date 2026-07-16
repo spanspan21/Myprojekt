@@ -403,7 +403,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             }
 
             Spacer(Modifier.height(20.dp))
-            Text("MEALS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            com.ascend.lifeos.ui.kit.SectionLabel("Meals", accent = Mod.Fuel)
             Spacer(Modifier.height(10.dp))
             MEAL_SLOTS.forEach { (code, name) ->
                 val slotMeals = day.meals.filter { it.meal == code }

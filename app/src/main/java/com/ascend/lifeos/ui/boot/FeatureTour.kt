@@ -162,6 +162,7 @@ private val SLIDES = listOf(
 
 @Composable
 fun FeatureTour(onComplete: () -> Unit) {
+    val ftCtx = androidx.compose.ui.platform.LocalContext.current
     var page by remember { mutableIntStateOf(0) }
     val slide = SLIDES[page]
     var entered by remember { mutableStateOf(false) }
@@ -278,7 +279,8 @@ fun FeatureTour(onComplete: () -> Unit) {
                 Box(
                     Modifier
                         .pressScale {
-                            if (isLast) onComplete() else page++
+                            if (isLast) { com.ascend.lifeos.data.Haptics.epic(ftCtx); onComplete() }
+                            else { com.ascend.lifeos.data.Haptics.tick(ftCtx); page++ }
                         }
                         .clip(RoundedCornerShape(16.dp))
                         .background(slide.accent)
