@@ -187,7 +187,7 @@ fun StretchScreen(onBack: () -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
                 Box(
                     Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                        .border(0.5.dp, HudLine, CircleShape).clickable {
+                        .border(0.5.dp, HudLine, CircleShape).pressScale {
                             com.ascend.lifeos.data.Haptics.tick(ctx)
                             isSecondSide = false
                             if (exIndex < routine.exercises.size - 1) {
@@ -200,7 +200,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(16.dp)).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .clickable { running = false; com.ascend.lifeos.ui.kit.AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
+                        .pressScale { running = false; com.ascend.lifeos.ui.kit.AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
                 ) { Text("End", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.weight(0.3f))

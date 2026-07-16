@@ -453,7 +453,7 @@ private fun HabitsBlock() {
                 Box(
                     Modifier.size(20.dp).clip(CircleShape)
                         .background(if (done) Mod.Home else Color.Transparent)
-                        .border(1.dp, if (done) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
+                        .border(1.dp, if (done) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (scheduled) 0.25f else 0.08f), CircleShape)
                         .clickable(enabled = scheduled) {
                             LifeStores.setHabitDone(ctx, h.id, today, !done)
                             if (!done) com.ascend.lifeos.data.Haptics.confirm(ctx)

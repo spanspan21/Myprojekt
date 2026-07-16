@@ -172,7 +172,7 @@ private fun StepPage(
                     Modifier.padding(horizontal = 5.dp).clip(RoundedCornerShape(9.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                        .clickable { onQuick(inc) }
+                        .pressScale { onQuick(inc) }
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) { Text("+$inc", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
             }
@@ -216,7 +216,7 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                         .background(if (on) c.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, if (on) c.copy(alpha = 0.6f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
-                        .clickable { rating = n }
+                        .pressScale { rating = n }
                         .padding(horizontal = 18.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

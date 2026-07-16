@@ -96,7 +96,7 @@ fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
                         .size(40.dp).clip(RoundedCornerShape(13.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-                        .clickable { constellation = false },
+                        .pressScale { constellation = false },
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
             }
@@ -211,7 +211,7 @@ private fun FocusNowCard(
                     Box(
                         Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (sel) Mod.Skills else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                            .clickable { onMinutes(m); com.ascend.lifeos.data.Haptics.tick(ctx) }
+                            .pressScale { onMinutes(m); com.ascend.lifeos.data.Haptics.tick(ctx) }
                             .padding(horizontal = 14.dp, vertical = 7.dp),
                     ) {
                         Text(

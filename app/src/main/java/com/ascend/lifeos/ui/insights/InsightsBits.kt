@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Ivory
 import com.ascend.lifeos.ui.theme.TextPrimary
 
@@ -30,7 +31,7 @@ internal fun BoxScope.CloseOrb(onClose: () -> Unit) {
             .size(40.dp).clip(RoundedCornerShape(13.dp))
             .background(Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-            .clickable(onClick = onClose),
+            .pressScale(onClick = onClose),
         contentAlignment = Alignment.Center,
     ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
 }

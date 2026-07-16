@@ -162,7 +162,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
             Box(
                 Modifier.size(22.dp).clip(CircleShape)
                     .background(if (done) Mod.Mind else Color.Transparent)
-                    .border(1.dp, if (done) Mod.Mind else Ivory.copy(alpha = 0.25f), CircleShape)
+                    .border(1.dp, if (done) Mod.Mind else Ivory.copy(alpha = if (active && !auto && !measurable) 0.25f else 0.08f), CircleShape)
                     .clickable(enabled = active && !auto && !measurable) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.setHabitDone(ctx, h.id, today, !done) },
                 contentAlignment = Alignment.Center,
             ) {
