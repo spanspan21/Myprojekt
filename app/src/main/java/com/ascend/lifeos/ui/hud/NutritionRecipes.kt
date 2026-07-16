@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FoodEntry
@@ -258,7 +259,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                                 Text(row.label, color = Mod.Fuel, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(38.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(row.title, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium, maxLines = 1)
+                                    Text(row.title, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     val rec = row.recipe
                                     if (rec != null) {
                                         Text(
@@ -458,7 +459,7 @@ private fun RecipeCard(
                     r.steps.forEachIndexed { i, step ->
                         Row(Modifier.padding(vertical = 2.dp)) {
                             Text("${i + 1}.", color = Mod.Fuel, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(20.dp))
-                            Text(step, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                            Text(step, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                         }
                     }
                 }
@@ -870,14 +871,14 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             ) {
                 Text(
                     r.steps.getOrElse(step) { "" },
-                    color = TextPrimary, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp,
+                    color = TextPrimary, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s32,
                 )
             }
             Spacer(Modifier.height(14.dp))
             // Zutaten-Spickzettel — immer sichtbar
             Text(
                 r.parts.joinToString("  ·  ") { "${it.name} ${it.grams}g" },
-                color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 16.sp, maxLines = 3,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s16, maxLines = 3,
             )
             Spacer(Modifier.height(18.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

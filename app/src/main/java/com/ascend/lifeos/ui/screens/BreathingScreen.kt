@@ -250,7 +250,7 @@ fun BreathingScreen(onClose: () -> Unit) {
                             p.label,
                             color = TextPrimary,
                             fontFamily = Display,
-                            fontSize = 22.sp,
+                            fontSize = FS.s22,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                         )
@@ -261,7 +261,7 @@ fun BreathingScreen(onClose: () -> Unit) {
                             "$phaseSeconds",
                             color = BreatheAccent,
                             fontFamily = Display,
-                            fontSize = 32.sp,
+                            fontSize = FS.s32,
                             fontWeight = FontWeight.ExtraBold,
                         )
                     }

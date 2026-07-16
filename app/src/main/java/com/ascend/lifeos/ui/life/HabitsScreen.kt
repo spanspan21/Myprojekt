@@ -717,7 +717,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
                 if (unit == "min") {
                     Spacer(Modifier.height(6.dp))
                     Text("Time habits get a start/stop timer on the row — it logs how long you actually did it.",
-                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp)
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s14)
                 }
             }
             Spacer(Modifier.height(14.dp))

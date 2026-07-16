@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.ui.motion.Motion
@@ -494,7 +495,7 @@ fun GuardScreen() {
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "needs one-time: adb shell pm grant com.ascend.lifeos android.permission.WRITE_SECURE_SETTINGS",
-                            color = TextDim, fontSize = FS.s9_5, fontFamily = Body, lineHeight = 13.sp,
+                            color = TextDim, fontSize = FS.s9_5, fontFamily = Body, lineHeight = FS.s13,
                         )
                     }
                 }
@@ -556,7 +557,7 @@ fun GuardScreen() {
                             Text("House of Time", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text(
                                 "Gamble minutes at the limit wall. The house edge works for you.",
-                                color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
+                                color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s14,
                             )
                         }
                         Spacer(Modifier.width(10.dp))
@@ -586,7 +587,7 @@ fun GuardScreen() {
                         val earned = remember(tick) { cas.earnedAttempts(ctx, skillMin) }
                         Text(
                             "Skill-time earns extra spins · 20 min = +1 (max 5). Today: ${skillMin}m → +$earned earned.",
-                            color = if (earned > 0) Champagne else TextDim, fontSize = FS.s10, fontFamily = Body, lineHeight = 13.sp,
+                            color = if (earned > 0) Champagne else TextDim, fontSize = FS.s10, fontFamily = Body, lineHeight = FS.s13,
                         )
                         Spacer(Modifier.height(10.dp))
                         MiniStepper(
@@ -1163,7 +1164,7 @@ private fun AppRow(
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(app.label, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(app.label, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     val sub = when {
                         limit != null ->
                             "Limit ${limit}m" +
@@ -1334,7 +1335,7 @@ private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, a11yOk: Boolean
             Text("Guard setup", color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
             Text(
                 "Every green row makes the wall harder to slip past.",
-                color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 16.sp,
+                color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s16,
             )
             Spacer(Modifier.height(12.dp))
             PermRow("Usage access", "reads real screen time", usageOk) { DigitalWellbeingManager.requestUsageAccess(ctx) }
@@ -1398,7 +1399,7 @@ private fun PresetChip(label: String, modifier: Modifier = Modifier, onClick: ()
             .padding(vertical = 9.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(label, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

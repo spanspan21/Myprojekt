@@ -283,7 +283,7 @@ private fun GradeHero(overall: Double, subjectCount: Int) {
                 Spacer(Modifier.height(3.dp))
                 Text(
                     "Ø of $subjectCount ${if (subjectCount == 1) "subject" else "subjects"} · each counts the same",
-                    color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 15.sp,
+                    color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s15,
                 )
             }
         }

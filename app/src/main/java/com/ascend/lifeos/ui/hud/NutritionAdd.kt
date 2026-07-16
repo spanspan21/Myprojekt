@@ -56,6 +56,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -321,7 +322,7 @@ private fun SearchPane(
                 }
                 // ── Teller: die ~geschätzten Alltagsgerichte (Kap. 37) ──
                 else -> {
-                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                     Spacer(Modifier.height(10.dp))
                     BasicFoods.ALL.filter { it.approx }.forEach { p ->
                         ResultRow(
@@ -557,7 +558,7 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
     ) {
         Icon(icon, label, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
-        Text(label, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(label, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -570,8 +571,8 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text(sub, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1)
+                Text(title, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(sub, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             if (verified) {
                 Spacer(Modifier.width(8.dp))
@@ -628,7 +629,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     if (evalLines.isNotEmpty()) {
         Spacer(Modifier.height(10.dp))
         evalLines.forEach { (line, c) ->
-            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = 15.sp, maxLines = 2)
+            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s15, maxLines = 2)
         }
     }
 
@@ -662,7 +663,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
             Spacer(Modifier.height(10.dp))
             // full verdict narration (un-truncated)
             (eval.pros.map { it to Good } + eval.cons.map { it to Crit }).forEach { (line, c) ->
-                Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = 15.sp)
+                Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s15)
             }
             Spacer(Modifier.height(12.dp))
             Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
@@ -680,7 +681,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
             }
             product.allergens.takeIf { it.isNotEmpty() }?.let {
                 Spacer(Modifier.height(8.dp))
-                Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = FS.s10, fontFamily = Body, lineHeight = 14.sp)
+                Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = FS.s10, fontFamily = Body, lineHeight = FS.s14)
             }
         }
     }
@@ -721,7 +722,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         Spacer(Modifier.height(10.dp))
         Text(
             "≈ vitamins & minerals estimated from a similar staple — this scan carried none",
-            color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Medium, lineHeight = 14.sp,
+            color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Medium, lineHeight = FS.s14,
         )
     }
     Spacer(Modifier.height(18.dp))

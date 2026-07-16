@@ -236,7 +236,7 @@ internal fun GlassField(
             value, onChange, singleLine = singleLine,
             textStyle = TextStyle(
                 color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body,
-                fontWeight = FontWeight.SemiBold, lineHeight = 19.sp,
+                fontWeight = FontWeight.SemiBold, lineHeight = FS.s19,
             ),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = if (singleLine) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Default),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),

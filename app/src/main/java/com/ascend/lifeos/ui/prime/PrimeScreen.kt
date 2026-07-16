@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.prime.PrimeEngine
@@ -128,9 +129,9 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(d.text, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = 18.sp)
+                            Text(d.text, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = FS.s18)
                             Spacer(Modifier.height(2.dp))
-                            Text(d.why, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp)
+                            Text(d.why, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15)
                         }
                         if (d.route != null) {
                             Spacer(Modifier.width(8.dp))
@@ -164,7 +165,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                         Column(Modifier.fillMaxWidth().padding(14.dp)) {
                             Text(g.label, color = TextDim, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                             Spacer(Modifier.height(5.dp))
-                            Text(g.value, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                            Text(g.value, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(7.dp))
                             if (g.score != null) {
                                 NeonBar(g.score, color = if (g.score >= 0.99f) Good else Accent, modifier = Modifier.fillMaxWidth(), height = 4.dp)
@@ -172,7 +173,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                                 Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f)))
                             }
                             Spacer(Modifier.height(5.dp))
-                            Text(g.hint, color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1)
+                            Text(g.hint, color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -189,7 +190,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
             Panel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.anomalies.forEachIndexed { i, a ->
-                        Text(a, color = TextPrimary, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                        Text(a, color = TextPrimary, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                         if (i != r.anomalies.lastIndex) Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -206,7 +207,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                     r.insights.forEachIndexed { i, s ->
                         Row {
                             Text("◆ ", color = Champagne, fontSize = FS.s11)
-                            Text(s, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                            Text(s, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                         }
                         if (i != r.insights.lastIndex) Spacer(Modifier.height(8.dp))
                     }
@@ -222,7 +223,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
             Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.forecasts.forEachIndexed { i, f ->
-                        Text(f, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                        Text(f, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                         if (i != r.forecasts.lastIndex) Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -232,7 +233,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
         Spacer(Modifier.height(14.dp))
         Text(
             "PRIME runs only on your own logged data — every line names its reason.",
-            color = TextDim.copy(alpha = 0.7f), fontSize = FS.s10, fontFamily = Body, lineHeight = 14.sp,
+            color = TextDim.copy(alpha = 0.7f), fontSize = FS.s10, fontFamily = Body, lineHeight = FS.s14,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
         }
@@ -448,7 +449,7 @@ private fun AnimatedSubBar(name: String, score: Int, why: String, indexInList: I
         androidx.compose.animation.AnimatedVisibility(open) {
             Text(
                 why, color = TextMuted, fontFamily = Body, fontSize = FS.s10,
-                lineHeight = 13.sp, modifier = Modifier.padding(start = 82.dp, top = 4.dp, bottom = 2.dp),
+                lineHeight = FS.s13, modifier = Modifier.padding(start = 82.dp, top = 4.dp, bottom = 2.dp),
             )
         }
     }

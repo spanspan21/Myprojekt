@@ -154,7 +154,7 @@ private fun StepPage(
         Spacer(Modifier.height(8.dp))
         Text(name, color = TextPrimary, fontFamily = Display, fontSize = FS.s28, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
         Spacer(Modifier.height(10.dp))
-        Text(instruction, color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = 20.sp)
+        Text(instruction, color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = FS.s20)
 
         Spacer(Modifier.weight(0.5f))
 
@@ -206,7 +206,7 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
         Spacer(Modifier.height(8.dp))
         Text(check.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
         Spacer(Modifier.height(10.dp))
-        Text(check.instruction, color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = 20.sp)
+        Text(check.instruction, color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = FS.s20)
 
         Spacer(Modifier.weight(0.5f))
 
@@ -275,7 +275,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Text("Your movement profile", color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
-        Text("The generator builds every session off these — strength, power, and the mobility you need. Re-run in ~6 weeks.", color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 19.sp)
+        Text("The generator builds every session off these — strength, power, and the mobility you need. Re-run in ~6 weeks.", color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s19)
         Spacer(Modifier.height(20.dp))
 
         Pattern.entries.forEach { p ->
@@ -313,10 +313,10 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         SectionLabel("Mobility prescription", accent = Mod.Body)
         Spacer(Modifier.height(8.dp))
         if (prescribed.isEmpty()) {
-            Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 17.sp)
+            Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s17)
         } else {
             val names = com.ascend.lifeos.data.training.ExerciseSeed.STRETCH_ROUTINES.filter { it.id in prescribed }.map { it.name }
-            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Body, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 17.sp)
+            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Body, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s17)
         }
 
         Spacer(Modifier.height(28.dp))

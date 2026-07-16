@@ -836,7 +836,7 @@ private fun DayTimelineView(
                         if (blockH >= 38.dp) {
                             Text(
                                 "${CalendarRepo.fmtMin(b.startMin)}–${CalendarRepo.fmtMin(b.endMin)} · ${eventLabel(b.type)}",
-                                color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1, lineHeight = 11.sp,
+                                color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis, lineHeight = FS.s11,
                             )
                         }
                     }
@@ -1087,7 +1087,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                     Text("Weather-dependent", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                     Text(
                         "Applies to every \"${b.title}\" — Jarvis checks the forecast and suggests, never moves.",
-                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s14,
                     )
                 }
                 Text(
@@ -1275,7 +1275,7 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Text(
                 "Every source can be connected or removed here — the timeline itself stays clean.",
-                color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp,
+                color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16,
             )
             Spacer(Modifier.height(16.dp))
 

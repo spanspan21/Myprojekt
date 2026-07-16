@@ -169,7 +169,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
                         ) {
                             Box(Modifier.padding(top = 6.dp).size(5.dp).clip(CircleShape).background(WindDownAccent.copy(alpha = 0.6f)))
                             Spacer(Modifier.width(10.dp))
-                            Text(rule, color = TextMuted, fontFamily = Body, fontSize = FS.s12, lineHeight = 17.sp)
+                            Text(rule, color = TextMuted, fontFamily = Body, fontSize = FS.s12, lineHeight = FS.s17)
                         }
                     }
                 }

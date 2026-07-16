@@ -209,7 +209,7 @@ fun BodyScreen() {
                                     signals.isEmpty() -> "Health Connect is linked — waiting for your watch's first sync. Sleep lands after tonight."
                                     else -> "Linked · ${signals.joinToString(" · ")} — sleep lands after your first night with the watch."
                                 },
-                                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
+                                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
                             )
                             Spacer(Modifier.height(10.dp))
                             Row {
@@ -457,7 +457,7 @@ fun BodyScreen() {
                                     }
                                 }
                                 Spacer(Modifier.height(6.dp))
-                                Text(v.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                                Text(v.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                                 if (last14.any { it > 0 }) {
                                     Spacer(Modifier.height(12.dp))
                                     Row(Modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.Bottom) {
@@ -1163,7 +1163,7 @@ private fun CorrelationCard() {
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 18.dp, line = Mod.Body.copy(alpha = 0.3f)) {
             Text(
-                it, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
+                it, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
                 modifier = Modifier.padding(16.dp),
             )
         }

@@ -131,7 +131,7 @@ fun StretchScreen(onBack: () -> Unit) {
                             Text("${routine.durationMin} min · ${routine.exercises.size} drills · ${routine.focus}", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                             if (routine.purpose.isNotBlank()) {
                                 Spacer(Modifier.height(6.dp))
-                                Text(routine.purpose, color = TextMuted, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp)
+                                Text(routine.purpose, color = TextMuted, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15)
                             }
                         }
                     }
@@ -168,7 +168,7 @@ fun StretchScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(6.dp))
                     Text(
                         ex.cue, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, textAlign = TextAlign.Center,
-                        lineHeight = 17.sp, modifier = Modifier.padding(horizontal = 6.dp),
+                        lineHeight = FS.s17, modifier = Modifier.padding(horizontal = 6.dp),
                     )
                 }
                 Spacer(Modifier.height(6.dp))

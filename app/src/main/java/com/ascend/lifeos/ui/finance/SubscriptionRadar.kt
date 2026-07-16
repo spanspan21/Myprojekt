@@ -94,7 +94,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                         Text(
                             "${a.payee} + ${b.payee} overlap — one may be enough$more",
                             color = Warn, fontSize = FS.s11_5, fontFamily = Body,
-                            fontWeight = FontWeight.Bold, lineHeight = 16.sp,
+                            fontWeight = FontWeight.Bold, lineHeight = FS.s16,
                         )
                     }
 

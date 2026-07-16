@@ -470,6 +470,7 @@ private fun AccountChip(a: Account, onClick: () -> Unit) {
             Text(
                 a.name, color = TextMuted, fontSize = FS.s10_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(euros(a.balanceCents), color = TextPrimary, style = metricStyle(12))
         }
@@ -490,6 +491,7 @@ private fun RowScope.QuickAction(icon: ImageVector, label: String, onClick: () -
             Text(
                 label, color = TextMuted, fontSize = FS.s10_5,
                 fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -743,7 +745,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
                         color = if (i == series.lastIndex) TextPrimary else TextDim,
                         style = metricStyle(9, FontWeight.SemiBold),
                         textAlign = TextAlign.Center,
-                        maxLines = 1,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
                 }

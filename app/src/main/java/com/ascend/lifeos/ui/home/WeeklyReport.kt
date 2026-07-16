@@ -279,7 +279,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     s.recommendations.forEach { rec ->
                         Panel(Modifier.fillMaxWidth(), corner = 14.dp, line = Mod.Home.copy(alpha = 0.3f)) {
-                            Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp, modifier = Modifier.padding(14.dp))
+                            Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18, modifier = Modifier.padding(14.dp))
                         }
                         Spacer(Modifier.height(8.dp))
                     }

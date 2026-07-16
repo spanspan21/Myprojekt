@@ -231,7 +231,7 @@ private fun FocusNowCard(
             Spacer(Modifier.height(12.dp))
             Text(
                 plan.note, color = TextDim,
-                fontSize = FS.s12, fontFamily = Body, lineHeight = 16.sp,
+                fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s16,
             )
             plan.items.take(3).forEach { item ->
                 Spacer(Modifier.height(12.dp))
@@ -247,7 +247,7 @@ private fun FocusNowCard(
                         Text(
                             "${item.domainTitle} — ${item.reason}",
                             color = TextDim,
-                            fontSize = FS.s11, fontFamily = Body, lineHeight = 14.sp,
+                            fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s14,
                         )
                     }
                 }
@@ -338,7 +338,7 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
             Spacer(Modifier.height(9.dp))
             Text(
                 "Explain ${r.nodeTitle} in two sentences — out loud or in your head.",
-                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
+                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
             )
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -560,7 +560,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                         fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text(n.node.subtitle, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp)
+                    Text(n.node.subtitle, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18)
                     Spacer(Modifier.height(12.dp))
                 }
 
@@ -621,7 +621,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                                     fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                                 )
                                 if (t.detail.isNotBlank()) {
-                                    Text(t.detail, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp)
+                                    Text(t.detail, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15)
                                 }
                             }
                         }
@@ -730,7 +730,7 @@ private fun MetaField(
     BasicTextField(
         value = value,
         onValueChange = onChange,
-        textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 17.sp),
+        textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s17),
         cursorBrush = SolidColor(accent),
         singleLine = singleLine,
         modifier = Modifier.fillMaxWidth(),

@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.finance.BankAspsp
@@ -97,7 +98,7 @@ internal fun BankPanel() {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Umsätze automatisch importieren — nur Lesezugriff, Freigabe per TAN bei deiner Bank. Der AboRadar erkennt deine Abos dann von selbst.",
-                    color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp,
+                    color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17,
                 )
                 Spacer(Modifier.height(12.dp))
                 ActionButton(if (busy) "Verbinde …" else "Bank auswählen", enabled = !busy) { showPicker = true }
@@ -108,7 +109,7 @@ internal fun BankPanel() {
                 accounts.forEach { acc ->
                     Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(acc.label, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Text(acc.label, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             if (acc.iban.length > 4) {
                                 Text("···${acc.iban.takeLast(4)}", color = TextDim, fontSize = FS.s10, fontFamily = Body)
                             }
@@ -150,7 +151,7 @@ internal fun BankPanel() {
                 Text(
                     it,
                     color = if (it.startsWith("Fehler") || it.contains("abgelaufen")) Crit else FinAccent,
-                    fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
+                    fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s15,
                 )
             }
         }
@@ -178,7 +179,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
         SearchField(query, { query = it }, "Bank suchen — z. B. Sparkasse, DKB, N26")
         Spacer(Modifier.height(12.dp))
         when {
-            error != null -> Text("Fehler: $error", color = Crit, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 17.sp)
+            error != null -> Text("Fehler: $error", color = Crit, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s17)
             banks == null -> Text("Lade Institute …", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
             else -> {
                 val hits = remember(query, banks) {
@@ -210,7 +211,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                             ) {
                                 Icon(Icons.Rounded.AccountBalance, bank.name, tint = TextDim, modifier = Modifier.size(15.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text(bank.name, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                Text(bank.name, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
@@ -218,7 +219,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Du wirst zu deiner Bank weitergeleitet und gibst dort per TAN frei. JARVIS sieht deine Zugangsdaten nie — nur die Umsätze (Lesezugriff, bis zu 90 Tage gültig).",
-                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 15.sp,
+                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s15,
                 )
             }
         }

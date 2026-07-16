@@ -193,7 +193,7 @@ fun MindScreen(onClose: () -> Unit) {
                     Column(Modifier.padding(14.dp)) {
                         Text(k, color = Mod.Mind, fontFamily = Display, fontSize = FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         lines.filter { it.isNotBlank() }.forEach {
-                            Text("· $it", color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                            Text("· $it", color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
                         }
                     }
                 }

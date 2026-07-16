@@ -242,7 +242,7 @@ fun JarvisHeader(
             }
             Text(
                 title, color = TextPrimary, fontFamily = Display, fontStyle = DisplayItalic,
-                fontSize = if (editorial) 30.sp else 26.sp,
+                fontSize = if (editorial) FS.s30 else FS.s26,
                 fontWeight = if (editorial) FontWeight.Normal else FontWeight.Bold,
                 letterSpacing = (-0.3).sp, lineHeight = if (editorial) 34.sp else 30.sp,
             )

@@ -107,7 +107,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
                     score >= 55 -> "Solid base. Protein came up short on ${(logged - protHit).coerceAtLeast(0)} logged days — the gap filler helps in the evening."
                     else -> "Reset week: today counts, not yesterday. One logged day is a good day."
                 },
-                color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp,
+                color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16,
             )
         }
     }

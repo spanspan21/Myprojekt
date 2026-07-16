@@ -93,7 +93,7 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "Edits keep the records honest — a PR that loses its set is removed, none is invented.",
-                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s14,
                     )
                     Spacer(Modifier.height(14.dp))
                 }

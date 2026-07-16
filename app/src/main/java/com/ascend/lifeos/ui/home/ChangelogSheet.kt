@@ -250,7 +250,7 @@ fun ChangelogSheet(onDismiss: () -> Unit) {
                 Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.Top) {
                     Box(Modifier.padding(top = 6.dp).size(5.dp).clip(CircleShape).background(Mod.Home))
                     Spacer(Modifier.width(10.dp))
-                    Text(it, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 18.sp)
+                    Text(it, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s18)
                 }
             }
             Spacer(Modifier.height(16.dp))

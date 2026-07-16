@@ -217,12 +217,12 @@ fun FeatureTour(onComplete: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     Text(
                         s.title, color = TextPrimary, fontFamily = Display,
-                        fontSize = FS.s26, fontWeight = FontWeight.Bold, lineHeight = 32.sp,
+                        fontSize = FS.s26, fontWeight = FontWeight.Bold, lineHeight = FS.s32,
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
                         s.body, color = TextMuted, fontFamily = Body,
-                        fontSize = FS.s14, lineHeight = 22.sp,
+                        fontSize = FS.s14, lineHeight = FS.s22,
                     )
                     Spacer(Modifier.height(22.dp))
                     s.features.forEach { feat ->

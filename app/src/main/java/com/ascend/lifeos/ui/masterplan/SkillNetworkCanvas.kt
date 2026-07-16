@@ -246,7 +246,7 @@ private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: 
             text = star.node.node.title,
             color = labelColor,
             fontSize = FS.s11,
-            lineHeight = 13.sp,
+            lineHeight = FS.s13,
             fontWeight = if (star.state == NodeState.LOCKED) FontWeight.Medium else FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             maxLines = 2,

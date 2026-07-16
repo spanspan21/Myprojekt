@@ -72,7 +72,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                 Text(
                     "Nothing is hidden. Every score, every tool and every algorithm is spelled out below — " +
                         "the app stays quiet so this stays complete. Tap any topic to open it.",
-                    color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 20.sp,
+                    color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s20,
                 )
                 Spacer(Modifier.height(22.dp))
             }
@@ -82,7 +82,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                         Column(Modifier.padding(horizontal = 15.dp, vertical = 12.dp)) {
-                            Text(ch.lead, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 19.sp)
+                            Text(ch.lead, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s19)
                             Spacer(Modifier.height(6.dp))
                             ch.topics.forEachIndexed { i, t ->
                                 if (i == 0) Spacer(Modifier.height(4.dp))
@@ -120,7 +120,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
         }
         if (open) {
             Text(
-                topic.a, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 20.sp,
+                topic.a, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s20,
                 modifier = Modifier.padding(bottom = 12.dp, end = 26.dp),
             )
         }

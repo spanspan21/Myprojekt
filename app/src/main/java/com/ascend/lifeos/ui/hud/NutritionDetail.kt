@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -229,7 +230,7 @@ private fun TopSourcesSheet(nutrientId: String, onDismiss: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp)) {
                         Text("${i + 1}", color = Accent, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(22.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Text(name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("${fmtDose(dense * nd.gToUnit)} ${nd.unit} per 100 kcal", color = Accent, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.width(10.dp))
@@ -457,7 +458,7 @@ fun StatsView(onBack: () -> Unit) {
                     top5.forEachIndexed { i, e ->
                         Row(Modifier.padding(vertical = 5.dp)) {
                             Text("${i + 1}", color = Accent, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
-                            Text(e.key, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f), maxLines = 1)
+                            Text(e.key, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("${e.value}×", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                         }
                     }
@@ -682,7 +683,7 @@ fun GoalsSheet(sheetState: SheetState, onDismiss: () -> Unit) {
             }
             GOAL_HINTS[goal]?.let {
                 Spacer(Modifier.height(8.dp))
-                Text(it, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp)
+                Text(it, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15)
             }
 
             Spacer(Modifier.height(18.dp))

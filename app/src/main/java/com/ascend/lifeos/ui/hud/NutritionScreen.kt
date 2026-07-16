@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.prevKey
@@ -456,7 +457,7 @@ private fun JarvisReactionBanner() {
             Spacer(Modifier.width(10.dp))
             Text(
                 last, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body,
-                fontWeight = FontWeight.SemiBold, lineHeight = 17.sp,
+                fontWeight = FontWeight.SemiBold, lineHeight = FS.s17,
             )
         }
     }
@@ -656,7 +657,7 @@ private fun CoachCheckInCard() {
             Spacer(Modifier.height(8.dp))
 
             if (s.holding != null) {
-                Text(s.holding, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp)
+                Text(s.holding, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18)
                 Spacer(Modifier.height(10.dp))
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
@@ -685,11 +686,11 @@ private fun CoachCheckInCard() {
                 }
                 Spacer(Modifier.height(8.dp))
                 c.why.forEach {
-                    Text("· $it", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp)
+                    Text("· $it", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16)
                 }
                 c.warnings.forEach {
                     Spacer(Modifier.height(3.dp))
-                    Text("⚠ $it", color = Amber, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text("⚠ $it", color = Amber, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16, fontWeight = FontWeight.SemiBold)
                 }
 
                 // rate dial — the evidence zone for this phase, one tap to retune.
@@ -1063,7 +1064,7 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
                     ) {
                         Column(Modifier.weight(1f)) {
                             // ◌ = Quick-Add ohne volle Makros, ≈ = ehrliche Teller-Schätzung (Kap. 37/42)
-                            Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium, maxLines = 1)
+                            Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             // Drinks carry volumeMl → show "300 ml", not "300 g".
                             val amountTxt = when {
                                 e.volumeMl > 0 -> "${e.volumeMl} ml · "
@@ -1155,7 +1156,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
                     .padding(horizontal = 12.dp, vertical = 9.dp),
             ) {
                 Column {
-                    Text(pick.label, color = TextPrimary, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(pick.label, color = TextPrimary, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text("${pick.entry.protein} P · ${pick.entry.kcal} kcal", color = Mod.Fuel, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }

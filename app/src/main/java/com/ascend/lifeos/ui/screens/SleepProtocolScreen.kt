@@ -169,7 +169,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Text(
                     "This tracks how long and how well you sleep — straight from your watch — and feeds your daily Readiness. " +
                         "You're a growing athlete: your job is 8–9 h and a steady bed/wake time. That's the whole game.",
-                    color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
+                    color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -277,7 +277,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             Column(Modifier.padding(16.dp)) {
                 Text(
                     "The one thing no sensor knows: how long you lay in bed before sleep. Correct it here — manual entries always beat synced ones.",
-                    color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp,
+                    color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
                 )
                 Spacer(Modifier.height(10.dp))
                 StepRow("To bed", SleepProtocol.formatMin(bed),
@@ -319,7 +319,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(4.dp))
         Text(
             "The share of your time in bed you were actually asleep — higher is better (90%+ is great).",
-            color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp,
+            color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
         )
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
@@ -365,7 +365,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             "Only turn this on if you regularly struggle to fall or stay asleep. It's a clinical technique that deliberately " +
                 "SHRINKS your time in bed to rebuild sleep pressure — the opposite of what a growing athlete usually needs. " +
                 "Leave it off unless sleep is genuinely broken; otherwise just chase 8–9 h.",
-            color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp,
+            color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
         )
         Spacer(Modifier.height(10.dp))
         Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
@@ -479,7 +479,7 @@ private fun RuleLine(text: String) {
     Row(Modifier.padding(vertical = 3.dp)) {
         Text("·", color = Mod.Body, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
         Spacer(Modifier.width(8.dp))
-        Text(text, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+        Text(text, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
     }
 }
 

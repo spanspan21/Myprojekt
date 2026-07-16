@@ -150,7 +150,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                         }
                     }
                     Spacer(Modifier.height(3.dp))
-                    Text(skill.blurb, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp)
+                    Text(skill.blurb, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16)
                 }
                 Spacer(Modifier.width(10.dp))
                 Column(horizontalAlignment = Alignment.End) {

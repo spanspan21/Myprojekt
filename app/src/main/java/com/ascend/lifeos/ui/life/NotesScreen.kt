@@ -184,7 +184,7 @@ fun NotesScreen(onClose: () -> Unit) {
                         } else {
                             Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
                                 Column(Modifier.weight(1f)) {
-                                    Text(text, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, lineHeight = 20.sp)
+                                    Text(text, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, lineHeight = FS.s20)
                                     Spacer(Modifier.height(4.dp))
                                     Text(date.format(fmt), color = TextDim, fontFamily = Body, fontSize = FS.s10)
                                 }

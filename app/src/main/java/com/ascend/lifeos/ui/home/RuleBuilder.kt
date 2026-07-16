@@ -138,7 +138,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(p.title, color = if (on) TextPrimary else TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    Text(p.description, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp)
+                    Text(p.description, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s14)
                 }
                 Spacer(Modifier.width(10.dp))
                 Box(
@@ -222,7 +222,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                 )
             }
             Spacer(Modifier.height(4.dp))
-            Text(conditionLine(rule), color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp)
+            Text(conditionLine(rule), color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16)
         }
     }
 }

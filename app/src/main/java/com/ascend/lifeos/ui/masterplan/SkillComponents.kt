@@ -133,7 +133,7 @@ fun NodeSheet(
                 Column(Modifier.weight(1f)) {
                     Text(node.node.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold, fontFamily = Body)
                     if (node.node.subtitle.isNotBlank()) {
-                        Text(node.node.subtitle, color = TextMuted, fontSize = FS.s13, lineHeight = 17.sp, fontFamily = Body)
+                        Text(node.node.subtitle, color = TextMuted, fontSize = FS.s13, lineHeight = FS.s17, fontFamily = Body)
                     }
                 }
             }
@@ -184,11 +184,11 @@ fun TaskRow(task: TaskEntity, onToggle: (Boolean) -> Unit) {
             Text(
                 task.title,
                 color = if (done) TextDim else TextPrimary,
-                fontSize = FS.s15, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp, fontFamily = Body,
+                fontSize = FS.s15, fontWeight = FontWeight.SemiBold, lineHeight = FS.s20, fontFamily = Body,
                 textDecoration = if (done) TextDecoration.LineThrough else TextDecoration.None,
             )
             if (task.detail.isNotBlank()) {
-                Text(task.detail, color = TextMuted, fontSize = FS.s12_5, lineHeight = 17.sp, fontFamily = Body)
+                Text(task.detail, color = TextMuted, fontSize = FS.s12_5, lineHeight = FS.s17, fontFamily = Body)
             }
         }
     }

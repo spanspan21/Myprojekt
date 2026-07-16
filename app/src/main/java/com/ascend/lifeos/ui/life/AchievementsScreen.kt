@@ -150,7 +150,7 @@ private fun Plaque(a: Achievement) {
         Spacer(Modifier.height(6.dp))
         Text(
             a.title, color = TextMuted, fontSize = FS.s10_5, fontFamily = Body,
-            fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = 13.sp,
+            fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = FS.s13,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
         Text(DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = FS.s9, fontFamily = Body)
@@ -175,7 +175,7 @@ private fun BlankPlaque(nextStreakMark: Int?) {
         Text(
             if (nextStreakMark != null) "next: $nextStreakMark-day streak" else "all marks minted",
             color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-            maxLines = 2, lineHeight = 13.sp,
+            maxLines = 2, lineHeight = FS.s13,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
@@ -216,7 +216,7 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
             }
             if (a.detail.isNotBlank()) {
                 Spacer(Modifier.height(2.dp))
-                Text(a.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 16.sp)
+                Text(a.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s16)
             }
         }
     }

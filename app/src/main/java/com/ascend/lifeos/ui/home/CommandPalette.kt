@@ -663,7 +663,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 "settings · prime · heatmap · notes — jump",
                 "train · fuel · body · skills · report — jump",
             ).forEach {
-                Text("· $it", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 18.sp)
+                Text("· $it", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s18)
             }
             Spacer(Modifier.height(14.dp))
         }

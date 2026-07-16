@@ -126,7 +126,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Text(
                 "Protein window: aim for 30–40 g within the next ~2 hours. Fuel has your top sources.",
-                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
+                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
                 modifier = Modifier.padding(14.dp),
             )
         }
@@ -192,7 +192,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                 Text(
                     if (isHold) "Hold for $target seconds — clean form, then log your best hold."
                     else "Target: $target clean reps in one set. Warm up first, then send it.",
-                    color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = 20.sp,
+                    color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = FS.s20,
                 )
                 Spacer(Modifier.height(36.dp))
 
@@ -282,7 +282,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Spacer(Modifier.height(10.dp))
                     Text(
                         "The reps you just did still count as training. Keep feeding the pattern — the next test will fall.",
-                        color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = 20.sp,
+                        color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = FS.s20,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(36.dp))

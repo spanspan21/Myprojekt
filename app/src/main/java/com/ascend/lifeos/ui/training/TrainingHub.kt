@@ -426,7 +426,7 @@ fun TrainingHub(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "Your assignment above is the plan. Use these only when you genuinely can't run today's session.",
-                        color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 15.sp,
+                        color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
                     )
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 32.dp)) {
@@ -630,7 +630,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
                 }
                 Text(
                     placement?.let { placementLabel(it) } ?: session.focus,
-                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 1,
+                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(8.dp))
                 BlockChips(session.blocks)
@@ -690,7 +690,7 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(focused.chain.groupName, color = TextPrimary, fontFamily = Display, fontSize = FS.s14_5, fontWeight = FontWeight.Bold)
-                    Text(current.exerciseName, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1)
+                    Text(current.exerciseName, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Text("Lv ${focused.level}/6", color = if (testReady) Amber else Mod.Train, fontFamily = Display, fontSize = FS.s13, fontWeight = FontWeight.Bold)
             }
@@ -1005,7 +1005,7 @@ private fun TemplateCard(modifier: Modifier = Modifier, tpl: WorkoutTemplate, on
                     Text(tpl.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.height(4.dp))
-                Text(tpl.split, color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 1)
+                Text(tpl.split, color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
                 Text("~${tpl.estimatedMinutes} min · ${tpl.exercises.size} exercises", color = TextMuted, fontSize = FS.s10, fontFamily = Body)
             }
@@ -1023,7 +1023,7 @@ private fun SessionRow(sws: SessionWithSets, onOpen: (() -> Unit)? = null) {
             Box(Modifier.width(3.dp).fillMaxHeight().background(color))
             Row(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(s.templateName, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(s.templateName, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text("$date · ${s.totalSets} sets · ${s.totalReps} reps · ${s.durationMinutes} min", color = TextDim, fontSize = FS.s10, fontFamily = Body)
                 }
                 if (s.isComplete) {

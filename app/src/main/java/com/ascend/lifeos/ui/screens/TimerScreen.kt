@@ -162,7 +162,7 @@ fun TimerScreen(onClose: () -> Unit) {
                         timeStr,
                         color = if (finished) Good else TextPrimary,
                         fontFamily = Display,
-                        fontSize = 42.sp,
+                        fontSize = FS.s42,
                         fontWeight = FontWeight.Bold,
                     )
                     if (finished) {

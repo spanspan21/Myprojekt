@@ -549,10 +549,10 @@ private fun MorphingDock(
                                             Text(
                                                 if (badge > 9) "9+" else badge.toString(),
                                                 color = Ivory,
-                                                fontSize = 8.sp,
+                                                fontSize = FS.s8,
                                                 fontWeight = FontWeight.Bold,
                                                 fontFamily = Body,
-                                                lineHeight = 8.sp,
+                                                lineHeight = FS.s8,
                                             )
                                         }
                                     }
@@ -563,7 +563,7 @@ private fun MorphingDock(
                                     color = fg,
                                     fontFamily = Body, fontSize = FS.s8_5, fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp, maxLines = 1, softWrap = false,
-                                    lineHeight = 11.sp,
+                                    lineHeight = FS.s11,
                                 )
                             }
                         }

@@ -27,7 +27,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
@@ -195,7 +195,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
         Spacer(Modifier.height(6.dp))
         Text("The numbers everything is computed from", color = TextPrimary,
-            fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
+            fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold, lineHeight = FS.s26)
         }
         Spacer(Modifier.height(18.dp))
 
@@ -776,7 +776,7 @@ private fun CalibratePhase(onNext: () -> Unit) {
                         )
                     }
                     Spacer(Modifier.height(5.dp))
-                    Text(s.readout, color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 1)
+                    Text(s.readout, color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(

@@ -246,7 +246,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
             }
             if (ex.description.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text(ex.description, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 19.sp)
+                Text(ex.description, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s19)
             }
             Spacer(Modifier.height(10.dp))
             // form check: curated-quality via YouTube search — never a dead link

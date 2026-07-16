@@ -294,7 +294,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(7.dp))
                     Text(
                         voice, color = TextMuted, fontFamily = Body,
-                        fontSize = FS.s13_5, fontWeight = FontWeight.Medium, lineHeight = 19.sp,
+                        fontSize = FS.s13_5, fontWeight = FontWeight.Medium, lineHeight = FS.s19,
                     )
                 }
             }
@@ -405,7 +405,7 @@ fun HomeScreen(
                         }
                         Text(
                             scanLine, color = TextMuted, fontFamily = Body,
-                            fontSize = FS.s11_5, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
+                            fontSize = FS.s11_5, fontWeight = FontWeight.SemiBold, lineHeight = FS.s15,
                         )
                         Spacer(Modifier.height(11.dp))
                         HairLine()
@@ -845,6 +845,7 @@ fun HomeScreen(
                                 fontSize = FS.s10_5, fontFamily = Body,
                                 fontWeight = if (done) FontWeight.Bold else FontWeight.Medium,
                                 maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
@@ -1158,7 +1159,7 @@ private fun SleepConfirmCard(
             Spacer(Modifier.height(3.dp))
             Text(
                 "Your watch only sees when you slept — this keeps the sleep window honest.",
-                color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 15.sp,
+                color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s15,
             )
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -1300,8 +1301,8 @@ private fun EventLine(tag: String, title: String, sub: String, color: Color, onC
                 fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(2.dp))
-            Text(title, color = TextPrimary, fontFamily = Body, fontSize = FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1)
-            Text(sub, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, maxLines = 1)
+            Text(title, color = TextPrimary, fontFamily = Body, fontSize = FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(sub, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Icon(Icons.Rounded.Bolt, title, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
     }
@@ -1658,7 +1659,7 @@ private fun BriefRow(
             Spacer(Modifier.height(2.dp))
             Text(
                 text, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body,
-                fontWeight = FontWeight.Medium, lineHeight = 17.sp,
+                fontWeight = FontWeight.Medium, lineHeight = FS.s17,
             )
         }
         if (action != null) {

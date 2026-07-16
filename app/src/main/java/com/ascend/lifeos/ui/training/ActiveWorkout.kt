@@ -453,7 +453,7 @@ private fun ExerciseSetLogger(
                 // you don't set it. The stepper below logs what you actually got.
                 Text("PRESCRIBED", color = Accent, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(2.dp))
-                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
+                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s16)
             }
             Spacer(Modifier.height(10.dp))
             // the movement, drawn on the REAL anatomical body — the muscles this
