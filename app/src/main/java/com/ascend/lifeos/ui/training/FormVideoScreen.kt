@@ -212,7 +212,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                             Icon(
                                 Icons.Rounded.Delete, if (armed) "Confirm delete" else "Delete video",
                                 tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp).clickable {
+                                modifier = Modifier.size(16.dp).pressScale {
                                     if (armed) { f.delete(); clips = listClips(dir); armedDelete = null; AppFeedback.show("Video deleted") }
                                     else armedDelete = f.absolutePath
                                 },

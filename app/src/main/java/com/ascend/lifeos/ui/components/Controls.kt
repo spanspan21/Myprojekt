@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
 @Composable
@@ -47,7 +48,7 @@ fun CheckBox(checked: Boolean, onClick: () -> Unit, dashed: Boolean = false) {
             .clip(RoundedCornerShape(9.dp))
             .background(bg)
             .border(BorderStroke(2.dp, border), RoundedCornerShape(9.dp))
-            .clickable { onClick() },
+            .pressScale { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         if (checked) Icon(Icons.Rounded.Check, "Checked", tint = Bg, modifier = Modifier.size(15.dp))

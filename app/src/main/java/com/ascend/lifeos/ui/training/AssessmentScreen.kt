@@ -66,7 +66,7 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Rounded.ArrowBack, if (step == 0) "Go back" else "Previous step", tint = TextMuted,
-                modifier = Modifier.size(22.dp).clickable { if (step == 0) onBack() else step-- },
+                modifier = Modifier.size(22.dp).pressScale { if (step == 0) onBack() else step-- },
             )
             Spacer(Modifier.weight(1f))
             if (!finished) {
@@ -256,7 +256,7 @@ private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit)
         Modifier.size(60.dp).clip(CircleShape)
             .background(Ivory.copy(alpha = if (enabled) 0.06f else 0.03f))
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(enabled = enabled, onClick = onClick),
+            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = FS.s24, fontWeight = FontWeight.Bold) }
 }

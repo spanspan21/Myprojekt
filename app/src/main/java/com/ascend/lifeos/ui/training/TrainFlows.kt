@@ -171,7 +171,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
-                modifier = Modifier.size(22.dp).clickable(onClick = onBack),
+                modifier = Modifier.size(22.dp).pressScale(onClick = onBack),
             )
             Spacer(Modifier.weight(1f))
             Text(
@@ -302,7 +302,7 @@ private fun TestStep(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(58.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = FS.s23, fontWeight = FontWeight.Bold) }
 }

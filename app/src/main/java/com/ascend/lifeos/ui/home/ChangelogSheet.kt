@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -254,7 +255,7 @@ fun ChangelogSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Home)
-                    .clickable(onClick = onDismiss).padding(vertical = 12.dp),
+                    .pressScale(onClick = onDismiss).padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Understood", color = Void, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(14.dp))

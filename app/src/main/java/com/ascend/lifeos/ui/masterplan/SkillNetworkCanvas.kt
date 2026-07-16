@@ -9,6 +9,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -215,7 +216,7 @@ fun SkillNetworkCanvas(
                 .clip(RoundedCornerShape(14.dp))
                 .background(SurfaceHi)
                 .border(0.5.dp, Ivory.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
-                .clickable { scale = initialScale; pan = initialPan },
+                .pressScale { scale = initialScale; pan = initialPan },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.CenterFocusStrong, "Reset view", tint = TextPrimary, modifier = Modifier.size(20.dp)) }
         }

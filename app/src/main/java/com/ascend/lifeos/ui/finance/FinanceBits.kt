@@ -202,7 +202,7 @@ internal fun ArmedDelete(modifier: Modifier = Modifier, onDelete: () -> Unit) {
     Icon(
         Icons.Rounded.Delete, if (armed) "Tap again to delete" else "Delete",
         tint = if (armed) Crit else TextDim,
-        modifier = modifier.size(16.dp).clickable {
+        modifier = modifier.size(16.dp).pressScale {
             if (armed) { Haptics.confirm(adCtx); onDelete() }
             else { Haptics.warn(adCtx); armed = true }
         },
@@ -276,7 +276,7 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
         if (value.isNotEmpty()) {
             Text(
                 "Clear", color = FinAccent, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onChange("") }.padding(4.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onChange("") }.padding(4.dp),
             )
         }
     }

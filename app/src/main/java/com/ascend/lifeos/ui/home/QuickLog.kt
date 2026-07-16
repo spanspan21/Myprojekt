@@ -101,7 +101,7 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
                         "BACK", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                            .clickable { mode = QlMode.ACTIONS }
+                            .pressScale { mode = QlMode.ACTIONS }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }

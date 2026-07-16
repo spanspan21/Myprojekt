@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.training
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -66,7 +67,7 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
-                modifier = Modifier.size(22.dp).clickable(onClick = onBack),
+                modifier = Modifier.size(22.dp).pressScale(onClick = onBack),
             )
             Spacer(Modifier.width(12.dp))
             Column {

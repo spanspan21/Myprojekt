@@ -87,7 +87,7 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                         }
                         Icon(
                             Icons.Rounded.Close, "Close", tint = TextMuted,
-                            modifier = Modifier.size(26.dp).clickable(onClick = onClose),
+                            modifier = Modifier.size(26.dp).pressScale(onClick = onClose),
                         )
                     }
                     Spacer(Modifier.height(6.dp))
@@ -175,7 +175,7 @@ private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, 
                 if (armed) Icons.Rounded.Delete else Icons.Rounded.Close,
                 if (armed) "Tap again" else "Delete set",
                 tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
-                modifier = Modifier.size(16.dp).clickable {
+                modifier = Modifier.size(16.dp).pressScale {
                     if (armed) { Haptics.confirm(seCtx); onDelete() }
                     else { Haptics.warn(seCtx); armed = true }
                 },

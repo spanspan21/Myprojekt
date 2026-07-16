@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FitnessCenter
 import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -80,7 +81,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                         }
                         Icon(
                             Icons.Rounded.Close, "Close", tint = TextMuted,
-                            modifier = Modifier.size(22.dp).clickable(onClick = onClose),
+                            modifier = Modifier.size(22.dp).pressScale(onClick = onClose),
                         )
                     }
                     Spacer(Modifier.height(16.dp))

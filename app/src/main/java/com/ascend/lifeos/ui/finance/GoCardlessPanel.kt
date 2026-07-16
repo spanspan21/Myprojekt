@@ -35,6 +35,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.finance.GcBank
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.data.finance.GoCardlessLink
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
@@ -183,7 +184,7 @@ private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: 
                     items(filtered, key = { it.id }) { b ->
                         Text(
                             b.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5,
-                            modifier = Modifier.animateItem().fillMaxWidth().clickable { onPick(b) }.padding(vertical = 12.dp),
+                            modifier = Modifier.animateItem().fillMaxWidth().pressScale { onPick(b) }.padding(vertical = 12.dp),
                         )
                     }
                 }
@@ -197,7 +198,7 @@ private fun Pill(label: String, modifier: Modifier = Modifier, filled: Boolean =
     Box(
         modifier.clip(RoundedCornerShape(11.dp))
             .background(if (filled) Mod.Finance else Ivory.copy(alpha = 0.06f))
-            .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 11.dp),
+            .pressScale(onClick = onClick).padding(horizontal = 14.dp, vertical = 11.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = if (filled) Void else TextMuted, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)

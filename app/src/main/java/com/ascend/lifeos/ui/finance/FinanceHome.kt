@@ -821,7 +821,7 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
             Modifier.size(18.dp).clip(CircleShape)
                 .background(if (r.active) FinAccent.copy(alpha = 0.18f) else Color.Transparent)
                 .border(1.dp, if (r.active) FinAccent else Ivory.copy(alpha = 0.20f), CircleShape)
-                .clickable(onClick = onToggle),
+                .pressScale(onClick = onToggle),
             contentAlignment = Alignment.Center,
         ) {
             if (r.active) Box(Modifier.size(7.dp).clip(CircleShape).background(FinAccent))

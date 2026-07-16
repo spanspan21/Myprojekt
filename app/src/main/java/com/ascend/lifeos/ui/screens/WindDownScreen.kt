@@ -69,7 +69,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
                 .padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 100.dp),
         ) {
             JarvisHeader("Wind Down", "Evening routine", WindDownAccent) {
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clip(CircleShape).clickable(onClick = onClose))
+                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clip(CircleShape).pressScale(onClick = onClose))
             }
             Spacer(Modifier.height(20.dp))
 

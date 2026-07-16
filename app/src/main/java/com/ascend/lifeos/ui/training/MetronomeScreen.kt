@@ -70,7 +70,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Metronome", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
         }

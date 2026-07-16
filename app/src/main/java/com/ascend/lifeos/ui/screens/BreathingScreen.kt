@@ -141,7 +141,7 @@ fun BreathingScreen(onClose: () -> Unit) {
             JarvisHeader("Breathe", "${rounds} rounds", BreatheAccent) {
                 Icon(
                     Icons.Rounded.Close, "Close", tint = TextDim,
-                    modifier = Modifier.size(20.dp).clip(CircleShape).clickable { Haptics.tick(ctx); onClose() },
+                    modifier = Modifier.size(20.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onClose() },
                 )
             }
             Spacer(Modifier.height(12.dp))

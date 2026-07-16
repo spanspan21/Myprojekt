@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.res.ResourcesCompat
 import com.ascend.lifeos.R
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.kit.Panel
@@ -381,7 +382,7 @@ private fun MetricChip(m: HeatMetric, selected: Boolean, onClick: () -> Unit) {
                 if (selected) m.tint.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(11.dp),
             )
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(horizontal = 13.dp, vertical = 8.dp),
     ) {
         Text(

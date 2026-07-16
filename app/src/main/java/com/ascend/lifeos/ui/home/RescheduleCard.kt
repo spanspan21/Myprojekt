@@ -167,7 +167,7 @@ private fun ReschedulePickSheet(
 private fun Step(label: String, onClick: () -> Unit) {
     Box(
         Modifier.height(46.dp).width(46.dp).clip(RoundedCornerShape(23.dp))
-            .background(Ivory.copy(alpha = 0.06f)).clickable(onClick = onClick),
+            .background(Ivory.copy(alpha = 0.06f)).pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold) }
 }

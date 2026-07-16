@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -174,7 +175,7 @@ fun NodeSheet(
 fun TaskRow(task: TaskEntity, onToggle: (Boolean) -> Unit) {
     val done = task.status == TaskStatus.DONE
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { onToggle(!done) }.padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).pressScale { onToggle(!done) }.padding(vertical = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         CheckBox(checked = done, onClick = { onToggle(!done) })
@@ -202,7 +203,7 @@ fun ResourceRow(r: ResourceEntity, accent: Color) {
             .clip(RoundedCornerShape(12.dp))
             .background(GlassFill)
             .border(0.5.dp, GlassLine, RoundedCornerShape(12.dp))
-            .clickable {
+            .pressScale {
                 if (r.url.isNotBlank()) runCatching {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.url)))
                 }

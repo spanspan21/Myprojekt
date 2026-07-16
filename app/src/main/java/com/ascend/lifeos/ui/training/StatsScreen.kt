@@ -60,7 +60,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { Haptics.tick(ctx); onBack() })
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale { Haptics.tick(ctx); onBack() })
                 Spacer(Modifier.width(12.dp))
                 Text("Statistics", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
             }

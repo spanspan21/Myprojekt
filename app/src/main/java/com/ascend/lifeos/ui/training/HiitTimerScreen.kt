@@ -85,7 +85,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
         val hCtx = androidx.compose.ui.platform.LocalContext.current
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { Haptics.tick(hCtx); onBack() })
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale { Haptics.tick(hCtx); onBack() })
             Spacer(Modifier.width(12.dp))
             Text("HIIT Timer", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
         }

@@ -677,7 +677,7 @@ private fun SetRow(
                         if (armedDel) Icons.Rounded.Delete else Icons.Rounded.Close,
                         if (armedDel) "Tap again" else "Delete set",
                         tint = if (armedDel) Crit else TextDim.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp).clickable {
+                        modifier = Modifier.size(18.dp).pressScale {
                             if (armedDel) { Haptics.confirm(ctx); onDelete() }
                             else { Haptics.warn(ctx); armedDel = true }
                         },
@@ -736,7 +736,7 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
             )
             Icon(
                 Icons.Rounded.Close, "Dismiss", tint = TextDim.copy(alpha = 0.5f),
-                modifier = Modifier.size(16.dp).clickable(onClick = onDismiss),
+                modifier = Modifier.size(16.dp).pressScale(onClick = onDismiss),
             )
         }
     }

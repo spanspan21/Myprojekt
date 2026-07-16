@@ -453,7 +453,7 @@ private fun PathDetail(d: DomainWithGraph, vm: MasterPlanViewModel, onBack: () -
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
-                    modifier = Modifier.size(22.dp).clickable(onClick = onBack),
+                    modifier = Modifier.size(22.dp).pressScale(onClick = onBack),
                 )
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {

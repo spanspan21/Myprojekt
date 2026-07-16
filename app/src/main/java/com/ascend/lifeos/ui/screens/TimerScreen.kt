@@ -93,7 +93,7 @@ fun TimerScreen(onClose: () -> Unit) {
             JarvisHeader("Timer", if (finished) "Done!" else "", TimerAccent) {
                 Icon(
                     Icons.Rounded.Close, "Close timer", tint = TextDim,
-                    modifier = Modifier.size(20.dp).clip(CircleShape).clickable(onClick = onClose),
+                    modifier = Modifier.size(20.dp).clip(CircleShape).pressScale(onClick = onClose),
                 )
             }
             Spacer(Modifier.height(12.dp))

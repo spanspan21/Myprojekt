@@ -364,7 +364,7 @@ private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
                 )
                 Icon(
                     Icons.Rounded.Close, "Cancel", tint = TextDim,
-                    modifier = Modifier.size(15.dp).clickable(onClick = onCancel),
+                    modifier = Modifier.size(15.dp).pressScale(onClick = onCancel),
                 )
             }
             Spacer(Modifier.height(11.dp))
