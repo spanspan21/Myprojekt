@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.finance.FinanceStore.HoldingKind
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Body
@@ -276,7 +277,7 @@ internal fun HoldingsSection(kind: HoldingKind, title: String, number: Int) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                 items.forEachIndexed { i, h ->
                     if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.06f)))
-                    HoldingRow(h, kind, onEdit = { edit = h }, onDelete = { FinanceStore.deleteHolding(ctx, h.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Holding deleted") })
+                    HoldingRow(h, kind, onEdit = { edit = h }, onDelete = { FinanceStore.deleteHolding(ctx, h.id); AppFeedback.show("Holding deleted") })
                 }
             }
         }
@@ -388,10 +389,10 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
             val price = if (priced) (amountCents ?: 0L) else (valueCents ?: 0L)
             if (existing != null) {
                 FinanceStore.updateHolding(ctx, existing.id, name, u, price)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Holding updated")
+                AppFeedback.show("Holding updated")
             } else {
                 FinanceStore.addHolding(ctx, kind, name, u, price)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Holding added")
+                AppFeedback.show("Holding added")
             }
             onDismiss()
         }
@@ -403,7 +404,7 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).pressScale {
                     if (armed) {
                         FinanceStore.deleteHolding(ctx, hold.id)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Holding deleted")
+                        AppFeedback.show("Holding deleted")
                         onDismiss()
                     } else armed = true
                 }.padding(vertical = 11.dp),

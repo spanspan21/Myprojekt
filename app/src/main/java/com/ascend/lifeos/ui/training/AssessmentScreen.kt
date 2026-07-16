@@ -27,7 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.data.training.ASSESS_TESTS
 import com.ascend.lifeos.data.training.ATHLETE_METRICS
@@ -320,7 +322,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         Box(
             Modifier.fillMaxWidth().padding(bottom = 36.dp)
                 .clip(RoundedCornerShape(16.dp)).background(Mod.Train)
-                .pressScale { com.ascend.lifeos.data.Haptics.epic(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Profile saved"); onDone() }.padding(vertical = 15.dp),
+                .pressScale { Haptics.epic(ctx); AppFeedback.show("Profile saved"); onDone() }.padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Save profile", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
     }

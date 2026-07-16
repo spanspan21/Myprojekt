@@ -28,9 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.life.Decision
 import com.ascend.lifeos.data.life.Decisions
 import com.ascend.lifeos.data.life.Factor
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -202,13 +204,13 @@ private fun ExpandedBody(d: Decision) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DecideButton("Decide: A", Modifier.weight(1f)) {
                     Decisions.upsert(ctx, d.copy(status = "decided", chosen = "A"))
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Decision locked in")
+                    Haptics.confirm(ctx)
+                    AppFeedback.show("Decision locked in")
                 }
                 DecideButton("Decide: B", Modifier.weight(1f)) {
                     Decisions.upsert(ctx, d.copy(status = "decided", chosen = "B"))
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Decision locked in")
+                    Haptics.confirm(ctx)
+                    AppFeedback.show("Decision locked in")
                 }
             }
         } else {
@@ -225,14 +227,14 @@ private fun ExpandedBody(d: Decision) {
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutcomeButton("Good call ✓", Good, on = d.outcomeGood == 1, modifier = Modifier.weight(1f)) {
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    Haptics.confirm(ctx)
                     Decisions.upsert(ctx, d.copy(outcomeNote = note.trim(), outcomeGood = 1))
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Outcome saved")
+                    AppFeedback.show("Outcome saved")
                 }
                 OutcomeButton("Bad call ✗", Crit, on = d.outcomeGood == -1, modifier = Modifier.weight(1f)) {
-                    com.ascend.lifeos.data.Haptics.tick(ctx)
+                    Haptics.tick(ctx)
                     Decisions.upsert(ctx, d.copy(outcomeNote = note.trim(), outcomeGood = -1))
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Outcome saved")
+                    AppFeedback.show("Outcome saved")
                 }
             }
         }
@@ -246,7 +248,7 @@ private fun ExpandedBody(d: Decision) {
             fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                .pressScale { if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); Decisions.delete(ctx, d.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Decision deleted") } else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
+                .pressScale { if (armed) { Haptics.confirm(ctx); Decisions.delete(ctx, d.id); AppFeedback.show("Decision deleted") } else { Haptics.warn(ctx); armed = true } }
                 .padding(vertical = 6.dp),
         )
     }
@@ -304,8 +306,8 @@ private fun AddFactorForm(d: Decision) {
                             ctx,
                             d.copy(factors = d.factors + Factor(Decisions.newId("f"), name.trim(), weight, scoreA, scoreB)),
                         )
-                        com.ascend.lifeos.data.Haptics.tick(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Factor added")
+                        Haptics.tick(ctx)
+                        AppFeedback.show("Factor added")
                         name = ""; weight = 3; scoreA = 3; scoreB = 3
                     } else Modifier)
                     .padding(horizontal = 14.dp, vertical = 9.dp),
@@ -338,7 +340,7 @@ private fun StepBox(sign: String, onClick: () -> Unit) {
         Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
-            .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() },
+            .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
 }
@@ -384,8 +386,8 @@ private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
                                 optionA = optionA.trim(), optionB = optionB.trim(),
                             ),
                         )
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Decision created")
+                        Haptics.confirm(ctx)
+                        AppFeedback.show("Decision created")
                         onCreate(id)
                     } else Modifier)
                     .padding(vertical = 12.dp),

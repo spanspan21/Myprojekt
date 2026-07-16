@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.prime.PrimeMath
@@ -110,8 +112,8 @@ fun BodyScreen() {
 
     val h = Repo.data.health
     val score = Repo.recoveryScoreV2(h)
-    val rdGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_GOOD, 75)
-    val rdWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_WARN, 50)
+    val rdGood = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
+    val rdWarn = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
     val scoreColor = when {
         score == null -> TextDim
         score >= rdGood -> Good
@@ -172,7 +174,7 @@ fun BodyScreen() {
                         if (sm != null) {
                             WhyRow("Sleep", "${sm / 60}h ${sm % 60}m", (sm / Repo.sleepNeedMin().toFloat()).coerceIn(0f, 1f), "Total sleep vs your ${Repo.sleepNeedMin() / 60}h target. Biggest single factor for recovery.")
                             val restShare = if (sm > 0) (h.rem + h.deep) * 100 / sm else 0
-                            val restTarget = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RESTORATIVE_PCT, 45)
+                            val restTarget = Prefs.int(ctx, Prefs.RESTORATIVE_PCT, 45)
                             WhyRow("Restorative", "$restShare%", (restShare / restTarget.toFloat()).coerceIn(0f, 1f), "Deep + REM as % of total sleep. Target: ${restTarget}%. These stages drive muscle repair and memory consolidation.")
                             val base = Repo.rhrBaseline()
                             val rhr = h.restingHr
@@ -247,8 +249,8 @@ fun BodyScreen() {
                             color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                         )
                     }
-                    val cTight = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_CONSIST_TIGHT, 30)
-                    val cOk = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_CONSIST_OK, 60)
+                    val cTight = Prefs.int(ctx, Prefs.SLEEP_CONSIST_TIGHT, 30)
+                    val cOk = Prefs.int(ctx, Prefs.SLEEP_CONSIST_OK, 60)
                     val c = when { spread <= cTight -> Good; spread <= cOk -> Warn; else -> Crit }
                     Text(
                         when { spread <= cTight -> "TIGHT"; spread <= cOk -> "OK"; else -> "DRIFTING" },
@@ -284,7 +286,7 @@ fun BodyScreen() {
                                     Icon(
                                         Icons.Rounded.Info, "Sleep score info", tint = TextDim.copy(alpha = 0.4f),
                                         modifier = Modifier.size(13.dp).clickable {
-                                            com.ascend.lifeos.ui.kit.AppFeedback.show("Duration vs target (55%) + deep/REM share (30%) + wake penalty (15%)")
+                                            AppFeedback.show("Duration vs target (55%) + deep/REM share (30%) + wake penalty (15%)")
                                         },
                                     )
                                 }
@@ -304,7 +306,7 @@ fun BodyScreen() {
                                 Icon(
                                     Icons.Rounded.Info, "Recovery info", tint = TextDim.copy(alpha = 0.4f),
                                     modifier = Modifier.size(13.dp).clickable {
-                                        com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep performance (40%) + deep/REM share (20%) + resting HR delta (25%) + training load (15%) + morning check-in")
+                                        AppFeedback.show("Sleep performance (40%) + deep/REM share (20%) + resting HR delta (25%) + training load (15%) + morning check-in")
                                     },
                                 )
                                 Spacer(Modifier.weight(1f))
@@ -334,7 +336,7 @@ fun BodyScreen() {
                             Text("14-night debt", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
                             Spacer(Modifier.weight(1f))
                             val absDebt = kotlin.math.abs(debt)
-                            val debtWarnMin = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_DEBT_WARN, 60) / 2
+                            val debtWarnMin = Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60) / 2
                             Text(
                                 "${if (debt > 0) "+" else "−"}${absDebt / 60}h ${absDebt % 60}m",
                                 color = if (debt > debtWarnMin) Crit else if (debt > 0) Warn else Good,
@@ -367,7 +369,7 @@ fun BodyScreen() {
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (sel) Mod.Body.copy(alpha = 0.14f) else Color.Transparent)
-                        .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); trendDays = d }
+                        .clickable { Haptics.tick(ctx); trendDays = d }
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                 )
             }
@@ -695,7 +697,7 @@ private fun SleepSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
-                    .pressScale { Repo.logManualSleep(minutes); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep logged"); onDismiss() }
+                    .pressScale { Repo.logManualSleep(minutes); Haptics.confirm(ctx); AppFeedback.show("Sleep logged"); onDismiss() }
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -714,7 +716,7 @@ private fun MeasurementsCard() {
     val m = Repo.data.profile.measurements
     val ctx = LocalContext.current
     // at 16 he's likely still growing — height is opt-in (Settings → Body)
-    val measures = if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.GROWTH_TRACKING, false)) {
+    val measures = if (Prefs.bool(ctx, Prefs.GROWTH_TRACKING, false)) {
         MEASURES + ("Height" to "height")
     } else MEASURES
 
@@ -794,8 +796,8 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
                     .pressScale {
                         Repo.logMeasurement(key, cm)
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Measurement saved")
+                        Haptics.confirm(ctx)
+                        AppFeedback.show("Measurement saved")
                         onDismiss()
                     }
                     .padding(vertical = 14.dp),
@@ -812,7 +814,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
 private fun WhyRow(label: String, value: String, quality: Float, hint: String? = null) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 3.dp)
-            .then(if (hint != null) Modifier.clickable { com.ascend.lifeos.ui.kit.AppFeedback.show(hint) } else Modifier),
+            .then(if (hint != null) Modifier.clickable { AppFeedback.show(hint) } else Modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, modifier = Modifier.width(86.dp))
@@ -870,7 +872,7 @@ private fun CheckInCard() {
     val ctx = LocalContext.current
     val hour = LocalTime.now().hour
     val d = Repo.bodyDay()
-    val switchHour = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.CHECKIN_SWITCH_HOUR, 15)
+    val switchHour = Prefs.int(ctx, Prefs.CHECKIN_SWITCH_HOUR, 15)
     val morning = hour < switchHour
 
     val morningDone = d?.morningEnergy != null && d.soreness != null
@@ -972,7 +974,7 @@ private fun FactorChip(label: String, on: Boolean, onToggle: (Boolean) -> Unit) 
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) Mod.Body.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) Mod.Body.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onToggle(!on) }
+            .clickable { Haptics.tick(ctx); onToggle(!on) }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) Mod.Body else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -1040,8 +1042,8 @@ private fun SickModeRow() {
                     .border(0.5.dp, if (sick) Crit.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
                     .pressScale {
                         Repo.setSickMode(!sick)
-                        com.ascend.lifeos.data.Haptics.warn(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show(if (!sick) "Sick mode on — streak paused" else "Sick mode off — back to normal")
+                        Haptics.warn(ctx)
+                        AppFeedback.show(if (!sick) "Sick mode on — streak paused" else "Sick mode off — back to normal")
                     }
                     .padding(horizontal = 13.dp, vertical = 8.dp),
             ) {
@@ -1062,7 +1064,7 @@ private fun CheckChip(label: String, color: Color, onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(11.dp))
             .background(color.copy(alpha = 0.10f))
             .border(0.5.dp, color.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-            .pressScale { com.ascend.lifeos.data.Haptics.tick(ccCtx); onClick() }
+            .pressScale { Haptics.tick(ccCtx); onClick() }
             .padding(horizontal = 15.dp, vertical = 9.dp),
     ) { Text(label, color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -1194,8 +1196,8 @@ private fun WeightSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
                     .pressScale {
                         Repo.logWeight(kg)
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Weight logged")
+                        Haptics.confirm(ctx)
+                        AppFeedback.show("Weight logged")
                         onDismiss()
                     }
                     .padding(vertical = 14.dp),

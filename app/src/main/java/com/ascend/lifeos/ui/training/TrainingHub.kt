@@ -1,8 +1,11 @@
 package com.ascend.lifeos.ui.training
 
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.animation.core.animateFloat
@@ -97,12 +100,12 @@ fun TrainingHub(
                 Text("Next split: ${vm.suggestedSplit()}", color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             // Whoop-style strain target: recovery decides how hard today may be
-            if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.STRAIN_TARGET_ON, true)) {
+            if (Prefs.bool(ctx, Prefs.STRAIN_TARGET_ON, true)) {
                 com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
                     val (lo, hi) = when {
-                        rec >= 75 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_GREEN_LO, 14) to com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_GREEN_HI, 20)
-                        rec >= 50 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_AMBER_LO, 10) to com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_AMBER_HI, 14)
-                        else -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_RED_LO, 4) to com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_RED_HI, 8)
+                        rec >= 75 -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14) to Prefs.int(ctx, Prefs.STRAIN_GREEN_HI, 20)
+                        rec >= 50 -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10) to Prefs.int(ctx, Prefs.STRAIN_AMBER_HI, 14)
+                        else -> Prefs.int(ctx, Prefs.STRAIN_RED_LO, 4) to Prefs.int(ctx, Prefs.STRAIN_RED_HI, 8)
                     }
                     Spacer(Modifier.height(3.dp))
                     val doneSets = vm.todaySetsLive // include the live session
@@ -118,8 +121,8 @@ fun TrainingHub(
                         color = if (doneSets > hi) Amber else TextDim,
                         fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable {
-                            com.ascend.lifeos.data.Haptics.tick(ctx)
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("$strainZone — recovery $rec%. Green ≥75: full volume, Amber ≥50: moderate, Red: light day")
+                            Haptics.tick(ctx)
+                            AppFeedback.show("$strainZone — recovery $rec%. Green ≥75: full volume, Amber ≥50: moderate, Red: light day")
                         },
                     )
                 }
@@ -143,7 +146,7 @@ fun TrainingHub(
         item {
             AnimatedVisibility(vm.deloadRecommended && !vm.deloadActive) {
                 Column {
-                    GlassPanel(Modifier.fillMaxWidth().pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.activateDeload(); com.ascend.lifeos.ui.kit.AppFeedback.show("Deload activated") }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
+                    GlassPanel(Modifier.fillMaxWidth().pressScale { Haptics.confirm(ctx); vm.activateDeload(); AppFeedback.show("Deload activated") }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
                         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("Deload recommended", color = Orange, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
@@ -160,7 +163,7 @@ fun TrainingHub(
                             Text("Deload week active", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Text("End", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
-                                modifier = Modifier.clickable { com.ascend.lifeos.data.Haptics.tick(ctx); vm.endDeload(); com.ascend.lifeos.ui.kit.AppFeedback.show("Deload ended") })
+                                modifier = Modifier.clickable { Haptics.tick(ctx); vm.endDeload(); AppFeedback.show("Deload ended") })
                         }
                     }
                     Spacer(Modifier.height(14.dp))
@@ -186,11 +189,11 @@ fun TrainingHub(
                         }
                         Text(
                             "Resume", color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
+                            modifier = Modifier.pressScale { Haptics.confirm(ctx); vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
                         )
                         Text(
                             "Close", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
-                            modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); vm.dismissAbandoned() }.padding(6.dp),
+                            modifier = Modifier.pressScale { Haptics.tick(ctx); vm.dismissAbandoned() }.padding(6.dp),
                         )
                     }
                 }
@@ -302,7 +305,7 @@ fun TrainingHub(
                             Modifier.clip(RoundedCornerShape(11.dp))
                                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                                .pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.regeneratePlan(); com.ascend.lifeos.ui.kit.AppFeedback.show("Plan regenerated") }
+                                .pressScale { Haptics.confirm(ctx); vm.regeneratePlan(); AppFeedback.show("Plan regenerated") }
                                 .padding(horizontal = 13.dp, vertical = 8.dp),
                         ) {
                             Text("Re-plan now", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -571,7 +574,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                             .background(Good.copy(alpha = 0.12f))
                             .border(0.5.dp, Good.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
-                            .pressScale { com.ascend.lifeos.data.Haptics.tick(heroCtx); onStart() }.padding(vertical = 12.dp),
+                            .pressScale { Haptics.tick(heroCtx); onStart() }.padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("✓ Complete — tap to redo", color = Good, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
@@ -579,7 +582,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                 } else {
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Train)
-                            .pressScale { com.ascend.lifeos.data.Haptics.confirm(heroCtx); onStart() }.padding(vertical = 12.dp),
+                            .pressScale { Haptics.confirm(heroCtx); onStart() }.padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -599,7 +602,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
     val wscCtx = LocalContext.current
     val accent = if (done) Good else Mod.Train
     GlassPanel(
-        modifier.width(250.dp).then(if (done) Modifier else Modifier.pressScale { com.ascend.lifeos.data.Haptics.tick(wscCtx); onStart() }),
+        modifier.width(250.dp).then(if (done) Modifier else Modifier.pressScale { Haptics.tick(wscCtx); onStart() }),
         corner = 16.dp,
         fill = if (done) Good.copy(alpha = 0.04f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
         line = if (done) Good.copy(alpha = 0.25f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f),
@@ -739,7 +742,7 @@ private fun StepBox(label: String, onClick: () -> Unit) {
         Modifier.size(34.dp).clip(RoundedCornerShape(9.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(9.dp))
-            .pressScale { com.ascend.lifeos.data.Haptics.tick(sbCtx); onClick() },
+            .pressScale { Haptics.tick(sbCtx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold) }
 }
@@ -856,10 +859,10 @@ private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     val stCtx = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).pressScale { com.ascend.lifeos.data.Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
         Text(value, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.ExtraBold)
         Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).pressScale { com.ascend.lifeos.data.Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
 
@@ -947,7 +950,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.horizontalGradient(listOf(Accent.copy(alpha = glow), Cyan.copy(alpha = glow * 0.7f))))
             .border(1.dp, Accent.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
-            .pressScale { com.ascend.lifeos.data.Haptics.confirm(swCtx); onClick() }
+            .pressScale { Haptics.confirm(swCtx); onClick() }
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -969,7 +972,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
 @Composable
 private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val qaCtx = LocalContext.current
-    GlassPanel(modifier.pressScale { com.ascend.lifeos.data.Haptics.tick(qaCtx); onClick() }, corner = 16.dp) {
+    GlassPanel(modifier.pressScale { Haptics.tick(qaCtx); onClick() }, corner = 16.dp) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, label, tint = Accent, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
@@ -982,7 +985,7 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = M
 private fun TemplateCard(modifier: Modifier = Modifier, tpl: WorkoutTemplate, onClick: () -> Unit) {
     val tcCtx = LocalContext.current
     val color = templateColor(tpl.split)
-    GlassPanel(modifier.width(155.dp).pressScale { com.ascend.lifeos.data.Haptics.tick(tcCtx); onClick() }, corner = 16.dp) {
+    GlassPanel(modifier.width(155.dp).pressScale { Haptics.tick(tcCtx); onClick() }, corner = 16.dp) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(color))
             Column(Modifier.padding(14.dp)) {
@@ -1198,7 +1201,7 @@ private fun ActivityQuickLog() {
                         km.replace(',', '.').toDoubleOrNull(),
                     )
                     celebrate = ActivityBests.highlight(logged, before)
-                    runCatching { com.ascend.lifeos.data.Haptics.confirm(ctx) }
+                    runCatching { Haptics.confirm(ctx) }
                     km = ""
                     open = false
                 }
@@ -1234,11 +1237,11 @@ private fun ActivityQuickLog() {
                             tint = if (actArmed) Crit else TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(14.dp).clickable {
                                 if (actArmed) {
-                                    com.ascend.lifeos.data.Haptics.warn(ctx)
+                                    Haptics.warn(ctx)
                                     com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
                                     celebrate = null
                                     armedDeleteActivity = null
-                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Activity deleted")
+                                    AppFeedback.show("Activity deleted")
                                 } else armedDeleteActivity = e.id
                             },
                         )

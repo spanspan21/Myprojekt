@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.data.Backup
 import com.ascend.lifeos.data.CrashLog
@@ -35,6 +36,7 @@ import com.ascend.lifeos.data.Protocols
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.kit.Panel
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.launch
@@ -93,7 +95,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 val ok = Backup.runNow(ctx)
                 backupState = if (ok) "Backup written ✓" else "Folder set — backup failed"
-                if (ok) com.ascend.lifeos.ui.kit.AppFeedback.show("Backup saved successfully")
+                if (ok) AppFeedback.show("Backup saved successfully")
             }
         }
     }
@@ -877,7 +879,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 themeId = spec.id
                                 Prefs.setString(ctx, Prefs.THEME, spec.id)
                                 com.ascend.lifeos.ui.theme.applyTheme(spec.id)
-                                com.ascend.lifeos.data.Haptics.tick(ctx)
+                                Haptics.tick(ctx)
                             }
                             .padding(7.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1030,7 +1032,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             { "Synced ✓ ($it sections) — open your dashboard" },
                             { "Failed: ${it.message?.take(80)}" },
                         )
-                        r.onSuccess { com.ascend.lifeos.ui.kit.AppFeedback.show("Synced $it sections to dashboard") }
+                        r.onSuccess { AppFeedback.show("Synced $it sections to dashboard") }
                     }
                 }
             }
@@ -1044,7 +1046,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                         val ok = Backup.runNow(ctx)
                         backupState = if (ok) "Backup written ✓" else "Backup failed"
-                    if (ok) com.ascend.lifeos.ui.kit.AppFeedback.show("Backup saved successfully")
+                    if (ok) AppFeedback.show("Backup saved successfully")
                     }
                 } else runCatching { folderPicker.launch(null) }
             }
@@ -1122,7 +1124,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 }
                 ActionRow("Clear crash logs", "Removes all stored reports") {
                     CrashLog.clear(ctx); crashStamp = null
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Crash logs cleared")
+                    AppFeedback.show("Crash logs cleared")
                 }
             }
         }

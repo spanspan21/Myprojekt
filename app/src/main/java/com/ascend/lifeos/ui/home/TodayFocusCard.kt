@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.prime.PrimeDirective
 import com.ascend.lifeos.data.prime.PrimeEngine
 import com.ascend.lifeos.ui.kit.Panel
@@ -44,7 +45,7 @@ import java.time.LocalTime
 @Composable
 fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
-    val cutoff = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_CARD_CUTOFF, 12)
+    val cutoff = Prefs.int(ctx, Prefs.FOCUS_CARD_CUTOFF, 12)
     if (LocalTime.now().hour >= cutoff) return
 
     val directives by produceState<List<PrimeDirective>>(emptyList()) {

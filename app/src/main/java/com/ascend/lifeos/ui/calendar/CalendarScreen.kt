@@ -53,6 +53,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.CalendarSync
+import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.calendar.*
 import com.ascend.lifeos.ui.kit.*
 import com.ascend.lifeos.ui.motion.Motion
@@ -144,11 +146,11 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
     // "imports itself": throttled feed refresh on open (Room flows update the UI)
     LaunchedEffect(Unit) {
         runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(ctx) }
-        if (!com.ascend.lifeos.data.Prefs.bool(ctx, "hint_cal_ics", false)) {
+        if (!Prefs.bool(ctx, "hint_cal_ics", false)) {
             val streak = com.ascend.lifeos.data.Repo.data.profile.streak
             if (streak >= 3) {
-                com.ascend.lifeos.data.Prefs.setBool(ctx, "hint_cal_ics", true)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Tip: Add ICS feeds in Settings for automatic timetable sync")
+                Prefs.setBool(ctx, "hint_cal_ics", true)
+                AppFeedback.show("Tip: Add ICS feeds in Settings for automatic timetable sync")
             }
         }
     }
@@ -195,7 +197,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                         Box(
                             Modifier.clip(RoundedCornerShape(9.dp)).background(c.copy(alpha = 0.12f))
                                 .border(0.5.dp, c.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
+                                .pressScale { Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                         ) {
                             Text(b.title, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -225,7 +227,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 110.dp)
                 .size(54.dp).clip(CircleShape)
                 .background(Mod.Calendar)
-                .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); prefillStart = null; addOpen = true },
+                .pressScale { Haptics.tick(ctx); prefillStart = null; addOpen = true },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.Add, "Add event", tint = Void, modifier = Modifier.size(24.dp)) }
 
@@ -254,8 +256,8 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             prefillStart = prefillStart,
             onSave = { title, type, d, endD, s, e, allDay, mask ->
                 vm.add(title, type, d, endD, s, e, allDay, mask)
-                com.ascend.lifeos.data.Haptics.confirm(ctx)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Event added")
+                Haptics.confirm(ctx)
+                AppFeedback.show("Event added")
                 addOpen = false
             },
             onDismiss = { addOpen = false },
@@ -264,9 +266,9 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 
     detailBlock?.let { b ->
         EventDetailSheet(b, onDelete = {
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
+            Haptics.confirm(ctx)
             vm.delete(b.id); detailBlock = null
-            com.ascend.lifeos.ui.kit.AppFeedback.show("Event deleted")
+            AppFeedback.show("Event deleted")
         }, onDismiss = { detailBlock = null })
     }
 }
@@ -280,7 +282,7 @@ private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSel
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             Icons.Rounded.ChevronLeft, "Previous week", tint = TextDim,
-            modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
+            modifier = Modifier.size(22.dp).clickable { Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
         )
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceEvenly) {
             for (i in 0..6) {
@@ -290,7 +292,7 @@ private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSel
         }
         Icon(
             Icons.Rounded.ChevronRight, "Next week", tint = TextDim,
-            modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
+            modifier = Modifier.size(22.dp).clickable { Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
         )
     }
 }
@@ -485,7 +487,7 @@ private fun MonthDayCell(
                 },
                 RoundedCornerShape(11.dp),
             )
-            .clickable { com.ascend.lifeos.data.Haptics.tick(mdcCtx); onClick() },
+            .clickable { Haptics.tick(mdcCtx); onClick() },
     ) {
         if (hasHockey) {
             Box(
@@ -587,7 +589,7 @@ private fun IcsFeedRow() {
                         scope.launch {
                             IcsSync.removeFeed(ctx)
                             expanded = false; input = ""; error = null; tick++
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Feed removed")
+                            AppFeedback.show("Feed removed")
                         }
                         armedRemoveFeed = false
                     } else armedRemoveFeed = true
@@ -705,8 +707,8 @@ private fun DayTimelineView(
     onSlotTap: (FreeSlot) -> Unit,
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    val HOUR_START = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.CAL_HOUR_START, 6)
-    val HOUR_END = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.CAL_HOUR_END, 23)
+    val HOUR_START = Prefs.int(ctx, Prefs.CAL_HOUR_START, 6)
+    val HOUR_END = Prefs.int(ctx, Prefs.CAL_HOUR_END, 23)
     val totalHours = HOUR_END - HOUR_START
     val scroll = rememberScrollState()
 
@@ -745,7 +747,7 @@ private fun DayTimelineView(
         }
 
         // free slots (ghost, tappable) — optionally tagged with the hour's weather
-        val weatherOn = com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.WEATHER_SLOTS, true)
+        val weatherOn = Prefs.bool(ctx, Prefs.WEATHER_SLOTS, true)
         LaunchedEffect(weatherOn, t.day) {
             if (weatherOn && t.day == LocalDate.now()) {
                 runCatching { com.ascend.lifeos.data.WeatherRepo.refresh(ctx) }
@@ -920,7 +922,7 @@ private fun QuickAddSheet(
                         Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (on) c.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                            .clickable { com.ascend.lifeos.data.Haptics.tick(addCtx); type = t }
+                            .clickable { Haptics.tick(addCtx); type = t }
                             .padding(horizontal = 11.dp, vertical = 7.dp),
                     ) {
                         Text(eventLabel(t), color = if (on) c else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -970,7 +972,7 @@ private fun QuickAddSheet(
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-                            .clickable { com.ascend.lifeos.data.Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
+                            .clickable { Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
                     ) { Text("−", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
                     Text(
@@ -980,7 +982,7 @@ private fun QuickAddSheet(
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-                            .clickable { com.ascend.lifeos.data.Haptics.tick(addCtx); holidayDays += 1 },
+                            .clickable { Haptics.tick(addCtx); holidayDays += 1 },
                         contentAlignment = Alignment.Center,
                     ) { Text("+", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
                 }
@@ -991,7 +993,7 @@ private fun QuickAddSheet(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
                     .background(Mod.Calendar)
                     .pressScale {
-                        com.ascend.lifeos.data.Haptics.confirm(addCtx)
+                        Haptics.confirm(addCtx)
                         onSave(
                             title, type, day,
                             if (isHoliday) day.plusDays((holidayDays - 1).toLong()) else day,
@@ -1024,7 +1026,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
         ) {
             Text(
                 "−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                modifier = Modifier.clip(CircleShape).clickable { Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
             Text(
                 CalendarRepo.fmtMin(value), color = TextPrimary, style = metricStyle(16),
@@ -1032,7 +1034,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
             )
             Text(
                 "+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                modifier = Modifier.clip(CircleShape).clickable { Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
     }
@@ -1068,7 +1070,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                    .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
+                    .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1093,8 +1095,8 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                     .background(Crit.copy(alpha = if (armedDelete) 0.20f else 0.10f))
                     .border(0.5.dp, Crit.copy(alpha = if (armedDelete) 0.6f else 0.35f), RoundedCornerShape(14.dp))
                     .pressScale {
-                        if (armedDelete) { com.ascend.lifeos.data.Haptics.confirm(ctx); onDelete() }
-                        else { com.ascend.lifeos.data.Haptics.warn(ctx); armedDelete = true }
+                        if (armedDelete) { Haptics.confirm(ctx); onDelete() }
+                        else { Haptics.warn(ctx); armedDelete = true }
                     }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
@@ -1176,7 +1178,7 @@ private fun UntisRow() {
                     Icon(
                         Icons.Rounded.Close, "Remove WebUntis", tint = TextDim,
                         modifier = Modifier.size(16.dp).clickable {
-                            scope.launch { UntisSync.remove(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("WebUntis removed"); tick++; status = "Removed" }
+                            scope.launch { UntisSync.remove(ctx); AppFeedback.show("WebUntis removed"); tick++; status = "Removed" }
                         },
                     )
                 }
@@ -1438,7 +1440,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         Modifier.size(19.dp).clip(CircleShape)
                             .background(if (t.done) Mod.Calendar else Color.Transparent)
                             .border(1.dp, if (t.done) Mod.Calendar else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
-                            .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
+                            .clickable { Haptics.tick(ctx); com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
                         contentAlignment = Alignment.Center,
                     ) { if (t.done) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(11.dp))
@@ -1467,7 +1469,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                             .clickable {
                                 if (taskArmed) { scope.launch {
                                     com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id)
-                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Task deleted")
+                                    AppFeedback.show("Task deleted")
                                 }; armedDeleteTask = null }
                                 else armedDeleteTask = t.id
                             }
@@ -1485,7 +1487,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Mod.Calendar.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
                     .then(if (tasks.any { !it.done }) Modifier.pressScale {
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        Haptics.confirm(ctx)
                         planNote = "Planning…"
                         scope.launch {
                             // plan() runs synchronous device-calendar ContentResolver

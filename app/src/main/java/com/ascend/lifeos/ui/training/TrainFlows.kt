@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.PrType
 import com.ascend.lifeos.data.training.TrainBrain
 import com.ascend.lifeos.ui.kit.ProgressDots
@@ -131,7 +132,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         Spacer(Modifier.height(26.dp))
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ember)
-                .pressScale { com.ascend.lifeos.data.Haptics.confirm(sumCtx); vm.dismissSummary(); onDone() }
+                .pressScale { Haptics.confirm(sumCtx); vm.dismissSummary(); onDone() }
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Done", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
@@ -224,7 +225,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                         .background(if (value > 0) ember else ember.copy(alpha = 0.2f))
                         .then(if (value > 0) Modifier.pressScale {
                             result = value >= target
-                            if (value >= target) com.ascend.lifeos.data.Haptics.epic(ctx) else com.ascend.lifeos.data.Haptics.warn(ctx)
+                            if (value >= target) Haptics.epic(ctx) else Haptics.warn(ctx)
                         } else Modifier)
                         .padding(vertical = 15.dp),
                     contentAlignment = Alignment.Center,
@@ -261,7 +262,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Spacer(Modifier.height(36.dp))
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Good)
-                            .pressScale { com.ascend.lifeos.data.Haptics.success(ctx); onDone() }.padding(vertical = 15.dp),
+                            .pressScale { Haptics.success(ctx); onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Continue", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
                 }
@@ -287,7 +288,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
-                            .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onDone() }.padding(vertical = 15.dp),
+                            .pressScale { Haptics.tick(ctx); onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Back to training", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
                 }

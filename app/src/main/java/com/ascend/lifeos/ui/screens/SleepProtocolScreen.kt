@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.sleep.NightLog
@@ -73,8 +75,8 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         if (sleepScore != null || h?.sleepMin != null) {
             Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val ssGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_SCORE_GOOD, 75)
-                    val ssWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_SCORE_WARN, 55)
+                    val ssGood = Prefs.int(ctx, Prefs.SLEEP_SCORE_GOOD, 75)
+                    val ssWarn = Prefs.int(ctx, Prefs.SLEEP_SCORE_WARN, 55)
                     val sColor = when {
                         sleepScore == null -> TextDim
                         sleepScore >= ssGood -> Good
@@ -102,7 +104,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                             SleepStageRow("Light", h.light, total, Mod.Body)
                             SleepStageRow("Awake", h.awake, total, TextDim)
                         }
-                        if (sleepDebt > com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_DEBT_WARN, 60)) {
+                        if (sleepDebt > Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60)) {
                             Spacer(Modifier.height(6.dp))
                             Text(
                                 "Sleep debt ${sleepDebt / 60}h ${sleepDebt % 60}m",
@@ -147,7 +149,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(12.dp))
                         .background(if (napLogged) Good.copy(alpha = 0.15f) else Mod.Body)
-                        .then(if (!napLogged) Modifier.pressScale { SleepStore.logNap(ctx, napMin); napLogged = true; com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Nap logged") } else Modifier)
+                        .then(if (!napLogged) Modifier.pressScale { SleepStore.logNap(ctx, napMin); napLogged = true; Haptics.confirm(ctx); AppFeedback.show("Nap logged") } else Modifier)
                         .padding(horizontal = 20.dp, vertical = 10.dp),
                 ) {
                     Text(
@@ -294,8 +296,8 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                         .pressScale {
                             SleepStore.upsertLog(ctx, NightLog(prevKey(todayKey()), bed, onset, nightWake, finalWake, up))
                             saved = true
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep log saved")
+                            Haptics.confirm(ctx)
+                            AppFeedback.show("Sleep log saved")
                         }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
@@ -329,8 +331,8 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                         color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
                     )
                 } else {
-                    val seGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_EFF_GOOD, 90)
-                    val seWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_EFF_WARN, 85)
+                    val seGood = Prefs.int(ctx, Prefs.SLEEP_EFF_GOOD, 90)
+                    val seWarn = Prefs.int(ctx, Prefs.SLEEP_EFF_WARN, 85)
                     val c = when { latest >= seGood.toFloat() -> Good; latest >= seWarn.toFloat() -> Warn; else -> Crit }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -396,7 +398,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(if (canStart) Mod.Body else Mod.Body.copy(alpha = 0.25f))
-                    .then(if (canStart) Modifier.pressScale { SleepStore.startRestriction(ctx); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep restriction started") } else Modifier)
+                    .then(if (canStart) Modifier.pressScale { SleepStore.startRestriction(ctx); Haptics.confirm(ctx); AppFeedback.show("Sleep restriction started") } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Start restriction", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

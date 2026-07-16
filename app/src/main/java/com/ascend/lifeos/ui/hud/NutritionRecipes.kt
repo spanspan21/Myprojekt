@@ -61,6 +61,7 @@ import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.RecipeDb
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.ShopItem
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -268,7 +269,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                                             modifier = Modifier.pressScale {
                                                 val missing = rec.parts.filter { !matchesPantry(it.name, pantry) }
                                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = rec.title) })
-                                                com.ascend.lifeos.ui.kit.AppFeedback.show("Added to shopping list")
+                                                AppFeedback.show("Added to shopping list")
                                             }.padding(top = 2.dp),
                                         )
                                     }
@@ -475,11 +476,11 @@ private fun RecipeCard(
                             nutrients = nut,
                             microsEstimated = nut.isNotEmpty(),
                         ))
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("${r.title} logged")
+                        AppFeedback.show("${r.title} logged")
                     }
                     HudButton("+ Shopping", Modifier.weight(1f), primary = false) {
                         Repo.addToShoppingQty(r.parts.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Added to shopping list")
+                        AppFeedback.show("Added to shopping list")
                     }
                 }
                 if (r.steps.isNotEmpty()) {
@@ -497,7 +498,7 @@ private fun RecipeCard(
                             if (armed) {
                                 Haptics.confirm(ctx)
                                 com.ascend.lifeos.data.OwnRecipes.delete(r.id)
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Recipe deleted")
+                                AppFeedback.show("Recipe deleted")
                             } else armed = true
                         }.padding(horizontal = 6.dp, vertical = 3.dp),
                     )
@@ -512,7 +513,7 @@ private fun RecipeCard(
                             color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
                             modifier = Modifier.pressScale {
                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("${missing.size} items added to list")
+                                AppFeedback.show("${missing.size} items added to list")
                             },
                         )
                     }
@@ -657,7 +658,7 @@ fun ShoppingView(onBack: () -> Unit) {
                     Text("Clear checked", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
                         Haptics.tick(ctx)
                         Repo.clearShoppingChecked()
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Checked items cleared")
+                        AppFeedback.show("Checked items cleared")
                     }.padding(horizontal = 12.dp, vertical = 8.dp))
                 }
                 var armedClearAll by remember { mutableStateOf(false) }
@@ -670,7 +671,7 @@ fun ShoppingView(onBack: () -> Unit) {
                         if (armedClearAll) {
                             Haptics.confirm(ctx)
                             Repo.clearShopping()
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Shopping list cleared")
+                            AppFeedback.show("Shopping list cleared")
                             armedClearAll = false
                         } else armedClearAll = true
                     }.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -682,7 +683,7 @@ fun ShoppingView(onBack: () -> Unit) {
 
 @Composable
 private fun BackBox(onBack: () -> Unit) {
-    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() }, contentAlignment = Alignment.Center) {
+    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
         Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
     }
 }
@@ -996,7 +997,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                         steps = steps, servings = servings, minutes = minutes.toIntOrNull(), own = true,
                     ),
                 )
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Recipe saved")
+                AppFeedback.show("Recipe saved")
                 onClose()
             }
             Spacer(Modifier.height(10.dp))

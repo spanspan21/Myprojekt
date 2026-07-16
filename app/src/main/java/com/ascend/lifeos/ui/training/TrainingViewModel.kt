@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.training.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -147,7 +148,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         private set
     /** true = recommended (JARVIS auto-places sessions); false = custom (you do). */
     var autoSchedule by mutableStateOf(
-        com.ascend.lifeos.data.Prefs.bool(getApplication(), com.ascend.lifeos.data.Prefs.TRAIN_AUTO_SCHEDULE, true),
+        Prefs.bool(getApplication(), Prefs.TRAIN_AUTO_SCHEDULE, true),
     )
         private set
     var muscleFreshness by mutableStateOf<MuscleRecovery.Freshness?>(null)
@@ -155,7 +156,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Switch between recommended (auto) and custom (manual) scheduling. */
     fun setScheduleMode(on: Boolean) {
-        com.ascend.lifeos.data.Prefs.setBool(getApplication(), com.ascend.lifeos.data.Prefs.TRAIN_AUTO_SCHEDULE, on)
+        Prefs.setBool(getApplication(), Prefs.TRAIN_AUTO_SCHEDULE, on)
         autoSchedule = on
         if (on) regeneratePlan()   // recommended → wipe + re-distribute right away
     }
@@ -227,13 +228,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         runCatching { com.ascend.lifeos.data.calendar.CalendarRepo.clearPastTraining(getApplication()) }
         // A deload is a real 7-day week: restore it from prefs each time we build the
         // plan, so it survives an app restart and expires on its own after the week.
-        val deloadUntil = com.ascend.lifeos.data.Prefs.int(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
+        val deloadUntil = Prefs.int(getApplication(), Prefs.DELOAD_UNTIL, 0)
         deloadActive = deloadUntil > 0 && java.time.LocalDate.now().toEpochDay().toInt() < deloadUntil
         // An automation (a fired TRAIN_EASY rule) can force today into an easy,
         // deload-style session — this is what makes that action real end-to-end,
         // reusing the tested deload path rather than new plan logic (audit F3/F5).
-        val easyOverride = com.ascend.lifeos.data.Prefs.string(
-            getApplication(), com.ascend.lifeos.data.Prefs.TRAIN_EASY_DAY, "",
+        val easyOverride = Prefs.string(
+            getApplication(), Prefs.TRAIN_EASY_DAY, "",
         ) == com.ascend.lifeos.core.todayKey()
         if (easyOverride) deloadActive = true
         val p = com.ascend.lifeos.data.Repo.data.profile
@@ -279,7 +280,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             deload = deloadActive, readiness = readiness,
             trainWeek = currentTrainWeek(), freshness = fresh,
             sickMode = p.sickMode, examWeek = examSoon,
-            seasonPhase = com.ascend.lifeos.data.Prefs.string(getApplication(), com.ascend.lifeos.data.Prefs.SEASON_PHASE, ""),
+            seasonPhase = Prefs.string(getApplication(), Prefs.SEASON_PHASE, ""),
             highStrain = highStrain,
             daysSinceLastSession = daysSince,
         )
@@ -467,7 +468,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun defaultRestSec(): Int =
-        com.ascend.lifeos.data.Prefs.int(getApplication(), com.ascend.lifeos.data.Prefs.DEFAULT_REST_SEC, 90)
+        Prefs.int(getApplication(), Prefs.DEFAULT_REST_SEC, 90)
 
     fun setCurrentExercise(index: Int) {
         activeCurrentExIndex = index.coerceIn(0, (activeExercises.size - 1).coerceAtLeast(0))
@@ -522,8 +523,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 val next = partners[(pos + 1) % partners.size]
                 activeCurrentExIndex = next.index
                 if ((pos + 1) % partners.size != 0) {
-                    val intra = com.ascend.lifeos.data.Prefs.int(
-                        getApplication(), com.ascend.lifeos.data.Prefs.SS_INTRA_REST, 0,
+                    val intra = Prefs.int(
+                        getApplication(), Prefs.SS_INTRA_REST, 0,
                     )
                     if (intra > 0) startRestTimer(intra)
                     return
@@ -755,7 +756,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         restTimerRunning = true
         // off-screen countdown: chronometer notification, auto-expires
         val ctx = getApplication<Application>()
-        if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.REST_NOTIFICATION, true)) {
+        if (Prefs.bool(ctx, Prefs.REST_NOTIFICATION, true)) {
             runCatching {
                 com.ascend.lifeos.data.Notifier.ensureChannel(ctx)
                 val n = androidx.core.app.NotificationCompat.Builder(ctx, com.ascend.lifeos.data.Notifier.CHANNEL)
@@ -947,12 +948,12 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // Persist a real 7-day deload week, then rebuild NOW so the lighter sessions
         // (2 sets, no vest, softer holds) show immediately instead of on next hub entry.
         val until = java.time.LocalDate.now().toEpochDay().toInt() + 7
-        com.ascend.lifeos.data.Prefs.setInt(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, until)
+        Prefs.setInt(getApplication(), Prefs.DELOAD_UNTIL, until)
         deloadActive = true
         regeneratePlan()
     }
     fun endDeload() {
-        com.ascend.lifeos.data.Prefs.setInt(getApplication(), com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
+        Prefs.setInt(getApplication(), Prefs.DELOAD_UNTIL, 0)
         deloadActive = false; deloadRecommended = false
         regeneratePlan()
     }

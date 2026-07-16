@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.training
 
 import android.content.Context
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -69,8 +70,8 @@ fun ActiveWorkoutScreen(
             vm.tickRestTimer()
             val rem = vm.restTimerRemaining
             // countdown warns, the finish rewards — two different textures
-            if (rem in listOf(10, 5)) com.ascend.lifeos.data.Haptics.warn(ctx)
-            if (rem == 0) com.ascend.lifeos.data.Haptics.success(ctx)
+            if (rem in listOf(10, 5)) Haptics.warn(ctx)
+            if (rem == 0) Haptics.success(ctx)
             if (rem < -5) vm.skipRestTimer()
         }
     }
@@ -103,7 +104,7 @@ fun ActiveWorkoutScreen(
                             .pressScale { formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                     ) { Icon(Icons.Rounded.Videocam, "Form video", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     // experimental rep counter (Settings → Training)
-                    if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.AUTO_COUNT, false)) {
+                    if (Prefs.bool(ctx, Prefs.AUTO_COUNT, false)) {
                         Spacer(Modifier.width(8.dp))
                         Box(
                             Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
@@ -118,7 +119,7 @@ fun ActiveWorkoutScreen(
                             .border(0.5.dp, Red.copy(alpha = if (armedCancel) 0.6f else 0.3f), RoundedCornerShape(12.dp))
                             .pressScale {
                                 if (armedCancel) { vm.cancelWorkout(); onFinish() }
-                                else { com.ascend.lifeos.data.Haptics.warn(ctx); armedCancel = true }
+                                else { Haptics.warn(ctx); armedCancel = true }
                             }.padding(horizontal = 14.dp, vertical = 9.dp),
                     ) { Text(if (armedCancel) "Sure?" else "Cancel", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
                 }
@@ -246,9 +247,9 @@ fun ActiveWorkoutScreen(
                 // eine Information, kein Nag
                 val toTarget = com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
                     val lo = when {
-                        rec >= 75 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_GREEN_LO, 14)
-                        rec >= 50 -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_AMBER_LO, 10)
-                        else -> com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STRAIN_RED_LO, 4)
+                        rec >= 75 -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14)
+                        rec >= 50 -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10)
+                        else -> Prefs.int(ctx, Prefs.STRAIN_RED_LO, 4)
                     }
                     lo - vm.todaySetsLive
                 }
@@ -261,7 +262,7 @@ fun ActiveWorkoutScreen(
                 }
                 val btnText = if (totalSets > 0) "Finish workout ($totalSets sets)" else "Finish workout"
                 HudButton(btnText, Modifier.fillMaxWidth(), enabled = totalSets > 0) {
-                    com.ascend.lifeos.data.Haptics.success(ctx)
+                    Haptics.success(ctx)
                     vm.finishWorkout(); onFinish()
                 }
             }
@@ -416,7 +417,7 @@ private fun ExerciseSetLogger(
                 Spacer(Modifier.height(4.dp))
                 val bannerCtx = androidx.compose.ui.platform.LocalContext.current
                 val intraRest = remember {
-                    com.ascend.lifeos.data.Prefs.int(bannerCtx, com.ascend.lifeos.data.Prefs.SS_INTRA_REST, 0)
+                    Prefs.int(bannerCtx, Prefs.SS_INTRA_REST, 0)
                 }
                 Text(
                     if (intraRest > 0) "Alternate sets — ${intraRest}s breather between partners, full rest after the round"
@@ -590,7 +591,7 @@ private fun ExerciseSetLogger(
             val setNum = ex.loggedSets.size + 1
             val btnText = "Log set $setNum"
             HudButton(btnText, Modifier.fillMaxWidth()) {
-                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                Haptics.confirm(ctx)
                 // Holds: the stepper value IS the seconds → route to holdSeconds,
                 // count the hold as one rep so set/volume math stays sane.
                 vm.logSet(
@@ -816,7 +817,7 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
     )
     // the Apple-Pay triple: visual + haptic + sound land on the same keyframe
     LaunchedEffect(pr) {
-        com.ascend.lifeos.data.Haptics.epic(ctx)
+        Haptics.epic(ctx)
         runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
         delay(8000); onDismiss()
     }
@@ -892,7 +893,7 @@ private fun supersetColor(orderIdx: Int): Color {
 @Composable
 private fun PlateHint(targetKg: Double, ctx: Context) {
     var barId by remember {
-        mutableStateOf(com.ascend.lifeos.data.Prefs.string(ctx, com.ascend.lifeos.data.Prefs.PLATE_BAR, "belt"))
+        mutableStateOf(Prefs.string(ctx, Prefs.PLATE_BAR, "belt"))
     }
     val bar = PlateMath.barById(barId)
     val load = PlateMath.solve(targetKg, bar) ?: return
@@ -908,7 +909,7 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
                     val i = PlateMath.BARS.indexOfFirst { it.id == barId }
                     val next = PlateMath.BARS[(i + 1) % PlateMath.BARS.size].id
                     barId = next
-                    com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.PLATE_BAR, next)
+                    Prefs.setString(ctx, Prefs.PLATE_BAR, next)
                 }
                 .padding(horizontal = 4.dp, vertical = 2.dp),
         )

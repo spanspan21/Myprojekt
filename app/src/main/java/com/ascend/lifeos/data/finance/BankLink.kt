@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.ascend.lifeos.data.Haptics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -231,7 +232,7 @@ object BankLink {
                 completeAuth(ctx.applicationContext, code)
                 val n = syncNow(ctx.applicationContext)
                 status = "Verbunden ✓ · $n Umsätze importiert"
-                com.ascend.lifeos.data.Haptics.success(ctx.applicationContext)
+                Haptics.success(ctx.applicationContext)
             } catch (e: Exception) {
                 status = "Fehler: ${e.message?.take(160)}"
             } finally {

@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -39,6 +41,7 @@ import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.data.calendar.EventType
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -310,14 +313,14 @@ object CommandEngine {
 
         // ---- deload toggle: "deload" / "deload off" ---------------------------
         if (q == "deload") {
-            val cur = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
+            val cur = Prefs.int(ctx, Prefs.DELOAD_UNTIL, 0)
             val today = LocalDate.now().toEpochDay().toInt()
             if (cur > 0 && cur >= today) {
-                com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0)
+                Prefs.setInt(ctx, Prefs.DELOAD_UNTIL, 0)
                 return CmdResult.Done("Deload ended — back to full training")
             } else {
                 val until = today + 7
-                com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, until)
+                Prefs.setInt(ctx, Prefs.DELOAD_UNTIL, until)
                 return CmdResult.Done("Deload week started — lighter loads for 7 days")
             }
         }
@@ -671,14 +674,14 @@ private suspend fun runCommand(
 ) {
     when (val r = CommandEngine.execute(raw, ctx)) {
         is CmdResult.Done -> {
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
+            Haptics.confirm(ctx)
             setFeedback(r.feedback to true)
             delay(900)
             onDismiss()
-            com.ascend.lifeos.ui.kit.AppFeedback.show(r.feedback)
+            AppFeedback.show(r.feedback)
         }
         is CmdResult.Navigate -> {
-            com.ascend.lifeos.data.Haptics.tick(ctx)
+            Haptics.tick(ctx)
             onNavigate(r.target)
             onDismiss()
         }

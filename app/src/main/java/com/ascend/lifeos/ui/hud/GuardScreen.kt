@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.hud
 
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -62,6 +64,7 @@ import com.ascend.lifeos.ui.motion.pressScale
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.Panel
@@ -148,9 +151,9 @@ fun GuardScreen() {
     val windowViolations = remember(tick) { WellbeingStore.windowViolationsToday(ctx, com.ascend.lifeos.core.todayKey()) }
     val budgetPart = (45f * (1f - usedMin.toFloat() / budget)).coerceIn(0f, 45f)
     val unlockPart = (20f * (1f - unlocks / 60f)).coerceIn(0f, 20f)
-    val puGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PICKUP_HOUR_GOOD, 8)
-    val puOk = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PICKUP_HOUR_OK, 7)
-    val puLate = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PICKUP_HOUR_LATE, 6)
+    val puGood = Prefs.int(ctx, Prefs.PICKUP_HOUR_GOOD, 8)
+    val puOk = Prefs.int(ctx, Prefs.PICKUP_HOUR_OK, 7)
+    val puLate = Prefs.int(ctx, Prefs.PICKUP_HOUR_LATE, 6)
     val pickupPart = when {
         firstPickup == null -> 7f
         firstPickup!! >= puGood * 60 -> 10f
@@ -161,8 +164,8 @@ fun GuardScreen() {
     val doomPart = (15f - dsSnoozes * 5f).coerceIn(0f, 15f)
     val schedulePart = (10f - windowViolations * 5f).coerceIn(0f, 10f)
     val focusScore = if (data == null) null else (budgetPart + unlockPart + pickupPart + doomPart + schedulePart).toInt()
-    val focusGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_GOOD, 70)
-    val focusWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_WARN, 45)
+    val focusGood = Prefs.int(ctx, Prefs.FOCUS_GOOD, 70)
+    val focusWarn = Prefs.int(ctx, Prefs.FOCUS_WARN, 45)
     val rawScoreColor = when {
         focusScore == null -> TextDim
         focusScore >= focusGood -> Good
@@ -409,10 +412,10 @@ fun GuardScreen() {
                         }
                         if (morningUntil > 0) {
                             Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; com.ascend.lifeos.data.Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; com.ascend.lifeos.data.Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Spacer(Modifier.width(6.dp))
                         }
                         TogglePill(morningUntil > 0) {
@@ -471,7 +474,7 @@ fun GuardScreen() {
                                 Box(
                                     Modifier.clip(RoundedCornerShape(10.dp))
                                         .background(if (sel) Mod.Guard.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                                        .clickable { WellbeingStore.setWindDownStartMin(ctx, m); tick++; com.ascend.lifeos.data.Haptics.tick(ctx) }
+                                        .clickable { WellbeingStore.setWindDownStartMin(ctx, m); tick++; Haptics.tick(ctx) }
                                         .padding(horizontal = 10.dp, vertical = 7.dp),
                                 ) {
                                     Text(
@@ -826,7 +829,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                     Text(
                         "Resume now",
                         color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onResume(); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard resumed") }
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onResume(); Haptics.confirm(ctx); AppFeedback.show("Guard resumed") }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
@@ -842,9 +845,9 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
             } else {
                 Spacer(Modifier.height(7.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    HudChip("15m", selected = false) { onPause(now + 15 * 60_000L); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard paused for 15 min") }
-                    HudChip("1h", selected = false) { onPause(now + 60 * 60_000L); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard paused for 1 hour") }
-                    HudChip("Rest of day", selected = false) { onPause(next6amMs()); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard paused until tomorrow") }
+                    HudChip("15m", selected = false) { onPause(now + 15 * 60_000L); Haptics.warn(ctx); AppFeedback.show("Guard paused for 15 min") }
+                    HudChip("1h", selected = false) { onPause(now + 60 * 60_000L); Haptics.warn(ctx); AppFeedback.show("Guard paused for 1 hour") }
+                    HudChip("Rest of day", selected = false) { onPause(next6amMs()); Haptics.warn(ctx); AppFeedback.show("Guard paused until tomorrow") }
                 }
                 Spacer(Modifier.height(5.dp))
                 Text(
@@ -903,7 +906,7 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(Crit.copy(alpha = 0.12f))
                             .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                            .pressScale { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); com.ascend.lifeos.data.Haptics.warn(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Focus session ended") }
+                            .pressScale { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); Haptics.warn(ctx); AppFeedback.show("Focus session ended") }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
                     ) { Text("End early", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -914,7 +917,7 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                     color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body,
                 )
                 Spacer(Modifier.height(10.dp))
-                val customMin = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FOCUS_CUSTOM_MIN, 45)
+                val customMin = Prefs.int(ctx, Prefs.FOCUS_CUSTOM_MIN, 45)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(25, customMin, 90).forEach { min ->
                         Box(
@@ -923,8 +926,8 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                                 .then(if (overlayOk) Modifier.pressScale {
                                     WellbeingStore.startFocus(ctx, min)
                                     if (!guardEnabled) onArm()
-                                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Focus: $min min — apps locked")
+                                    Haptics.confirm(ctx)
+                                    AppFeedback.show("Focus: $min min — apps locked")
                                 } else Modifier)
                                 .padding(horizontal = 16.dp, vertical = 9.dp),
                         ) { Text("$min min", color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -982,12 +985,12 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                                 .clip(RoundedCornerShape(6.dp))
                                 .clickable {
                                     if (armed) {
-                                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                        Haptics.confirm(ctx)
                                         WellbeingStore.removePhoneFreeWindow(ctx, w.first, w.second)
                                         onChanged()
                                         armedRemoveWindow = -1
-                                        com.ascend.lifeos.ui.kit.AppFeedback.show("Window removed")
-                                    } else { com.ascend.lifeos.data.Haptics.warn(ctx); armedRemoveWindow = i }
+                                        AppFeedback.show("Window removed")
+                                    } else { Haptics.warn(ctx); armedRemoveWindow = i }
                                 },
                         )
                     }

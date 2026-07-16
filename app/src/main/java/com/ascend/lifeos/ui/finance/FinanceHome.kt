@@ -58,12 +58,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.finance.Account
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.finance.Recurring
 import com.ascend.lifeos.data.finance.SaveGoal
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.data.life.Txn
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
@@ -350,7 +353,7 @@ fun FinanceHome(onClose: () -> Unit) {
                 item(key = "export") {
                     Spacer(Modifier.height(10.dp))
                     ExportCsvButton(count = txns.size) {
-                        com.ascend.lifeos.data.Haptics.tick(ctx)
+                        Haptics.tick(ctx)
                         val send = Intent(Intent.ACTION_SEND).apply {
                             type = "text/csv"
                             putExtra(Intent.EXTRA_SUBJECT, "JARVIS finance export")
@@ -530,7 +533,7 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
                 Spacer(Modifier.height(10.dp))
                 val ratio = spend.toFloat() / totalBudget
                 val bCtx = androidx.compose.ui.platform.LocalContext.current
-                val bWarn = com.ascend.lifeos.data.Prefs.int(bCtx, com.ascend.lifeos.data.Prefs.BUDGET_WARN_PCT, 75) / 100f
+                val bWarn = Prefs.int(bCtx, Prefs.BUDGET_WARN_PCT, 75) / 100f
                 val barColor = when {
                     ratio < bWarn -> FinAccent
                     ratio < 1f -> Warn
@@ -696,7 +699,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
             if (budget != null) {
                 Spacer(Modifier.height(4.dp))
                 val ratio = cents.toFloat() / budget
-                val bWarn2 = com.ascend.lifeos.data.Prefs.int(androidx.compose.ui.platform.LocalContext.current, com.ascend.lifeos.data.Prefs.BUDGET_WARN_PCT, 75) / 100f
+                val bWarn2 = Prefs.int(androidx.compose.ui.platform.LocalContext.current, Prefs.BUDGET_WARN_PCT, 75) / 100f
                 val barColor = when {
                     ratio < bWarn2 -> FinAccent
                     ratio < 1f -> Warn
@@ -812,7 +815,7 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
                     r,
                     onToggle = { FinanceStore.setRecurringActive(ctx, r.id, !r.active) },
                     onBook = { FinanceStore.bookRecurring(ctx, r.id) },
-                    onDelete = { FinanceStore.deleteRecurring(ctx, r.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Recurring deleted") },
+                    onDelete = { FinanceStore.deleteRecurring(ctx, r.id); AppFeedback.show("Recurring deleted") },
                 )
             }
         }
@@ -916,7 +919,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                     VerdictPill("Done", Good)
                     Spacer(Modifier.width(10.dp))
                 }
-                ArmedDelete(onDelete = { FinanceStore.deleteSaveGoal(ctx, g.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Goal deleted") })
+                ArmedDelete(onDelete = { FinanceStore.deleteSaveGoal(ctx, g.id); AppFeedback.show("Goal deleted") })
             }
             if (!done) {
                 Spacer(Modifier.height(10.dp))
@@ -926,7 +929,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                             Modifier.clip(RoundedCornerShape(9.dp))
                                 .background(FinAccent.copy(alpha = 0.10f))
                                 .border(0.5.dp, FinAccent.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .pressScale { FinanceStore.addToGoal(ctx, g.id, c); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("+${c / 100} € saved") }
+                                .pressScale { FinanceStore.addToGoal(ctx, g.id, c); Haptics.confirm(ctx); AppFeedback.show("+${c / 100} € saved") }
                                 .padding(horizontal = 11.dp, vertical = 6.dp),
                         ) {
                             Text(

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
@@ -212,7 +213,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                                 Icons.Rounded.Delete, if (armed) "Confirm delete" else "Delete video",
                                 tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
                                 modifier = Modifier.size(16.dp).clickable {
-                                    if (armed) { f.delete(); clips = listClips(dir); armedDelete = null; com.ascend.lifeos.ui.kit.AppFeedback.show("Video deleted") }
+                                    if (armed) { f.delete(); clips = listClips(dir); armedDelete = null; AppFeedback.show("Video deleted") }
                                     else armedDelete = f.absolutePath
                                 },
                             )

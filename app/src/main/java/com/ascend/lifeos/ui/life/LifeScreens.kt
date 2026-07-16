@@ -29,10 +29,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.life.Goal
 import com.ascend.lifeos.data.life.Kr
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
@@ -57,7 +59,7 @@ internal fun LifeScaffold(title: String, context: String, accent: Color, onClose
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = onClose),
+                    .pressScale(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
@@ -134,7 +136,7 @@ fun MindScreen(onClose: () -> Unit) {
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (on) c.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                                .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); mood = v; saved = false }
+                                .clickable { Haptics.tick(ctx); mood = v; saved = false }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) { Text(label, color = if (on) c else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
@@ -143,10 +145,10 @@ fun MindScreen(onClose: () -> Unit) {
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(if (saved) Good.copy(alpha = 0.14f) else Mod.Mind)
                             .pressScale {
-                                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                Haptics.confirm(ctx)
                                 Repo.setJournal(listOf(a1, a2, a3), mood)
                                 saved = true
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Journal saved")
+                                AppFeedback.show("Journal saved")
                             }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
@@ -220,7 +222,7 @@ private fun BreathingOverlay(inhale: Int, hold: Int, exhale: Int, onClose: () ->
                 if (next == 0) cycles++
                 phase = next
                 secondsLeft = when (next) { 0 -> inhale; 1 -> hold; else -> exhale }
-                com.ascend.lifeos.data.Haptics.success(ctx)
+                Haptics.success(ctx)
             }
         }
     }
@@ -327,8 +329,8 @@ fun GoalsScreen(onClose: () -> Unit) {
                             Icons.Rounded.Close, "Delete goal",
                             tint = if (armedGoal == g.id) Crit else TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(15.dp).clickable {
-                                if (armedGoal == g.id) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.deleteGoal(ctx, g.id); armedGoal = null; com.ascend.lifeos.ui.kit.AppFeedback.show("Goal deleted") }
-                                else { com.ascend.lifeos.data.Haptics.warn(ctx); armedGoal = g.id }
+                                if (armedGoal == g.id) { Haptics.confirm(ctx); LifeStores.deleteGoal(ctx, g.id); armedGoal = null; AppFeedback.show("Goal deleted") }
+                                else { Haptics.warn(ctx); armedGoal = g.id }
                             },
                         )
                     }
@@ -346,11 +348,11 @@ fun GoalsScreen(onClose: () -> Unit) {
                                 Spacer(Modifier.width(10.dp))
                                 Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).clickable {
-                                        com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
+                                        Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
                                     }.padding(horizontal = 7.dp))
                                 Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).clickable {
-                                        com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
+                                        Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
                                     }.padding(horizontal = 7.dp))
                             } else {
                                 Spacer(Modifier.width(10.dp))
@@ -381,7 +383,7 @@ fun GoalsScreen(onClose: () -> Unit) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(g.title, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, modifier = Modifier.weight(1f))
                         Text("Restore", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.updateGoal(ctx, g.id, archived = false); com.ascend.lifeos.ui.kit.AppFeedback.show("Goal restored") }.padding(horizontal = 6.dp))
+                            modifier = Modifier.pressScale { Haptics.confirm(ctx); LifeStores.updateGoal(ctx, g.id, archived = false); AppFeedback.show("Goal restored") }.padding(horizontal = 6.dp))
                     }
                 }
                 Spacer(Modifier.height(6.dp))
@@ -456,8 +458,8 @@ private fun HabitsBlock() {
                         .border(1.dp, if (done) Mod.Home else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = if (scheduled) 0.25f else 0.08f), CircleShape)
                         .clickable(enabled = scheduled) {
                             LifeStores.setHabitDone(ctx, h.id, today, !done)
-                            if (!done) com.ascend.lifeos.data.Haptics.confirm(ctx)
-                            else com.ascend.lifeos.data.Haptics.tick(ctx)
+                            if (!done) Haptics.confirm(ctx)
+                            else Haptics.tick(ctx)
                         },
                     contentAlignment = Alignment.Center,
                 ) { if (done) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
@@ -474,8 +476,8 @@ private fun HabitsBlock() {
                     Icons.Rounded.Close, "Delete habit",
                     tint = if (armedHabit == h.id) Crit else TextDim.copy(alpha = 0.5f),
                     modifier = Modifier.size(14.dp).clickable {
-                        if (armedHabit == h.id) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.deleteHabit(ctx, h.id); armedHabit = null; com.ascend.lifeos.ui.kit.AppFeedback.show("Habit deleted") }
-                        else { com.ascend.lifeos.data.Haptics.warn(ctx); armedHabit = h.id }
+                        if (armedHabit == h.id) { Haptics.confirm(ctx); LifeStores.deleteHabit(ctx, h.id); armedHabit = null; AppFeedback.show("Habit deleted") }
+                        else { Haptics.warn(ctx); armedHabit = h.id }
                     },
                 )
             }
@@ -492,8 +494,8 @@ private fun HabitsBlock() {
                 .then(if (title.isNotBlank()) Modifier.pressScale {
                     LifeStores.addHabit(ctx, title, 0b1111111)
                     title = ""
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added")
+                    Haptics.confirm(ctx)
+                    AppFeedback.show("Habit added")
                 } else Modifier)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -551,8 +553,8 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                         }
                         LifeStores.addGoal(ctx, title, krs)
                         if (deadline.length == 10) LifeStores.updateGoal(ctx, LifeStores.goals(ctx).last().id, deadline = deadline)
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Goal created")
+                        Haptics.confirm(ctx)
+                        AppFeedback.show("Goal created")
                         onDone()
                     } else Modifier)
                     .padding(vertical = 13.dp),
@@ -582,9 +584,9 @@ private fun EditGoalSheet(goal: Goal, onDone: () -> Unit) {
                     Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
                         .background(Mod.Home)
                         .pressScale {
-                            com.ascend.lifeos.data.Haptics.success(ctx)
+                            Haptics.success(ctx)
                             LifeStores.updateGoal(ctx, goal.id, title = title, deadline = deadline)
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Goal saved")
+                            AppFeedback.show("Goal saved")
                             onDone()
                         }
                         .padding(vertical = 13.dp),
@@ -594,9 +596,9 @@ private fun EditGoalSheet(goal: Goal, onDone: () -> Unit) {
                     Modifier.clip(RoundedCornerShape(14.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .pressScale {
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            Haptics.confirm(ctx)
                             LifeStores.updateGoal(ctx, goal.id, archived = true)
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Goal archived")
+                            AppFeedback.show("Goal archived")
                             onDone()
                         }
                         .padding(horizontal = 18.dp, vertical = 13.dp),

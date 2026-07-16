@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.training.TrainingReschedule
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -80,14 +82,14 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pill("Fits", filled = true, modifier = Modifier.weight(1f)) {
                     scope.launch { TrainingReschedule.accept(ctx, s); dismissed = true }
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Session rescheduled")
+                    Haptics.confirm(ctx)
+                    AppFeedback.show("Session rescheduled")
                 }
                 Pill("Other time", modifier = Modifier.weight(1f)) { pickOpen = true }
                 Pill("Skip", modifier = Modifier.weight(1f)) {
                     TrainingReschedule.skip(ctx); dismissed = true
-                    com.ascend.lifeos.data.Haptics.tick(ctx)
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Session skipped")
+                    Haptics.tick(ctx)
+                    AppFeedback.show("Session skipped")
                 }
             }
         }
@@ -104,8 +106,8 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
                     TrainingReschedule.accept(ctx, s.copy(startMin = start, endMin = start + len))
                     pickOpen = false; dismissed = true
                 }
-                com.ascend.lifeos.data.Haptics.confirm(ctx)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Session moved")
+                Haptics.confirm(ctx)
+                AppFeedback.show("Session moved")
             },
         )
     }

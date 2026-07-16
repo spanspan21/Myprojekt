@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.kit.Panel
@@ -186,7 +187,7 @@ fun TimerScreen(onClose: () -> Unit) {
                             Modifier.weight(1f)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(if (sel) TimerAccent.copy(alpha = 0.2f) else Ivory.copy(alpha = 0.05f))
-                                .pressScale { countdownTarget = m; elapsedMs = 0; finished = false; com.ascend.lifeos.data.Haptics.tick(ctx) }
+                                .pressScale { countdownTarget = m; elapsedMs = 0; finished = false; Haptics.tick(ctx) }
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -225,7 +226,7 @@ fun TimerScreen(onClose: () -> Unit) {
                 Box(
                     Modifier.size(52.dp).clip(CircleShape)
                         .background(Ivory.copy(alpha = 0.08f))
-                        .pressScale { running = false; elapsedMs = 0; finished = false; laps.clear(); com.ascend.lifeos.data.Haptics.tick(ctx) },
+                        .pressScale { running = false; elapsedMs = 0; finished = false; laps.clear(); Haptics.tick(ctx) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Rounded.Refresh, "Reset timer", tint = TextDim, modifier = Modifier.size(24.dp))
@@ -236,7 +237,7 @@ fun TimerScreen(onClose: () -> Unit) {
                     Box(
                         Modifier.size(52.dp).clip(CircleShape)
                             .background(Ivory.copy(alpha = 0.08f))
-                            .pressScale { laps.add(elapsedMs); com.ascend.lifeos.data.Haptics.tick(ctx) },
+                            .pressScale { laps.add(elapsedMs); Haptics.tick(ctx) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("LAP", color = TimerAccent, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold)
@@ -250,7 +251,7 @@ fun TimerScreen(onClose: () -> Unit) {
                         .pressScale {
                             if (finished) { elapsedMs = 0; finished = false }
                             running = !running
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            Haptics.confirm(ctx)
                         },
                     contentAlignment = Alignment.Center,
                 ) {

@@ -141,7 +141,7 @@ fun BreathingScreen(onClose: () -> Unit) {
             JarvisHeader("Breathe", "${rounds} rounds", BreatheAccent) {
                 Icon(
                     Icons.Rounded.Close, "Close", tint = TextDim,
-                    modifier = Modifier.size(20.dp).clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClose() },
+                    modifier = Modifier.size(20.dp).clip(CircleShape).clickable { Haptics.tick(ctx); onClose() },
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -158,7 +158,7 @@ fun BreathingScreen(onClose: () -> Unit) {
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (selected) BreatheAccent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f))
                             .then(if (!running) Modifier.pressScale {
-                                com.ascend.lifeos.data.Haptics.tick(ctx)
+                                Haptics.tick(ctx)
                                 pattern = p
                                 rounds = 0
                             } else Modifier)
@@ -289,7 +289,7 @@ fun BreathingScreen(onClose: () -> Unit) {
                     .clip(CircleShape)
                     .background(if (running) Ivory.copy(alpha = 0.08f) else BreatheAccent)
                     .pressScale {
-                        com.ascend.lifeos.data.Haptics.tick(ctx)
+                        Haptics.tick(ctx)
                         running = !running
                         if (running) rounds = 0
                     },

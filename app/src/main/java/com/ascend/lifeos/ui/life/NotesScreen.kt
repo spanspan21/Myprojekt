@@ -27,8 +27,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.motion.pressScale
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
@@ -105,7 +108,7 @@ fun NotesScreen(onClose: () -> Unit) {
             Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
                 Column(Modifier.padding(12.dp)) {
                     OutlinedTextField(
-                        value = newText, onValueChange = { newText = it.take(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.NOTE_CHAR_LIMIT, 1000)) },
+                        value = newText, onValueChange = { newText = it.take(Prefs.int(ctx, Prefs.NOTE_CHAR_LIMIT, 1000)) },
                         placeholder = { Text("Capture a thought…", color = TextDim, fontFamily = Body, fontSize = FS.s13) },
                         singleLine = false, maxLines = 5, minLines = 2,
                         modifier = Modifier.fillMaxWidth(),
@@ -117,7 +120,7 @@ fun NotesScreen(onClose: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        val noteLimit = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.NOTE_CHAR_LIMIT, 1000)
+                        val noteLimit = Prefs.int(ctx, Prefs.NOTE_CHAR_LIMIT, 1000)
                         Text("${newText.length}/$noteLimit", color = TextDim, fontFamily = Body, fontSize = FS.s10)
                         Box(
                             Modifier.clip(RoundedCornerShape(12.dp))
@@ -125,8 +128,8 @@ fun NotesScreen(onClose: () -> Unit) {
                                 .then(if (newText.isNotBlank()) Modifier.pressScale {
                                     LifeStores.addNote(ctx, newText)
                                     newText = ""
-                                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Note saved")
+                                    Haptics.confirm(ctx)
+                                    AppFeedback.show("Note saved")
                                 } else Modifier)
                                 .padding(horizontal = 16.dp, vertical = 10.dp),
                         ) { Text("Save", color = Void, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.ExtraBold) }
@@ -152,7 +155,7 @@ fun NotesScreen(onClose: () -> Unit) {
                         if (isEditing) {
                             Column(Modifier.padding(12.dp)) {
                                 OutlinedTextField(
-                                    value = editText, onValueChange = { editText = it.take(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.NOTE_CHAR_LIMIT, 1000)) },
+                                    value = editText, onValueChange = { editText = it.take(Prefs.int(ctx, Prefs.NOTE_CHAR_LIMIT, 1000)) },
                                     singleLine = false, maxLines = 6, minLines = 2,
                                     modifier = Modifier.fillMaxWidth(),
                                     textStyle = TextStyle(color = TextPrimary, fontFamily = Body, fontSize = FS.s13),
@@ -165,7 +168,7 @@ fun NotesScreen(onClose: () -> Unit) {
                                             .pressScale {
                                                 LifeStores.editNote(ctx, id, editText)
                                                 editingId = null
-                                                com.ascend.lifeos.ui.kit.AppFeedback.show("Note updated")
+                                                AppFeedback.show("Note updated")
                                             }
                                             .padding(horizontal = 14.dp, vertical = 8.dp),
                                     ) { Text("Update", color = Void, fontFamily = Body, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
@@ -197,12 +200,12 @@ fun NotesScreen(onClose: () -> Unit) {
                                     modifier = Modifier.size(16.dp).clip(CircleShape)
                                         .clickable {
                                             if (armedNote == id) {
-                                                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                                Haptics.confirm(ctx)
                                                 LifeStores.deleteNote(ctx, id)
                                                 armedNote = null
-                                                com.ascend.lifeos.ui.kit.AppFeedback.show("Note deleted")
+                                                AppFeedback.show("Note deleted")
                                             } else {
-                                                com.ascend.lifeos.data.Haptics.warn(ctx)
+                                                Haptics.warn(ctx)
                                                 armedNote = id
                                             }
                                         },

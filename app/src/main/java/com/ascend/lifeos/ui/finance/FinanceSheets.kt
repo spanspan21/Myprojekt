@@ -34,6 +34,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.data.finance.Account
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.life.LifeStores
@@ -115,8 +117,8 @@ internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss:
             else java.time.LocalDate.now().minusDays(dayOffset.toLong())
                 .atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
             FinanceStore.bookTxn(ctx, if (isExpense) -cents!! else cents!!, category, note, accountId, at = at)
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
-            com.ascend.lifeos.ui.kit.AppFeedback.show(if (isExpense) "Expense logged" else "Income logged")
+            Haptics.confirm(ctx)
+            AppFeedback.show(if (isExpense) "Expense logged" else "Income logged")
             onDismiss()
         }
     }
@@ -155,8 +157,8 @@ internal fun MoveSheet(accounts: List<Account>, onDismiss: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             ActionButton("Move", enabled = cents != null && fromId != null && toId != null && fromId != toId) {
                 FinanceStore.move(ctx, fromId!!, toId!!, cents!!)
-                com.ascend.lifeos.data.Haptics.confirm(ctx)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Transfer complete")
+                Haptics.confirm(ctx)
+                AppFeedback.show("Transfer complete")
                 onDismiss()
             }
             if (fromId != null && fromId == toId) {
@@ -196,16 +198,16 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
         }
         Spacer(Modifier.height(18.dp))
         ActionButton("Save account", enabled = name.isNotBlank()) {
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
+            Haptics.confirm(ctx)
             if (existing == null) {
                 FinanceStore.addAccount(ctx, name, icon, parsedBalance ?: 0L)
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Account created")
+                AppFeedback.show("Account created")
             } else {
                 FinanceStore.updateAccount(ctx, existing.id, name, icon)
                 if (parsedBalance != null && parsedBalance != existing.balanceCents) {
                     FinanceStore.setAccountBalance(ctx, existing.id, parsedBalance)
                 }
-                com.ascend.lifeos.ui.kit.AppFeedback.show("Account updated")
+                AppFeedback.show("Account updated")
             }
             onDismiss()
         }
@@ -216,7 +218,7 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
                     .background(Crit.copy(alpha = if (deleteArmed) 0.22f else 0.10f))
                     .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(15.dp))
                     .pressScale {
-                        if (deleteArmed) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.deleteAccount(ctx, existing.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Account deleted"); onDismiss() } else { com.ascend.lifeos.data.Haptics.warn(ctx); deleteArmed = true }
+                        if (deleteArmed) { Haptics.confirm(ctx); FinanceStore.deleteAccount(ctx, existing.id); AppFeedback.show("Account deleted"); onDismiss() } else { Haptics.warn(ctx); deleteArmed = true }
                     }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
@@ -255,9 +257,9 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
         GlassField(amount, { amount = it }, "Monthly cap in € — e.g. 50", keyboard = KeyboardType.Decimal)
         Spacer(Modifier.height(18.dp))
         ActionButton(if (existing == null) "Set budget" else "Update budget", enabled = cents != null) {
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
+            Haptics.confirm(ctx)
             FinanceStore.setBudget(ctx, category, cents!!)
-            com.ascend.lifeos.ui.kit.AppFeedback.show("Budget set")
+            AppFeedback.show("Budget set")
             onDismiss()
         }
         if (existing != null) {
@@ -270,8 +272,8 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
                 modifier = Modifier.align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(10.dp))
                     .pressScale {
-                        if (armedRemoveBudget) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.setBudget(ctx, category, 0); com.ascend.lifeos.ui.kit.AppFeedback.show("Budget removed"); onDismiss() }
-                        else { com.ascend.lifeos.data.Haptics.warn(ctx); armedRemoveBudget = true }
+                        if (armedRemoveBudget) { Haptics.confirm(ctx); FinanceStore.setBudget(ctx, category, 0); AppFeedback.show("Budget removed"); onDismiss() }
+                        else { Haptics.warn(ctx); armedRemoveBudget = true }
                     }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             )
@@ -322,7 +324,7 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
         Spacer(Modifier.height(18.dp))
         ActionButton("Save recurring", enabled = name.isNotBlank() && cents != null) {
             FinanceStore.addRecurring(ctx, name, if (isCost) -cents!! else cents!!, if (isCost) category else "Income", day)
-            com.ascend.lifeos.ui.kit.AppFeedback.show("Recurring charge saved")
+            AppFeedback.show("Recurring charge saved")
             onDismiss()
         }
     }
@@ -413,7 +415,7 @@ internal fun GoalSheet(onDismiss: () -> Unit) {
         Spacer(Modifier.height(18.dp))
         ActionButton("Start goal", enabled = title.isNotBlank() && cents != null) {
             FinanceStore.addSaveGoal(ctx, title, cents!!)
-            com.ascend.lifeos.ui.kit.AppFeedback.show("Savings goal created")
+            AppFeedback.show("Savings goal created")
             onDismiss()
         }
     }
@@ -472,14 +474,14 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
 
         Spacer(Modifier.height(18.dp))
         ActionButton("Save changes") {
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
+            Haptics.confirm(ctx)
             if (category != txn.category || note.trim() != txn.note) {
                 FinanceStore.updateTxn(ctx, txn.id, category, note)
             }
             if (accountId != FinanceStore.accountIdOf(ctx, txn.id)) {
                 FinanceStore.setTxnAccount(ctx, txn.id, accountId)
             }
-            com.ascend.lifeos.ui.kit.AppFeedback.show("Transaction updated")
+            AppFeedback.show("Transaction updated")
             onDismiss()
         }
         Spacer(Modifier.height(10.dp))
@@ -488,7 +490,7 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
                 .background(Crit.copy(alpha = if (deleteArmed) 0.22f else 0.10f))
                 .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(15.dp))
                 .pressScale {
-                    if (deleteArmed) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.deleteTxn(ctx, txn.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Transaction deleted"); onDismiss() } else { com.ascend.lifeos.data.Haptics.warn(ctx); deleteArmed = true }
+                    if (deleteArmed) { Haptics.confirm(ctx); FinanceStore.deleteTxn(ctx, txn.id); AppFeedback.show("Transaction deleted"); onDismiss() } else { Haptics.warn(ctx); deleteArmed = true }
                 }
                 .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center,

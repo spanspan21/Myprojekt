@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.hud
 
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,6 +42,7 @@ import com.ascend.lifeos.data.CustomFood
 import com.ascend.lifeos.data.FoodApi
 import com.ascend.lifeos.data.NUTRIENTS_BY_ID
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.TextDim
@@ -146,8 +148,8 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
                     micros = microG, barcode = barcode, favorite = favorite,
                 ),
             )
-            com.ascend.lifeos.data.Haptics.confirm(ctx)
-            com.ascend.lifeos.ui.kit.AppFeedback.show("Food saved")
+            Haptics.confirm(ctx)
+            AppFeedback.show("Food saved")
             onDone()
         }
         Spacer(Modifier.height(6.dp))

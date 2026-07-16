@@ -63,6 +63,7 @@ import com.ascend.lifeos.data.CustomFood
 import com.ascend.lifeos.data.FoodApi
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.FoodScore
 import com.ascend.lifeos.data.MACRO_IDS
 import com.ascend.lifeos.data.Repo
@@ -274,7 +275,7 @@ private fun SearchPane(
                         )
                     } else {
                         Section("RECENT — 1 TAP LOGS, ＋ COLLECTS")
-                        val recentCount = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RECENT_FOODS_COUNT, 12)
+                        val recentCount = Prefs.int(ctx, Prefs.RECENT_FOODS_COUNT, 12)
                         recents.take(recentCount).forEach { e ->
                             ResultRow(
                                 e.name, "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}", "",

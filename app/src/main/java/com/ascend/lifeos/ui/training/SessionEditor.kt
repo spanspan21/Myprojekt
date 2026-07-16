@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.training
 
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +42,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.ascend.lifeos.data.training.WorkoutSessionEntity
 import com.ascend.lifeos.data.training.WorkoutSetEntity
 import com.ascend.lifeos.ui.hud.GlassPanel
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Bg
@@ -105,7 +107,7 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                     items(exSets.size, key = { i -> exSets[i].id }) { i ->
                         Column(Modifier.animateItem()) {
                             HistorySetRow(exSets[i], onEdit = { dr, dw -> vm.editHistorySet(exSets[i].id, dr, dw) }) {
-                                vm.deleteHistorySet(exSets[i]); com.ascend.lifeos.ui.kit.AppFeedback.show("Set removed")
+                                vm.deleteHistorySet(exSets[i]); AppFeedback.show("Set removed")
                             }
                             Spacer(Modifier.height(6.dp))
                         }
@@ -169,8 +171,8 @@ private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, 
                 if (armed) "Tap again" else "Delete set",
                 tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
                 modifier = Modifier.size(16.dp).clickable {
-                    if (armed) { com.ascend.lifeos.data.Haptics.confirm(seCtx); onDelete() }
-                    else { com.ascend.lifeos.data.Haptics.warn(seCtx); armed = true }
+                    if (armed) { Haptics.confirm(seCtx); onDelete() }
+                    else { Haptics.warn(seCtx); armed = true }
                 },
             )
         }

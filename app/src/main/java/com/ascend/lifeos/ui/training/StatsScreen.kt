@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.HudChip
@@ -59,7 +60,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onBack() })
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { Haptics.tick(ctx); onBack() })
                 Spacer(Modifier.width(12.dp))
                 Text("Statistics", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
             }
@@ -368,7 +369,7 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
         line = if (isToday) Amber.copy(alpha = 0.3f) else HudLine,
     ) {
         Row(
-            Modifier.fillMaxWidth().pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(26.dp).clip(CircleShape).background(Amber.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {

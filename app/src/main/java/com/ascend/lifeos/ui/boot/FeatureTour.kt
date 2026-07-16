@@ -68,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Body
@@ -279,8 +280,8 @@ fun FeatureTour(onComplete: () -> Unit) {
                 Box(
                     Modifier
                         .pressScale {
-                            if (isLast) { com.ascend.lifeos.data.Haptics.epic(ftCtx); onComplete() }
-                            else { com.ascend.lifeos.data.Haptics.tick(ftCtx); page++ }
+                            if (isLast) { Haptics.epic(ftCtx); onComplete() }
+                            else { Haptics.tick(ftCtx); page++ }
                         }
                         .clip(RoundedCornerShape(16.dp))
                         .background(slide.accent)

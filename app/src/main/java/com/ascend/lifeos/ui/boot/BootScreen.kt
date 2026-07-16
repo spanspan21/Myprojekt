@@ -14,6 +14,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.Canvas
@@ -300,7 +302,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Spacer(Modifier.height(4.dp))
         Text("When JARVIS sends your morning briefing", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
         Spacer(Modifier.height(8.dp))
-        var wakeMin by remember { mutableIntStateOf(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.NOTIF_MORNING_MIN, 420)) }
+        var wakeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.NOTIF_MORNING_MIN, 420)) }
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -308,7 +310,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             listOf(300 to "5:00", 330 to "5:30", 360 to "6:00", 390 to "6:30", 420 to "7:00", 450 to "7:30", 480 to "8:00", 510 to "8:30", 540 to "9:00").forEach { (m, label) ->
                 BootChip(label, wakeMin == m) {
                     wakeMin = m
-                    com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.NOTIF_MORNING_MIN, m)
+                    Prefs.setInt(ctx, Prefs.NOTIF_MORNING_MIN, m)
                 }
             }
         }
@@ -320,7 +322,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Spacer(Modifier.height(4.dp))
         Text("Your target — JARVIS measures debt against this", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
         Spacer(Modifier.height(8.dp))
-        var sleepTarget by remember { mutableIntStateOf(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_TARGET_MIN, 0).let { if (it == 0) 480 else it }) }
+        var sleepTarget by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_TARGET_MIN, 0).let { if (it == 0) 480 else it }) }
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -328,14 +330,14 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             listOf(390 to "6h30", 420 to "7h", 450 to "7h30", 480 to "8h", 510 to "8h30", 540 to "9h").forEach { (m, label) ->
                 BootChip(label, sleepTarget == m) {
                     sleepTarget = m
-                    com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.SLEEP_TARGET_MIN, m)
+                    Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, m)
                 }
             }
         }
         Spacer(Modifier.height(10.dp))
         Text("Bedtime", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
         Spacer(Modifier.height(6.dp))
-        var bedtimeMin by remember { mutableIntStateOf(com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GREET_NIGHT_START, 22) * 60) }
+        var bedtimeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GREET_NIGHT_START, 22) * 60) }
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -343,7 +345,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             listOf(1260 to "21:00", 1290 to "21:30", 1320 to "22:00", 1350 to "22:30", 1380 to "23:00", 1410 to "23:30").forEach { (m, label) ->
                 BootChip(label, bedtimeMin == m) {
                     bedtimeMin = m
-                    com.ascend.lifeos.data.Prefs.setInt(ctx, com.ascend.lifeos.data.Prefs.GREET_NIGHT_START, m / 60)
+                    Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, m / 60)
                 }
             }
         }
@@ -381,7 +383,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             com.ascend.lifeos.data.NutritionCalc.breakdown(sex, age, height, weight, activity, goal)
         }
         val targets = bd.targets
-        val waterMl = weight * com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.WATER_ML_PER_KG, 30)
+        val waterMl = weight * Prefs.int(ctx, Prefs.WATER_ML_PER_KG, 30)
         Text("YOUR TARGETS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
@@ -415,7 +417,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Spacer(Modifier.height(22.dp))
         Box(
             Modifier.fillMaxWidth()
-                .pressScale { if (!leaving) { com.ascend.lifeos.data.Haptics.epic(ctx); leaving = true } }
+                .pressScale { if (!leaving) { Haptics.epic(ctx); leaving = true } }
                 .clip(RoundedCornerShape(15.dp)).background(Mod.Home)
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
@@ -471,7 +473,7 @@ private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
     )
     Box(
         Modifier
-            .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() }
+            .pressScale { Haptics.tick(ctx); onClick() }
             .clip(RoundedCornerShape(11.dp))
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
@@ -504,7 +506,7 @@ private fun StepBtn(sign: String, onClick: () -> Unit) {
         Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-            .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() },
+            .clickable { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
 }

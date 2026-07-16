@@ -32,6 +32,7 @@ import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.StretchRoutine
 import com.ascend.lifeos.ui.hud.*
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -80,8 +81,8 @@ fun StretchScreen(onBack: () -> Unit) {
                         exIndex++; remaining = routine.exercises[exIndex].holdSec
                     } else {
                         running = false
-                        com.ascend.lifeos.data.Haptics.success(ctx)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Stretch complete")
+                        Haptics.success(ctx)
+                        AppFeedback.show("Stretch complete")
                     }
                 }
             }
@@ -103,7 +104,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 items(routines, key = { it.id }) { routine ->
                     val isSuggested = routine.id in suggested
                     GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale {
-                        com.ascend.lifeos.data.Haptics.tick(ctx)
+                        Haptics.tick(ctx)
                         activeRoutine = routine; exIndex = 0; isSecondSide = false
                         remaining = routine.exercises.first().holdSec; running = true
                     }, corner = 16.dp) {
@@ -188,7 +189,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, HudLine, CircleShape).pressScale {
-                            com.ascend.lifeos.data.Haptics.tick(ctx)
+                            Haptics.tick(ctx)
                             isSecondSide = false
                             if (exIndex < routine.exercises.size - 1) {
                                 exIndex++; remaining = routine.exercises[exIndex].holdSec
@@ -200,7 +201,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(16.dp)).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .pressScale { running = false; com.ascend.lifeos.ui.kit.AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
+                        .pressScale { running = false; AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
                 ) { Text("End", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.weight(0.3f))

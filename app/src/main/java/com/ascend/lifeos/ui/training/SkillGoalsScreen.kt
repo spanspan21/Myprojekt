@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.training.*
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.VerdictPill
 import com.ascend.lifeos.ui.theme.*
@@ -104,7 +105,7 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     SkillCard(skill, profile, adherence, skill.id in selected, Modifier.animateItem()) {
                         val wasSelected = skill.id in selected
                         Repo.toggleSkillGoal(skill.id)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show(if (wasSelected) "Target removed" else "Target added")
+                        AppFeedback.show(if (wasSelected) "Target removed" else "Target added")
                     }
                     Spacer(Modifier.height(8.dp))
                 }

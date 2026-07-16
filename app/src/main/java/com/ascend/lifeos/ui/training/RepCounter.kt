@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
@@ -87,7 +88,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
-                        .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); permLauncher.launch(android.Manifest.permission.CAMERA) }
+                        .pressScale { Haptics.tick(ctx); permLauncher.launch(android.Manifest.permission.CAMERA) }
                         .padding(20.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -160,14 +161,14 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                         Modifier.weight(1f).clip(RoundedCornerShape(13.dp))
                             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-                            .pressScale { com.ascend.lifeos.data.Haptics.warn(ctx); reps = 0; counter.reset() }
+                            .pressScale { Haptics.warn(ctx); reps = 0; counter.reset() }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Reset", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Box(
                         Modifier.weight(2f).clip(RoundedCornerShape(13.dp))
                             .background(if (reps > 0) Mod.Train else Mod.Train.copy(alpha = 0.25f))
-                            .then(if (reps > 0) Modifier.pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); onUseCount(reps); onClose() } else Modifier)
+                            .then(if (reps > 0) Modifier.pressScale { Haptics.confirm(ctx); onUseCount(reps); onClose() } else Modifier)
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Use $reps reps", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

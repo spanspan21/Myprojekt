@@ -23,7 +23,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.kit.Panel
@@ -46,9 +49,9 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
         bedtime = withContext(Dispatchers.IO) {
             runCatching {
                 val tomorrow = LocalDate.now().plusDays(1)
-                val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
+                val dao = CalendarRepo.dao(ctx)
                 val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
-                val tl = com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, tomorrow, entities)
+                val tl = CalendarRepo.timelineFor(ctx, tomorrow, entities)
                 val first = tl.blocks.minByOrNull { it.startMin } ?: return@runCatching null
                 val wakeMin = first.startMin - 75
                 val target = wakeMin - sleepNeed
@@ -80,7 +83,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
                             bedtime?.let { "Lights out by $it" } ?: "Target: ${sleepNeed / 60}h ${sleepNeed % 60}m sleep",
                             color = TextPrimary, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.Bold,
                         )
-                        if (sleepDebt > com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_DEBT_WARN, 60)) {
+                        if (sleepDebt > Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60)) {
                             Spacer(Modifier.height(3.dp))
                             Text(
                                 "Sleep debt: ${sleepDebt / 60}h ${sleepDebt % 60}m — aim for extra tonight",
@@ -182,7 +185,7 @@ private fun WindDownChip(label: String, on: Boolean, color: Color, onClick: () -
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) color.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .pressScale { onClick(); com.ascend.lifeos.data.Haptics.tick(ctx) }
+            .pressScale { onClick(); Haptics.tick(ctx) }
             .padding(horizontal = 14.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) color else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -195,7 +198,7 @@ private fun WindDownFactor(label: String, on: Boolean, onToggle: (Boolean) -> Un
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) accent.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) accent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .pressScale { onToggle(!on); com.ascend.lifeos.data.Haptics.tick(ctx) }
+            .pressScale { onToggle(!on); Haptics.tick(ctx) }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) accent else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

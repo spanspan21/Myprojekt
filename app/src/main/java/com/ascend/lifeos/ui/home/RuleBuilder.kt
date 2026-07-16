@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,7 @@ import com.ascend.lifeos.data.rules.CustomRules
 import com.ascend.lifeos.data.rules.RAction
 import com.ascend.lifeos.data.rules.RMetric
 import com.ascend.lifeos.data.rules.ROp
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -124,7 +126,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = onClose),
+                    .pressScale(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
@@ -138,7 +140,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
             var on by remember(p.id) { mutableStateOf(com.ascend.lifeos.data.Protocols.enabled(ctx, p.id)) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
+                    .pressScale { Haptics.tick(ctx); on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
                     .padding(vertical = 8.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -223,7 +225,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     color = if (armed) Crit else TextDim,
                     fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp))
-                        .pressScale { if (armed) { com.ascend.lifeos.data.Haptics.warn(ctx); onDelete(); com.ascend.lifeos.ui.kit.AppFeedback.show("Rule deleted") } else armed = true }
+                        .pressScale { if (armed) { Haptics.warn(ctx); onDelete(); AppFeedback.show("Rule deleted") } else armed = true }
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }
@@ -311,7 +313,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(if (canSave) Mod.Home else Mod.Home.copy(alpha = 0.25f))
                     .then(if (canSave) Modifier.pressScale {
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        Haptics.confirm(ctx)
                         CustomRules.upsert(
                             ctx,
                             CustomRule(

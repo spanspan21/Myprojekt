@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.theme.Body
 import com.ascend.lifeos.ui.theme.Crit
@@ -209,8 +210,8 @@ internal fun ArmedDelete(modifier: Modifier = Modifier, onDelete: () -> Unit) {
         Icons.Rounded.Delete, if (armed) "Tap again to delete" else "Delete",
         tint = if (armed) Crit else TextDim,
         modifier = modifier.size(16.dp).clickable {
-            if (armed) { com.ascend.lifeos.data.Haptics.confirm(adCtx); onDelete() }
-            else { com.ascend.lifeos.data.Haptics.warn(adCtx); armed = true }
+            if (armed) { Haptics.confirm(adCtx); onDelete() }
+            else { Haptics.warn(adCtx); armed = true }
         },
     )
 }

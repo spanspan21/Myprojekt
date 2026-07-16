@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.background
@@ -174,7 +175,7 @@ private fun ActionsPane(
                 statColor = if (water >= waterGoal) Good else Mod.Body,
                 onClick = {
                     Repo.addWater(1)
-                    com.ascend.lifeos.data.Haptics.tick(ctx)
+                    Haptics.tick(ctx)
                     waterTick++
                 },
             )
@@ -208,7 +209,7 @@ private fun ActionsPane(
                 if (fast.active) Good else Mod.Home,
                 onClick = {
                     if (fast.active) Repo.stopFast() else Repo.startFast(fast.protocol)
-                    com.ascend.lifeos.data.Haptics.tick(ctx)
+                    Haptics.tick(ctx)
                 },
             )
         }
@@ -351,7 +352,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             val noteFm = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value = note,
-                onValueChange = { if (it.length <= com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.QUICK_NOTE_LIMIT, 60)) note = it },
+                onValueChange = { if (it.length <= Prefs.int(ctx, Prefs.QUICK_NOTE_LIMIT, 60)) note = it },
                 singleLine = true,
                 textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium),
                 cursorBrush = SolidColor(Mod.Finance),
@@ -369,7 +370,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                 .background(if (canSave) Mod.Finance else Mod.Finance.copy(alpha = 0.18f))
                 .then(if (canSave) Modifier.pressScale {
                     com.ascend.lifeos.data.finance.FinanceStore.bookTxn(ctx, -cents, cat ?: "Other", note)
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    Haptics.confirm(ctx)
                     onSaved()
                 } else Modifier)
                 .padding(vertical = 14.dp),
@@ -413,7 +414,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
                 .background(Mod.Body)
                 .pressScale {
                     Repo.logWeight(kg)
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    Haptics.confirm(ctx)
                     onSaved()
                 }
                 .padding(vertical = 14.dp),
@@ -443,7 +444,7 @@ private fun QlStep(label: String, onClick: () -> Unit) {
 private fun DonePane(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) {
-        com.ascend.lifeos.data.Haptics.success(ctx)
+        Haptics.success(ctx)
         delay(900)
         onDismiss()
     }
@@ -559,7 +560,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
                 .background(if (selected > 0) Mod.Mind else Mod.Mind.copy(alpha = 0.18f))
                 .then(if (selected > 0) Modifier.pressScale {
                     Repo.logMood(selected, moodNote.trim())
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    Haptics.confirm(ctx)
                     onSaved()
                 } else Modifier)
                 .padding(vertical = 14.dp),
@@ -609,7 +610,7 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
                 .background(if (filled) Mod.Mind else Mod.Mind.copy(alpha = 0.18f))
                 .then(if (filled) Modifier.pressScale {
                     Repo.setJournal(answers.map { it.trim() }, null)
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                    Haptics.confirm(ctx)
                     onSaved()
                 } else Modifier)
                 .padding(vertical = 14.dp),

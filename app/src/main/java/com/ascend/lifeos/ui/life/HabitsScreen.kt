@@ -28,10 +28,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.life.Habit
 import com.ascend.lifeos.data.life.HabitMetrics
 import com.ascend.lifeos.data.life.HabitReminders
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
@@ -97,7 +99,7 @@ fun HabitsScreen(onClose: () -> Unit) {
             Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                 .background(Mod.Mind.copy(alpha = 0.12f))
                 .border(0.5.dp, Mod.Mind.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
-                .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); catalogOpen = true }
+                .pressScale { Haptics.tick(ctx); catalogOpen = true }
                 .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -155,7 +157,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
     val elapsedSec = if (running) ((now - timerStart) / 1000L).coerceAtLeast(0L) else 0L
     // tap opens detail; long-press skips/unskips today (streak freeze)
     Panel(
-        Modifier.fillMaxWidth().combinedClickable(onClick = onTap, onLongClick = { com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.toggleHabitSkip(ctx, h.id, today) }),
+        Modifier.fillMaxWidth().combinedClickable(onClick = onTap, onLongClick = { Haptics.tick(ctx); LifeStores.toggleHabitSkip(ctx, h.id, today) }),
         corner = 14.dp,
     ) {
         Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -163,7 +165,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
                 Modifier.size(22.dp).clip(CircleShape)
                     .background(if (done) Mod.Mind else Color.Transparent)
                     .border(1.dp, if (done) Mod.Mind else Ivory.copy(alpha = if (active && !auto && !measurable) 0.25f else 0.08f), CircleShape)
-                    .clickable(enabled = active && !auto && !measurable) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.setHabitDone(ctx, h.id, today, !done) },
+                    .clickable(enabled = active && !auto && !measurable) { Haptics.confirm(ctx); LifeStores.setHabitDone(ctx, h.id, today, !done) },
                 contentAlignment = Alignment.Center,
             ) {
                 when {
@@ -199,15 +201,15 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (timed) {
                         TimerMini(running) {
-                            if (running) { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.stopHabitTimer(ctx, h.id, today) }
-                            else { com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.startHabitTimer(ctx, h.id) }
+                            if (running) { Haptics.confirm(ctx); LifeStores.stopHabitTimer(ctx, h.id, today) }
+                            else { Haptics.tick(ctx); LifeStores.startHabitTimer(ctx, h.id) }
                         }
                         if (!running) Spacer(Modifier.width(5.dp))
                     }
                     if (!running) {
-                        StepMini("−") { com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.setHabitCount(ctx, h.id, today, (HabitMetrics.progress(ctx, h, today) - step).coerceAtLeast(0)) }
+                        StepMini("−") { Haptics.tick(ctx); LifeStores.setHabitCount(ctx, h.id, today, (HabitMetrics.progress(ctx, h, today) - step).coerceAtLeast(0)) }
                         Spacer(Modifier.width(5.dp))
-                        StepMini("+") { com.ascend.lifeos.data.Haptics.tick(ctx); LifeStores.setHabitCount(ctx, h.id, today, HabitMetrics.progress(ctx, h, today) + step) }
+                        StepMini("+") { Haptics.tick(ctx); LifeStores.setHabitCount(ctx, h.id, today, HabitMetrics.progress(ctx, h, today) + step) }
                     }
                 }
             } else {
@@ -421,11 +423,11 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                     .border(0.5.dp, Crit.copy(alpha = if (armed) 0.5f else 0.3f), RoundedCornerShape(12.dp))
                     .pressScale {
                         if (armed) {
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            Haptics.confirm(ctx)
                             LifeStores.deleteHabit(ctx, h.id)
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Habit deleted")
+                            AppFeedback.show("Habit deleted")
                             onDismiss()
-                        } else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true }
+                        } else { Haptics.warn(ctx); armed = true }
                     }
                     .padding(vertical = 11.dp),
                 horizontalArrangement = Arrangement.Center,
@@ -595,8 +597,8 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                                     com.ascend.lifeos.data.life.HabitMetrics.personalThreshold(p.autoMetric, p.threshold)
                                 } else p.threshold
                                 LifeStores.addHabit(ctx, p.title, 0b1111111, p.icon, p.autoMetric, thr, p.target, p.unit, p.avoid)
-                                com.ascend.lifeos.data.Haptics.confirm(ctx)
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added")
+                                Haptics.confirm(ctx)
+                                AppFeedback.show("Habit added")
                             } else Modifier)
                             .padding(horizontal = 11.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -618,7 +620,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(if (custom.isNotBlank()) Mod.Mind else Mod.Mind.copy(alpha = 0.25f))
-                        .then(if (custom.isNotBlank()) Modifier.pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); LifeStores.addHabit(ctx, custom, 0b1111111); custom = ""; com.ascend.lifeos.ui.kit.AppFeedback.show("Habit added") } else Modifier)
+                        .then(if (custom.isNotBlank()) Modifier.pressScale { Haptics.confirm(ctx); LifeStores.addHabit(ctx, custom, 0b1111111); custom = ""; AppFeedback.show("Habit added") } else Modifier)
                         .padding(horizontal = 14.dp, vertical = 11.dp),
                 ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             }
@@ -626,7 +628,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
                     .border(0.5.dp, Mod.Mind.copy(alpha = 0.3f), RoundedCornerShape(11.dp))
-                    .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onBuild() }.padding(vertical = 11.dp),
+                    .pressScale { Haptics.tick(ctx); onBuild() }.padding(vertical = 11.dp),
                 horizontalArrangement = Arrangement.Center,
             ) { Text("Build your own — schedule · quit · measurable →", color = Mod.Mind, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
             Spacer(Modifier.height(24.dp))
@@ -731,9 +733,9 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (name.isNotBlank() && mask != 0) Mod.Mind else Mod.Mind.copy(alpha = 0.25f))
                     .then(if (name.isNotBlank() && mask != 0) Modifier.pressScale {
-                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                        Haptics.confirm(ctx)
                         LifeStores.addHabit(ctx, name, mask, emoji, "", 0, if (measurable) target else 0, if (measurable) unit else "", avoid)
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Habit created")
+                        AppFeedback.show("Habit created")
                         onDismiss()
                     } else Modifier)
                     .padding(vertical = 13.dp),

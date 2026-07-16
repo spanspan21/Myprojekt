@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.hud
 
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -79,6 +81,7 @@ import com.ascend.lifeos.data.Profile
 import com.ascend.lifeos.data.FastingCalc
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.WaterCalc
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.Motion
@@ -109,7 +112,7 @@ private enum class NView { DASH, MICROS, STATS, FASTING, RECIPES, SHOPPING }
 
 /** How far back the day cursor can travel for backdated logging. */
 private fun maxBackdateDays(ctx: android.content.Context): Int =
-    com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.BACKDATE_DAYS, 30)
+    Prefs.int(ctx, Prefs.BACKDATE_DAYS, 30)
 
 /**
  * FUEL — the full nutrition cockpit. A macro arc-reactor, dynamic hydration,
@@ -264,7 +267,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                                 val diff = avg - p.kcalGoal
                                 Text(
                                     "Ø $avg kcal (${if (diff >= 0) "+" else ""}$diff)",
-                                    color = if (kotlin.math.abs(diff) < com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.KCAL_TOLERANCE, 150)) Good else Warn,
+                                    color = if (kotlin.math.abs(diff) < Prefs.int(ctx, Prefs.KCAL_TOLERANCE, 150)) Good else Warn,
                                     fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = com.ascend.lifeos.ui.theme.Body, fontWeight = FontWeight.ExtraBold,
                                 )
                             }
@@ -353,7 +356,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                         ?.let { com.ascend.lifeos.data.training.ActivityTypes.byId(it.type) }
                 } else null
             }
-            val trainBonusL = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.WATER_TRAIN_BONUS, 500) / 1000f
+            val trainBonusL = Prefs.int(ctx, Prefs.WATER_TRAIN_BONUS, 500) / 1000f
             val bonusLabel = "+%.1f L".format(trainBonusL)
             HydrationCard(
                 glasses = day.water,
@@ -663,7 +666,7 @@ private fun CoachCheckInCard() {
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                        .clickable { com.ascend.lifeos.data.Haptics.tick(cctx); com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
+                        .clickable { Haptics.tick(cctx); com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text("Okay", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
             } else if (c != null) {
@@ -718,10 +721,10 @@ private fun CoachCheckInCard() {
                             .background(Mod.Fuel.copy(alpha = 0.16f))
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(11.dp))
                             .pressScale {
-                                com.ascend.lifeos.data.Haptics.confirm(cctx)
+                                Haptics.confirm(cctx)
                                 com.ascend.lifeos.data.nutrition.CoachRitual.adopt(c)
                                 gone = true
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Targets adopted")
+                                AppFeedback.show("Targets adopted")
                             }
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                     ) { Text("Adopt ${c.newKcal} kcal · P${c.protein}", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
@@ -743,8 +746,8 @@ private fun CoachCheckInCard() {
 @Composable
 private fun ProteinSpread(day: DayData) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    val ppmThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_PER_MEAL, 20)
-    val spreadFull = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SPREAD_FULL_G, 30).toFloat()
+    val ppmThresh = Prefs.int(ctx, Prefs.PROTEIN_PER_MEAL, 20)
+    val spreadFull = Prefs.int(ctx, Prefs.SPREAD_FULL_G, 30).toFloat()
     val perSlot = MEAL_SLOTS.map { (code, _) -> code to day.meals.filter { it.meal == code }.sumOf { it.protein } }
     val hit = perSlot.count { it.second >= ppmThresh }
     GlassPanel(Modifier.fillMaxWidth()) {
@@ -908,7 +911,7 @@ private fun HydrationCard(
                         maxLines = 1, style = shadow,
                     )
                     if (hot) {
-                        val heatBonusL = com.ascend.lifeos.data.Prefs.int(hCtx, com.ascend.lifeos.data.Prefs.WATER_HEAT_BONUS, 300) / 1000f
+                        val heatBonusL = Prefs.int(hCtx, Prefs.WATER_HEAT_BONUS, 300) / 1000f
                         Spacer(Modifier.width(7.dp)); Text("🔥 +%.1f L".format(heatBonusL), color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow)
                     }
                     if (showHeat) {
@@ -919,7 +922,7 @@ private fun HydrationCard(
             }
             if (canEdit) {
                 WaterButton(Icons.Rounded.Remove, "Remove water", 40.dp, Cyan, filled = false) {
-                    if (glasses > 0) { Repo.addWater(-1); com.ascend.lifeos.data.Haptics.tick(hCtx) }
+                    if (glasses > 0) { Repo.addWater(-1); Haptics.tick(hCtx) }
                 }
                 Spacer(Modifier.width(11.dp))
                 WaterButton(
@@ -927,15 +930,15 @@ private fun HydrationCard(
                     // Long-press logs a 0.5 L bottle (2 glasses) in one go — big-bottle
                     // drinkers shouldn't tap three times for one bottle.
                     onLongClick = {
-                        val bottleMl = com.ascend.lifeos.data.Prefs.int(hCtx, com.ascend.lifeos.data.Prefs.BOTTLE_ML, 500)
+                        val bottleMl = Prefs.int(hCtx, Prefs.BOTTLE_ML, 500)
                         val bottleGlasses = (bottleMl / WaterCalc.glassMl()).coerceAtLeast(1)
                         Repo.addWater(bottleGlasses)
-                        com.ascend.lifeos.data.Haptics.success(hCtx)
+                        Haptics.success(hCtx)
                     },
                 ) {
                     Repo.addWater(1)
-                    if (totalMl + WaterCalc.glassMl() >= targetMl) com.ascend.lifeos.data.Haptics.success(hCtx)
-                    else com.ascend.lifeos.data.Haptics.confirm(hCtx)
+                    if (totalMl + WaterCalc.glassMl() >= targetMl) Haptics.success(hCtx)
+                    else Haptics.confirm(hCtx)
                 }
             }
         }
@@ -1033,7 +1036,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                 Text(name, color = if (logged) TextPrimary else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 if (meals.isNotEmpty()) {
                     val protTotal = meals.sumOf { it.protein }
-                    val protThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_PER_MEAL, 20)
+                    val protThresh = Prefs.int(ctx, Prefs.PROTEIN_PER_MEAL, 20)
                     if (protTotal >= protThresh) {
                         Box(Modifier.size(6.dp).clip(CircleShape).background(Good))
                         Spacer(Modifier.width(6.dp))
@@ -1049,7 +1052,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                             color = Mod.Fuel.copy(alpha = 0.85f), fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable {
                                 y.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
-                                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                Haptics.confirm(ctx)
                             },
                         )
                     } else {
@@ -1097,8 +1100,8 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                         LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
                         Box(
                             Modifier.size(30.dp).clip(CircleShape).clickable {
-                                if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); Repo.removeFood(e.id, dayKey); com.ascend.lifeos.ui.kit.AppFeedback.show("Entry removed") }
-                                else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true }
+                                if (armed) { Haptics.confirm(ctx); Repo.removeFood(e.id, dayKey); AppFeedback.show("Entry removed") }
+                                else { Haptics.warn(ctx); armed = true }
                             },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -1107,7 +1110,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 15.dp, end = 15.dp, bottom = 12.dp)) {
-                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.success(ctx); Repo.saveMeal(name, meals); com.ascend.lifeos.ui.kit.AppFeedback.show("Meal saved") })
+                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale { Haptics.success(ctx); Repo.saveMeal(name, meals); AppFeedback.show("Meal saved") })
                 }
             }
         }
@@ -1127,10 +1130,10 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
     val protLeft = p.proteinGoal - totals.protein
     val hour = java.time.LocalTime.now().hour
     val gCtx = androidx.compose.ui.platform.LocalContext.current
-    val gapHour = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_FILLER_HOUR, 17)
-    val gapProt = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_PROT_THRESH, 25)
-    val gapKcal = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_KCAL_THRESH, 300)
-    val gapMin = com.ascend.lifeos.data.Prefs.int(gCtx, com.ascend.lifeos.data.Prefs.GAP_KCAL_MIN, 120)
+    val gapHour = Prefs.int(gCtx, Prefs.GAP_FILLER_HOUR, 17)
+    val gapProt = Prefs.int(gCtx, Prefs.GAP_PROT_THRESH, 25)
+    val gapKcal = Prefs.int(gCtx, Prefs.GAP_KCAL_THRESH, 300)
+    val gapMin = Prefs.int(gCtx, Prefs.GAP_KCAL_MIN, 120)
     val show = isToday && hour >= gapHour && (protLeft >= gapProt || kcalLeft >= gapKcal) && kcalLeft > gapMin
     if (!show) return
 
@@ -1152,7 +1155,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
                     .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                     .pressScale {
                         Repo.addFood(pick.entry, dayKey)
-                        com.ascend.lifeos.data.Haptics.confirm(hCtx)
+                        Haptics.confirm(hCtx)
                     }
                     .padding(horizontal = 12.dp, vertical = 9.dp),
             ) {

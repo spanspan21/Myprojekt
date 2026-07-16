@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -109,7 +110,7 @@ private fun DocRow(topic: DocTopic, accent: Color) {
     Column(Modifier.fillMaxWidth().animateContentSize()) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         Row(
-            Modifier.fillMaxWidth().pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); open = !open }.padding(vertical = 11.dp),
+            Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); open = !open }.padding(vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(

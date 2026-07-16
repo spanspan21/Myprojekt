@@ -42,10 +42,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.school.SchoolStore
 import com.ascend.lifeos.data.school.SchoolStore.Grade
 import com.ascend.lifeos.data.school.SchoolStore.Subject
 import com.ascend.lifeos.ui.finance.AddRowButton
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
@@ -239,14 +241,14 @@ fun SchoolScreen(onClose: () -> Unit) {
                         onToggle = { expanded = if (expanded == s.id) null else s.id },
                         onAddGrade = { addGradeFor = s },
                         onDeleteGrade = { g ->
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            Haptics.confirm(ctx)
                             SchoolStore.deleteGrade(ctx, g.id); tick++
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Grade deleted")
+                            AppFeedback.show("Grade deleted")
                         },
                         onDeleteSubject = {
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            Haptics.confirm(ctx)
                             SchoolStore.deleteSubject(ctx, s.id); tick++
-                            com.ascend.lifeos.ui.kit.AppFeedback.show("Subject deleted")
+                            AppFeedback.show("Subject deleted")
                         },
                     )
                     Spacer(Modifier.height(8.dp))
@@ -378,7 +380,7 @@ private fun SubjectCard(
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Crit.copy(alpha = if (armed) 0.22f else 0.10f))
                             .border(0.5.dp, Crit.copy(alpha = if (armed) 0.6f else 0.3f), RoundedCornerShape(11.dp))
-                            .clickable { if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); onDeleteSubject() } else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
+                            .clickable { if (armed) { Haptics.confirm(ctx); onDeleteSubject() } else { Haptics.warn(ctx); armed = true } }
                             .padding(horizontal = 14.dp, vertical = 11.dp),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -538,7 +540,7 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (name.isNotBlank()) Mod.School else Mod.School.copy(alpha = 0.25f))
-                    .then(if (name.isNotBlank()) Modifier.pressScale { SchoolStore.addSubject(ctx, name, points); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Subject added"); onSaved(); onDismiss() } else Modifier)
+                    .then(if (name.isNotBlank()) Modifier.pressScale { SchoolStore.addSubject(ctx, name, points); Haptics.confirm(ctx); AppFeedback.show("Subject added"); onSaved(); onDismiss() } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Add subject", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -611,7 +613,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
 
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Mod.School)
-                    .pressScale { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Grade added"); onSaved(); onDismiss() }
+                    .pressScale { SchoolStore.addGrade(ctx, subject.id, value, oral, weight, note); Haptics.confirm(ctx); AppFeedback.show("Grade added"); onSaved(); onDismiss() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save grade", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

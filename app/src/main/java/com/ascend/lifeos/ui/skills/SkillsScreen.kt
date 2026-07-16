@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.masterplan.DomainWithGraph
 import com.ascend.lifeos.data.masterplan.NodeWithChildren
 import com.ascend.lifeos.data.masterplan.ResourceEntity
@@ -211,7 +212,7 @@ private fun FocusNowCard(
                     Box(
                         Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (sel) Mod.Skills else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                            .pressScale { onMinutes(m); com.ascend.lifeos.data.Haptics.tick(ctx) }
+                            .pressScale { onMinutes(m); Haptics.tick(ctx) }
                             .padding(horizontal = 14.dp, vertical = 7.dp),
                     ) {
                         Text(
@@ -299,7 +300,7 @@ private fun ReviewQueue(due: List<DueReview>, onGraded: () -> Unit) {
                         openId = null
                         onGraded()
                         val label = if (days == 1) "tomorrow" else "in $days days"
-                        com.ascend.lifeos.ui.kit.AppFeedback.show("Next review $label")
+                        AppFeedback.show("Next review $label")
                     },
                 )
             }
@@ -336,9 +337,9 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val gradeCtx = LocalContext.current
-                GradeChip("Again", TextMuted) { onGrade(SkillMeta.GRADE_AGAIN); com.ascend.lifeos.data.Haptics.tick(gradeCtx) }
-                GradeChip("Good", Mod.Skills) { onGrade(SkillMeta.GRADE_GOOD); com.ascend.lifeos.data.Haptics.confirm(gradeCtx) }
-                GradeChip("Easy", Good) { onGrade(SkillMeta.GRADE_EASY); com.ascend.lifeos.data.Haptics.confirm(gradeCtx) }
+                GradeChip("Again", TextMuted) { onGrade(SkillMeta.GRADE_AGAIN); Haptics.tick(gradeCtx) }
+                GradeChip("Good", Mod.Skills) { onGrade(SkillMeta.GRADE_GOOD); Haptics.confirm(gradeCtx) }
+                GradeChip("Easy", Good) { onGrade(SkillMeta.GRADE_EASY); Haptics.confirm(gradeCtx) }
             }
         }
     }
@@ -588,13 +589,13 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                                     vm.setTaskDone(t.id, !doneTask)
                                     if (completesNode) {
                                         SkillMeta.scheduleInitial(ctx, n.node.id)
-                                        com.ascend.lifeos.data.Haptics.epic(ctx)
+                                        Haptics.epic(ctx)
                                         AppFeedback.show("Milestone complete — review scheduled")
                                     } else if (!doneTask) {
-                                        com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                        Haptics.confirm(ctx)
                                         AppFeedback.show("Task done")
                                     } else {
-                                        com.ascend.lifeos.data.Haptics.tick(ctx)
+                                        Haptics.tick(ctx)
                                     }
                                 }
                                 .padding(vertical = 6.dp),
@@ -664,7 +665,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                                 WellbeingStore.startFocus(ctx, 25)
                                 com.ascend.lifeos.wellbeing.JarvisGuardService.start(ctx)
                                 SkillMeta.addFocusMinutes(ctx, n.node.domainId, 25)
-                                com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                Haptics.confirm(ctx)
                                 AppFeedback.show("Focus session started — 25 min")
                             }
                             .padding(vertical = 12.dp),

@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.FS
 import kotlinx.coroutines.delay
@@ -579,7 +580,7 @@ private fun GateLock(
     val hCtx = LocalContext.current
     LaunchedEffect(Unit) {
         while (true) {
-            com.ascend.lifeos.data.Haptics.tick(hCtx)
+            Haptics.tick(hCtx)
             delay(6_000)
         }
     }

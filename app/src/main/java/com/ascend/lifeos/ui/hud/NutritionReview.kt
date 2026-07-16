@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Good
@@ -67,8 +68,8 @@ fun WeeklyFuelReview(isToday: Boolean) {
     val avgK = days.filter { it.logged }.map { it.kcal }.average().roundToInt()
     val avgP = days.filter { it.logged }.map { it.protein }.average().roundToInt()
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    val protPct = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_HIT_PCT, 90) / 100.0
-    val kcalPct = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.KCAL_ADHERENCE_PCT, 10) / 100.0
+    val protPct = Prefs.int(ctx, Prefs.PROTEIN_HIT_PCT, 90) / 100.0
+    val kcalPct = Prefs.int(ctx, Prefs.KCAL_ADHERENCE_PCT, 10) / 100.0
     val protHit = days.count { it.logged && it.protein >= p.proteinGoal * protPct }
     val kcalHit = days.count { it.logged && p.kcalGoal > 0 && abs(it.kcal - p.kcalGoal) <= p.kcalGoal * kcalPct }
     val score = (40.0 * logged / 7 + 30.0 * protHit / logged + 30.0 * kcalHit / logged).roundToInt()

@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.hud
 
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.CustomFood
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Mod
 import com.ascend.lifeos.ui.theme.TextDim
@@ -254,7 +256,7 @@ fun DrinkBuilderPane(
                 ),
                 dayKey,
             )
-            com.ascend.lifeos.ui.kit.AppFeedback.show("$name logged")
+            AppFeedback.show("$name logged")
             onAdded()
         }
         Box(
@@ -271,8 +273,8 @@ fun DrinkBuilderPane(
                         ),
                     )
                     starred = true
-                    com.ascend.lifeos.data.Haptics.confirm(ctx)
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Saved as favorite")
+                    Haptics.confirm(ctx)
+                    AppFeedback.show("Saved as favorite")
                 },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.Star, if (starred) "Saved as favorite" else "Save as favorite", tint = Amber, modifier = Modifier.size(20.dp)) }

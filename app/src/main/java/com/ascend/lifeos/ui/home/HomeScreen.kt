@@ -61,6 +61,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.JarvisVoice
@@ -143,9 +145,9 @@ fun HomeScreen(
     val healthConnected = Repo.data.health != null && Repo.data.health?.sleepMin != null
 
     LaunchedEffect(profile.streak) {
-        if (profile.streak == 7 && !com.ascend.lifeos.data.Prefs.bool(ctx, "hint_edit_dashboard", false)) {
-            com.ascend.lifeos.data.Prefs.setBool(ctx, "hint_edit_dashboard", true)
-            com.ascend.lifeos.ui.kit.AppFeedback.show("One week in — tap 'Edit dashboard' below to reorder or hide cards")
+        if (profile.streak == 7 && !Prefs.bool(ctx, "hint_edit_dashboard", false)) {
+            Prefs.setBool(ctx, "hint_edit_dashboard", true)
+            AppFeedback.show("One week in — tap 'Edit dashboard' below to reorder or hide cards")
         }
     }
 
@@ -211,10 +213,10 @@ fun HomeScreen(
     LaunchedEffect(missionsDone) {
         if (seenDone in 0 until missionsDone) {
             if (missionsDone == 3) {   // the #1 moment: all missions complete
-                com.ascend.lifeos.data.Haptics.epic(ctx)
+                Haptics.epic(ctx)
                 runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
                 goldSweepTick++        // Gold-Sweep über die Missions-Sektion (Kap. 20)
-            } else com.ascend.lifeos.data.Haptics.success(ctx)
+            } else Haptics.success(ctx)
         }
         seenDone = missionsDone
     }
@@ -280,7 +282,7 @@ fun HomeScreen(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(Warn.copy(alpha = 0.12f))
                         .border(0.5.dp, Warn.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); Repo.setSickMode(false) }
+                        .pressScale { Haptics.tick(ctx); Repo.setSickMode(false) }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Text(
@@ -290,7 +292,7 @@ fun HomeScreen(
                     )
                 }
             }
-            val deloadUntil = remember { com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.DELOAD_UNTIL, 0).toLong() }
+            val deloadUntil = remember { Prefs.int(ctx, Prefs.DELOAD_UNTIL, 0).toLong() }
             if (deloadUntil > 0 && deloadUntil >= LocalDate.now().toEpochDay()) {
                 val daysLeft = (deloadUntil - LocalDate.now().toEpochDay()).toInt()
                 Reveal(0) {
@@ -319,8 +321,8 @@ fun HomeScreen(
                         runCatching { com.ascend.lifeos.data.training.MuscleRecovery.compute(ctx).map }.getOrNull()
                     }
                 }
-                val rGood = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_GOOD, 75)
-                val rWarn = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_WARN, 50)
+                val rGood = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
+                val rWarn = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
                 val rColor = when {
                     readiness == null -> TextDim
                     readiness >= rGood -> Good
@@ -360,7 +362,7 @@ fun HomeScreen(
                             color = TextDim, fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
                             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
                             modifier = if (readiness != null) Modifier.clickable {
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep (40%) + deep/REM (20%) + resting HR (25%) + training load (15%) + morning check-in")
+                                AppFeedback.show("Sleep (40%) + deep/REM (20%) + resting HR (25%) + training load (15%) + morning check-in")
                             } else Modifier,
                         )
                         Spacer(Modifier.height(9.dp))
@@ -369,7 +371,7 @@ fun HomeScreen(
                             when {
                                 f.isNullOrEmpty() -> "Scan idle — log sets to light it up"
                                 else -> {
-                                    val freshThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FRESHNESS_THRESHOLD, 45) / 100f
+                                    val freshThresh = Prefs.int(ctx, Prefs.FRESHNESS_THRESHOLD, 45) / 100f
                                     val tired = f.filterValues { it < freshThresh }.keys.take(2)
                                     if (tired.isEmpty()) "All systems fresh — full send"
                                     else "Recovering: " + tired.joinToString(" · ") {
@@ -408,11 +410,11 @@ fun HomeScreen(
                                 val aura = remember { androidx.compose.animation.core.Animatable(0f) }
                                 LaunchedEffect(Unit) {
                                     if (isMark && !Motion.reduced(ctx) &&
-                                        com.ascend.lifeos.data.Prefs.string(ctx, "streak_aura_seen", "") != "${profile.streak}"
+                                        Prefs.string(ctx, "streak_aura_seen", "") != "${profile.streak}"
                                     ) {
                                         kotlinx.coroutines.delay(1900)
                                         aura.animateTo(1f, tween(900, easing = Motion.easeOut))
-                                        com.ascend.lifeos.data.Prefs.setString(ctx, "streak_aura_seen", "${profile.streak}")
+                                        Prefs.setString(ctx, "streak_aura_seen", "${profile.streak}")
                                         aura.snapTo(0f)
                                     }
                                 }
@@ -438,7 +440,7 @@ fun HomeScreen(
                             // a demoralising "day one" if you've actually been showing
                             // up — surface the forgiving 30-day consistency instead.
                             val habit = remember(profile.streak, missionsDone) { Repo.habitStrength() }
-                            val consistThresh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.HABIT_CONSIST_THRESH, 40)
+                            val consistThresh = Prefs.int(ctx, Prefs.HABIT_CONSIST_THRESH, 40)
                             val atRisk = profile.streak > 0 && missionsDone < 3 && java.time.LocalTime.now().hour >= 18
                             Text(
                                 when {
@@ -461,13 +463,13 @@ fun HomeScreen(
             }
 
             // optional spoken briefing — only rendered when the toggle is on
-            if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.TTS_BRIEFING, false)) {
+            if (Prefs.bool(ctx, Prefs.TTS_BRIEFING, false)) {
                 Spacer(Modifier.height(10.dp))
                 Row(
                     Modifier.clip(RoundedCornerShape(10.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                        .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
+                        .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -519,14 +521,14 @@ fun HomeScreen(
                     }
                 }
                 val insight by produceState<com.ascend.lifeos.data.InsightMiner.Insight?>(null) {
-                    if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.INSIGHTS_ON, true)) {
+                    if (Prefs.bool(ctx, Prefs.INSIGHTS_ON, true)) {
                         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                             runCatching { com.ascend.lifeos.data.InsightMiner.mine(ctx) }.getOrNull()
                         }
                     }
                 }
                 var insightDismissed by remember { mutableStateOf(false) }
-                val exam = if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.EXAM_COUNTDOWN, true)) dayContext.second else null
+                val exam = if (Prefs.bool(ctx, Prefs.EXAM_COUNTDOWN, true)) dayContext.second else null
 
                 val ins = insight?.takeIf { !insightDismissed }
 
@@ -771,7 +773,7 @@ fun HomeScreen(
                         .background(Mod.Body.copy(alpha = 0.08f))
                         .pressScale {
                             Repo.addWater(1)
-                            com.ascend.lifeos.data.Haptics.confirm(ctx)
+                            Haptics.confirm(ctx)
                         }
                         .padding(horizontal = 14.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -809,7 +811,7 @@ fun HomeScreen(
                                 .background(if (done) Good.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                                 .then(if (!done) Modifier.pressScale {
-                                    com.ascend.lifeos.data.Haptics.confirm(ctx)
+                                    Haptics.confirm(ctx)
                                     com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, h.id, dk, true)
                                 } else Modifier)
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
@@ -955,14 +957,14 @@ fun HomeScreen(
                                     VitalMini("Sleep", "${sm / 60}h${"%02d".format(sm % 60)}", sm / needMin.toFloat(), Mod.Body)
                                 }
                                 readiness?.let { r ->
-                                    val rG = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_GOOD, 75)
-                                    val rW = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.READINESS_WARN, 50)
+                                    val rG = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
+                                    val rW = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
                                     VitalMini("Recovery", "$r%", r / 100f, when {
                                         r >= rG -> Good; r >= rW -> Warn; else -> Crit
                                     })
                                 }
                                 steps?.let { s ->
-                                    val stepGoal = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.STEP_GOAL, 10000)
+                                    val stepGoal = Prefs.int(ctx, Prefs.STEP_GOAL, 10000)
                                     VitalMini("Steps", if (s >= 1000) "${s / 1000}k" else "$s", (s / stepGoal.toFloat()).coerceAtMost(1f), Mod.Train)
                                 }
                                 rhr?.let { hr ->
@@ -1097,7 +1099,7 @@ private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
         Box(
             Modifier.size(52.dp).clip(CircleShape)
                 .background(Mod.Home)
-                .pressScale { com.ascend.lifeos.data.Haptics.tick(qlCtx); onClick() },
+                .pressScale { Haptics.tick(qlCtx); onClick() },
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.Add, "Quick log", tint = Void, modifier = Modifier.size(26.dp))
@@ -1142,7 +1144,7 @@ private fun SleepConfirmCard(
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                             .background(accent.copy(alpha = 0.10f))
                             .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
-                            .pressScale { com.ascend.lifeos.data.Haptics.confirm(scCtx); onConfirm(mins) }
+                            .pressScale { Haptics.confirm(scCtx); onConfirm(mins) }
                             .padding(vertical = 9.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
@@ -1181,7 +1183,7 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
     val current = blocks.firstOrNull { it.startMin <= nowMin }
     val next = blocks.firstOrNull { it.startMin > nowMin }
     // first free slot from now that fits a session
-    val minSlot = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.CAL_MIN_SLOT, 40)
+    val minSlot = Prefs.int(ctx, Prefs.CAL_MIN_SLOT, 40)
     val slot = timeline?.freeSlots.orEmpty()
         .map { s -> if (s.startMin < nowMin) s.copy(startMin = nowMin) else s }
         .firstOrNull { it.endMin > nowMin && it.durationMin >= minSlot }
@@ -1393,8 +1395,8 @@ internal object HomeCards {
     // pref has never mentioned are new ships → they appear (at the end) instead
     // of being invisible forever; deliberately hidden ones stay hidden.
     fun order(ctx: android.content.Context): List<String> {
-        val raw = com.ascend.lifeos.data.Prefs.string(
-            ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS, DEFAULT.joinToString(","),
+        val raw = Prefs.string(
+            ctx, Prefs.HOME_CARDS, DEFAULT.joinToString(","),
         )
         val known = DEFAULT.toSet()
         val tokens = raw.split(",")
@@ -1407,8 +1409,8 @@ internal object HomeCards {
 
     fun save(ctx: android.content.Context, order: List<String>) {
         val hidden = DEFAULT.filter { it !in order }
-        com.ascend.lifeos.data.Prefs.setString(
-            ctx, com.ascend.lifeos.data.Prefs.HOME_CARDS,
+        Prefs.setString(
+            ctx, Prefs.HOME_CARDS,
             (order + hidden.map { "-$it" }).joinToString(","),
         )
     }
