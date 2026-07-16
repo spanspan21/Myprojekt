@@ -270,7 +270,7 @@ private fun OutcomeButton(label: String, color: Color, on: Boolean, modifier: Mo
         modifier.clip(RoundedCornerShape(11.dp))
             .background(if (on) color.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (on) color else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -338,7 +338,7 @@ private fun StepBox(sign: String, onClick: () -> Unit) {
         Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
-            .clickable { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() },
+            .pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
 }

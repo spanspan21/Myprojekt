@@ -133,7 +133,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (sel) Mod.Body.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                .clickable { napMin = m; napLogged = false }
+                                .pressScale { napMin = m; napLogged = false }
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                         ) {
                             Text(
@@ -466,7 +466,7 @@ private fun StepOrb(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(32.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold) }
 }
