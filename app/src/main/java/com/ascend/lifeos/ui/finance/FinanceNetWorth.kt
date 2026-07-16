@@ -276,7 +276,7 @@ internal fun HoldingsSection(kind: HoldingKind, title: String, number: Int) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                 items.forEachIndexed { i, h ->
                     if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.06f)))
-                    HoldingRow(h, kind, onEdit = { edit = h }, onDelete = { FinanceStore.deleteHolding(ctx, h.id) })
+                    HoldingRow(h, kind, onEdit = { edit = h }, onDelete = { FinanceStore.deleteHolding(ctx, h.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Holding deleted") })
                 }
             }
         }

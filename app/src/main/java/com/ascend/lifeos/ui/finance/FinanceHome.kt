@@ -811,7 +811,7 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
                     r,
                     onToggle = { FinanceStore.setRecurringActive(ctx, r.id, !r.active) },
                     onBook = { FinanceStore.bookRecurring(ctx, r.id) },
-                    onDelete = { FinanceStore.deleteRecurring(ctx, r.id) },
+                    onDelete = { FinanceStore.deleteRecurring(ctx, r.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Recurring deleted") },
                 )
             }
         }
@@ -915,7 +915,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                     VerdictPill("Done", Good)
                     Spacer(Modifier.width(10.dp))
                 }
-                ArmedDelete(onDelete = { FinanceStore.deleteSaveGoal(ctx, g.id) })
+                ArmedDelete(onDelete = { FinanceStore.deleteSaveGoal(ctx, g.id); com.ascend.lifeos.ui.kit.AppFeedback.show("Goal deleted") })
             }
             if (!done) {
                 Spacer(Modifier.height(10.dp))

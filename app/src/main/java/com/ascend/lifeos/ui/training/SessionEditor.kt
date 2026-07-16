@@ -99,7 +99,7 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                     items(exSets.size, key = { i -> exSets[i].id }) { i ->
                         Column(Modifier.animateItem()) {
                             HistorySetRow(exSets[i], onEdit = { dr, dw -> vm.editHistorySet(exSets[i].id, dr, dw) }) {
-                                vm.deleteHistorySet(exSets[i])
+                                vm.deleteHistorySet(exSets[i]); com.ascend.lifeos.ui.kit.AppFeedback.show("Set removed")
                             }
                             Spacer(Modifier.height(6.dp))
                         }

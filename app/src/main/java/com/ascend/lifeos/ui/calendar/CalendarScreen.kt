@@ -532,6 +532,8 @@ private fun IcsFeedRow() {
     var input by remember { mutableStateOf("") }
     var syncing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var armedRemoveFeed by remember { mutableStateOf(false) }
+    LaunchedEffect(armedRemoveFeed) { if (armedRemoveFeed) { kotlinx.coroutines.delay(2500); armedRemoveFeed = false } }
 
     fun runSync(firstAttempt: Boolean = false) {
         if (syncing) return
@@ -577,12 +579,17 @@ private fun IcsFeedRow() {
             }
             Spacer(Modifier.width(6.dp))
             Icon(
-                Icons.Rounded.Close, "Remove timetable feed", tint = TextDim,
+                Icons.Rounded.Close, if (armedRemoveFeed) "Confirm remove" else "Remove timetable feed",
+                tint = if (armedRemoveFeed) Crit else TextDim,
                 modifier = Modifier.clip(CircleShape).clickable {
-                    scope.launch {
-                        IcsSync.removeFeed(ctx) // clears the feed + deletes its imported events
-                        expanded = false; input = ""; error = null; tick++
-                    }
+                    if (armedRemoveFeed) {
+                        scope.launch {
+                            IcsSync.removeFeed(ctx)
+                            expanded = false; input = ""; error = null; tick++
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("Feed removed")
+                        }
+                        armedRemoveFeed = false
+                    } else armedRemoveFeed = true
                 }.padding(5.dp).size(14.dp),
             )
         }
@@ -1152,7 +1159,7 @@ private fun UntisRow() {
                     Icon(
                         Icons.Rounded.Close, "Remove WebUntis", tint = TextDim,
                         modifier = Modifier.size(16.dp).clickable {
-                            scope.launch { UntisSync.remove(ctx); tick++; status = "Removed" }
+                            scope.launch { UntisSync.remove(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("WebUntis removed"); tick++; status = "Removed" }
                         },
                     )
                 }

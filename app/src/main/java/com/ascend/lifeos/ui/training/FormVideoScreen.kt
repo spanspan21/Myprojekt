@@ -61,6 +61,8 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
     var elapsed by remember { mutableIntStateOf(0) }
     var playing by remember { mutableStateOf<File?>(null) }
     var camReady by remember { mutableStateOf(false) }
+    var armedDelete by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(armedDelete) { if (armedDelete != null) { kotlinx.coroutines.delay(2500); armedDelete = null } }
 
     val hasCam = ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.CAMERA) ==
         android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -205,9 +207,14 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                                     color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                                 )
                             }
+                            val armed = armedDelete == f.absolutePath
                             Icon(
-                                Icons.Rounded.Delete, "Delete video", tint = TextDim.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp).clickable { f.delete(); clips = listClips(dir) },
+                                Icons.Rounded.Delete, if (armed) "Confirm delete" else "Delete video",
+                                tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
+                                modifier = Modifier.size(16.dp).clickable {
+                                    if (armed) { f.delete(); clips = listClips(dir); armedDelete = null; com.ascend.lifeos.ui.kit.AppFeedback.show("Video deleted") }
+                                    else armedDelete = f.absolutePath
+                                },
                             )
                         }
                     }
