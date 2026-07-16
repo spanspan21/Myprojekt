@@ -205,9 +205,9 @@ private fun SearchPane(
     autoFocus: Boolean, onAutoFocused: () -> Unit,
 ) {
     val ctx = LocalContext.current
-    Text("Add food", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+    Text("Add food", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
     backdateLabel(dayKey)?.let {
-        Text("Logging to $it", color = Mod.Fuel, fontSize = FS.s11_5, fontWeight = FontWeight.Bold)
+        Text("Logging to $it", color = Mod.Fuel, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
     Spacer(Modifier.height(14.dp))
 
@@ -264,7 +264,7 @@ private fun SearchPane(
                         Repo.profile().recentFoods.sortedByDescending { if (it.meal == meal) 1 else 0 }
                     }
                     if (recents.isEmpty()) {
-                        com.ascend.lifeos.ui.kit.EmptyState(
+                        EmptyState(
                             icon = androidx.compose.material.icons.Icons.Rounded.Search,
                             title = "Nothing logged yet",
                             hint = "Type in the search above or scan a barcode",
@@ -321,7 +321,7 @@ private fun SearchPane(
                 }
                 // ── Teller: die ~geschätzten Alltagsgerichte (Kap. 37) ──
                 else -> {
-                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = FS.s12, lineHeight = 17.sp)
+                    Text("~ means honestly estimated. Tap for S / M / L.", color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
                     Spacer(Modifier.height(10.dp))
                     BasicFoods.ALL.filter { it.approx }.forEach { p ->
                         ResultRow(
@@ -400,7 +400,7 @@ private fun SearchPane(
                     }
                 } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
                     Column {
-                        com.ascend.lifeos.ui.kit.EmptyState(Icons.Rounded.Search, "No results", "Try a different name or add your own below", Mod.Fuel)
+                        EmptyState(Icons.Rounded.Search, "No results", "Try a different name or add your own below", Mod.Fuel)
                         // Kap. 35: drei Wege statt Sackgasse
                         val dym = remember(query) { BasicFoods.didYouMean(query) }
                         if (dym != null) {
@@ -440,11 +440,11 @@ private fun SearchPane(
         GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("${basket.size} in basket", color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.Bold)
-                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g protein", color = TextDim, fontSize = FS.s10_5)
+                    Text("${basket.size} in basket", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g protein", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                 }
                 Text(
-                    "Clear", color = TextDim, fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
+                    "Clear", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.pressScale { onBasket(emptyList()) }.padding(8.dp),
                 )
                 Spacer(Modifier.width(6.dp))
@@ -537,7 +537,7 @@ private fun pseudoProduct(e: FoodEntry): FoodApi.Product? {
 
 @Composable
 private fun Section(title: String) {
-    Text(title, color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
+    Text(title, color = TextDim, fontSize = FS.s9, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
 }
 
 @Composable
@@ -557,7 +557,7 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
     ) {
         Icon(icon, label, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
-        Text(label, color = TextMuted, fontSize = FS.s12_5, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(label, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 
@@ -570,8 +570,8 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text(sub, color = TextDim, fontSize = FS.s11, maxLines = 1)
+                Text(title, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(sub, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1)
             }
             if (verified) {
                 Spacer(Modifier.width(8.dp))
@@ -583,7 +583,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
                 } else {
                     val c = when (score) { "A" -> Good; "B" -> Mod.Fuel; "C" -> Warn; "D" -> Orange; else -> Crit }
                     Box(Modifier.size(24.dp).clip(RoundedCornerShape(7.dp)).background(c.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
-                        Text(score, color = c, fontSize = FS.s12, fontWeight = FontWeight.Bold)
+                        Text(score, color = c, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -615,9 +615,9 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(product.name, color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold, maxLines = 2)
-            product.brand?.let { Text(it, color = TextDim, fontSize = FS.s11_5) }
-            if (fromCache) Text("cached", color = Mod.Fuel.copy(alpha = 0.85f), fontSize = FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+            Text(product.name, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2)
+            product.brand?.let { Text(it, color = TextDim, fontSize = FS.s11_5, fontFamily = Body) }
+            if (fromCache) Text("cached", color = Mod.Fuel.copy(alpha = 0.85f), fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
         }
         Spacer(Modifier.width(8.dp))
         VerdictPill("${eval.score}/10 · ${eval.label}", Color(eval.color))
@@ -628,7 +628,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     if (evalLines.isNotEmpty()) {
         Spacer(Modifier.height(10.dp))
         evalLines.forEach { (line, c) ->
-            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, lineHeight = 15.sp, maxLines = 2)
+            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = 15.sp, maxLines = 2)
         }
     }
 
@@ -650,7 +650,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         Modifier.fillMaxWidth().pressScale { showDetails = !showDetails },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = FS.s11_5, fontWeight = FontWeight.Bold)
+        Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
         // collapsed-state teaser badges
         product.nova?.let { DetailBadge("NOVA $it", if (it >= 4) Crit else TextDim) }
@@ -662,10 +662,10 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
             Spacer(Modifier.height(10.dp))
             // full verdict narration (un-truncated)
             (eval.pros.map { it to Good } + eval.cons.map { it to Crit }).forEach { (line, c) ->
-                Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, lineHeight = 15.sp)
+                Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = 15.sp)
             }
             Spacer(Modifier.height(12.dp))
-            Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
             Spacer(Modifier.height(6.dp))
             NutrientRow("Saturated fat", product.satFat100 * f, "g", 1.5, 5.0)
             NutrientRow("Sugar", product.sugars100 * f, "g", 5.0, 22.5)
@@ -674,13 +674,13 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
             val risky = FoodScore.riskyAdditives(product).map { it.first }.toSet()
             if (product.additives.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
-                Text("ADDITIVES", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("ADDITIVES", color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(4.dp))
                 FlowRowChips(product.additives.map { FoodScore.normAdditive(it) }) { e -> e in risky }
             }
             product.allergens.takeIf { it.isNotEmpty() }?.let {
                 Spacer(Modifier.height(8.dp))
-                Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = FS.s10, lineHeight = 14.sp)
+                Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = FS.s10, fontFamily = Body, lineHeight = 14.sp)
             }
         }
     }
@@ -688,7 +688,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     Spacer(Modifier.height(14.dp))
     // Kap. 38: Getränke sprechen ml, Essen spricht Portionen — Gramm ist Fallback
     val isMl = product.portions.any { it.ml }
-    Text("AMOUNT", color = TextDim, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+    Text("AMOUNT", color = TextDim, fontSize = FS.s9, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(96.dp)) {
@@ -709,7 +709,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     }
     if (lastGrams != null) {
         Spacer(Modifier.height(6.dp))
-        Text("last time: $lastGrams ${if (isMl) "ml" else "g"}", color = TextDim, fontSize = FS.s10)
+        Text("last time: $lastGrams ${if (isMl) "ml" else "g"}", color = TextDim, fontSize = FS.s10, fontFamily = Body)
     }
 
     Spacer(Modifier.height(14.dp))
@@ -752,7 +752,7 @@ private fun DetailBadge(text: String, color: Color) {
     Box(
         Modifier.clip(RoundedCornerShape(6.dp)).background(color.copy(alpha = 0.14f))
             .padding(horizontal = 6.dp, vertical = 2.dp),
-    ) { Text(text, color = color, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp) }
+    ) { Text(text, color = color, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp) }
 }
 
 /** One traffic-light nutrient row. [inverse] = higher is better (fiber). */
@@ -766,8 +766,8 @@ private fun NutrientRow(label: String, value: Double, unit: String, low: Double,
     Row(Modifier.fillMaxWidth().padding(vertical = 2.5.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(7.dp).clip(CircleShape).background(dot))
         Spacer(Modifier.width(9.dp))
-        Text(label, color = TextMuted, fontSize = FS.s11, modifier = Modifier.weight(1f))
-        Text("${if (value >= 10) value.roundToInt().toString() else "%.1f".format(value)} $unit", color = TextPrimary, fontSize = FS.s11, fontWeight = FontWeight.SemiBold)
+        Text(label, color = TextMuted, fontSize = FS.s11, fontFamily = Body, modifier = Modifier.weight(1f))
+        Text("${if (value >= 10) value.roundToInt().toString() else "%.1f".format(value)} $unit", color = TextPrimary, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -780,7 +780,7 @@ private fun FlowRowChips(items: List<String>, isRisky: (String) -> Boolean) {
                 Modifier.clip(RoundedCornerShape(7.dp))
                     .background((if (risky) Crit else TextDim).copy(alpha = 0.12f))
                     .padding(horizontal = 8.dp, vertical = 3.dp),
-            ) { Text(e, color = if (risky) Crit else TextMuted, fontSize = FS.s10, fontWeight = if (risky) FontWeight.Bold else FontWeight.Normal) }
+            ) { Text(e, color = if (risky) Crit else TextMuted, fontSize = FS.s10, fontFamily = Body, fontWeight = if (risky) FontWeight.Bold else FontWeight.Normal) }
         }
     }
 }
@@ -788,8 +788,8 @@ private fun FlowRowChips(items: List<String>, isRisky: (String) -> Boolean) {
 @Composable
 private fun PortionStat(value: String, label: String, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.ExtraBold)
-        Text(label.uppercase(), color = TextDim, fontSize = FS.s8, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(value, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+        Text(label.uppercase(), color = TextDim, fontSize = FS.s8, fontFamily = Display, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

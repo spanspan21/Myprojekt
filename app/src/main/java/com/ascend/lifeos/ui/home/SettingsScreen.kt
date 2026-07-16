@@ -890,7 +890,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 applyTheme(spec.id)
                                 Haptics.tick(ctx)
                             }
-                            .padding(7.dp),
+                            .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Box(
@@ -1411,7 +1411,7 @@ private fun ActionRow(title: String, sub: String, onClick: () -> Unit) {
             Text(title, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
             Text(sub, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
         }
-        Text("→", color = TextDim, fontSize = FS.s14)
+        Text("→", color = TextDim, fontSize = FS.s14, fontFamily = Body)
     }
 }
 
@@ -1465,7 +1465,7 @@ private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange:
                 .background(Ivory.copy(alpha = 0.06f))
                 .pressScale { onChange((value + step).coerceAtMost(max)) },
             contentAlignment = Alignment.Center,
-        ) { Text("▲", color = TextMuted, fontSize = FS.s14) }
+        ) { Text("▲", color = TextMuted, fontSize = FS.s14, fontFamily = Body) }
         Spacer(Modifier.height(6.dp))
         Text(
             "%02d".format(value), color = TextPrimary,
@@ -1477,7 +1477,7 @@ private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange:
                 .background(Ivory.copy(alpha = 0.06f))
                 .pressScale { onChange((value - step).coerceAtLeast(min)) },
             contentAlignment = Alignment.Center,
-        ) { Text("▼", color = TextMuted, fontSize = FS.s14) }
+        ) { Text("▼", color = TextMuted, fontSize = FS.s14, fontFamily = Body) }
     }
 }
 

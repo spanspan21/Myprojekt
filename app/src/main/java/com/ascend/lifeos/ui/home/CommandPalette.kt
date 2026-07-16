@@ -48,6 +48,7 @@ import com.ascend.lifeos.data.sleep.SleepStore
 import com.ascend.lifeos.data.training.ActivityTypes
 import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
@@ -545,7 +546,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
         }
     }
 
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "COMMAND", color = Mod.Home, fontFamily = Display,

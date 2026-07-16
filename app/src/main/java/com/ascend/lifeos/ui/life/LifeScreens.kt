@@ -35,6 +35,7 @@ import com.ascend.lifeos.data.life.Goal
 import com.ascend.lifeos.data.life.Kr
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
@@ -189,7 +190,7 @@ fun MindScreen(onClose: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             archive.forEach { (k, lines) ->
                 Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
-                    Column(Modifier.padding(13.dp)) {
+                    Column(Modifier.padding(14.dp)) {
                         Text(k, color = Mod.Mind, fontFamily = Display, fontSize = FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         lines.filter { it.isNotBlank() }.forEach {
                             Text("· $it", color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
@@ -284,7 +285,7 @@ fun GoalsScreen(onClose: () -> Unit) {
 
     LifeScaffold("Goals", "$quarter · ${active.size} active", Mod.Home, onClose) {
         if (active.isEmpty()) {
-            com.ascend.lifeos.ui.kit.EmptyState(
+            EmptyState(
                 Icons.Rounded.Check, "No active goals",
                 "Set a goal to track key results and measure progress", Mod.Home,
             )
@@ -347,11 +348,11 @@ fun GoalsScreen(onClose: () -> Unit) {
                             }
                             if (kr.metric.isBlank()) {
                                 Spacer(Modifier.width(10.dp))
-                                Text("−", color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold,
+                                Text("−", color = TextMuted, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).pressScale {
                                         Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
                                     }.padding(horizontal = 7.dp))
-                                Text("+", color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold,
+                                Text("+", color = TextMuted, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.clip(CircleShape).pressScale {
                                         Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
                                     }.padding(horizontal = 7.dp))
@@ -463,7 +464,7 @@ private fun HabitsBlock() {
                             else Haptics.tick(ctx)
                         } else Modifier),
                     contentAlignment = Alignment.Center,
-                ) { if (done) Text("✓", color = Void, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+                ) { if (done) Text("✓", color = Void, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(11.dp))
                 Column(Modifier.weight(1f)) {
                     Text(h.title, color = if (scheduled) TextPrimary else TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -532,7 +533,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                         .border(1.dp, if (weightBind) Mod.Home else Ivory.copy(alpha = 0.25f), CircleShape)
                         .pressScale { weightBind = !weightBind },
                     contentAlignment = Alignment.Center,
-                ) { if (weightBind) Text("✓", color = Void, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
+                ) { if (weightBind) Text("✓", color = Void, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(9.dp))
                 Text("Track weight to", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(8.dp))

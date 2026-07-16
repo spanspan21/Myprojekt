@@ -96,8 +96,8 @@ fun ActiveWorkoutScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(vm.activeTemplateName, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
-                        Text("$elapsedMin min", color = TextDim, fontSize = FS.s12)
+                        Text(vm.activeTemplateName, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                        Text("$elapsedMin min", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                     }
                     // form-check camera
                     Box(
@@ -123,7 +123,7 @@ fun ActiveWorkoutScreen(
                                 if (armedCancel) { vm.cancelWorkout(); onFinish() }
                                 else { Haptics.warn(ctx); armedCancel = true }
                             }.padding(horizontal = 14.dp, vertical = 9.dp),
-                    ) { Text(if (armedCancel) "Sure?" else "Cancel", color = Red, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
+                    ) { Text(if (armedCancel) "Sure?" else "Cancel", color = Red, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
                 Spacer(Modifier.height(16.dp))
             }
@@ -173,9 +173,9 @@ fun ActiveWorkoutScreen(
                                 Modifier.fillMaxWidth().pressScale { warmupOpen = !warmupOpen },
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text("WARM-UP", color = Amber, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                Text("WARM-UP", color = Amber, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                                 Spacer(Modifier.weight(1f))
-                                Text(if (warmupOpen) "▾" else "▸", color = TextDim, fontSize = FS.s12)
+                                Text(if (warmupOpen) "▾" else "▸", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                             }
                             if (warmupOpen) {
                                 Spacer(Modifier.height(6.dp))
@@ -194,10 +194,10 @@ fun ActiveWorkoutScreen(
                                         Text(
                                             w.name,
                                             color = if (done) TextDim else TextMuted,
-                                            fontSize = FS.s12_5, fontWeight = FontWeight.SemiBold,
+                                            fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                                             modifier = Modifier.weight(1f),
                                         )
-                                        Text(w.detail, color = TextDim, fontSize = FS.s10_5)
+                                        Text(w.detail, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                                     }
                                 }
                             }
@@ -382,10 +382,10 @@ private fun ExerciseSetLogger(
                 Spacer(Modifier.width(8.dp))
                 // name opens the exercise deep dive (trend, PRs, history)
                 Text(
-                    ex.exerciseName, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+                    ex.exerciseName, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f).pressScale { onOpenDetail(ex.exerciseId) },
                 )
-                Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = FS.s12, fontWeight = FontWeight.Bold)
+                Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
 
             // ── Superset banner (grouped) / linker (solo) ──────────────
@@ -398,13 +398,13 @@ private fun ExerciseSetLogger(
                     Spacer(Modifier.width(6.dp))
                     Text(
                         "SUPERSET ${'A' + groupOrder.indexOf(ssGroup)}",
-                        color = ssColor, fontSize = FS.s9,
+                        color = ssColor, fontSize = FS.s9, fontFamily = Display,
                         fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         "Unlink",
-                        color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
                             .pressScale { vm.unlinkSuperset(vm.activeCurrentExIndex) }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
@@ -424,13 +424,13 @@ private fun ExerciseSetLogger(
                 Text(
                     if (intraRest > 0) "Alternate sets — ${intraRest}s breather between partners, full rest after the round"
                     else "Alternate sets — rest fires after the round, not between partners",
-                    color = TextDim, fontSize = FS.s10,
+                    color = TextDim, fontSize = FS.s10, fontFamily = Body,
                 )
             } else if (vm.activeExercises.size > 1) {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     if (linkOpen) "▾ Superset with…" else "⛓ Superset with…",
-                    color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
+                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.pressScale { linkOpen = !linkOpen }.padding(vertical = 2.dp),
                 )
                 AnimatedVisibility(linkOpen) {
@@ -451,9 +451,9 @@ private fun ExerciseSetLogger(
                 Spacer(Modifier.height(8.dp))
                 // The coach's instruction — the plan's fixed target. You execute it;
                 // you don't set it. The stepper below logs what you actually got.
-                Text("PRESCRIBED", color = Accent, fontSize = FS.s8_5, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                Text("PRESCRIBED", color = Accent, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(2.dp))
-                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = FS.s12_5, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
+                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = 16.sp)
             }
             Spacer(Modifier.height(10.dp))
             // the movement, drawn on the REAL anatomical body — the muscles this
@@ -476,16 +476,16 @@ private fun ExerciseSetLogger(
                 Spacer(Modifier.width(20.dp))
                 Text(
                     if (isHold) "${reps}s" else reps,
-                    color = TextPrimary, fontSize = FS.s42, fontWeight = FontWeight.ExtraBold,
+                    color = TextPrimary, fontSize = FS.s42, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center, modifier = Modifier.width(if (isHold) 110.dp else 70.dp),
                 )
                 Spacer(Modifier.width(20.dp))
                 StepperButton("+") { reps = ((reps.toIntOrNull() ?: 10) + stepBy).toString() }
             }
-            Text(if (isHold) "Seconds held" else "Reps you got", color = TextDim, fontSize = FS.s11, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            Text(if (isHold) "Seconds held" else "Reps you got", color = TextDim, fontSize = FS.s11, fontFamily = Body, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             ghost?.let {
                 Spacer(Modifier.height(4.dp))
-                Text(it, color = Accent.copy(alpha = 0.7f), fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                Text(it, color = Accent.copy(alpha = 0.7f), fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             }
             // before the first set: the session target (double progression);
             // once sets land, live RPE autoregulation takes over the same slot
@@ -493,7 +493,7 @@ private fun ExerciseSetLogger(
                 target?.let { t ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        t, color = Good, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
+                        t, color = Good, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                     )
                 }
@@ -503,7 +503,7 @@ private fun ExerciseSetLogger(
                 TrainBrain.nextSetHint(last.reps, last.rpe)?.let { hint ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        hint, color = Amber, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
+                        hint, color = Amber, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                     )
                 }
@@ -526,14 +526,14 @@ private fun ExerciseSetLogger(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
                 if (prescribedVest != null) {
                     Column(Modifier.weight(1f)) {
-                        Text("VEST · PRESCRIBED", color = Accent, fontSize = FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
+                        Text("VEST · PRESCRIBED", color = Accent, fontSize = FS.s9, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
                         Spacer(Modifier.height(5.dp))
                         Box(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                                 .background(Accent.copy(alpha = 0.10f))
                                 .border(0.5.dp, Accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                                 .padding(horizontal = 14.dp, vertical = 14.dp),
-                        ) { Text("${prescribedVest} kg", color = Accent, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
+                        ) { Text("${prescribedVest} kg", color = Accent, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                 }
                 GlassField("RPE", rpe, KeyboardType.Number, Modifier.weight(if (prescribedVest != null) 0.7f else 1f)) { rpe = it }
@@ -543,7 +543,7 @@ private fun ExerciseSetLogger(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "Total system weight ${"%.1f".format(w + profileW.weightKg)} kg · load locked to the plan",
-                        color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -558,7 +558,7 @@ private fun ExerciseSetLogger(
             // ── Advanced toggle (set type + tempo + hold + note) ──
             Text(
                 if (showAdvanced) "▾ Advanced" else "▸ Advanced",
-                color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.pressScale { showAdvanced = !showAdvanced }.padding(vertical = 4.dp),
             )
             AnimatedVisibility(showAdvanced) {
@@ -618,7 +618,7 @@ private fun StepperButton(label: String, onClick: () -> Unit) {
         Modifier.size(56.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, HudLine, CircleShape).pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s22, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 // ─── Set Row with colored stripe (tap the row to edit it in place) ──────────
@@ -659,19 +659,19 @@ private fun SetRow(
                     Box(
                         Modifier.size(24.dp).clip(CircleShape).background(color.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center,
-                    ) { Text("${index + 1}", color = color, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+                    ) { Text("${index + 1}", color = color, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         val parts = mutableListOf(if (isHold) "${set.holdSeconds}s hold" else "${set.reps} Reps")
                         set.weight?.let { parts.add("${it}kg") }
                         set.rpe?.let { parts.add("RPE $it") }
-                        Text(parts.joinToString(" · "), color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.SemiBold)
+                        Text(parts.joinToString(" · "), color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                         val meta = mutableListOf(setTypeLabel(set.setType))
                         set.tempo?.let { meta.add("⏱ $it") }
-                        Text(meta.joinToString(" · "), color = TextDim, fontSize = FS.s10)
+                        Text(meta.joinToString(" · "), color = TextDim, fontSize = FS.s10, fontFamily = Body)
                     }
                     if (set.isPersonalRecord) {
-                        Text("PR", color = ChampagneDeep, fontSize = FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
+                        Text("PR", color = ChampagneDeep, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
                     }
                     var armedDel by remember { mutableStateOf(false) }
                     LaunchedEffect(armedDel) { if (armedDel) { delay(2500); armedDel = false } }
@@ -724,16 +724,16 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("↺", color = TextDim, fontSize = FS.s16, fontWeight = FontWeight.Bold)
+            Text("↺", color = TextDim, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(10.dp))
             Text(
                 "Satz gelöscht · $reps Reps",
-                color = TextPrimary, fontSize = FS.s12_5, fontWeight = FontWeight.SemiBold,
+                color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
             )
             Text(
                 "Rückgängig",
-                color = Accent, fontSize = FS.s12_5, fontWeight = FontWeight.Bold,
+                color = Accent, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onUndo() }.padding(horizontal = 12.dp, vertical = 8.dp),
             )
             Icon(
@@ -766,13 +766,13 @@ private fun RestTimerCard(vm: TrainingViewModel) {
                     drawCircle(sweepColor, 5.dp.toPx(), Offset(cx, cy))
                 }
                 val display = if (vm.restTimerRemaining >= 0) "${vm.restTimerRemaining}s" else "+${-vm.restTimerRemaining}s"
-                Text(display, color = if (vm.restTimerRemaining <= 5) Red else if (vm.restTimerRemaining <= 10) Amber else Accent, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold)
+                Text(display, color = if (vm.restTimerRemaining <= 5) Red else if (vm.restTimerRemaining <= 10) Amber else Accent, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             }
 
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text("Rest", color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
-                Text("${vm.restTimerTotal}s total", color = TextDim, fontSize = FS.s11)
+                Text("Rest", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("${vm.restTimerTotal}s total", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             }
 
             Column(horizontalAlignment = Alignment.End) {
@@ -791,7 +791,7 @@ private fun RestTimerCard(vm: TrainingViewModel) {
                                 .pressScale { vm.adjustRestTimer(sec - vm.restTimerTotal) }
                                 .padding(horizontal = 7.dp, vertical = 3.dp),
                         ) {
-                            Text("${sec}s", color = if (sel) Accent else TextDim, fontSize = FS.s9_5, fontWeight = FontWeight.Bold)
+                            Text("${sec}s", color = if (sel) Accent else TextDim, fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -806,7 +806,7 @@ private fun MiniBtn(label: String, onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(10.dp)).background(Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, HudLine, RoundedCornerShape(10.dp)).pressScale(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
-    ) { Text(label, color = TextMuted, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 // ─── PR Celebration Overlay (8s timeout) ───────────────────────────────────
@@ -843,9 +843,9 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
             line = Champagne.copy(alpha = 0.4f * alpha),
         ) {
             Column(Modifier.padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("NEW PR", color = Champagne, fontSize = FS.s22, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+                Text("NEW PR", color = Champagne, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
                 Spacer(Modifier.height(8.dp))
-                Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(4.dp))
                 val valueStr = when (pr.type) {
                     PrType.MAX_REPS -> "${pr.value.toInt()} Reps"
@@ -855,9 +855,9 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
                     PrType.LONGEST_HOLD -> "${pr.value.toInt()}s Hold"
                 }
                 // die Leistung steht größer als das Etikett (Kap. 20)
-                Text(valueStr, color = Champagne, fontSize = FS.s30, fontWeight = FontWeight.Medium)
+                Text(valueStr, color = Champagne, fontSize = FS.s30, fontFamily = Body, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(6.dp))
-                Text(prTypeLabel(pr.type), color = TextDim, fontSize = FS.s12)
+                Text(prTypeLabel(pr.type), color = TextDim, fontSize = FS.s12, fontFamily = Body)
             }
         }
     }
@@ -901,11 +901,11 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
     val load = PlateMath.solve(targetKg, bar) ?: return
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("PLATES", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
+        Text("PLATES", color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
         Spacer(Modifier.width(8.dp))
         Text(
             "${bar.label} ▸",
-            color = Accent.copy(alpha = 0.85f), fontSize = FS.s10, fontWeight = FontWeight.Bold,
+            color = Accent.copy(alpha = 0.85f), fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(6.dp))
                 .pressScale {
                     val i = PlateMath.BARS.indexOfFirst { it.id == barId }
@@ -923,7 +923,7 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         if (load.plates.isEmpty()) {
-            Text("bar only", color = TextDim, fontSize = FS.s10_5)
+            Text("bar only", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
         }
         load.plates.forEach { p -> PlateChip(p) }
         Spacer(Modifier.width(3.dp))
@@ -935,7 +935,7 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
                 if (!load.exact) append(" · closest")
             },
             color = if (load.exact) TextMuted else Amber,
-            fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold,
+            fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
         )
     }
 }
@@ -959,7 +959,7 @@ private fun PlateChip(p: Double) {
     ) {
         Text(
             if (p % 1.0 == 0.0) "${p.toInt()}" else "$p",
-            color = fg, fontSize = FS.s9, fontWeight = FontWeight.ExtraBold,
+            color = fg, fontSize = FS.s9, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
         )
     }
 }

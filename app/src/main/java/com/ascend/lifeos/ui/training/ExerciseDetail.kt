@@ -70,12 +70,12 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                         Column(Modifier.weight(1f)) {
                             Text(
                                 entity?.name ?: "…", color = TextPrimary,
-                                fontSize = FS.s20, fontWeight = FontWeight.ExtraBold,
+                                fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                             )
                             entity?.let {
                                 Text(
                                     "${muscleLabel(it.primaryMuscle)}${if (it.secondaryMuscles.isNotEmpty()) " · " + it.secondaryMuscles.joinToString("/") { m -> muscleLabel(m) } else ""}",
-                                    color = TextDim, fontSize = FS.s11,
+                                    color = TextDim, fontSize = FS.s11, fontFamily = Body,
                                 )
                             }
                         }
@@ -97,7 +97,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                         isHold -> "LONGEST HOLD PER SESSION"
                         else -> "BEST REPS PER SESSION"
                     }
-                    Text(title, color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Text(title, color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Spacer(Modifier.height(10.dp))
                     GlassPanel(Modifier.fillMaxWidth().height(160.dp), corner = 18.dp) {
                         val series = perSession.map {
@@ -214,7 +214,7 @@ private fun sessionSummaries(sets: List<WorkoutSetEntity>): List<SessionSummary>
 private fun TrendLine(series: List<Double>, modifier: Modifier) {
     if (series.size < 2) {
         Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Two sessions make a trend — one more to go.", color = TextDim, fontSize = FS.s11)
+            Text("Two sessions make a trend — one more to go.", color = TextDim, fontSize = FS.s11, fontFamily = Body)
         }
         return
     }
@@ -246,9 +246,9 @@ private fun TrendLine(series: List<Double>, modifier: Modifier) {
 private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
     GlassPanel(modifier, corner = 14.dp) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(label, color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+            Text(label, color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
             Spacer(Modifier.height(3.dp))
-            Text(value, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold)
+            Text(value, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
     }
 }
@@ -267,10 +267,10 @@ private fun PrTimelineRow(pr: PersonalRecordEntity) {
                 PrType.EST_1RM -> "${"%.1f".format(pr.value)} kg e1RM"
                 PrType.LONGEST_HOLD -> "${pr.value.toInt()}s hold"
             },
-            color = TextPrimary, fontSize = FS.s12_5, fontWeight = FontWeight.Bold,
+            color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f),
         )
-        Text(date, color = TextDim, fontSize = FS.s10_5)
+        Text(date, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
     }
 }
 
@@ -278,18 +278,18 @@ private fun PrTimelineRow(pr: PersonalRecordEntity) {
 private fun RecentSetRow(s: WorkoutSetEntity) {
     val date = SimpleDateFormat("dd.MM", Locale.getDefault()).format(Date(s.loggedAt))
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(date, color = TextDim, fontSize = FS.s10_5, modifier = Modifier.width(42.dp))
+        Text(date, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, modifier = Modifier.width(42.dp))
         Text(
             if (s.holdSeconds != null) "${s.holdSeconds}s hold" else "${s.reps} reps",
-            color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.SemiBold,
+            color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.width(80.dp),
         )
-        s.weight?.let { Text("${it} kg", color = TextMuted, fontSize = FS.s12, modifier = Modifier.width(70.dp)) }
+        s.weight?.let { Text("${it} kg", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.width(70.dp)) }
         Spacer(Modifier.weight(1f))
-        s.rpe?.let { Text("RPE $it", color = TextDim, fontSize = FS.s10_5) }
+        s.rpe?.let { Text("RPE $it", color = TextDim, fontSize = FS.s10_5, fontFamily = Body) }
         if (s.isPersonalRecord) {
             Spacer(Modifier.width(8.dp))
-            Text("PR", color = ChampagneDeep, fontSize = FS.s10, fontWeight = FontWeight.ExtraBold)
+            Text("PR", color = ChampagneDeep, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
     }
 }

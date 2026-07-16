@@ -471,7 +471,7 @@ private fun StepOrb(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 @Composable

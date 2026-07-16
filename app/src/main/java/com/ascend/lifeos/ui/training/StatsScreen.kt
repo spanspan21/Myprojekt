@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
@@ -63,7 +64,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale { Haptics.tick(ctx); onBack() })
                 Spacer(Modifier.width(12.dp))
-                Text("Statistics", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+                Text("Statistics", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             }
             Spacer(Modifier.height(22.dp))
         }
@@ -129,10 +130,10 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     if (bests.isNotEmpty()) {
                         val ty = ActivityTypes.byId(t)
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                             Text(
                                 bests.joinToString("  ") { "${it.emoji} ${it.value}" },
-                                color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold,
+                                color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }
@@ -148,7 +149,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         }
         if (prs.isEmpty()) {
             item {
-                com.ascend.lifeos.ui.kit.EmptyState(
+                EmptyState(
                     androidx.compose.material.icons.Icons.Rounded.FitnessCenter, "No records yet",
                     "Personal records appear as you train", Amber,
                 )
@@ -191,9 +192,9 @@ private fun ActivityWeekBars(loads: FloatArray, modifier: Modifier) {
         }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth()) {
-            Text("7 wks ago", color = TextDim, fontSize = FS.s9)
+            Text("7 wks ago", color = TextDim, fontSize = FS.s9, fontFamily = Body)
             Spacer(Modifier.weight(1f))
-            Text("this week · load in hard-set units", color = TextDim, fontSize = FS.s9)
+            Text("this week · load in hard-set units", color = TextDim, fontSize = FS.s9, fontFamily = Body)
         }
     }
 }
@@ -203,7 +204,7 @@ private fun ActivityWeekBars(loads: FloatArray, modifier: Modifier) {
 @Composable
 private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
     if (sessions.isEmpty()) {
-        com.ascend.lifeos.ui.kit.EmptyState(
+        EmptyState(
             icon = Icons.Rounded.FitnessCenter,
             title = "No volume data yet",
             hint = "Complete your first workout to see progress",
@@ -288,17 +289,17 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>, allExercises: List<Ex
                     else -> TextDim.copy(alpha = 0.3f)
                 }
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(muscleLabel(muscle), color = TextMuted, fontSize = FS.s10, fontWeight = FontWeight.Bold, modifier = Modifier.width(80.dp))
+                    Text(muscleLabel(muscle), color = TextMuted, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(80.dp))
                     Box(
                         Modifier.weight(1f).height(10.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.04f)),
                     ) {
                         Box(Modifier.fillMaxHeight().fillMaxWidth(frac.coerceIn(0f, 1f)).clip(CircleShape).background(color))
                     }
-                    Text("$vol", color = TextDim, fontSize = FS.s10, modifier = Modifier.width(30.dp), textAlign = TextAlign.End)
+                    Text("$vol", color = TextDim, fontSize = FS.s10, fontFamily = Body, modifier = Modifier.width(30.dp), textAlign = TextAlign.End)
                 }
             }
             if (muscleMap.isEmpty()) {
-                com.ascend.lifeos.ui.kit.EmptyState(
+                EmptyState(
                     icon = Icons.Rounded.FitnessCenter,
                     title = "No sets this week",
                     hint = "Muscle volume appears here after your first session",
@@ -374,22 +375,22 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(26.dp).clip(CircleShape).background(Amber.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                Text("PR", color = Amber, fontSize = FS.s9, fontWeight = FontWeight.ExtraBold)
+                Text("PR", color = Amber, fontSize = FS.s9, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.Bold)
+                    Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     if (isToday) {
                         Spacer(Modifier.width(6.dp))
-                        Text("NEW", color = Amber, fontSize = FS.s8, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                        Text("NEW", color = Amber, fontSize = FS.s8, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
                     }
                 }
-                Text(prLabel(pr.type), color = TextDim, fontSize = FS.s10)
+                Text(prLabel(pr.type), color = TextDim, fontSize = FS.s10, fontFamily = Body)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(prValueStr(pr), color = Amber, fontSize = FS.s14, fontWeight = FontWeight.ExtraBold)
-                Text(date, color = TextDim, fontSize = FS.s10)
+                Text(prValueStr(pr), color = Amber, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                Text(date, color = TextDim, fontSize = FS.s10, fontFamily = Body)
             }
         }
     }

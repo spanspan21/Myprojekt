@@ -34,6 +34,7 @@ import com.ascend.lifeos.data.life.HabitMetrics
 import com.ascend.lifeos.data.life.HabitReminders
 import com.ascend.lifeos.data.life.LifeStores
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
@@ -78,7 +79,7 @@ fun HabitsScreen(onClose: () -> Unit) {
         onClose = onClose,
     ) {
         if (habits.isEmpty()) {
-            com.ascend.lifeos.ui.kit.EmptyState(
+            EmptyState(
                 icon = Icons.Rounded.Bolt,
                 title = "No habits yet",
                 hint = "Pick from the catalog — some track themselves from your steps, sleep and training",
@@ -123,12 +124,12 @@ private fun OverallHeader(habits: List<Habit>, doneToday: Int, dueToday: Int, to
     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Ring(progress = todayProgress, color = Mod.Mind, modifier = Modifier.size(64.dp), stroke = 6.dp) {
-                Text("$doneToday/$dueToday", color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.ExtraBold)
+                Text("$doneToday/$dueToday", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             }
             Spacer(Modifier.width(18.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text("🔥", fontSize = FS.s17)
+                    Text("🔥", fontSize = FS.s17, fontFamily = Body)
                     Spacer(Modifier.width(4.dp))
                     TickerNumber(streak, 34, Mod.Mind)
                     Spacer(Modifier.width(6.dp))
@@ -169,8 +170,8 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
                 contentAlignment = Alignment.Center,
             ) {
                 when {
-                    done -> Text("✓", color = Void, fontSize = FS.s12, fontWeight = FontWeight.Bold)
-                    skipped -> Text("–", color = Ivory.copy(alpha = 0.45f), fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                    done -> Text("✓", color = Void, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    skipped -> Text("–", color = Ivory.copy(alpha = 0.45f), fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                     auto -> Icon(Icons.Rounded.Bolt, null, tint = Ivory.copy(alpha = 0.35f), modifier = Modifier.size(11.dp))
                     else -> {}
                 }
@@ -178,7 +179,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s13); Spacer(Modifier.width(6.dp)) }
+                    if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s13, fontFamily = Body); Spacer(Modifier.width(6.dp)) }
                     Text(h.title, color = if (active) TextPrimary else TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     if (h.avoid) { Spacer(Modifier.width(6.dp)); Text("QUIT", color = Warn, fontSize = FS.s8, fontFamily = MicroLabel, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
                 }
@@ -225,7 +226,7 @@ private fun StepMini(label: String, onClick: () -> Unit) {
         Modifier.size(28.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.07f))
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape).pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 /** Start/stop stopwatch orb for time-based (min) habits. */
@@ -237,7 +238,7 @@ private fun TimerMini(running: Boolean, onClick: () -> Unit) {
             .border(0.5.dp, Mod.Mind.copy(alpha = if (running) 0.9f else 0.4f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(if (running) "■" else "▶", color = if (running) Void else Mod.Mind, fontSize = FS.s11, fontWeight = FontWeight.Black) }
+    ) { Text(if (running) "■" else "▶", color = if (running) Void else Mod.Mind, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Black) }
 }
 
 /** Adaptive counter step so a 60-min target isn't 60 taps of +1. */
@@ -284,7 +285,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
     JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s20); Spacer(Modifier.width(8.dp)) }
+                if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s20, fontFamily = Body); Spacer(Modifier.width(8.dp)) }
                 Text(h.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
             }
@@ -603,10 +604,10 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                             .padding(horizontal = 11.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(p.icon, fontSize = FS.s13)
+                        Text(p.icon, fontSize = FS.s13, fontFamily = Body)
                         Spacer(Modifier.width(6.dp))
                         Text(p.title, color = if (added) TextDim else TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold)
-                        if (added) { Spacer(Modifier.width(5.dp)); Text("✓", color = Mod.Mind, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+                        if (added) { Spacer(Modifier.width(5.dp)); Text("✓", color = Mod.Mind, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -680,7 +681,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
                             .border(0.5.dp, if (emoji == e) Mod.Mind.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                             .pressScale { emoji = if (emoji == e) "" else e },
                         contentAlignment = Alignment.Center,
-                    ) { Text(e, fontSize = FS.s17) }
+                    ) { Text(e, fontSize = FS.s17, fontFamily = Body) }
                 }
             }
             Spacer(Modifier.height(14.dp))

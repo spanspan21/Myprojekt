@@ -145,7 +145,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
                     Modifier.clip(RoundedCornerShape(10.dp))
                         .background(if (on) Good.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f))
                         .padding(horizontal = 10.dp, vertical = 5.dp),
-                ) { Text(if (on) "ON" else "OFF", color = if (on) Good else TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
+                ) { Text(if (on) "ON" else "OFF", color = if (on) Good else TextDim, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold) }
             }
         }
         Spacer(Modifier.height(20.dp))
@@ -388,7 +388,7 @@ private fun StepOrb(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextMuted, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 @Composable

@@ -259,7 +259,7 @@ private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit)
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = FS.s24, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = FS.s24, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 // ─── Result summary ──────────────────────────────────────────────────────────

@@ -99,7 +99,7 @@ fun EnergyBadge(level: EnergyLevel, accent: Color) {
     Box(
         Modifier.clip(RoundedCornerShape(8.dp)).background(accent.copy(alpha = 0.15f))
             .padding(horizontal = 9.dp, vertical = 5.dp),
-    ) { Text(label, color = accent, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+    ) { Text(label, color = accent, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontFamily = Display) }
 }
 
 // ---- Node detail sheet (shared by Focus & Vault) ----------------------------
@@ -131,9 +131,9 @@ fun NodeSheet(
                 ) { Icon(Icons.Rounded.Bolt, null, tint = accent, modifier = Modifier.size(18.dp)) }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(node.node.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold)
+                    Text(node.node.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold, fontFamily = Body)
                     if (node.node.subtitle.isNotBlank()) {
-                        Text(node.node.subtitle, color = TextMuted, fontSize = FS.s13, lineHeight = 17.sp)
+                        Text(node.node.subtitle, color = TextMuted, fontSize = FS.s13, lineHeight = 17.sp, fontFamily = Body)
                     }
                 }
             }
@@ -143,14 +143,14 @@ fun NodeSheet(
                 EnergyBadge(node.node.requiredEnergy, accent)
                 Box(
                     Modifier.clip(RoundedCornerShape(8.dp)).background(GlassFill).padding(horizontal = 9.dp, vertical = 5.dp),
-                ) { Text("${node.node.estimatedMinutes} MIN", color = TextMuted, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                ) { Text("${node.node.estimatedMinutes} MIN", color = TextMuted, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontFamily = Display) }
             }
 
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProgressBar(progress = node.progress, color = accent, modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(10.dp))
-                Text("${node.doneCount}/${node.tasks.size}", color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.SemiBold)
+                Text("${node.doneCount}/${node.tasks.size}", color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.SemiBold, fontFamily = Body)
             }
 
             // keep the spacing the old components.SectionLabel carried built in
@@ -184,11 +184,11 @@ fun TaskRow(task: TaskEntity, onToggle: (Boolean) -> Unit) {
             Text(
                 task.title,
                 color = if (done) TextDim else TextPrimary,
-                fontSize = FS.s15, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp,
+                fontSize = FS.s15, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp, fontFamily = Body,
                 textDecoration = if (done) TextDecoration.LineThrough else TextDecoration.None,
             )
             if (task.detail.isNotBlank()) {
-                Text(task.detail, color = TextMuted, fontSize = FS.s12_5, lineHeight = 17.sp)
+                Text(task.detail, color = TextMuted, fontSize = FS.s12_5, lineHeight = 17.sp, fontFamily = Body)
             }
         }
     }
@@ -214,9 +214,9 @@ fun ResourceRow(r: ResourceEntity, accent: Color) {
         Icon(iconFor(r.kind), r.title, tint = accent, modifier = Modifier.size(17.dp))
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(r.title, color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.SemiBold)
+            Text(r.title, color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.SemiBold, fontFamily = Body)
             if (r.provider.isNotBlank()) {
-                Text(r.provider, color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Medium)
+                Text(r.provider, color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Medium, fontFamily = Body)
             }
         }
         Spacer(Modifier.width(8.dp))

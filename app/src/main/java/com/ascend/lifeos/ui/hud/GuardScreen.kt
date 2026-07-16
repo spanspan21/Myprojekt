@@ -70,6 +70,7 @@ import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.wellbeing.AppUsage
 import com.ascend.lifeos.wellbeing.DayUsage
@@ -246,7 +247,7 @@ fun GuardScreen() {
                 ) {
                     Text(
                         label, color = if (on) Mod.Guard else TextMuted,
-                        fontSize = FS.s12, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -279,7 +280,7 @@ fun GuardScreen() {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             if (focusScore != null) {
-                                com.ascend.lifeos.ui.kit.TickerNumber(
+                                TickerNumber(
                                     focusScore, fontSize = 28, color = scoreColor,
                                     fontWeight = FontWeight.Bold, fontFamily = Display,
                                 )
@@ -415,10 +416,10 @@ fun GuardScreen() {
                             )
                         }
                         if (morningUntil > 0) {
-                            Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+                            Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                                 modifier = Modifier.pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+                            Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                                 modifier = Modifier.pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Spacer(Modifier.width(6.dp))
                         }
@@ -436,7 +437,7 @@ fun GuardScreen() {
                             Text("Daily budget", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text("Drives the focus score and Home mission", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
-                        Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+                        Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale {
                                 WellbeingStore.setBudgetMin(ctx, budget - 30); tick++
                             }.padding(horizontal = 8.dp))
@@ -444,7 +445,7 @@ fun GuardScreen() {
                             "${budget / 60}h${if (budget % 60 != 0) " ${budget % 60}m" else ""}",
                             color = Mod.Guard, style = metricStyle(15),
                         )
-                        Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+                        Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale {
                                 WellbeingStore.setBudgetMin(ctx, budget + 30); tick++
                             }.padding(horizontal = 8.dp))
@@ -826,13 +827,13 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                 Text(
                     if (active) "⏸ WALLS PAUSED" else "PAUSE",
                     color = if (active) Warn else TextDim,
-                    fontSize = FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
+                    fontSize = FS.s9, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.weight(1f))
                 if (active) {
                     Text(
                         "Resume now",
-                        color = Accent, fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
+                        color = Accent, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onResume(); Haptics.confirm(ctx); AppFeedback.show("Guard resumed") }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
@@ -844,7 +845,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                 Spacer(Modifier.height(3.dp))
                 Text(
                     "Every wall is down · auto-resumes in $leftStr",
-                    color = TextMuted, fontSize = FS.s11_5, fontWeight = FontWeight.SemiBold,
+                    color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
             } else {
                 Spacer(Modifier.height(7.dp))
@@ -856,7 +857,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                 Spacer(Modifier.height(5.dp))
                 Text(
                     "Intercepts sleep, maintenance keeps running. It resumes by itself.",
-                    color = TextDim, fontSize = FS.s10,
+                    color = TextDim, fontSize = FS.s10, fontFamily = Body,
                 )
             }
         }
@@ -1158,11 +1159,11 @@ private fun AppRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
                     if (icon != null) Image(icon, null, modifier = Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)))
-                    else Text(app.label.take(1), color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold)
+                    else Text(app.label.take(1), color = TextMuted, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(app.label, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(app.label, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1)
                     val sub = when {
                         limit != null ->
                             "Limit ${limit}m" +
@@ -1177,10 +1178,10 @@ private fun AppRow(
                     if (sub != null) Text(
                         sub,
                         color = if (over || opensOver) Red else if (bonusWon > 0) Champagne else TextDim,
-                        fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold,
+                        fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Text(fmtDur(app.ms), color = if (over) Red else TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                Text(fmtDur(app.ms), color = if (over) Red else TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(9.dp))
             NeonBar(app.ms.toFloat() / maxMs, if (over) Red else Mod.Guard, Modifier.fillMaxWidth(), height = 5.dp)
@@ -1318,10 +1319,10 @@ private fun stepMinutes(cur: Int, dir: Int): Int {
 private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.weight(1f))
-        Text("−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+        Text("−", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onMinus).padding(horizontal = 10.dp, vertical = 2.dp))
         Text(value, color = Mod.Guard, style = metricStyle(14), textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
-        Text("+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+        Text("+", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onPlus).padding(horizontal = 10.dp, vertical = 2.dp))
     }
 }
@@ -1330,10 +1331,10 @@ private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlu
 private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, a11yOk: Boolean, batteryOk: Boolean, ctx: android.content.Context) {
     GlassPanel(Modifier.fillMaxWidth(), line = Mod.Guard.copy(alpha = 0.35f)) {
         Column(Modifier.fillMaxWidth().padding(18.dp)) {
-            Text("Guard setup", color = TextPrimary, fontSize = FS.s15, fontWeight = FontWeight.Bold)
+            Text("Guard setup", color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
             Text(
                 "Every green row makes the wall harder to slip past.",
-                color = TextMuted, fontSize = FS.s12, lineHeight = 16.sp,
+                color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 16.sp,
             )
             Spacer(Modifier.height(12.dp))
             PermRow("Usage access", "reads real screen time", usageOk) { DigitalWellbeingManager.requestUsageAccess(ctx) }
@@ -1367,11 +1368,11 @@ private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit
         )
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = TextPrimary, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
-            Text(why, color = TextDim, fontSize = FS.s10_5)
+            Text(title, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+            Text(why, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
         }
         if (ok) {
-            Text("ON", color = Good, fontSize = FS.s10_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("ON", color = Good, fontSize = FS.s10_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         } else {
             LimitChip("Grant", false, onGrant)
         }
@@ -1382,7 +1383,7 @@ private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit
 private fun EmptyHint(text: String) {
     GlassPanel(Modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth().padding(22.dp), contentAlignment = Alignment.Center) {
-            Text(text, color = TextMuted, fontSize = FS.s12_5)
+            Text(text, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
         }
     }
 }
@@ -1397,7 +1398,7 @@ private fun PresetChip(label: String, modifier: Modifier = Modifier, onClick: ()
             .padding(vertical = 9.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = TextMuted, fontSize = FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(label, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
@@ -1412,7 +1413,7 @@ private fun LimitChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 7.dp),
-    ) { Text(label, color = fg, fontSize = FS.s11_5, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = fg, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -1422,5 +1423,5 @@ private fun PillButton(label: String, primary: Boolean, onClick: () -> Unit) {
             .background(if (primary) Mod.Guard.copy(alpha = 0.18f) else HudFill)
             .border(0.5.dp, if (primary) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(13.dp))
             .pressScale(onClick = onClick).padding(horizontal = 16.dp, vertical = 11.dp),
-    ) { Text(label, color = if (primary) Mod.Guard else TextMuted, fontSize = FS.s13, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = if (primary) Mod.Guard else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

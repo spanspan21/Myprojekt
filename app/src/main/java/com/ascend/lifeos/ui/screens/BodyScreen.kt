@@ -570,7 +570,7 @@ fun BodyScreen() {
                                     "gain" -> if (delta > 0.15) Good else if (delta < -0.15) Warn else Amber
                                     else -> if (kotlin.math.abs(delta) < 0.4) Good else Amber
                                 }
-                                Text(arrow, color = arrowColor, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                                Text(arrow, color = arrowColor, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             }
                             if (bmi != null) {
                                 Spacer(Modifier.width(8.dp))
@@ -859,7 +859,7 @@ private fun StageBar(label: String, minutes: Int, total: Int, color: Color) {
 @Composable
 private fun TrendTile(label: String, values: List<Float>, color: Color, modifier: Modifier = Modifier, fmt: (Float) -> String) {
     Panel(modifier, corner = 16.dp) {
-        Column(Modifier.padding(13.dp)) {
+        Column(Modifier.padding(14.dp)) {
             Text(
                 label, color = TextDim, fontFamily = Display, fontSize = FS.s9,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
@@ -1278,5 +1278,5 @@ private fun WeightStep(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

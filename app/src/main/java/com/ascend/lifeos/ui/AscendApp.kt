@@ -62,6 +62,7 @@ import com.ascend.lifeos.ui.calendar.CalendarScreen
 import com.ascend.lifeos.ui.home.HomeScreen
 import com.ascend.lifeos.ui.hud.GuardScreen
 import com.ascend.lifeos.ui.hud.NutritionScreen
+import com.ascend.lifeos.ui.kit.FeedbackHost
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.skills.SkillsScreen
@@ -350,7 +351,7 @@ fun AscendApp() {
             }
         }
 
-        com.ascend.lifeos.ui.kit.FeedbackHost(Modifier.align(Alignment.BottomCenter))
+        FeedbackHost(Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -467,7 +468,7 @@ private fun MorphingDock(
                                 modifier = Modifier.size(19.dp),
                             )
                             Text(
-                                "▾", color = TextDim, fontSize = FS.s7, fontWeight = FontWeight.Bold,
+                                "▾", color = TextDim, fontSize = FS.s7, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
                         Box(

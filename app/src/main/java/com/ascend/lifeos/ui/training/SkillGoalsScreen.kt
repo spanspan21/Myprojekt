@@ -166,7 +166,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                             .background(if (selected) Mod.Train else Color.Transparent)
                             .border(1.dp, if (selected) Mod.Train else Ivory.copy(alpha = 0.22f), CircleShape),
                         contentAlignment = Alignment.Center,
-                    ) { if (selected) Text("✓", color = Void, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+                    ) { if (selected) Text("✓", color = Void, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
 

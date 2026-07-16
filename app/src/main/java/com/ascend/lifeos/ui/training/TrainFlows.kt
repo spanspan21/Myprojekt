@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.PrType
 import com.ascend.lifeos.data.training.TrainBrain
+import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.ProgressDots
 import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
@@ -78,7 +79,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
 
         // PRs
         if (s.prs.isNotEmpty()) {
-            com.ascend.lifeos.ui.kit.Panel(
+            Panel(
                 Modifier.fillMaxWidth(), corner = 18.dp,
                 fill = Amber.copy(alpha = 0.06f), line = Amber.copy(alpha = 0.35f),
             ) {
@@ -122,7 +123,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         Spacer(Modifier.height(18.dp))
 
         // recovery bridge — the network effect
-        com.ascend.lifeos.ui.kit.Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Text(
                 "Protein window: aim for 30–40 g within the next ~2 hours. Fuel has your top sources.",
                 color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
@@ -305,5 +306,5 @@ private fun TestStep(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s23, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s23, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

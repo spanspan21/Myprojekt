@@ -1158,7 +1158,7 @@ private fun SleepConfirmCard(
             Spacer(Modifier.height(3.dp))
             Text(
                 "Your watch only sees when you slept — this keeps the sleep window honest.",
-                color = TextDim, fontSize = FS.s11_5, lineHeight = 15.sp,
+                color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 15.sp,
             )
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -1170,12 +1170,12 @@ private fun SleepConfirmCard(
                             .pressScale { Haptics.confirm(scCtx); onConfirm(mins) }
                             .padding(vertical = 9.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text(label, color = accent, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+                    ) { Text(label, color = accent, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
             Spacer(Modifier.height(9.dp))
             Text(
-                "That was a power nap →", color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.SemiBold,
+                "That was a power nap →", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
             )
         }
@@ -1456,7 +1456,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
         onChanged()
     }
 
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(22.dp)) {
             Text(
                 "DASHBOARD", color = Mod.Home, fontFamily = Display,
@@ -1499,7 +1499,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                     AnimatedVisibility(visible = visible) {
                         Row {
                             Text(
-                                "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
+                                "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13, fontFamily = Body,
                                 modifier = Modifier.clip(CircleShape).then(if (idx > 0) Modifier.pressScale {
                                     val m = order.toMutableList()
                                     m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
@@ -1507,7 +1507,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                                 } else Modifier).padding(8.dp),
                             )
                             Text(
-                                "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
+                                "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13, fontFamily = Body,
                                 modifier = Modifier.clip(CircleShape).then(if (idx < order.lastIndex) Modifier.pressScale {
                                     val m = order.toMutableList()
                                     m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }

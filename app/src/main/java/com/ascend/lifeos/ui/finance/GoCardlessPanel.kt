@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.finance.GcBank
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.data.finance.GoCardlessLink
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -176,7 +177,7 @@ private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: 
             Field("Search…", query) { query = it }
             Spacer(Modifier.height(10.dp))
             if (filtered.isEmpty()) {
-                com.ascend.lifeos.ui.kit.EmptyState(
+                EmptyState(
                     Icons.Rounded.AccountBalance,
                     "No banks found", "Try a different search term", Mod.Finance,
                 )

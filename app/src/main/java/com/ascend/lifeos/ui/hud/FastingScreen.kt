@@ -74,7 +74,7 @@ fun FastingScreen(onBack: () -> Unit) {
                 Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(14.dp))
-            Text("Fasting", color = TextPrimary, fontSize = FS.s24, fontWeight = FontWeight.ExtraBold)
+            Text("Fasting", color = TextPrimary, fontSize = FS.s24, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
 
         // protocol picker
@@ -99,18 +99,18 @@ fun FastingScreen(onBack: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (state.active) {
-                    Text(hm(elapsed), color = TextPrimary, fontSize = FS.s42, fontWeight = FontWeight.ExtraBold)
-                    Text("/ ${target.toInt()}h · ${protocol.id}", color = TextMuted, fontSize = FS.s13, fontWeight = FontWeight.Bold)
+                    Text(hm(elapsed), color = TextPrimary, fontSize = FS.s42, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                    Text("/ ${target.toInt()}h · ${protocol.id}", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     Box(Modifier.clip(RoundedCornerShape(9.dp)).background(zone.color.copy(alpha = 0.16f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Text(zone.label, color = zone.color, fontSize = FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                        Text(zone.label, color = zone.color, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     val remaining = (target - elapsed).coerceAtLeast(0.0)
-                    Text(if (remaining <= 0) "Eating window open ✓" else "${hm(remaining)} to go", color = TextDim, fontSize = FS.s12)
+                    Text(if (remaining <= 0) "Eating window open ✓" else "${hm(remaining)} to go", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                 } else {
-                    Text("Ready", color = TextPrimary, fontSize = FS.s30, fontWeight = FontWeight.ExtraBold)
-                    Text("${protocol.id} · ${protocol.desc}", color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.SemiBold)
+                    Text("Ready", color = TextPrimary, fontSize = FS.s30, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                    Text("${protocol.id} · ${protocol.desc}", color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -132,9 +132,9 @@ fun FastingScreen(onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 5.dp)) {
                         Box(Modifier.size(10.dp).clip(CircleShape).background(z.color))
                         Spacer(Modifier.width(12.dp))
-                        Text(z.label, color = if (active) z.color else TextMuted, fontSize = FS.s13, fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text(z.label, color = if (active) z.color else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         val to = FastingCalc.ZONES.getOrNull(i + 1)?.fromH
-                        Text(if (to != null) "${z.fromH.toInt()}–${to.toInt()}h" else "${z.fromH.toInt()}h+", color = TextDim, fontSize = FS.s11)
+                        Text(if (to != null) "${z.fromH.toInt()}–${to.toInt()}h" else "${z.fromH.toInt()}h+", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                     }
                 }
             }
@@ -162,7 +162,7 @@ private fun hm(hours: Double): String {
 @Composable
 private fun FastStat(value: String, label: String, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold)
-        Text(label.uppercase(), color = TextDim, fontSize = FS.s8, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(value, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+        Text(label.uppercase(), color = TextDim, fontSize = FS.s8, fontFamily = Display, letterSpacing = 0.5.sp, fontWeight = FontWeight.SemiBold)
     }
 }

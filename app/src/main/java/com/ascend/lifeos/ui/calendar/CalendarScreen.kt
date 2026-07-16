@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.calendar
 
 import android.app.Application
+import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -730,7 +731,7 @@ private fun DayTimelineView(
     }
 
     if (t.blocks.isEmpty() && t.allDays.isEmpty()) {
-        com.ascend.lifeos.ui.kit.EmptyState(
+        EmptyState(
             icon = Icons.Rounded.CalendarMonth,
             title = "Nothing scheduled",
             hint = "Tap + to add a block or tap a free slot below",
@@ -885,7 +886,7 @@ private fun QuickAddSheet(
 
     val isHoliday = type == EventType.HOLIDAY
 
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "NEW BLOCK", color = Mod.Calendar, fontFamily = Display,
@@ -969,7 +970,7 @@ private fun QuickAddSheet(
                                 .pressScale { repeatMask = repeatMask xor (1 shl i) },
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(letters[i], color = if (on) Mod.Calendar else TextDim, fontSize = FS.s12, fontWeight = FontWeight.Bold)
+                            Text(letters[i], color = if (on) Mod.Calendar else TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -982,7 +983,7 @@ private fun QuickAddSheet(
                             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
                             .pressScale { Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
-                    ) { Text("−", color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
+                    ) { Text("−", color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Text(
                         "$holidayDays days", color = TextPrimary, style = metricStyle(16),
                         modifier = Modifier.widthIn(min = 78.dp), textAlign = TextAlign.Center,
@@ -992,7 +993,7 @@ private fun QuickAddSheet(
                             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
                             .pressScale { Haptics.tick(addCtx); holidayDays += 1 },
                         contentAlignment = Alignment.Center,
-                    ) { Text("+", color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
+                    ) { Text("+", color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
 
@@ -1033,7 +1034,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                "−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+                "−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
             Text(
@@ -1041,7 +1042,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
                 modifier = Modifier.weight(1f), textAlign = TextAlign.Center,
             )
             Text(
-                "+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+                "+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
@@ -1053,7 +1054,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: () -> Unit) {
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             val c = eventColor(b.type)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1192,7 +1193,8 @@ private fun UntisRow() {
                 }
             }
 
-            if (expanded && !configured) {
+            AnimatedVisibility(visible = expanded && !configured) {
+                Column {
                 Spacer(Modifier.height(10.dp))
                 UntisField("Server", host, "fos-bos-kempten.webuntis.com") { host = it }
                 Spacer(Modifier.height(7.dp))
@@ -1217,6 +1219,7 @@ private fun UntisRow() {
                         color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                     )
                 }
+            }
             }
         }
     }
@@ -1260,7 +1263,7 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
     val calPermission = remember(tick) { CalendarSync.granted(ctx) }
     val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { tick++ }
 
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 22.dp)
                 .navigationBarsPadding().verticalScroll(rememberScrollState()),
@@ -1338,7 +1341,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
     var armedDeleteTask by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(armedDeleteTask) { if (armedDeleteTask != null) { kotlinx.coroutines.delay(2500); armedDeleteTask = null } }
 
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
@@ -1394,7 +1397,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Duration", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
-                    "−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+                    "−", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).pressScale { durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
@@ -1402,14 +1405,14 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
                 Text(
-                    "+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+                    "+", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).pressScale { durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Deadline", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
-                    "−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+                    "−", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).pressScale { deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
@@ -1418,7 +1421,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
                 Text(
-                    "+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
+                    "+", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).pressScale { deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
@@ -1450,7 +1453,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                             .border(1.dp, if (t.done) Mod.Calendar else Ivory.copy(alpha = 0.25f), CircleShape)
                             .pressScale { Haptics.tick(ctx); TaskBlocks.setDone(ctx, t.id, !t.done) },
                         contentAlignment = Alignment.Center,
-                    ) { if (t.done) Text("✓", color = Void, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
+                    ) { if (t.done) Text("✓", color = Void, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(11.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -1471,7 +1474,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     }
                     val taskArmed = armedDeleteTask == t.id
                     Text(
-                        "✕", color = if (taskArmed) Crit else TextDim, fontSize = FS.s13,
+                        "✕", color = if (taskArmed) Crit else TextDim, fontSize = FS.s13, fontFamily = Body,
                         fontWeight = if (taskArmed) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.clip(CircleShape)
                             .pressScale {

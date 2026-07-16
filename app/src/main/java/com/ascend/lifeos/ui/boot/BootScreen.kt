@@ -515,7 +515,7 @@ private fun StepBtn(sign: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
             .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
-    ) { Text(sign, color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
+    ) { Text(sign, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 @Composable

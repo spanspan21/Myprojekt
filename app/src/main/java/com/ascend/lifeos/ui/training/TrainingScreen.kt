@@ -31,7 +31,9 @@ import com.ascend.lifeos.data.training.ExerciseEntity
 import com.ascend.lifeos.ui.hud.GlassField
 import com.ascend.lifeos.ui.hud.GlassPanel
 import com.ascend.lifeos.ui.hud.HudChip
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.JarvisSheet
+import com.ascend.lifeos.ui.kit.Spark
 import com.ascend.lifeos.ui.theme.*
 
 private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY }
@@ -153,9 +155,9 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
             Spacer(Modifier.width(12.dp))
-            Text("Exercises", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+            Text("Exercises", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.weight(1f))
-            Text("${filtered.size}", color = TextDim, fontSize = FS.s13, fontWeight = FontWeight.Bold)
+            Text("${filtered.size}", color = TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(14.dp))
         GlassField("Search exercises…", search, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = androidx.compose.ui.text.input.ImeAction.Search) { search = it }
@@ -184,7 +186,7 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
         LazyColumn(contentPadding = PaddingValues(bottom = 140.dp)) {
             if (filtered.isEmpty()) {
                 item {
-                    com.ascend.lifeos.ui.kit.EmptyState(
+                    EmptyState(
                         androidx.compose.material.icons.Icons.Rounded.Search, "No exercises found",
                         "Try a different search or filter", Mod.Train,
                     )
@@ -199,9 +201,9 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
                     ) {
                         Icon(catIcon(cat), null, tint = catColor(cat), modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(catLabel(cat).uppercase(), color = catColor(cat), fontSize = FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp)
+                        Text(catLabel(cat).uppercase(), color = catColor(cat), fontSize = FS.s11, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp)
                         Spacer(Modifier.width(6.dp))
-                        Text("${exInCat.size}", color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold)
+                        Text("${exInCat.size}", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
                 items(exInCat, key = { it.id }) { ex ->
@@ -210,10 +212,10 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
                             Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                                Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 Text(
                                     "${muscleLabel(ex.primaryMuscle)} · ${ex.unit}",
-                                    color = TextDim, fontSize = FS.s11,
+                                    color = TextDim, fontSize = FS.s11, fontFamily = Body,
                                 )
                             }
                         }
@@ -235,16 +237,16 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                 Icon(catIcon(ex.category), null, tint = catColor(ex.category), modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(ex.name, color = TextPrimary, fontSize = FS.s19, fontWeight = FontWeight.ExtraBold)
+                    Text(ex.name, color = TextPrimary, fontSize = FS.s19, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                     Text(
                         "${catLabel(ex.category)} · ${muscleLabel(ex.primaryMuscle)} · ${ex.unit}",
-                        color = TextDim, fontSize = FS.s11_5,
+                        color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
                     )
                 }
             }
             if (ex.description.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text(ex.description, color = TextMuted, fontSize = FS.s13, lineHeight = 19.sp)
+                Text(ex.description, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = 19.sp)
             }
             Spacer(Modifier.height(10.dp))
             // form check: curated-quality via YouTube search — never a dead link
@@ -269,13 +271,13 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
             ) {
                 Text(
                     "▶ Form check", color = catColor(ex.category),
-                    fontSize = FS.s12, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
             Spacer(Modifier.height(18.dp))
             Text(
                 "MUSCLES", color = TextDim, fontSize = FS.s9_5,
-                fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(10.dp))
             MuscleMap(
@@ -288,11 +290,11 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(9.dp).clip(androidx.compose.foundation.shape.CircleShape).background(catColor(ex.category).copy(alpha = 0.85f)))
                 Spacer(Modifier.width(6.dp))
-                Text("Primary", color = TextMuted, fontSize = FS.s11)
+                Text("Primary", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
                 Spacer(Modifier.width(16.dp))
                 Box(Modifier.size(9.dp).clip(androidx.compose.foundation.shape.CircleShape).background(catColor(ex.category).copy(alpha = 0.30f)))
                 Spacer(Modifier.width(6.dp))
-                Text("Secondary", color = TextMuted, fontSize = FS.s11)
+                Text("Secondary", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
             }
 
             // ── history: last 20 working sets + PR line ─────────────
@@ -304,7 +306,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                     Spacer(Modifier.height(16.dp))
                     Text(
                         "HISTORY", color = TextDim, fontSize = FS.s9_5,
-                        fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                        fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
                     )
                     Spacer(Modifier.height(8.dp))
                     val series = history.take(20).reversed().map { s ->
@@ -312,7 +314,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                         val bw = com.ascend.lifeos.data.Repo.data.profile.weightKg.toFloat()
                         s.reps * (1f + (s.weight ?: 0f) / bw)
                     }
-                    com.ascend.lifeos.ui.kit.Spark(
+                    Spark(
                         values = series, color = catColor(ex.category),
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                     )
@@ -321,10 +323,10 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                     Row {
                         Text(
                             "Best: ${best?.reps ?: 0} reps" + (best?.weight?.takeIf { it > 0 }?.let { " +${it}kg" } ?: ""),
-                            color = Amber, fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
+                            color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.weight(1f))
-                        Text("${history.size} sets logged", color = TextDim, fontSize = FS.s11)
+                        Text("${history.size} sets logged", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                     }
                 }
             }
@@ -350,7 +352,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
             Spacer(Modifier.width(12.dp))
-            Text("Add exercise", color = TextPrimary, fontSize = FS.s18, fontWeight = FontWeight.ExtraBold)
+            Text("Add exercise", color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(14.dp))
         GlassField("Search…", search, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = androidx.compose.ui.text.input.ImeAction.Search) { search = it }
@@ -372,7 +374,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
         LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
             if (filtered.isEmpty()) {
                 item {
-                    com.ascend.lifeos.ui.kit.EmptyState(
+                    EmptyState(
                         androidx.compose.material.icons.Icons.Rounded.Search, "No matching exercises",
                         "Try a different search term", Mod.Train,
                     )
@@ -384,8 +386,8 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
                         Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
-                            Text("${catLabel(ex.category)} · ${muscleLabel(ex.primaryMuscle)}", color = TextDim, fontSize = FS.s11)
+                            Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("${catLabel(ex.category)} · ${muscleLabel(ex.primaryMuscle)}", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         Icon(Icons.Rounded.Search, null, tint = TextDim.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
                     }

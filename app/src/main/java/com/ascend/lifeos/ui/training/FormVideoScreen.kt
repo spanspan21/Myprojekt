@@ -39,6 +39,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
@@ -185,7 +186,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
         Spacer(Modifier.height(16.dp))
 
         if (clips.isEmpty()) {
-            com.ascend.lifeos.ui.kit.EmptyState(
+            EmptyState(
                 icon = Icons.Rounded.PlayArrow,
                 title = "No form clips yet",
                 hint = "Record your first set to compare form over time",

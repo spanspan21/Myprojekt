@@ -8,7 +8,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.kit.ShimmerPanel
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -213,7 +216,7 @@ fun TrainingHub(
                 ) {
                     Row(Modifier.padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(note, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                        Text("✓", color = Purple, fontSize = FS.s13, fontWeight = FontWeight.Bold)
+                        Text("✓", color = Purple, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(Modifier.height(12.dp))
@@ -241,7 +244,7 @@ fun TrainingHub(
                 val plan = vm.weekPlan
                 Crossfade(targetState = plan != null && plan.sessions.isNotEmpty(), label = "nextSession", animationSpec = tween(400)) { hasData ->
                     if (!hasData) {
-                        com.ascend.lifeos.ui.kit.ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
                     } else {
                         Column {
                             plan?.note?.let {
@@ -389,7 +392,7 @@ fun TrainingHub(
         }
         if (sessions.isEmpty()) {
             item {
-                com.ascend.lifeos.ui.kit.EmptyState(
+                EmptyState(
                     androidx.compose.material.icons.Icons.Rounded.FitnessCenter, "No workouts yet",
                     "Start your first session above", Mod.Train,
                 )
@@ -616,7 +619,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(accent.copy(alpha = if (done) 0.7f else 0.55f)))
-            Column(Modifier.padding(13.dp)) {
+            Column(Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (done) {
                         Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(16.dp))
@@ -708,7 +711,7 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
                             fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f),
                         )
-                        Text("→", color = if (testReady) Amber else Mod.Train, fontSize = FS.s15, fontWeight = FontWeight.Bold)
+                        Text("→", color = if (testReady) Amber else Mod.Train, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -751,7 +754,7 @@ private fun StepBox(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(9.dp))
             .pressScale { Haptics.tick(sbCtx); onClick() },
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 /** Custom mode: pick a day (next 7) + time for one session, then place it. */
@@ -783,7 +786,7 @@ private fun CustomPlaceRow(
                     color = if (done) Good else if (placement != null) Mod.Train else Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(Modifier.width(6.dp))
-                Text(if (expanded) "▾" else "▸", color = TextDim, fontSize = FS.s11)
+                Text(if (expanded) "▾" else "▸", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             }
             androidx.compose.animation.AnimatedVisibility(expanded) {
                 Column {
@@ -801,8 +804,8 @@ private fun CustomPlaceRow(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(d.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH), color = if (sel) Mod.Train else TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold)
-                                    Text("${d.dayOfMonth}", color = if (sel) Mod.Train else TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold)
+                                    Text(d.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH), color = if (sel) Mod.Train else TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                    Text("${d.dayOfMonth}", color = if (sel) Mod.Train else TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -865,10 +868,10 @@ private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOp
 private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     val stCtx = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+        Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
         Text(value, color = TextPrimary, fontFamily = Display, fontSize = FS.s13, fontWeight = FontWeight.ExtraBold)
-        Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
+        Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
@@ -899,7 +902,7 @@ private fun CalibrateCta(onOpenAssess: () -> Unit) {
                 Text("Run calibration protocol", color = TextPrimary, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.ExtraBold)
                 Text("7 max tests · unlocks your generated week plan", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body)
             }
-            Text("→", color = Mod.Train, fontSize = FS.s18, fontWeight = FontWeight.Bold)
+            Text("→", color = Mod.Train, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -937,7 +940,7 @@ private fun StatBlock(label: String, value: String, color: Color) {
 @Composable
 private fun TickerStatBlock(label: String, value: Int, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        com.ascend.lifeos.ui.kit.TickerNumber(
+        TickerNumber(
             value, fontSize = 22, color = color,
             fontWeight = FontWeight.Bold, fontFamily = Display,
         )
@@ -1026,7 +1029,7 @@ private fun SessionRow(sws: SessionWithSets, onOpen: (() -> Unit)? = null) {
                 if (s.isComplete) {
                     Box(
                         Modifier.clip(RoundedCornerShape(6.dp)).background(Accent.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 3.dp),
-                    ) { Text("✓", color = Accent, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
+                    ) { Text("✓", color = Accent, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -1145,7 +1148,7 @@ private fun ActivityQuickLog() {
                 Modifier.fillMaxWidth().pressScale { open = !open },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("⚡", fontSize = FS.s16)
+                Text("⚡", fontSize = FS.s16, fontFamily = Body)
                 Spacer(Modifier.width(9.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Log activity", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -1154,7 +1157,7 @@ private fun ActivityQuickLog() {
                         color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                     )
                 }
-                Text(if (open) "▾" else "▸", color = TextDim, fontSize = FS.s12)
+                Text(if (open) "▾" else "▸", color = TextDim, fontSize = FS.s12, fontFamily = Body)
             }
 
             if (open) {

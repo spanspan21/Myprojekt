@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.finance.BankAspsp
 import com.ascend.lifeos.data.finance.BankLink
 import com.ascend.lifeos.data.finance.FinanceStore
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.launch
@@ -186,7 +187,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                     if (q.isEmpty()) all else all.filter { it.name.lowercase().contains(q) }
                 }
                 if (hits.isEmpty()) {
-                    com.ascend.lifeos.ui.kit.EmptyState(androidx.compose.material.icons.Icons.Rounded.AccountBalance, "Keine Treffer", "Anders schreiben?", Mod.Finance)
+                    EmptyState(Icons.Rounded.AccountBalance, "Keine Treffer", "Anders schreiben?", Mod.Finance)
                 } else {
                     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp), contentPadding = PaddingValues(bottom = 12.dp)) {
                         items(hits, key = { it.name }) { bank ->

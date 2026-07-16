@@ -88,7 +88,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale { Haptics.tick(hCtx); onBack() })
             Spacer(Modifier.width(12.dp))
-            Text("HIIT Timer", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+            Text("HIIT Timer", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(20.dp))
 
@@ -104,8 +104,8 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                 }, corner = 14.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(p.name, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
-                            Text("${p.workSec}s/${p.restSec}s · ${p.rounds}×${p.sets}", color = TextDim, fontSize = FS.s11)
+                            Text(p.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("${p.workSec}s/${p.restSec}s · ${p.rounds}×${p.sets}", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         Icon(Icons.Rounded.PlayArrow, "Start preset", tint = Accent, modifier = Modifier.size(20.dp))
                     }
@@ -157,9 +157,9 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                     ))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (isWork) "WORK" else "REST", color = if (isWork) Crit else Cyan, fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
+                    Text(if (isWork) "WORK" else "REST", color = if (isWork) Crit else Cyan, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
                     TickerNumber(remaining, 64, color = TextPrimary)
-                    Text("Round $currentRound/${preset?.rounds ?: 0} · Set $currentSet/${preset?.sets ?: 0}", color = TextDim, fontSize = FS.s13)
+                    Text("Round $currentRound/${preset?.rounds ?: 0} · Set $currentSet/${preset?.sets ?: 0}", color = TextDim, fontSize = FS.s13, fontFamily = Body)
                 }
             }
 

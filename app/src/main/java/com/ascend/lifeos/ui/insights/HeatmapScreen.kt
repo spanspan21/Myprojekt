@@ -62,6 +62,7 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.WaterCalc
 import com.ascend.lifeos.data.training.TrainingDatabase
 import com.ascend.lifeos.ui.kit.Panel
+import com.ascend.lifeos.ui.kit.ShimmerPanel
 import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.wellbeing.WellbeingStore
 import kotlinx.coroutines.Dispatchers
@@ -240,7 +241,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                 if (m == null) {
                     Column {
                         Spacer(Modifier.height(16.dp))
-                        com.ascend.lifeos.ui.kit.ShimmerPanel(height = 180.dp)
+                        ShimmerPanel(height = 180.dp)
                         Spacer(Modifier.height(10.dp))
                         Text("Painting the year…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
                     }

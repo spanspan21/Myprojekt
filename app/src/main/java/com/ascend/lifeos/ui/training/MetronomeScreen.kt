@@ -73,7 +73,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
             Spacer(Modifier.width(12.dp))
-            Text("Metronome", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+            Text("Metronome", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(24.dp))
 
@@ -105,12 +105,12 @@ fun MetronomeScreen(onBack: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (running) {
-                    Text(phaseNames[phase], color = phaseColors[phase], fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                    Text(phaseNames[phase], color = phaseColors[phase], fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                     TickerNumber(remaining, 56, color = TextPrimary)
                 } else {
-                    Text(tempo, color = TextPrimary, fontSize = FS.s32, fontWeight = FontWeight.ExtraBold)
+                    Text(tempo, color = TextPrimary, fontSize = FS.s32, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(4.dp))
-                    Text("Ecc-Pause-Con-Pause", color = TextDim, fontSize = FS.s11)
+                    Text("Ecc-Pause-Con-Pause", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                 }
             }
         }

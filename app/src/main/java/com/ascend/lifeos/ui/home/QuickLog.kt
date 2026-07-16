@@ -56,6 +56,7 @@ import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
@@ -73,7 +74,7 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
     val ctx = LocalContext.current
     var mode by remember { mutableStateOf(QlMode.ACTIONS) }
 
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -470,7 +471,7 @@ private fun DonePane(onDismiss: () -> Unit) {
                     .background(Good.copy(alpha = 0.14f))
                     .border(0.5.dp, Good.copy(alpha = 0.4f), CircleShape),
                 contentAlignment = Alignment.Center,
-            ) { Text("✓", color = Good, fontSize = FS.s22, fontWeight = FontWeight.Bold) }
+            ) { Text("✓", color = Good, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
         Spacer(Modifier.height(10.dp))
         val comp = Repo.completion()
@@ -530,7 +531,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
                         .padding(horizontal = 12.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(MOOD_EMOJIS[i], fontSize = FS.s22)
+                    Text(MOOD_EMOJIS[i], fontSize = FS.s22, fontFamily = Body)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         label, color = if (on) MOOD_COLORS[i] else TextDim,

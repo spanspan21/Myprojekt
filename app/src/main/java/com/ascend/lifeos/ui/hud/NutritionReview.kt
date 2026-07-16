@@ -23,6 +23,7 @@ import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -73,9 +74,9 @@ fun WeeklyFuelReview(isToday: Boolean) {
     GlassPanel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("WEEKLY REVIEW", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
-                com.ascend.lifeos.ui.kit.TickerNumber(score, 22, scoreColor)
-                Text(" / 100", color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold)
+                Text("WEEKLY REVIEW", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
+                TickerNumber(score, 22, scoreColor)
+                Text(" / 100", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))
             // 7 Balken — grün: ±10 % ums Ziel, amber: drunter, warn: drüber
@@ -97,7 +98,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
             Spacer(Modifier.height(10.dp))
             Text(
                 "Ø $avgK kcal · Ø $avgP g protein · $logged/7 days logged",
-                color = TextPrimary, fontSize = FS.s12_5, fontWeight = FontWeight.Bold,
+                color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
@@ -106,7 +107,7 @@ fun WeeklyFuelReview(isToday: Boolean) {
                     score >= 55 -> "Solid base. Protein came up short on ${(logged - protHit).coerceAtLeast(0)} logged days — the gap filler helps in the evening."
                     else -> "Reset week: today counts, not yesterday. One logged day is a good day."
                 },
-                color = TextMuted, fontSize = FS.s11_5, lineHeight = 16.sp,
+                color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp,
             )
         }
     }

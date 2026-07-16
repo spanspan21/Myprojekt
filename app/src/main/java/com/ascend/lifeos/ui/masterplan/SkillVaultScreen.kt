@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.masterplan.DomainWithGraph
+import com.ascend.lifeos.ui.kit.ShimmerPanel
 import com.ascend.lifeos.ui.theme.*
 
 /**
@@ -75,7 +76,7 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
                     VoidBackground(Accent)
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            com.ascend.lifeos.ui.kit.ShimmerPanel(
+                            ShimmerPanel(
                                 Modifier.width(220.dp), height = 220.dp, corner = 110.dp,
                             )
                             Spacer(Modifier.height(20.dp))
@@ -88,10 +89,10 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
 
         // Floating header + domain switcher over the map.
         Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 18.dp, vertical = 12.dp)) {
-            Text("SKILL VAULT", color = TextMuted, fontSize = FS.s11, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Text("SKILL VAULT", color = TextMuted, fontSize = FS.s11, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
             if (active != null) {
                 Spacer(Modifier.height(2.dp))
-                Text(active.domain.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold)
+                Text(active.domain.title, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))
             Row(
@@ -143,8 +144,8 @@ private fun DomainChip(
     ) {
         Box(Modifier.width(7.dp).height(7.dp).clip(RoundedCornerShape(4.dp)).background(accent))
         Spacer(Modifier.width(8.dp))
-        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = FS.s13, fontWeight = FontWeight.SemiBold)
+        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.width(8.dp))
-        Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold)
+        Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }

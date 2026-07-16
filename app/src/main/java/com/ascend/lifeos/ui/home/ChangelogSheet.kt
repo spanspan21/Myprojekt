@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.theme.*
 
 /**
@@ -233,7 +234,7 @@ object Changelog {
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogSheet(onDismiss: () -> Unit) {
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(
             Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()
                 .verticalScroll(rememberScrollState()),

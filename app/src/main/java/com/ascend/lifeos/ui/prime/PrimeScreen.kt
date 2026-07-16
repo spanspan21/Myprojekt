@@ -57,6 +57,7 @@ import com.ascend.lifeos.data.prime.PrimeEngine
 import com.ascend.lifeos.data.prime.PrimeReport
 import com.ascend.lifeos.ui.hud.NeonBar
 import com.ascend.lifeos.ui.kit.IconOrb
+import com.ascend.lifeos.ui.kit.LumenCrystal
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
@@ -160,7 +161,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                         else -> null
                     }
                     Panel(Modifier.weight(1f), onClick = route?.let { r -> { onNavigate(r) } }) {
-                        Column(Modifier.fillMaxWidth().padding(13.dp)) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp)) {
                             Text(g.label, color = TextDim, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                             Spacer(Modifier.height(5.dp))
                             Text(g.value, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1)
@@ -273,7 +274,7 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
             if (isLight) {
                 // LUMEN: the signature Crystal is the index — breathing, glowing,
                 // its intensity driven by the score; the number counts up below.
-                com.ascend.lifeos.ui.kit.LumenCrystal(
+                LumenCrystal(
                     Modifier.size(154.dp),
                     accent = Accent,   // the brand blue — the score lives in the number + tier
                     intensity = if (loading) 0.5f else ((index ?: 0) / 100f).coerceAtLeast(0.35f),

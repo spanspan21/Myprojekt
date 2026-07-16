@@ -342,7 +342,7 @@ private fun StepBox(sign: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
             .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
-    ) { Text(sign, color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
+    ) { Text(sign, color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 // ─── new decision ────────────────────────────────────────────────────────────

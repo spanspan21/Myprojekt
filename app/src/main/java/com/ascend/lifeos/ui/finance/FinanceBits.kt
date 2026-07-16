@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -328,14 +329,14 @@ internal fun StepperOrb(label: String, onClick: () -> Unit) {
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = FS.s18, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 /** Standard finance bottom sheet: dark glass, no drag handle, lime overline. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SheetShell(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
+    JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding().imePadding()) {
             Text(
                 title.uppercase(), color = FinAccent, fontFamily = Display,

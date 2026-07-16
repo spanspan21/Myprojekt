@@ -88,7 +88,7 @@ fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onC
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
-    ) { Text(label, color = fg, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = fg, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 /** Filled/ghost neon action button — tinted in the current module's accent. */
@@ -112,7 +112,7 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
         Text(
             label,
             color = if (primary) Void else TextMuted,
-            fontSize = FS.s14, fontWeight = FontWeight.Bold,
+            fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -128,7 +128,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
             .border(0.5.dp, HudLine, RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 13.dp),
     ) {
-        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = FS.s14)
+        if (value.isEmpty()) Text(placeholder, color = TextDim, fontSize = FS.s14, fontFamily = Body)
         BasicTextField(
             value = value, onValueChange = onValue, singleLine = true,
             textStyle = TextStyle(color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.SemiBold),
