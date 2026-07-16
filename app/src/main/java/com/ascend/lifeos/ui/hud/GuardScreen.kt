@@ -951,6 +951,9 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
     var start by remember { mutableIntStateOf(18 * 60) }
     var end by remember { mutableIntStateOf(19 * 60) }
 
+    var armedRemoveWindow by remember { mutableStateOf(-1) }
+    LaunchedEffect(armedRemoveWindow) { if (armedRemoveWindow >= 0) { kotlinx.coroutines.delay(2500); armedRemoveWindow = -1 } }
+
     Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
@@ -961,6 +964,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                 Spacer(Modifier.height(12.dp))
                 windows.forEachIndexed { i, w ->
                     if (i > 0) Spacer(Modifier.height(8.dp))
+                    val armed = armedRemoveWindow == i
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             "${fmtMin(w.first)} – ${fmtMin(w.second)}",
@@ -972,12 +976,17 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                         }
                         Spacer(Modifier.weight(1f))
                         Icon(
-                            Icons.Rounded.Close, "Remove window", tint = TextDim,
+                            Icons.Rounded.Close, if (armed) "Confirm remove" else "Remove window",
+                            tint = if (armed) Crit else TextDim,
                             modifier = Modifier.size(18.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .clickable {
-                                    WellbeingStore.removePhoneFreeWindow(ctx, w.first, w.second)
-                                    onChanged()
+                                    if (armed) {
+                                        WellbeingStore.removePhoneFreeWindow(ctx, w.first, w.second)
+                                        onChanged()
+                                        armedRemoveWindow = -1
+                                        com.ascend.lifeos.ui.kit.AppFeedback.show("Window removed")
+                                    } else armedRemoveWindow = i
                                 },
                         )
                     }

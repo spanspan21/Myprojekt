@@ -1108,6 +1108,8 @@ private fun progressionIcon(key: String): ImageVector = when (key) {
 private fun ActivityQuickLog() {
     val ctx = LocalContext.current
     var open by remember { mutableStateOf(false) }
+    var armedDeleteActivity by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(armedDeleteActivity) { if (armedDeleteActivity != null) { kotlinx.coroutines.delay(2500); armedDeleteActivity = null } }
     val rev = com.ascend.lifeos.data.ActivityStore.rev
     var typeId by remember {
         mutableStateOf(
@@ -1225,13 +1227,18 @@ private fun ActivityQuickLog() {
                         )
                         Text(relDay(e.ts), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
                         Spacer(Modifier.width(8.dp))
+                        val actArmed = armedDeleteActivity == e.id
                         Icon(
-                            Icons.Rounded.Close, "Delete activity", tint = TextDim.copy(alpha = 0.5f),
+                            Icons.Rounded.Close, if (actArmed) "Confirm delete" else "Delete activity",
+                            tint = if (actArmed) Crit else TextDim.copy(alpha = 0.5f),
                             modifier = Modifier.size(14.dp).clickable {
-                                com.ascend.lifeos.data.Haptics.warn(ctx)
-                                com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
-                                celebrate = null
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Activity deleted")
+                                if (actArmed) {
+                                    com.ascend.lifeos.data.Haptics.warn(ctx)
+                                    com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
+                                    celebrate = null
+                                    armedDeleteActivity = null
+                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Activity deleted")
+                                } else armedDeleteActivity = e.id
                             },
                         )
                     }

@@ -78,6 +78,8 @@ fun ActiveWorkoutScreen(
     var formVideoOpen by remember { mutableStateOf(false) }
     var repCounterOpen by remember { mutableStateOf(false) }
     var detailFor by remember { mutableStateOf<String?>(null) }
+    var armedCancel by remember { mutableStateOf(false) }
+    LaunchedEffect(armedCancel) { if (armedCancel) { delay(2500); armedCancel = false } }
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -111,10 +113,14 @@ fun ActiveWorkoutScreen(
                     }
                     Spacer(Modifier.width(8.dp))
                     Box(
-                        Modifier.clip(RoundedCornerShape(12.dp)).background(Red.copy(alpha = 0.12f))
-                            .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                            .pressScale { vm.cancelWorkout(); onFinish() }.padding(horizontal = 14.dp, vertical = 9.dp),
-                    ) { Text("Cancel", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+                        Modifier.clip(RoundedCornerShape(12.dp))
+                            .background(Red.copy(alpha = if (armedCancel) 0.25f else 0.12f))
+                            .border(0.5.dp, Red.copy(alpha = if (armedCancel) 0.6f else 0.3f), RoundedCornerShape(12.dp))
+                            .pressScale {
+                                if (armedCancel) { vm.cancelWorkout(); onFinish() }
+                                else { com.ascend.lifeos.data.Haptics.warn(ctx); armedCancel = true }
+                            }.padding(horizontal = 14.dp, vertical = 9.dp),
+                    ) { Text(if (armedCancel) "Sure?" else "Cancel", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
                 }
                 Spacer(Modifier.height(16.dp))
             }
