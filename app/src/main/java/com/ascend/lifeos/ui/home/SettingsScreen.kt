@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.data.Backup
 import com.ascend.lifeos.data.CrashLog
 import com.ascend.lifeos.data.JarvisSpeech
@@ -119,7 +120,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = onClose),
+                    .pressScale(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
@@ -1195,7 +1196,7 @@ private fun StepBtn(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(34.dp).clip(CircleShape)
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
 }
@@ -1450,7 +1451,7 @@ private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange:
         Box(
             Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                .clickable { onChange((value + step).coerceAtMost(max)) },
+                .pressScale { onChange((value + step).coerceAtMost(max)) },
             contentAlignment = Alignment.Center,
         ) { Text("▲", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14) }
         Spacer(Modifier.height(6.dp))
@@ -1462,7 +1463,7 @@ private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange:
         Box(
             Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                .clickable { onChange((value - step).coerceAtLeast(min)) },
+                .pressScale { onChange((value - step).coerceAtLeast(min)) },
             contentAlignment = Alignment.Center,
         ) { Text("▼", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14) }
     }

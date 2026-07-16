@@ -430,7 +430,7 @@ private fun QlStep(label: String, onClick: () -> Unit) {
         Modifier.size(44.dp).clip(CircleShape)
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -526,7 +526,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
                         .clip(RoundedCornerShape(14.dp))
                         .background(bg)
                         .border(0.5.dp, edge, RoundedCornerShape(14.dp))
-                        .clickable { selected = level }
+                        .pressScale { selected = level }
                         .padding(horizontal = 12.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {

@@ -182,7 +182,7 @@ private fun WindDownChip(label: String, on: Boolean, color: Color, onClick: () -
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) color.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .clickable { onClick(); com.ascend.lifeos.data.Haptics.tick(ctx) }
+            .pressScale { onClick(); com.ascend.lifeos.data.Haptics.tick(ctx) }
             .padding(horizontal = 14.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) color else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -195,7 +195,7 @@ private fun WindDownFactor(label: String, on: Boolean, onToggle: (Boolean) -> Un
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) accent.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) accent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .clickable { onToggle(!on); com.ascend.lifeos.data.Haptics.tick(ctx) }
+            .pressScale { onToggle(!on); com.ascend.lifeos.data.Haptics.tick(ctx) }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) accent else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

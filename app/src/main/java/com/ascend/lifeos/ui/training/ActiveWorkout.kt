@@ -100,7 +100,7 @@ fun ActiveWorkoutScreen(
                     Box(
                         Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
-                            .clickable { formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
+                            .pressScale { formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                     ) { Icon(Icons.Rounded.Videocam, "Form video", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     // experimental rep counter (Settings → Training)
                     if (com.ascend.lifeos.data.Prefs.bool(ctx, com.ascend.lifeos.data.Prefs.AUTO_COUNT, false)) {
@@ -108,7 +108,7 @@ fun ActiveWorkoutScreen(
                         Box(
                             Modifier.clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
-                                .clickable { repCounterOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
+                                .pressScale { repCounterOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                         ) { Icon(Icons.Rounded.Visibility, "Rep counter", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     }
                     Spacer(Modifier.width(8.dp))
@@ -145,7 +145,7 @@ fun ActiveWorkoutScreen(
                     }
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                            .border(0.5.dp, HudLine, RoundedCornerShape(11.dp)).clickable(onClick = onAddExercise)
+                            .border(0.5.dp, HudLine, RoundedCornerShape(11.dp)).pressScale(onClick = onAddExercise)
                             .padding(horizontal = 10.dp, vertical = 8.dp),
                     ) { Icon(Icons.Rounded.Add, "Add exercise", tint = TextDim, modifier = Modifier.size(16.dp)) }
                 }
@@ -403,7 +403,7 @@ private fun ExerciseSetLogger(
                         "Unlink",
                         color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                            .clickable { vm.unlinkSuperset(vm.activeCurrentExIndex) }
+                            .pressScale { vm.unlinkSuperset(vm.activeCurrentExIndex) }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
                     )
                 }
