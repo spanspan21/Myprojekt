@@ -29,6 +29,8 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "Haptic feedback on major CTAs: boot launch, Quick-log FAB, rep counter use, workout done, test day pass/fail, rule save/delete — every key action now buzzes",
+        "UX safety wave 3: cancel workout, activity log delete and phone-free window remove now require double-tap confirmation",
         "UX safety wave 2: grade delete, task delete and shopping-list clear now require double-tap confirmation — no more accidental data loss",
         "pressScale wave 4: every card, CTA and action button across all screens now press-and-spring — 100+ interactive surfaces upgraded",
         "Vibration centralized: all 6 remaining screens with local vibrate() boilerplate now use the Haptics class — cleaner code, consistent feel",
