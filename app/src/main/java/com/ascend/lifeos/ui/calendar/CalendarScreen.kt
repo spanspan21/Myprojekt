@@ -1308,6 +1308,8 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
     var durMin by remember { mutableIntStateOf(45) }
     var deadlineDays by remember { mutableIntStateOf(3) }
     var planNote by remember { mutableStateOf<String?>(null) }
+    var armedDeleteTask by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(armedDeleteTask) { if (armedDeleteTask != null) { kotlinx.coroutines.delay(2500); armedDeleteTask = null } }
 
     com.ascend.lifeos.ui.kit.JarvisSheet(onDismiss = onDismiss) {
         Column(
@@ -1437,13 +1439,18 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                             fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
                         )
                     }
+                    val taskArmed = armedDeleteTask == t.id
                     Text(
-                        "✕", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                        "✕", color = if (taskArmed) Crit else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                        fontWeight = if (taskArmed) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.clip(CircleShape)
-                            .clickable { scope.launch {
-                                com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id)
-                                com.ascend.lifeos.ui.kit.AppFeedback.show("Task deleted")
-                            } }
+                            .clickable {
+                                if (taskArmed) { scope.launch {
+                                    com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id)
+                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Task deleted")
+                                }; armedDeleteTask = null }
+                                else armedDeleteTask = t.id
+                            }
                             .padding(6.dp),
                     )
                 }

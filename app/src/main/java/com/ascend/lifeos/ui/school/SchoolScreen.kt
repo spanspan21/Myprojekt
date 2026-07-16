@@ -101,7 +101,7 @@ private fun pill(text: String, on: Boolean, modifier: Modifier = Modifier, onCli
         modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) Mod.School.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, if (on) Mod.School.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
+            .pressScale(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center,
     ) { Text(text, color = if (on) Mod.School else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -367,7 +367,7 @@ private fun SubjectCard(
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                             .background(Mod.School.copy(alpha = 0.12f))
                             .border(0.5.dp, Mod.School.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                            .clickable(onClick = onAddGrade).padding(vertical = 11.dp),
+                            .pressScale(onClick = onAddGrade).padding(vertical = 11.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("+ Add grade", color = Mod.School, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     var armed by remember { mutableStateOf(false) }
@@ -471,6 +471,8 @@ private fun GradeTrendChart(grades: List<Grade>, isPoints: Boolean) {
 
 @Composable
 private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
+    var armed by remember { mutableStateOf(false) }
+    LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ivory.copy(alpha = 0.04f))
             .padding(horizontal = 11.dp, vertical = 9.dp),
@@ -500,8 +502,10 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
             }
         }
         Icon(
-            Icons.Rounded.Delete, null, tint = TextDim,
-            modifier = Modifier.size(16.dp).clickable(onClick = onDelete),
+            Icons.Rounded.Delete, null, tint = if (armed) Crit else TextDim,
+            modifier = Modifier.size(16.dp).clickable {
+                if (armed) onDelete() else armed = true
+            },
         )
     }
 }

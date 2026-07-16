@@ -350,7 +350,7 @@ private fun RowScope.GradeChip(label: String, color: Color, onClick: () -> Unit)
         Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
             .background(color.copy(alpha = 0.10f))
             .border(0.5.dp, color.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -582,7 +582,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                         val doneTask = t.status == TaskStatus.DONE
                         Row(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                                .clickable {
+                                .pressScale {
                                     val completesNode = !doneTask &&
                                         n.tasks.all { it.id == t.id || it.status == TaskStatus.DONE }
                                     vm.setTaskDone(t.id, !doneTask)
@@ -692,7 +692,7 @@ private fun ResourceRowMini(r: ResourceEntity, accent: Color) {
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
-            .clickable {
+            .pressScale {
                 runCatching {
                     ctx.startActivity(
                         android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(r.url))

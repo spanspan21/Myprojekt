@@ -29,6 +29,7 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "UX safety wave 2: grade delete, task delete and shopping-list clear now require double-tap confirmation — no more accidental data loss",
         "pressScale wave 4: every card, CTA and action button across all screens now press-and-spring — 100+ interactive surfaces upgraded",
         "Vibration centralized: all 6 remaining screens with local vibrate() boilerplate now use the Haptics class — cleaner code, consistent feel",
         "Empty states everywhere: goals, workouts, records, exercises, skill domains, bank search and recipe filter show helpful guidance instead of blank space",

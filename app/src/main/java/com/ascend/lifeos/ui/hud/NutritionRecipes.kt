@@ -660,11 +660,21 @@ fun ShoppingView(onBack: () -> Unit) {
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Checked items cleared")
                     }.padding(horizontal = 12.dp, vertical = 8.dp))
                 }
-                Text("Clear all", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
-                    Haptics.confirm(ctx)
-                    Repo.clearShopping()
-                    com.ascend.lifeos.ui.kit.AppFeedback.show("Shopping list cleared")
-                }.padding(horizontal = 12.dp, vertical = 8.dp))
+                var armedClearAll by remember { mutableStateOf(false) }
+                LaunchedEffect(armedClearAll) { if (armedClearAll) { kotlinx.coroutines.delay(2500); armedClearAll = false } }
+                Text(
+                    if (armedClearAll) "Tap again to clear" else "Clear all",
+                    color = if (armedClearAll) Crit else TextDim,
+                    fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.pressScale {
+                        if (armedClearAll) {
+                            Haptics.confirm(ctx)
+                            Repo.clearShopping()
+                            com.ascend.lifeos.ui.kit.AppFeedback.show("Shopping list cleared")
+                            armedClearAll = false
+                        } else armedClearAll = true
+                    }.padding(horizontal = 12.dp, vertical = 8.dp),
+                )
             }
         }
     }
