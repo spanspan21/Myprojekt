@@ -139,11 +139,18 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         }
 
         // ── Recent PRs ─────────────────────────────────────────────
-        if (prs.isNotEmpty()) {
+        item {
+            Text("RECENT RECORDS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Spacer(Modifier.height(10.dp))
+        }
+        if (prs.isEmpty()) {
             item {
-                Text("RECENT RECORDS", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                Spacer(Modifier.height(10.dp))
+                com.ascend.lifeos.ui.kit.EmptyState(
+                    androidx.compose.material.icons.Icons.Rounded.FitnessCenter, "No records yet",
+                    "Personal records appear as you train", com.ascend.lifeos.ui.theme.Amber,
+                )
             }
+        } else {
             items(prs, key = { it.id }) { pr ->
                 Column(Modifier.animateItem()) {
                     PrRow(pr) { detailFor = pr.exerciseId }

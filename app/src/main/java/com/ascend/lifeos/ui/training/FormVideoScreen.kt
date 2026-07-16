@@ -37,8 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -92,7 +94,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
                     .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable { recording?.stop(); onClose() },
+                    .pressScale { recording?.stop(); onClose() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         }
@@ -149,7 +151,8 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                         .clip(CircleShape)
                         .background(if (recording != null) Crit else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f))
                         .border(2.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.8f), CircleShape)
-                        .clickable(enabled = camReady) {
+                        .then(if (camReady) Modifier.pressScale {
+                            Haptics.tick(ctx)
                             val rec = recording
                             if (rec != null) { rec.stop(); recording = null } else {
                                 val file = File(dir, "${exercise.ifBlank { "clip" }.replace(' ', '_')}_${System.currentTimeMillis()}.mp4")
@@ -159,7 +162,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                                         if (ev is VideoRecordEvent.Finalize) clips = listClips(dir)
                                     }
                             }
-                        },
+                        } else Modifier),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(

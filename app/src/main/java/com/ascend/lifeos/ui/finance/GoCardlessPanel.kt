@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.finance
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountBalance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -180,12 +182,19 @@ private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: 
             Spacer(Modifier.height(12.dp))
             Field("Search…", query) { query = it }
             Spacer(Modifier.height(10.dp))
-            LazyColumn(Modifier.heightIn(max = 360.dp)) {
-                items(filtered, key = { it.id }) { b ->
-                    Text(
-                        b.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5,
-                        modifier = Modifier.animateItem().fillMaxWidth().clickable { onPick(b) }.padding(vertical = 12.dp),
-                    )
+            if (filtered.isEmpty()) {
+                com.ascend.lifeos.ui.kit.EmptyState(
+                    Icons.Rounded.AccountBalance,
+                    "No banks found", "Try a different search term", Mod.Finance,
+                )
+            } else {
+                LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                    items(filtered, key = { it.id }) { b ->
+                        Text(
+                            b.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5,
+                            modifier = Modifier.animateItem().fillMaxWidth().clickable { onPick(b) }.padding(vertical = 12.dp),
+                        )
+                    }
                 }
             }
         }

@@ -36,6 +36,7 @@ import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.ui.kit.*
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -210,14 +211,14 @@ fun BodyScreen() {
                                 Box(
                                     Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Body.copy(alpha = 0.14f))
                                         .border(0.5.dp, Mod.Body.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
-                                        .clickable { connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
+                                        .pressScale { connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
                                 ) { Text(if (linked) "Sync now" else "Connect", color = Mod.Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                                 Spacer(Modifier.width(8.dp))
                                 // no-watch nights still get logged (audit F9)
                                 Box(
                                     Modifier.clip(RoundedCornerShape(11.dp))
                                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.14f), RoundedCornerShape(11.dp))
-                                        .clickable { sleepOpen = true }.padding(horizontal = 13.dp, vertical = 8.dp),
+                                        .pressScale { sleepOpen = true }.padding(horizontal = 13.dp, vertical = 8.dp),
                                 ) { Text("Log sleep", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                             }
                         }
@@ -693,7 +694,7 @@ private fun SleepSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
-                    .clickable { Repo.logManualSleep(minutes); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep logged"); onDismiss() }
+                    .pressScale { Repo.logManualSleep(minutes); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep logged"); onDismiss() }
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -790,7 +791,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
-                    .clickable {
+                    .pressScale {
                         Repo.logMeasurement(key, cm)
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Measurement saved")
@@ -1036,7 +1037,7 @@ private fun SickModeRow() {
                 Modifier.clip(RoundedCornerShape(11.dp))
                     .background(if (sick) Crit.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                     .border(0.5.dp, if (sick) Crit.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                    .clickable {
+                    .pressScale {
                         Repo.setSickMode(!sick)
                         com.ascend.lifeos.data.Haptics.warn(ctx)
                         com.ascend.lifeos.ui.kit.AppFeedback.show(if (!sick) "Sick mode on — streak paused" else "Sick mode off — back to normal")
@@ -1190,7 +1191,7 @@ private fun WeightSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
-                    .clickable {
+                    .pressScale {
                         Repo.logWeight(kg)
                         com.ascend.lifeos.data.Haptics.confirm(ctx)
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Weight logged")

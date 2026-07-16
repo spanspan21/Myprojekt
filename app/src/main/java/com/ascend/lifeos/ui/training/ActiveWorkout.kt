@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.*
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.motion.sharedHero
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
@@ -115,7 +116,7 @@ fun ActiveWorkoutScreen(
                     Box(
                         Modifier.clip(RoundedCornerShape(12.dp)).background(Red.copy(alpha = 0.12f))
                             .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                            .clickable { vm.cancelWorkout(); onFinish() }.padding(horizontal = 14.dp, vertical = 9.dp),
+                            .pressScale { vm.cancelWorkout(); onFinish() }.padding(horizontal = 14.dp, vertical = 9.dp),
                     ) { Text("Cancel", color = Red, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -717,7 +718,7 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
             Text(
                 "Rückgängig",
                 color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onUndo).padding(horizontal = 12.dp, vertical = 8.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onUndo() }.padding(horizontal = 12.dp, vertical = 8.dp),
             )
             Icon(
                 Icons.Rounded.Close, "Dismiss", tint = TextDim.copy(alpha = 0.5f),

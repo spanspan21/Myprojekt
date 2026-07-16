@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ShoppingCart
@@ -56,10 +57,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FoodEntry
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.RecipeDb
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.ShopItem
 import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.Amber
 import com.ascend.lifeos.ui.theme.Crit
@@ -170,11 +173,11 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             Spacer(Modifier.width(14.dp))
             Text("Recipes", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
             // Kap. 41 (P19-Fix): eigene Rezepte anlegen
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).clickable { editorOpen = true }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { editorOpen = true }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.Add, "Add recipe", tint = Mod.Fuel, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(8.dp))
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).clickable { onShopping() }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { onShopping() }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.ShoppingCart, "Shopping list", tint = Mod.Fuel, modifier = Modifier.size(20.dp))
             }
         }
@@ -228,7 +231,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                .clickable { planOpen = !planOpen; if (!planOpen) assignDay = null }.padding(vertical = 4.dp),
+                .pressScale { planOpen = !planOpen; if (!planOpen) assignDay = null }.padding(vertical = 4.dp),
         ) {
             Text(if (planOpen) "PLAN ▾" else "PLAN ▸", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             if (planned.isNotEmpty()) {
@@ -262,7 +265,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                                     if (rec != null) {
                                         Text(
                                             "Missing → shopping", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.clickable {
+                                            modifier = Modifier.pressScale {
                                                 val missing = rec.parts.filter { !matchesPantry(it.name, pantry) }
                                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = rec.title) })
                                                 com.ascend.lifeos.ui.kit.AppFeedback.show("Added to shopping list")
@@ -289,7 +292,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             Spacer(Modifier.width(10.dp))
             Box(
                 Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
-                    .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).clickable { addPantry() },
+                    .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).pressScale { addPantry() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Add, "Add to pantry", tint = Mod.Fuel, modifier = Modifier.size(20.dp)) }
         }
@@ -308,16 +311,23 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         Text("$remainKcal kcal left in today's budget", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5)
 
         Spacer(Modifier.height(14.dp))
-        val assignLabel = assignDay?.let { labelOf(it) }
-        ranked.forEach { r ->
-            val fit = fitScore(r, remainKcal, remainProt)
-            RecipeCard(
-                r, fit, pantry, expanded == r.id,
-                assignLabel = assignLabel,
-                onAssign = { assignDay?.let { d -> assignPlan(d, r) } },
-                onToggle = { expanded = if (expanded == r.id) null else r.id },
+        if (ranked.isEmpty()) {
+            EmptyState(
+                Icons.Rounded.MenuBook,
+                "No recipes match", "Try a different filter or log more calories", Mod.Fuel,
             )
-            Spacer(Modifier.height(10.dp))
+        } else {
+            val assignLabel = assignDay?.let { labelOf(it) }
+            ranked.forEach { r ->
+                val fit = fitScore(r, remainKcal, remainProt)
+                RecipeCard(
+                    r, fit, pantry, expanded == r.id,
+                    assignLabel = assignLabel,
+                    onAssign = { assignDay?.let { d -> assignPlan(d, r) } },
+                    onToggle = { expanded = if (expanded == r.id) null else r.id },
+                )
+                Spacer(Modifier.height(10.dp))
+            }
         }
     }
 }
@@ -375,7 +385,7 @@ private fun PantryChip(label: String, onRemove: () -> Unit) {
     Row(
         Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Fuel.copy(alpha = 0.14f))
             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-            .clickable { onRemove() }.padding(horizontal = 11.dp, vertical = 7.dp),
+            .pressScale { onRemove() }.padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
@@ -389,10 +399,11 @@ private fun RecipeCard(
     r: RecipeDb.Recipe, fit: Int, pantry: List<String>, expanded: Boolean,
     assignLabel: String? = null, onAssign: () -> Unit = {}, onToggle: () -> Unit,
 ) {
+    val ctx = LocalContext.current
     val pantryActive = pantry.isNotEmpty()
     val matched = if (pantryActive) r.parts.count { matchesPantry(it.name, pantry) } else 0
     GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.fillMaxWidth().clickable { onToggle() }.padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().pressScale { onToggle() }.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -416,7 +427,7 @@ private fun RecipeCard(
                     Box(
                         Modifier.clip(RoundedCornerShape(9.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(9.dp))
-                            .clickable { onAssign() }.padding(horizontal = 9.dp, vertical = 6.dp),
+                            .pressScale { onAssign() }.padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text("→ $assignLabel", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(8.dp))
                 }
@@ -482,8 +493,9 @@ private fun RecipeCard(
                         if (armed) "Tap again to delete" else "Delete recipe",
                         color = if (armed) Crit else Red,
                         fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable {
+                        modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale {
                             if (armed) {
+                                Haptics.confirm(ctx)
                                 com.ascend.lifeos.data.OwnRecipes.delete(r.id)
                                 com.ascend.lifeos.ui.kit.AppFeedback.show("Recipe deleted")
                             } else armed = true
@@ -498,7 +510,7 @@ private fun RecipeCard(
                         Text(
                             "Add ${missing.size} missing → shopping list",
                             color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable {
+                            modifier = Modifier.pressScale {
                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
                                 com.ascend.lifeos.ui.kit.AppFeedback.show("${missing.size} items added to list")
                             },
@@ -570,7 +582,7 @@ fun ShoppingView(onBack: () -> Unit) {
                 }
             }
             if (items.isNotEmpty()) {
-                Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).clickable {
+                Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale {
                     val text = items.joinToString("\n") { "• ${it.name}${shopQtyLabel(it)}" }
                     // (Mengen-Suffix via shopQtyLabel — Kap. 41)
                     runCatching { ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "Shopping list\n$text"), "Share")) }
@@ -590,10 +602,10 @@ fun ShoppingView(onBack: () -> Unit) {
             Box(
                 Modifier.size(44.dp).clip(RoundedCornerShape(13.dp))
                     .background(if (newItem.isBlank()) Mod.Fuel.copy(alpha = 0.15f) else Mod.Fuel)
-                    .clickable(enabled = newItem.isNotBlank()) {
+                    .then(if (newItem.isNotBlank()) Modifier.pressScale {
                         Repo.addToShopping(listOf(newItem.trim()))
                         newItem = ""
-                    },
+                    } else Modifier),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -622,7 +634,7 @@ fun ShoppingView(onBack: () -> Unit) {
                     Column(Modifier.fillMaxWidth().padding(8.dp)) {
                         inCat.forEach { it ->
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { Repo.toggleShop(it.name) }.padding(horizontal = 10.dp, vertical = 11.dp),
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).pressScale { Repo.toggleShop(it.name) }.padding(horizontal = 10.dp, vertical = 11.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(if (it.checked) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked, if (it.checked) "Uncheck" else "Check", tint = if (it.checked) Mod.Fuel else TextDim, modifier = Modifier.size(20.dp))
@@ -642,12 +654,14 @@ fun ShoppingView(onBack: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 if (done > 0) {
-                    Text("Clear checked", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.clickable {
+                    Text("Clear checked", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
+                        Haptics.tick(ctx)
                         Repo.clearShoppingChecked()
                         com.ascend.lifeos.ui.kit.AppFeedback.show("Checked items cleared")
                     }.padding(horizontal = 12.dp, vertical = 8.dp))
                 }
-                Text("Clear all", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.clickable {
+                Text("Clear all", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
+                    Haptics.confirm(ctx)
                     Repo.clearShopping()
                     com.ascend.lifeos.ui.kit.AppFeedback.show("Shopping list cleared")
                 }.padding(horizontal = 12.dp, vertical = 8.dp))
@@ -793,7 +807,7 @@ private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planne
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clip(RoundedCornerShape(11.dp)).background(bg)
             .border(if (active) 1.dp else 0.5.dp, borderColor, RoundedCornerShape(11.dp))
-            .clickable { onClick() }.padding(horizontal = 13.dp, vertical = 7.dp),
+            .pressScale { onClick() }.padding(horizontal = 13.dp, vertical = 7.dp),
     ) {
         Text(label, color = if (active || isToday) Mod.Fuel else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(3.dp))
@@ -935,7 +949,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                 Text(
                     "+ ${p.name}",
                     color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.fillMaxWidth().clickable {
+                    modifier = Modifier.fillMaxWidth().pressScale {
                         val g = ingGrams.toIntOrNull() ?: 100
                         parts = parts + RecipeDb.Ing(p.name, p.kcal100, p.protein100, p.carbs100, p.fat100, g)
                         ingQuery = ""

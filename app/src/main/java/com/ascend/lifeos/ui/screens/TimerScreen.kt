@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.kit.Panel
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -109,9 +110,9 @@ fun TimerScreen(onClose: () -> Unit) {
                         Modifier.weight(1f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(bgClr)
-                            .clickable(enabled = !running) {
+                            .then(if (!running) Modifier.pressScale {
                                 mode = m; elapsedMs = 0; finished = false
-                            }
+                            } else Modifier)
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -246,7 +247,7 @@ fun TimerScreen(onClose: () -> Unit) {
                 Box(
                     Modifier.size(72.dp).clip(CircleShape)
                         .background(if (running) Ivory.copy(alpha = 0.08f) else TimerAccent)
-                        .clickable {
+                        .pressScale {
                             if (finished) { elapsedMs = 0; finished = false }
                             running = !running
                             com.ascend.lifeos.data.Haptics.confirm(ctx)

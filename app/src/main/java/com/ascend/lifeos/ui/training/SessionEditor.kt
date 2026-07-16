@@ -36,6 +36,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.ascend.lifeos.data.training.WorkoutSessionEntity
 import com.ascend.lifeos.data.training.WorkoutSetEntity
 import com.ascend.lifeos.ui.hud.GlassPanel
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Bg
 import com.ascend.lifeos.ui.theme.Body
@@ -167,7 +168,7 @@ private fun MiniStep(label: String, onClick: () -> Unit) {
     Box(
         Modifier.clip(if (label.length > 1) RoundedCornerShape(8.dp) else CircleShape)
             .background(Ivory.copy(alpha = 0.06f))
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(horizontal = if (label.length > 1) 8.dp else 10.dp, vertical = 6.dp),
     ) { Text(label, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

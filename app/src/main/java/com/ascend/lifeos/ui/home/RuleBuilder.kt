@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -137,7 +138,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
             var on by remember(p.id) { mutableStateOf(com.ascend.lifeos.data.Protocols.enabled(ctx, p.id)) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .clickable { on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
+                    .pressScale { on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
                     .padding(vertical = 8.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -212,7 +213,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     if (rule.enabled) "ON" else "OFF",
                     color = if (rule.enabled) Mod.Home else TextDim,
                     fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable(onClick = onToggle)
+                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale(onClick = onToggle)
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
                 Spacer(Modifier.width(6.dp))
@@ -221,7 +222,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     color = if (armed) Crit else TextDim,
                     fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp))
-                        .clickable { if (armed) { onDelete(); com.ascend.lifeos.ui.kit.AppFeedback.show("Rule deleted") } else armed = true }
+                        .pressScale { if (armed) { onDelete(); com.ascend.lifeos.ui.kit.AppFeedback.show("Rule deleted") } else armed = true }
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }
@@ -279,7 +280,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                 Text(
                     "+ Second condition", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable { second = true }
+                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { second = true }
                         .padding(vertical = 3.dp),
                 )
             } else {
@@ -308,7 +309,7 @@ private fun RuleEditor(onDone: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(if (canSave) Mod.Home else Mod.Home.copy(alpha = 0.25f))
-                    .clickable(enabled = canSave) {
+                    .then(if (canSave) Modifier.pressScale {
                         CustomRules.upsert(
                             ctx,
                             CustomRule(
@@ -326,7 +327,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                             ),
                         )
                         onDone()
-                    }
+                    } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Save rule", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
@@ -346,7 +347,7 @@ private fun Chip(label: String, on: Boolean, onClick: () -> Unit) {
                 if (on) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 7.dp),
     ) {
         Text(

@@ -7,7 +7,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.PoseDetection
@@ -75,7 +75,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                     Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                        .clickable(onClick = onClose),
+                        .pressScale(onClick = onClose),
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
             }
@@ -86,7 +86,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
                         .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
-                        .clickable { permLauncher.launch(android.Manifest.permission.CAMERA) }
+                        .pressScale { permLauncher.launch(android.Manifest.permission.CAMERA) }
                         .padding(20.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -159,14 +159,14 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                         Modifier.weight(1f).clip(RoundedCornerShape(13.dp))
                             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
                             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-                            .clickable { reps = 0; counter.reset() }
+                            .pressScale { reps = 0; counter.reset() }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Reset", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Box(
                         Modifier.weight(2f).clip(RoundedCornerShape(13.dp))
                             .background(if (reps > 0) Mod.Train else Mod.Train.copy(alpha = 0.25f))
-                            .clickable(enabled = reps > 0) { onUseCount(reps); onClose() }
+                            .then(if (reps > 0) Modifier.pressScale { onUseCount(reps); onClose() } else Modifier)
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text("Use $reps reps", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

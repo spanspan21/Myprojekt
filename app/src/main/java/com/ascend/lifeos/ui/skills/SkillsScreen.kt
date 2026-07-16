@@ -175,9 +175,15 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
                     Spacer(Modifier.height(12.dp))
                 }
             }
-            items(domains, key = { it.domain.id }) { d ->
-                PathCard(d, metaTick, Modifier.animateItem()) { onOpen(d.domain.id) }
-                Spacer(Modifier.height(12.dp))
+            if (domains.isEmpty()) {
+                item(key = "empty") {
+                    EmptyState(Icons.Rounded.Psychology, "No skill domains", "Add a domain to start building your skill tree", Mod.Skills)
+                }
+            } else {
+                items(domains, key = { it.domain.id }) { d ->
+                    PathCard(d, metaTick, Modifier.animateItem()) { onOpen(d.domain.id) }
+                    Spacer(Modifier.height(12.dp))
+                }
             }
         }
     }

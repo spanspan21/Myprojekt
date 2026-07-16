@@ -28,6 +28,7 @@ import com.ascend.lifeos.data.sleep.NightLog
 import com.ascend.lifeos.data.sleep.SleepProtocol
 import com.ascend.lifeos.data.sleep.SleepStore
 import com.ascend.lifeos.ui.kit.*
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
 // ─── SLEEP PROTOCOL — CBT-I: restriction + stimulus control ──────────────────
@@ -145,7 +146,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(12.dp))
                         .background(if (napLogged) Good.copy(alpha = 0.15f) else Mod.Body)
-                        .clickable(enabled = !napLogged) { SleepStore.logNap(ctx, napMin); napLogged = true; com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Nap logged") }
+                        .then(if (!napLogged) Modifier.pressScale { SleepStore.logNap(ctx, napMin); napLogged = true; com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Nap logged") } else Modifier)
                         .padding(horizontal = 20.dp, vertical = 10.dp),
                 ) {
                     Text(
@@ -289,7 +290,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                         .background(if (saved) Good.copy(alpha = 0.14f) else Mod.Body)
-                        .clickable {
+                        .pressScale {
                             SleepStore.upsertLog(ctx, NightLog(prevKey(todayKey()), bed, onset, nightWake, finalWake, up))
                             saved = true
                             com.ascend.lifeos.data.Haptics.confirm(ctx)
@@ -394,7 +395,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(if (canStart) Mod.Body else Mod.Body.copy(alpha = 0.25f))
-                    .clickable(enabled = canStart) { SleepStore.startRestriction(ctx); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep restriction started") }
+                    .then(if (canStart) Modifier.pressScale { SleepStore.startRestriction(ctx); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Sleep restriction started") } else Modifier)
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) { Text("Start restriction", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }

@@ -281,6 +281,13 @@ fun GoalsScreen(onClose: () -> Unit) {
     LaunchedEffect(armedGoal) { if (armedGoal != null) { kotlinx.coroutines.delay(2500); armedGoal = null } }
 
     LifeScaffold("Goals", "$quarter · ${active.size} active", Mod.Home, onClose) {
+        if (active.isEmpty()) {
+            com.ascend.lifeos.ui.kit.EmptyState(
+                Icons.Rounded.Check, "No active goals",
+                "Set a goal to track key results and measure progress", Mod.Home,
+            )
+            Spacer(Modifier.height(12.dp))
+        }
         active.forEach { g ->
             val progress = g.krs.map { krProgress(it, ctx) }.average().toFloat().takeIf { !it.isNaN() } ?: 0f
             val complete = progress >= 1f

@@ -80,7 +80,7 @@ internal fun BankPanel() {
                     Box(
                         Modifier.clip(CircleShape)
                             .background(FinAccent.copy(alpha = if (busy) 0.06f else 0.14f))
-                            .clickable(enabled = !busy) { BankLink.requestSync(ctx) }
+                            .then(if (!busy) Modifier.pressScale { BankLink.requestSync(ctx) } else Modifier)
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -143,7 +143,7 @@ internal fun BankPanel() {
                 Text(
                     "Trennen",
                     color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable(enabled = !busy) { BankLink.unlink(ctx) }.padding(vertical = 4.dp),
+                    modifier = Modifier.then(if (!busy) Modifier.pressScale { BankLink.unlink(ctx) } else Modifier).padding(vertical = 4.dp),
                 )
             }
 

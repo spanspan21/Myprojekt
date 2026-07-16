@@ -182,6 +182,14 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
         detail?.let { ex -> ExerciseDetailSheet(ex, vm, onDismiss = { detail = null }) }
 
         LazyColumn(contentPadding = PaddingValues(bottom = 140.dp)) {
+            if (filtered.isEmpty()) {
+                item {
+                    com.ascend.lifeos.ui.kit.EmptyState(
+                        androidx.compose.material.icons.Icons.Rounded.Search, "No exercises found",
+                        "Try a different search or filter", com.ascend.lifeos.ui.theme.Mod.Train,
+                    )
+                }
+            }
             categoryOrder.forEach { cat ->
                 val exInCat = grouped[cat] ?: return@forEach
                 stickyHeader(key = cat.name) {
@@ -362,6 +370,14 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
         Spacer(Modifier.height(12.dp))
 
         LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+            if (filtered.isEmpty()) {
+                item {
+                    com.ascend.lifeos.ui.kit.EmptyState(
+                        androidx.compose.material.icons.Icons.Rounded.Search, "No matching exercises",
+                        "Try a different search term", com.ascend.lifeos.ui.theme.Mod.Train,
+                    )
+                }
+            }
             items(filtered, key = { it.id }) { ex ->
                 GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale { onPicked(ex) }, corner = 14.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {

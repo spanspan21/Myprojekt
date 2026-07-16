@@ -142,7 +142,7 @@ fun TrainingHub(
         item {
             AnimatedVisibility(vm.deloadRecommended && !vm.deloadActive) {
                 Column {
-                    GlassPanel(Modifier.fillMaxWidth().clickable { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.activateDeload(); com.ascend.lifeos.ui.kit.AppFeedback.show("Deload activated") }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
+                    GlassPanel(Modifier.fillMaxWidth().pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.activateDeload(); com.ascend.lifeos.ui.kit.AppFeedback.show("Deload activated") }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
                         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("Deload recommended", color = Orange, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
@@ -372,16 +372,21 @@ fun TrainingHub(
         }
 
         // ── Recent workouts ─────────────────────────────────────────────
-        if (sessions.isNotEmpty()) {
+        item {
+            Text("RECENT WORKOUTS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Spacer(Modifier.height(10.dp))
+        }
+        if (sessions.isEmpty()) {
             item {
-                Text("RECENT WORKOUTS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                Spacer(Modifier.height(10.dp))
+                com.ascend.lifeos.ui.kit.EmptyState(
+                    androidx.compose.material.icons.Icons.Rounded.FitnessCenter, "No workouts yet",
+                    "Start your first session above", com.ascend.lifeos.ui.theme.Mod.Train,
+                )
+                Spacer(Modifier.height(14.dp))
             }
+        } else {
             items(sessions.take(3), key = { it.session.id }) { sws ->
                 Column(Modifier.animateItem()) {
-                    // only FINISHED sessions open the history editor — the live
-                    // session's sets belong to the logger (in-memory state would
-                    // race the DB edits)
                     SessionRow(sws, onOpen = if (sws.session.isComplete) {
                         { historyEditorFor = sws.session }
                     } else null)
@@ -565,7 +570,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                             .background(Good.copy(alpha = 0.12f))
                             .border(0.5.dp, Good.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
-                            .clickable { com.ascend.lifeos.data.Haptics.tick(heroCtx); onStart() }.padding(vertical = 12.dp),
+                            .pressScale { com.ascend.lifeos.data.Haptics.tick(heroCtx); onStart() }.padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("✓ Complete — tap to redo", color = Good, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
@@ -593,7 +598,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
     val wscCtx = LocalContext.current
     val accent = if (done) Good else Mod.Train
     GlassPanel(
-        modifier.width(250.dp).then(if (done) Modifier else Modifier.clickable { com.ascend.lifeos.data.Haptics.tick(wscCtx); onStart() }),
+        modifier.width(250.dp).then(if (done) Modifier else Modifier.pressScale { com.ascend.lifeos.data.Haptics.tick(wscCtx); onStart() }),
         corner = 16.dp,
         fill = if (done) Good.copy(alpha = 0.04f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
         line = if (done) Good.copy(alpha = 0.25f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f),
@@ -660,7 +665,7 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
     val targetDesc = current.unlockReps?.let { "$it reps" } ?: current.unlockHoldSecs?.let { "${it}s hold" }
 
     GlassPanel(
-        Modifier.fillMaxWidth().then(if (mastery) Modifier else Modifier.clickable { onOpenTestDay(focused.chain.groupKey) }),
+        Modifier.fillMaxWidth().then(if (mastery) Modifier else Modifier.pressScale { onOpenTestDay(focused.chain.groupKey) }),
         corner = 16.dp,
         fill = if (testReady) Amber.copy(alpha = 0.06f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
         line = if (testReady) Amber.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f),
@@ -869,7 +874,7 @@ private fun CalibrateCta(onOpenAssess: () -> Unit) {
             .clip(RoundedCornerShape(18.dp))
             .background(Mod.Train.copy(alpha = glow * 0.5f))
             .border(1.dp, Mod.Train.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
-            .clickable(onClick = onOpenAssess)
+            .pressScale { onOpenAssess() }
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -941,7 +946,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.horizontalGradient(listOf(Accent.copy(alpha = glow), Cyan.copy(alpha = glow * 0.7f))))
             .border(1.dp, Accent.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
-            .clickable { com.ascend.lifeos.data.Haptics.confirm(swCtx); onClick() }
+            .pressScale { com.ascend.lifeos.data.Haptics.confirm(swCtx); onClick() }
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -1000,7 +1005,7 @@ private fun SessionRow(sws: SessionWithSets, onOpen: (() -> Unit)? = null) {
     val date = java.text.SimpleDateFormat("dd.MM", java.util.Locale.getDefault()).format(java.util.Date(s.startedAt))
     val color = templateColor(s.templateName)
     GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
-        Row(Modifier.fillMaxWidth().let { m -> onOpen?.let { m.clickable(onClick = it) } ?: m }) {
+        Row(Modifier.fillMaxWidth().let { m -> onOpen?.let { cb -> m.pressScale { cb() } } ?: m }) {
             Box(Modifier.width(3.dp).fillMaxHeight().background(color))
             Row(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

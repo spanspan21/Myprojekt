@@ -32,8 +32,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.ui.hud.*
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -123,7 +125,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
                 Modifier.size(64.dp).clip(CircleShape)
                     .background(if (running) Red.copy(alpha = 0.12f) else Accent.copy(alpha = 0.18f))
                     .border(0.5.dp, if (running) Red.copy(alpha = 0.3f) else Accent.copy(alpha = 0.4f), CircleShape)
-                    .clickable { running = !running },
+                    .pressScale { Haptics.tick(ctx); running = !running },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

@@ -27,6 +27,7 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.ModuleBackground
 import com.ascend.lifeos.ui.kit.Panel
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -130,7 +131,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
 
             // Breathing shortcut
             Panel(
-                Modifier.fillMaxWidth().clickable(onClick = onOpenBreathe),
+                Modifier.fillMaxWidth().pressScale(onClick = onOpenBreathe),
                 corner = 16.dp,
             ) {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
