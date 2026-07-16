@@ -891,7 +891,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
             }
             Box(
                 Modifier.size(136.dp).scale(coreScale).clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(Mod.Home, Color(0xFF1EB483))))
+                    .background(Brush.radialGradient(listOf(Mod.Home, Good)))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,

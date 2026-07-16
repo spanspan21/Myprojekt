@@ -165,7 +165,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
                 Modifier.size(22.dp).clip(CircleShape)
                     .background(if (done) Mod.Mind else Color.Transparent)
                     .border(1.dp, if (done) Mod.Mind else Ivory.copy(alpha = if (active && !auto && !measurable) 0.25f else 0.08f), CircleShape)
-                    .clickable(enabled = active && !auto && !measurable) { Haptics.confirm(ctx); LifeStores.setHabitDone(ctx, h.id, today, !done) },
+                    .then(if (active && !auto && !measurable) Modifier.pressScale { Haptics.confirm(ctx); LifeStores.setHabitDone(ctx, h.id, today, !done) } else Modifier),
                 contentAlignment = Alignment.Center,
             ) {
                 when {
@@ -472,7 +472,7 @@ private fun ScheduleEditor(h: Habit) {
                 Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
                     .background(if (on) Mod.Mind.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
                     .border(0.5.dp, if (on) Mod.Mind.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                    .clickable {
+                    .pressScale {
                         val newMask = h.daysMask xor (1 shl i)
                         if (newMask != 0) LifeStores.setHabitDays(ctx, h.id, newMask)
                     }

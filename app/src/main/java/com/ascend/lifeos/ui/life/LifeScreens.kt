@@ -136,7 +136,7 @@ fun MindScreen(onClose: () -> Unit) {
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (on) c.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                                .clickable { Haptics.tick(ctx); mood = v; saved = false }
+                                .pressScale { Haptics.tick(ctx); mood = v; saved = false }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) { Text(label, color = if (on) c else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
@@ -456,11 +456,11 @@ private fun HabitsBlock() {
                     Modifier.size(20.dp).clip(CircleShape)
                         .background(if (done) Mod.Home else Color.Transparent)
                         .border(1.dp, if (done) Mod.Home else Ivory.copy(alpha = if (scheduled) 0.25f else 0.08f), CircleShape)
-                        .clickable(enabled = scheduled) {
+                        .then(if (scheduled) Modifier.pressScale {
                             LifeStores.setHabitDone(ctx, h.id, today, !done)
                             if (!done) Haptics.confirm(ctx)
                             else Haptics.tick(ctx)
-                        },
+                        } else Modifier),
                     contentAlignment = Alignment.Center,
                 ) { if (done) Text("✓", color = Void, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(11.dp))
@@ -529,7 +529,7 @@ private fun AddGoalSheet(onDone: () -> Unit) {
                     Modifier.size(18.dp).clip(CircleShape)
                         .background(if (weightBind) Mod.Home else Color.Transparent)
                         .border(1.dp, if (weightBind) Mod.Home else Ivory.copy(alpha = 0.25f), CircleShape)
-                        .clickable { weightBind = !weightBind },
+                        .pressScale { weightBind = !weightBind },
                     contentAlignment = Alignment.Center,
                 ) { if (weightBind) Text("✓", color = Void, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(9.dp))

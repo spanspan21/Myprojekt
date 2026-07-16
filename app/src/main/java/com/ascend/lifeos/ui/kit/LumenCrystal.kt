@@ -45,7 +45,7 @@ import kotlin.math.sin
 @Composable
 fun LumenCrystal(
     modifier: Modifier = Modifier,
-    accent: Color = Color(0xFF2563FF),
+    accent: Color = Accent,
     intensity: Float = 1f,          // 0..1 — glow + facet brightness
     onTap: (() -> Unit)? = null,
 ) {

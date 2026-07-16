@@ -70,7 +70,13 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
         } else {
             VoidBackground(Accent)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Loading constellations…", color = TextMuted, fontSize = FS.s14)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    com.ascend.lifeos.ui.kit.ShimmerPanel(
+                        Modifier.width(220.dp), height = 220.dp, corner = 110.dp,
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Text("Loading constellations…", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
+                }
             }
         }
 

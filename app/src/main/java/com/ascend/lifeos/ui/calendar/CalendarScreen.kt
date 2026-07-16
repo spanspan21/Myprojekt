@@ -922,7 +922,7 @@ private fun QuickAddSheet(
                         Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (on) c.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                            .clickable { Haptics.tick(addCtx); type = t }
+                            .pressScale { Haptics.tick(addCtx); type = t }
                             .padding(horizontal = 11.dp, vertical = 7.dp),
                     ) {
                         Text(eventLabel(t), color = if (on) c else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -958,7 +958,7 @@ private fun QuickAddSheet(
                             Modifier.size(34.dp).clip(CircleShape)
                                 .background(if (on) Mod.Calendar.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (on) Mod.Calendar.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), CircleShape)
-                                .clickable { repeatMask = repeatMask xor (1 shl i) },
+                                .pressScale { repeatMask = repeatMask xor (1 shl i) },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(letters[i], color = if (on) Mod.Calendar else TextDim, fontSize = FS.s12, fontWeight = FontWeight.Bold)

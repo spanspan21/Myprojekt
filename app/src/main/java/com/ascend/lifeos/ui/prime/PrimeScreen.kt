@@ -420,7 +420,7 @@ private fun AnimatedSubBar(name: String, score: Int, why: String, indexInList: I
     Column(
         Modifier.fillMaxWidth()
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-            .clickable(enabled = why.isNotBlank()) { open = !open }
+            .then(if (why.isNotBlank()) Modifier.pressScale { open = !open } else Modifier)
             .padding(vertical = 3.5.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {

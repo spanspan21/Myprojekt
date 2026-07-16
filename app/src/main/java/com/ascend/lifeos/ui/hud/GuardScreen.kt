@@ -772,7 +772,7 @@ fun GuardScreen() {
         ) {
             val ledger = remember { com.ascend.lifeos.wellbeing.PracticeLedger(ctx, ctx.packageName) }
             Box(
-                Modifier.fillMaxSize().background(Color(0xFF050505))
+                Modifier.fillMaxSize().background(Void)
                     .statusBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 14.dp),

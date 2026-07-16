@@ -16,7 +16,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -91,7 +90,7 @@ private val SLIDES = listOf(
         overline = "COMMAND CENTER",
         title = "Today at a glance",
         body = "Three daily missions — Train, Fuel, Water. Close them all to keep your streak alive. JARVIS reads your day and tells you what matters right now.",
-        accent = Color(0xFF2563FF),
+        accent = Mod.Home,
         icon = Icons.Rounded.Hexagon,
         features = listOf("Daily missions & streak", "Smart briefing", "Quick log in 3 seconds", "Command palette"),
     ),
@@ -99,7 +98,7 @@ private val SLIDES = listOf(
         overline = "TRAINING ENGINE",
         title = "Train smarter, not harder",
         body = "Evidence-based plans with progressive overload, recovery tracking and skill progressions. Every set is prescribed — volume, effort and rest are computed for you.",
-        accent = Color(0xFFFF5A45),
+        accent = Mod.Train,
         icon = Icons.Rounded.FitnessCenter,
         features = listOf("Auto-generated plans", "Progressive overload", "Muscle recovery map", "Superset pairing"),
     ),
@@ -107,7 +106,7 @@ private val SLIDES = listOf(
         overline = "NUTRITION",
         title = "Fuel with precision",
         body = "Log food by search, barcode or your own recipes. Adaptive calorie targets learn from your real metabolism. A weekly coach check-in keeps your macros honest.",
-        accent = Color(0xFF00B888),
+        accent = Mod.Body,
         icon = Icons.Rounded.Restaurant,
         features = listOf("345+ foods & recipes", "Barcode scanner", "Adaptive TDEE", "Food quality scoring"),
     ),
@@ -115,7 +114,7 @@ private val SLIDES = listOf(
         overline = "DIGITAL WELLBEING",
         title = "Guard your focus",
         body = "Hard screen-time limits that actually hold. Morning blocks, wind-down rules, app-specific walls — with a casino where you can gamble for unlock time.",
-        accent = Color(0xFFF0A62E),
+        accent = Mod.Fuel,
         icon = Icons.Rounded.Shield,
         features = listOf("Per-app limits", "Focus sessions", "Doomscroll detection", "Screen-time casino"),
     ),
@@ -123,7 +122,7 @@ private val SLIDES = listOf(
         overline = "LIFE SYSTEM",
         title = "Everything in one place",
         body = "Calendar with auto-scheduling, habit tracking, sleep protocol, finance with net worth, school timetable, flashcards — and Prime ties it all together into one daily index.",
-        accent = Color(0xFF7C5CFF),
+        accent = Mod.Guard,
         icon = Icons.Rounded.CalendarMonth,
         features = listOf("Calendar & time blocks", "Habit streaks", "Sleep & recovery", "Finance tracker"),
     ),
@@ -131,7 +130,7 @@ private val SLIDES = listOf(
         overline = "INTELLIGENCE",
         title = "JARVIS learns you",
         body = "Cross-module correlations, anomaly detection, forecasts — all from your own data. Prime gives you one number and three next actions. No guesswork.",
-        accent = Color(0xFF4F5BD5),
+        accent = Mod.Skills,
         icon = Icons.Rounded.Psychology,
         features = listOf("Prime readiness index", "Real correlations", "Smart directives", "Weekly report"),
     ),
@@ -139,7 +138,7 @@ private val SLIDES = listOf(
         overline = "TOOLKIT",
         title = "Tools that replace apps",
         body = "Breathing exercises with four patterns, stopwatch & countdown timer, quick notes, journal prompts — everything built in so you never need another app.",
-        accent = Color(0xFF4ECDC4),
+        accent = Mod.Calendar,
         icon = Icons.Rounded.SelfImprovement,
         features = listOf("Box & 4-7-8 breathing", "Timer & stopwatch", "Wind-down evening routine", "Quick notes & nap log"),
     ),
@@ -147,7 +146,7 @@ private val SLIDES = listOf(
         overline = "YOUR RULES",
         title = "Everything is configurable",
         body = "Tweak every threshold, every color boundary, every notification. Score thresholds, sleep debt warnings, step goals, water size — all in Settings. JARVIS adapts to you, not the other way around.",
-        accent = Color(0xFFE8A53A),
+        accent = Mod.Finance,
         icon = Icons.Rounded.Settings,
         features = listOf("Adjustable score thresholds", "Custom notification schedule", "Five visual themes", "Per-module accent colors"),
     ),
@@ -184,7 +183,7 @@ fun FeatureTour(onComplete: () -> Unit) {
                     "SKIP", color = TextDim, fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                        .clickable { onComplete() }
+                        .pressScale { onComplete() }
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
@@ -283,14 +282,14 @@ fun FeatureTour(onComplete: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             if (isLast) "Let's go" else "Next",
-                            color = Color(0xFF06110C), fontFamily = Body,
+                            color = Void, fontFamily = Body,
                             fontSize = FS.s14_5, fontWeight = FontWeight.ExtraBold,
                         )
                         if (!isLast) {
                             Spacer(Modifier.width(4.dp))
                             Icon(
                                 Icons.Rounded.ChevronRight, "Next",
-                                tint = Color(0xFF06110C), modifier = Modifier.size(18.dp),
+                                tint = Void, modifier = Modifier.size(18.dp),
                             )
                         }
                     }

@@ -168,7 +168,7 @@ fun ActiveWorkoutScreen(
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                         ) {
                             Row(
-                                Modifier.fillMaxWidth().clickable { warmupOpen = !warmupOpen },
+                                Modifier.fillMaxWidth().pressScale { warmupOpen = !warmupOpen },
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text("WARM-UP", color = Amber, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
@@ -180,7 +180,7 @@ fun ActiveWorkoutScreen(
                                 items.forEach { w ->
                                     var done by remember(w.name) { mutableStateOf(false) }
                                     Row(
-                                        Modifier.fillMaxWidth().clickable { done = !done }.padding(vertical = 4.dp),
+                                        Modifier.fillMaxWidth().pressScale { done = !done }.padding(vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Box(
@@ -381,7 +381,7 @@ private fun ExerciseSetLogger(
                 // name opens the exercise deep dive (trend, PRs, history)
                 Text(
                     ex.exerciseName, color = TextPrimary, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f).clickable { onOpenDetail(ex.exerciseId) },
+                    modifier = Modifier.weight(1f).pressScale { onOpenDetail(ex.exerciseId) },
                 )
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = FS.s12, fontWeight = FontWeight.Bold)
             }
@@ -429,7 +429,7 @@ private fun ExerciseSetLogger(
                 Text(
                     if (linkOpen) "▾ Superset with…" else "⛓ Superset with…",
                     color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { linkOpen = !linkOpen }.padding(vertical = 2.dp),
+                    modifier = Modifier.pressScale { linkOpen = !linkOpen }.padding(vertical = 2.dp),
                 )
                 AnimatedVisibility(linkOpen) {
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -557,7 +557,7 @@ private fun ExerciseSetLogger(
             Text(
                 if (showAdvanced) "▾ Advanced" else "▸ Advanced",
                 color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { showAdvanced = !showAdvanced }.padding(vertical = 4.dp),
+                modifier = Modifier.pressScale { showAdvanced = !showAdvanced }.padding(vertical = 4.dp),
             )
             AnimatedVisibility(showAdvanced) {
                 Column {
@@ -642,7 +642,7 @@ private fun SetRow(
                 Box(Modifier.width(3.dp).height(44.dp).background(color))
                 Row(
                     Modifier.weight(1f)
-                        .clickable {
+                        .pressScale {
                             if (!editing) {
                                 // prefill from the row — the sweaty-hands edit path
                                 eMain = if (isHold) "${set.holdSeconds}" else "${set.reps}"
@@ -905,7 +905,7 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
             "${bar.label} ▸",
             color = Accent.copy(alpha = 0.85f), fontSize = FS.s10, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(6.dp))
-                .clickable {
+                .pressScale {
                     val i = PlateMath.BARS.indexOfFirst { it.id == barId }
                     val next = PlateMath.BARS[(i + 1) % PlateMath.BARS.size].id
                     barId = next

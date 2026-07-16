@@ -32,6 +32,7 @@ import com.ascend.lifeos.data.life.Achievement
 import com.ascend.lifeos.data.life.Achievements
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import java.time.Instant
 import java.time.LocalDate
@@ -228,7 +229,7 @@ private fun FilterChip(module: String?, label: String, selected: Boolean, onClic
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (selected) c.copy(alpha = 0.18f) else Surface)
             .border(0.5.dp, if (selected) c.copy(alpha = 0.5f) else Line2, RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         Text(label, color = if (selected) c else TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
