@@ -158,7 +158,7 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
             Text("${filtered.size}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(14.dp))
-        GlassField("Search exercises…", search, KeyboardType.Text, Modifier.fillMaxWidth()) { search = it }
+        GlassField("Search exercises…", search, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = androidx.compose.ui.text.input.ImeAction.Search) { search = it }
         Spacer(Modifier.height(10.dp))
 
         // Category chips — ALL 7 categories shown
@@ -353,7 +353,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
             Text("Add exercise", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(14.dp))
-        GlassField("Search…", search, KeyboardType.Text, Modifier.fillMaxWidth()) { search = it }
+        GlassField("Search…", search, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = androidx.compose.ui.text.input.ImeAction.Search) { search = it }
         Spacer(Modifier.height(10.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             HudChip("All", filterCat == null) { filterCat = null }

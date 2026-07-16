@@ -952,7 +952,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             }
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.weight(1f)) { GlassField("Search ingredient", ingQuery, KeyboardType.Text) { ingQuery = it } }
+                Box(Modifier.weight(1f)) { GlassField("Search ingredient", ingQuery, KeyboardType.Text, imeAction = androidx.compose.ui.text.input.ImeAction.Search) { ingQuery = it } }
                 Box(Modifier.width(84.dp)) { GlassField("g", ingGrams, KeyboardType.Number) { ingGrams = it.filter(Char::isDigit).take(4) } }
             }
             ingHits.forEach { p ->

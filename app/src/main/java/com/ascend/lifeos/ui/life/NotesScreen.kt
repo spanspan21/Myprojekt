@@ -79,12 +79,15 @@ fun NotesScreen(onClose: () -> Unit) {
                     ) {
                         Icon(Icons.Rounded.Search, null, tint = TextDim, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
+                        val searchFm = androidx.compose.ui.platform.LocalFocusManager.current
                         OutlinedTextField(
                             value = searchQuery, onValueChange = { searchQuery = it },
                             placeholder = { Text("Search notes…", color = TextDim, fontFamily = Body, fontSize = FS.s12) },
                             singleLine = true,
                             modifier = Modifier.weight(1f).height(44.dp),
                             textStyle = TextStyle(color = TextPrimary, fontFamily = Body, fontSize = FS.s12),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { searchFm.clearFocus() }),
                         )
                         if (searchQuery.isNotBlank()) {
                             Spacer(Modifier.width(6.dp))

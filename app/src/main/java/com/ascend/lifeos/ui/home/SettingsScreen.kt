@@ -1264,12 +1264,15 @@ private fun CategoryEditor() {
         if (adding) {
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val catFm = androidx.compose.ui.platform.LocalFocusManager.current
                 androidx.compose.material3.OutlinedTextField(
                     value = newCat, onValueChange = { newCat = it.take(20) },
                     placeholder = { Text("New category", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12) },
                     singleLine = true,
                     modifier = Modifier.weight(1f).height(48.dp),
                     textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { catFm.clearFocus() }),
                 )
                 Spacer(Modifier.width(8.dp))
                 Box(

@@ -263,11 +263,14 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
             if (value.isEmpty()) {
                 Text(placeholder, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
             }
+            val searchFm = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value, onChange, singleLine = true,
                 textStyle = TextStyle(
                     color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 ),
+                keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { searchFm.clearFocus() }),
                 cursorBrush = SolidColor(FinAccent),
                 modifier = Modifier.fillMaxWidth(),
             )

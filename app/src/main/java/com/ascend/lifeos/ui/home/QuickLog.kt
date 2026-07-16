@@ -542,12 +542,15 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
         }
         Spacer(Modifier.height(12.dp))
         var moodNote by remember { mutableStateOf("") }
+        val moodFm = androidx.compose.ui.platform.LocalFocusManager.current
         androidx.compose.material3.OutlinedTextField(
             value = moodNote, onValueChange = { moodNote = it.take(120) },
             placeholder = { Text("What's behind this feeling?", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().height(48.dp),
             textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12),
+            keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { moodFm.clearFocus() }),
         )
         Spacer(Modifier.height(12.dp))
         Box(
@@ -576,17 +579,25 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
     val prompts = listOf("Best thing today?", "What annoyed you?", "What are you grateful for?")
     var answers by remember { mutableStateOf(List(3) { existing.getOrElse(it) { "" } }) }
 
+    val journalFocuses = List(3) { remember { androidx.compose.ui.focus.FocusRequester() } }
+    val journalFm = androidx.compose.ui.platform.LocalFocusManager.current
     Column(Modifier.fillMaxWidth()) {
         prompts.forEachIndexed { i, prompt ->
             Text(prompt, color = Mod.Mind, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(4.dp))
+            val isLast = i == prompts.lastIndex
             androidx.compose.material3.OutlinedTextField(
                 value = answers[i],
                 onValueChange = { v -> answers = answers.toMutableList().also { it[i] = v.take(100) } },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp).focusRequester(journalFocuses[i]),
                 textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13),
                 placeholder = { Text("…", color = TextDim, fontFamily = Body) },
+                keyboardOptions = KeyboardOptions(imeAction = if (isLast) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { if (!isLast) journalFocuses[i + 1].requestFocus() },
+                    onDone = { journalFm.clearFocus() },
+                ),
             )
             Spacer(Modifier.height(10.dp))
         }

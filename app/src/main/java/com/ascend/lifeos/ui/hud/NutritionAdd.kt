@@ -219,7 +219,7 @@ private fun SearchPane(
         if (autoFocus) { onAutoFocused(); runCatching { focusReq.requestFocus() } }
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f)) { GlassField("Search — Latte, Döner or 450", query, KeyboardType.Text, focus = focusReq) { onQuery(it) } }
+        Box(Modifier.weight(1f)) { GlassField("Search — Latte, Döner or 450", query, KeyboardType.Text, focus = focusReq, imeAction = androidx.compose.ui.text.input.ImeAction.Search) { onQuery(it) } }
         Spacer(Modifier.width(10.dp))
         SquareIcon(Icons.Rounded.QrCodeScanner, "Scan barcode", onScan)
     }

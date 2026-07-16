@@ -132,7 +132,7 @@ fun GlassField(placeholder: String, value: String, keyboard: KeyboardType, modif
             textStyle = TextStyle(color = com.ascend.lifeos.ui.theme.TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold),
             cursorBrush = SolidColor(LocalModuleAccent.current),
             keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = imeAction),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }, onSearch = { focusManager.clearFocus() }),
             modifier = if (focus != null) Modifier.fillMaxWidth().focusRequester(focus) else Modifier.fillMaxWidth(),
         )
     }
