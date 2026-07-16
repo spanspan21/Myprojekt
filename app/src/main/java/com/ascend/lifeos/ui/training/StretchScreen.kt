@@ -33,6 +33,7 @@ import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.StretchRoutine
 import com.ascend.lifeos.ui.hud.*
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -153,7 +154,7 @@ fun StretchScreen(onBack: () -> Unit) {
                     // the anatomical body sits inside the countdown ring — the
                     // stretched muscles are lit, so you see what you're opening
                     ExerciseFigure("", ex.name, color = Cyan, modifier = Modifier.height(84.dp), showBack = false)
-                    Text("$remaining", color = TextPrimary, fontSize = FS.s34, fontWeight = FontWeight.ExtraBold)
+                    TickerNumber(remaining, 34, color = TextPrimary)
                     Text(if (ex.reps != null) "≈ ${ex.reps} reps" else "seconds", color = TextDim, fontSize = FS.s11)
                 }
             }

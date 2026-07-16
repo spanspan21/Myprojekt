@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.home
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.flow.firstOrNull
@@ -1189,66 +1190,71 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
         .firstOrNull { it.endMin > nowMin && it.durationMin >= minSlot }
 
     // no flash of wrong advice: shimmer until the timeline actually loaded
-    if (timeline == null) { ShimmerPanel(height = 74.dp, corner = 20.dp); return }
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
-        Column(Modifier.padding(18.dp)) {
-            when {
-                current != null -> {
-                    EventLine(
-                        "NOW", current.title,
-                        "${fmt(current.startMin)}–${fmt(current.endMin)} · ${eventLabel(current.type)}",
-                        eventColor(current.type), onClick = onOpenCalendar,
-                    )
-                    if (!trainedToday && slot != null) {
-                        Spacer(Modifier.height(12.dp))
-                        HairLine()
-                        Spacer(Modifier.height(12.dp))
-                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
+    Crossfade(targetState = timeline != null, label = "schedule", animationSpec = tween(400)) { loaded ->
+        if (!loaded) {
+            ShimmerPanel(height = 74.dp, corner = 20.dp)
+        } else {
+            Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+                Column(Modifier.padding(18.dp)) {
+                    when {
+                        current != null -> {
+                            EventLine(
+                                "NOW", current.title,
+                                "${fmt(current.startMin)}–${fmt(current.endMin)} · ${eventLabel(current.type)}",
+                                eventColor(current.type), onClick = onOpenCalendar,
+                            )
+                            if (!trainedToday && slot != null) {
+                                Spacer(Modifier.height(12.dp))
+                                HairLine()
+                                Spacer(Modifier.height(12.dp))
+                                EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
+                            }
+                        }
+                        !trainedToday && slot != null && (next == null || slot.startMin < next.startMin) -> {
+                            val tag = if (slot.startMin <= nowMin) "READY NOW" else "READY ${fmt(slot.startMin)}"
+                            val sub = if (next != null) "fits before ${next.title} at ${fmt(next.startMin)}"
+                            else "${slot.durationMin} min free · no blockers"
+                            EventLine(tag, split, sub, Mod.Train, onClick = onOpenTrain)
+                            if (next != null) {
+                                Spacer(Modifier.height(12.dp))
+                                HairLine()
+                                Spacer(Modifier.height(12.dp))
+                                EventLine("LATER", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
+                            }
+                        }
+                        next != null -> {
+                            EventLine("NEXT", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
+                            if (!trainedToday && slot != null) {
+                                Spacer(Modifier.height(12.dp))
+                                HairLine()
+                                Spacer(Modifier.height(12.dp))
+                                EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
+                            }
+                        }
+                        !trainedToday -> EventLine("READY NOW", split, "clear schedule · open", Mod.Train, onClick = onOpenTrain)
+                        else -> EventLine("DONE", "Training complete", "recovery is the mission now", Good, onClick = onOpenTrain)
                     }
-                }
-                !trainedToday && slot != null && (next == null || slot.startMin < next.startMin) -> {
-                    val tag = if (slot.startMin <= nowMin) "READY NOW" else "READY ${fmt(slot.startMin)}"
-                    val sub = if (next != null) "fits before ${next.title} at ${fmt(next.startMin)}"
-                    else "${slot.durationMin} min free · no blockers"
-                    EventLine(tag, split, sub, Mod.Train, onClick = onOpenTrain)
-                    if (next != null) {
-                        Spacer(Modifier.height(12.dp))
-                        HairLine()
-                        Spacer(Modifier.height(12.dp))
-                        EventLine("LATER", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
+                    if (nowMin >= 20 * 60 && (next == null || next.endMin <= nowMin)) {
+                        val tomorrow = java.time.LocalDate.now().plusDays(1)
+                        val firstTomorrow by produceState<com.ascend.lifeos.data.calendar.TimelineBlock?>(null, tomorrow) {
+                            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                runCatching {
+                                    val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
+                                    val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
+                                    com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, tomorrow, entities).blocks.firstOrNull()
+                                }.getOrNull()
+                            }
+                        }
+                        if (firstTomorrow != null) {
+                            Spacer(Modifier.height(10.dp))
+                            HairLine()
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                "Tomorrow · ${firstTomorrow!!.title} at ${fmt(firstTomorrow!!.startMin)}",
+                                color = TextDim, fontSize = FS.s11, fontFamily = Body,
+                            )
+                        }
                     }
-                }
-                next != null -> {
-                    EventLine("NEXT", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
-                    if (!trainedToday && slot != null) {
-                        Spacer(Modifier.height(12.dp))
-                        HairLine()
-                        Spacer(Modifier.height(12.dp))
-                        EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
-                    }
-                }
-                !trainedToday -> EventLine("READY NOW", split, "clear schedule · open", Mod.Train, onClick = onOpenTrain)
-                else -> EventLine("DONE", "Training complete", "recovery is the mission now", Good, onClick = onOpenTrain)
-            }
-            if (nowMin >= 20 * 60 && (next == null || next.endMin <= nowMin)) {
-                val tomorrow = java.time.LocalDate.now().plusDays(1)
-                val firstTomorrow by produceState<com.ascend.lifeos.data.calendar.TimelineBlock?>(null, tomorrow) {
-                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching {
-                            val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
-                            val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
-                            com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, tomorrow, entities).blocks.firstOrNull()
-                        }.getOrNull()
-                    }
-                }
-                if (firstTomorrow != null) {
-                    Spacer(Modifier.height(10.dp))
-                    HairLine()
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Tomorrow · ${firstTomorrow!!.title} at ${fmt(firstTomorrow!!.startMin)}",
-                        color = TextDim, fontSize = FS.s11, fontFamily = Body,
-                    )
                 }
             }
         }

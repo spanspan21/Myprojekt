@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.masterplan
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,22 +62,26 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
 
     Box(Modifier.fillMaxSize()) {
         // The constellation itself is the full-bleed background.
-        if (active != null) {
-            SkillNetworkCanvas(
-                nodes = active.nodes,
-                onNodeClick = { openNodeId = it },
-                accent = accent,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            VoidBackground(Accent)
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    com.ascend.lifeos.ui.kit.ShimmerPanel(
-                        Modifier.width(220.dp), height = 220.dp, corner = 110.dp,
-                    )
-                    Spacer(Modifier.height(20.dp))
-                    Text("Loading constellations…", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
+        Crossfade(targetState = active != null, label = "vault", animationSpec = tween(400)) { loaded ->
+            if (loaded && active != null) {
+                SkillNetworkCanvas(
+                    nodes = active.nodes,
+                    onNodeClick = { openNodeId = it },
+                    accent = accent,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Box(Modifier.fillMaxSize()) {
+                    VoidBackground(Accent)
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            com.ascend.lifeos.ui.kit.ShimmerPanel(
+                                Modifier.width(220.dp), height = 220.dp, corner = 110.dp,
+                            )
+                            Spacer(Modifier.height(20.dp))
+                            Text("Loading constellations…", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
+                        }
+                    }
                 }
             }
         }

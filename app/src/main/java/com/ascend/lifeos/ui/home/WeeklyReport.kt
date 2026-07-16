@@ -1,6 +1,8 @@
 package com.ascend.lifeos.ui.home
 
 import android.content.Context
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -177,103 +179,107 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
         }
         Spacer(Modifier.height(18.dp))
 
-        val s = stats
-        if (s == null) {
-            repeat(3) {
-                ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
-                Spacer(Modifier.height(12.dp))
-            }
-            return@Column
-        }
+        Crossfade(targetState = stats, label = "report", animationSpec = tween(400)) { s ->
+            if (s == null) {
+                Column {
+                    repeat(3) {
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
+                        Spacer(Modifier.height(12.dp))
+                    }
+                }
+            } else {
+                Column {
+                    // ── train ────────────────────────────────────────────────────
+                    ReportSection("Train", Mod.Train) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            RStat("${s.workouts}", "SESSIONS", Mod.Train)
+                            RStat("${s.totalSets}", "SETS", Mod.Train)
+                            RStat("${s.totalReps}", "REPS", Mod.Train)
+                            RStat("${s.prCount}", "PRS", Amber)
+                        }
+                        if (s.activityCount > 0) {
+                            Spacer(Modifier.height(10.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                                RStat("${s.activityCount}", "ACTIVITIES", Mod.Train)
+                                RStat("${s.activityMinutes}", "ACTIVE MIN", Mod.Train)
+                                if (s.activityKm > 0.05) {
+                                    RStat(
+                                        if (s.activityKm % 1.0 < 0.05) "${s.activityKm.toInt()}" else String.format(java.util.Locale.ROOT, "%.1f", s.activityKm),
+                                        "KM", Mod.Train,
+                                    )
+                                }
+                            }
+                        }
+                    }
 
-        // ── train ────────────────────────────────────────────────────
-        ReportSection("Train", Mod.Train) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                RStat("${s.workouts}", "SESSIONS", Mod.Train)
-                RStat("${s.totalSets}", "SETS", Mod.Train)
-                RStat("${s.totalReps}", "REPS", Mod.Train)
-                RStat("${s.prCount}", "PRS", Amber)
-            }
-            if (s.activityCount > 0) {
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    RStat("${s.activityCount}", "ACTIVITIES", Mod.Train)
-                    RStat("${s.activityMinutes}", "ACTIVE MIN", Mod.Train)
-                    if (s.activityKm > 0.05) {
-                        RStat(
-                            if (s.activityKm % 1.0 < 0.05) "${s.activityKm.toInt()}" else String.format(java.util.Locale.ROOT, "%.1f", s.activityKm),
-                            "KM", Mod.Train,
+                    // ── body ─────────────────────────────────────────────────────
+                    ReportSection("Body", Mod.Body) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    s.sleepAvgMin?.let { "Ø sleep ${it / 60}h ${it % 60}m" } ?: "No sleep data",
+                                    color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                )
+                                s.rhrAvg?.let {
+                                    Text("Ø resting HR $it bpm", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
+                                }
+                            }
+                            if (s.sleepSeries.count { it > 0 } >= 2) {
+                                Spark(values = s.sleepSeries, color = Mod.Body, modifier = Modifier.width(110.dp).height(40.dp))
+                            }
+                        }
+                    }
+
+                    // ── fuel ─────────────────────────────────────────────────────
+                    ReportSection("Fuel", Mod.Fuel) {
+                        Text(
+                            s.kcalAvg?.let { "Ø $it kcal / day (goal ${s.kcalGoal})" } ?: "Not enough logged days",
+                            color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        )
+                        s.proteinAvg?.let {
+                            Text("Ø protein ${it}g", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
+                        }
+                    }
+
+                    // ── guard ────────────────────────────────────────────────────
+                    ReportSection("Guard", Mod.Guard) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    s.screenAvgMin?.let { "Ø screen ${it / 60}h ${it % 60}m / day" } ?: "No screen data",
+                                    color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                )
+                                if (s.reclaimedMin > 0) {
+                                    Text("≈${s.reclaimedMin} min reclaimed total", color = Mod.Guard, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            if (s.screenSeries.count { it > 0 } >= 2) {
+                                Spark(values = s.screenSeries, color = Mod.Guard, modifier = Modifier.width(110.dp).height(40.dp))
+                            }
+                        }
+                    }
+
+                    // ── skills ───────────────────────────────────────────────────
+                    ReportSection("Skills", Mod.Skills) {
+                        Text(
+                            if (s.focusMinutes > 0) "${s.focusMinutes / 60}h ${s.focusMinutes % 60}m of focused learning"
+                            else "No focus sessions this week",
+                            color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                     }
-                }
-            }
-        }
 
-        // ── body ─────────────────────────────────────────────────────
-        ReportSection("Body", Mod.Body) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        s.sleepAvgMin?.let { "Ø sleep ${it / 60}h ${it % 60}m" } ?: "No sleep data",
-                        color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    )
-                    s.rhrAvg?.let {
-                        Text("Ø resting HR $it bpm", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
+                    // ── directives ───────────────────────────────────────────────
+                    Spacer(Modifier.height(6.dp))
+                    SectionLabel("Next week's directives")
+                    Spacer(Modifier.height(10.dp))
+                    s.recommendations.forEach { rec ->
+                        Panel(Modifier.fillMaxWidth(), corner = 14.dp, line = Mod.Home.copy(alpha = 0.3f)) {
+                            Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp, modifier = Modifier.padding(13.dp))
+                        }
+                        Spacer(Modifier.height(8.dp))
                     }
                 }
-                if (s.sleepSeries.count { it > 0 } >= 2) {
-                    Spark(values = s.sleepSeries, color = Mod.Body, modifier = Modifier.width(110.dp).height(40.dp))
-                }
             }
-        }
-
-        // ── fuel ─────────────────────────────────────────────────────
-        ReportSection("Fuel", Mod.Fuel) {
-            Text(
-                s.kcalAvg?.let { "Ø $it kcal / day (goal ${s.kcalGoal})" } ?: "Not enough logged days",
-                color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
-            )
-            s.proteinAvg?.let {
-                Text("Ø protein ${it}g", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
-            }
-        }
-
-        // ── guard ────────────────────────────────────────────────────
-        ReportSection("Guard", Mod.Guard) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        s.screenAvgMin?.let { "Ø screen ${it / 60}h ${it % 60}m / day" } ?: "No screen data",
-                        color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    )
-                    if (s.reclaimedMin > 0) {
-                        Text("≈${s.reclaimedMin} min reclaimed total", color = Mod.Guard, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    }
-                }
-                if (s.screenSeries.count { it > 0 } >= 2) {
-                    Spark(values = s.screenSeries, color = Mod.Guard, modifier = Modifier.width(110.dp).height(40.dp))
-                }
-            }
-        }
-
-        // ── skills ───────────────────────────────────────────────────
-        ReportSection("Skills", Mod.Skills) {
-            Text(
-                if (s.focusMinutes > 0) "${s.focusMinutes / 60}h ${s.focusMinutes % 60}m of focused learning"
-                else "No focus sessions this week",
-                color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
-            )
-        }
-
-        // ── directives ───────────────────────────────────────────────
-        Spacer(Modifier.height(6.dp))
-        SectionLabel("Next week's directives")
-        Spacer(Modifier.height(10.dp))
-        s.recommendations.forEach { rec ->
-            Panel(Modifier.fillMaxWidth(), corner = 14.dp, line = Mod.Home.copy(alpha = 0.3f)) {
-                Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp, modifier = Modifier.padding(13.dp))
-            }
-            Spacer(Modifier.height(8.dp))
         }
     }
 }

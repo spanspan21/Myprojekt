@@ -1,6 +1,8 @@
 package com.ascend.lifeos.ui.insights
 
 import android.content.Context
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -232,138 +234,142 @@ fun HeatmapScreen(onClose: () -> Unit) {
                 HeatMetric.entries.forEach { m -> MetricChip(m, m == metric) { metric = m } }
             }
 
-            val m = model
-            if (m == null) {
-                Spacer(Modifier.height(16.dp))
-                com.ascend.lifeos.ui.kit.ShimmerPanel(height = 180.dp)
-                Spacer(Modifier.height(10.dp))
-                Text("Painting the year…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
-                return@Column
-            }
+            Crossfade(targetState = model, label = "heatmap", animationSpec = tween(400)) { m ->
+                if (m == null) {
+                    Column {
+                        Spacer(Modifier.height(16.dp))
+                        com.ascend.lifeos.ui.kit.ShimmerPanel(height = 180.dp)
+                        Spacer(Modifier.height(10.dp))
+                        Text("Painting the year…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
+                    }
+                } else {
+                    Column {
+                        Spacer(Modifier.height(10.dp))
+                        val filled = remember(m, metric) { m.facts.values.mapNotNull { it.metricValue(metric) } }
+                        val avgPct = if (filled.isEmpty()) null else (filled.map { it.toDouble() }.average() * 100).toInt()
+                        Text(
+                            buildString {
+                                append("${filled.size} of 365 days with data")
+                                avgPct?.let { append(" · Ø $it%") }
+                            },
+                            color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
+                        )
+                        Spacer(Modifier.height(14.dp))
 
-            Spacer(Modifier.height(10.dp))
-            val filled = remember(m, metric) { m.facts.values.mapNotNull { it.metricValue(metric) } }
-            val avgPct = if (filled.isEmpty()) null else (filled.map { it.toDouble() }.average() * 100).toInt()
-            Text(
-                buildString {
-                    append("${filled.size} of 365 days with data")
-                    avgPct?.let { append(" · Ø $it%") }
-                },
-                color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
-            )
-            Spacer(Modifier.height(14.dp))
-
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-                Column(Modifier.padding(12.dp)) {
-                    val hs = rememberScrollState()
-                    LaunchedEffect(m) { hs.scrollTo(hs.maxValue) }
-                    val gridH = (LABEL_H + 7 * STEP).dp
-                    Row {
-                        // fixed weekday gutter (M / W / F), aligned to the grid rows
-                        Canvas(Modifier.width(18.dp).height(gridH)) {
-                            val step = STEP.dp.toPx()
-                            val labelH = LABEL_H.dp.toPx()
-                            val cellPx = CELL.dp.toPx()
-                            val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                                color = TextDim.toArgb(); textSize = 8.5.sp.toPx(); typeface = chakra
-                            }
-                            listOf(0 to "M", 2 to "W", 4 to "F").forEach { (row, ch) ->
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    ch, 2.dp.toPx(), labelH + row * step + cellPx * 0.82f, p,
-                                )
-                            }
-                        }
-                        Box(Modifier.weight(1f).horizontalScroll(hs)) {
-                            Canvas(
-                                Modifier.size(width = (m.cols * STEP).dp, height = gridH)
-                                    .pointerInput(m) {
-                                        detectTapGestures { off ->
+                        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                            Column(Modifier.padding(12.dp)) {
+                                val hs = rememberScrollState()
+                                LaunchedEffect(m) { hs.scrollTo(hs.maxValue) }
+                                val gridH = (LABEL_H + 7 * STEP).dp
+                                Row {
+                                    // fixed weekday gutter (M / W / F), aligned to the grid rows
+                                    Canvas(Modifier.width(18.dp).height(gridH)) {
+                                        val step = STEP.dp.toPx()
+                                        val labelH = LABEL_H.dp.toPx()
+                                        val cellPx = CELL.dp.toPx()
+                                        val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                                            color = TextDim.toArgb(); textSize = 8.5.sp.toPx(); typeface = chakra
+                                        }
+                                        listOf(0 to "M", 2 to "W", 4 to "F").forEach { (row, ch) ->
+                                            drawContext.canvas.nativeCanvas.drawText(
+                                                ch, 2.dp.toPx(), labelH + row * step + cellPx * 0.82f, p,
+                                            )
+                                        }
+                                    }
+                                    Box(Modifier.weight(1f).horizontalScroll(hs)) {
+                                        Canvas(
+                                            Modifier.size(width = (m.cols * STEP).dp, height = gridH)
+                                                .pointerInput(m) {
+                                                    detectTapGestures { off ->
+                                                        val step = STEP.dp.toPx()
+                                                        val labelH = LABEL_H.dp.toPx()
+                                                        val col = (off.x / step).toInt()
+                                                        val row = ((off.y - labelH) / step).toInt()
+                                                        if (row in 0..6) {
+                                                            val key = m.pos[col * 8 + row]
+                                                            selected = if (key == selected) null else key
+                                                        }
+                                                    }
+                                                },
+                                        ) {
                                             val step = STEP.dp.toPx()
+                                            val cellPx = CELL.dp.toPx()
                                             val labelH = LABEL_H.dp.toPx()
-                                            val col = (off.x / step).toInt()
-                                            val row = ((off.y - labelH) / step).toInt()
-                                            if (row in 0..6) {
-                                                val key = m.pos[col * 8 + row]
-                                                selected = if (key == selected) null else key
+                                            val corner = CornerRadius(2.5.dp.toPx())
+
+                                            val mp = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                                                color = TextDim.toArgb(); textSize = 8.5.sp.toPx(); typeface = chakra
+                                            }
+                                            m.monthMarks.forEach { (col, initial) ->
+                                                drawContext.canvas.nativeCanvas.drawText(initial, col * step, labelH - 5.dp.toPx(), mp)
+                                            }
+
+                                            m.facts.values.forEach { f ->
+                                                val v = f.metricValue(metric)
+                                                val color =
+                                                    if (v == null) Ivory.copy(alpha = 0.03f)
+                                                    else metric.tint.copy(alpha = 0.08f + 0.8f * v.coerceIn(0f, 1f))
+                                                val tl = Offset(f.col * step, labelH + f.row * step)
+                                                drawRoundRect(color, tl, Size(cellPx, cellPx), corner)
+                                                if (f.key == m.todayKey) {
+                                                    drawRoundRect(
+                                                        metric.tint.copy(alpha = 0.55f), tl, Size(cellPx, cellPx),
+                                                        corner, style = Stroke(1.dp.toPx()),
+                                                    )
+                                                }
+                                                if (f.key == selected) {
+                                                    drawRoundRect(
+                                                        Ivory.copy(alpha = 0.85f), tl, Size(cellPx, cellPx),
+                                                        corner, style = Stroke(1.2.dp.toPx()),
+                                                    )
+                                                }
                                             }
                                         }
-                                    },
-                            ) {
-                                val step = STEP.dp.toPx()
-                                val cellPx = CELL.dp.toPx()
-                                val labelH = LABEL_H.dp.toPx()
-                                val corner = CornerRadius(2.5.dp.toPx())
-
-                                val mp = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                                    color = TextDim.toArgb(); textSize = 8.5.sp.toPx(); typeface = chakra
-                                }
-                                m.monthMarks.forEach { (col, initial) ->
-                                    drawContext.canvas.nativeCanvas.drawText(initial, col * step, labelH - 5.dp.toPx(), mp)
-                                }
-
-                                m.facts.values.forEach { f ->
-                                    val v = f.metricValue(metric)
-                                    val color =
-                                        if (v == null) Ivory.copy(alpha = 0.03f)
-                                        else metric.tint.copy(alpha = 0.08f + 0.8f * v.coerceIn(0f, 1f))
-                                    val tl = Offset(f.col * step, labelH + f.row * step)
-                                    drawRoundRect(color, tl, Size(cellPx, cellPx), corner)
-                                    if (f.key == m.todayKey) {
-                                        drawRoundRect(
-                                            metric.tint.copy(alpha = 0.55f), tl, Size(cellPx, cellPx),
-                                            corner, style = Stroke(1.dp.toPx()),
-                                        )
                                     }
-                                    if (f.key == selected) {
-                                        drawRoundRect(
-                                            Ivory.copy(alpha = 0.85f), tl, Size(cellPx, cellPx),
-                                            corner, style = Stroke(1.2.dp.toPx()),
-                                        )
+                                }
+                                Spacer(Modifier.height(10.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    LegendLabel("LESS")
+                                    LegendCell(Ivory.copy(alpha = 0.03f))
+                                    listOf(0.25f, 0.5f, 0.75f, 1f).forEach { v ->
+                                        LegendCell(metric.tint.copy(alpha = 0.08f + 0.8f * v))
                                     }
+                                    LegendLabel("MORE")
                                 }
                             }
                         }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        LegendLabel("LESS")
-                        LegendCell(Ivory.copy(alpha = 0.03f))
-                        listOf(0.25f, 0.5f, 0.75f, 1f).forEach { v ->
-                            LegendCell(metric.tint.copy(alpha = 0.08f + 0.8f * v))
-                        }
-                        LegendLabel("MORE")
-                    }
-                }
-            }
 
-            // ---- tapped-day detail ----
-            val f = selected?.let { m.facts[it] }
-            if (f != null) {
-                Spacer(Modifier.height(12.dp))
-                Panel(Modifier.fillMaxWidth(), corner = 16.dp, line = metric.tint.copy(alpha = 0.3f)) {
-                    Column(Modifier.padding(14.dp)) {
-                        Text(
-                            LocalDate.parse(f.key).format(DateTimeFormatter.ofPattern("EEE · d MMM yyyy", Locale.ENGLISH)),
-                            color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            MiniPill("KCAL", f.kcal > 0)
-                            MiniPill("WATER", f.water >= m.waterGoal)
-                            MiniPill("TRAIN", f.trained)
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            DetailStat("SLEEP", f.sleepMin?.let { hm(it) } ?: "—")
-                            DetailStat("SCREEN", f.screenMin?.let { hm(it) } ?: "—")
-                            DetailStat("MOOD", f.moodRaw?.let { "$it/3" } ?: "—")
-                            DetailStat("WATER", "${f.water}/${m.waterGoal}")
+                        // ---- tapped-day detail ----
+                        val f = selected?.let { m.facts[it] }
+                        if (f != null) {
+                            Spacer(Modifier.height(12.dp))
+                            Panel(Modifier.fillMaxWidth(), corner = 16.dp, line = metric.tint.copy(alpha = 0.3f)) {
+                                Column(Modifier.padding(14.dp)) {
+                                    Text(
+                                        LocalDate.parse(f.key).format(DateTimeFormatter.ofPattern("EEE · d MMM yyyy", Locale.ENGLISH)),
+                                        color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(Modifier.height(10.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        MiniPill("KCAL", f.kcal > 0)
+                                        MiniPill("WATER", f.water >= m.waterGoal)
+                                        MiniPill("TRAIN", f.trained)
+                                    }
+                                    Spacer(Modifier.height(12.dp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        DetailStat("SLEEP", f.sleepMin?.let { hm(it) } ?: "—")
+                                        DetailStat("SCREEN", f.screenMin?.let { hm(it) } ?: "—")
+                                        DetailStat("MOOD", f.moodRaw?.let { "$it/3" } ?: "—")
+                                        DetailStat("WATER", "${f.water}/${m.waterGoal}")
+                                    }
+                                }
+                            }
+                        } else {
+                            Spacer(Modifier.height(12.dp))
+                            Text("Tap a cell for that day's numbers.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
                         }
                     }
                 }
-            } else {
-                Spacer(Modifier.height(12.dp))
-                Text("Tap a cell for that day's numbers.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
             }
         }
         CloseOrb(onClose)
