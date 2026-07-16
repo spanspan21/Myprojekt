@@ -29,8 +29,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.StretchRoutine
+import com.ascend.lifeos.data.training.prescribedMobility
 import com.ascend.lifeos.ui.hud.*
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.TickerNumber
@@ -58,7 +60,7 @@ fun StretchScreen(onBack: () -> Unit) {
             else -> null
         }
         (setOfNotNull(timeRoutine) +
-            com.ascend.lifeos.data.training.prescribedMobility(com.ascend.lifeos.data.Repo.data.profile.assessResults)).toSet()
+            prescribedMobility(Repo.data.profile.assessResults)).toSet()
     }
     val routines = remember(suggested) {
         ExerciseSeed.STRETCH_ROUTINES.sortedByDescending { it.id in suggested }

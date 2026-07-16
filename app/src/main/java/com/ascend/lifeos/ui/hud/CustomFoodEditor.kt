@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.hud
 
 import com.ascend.lifeos.data.Haptics
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -114,14 +115,16 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
             Text("Micronutrients (optional)", color = TextMuted, fontSize = FS.s13, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Text(if (showMicros) "−" else "+", color = Accent, fontSize = FS.s18, fontWeight = FontWeight.Bold)
         }
-        if (showMicros) {
-            Spacer(Modifier.height(10.dp))
-            MICRO_16.forEach { id ->
-                val nd = NUTRIENTS_BY_ID[id] ?: return@forEach
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text(nd.label, color = TextMuted, fontSize = FS.s12, modifier = Modifier.weight(1f))
-                    Box(Modifier.width(120.dp)) {
-                        GlassField(nd.unit, micros[id] ?: "", KeyboardType.Number) { v -> micros[id] = v.filter { it.isDigit() || it == '.' }.take(7) }
+        AnimatedVisibility(visible = showMicros) {
+            Column {
+                Spacer(Modifier.height(10.dp))
+                MICRO_16.forEach { id ->
+                    val nd = NUTRIENTS_BY_ID[id] ?: return@forEach
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
+                        Text(nd.label, color = TextMuted, fontSize = FS.s12, modifier = Modifier.weight(1f))
+                        Box(Modifier.width(120.dp)) {
+                            GlassField(nd.unit, micros[id] ?: "", KeyboardType.Number) { v -> micros[id] = v.filter { it.isDigit() || it == '.' }.take(7) }
+                        }
                     }
                 }
             }

@@ -1,7 +1,9 @@
 package com.ascend.lifeos.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -420,57 +422,64 @@ fun BodyScreen() {
                 }.getOrNull()
             }
         }
-        if (loadInfo == null) {
-            SectionLabel("Training load")
-            Spacer(Modifier.height(10.dp))
-            ShimmerPanel(height = 108.dp)
-        }
-        loadInfo?.let { (st, v, last14) ->
-            SectionLabel("Training load")
-            Spacer(Modifier.height(10.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-                Column(Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            v.title,
-                            color = when (v.zone) {
-                                com.ascend.lifeos.data.training.TrainingLoad.Zone.PUSH -> Good
-                                com.ascend.lifeos.data.training.TrainingLoad.Zone.SWEET -> Mod.Body
-                                com.ascend.lifeos.data.training.TrainingLoad.Zone.CAUTION -> Warn
-                                com.ascend.lifeos.data.training.TrainingLoad.Zone.BACK_OFF -> Crit
-                                com.ascend.lifeos.data.training.TrainingLoad.Zone.BASE -> TextMuted
-                            },
-                            fontSize = FS.s15, fontFamily = Display, fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(Modifier.weight(1f))
-                        if (st.ctl >= 0.35) {
-                            Text(
-                                "acute ${"%.1f".format(st.atl)} · base ${"%.1f".format(st.ctl)}",
-                                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(v.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
-                    if (last14.any { it > 0 }) {
-                        Spacer(Modifier.height(12.dp))
-                        Row(Modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.Bottom) {
-                            val peak = (last14.max()).coerceAtLeast(1.0)
-                            last14.forEach { l ->
-                                Box(
-                                    Modifier.weight(1f).padding(horizontal = 1.5.dp)
-                                        .height((28 * (l / peak)).dp.coerceAtLeast(2.dp))
-                                        .clip(RoundedCornerShape(2.dp))
-                                        .background(if (l > 0) Mod.Body.copy(alpha = 0.75f) else Ivory.copy(alpha = 0.07f)),
-                                )
+        Crossfade(targetState = loadInfo != null, label = "trainLoad", animationSpec = tween(400)) { hasLoad ->
+            if (!hasLoad) {
+                Column {
+                    SectionLabel("Training load")
+                    Spacer(Modifier.height(10.dp))
+                    ShimmerPanel(height = 108.dp)
+                }
+            } else {
+                loadInfo?.let { (st, v, last14) ->
+                    Column {
+                        SectionLabel("Training load")
+                        Spacer(Modifier.height(10.dp))
+                        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                            Column(Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        v.title,
+                                        color = when (v.zone) {
+                                            com.ascend.lifeos.data.training.TrainingLoad.Zone.PUSH -> Good
+                                            com.ascend.lifeos.data.training.TrainingLoad.Zone.SWEET -> Mod.Body
+                                            com.ascend.lifeos.data.training.TrainingLoad.Zone.CAUTION -> Warn
+                                            com.ascend.lifeos.data.training.TrainingLoad.Zone.BACK_OFF -> Crit
+                                            com.ascend.lifeos.data.training.TrainingLoad.Zone.BASE -> TextMuted
+                                        },
+                                        fontSize = FS.s15, fontFamily = Display, fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(Modifier.weight(1f))
+                                    if (st.ctl >= 0.35) {
+                                        Text(
+                                            "acute ${"%.1f".format(st.atl)} · base ${"%.1f".format(st.ctl)}",
+                                            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(6.dp))
+                                Text(v.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = 17.sp)
+                                if (last14.any { it > 0 }) {
+                                    Spacer(Modifier.height(12.dp))
+                                    Row(Modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.Bottom) {
+                                        val peak = (last14.max()).coerceAtLeast(1.0)
+                                        last14.forEach { l ->
+                                            Box(
+                                                Modifier.weight(1f).padding(horizontal = 1.5.dp)
+                                                    .height((28 * (l / peak)).dp.coerceAtLeast(2.dp))
+                                                    .clip(RoundedCornerShape(2.dp))
+                                                    .background(if (l > 0) Mod.Body.copy(alpha = 0.75f) else Ivory.copy(alpha = 0.07f)),
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(4.dp))
+                                    Text("last 14 days · sets + ice time", color = TextDim, fontSize = FS.s9_5, fontFamily = Body)
+                                }
                             }
                         }
-                        Spacer(Modifier.height(4.dp))
-                        Text("last 14 days · sets + ice time", color = TextDim, fontSize = FS.s9_5, fontFamily = Body)
+                        Spacer(Modifier.height(20.dp))
                     }
                 }
             }
-            Spacer(Modifier.height(20.dp))
         }
 
         // ── heart rate curve (today) ─────────────────────────────────

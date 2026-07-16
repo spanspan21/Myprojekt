@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.boot
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -56,8 +57,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
+import com.ascend.lifeos.data.CalendarSync
 import com.ascend.lifeos.data.HealthConnect
+import com.ascend.lifeos.data.NutritionCalc
+import com.ascend.lifeos.data.Notifier
+import com.ascend.lifeos.data.OwnRecipes
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.calendar.CalendarAutoSync
+import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -148,10 +155,10 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
     var permTick by remember { mutableIntStateOf(0) }
     val notifOk = remember(permTick) {
-        com.ascend.lifeos.data.Notifier.hasPermission(ctx)
+        Notifier.hasPermission(ctx)
     }
     val calOk = remember(permTick) {
-        runCatching { com.ascend.lifeos.data.CalendarSync.granted(ctx) }.getOrDefault(false)
+        runCatching { CalendarSync.granted(ctx) }.getOrDefault(false)
     }
     val usageOk = remember(permTick) {
         com.ascend.lifeos.wellbeing.DigitalWellbeingManager.hasUsageAccess(ctx)
@@ -173,7 +180,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
                 curtain.animateTo(1f, tween(700, easing = com.ascend.lifeos.ui.motion.Motion.easeOut))
             }
             onFinish(sex, age, height, weight, activity, goal, objectives.toList())
-            com.ascend.lifeos.data.Repo.setTrainPrefs(trainFreq, sessionLen, com.ascend.lifeos.data.Repo.profile().hasVest)
+            Repo.setTrainPrefs(trainFreq, sessionLen, Repo.profile().hasVest)
         }
     }
 
@@ -232,15 +239,15 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Text("YOUR SPORT", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
-        var sport by remember { mutableStateOf(com.ascend.lifeos.data.Repo.data.profile.sport) }
+        var sport by remember { mutableStateOf(Repo.data.profile.sport) }
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            com.ascend.lifeos.data.training.SportCatalog.ALL.forEach { sp ->
+            SportCatalog.ALL.forEach { sp ->
                 BootChip("${sp.emoji} ${sp.label}", sport == sp.id) {
                     sport = sp.id
-                    com.ascend.lifeos.data.Repo.setSport(sp.id)
+                    Repo.setSport(sp.id)
                 }
             }
         }
@@ -289,7 +296,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            com.ascend.lifeos.data.NutritionCalc.GOAL_LABELS.forEach { (id, label) ->
+            NutritionCalc.GOAL_LABELS.forEach { (id, label) ->
                 BootChip(label, goal == id) { goal = id }
             }
         }
@@ -380,7 +387,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Spacer(Modifier.height(18.dp))
         com.ascend.lifeos.ui.home.Reveal(4) {
         val bd = remember(sex, age, height, weight, activity, goal) {
-            com.ascend.lifeos.data.NutritionCalc.breakdown(sex, age, height, weight, activity, goal)
+            NutritionCalc.breakdown(sex, age, height, weight, activity, goal)
         }
         val targets = bd.targets
         val waterMl = weight * Prefs.int(ctx, Prefs.WATER_ML_PER_KG, 30)
@@ -715,9 +722,9 @@ private fun CalibratePhase(onNext: () -> Unit) {
         // the main thread; the overlay/HC permissions stay contextual (asked when
         // the user first opens Guard / Body), not as a jarring mid-boot redirect.
         launch(kotlinx.coroutines.Dispatchers.IO) {
-            runCatching { com.ascend.lifeos.data.Notifier.ensureChannel(ctx) }
-            runCatching { com.ascend.lifeos.data.OwnRecipes.init(ctx) }
-            runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(ctx) }
+            runCatching { Notifier.ensureChannel(ctx) }
+            runCatching { OwnRecipes.init(ctx) }
+            runCatching { CalendarAutoSync.maybe(ctx) }
         }
         progress.forEachIndexed { i, a ->
             launch {
@@ -909,7 +916,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
 
         Spacer(Modifier.height(30.dp))
 
-        if (showHc) {
+        AnimatedVisibility(visible = showHc) {
             Row(
                 Modifier.clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.04f))

@@ -37,10 +37,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.ActivityStore
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.data.calendar.EventType
+import com.ascend.lifeos.data.finance.FinanceStore
+import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.data.sleep.SleepStore
+import com.ascend.lifeos.data.training.ActivityTypes
+import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
@@ -140,8 +146,8 @@ object CommandEngine {
         // ---- activity quick log: "lauf 45", "ride 90 rpe8", "yoga 30" ------
         // the fastest log in the app — one line, day counts as trained
         parseActivity(q)?.let { (typeId, minutes, rpe) ->
-            val t = com.ascend.lifeos.data.training.ActivityTypes.byId(typeId) ?: return@let
-            com.ascend.lifeos.data.ActivityStore.add(ctx, typeId, minutes, rpe ?: t.defaultRpe)
+            val t = ActivityTypes.byId(typeId) ?: return@let
+            ActivityStore.add(ctx, typeId, minutes, rpe ?: t.defaultRpe)
             return CmdResult.Done("${t.emoji} ${t.label} · $minutes min logged — day counts as trained")
         }
 
@@ -192,7 +198,7 @@ object CommandEngine {
             val cents = -(amount * 100).toLong()
             val note = m.groupValues.getOrNull(2)?.trim().orEmpty()
             val cat = guessCategory(note)
-            com.ascend.lifeos.data.finance.FinanceStore.bookTxn(ctx, cents, cat, note)
+            FinanceStore.bookTxn(ctx, cents, cat, note)
             return CmdResult.Done("%.2f € logged → $cat${if (note.isNotBlank()) " ($note)" else ""}".format(amount))
         }
 
@@ -202,20 +208,20 @@ object CommandEngine {
             if (amount <= 0 || amount > 999999) return@let
             val cents = (amount * 100).toLong()
             val note = m.groupValues.getOrNull(2)?.trim().orEmpty()
-            com.ascend.lifeos.data.finance.FinanceStore.bookTxn(ctx, cents, "Income", note)
+            FinanceStore.bookTxn(ctx, cents, "Income", note)
             return CmdResult.Done("+%.2f € income${if (note.isNotBlank()) " ($note)" else ""}".format(amount))
         }
 
         // ---- nap: "nap 20" -------------------------------------------------------
         Regex("^(?:nap|nickerchen|schlaf) (\\d{1,3})$").find(q)?.let { m ->
             val min = m.groupValues[1].toInt().coerceIn(5, 120)
-            com.ascend.lifeos.data.sleep.SleepStore.logNap(ctx, min)
+            SleepStore.logNap(ctx, min)
             return CmdResult.Done("${min}m nap logged")
         }
 
         // ---- notes: "note buy groceries" -----------------------------------------
         Regex("^(?:note|notiz) (.+)$").find(q)?.let { m ->
-            com.ascend.lifeos.data.life.LifeStores.addNote(ctx, m.groupValues[1].trim())
+            LifeStores.addNote(ctx, m.groupValues[1].trim())
             return CmdResult.Done("Note saved")
         }
 
@@ -413,8 +419,7 @@ object CommandEngine {
 
     /** The calendar example speaks the athlete's sport ("fussball tue 17-19"). */
     fun sportHintWord(): String = runCatching {
-        com.ascend.lifeos.data.training.SportCatalog
-            .byId(Repo.data.profile.sport).matchKeywords.firstOrNull()
+        SportCatalog.byId(Repo.data.profile.sport).matchKeywords.firstOrNull()
     }.getOrNull() ?: "hockey"
 
     private fun guessCategory(note: String): String {
@@ -503,11 +508,10 @@ object CommandEngine {
         // "my sport" words follow the profile (a swimmer's "schwimmen 17-18"
         // types as the sport block, exactly like hockey always did)
         val sportDef = runCatching {
-            com.ascend.lifeos.data.training.SportCatalog
-                .byId(com.ascend.lifeos.data.Repo.data.profile.sport)
-        }.getOrElse { com.ascend.lifeos.data.training.SportCatalog.byId("hockey") }
+            SportCatalog.byId(Repo.data.profile.sport)
+        }.getOrElse { SportCatalog.byId("hockey") }
         val type = when {
-            com.ascend.lifeos.data.training.SportCatalog.titleMatches(sportDef, title) ||
+            SportCatalog.titleMatches(sportDef, title) ||
                 "hockey" in title -> EventType.HOCKEY
             "school" in title || "schule" in title -> EventType.SCHOOL
             "work" in title || "arbeit" in title || "shift" in title -> EventType.WORK

@@ -1,7 +1,9 @@
 package com.ascend.lifeos.ui.training
 
+import com.ascend.lifeos.data.ActivityStore
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
@@ -12,6 +14,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -101,7 +104,7 @@ fun TrainingHub(
             }
             // Whoop-style strain target: recovery decides how hard today may be
             if (Prefs.bool(ctx, Prefs.STRAIN_TARGET_ON, true)) {
-                com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
+                Repo.recoveryScore()?.let { rec ->
                     val (lo, hi) = when {
                         rec >= 75 -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14) to Prefs.int(ctx, Prefs.STRAIN_GREEN_HI, 20)
                         rec >= 50 -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10) to Prefs.int(ctx, Prefs.STRAIN_AMBER_HI, 14)
@@ -236,19 +239,23 @@ fun TrainingHub(
                 SectionLabel("Next session", accent = Mod.Train)
                 Spacer(Modifier.height(10.dp))
                 val plan = vm.weekPlan
-                if (plan == null || plan.sessions.isEmpty()) {
-                    com.ascend.lifeos.ui.kit.ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
-                } else {
-                    plan.note?.let {
-                        Text(it, color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.height(8.dp))
+                Crossfade(targetState = plan != null && plan.sessions.isNotEmpty(), label = "nextSession", animationSpec = tween(400)) { hasData ->
+                    if (!hasData) {
+                        com.ascend.lifeos.ui.kit.ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
+                    } else {
+                        Column {
+                            plan?.note?.let {
+                                Text(it, color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                                Spacer(Modifier.height(8.dp))
+                            }
+                            val hero = plan!!.sessions.first()
+                            NextSessionHero(
+                                session = hero,
+                                placement = vm.placements.find { it.session.index == hero.index },
+                                done = hero.name in vm.weekDoneNames,
+                            ) { vm.startPlannedSession(hero); onStartWorkout() }
+                        }
                     }
-                    val hero = plan.sessions.first()
-                    NextSessionHero(
-                        session = hero,
-                        placement = vm.placements.find { it.session.index == hero.index },
-                        done = hero.name in vm.weekDoneNames,
-                    ) { vm.startPlannedSession(hero); onStartWorkout() }
                 }
                 Spacer(Modifier.height(18.dp))
             }
@@ -750,8 +757,8 @@ private fun StepBox(label: String, onClick: () -> Unit) {
 /** Custom mode: pick a day (next 7) + time for one session, then place it. */
 @Composable
 private fun CustomPlaceRow(
-    session: com.ascend.lifeos.data.training.PlannedSession,
-    placement: com.ascend.lifeos.data.training.Placement?,
+    session: PlannedSession,
+    placement: Placement?,
     done: Boolean = false,
     onPlace: (java.time.LocalDate, Int) -> Unit,
 ) {
@@ -821,21 +828,21 @@ private fun CustomPlaceRow(
 
 @Composable
 private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOpenAssess: () -> Unit) {
-    val p = com.ascend.lifeos.data.Repo.data.profile
+    val p = Repo.data.profile
     GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Stepper(
                     value = "${p.trainFreq}×/week",
-                    onMinus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq - 1, p.sessionLen, p.hasVest); vm.regeneratePlan() },
-                    onPlus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq + 1, p.sessionLen, p.hasVest); vm.regeneratePlan() },
+                    onMinus = { Repo.setTrainPrefs(p.trainFreq - 1, p.sessionLen, p.hasVest); vm.regeneratePlan() },
+                    onPlus = { Repo.setTrainPrefs(p.trainFreq + 1, p.sessionLen, p.hasVest); vm.regeneratePlan() },
                 )
                 Spacer(Modifier.weight(1f))
                 val len = p.sessionLen.coerceIn(30, 120)
                 Stepper(
                     value = "~$len min",
-                    onMinus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq, (len - 15).coerceAtLeast(30), p.hasVest); vm.regeneratePlan() },
-                    onPlus = { com.ascend.lifeos.data.Repo.setTrainPrefs(p.trainFreq, (len + 15).coerceAtMost(120), p.hasVest); vm.regeneratePlan() },
+                    onMinus = { Repo.setTrainPrefs(p.trainFreq, (len - 15).coerceAtLeast(30), p.hasVest); vm.regeneratePlan() },
+                    onPlus = { Repo.setTrainPrefs(p.trainFreq, (len + 15).coerceAtMost(120), p.hasVest); vm.regeneratePlan() },
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -1114,10 +1121,10 @@ private fun ActivityQuickLog() {
     var open by remember { mutableStateOf(false) }
     var armedDeleteActivity by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(armedDeleteActivity) { if (armedDeleteActivity != null) { kotlinx.coroutines.delay(2500); armedDeleteActivity = null } }
-    val rev = com.ascend.lifeos.data.ActivityStore.rev
+    val rev = ActivityStore.rev
     var typeId by remember {
         mutableStateOf(
-            com.ascend.lifeos.data.Repo.data.profile.sport
+            Repo.data.profile.sport
                 .takeIf { ActivityTypes.byId(it) != null } ?: "run",
         )
     }
@@ -1179,7 +1186,7 @@ private fun ActivityQuickLog() {
                 }
                 // the bests board for this type — what today's session is up against
                 val bests = remember(typeId, rev) {
-                    ActivityBests.bestsFor(com.ascend.lifeos.data.ActivityStore.all(ctx), typeId)
+                    ActivityBests.bestsFor(ActivityStore.all(ctx), typeId)
                 }
                 if (bests.isNotEmpty()) {
                     Spacer(Modifier.height(10.dp))
@@ -1195,8 +1202,8 @@ private fun ActivityQuickLog() {
                 }
                 Spacer(Modifier.height(12.dp))
                 HudButton("Log ${type.emoji} ${type.label} · $minutes min", Modifier.fillMaxWidth()) {
-                    val before = com.ascend.lifeos.data.ActivityStore.all(ctx)
-                    val logged = com.ascend.lifeos.data.ActivityStore.add(
+                    val before = ActivityStore.all(ctx)
+                    val logged = ActivityStore.add(
                         ctx, typeId, minutes, rpe,
                         km.replace(',', '.').toDoubleOrNull(),
                     )
@@ -1216,7 +1223,7 @@ private fun ActivityQuickLog() {
             }
 
             // last three — proof it landed, one tap to undo a mislog
-            val recent = remember(rev) { com.ascend.lifeos.data.ActivityStore.all(ctx).take(3) }
+            val recent = remember(rev) { ActivityStore.all(ctx).take(3) }
             if (recent.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
                 recent.forEach { e ->
@@ -1225,7 +1232,7 @@ private fun ActivityQuickLog() {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            com.ascend.lifeos.data.ActivityStore.label(e),
+                            ActivityStore.label(e),
                             color = TextMuted, fontSize = FS.s11_5, fontFamily = Body,
                             fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
                         )
@@ -1238,7 +1245,7 @@ private fun ActivityQuickLog() {
                             modifier = Modifier.size(14.dp).pressScale {
                                 if (actArmed) {
                                     Haptics.warn(ctx)
-                                    com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)
+                                    ActivityStore.delete(ctx, e.id)
                                     celebrate = null
                                     armedDeleteActivity = null
                                     AppFeedback.show("Activity deleted")

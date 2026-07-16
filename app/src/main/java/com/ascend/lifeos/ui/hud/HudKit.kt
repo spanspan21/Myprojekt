@@ -35,6 +35,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
@@ -65,6 +67,7 @@ fun GlassPanel(
 /** Selectable neon pill chip — accent-tinted, colors glide, presses feel. */
 @Composable
 fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val ctx = LocalContext.current
     val accent = LocalModuleAccent.current
     val bg by animateColorAsState(
         if (selected) accent.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f),
@@ -80,7 +83,7 @@ fun HudChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onC
     )
     Box(
         modifier
-            .pressScale(onClick)
+            .pressScale { Haptics.tick(ctx); onClick() }
             .clip(RoundedCornerShape(11.dp))
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))

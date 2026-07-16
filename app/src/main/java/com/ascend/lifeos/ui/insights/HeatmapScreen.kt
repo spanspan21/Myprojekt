@@ -59,6 +59,8 @@ import com.ascend.lifeos.R
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.WaterCalc
+import com.ascend.lifeos.data.training.TrainingDatabase
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.wellbeing.WellbeingStore
@@ -135,7 +137,7 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
     // so the two logging paths can never double-count.
     val trained = HashSet<String>()
     runCatching {
-        com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao()
+        TrainingDatabase.get(ctx).dao()
             .sessionsSince(System.currentTimeMillis() - 365L * 86_400_000L)
     }.getOrDefault(emptyList()).forEach { trained += dayKeyOf(it.session.startedAt) }
     profile.workoutDays.forEach { (k, done) -> if (done) trained += k }
@@ -160,7 +162,7 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
         val kcal = day?.meals?.sumOf { it.kcal } ?: 0
         // hydration in ml (logged drinks + taps); glass-equivalent for the cell
         val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
-        val water = hydrationMl / com.ascend.lifeos.data.WaterCalc.glassMl()
+        val water = hydrationMl / WaterCalc.glassMl()
         val isTrained = key in trained
         // a day with zero app activity stays honestly empty, not "0/3"
         val missions = if (day == null && !isTrained) null else {
@@ -170,7 +172,7 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
             // too (hydrationMl), not just water taps — otherwise the heatmap cell
             // disagrees with the streak it claims to mirror on drink-heavy days
             if (kcal >= profile.kcalGoal) done++
-            if (hydrationMl >= profile.waterGoal * com.ascend.lifeos.data.WaterCalc.glassMl()) done++
+            if (hydrationMl >= profile.waterGoal * WaterCalc.glassMl()) done++
             if (isTrained) done++
             done / 3f
         }

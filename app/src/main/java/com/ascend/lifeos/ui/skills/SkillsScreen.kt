@@ -45,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.masterplan.DayPlan
+import com.ascend.lifeos.data.masterplan.JarvisRoutingEngine
 import com.ascend.lifeos.data.masterplan.DomainWithGraph
 import com.ascend.lifeos.data.masterplan.NodeWithChildren
 import com.ascend.lifeos.data.masterplan.ResourceEntity
@@ -147,10 +150,10 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
     val due = remember(domains, metaTick) { dueReviewItems(ctx, domains) }
     // Revive the readiness router (audit F2): real recovery + a time budget →
     // the one thing to do now, across every path. Was fully built but orphaned.
-    val readiness = remember(metaTick) { com.ascend.lifeos.data.Repo.recoveryScore() }
+    val readiness = remember(metaTick) { Repo.recoveryScore() }
     var focusMin by remember { mutableStateOf(30) }
     val focusPlan = remember(domains, readiness, focusMin) {
-        com.ascend.lifeos.data.masterplan.JarvisRoutingEngine().planDay(domains, readiness, focusMin)
+        JarvisRoutingEngine().planDay(domains, readiness, focusMin)
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
@@ -196,7 +199,7 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
 
 @Composable
 private fun FocusNowCard(
-    plan: com.ascend.lifeos.data.masterplan.DayPlan,
+    plan: DayPlan,
     minutes: Int,
     onMinutes: (Int) -> Unit,
 ) {

@@ -63,7 +63,29 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.InsightMiner
+import com.ascend.lifeos.data.JarvisSpeech
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Protocol
+import com.ascend.lifeos.data.Protocols
+import com.ascend.lifeos.data.SoundFx
+import com.ascend.lifeos.data.WaterCalc
+import com.ascend.lifeos.data.calendar.CalendarDatabase
+import com.ascend.lifeos.data.calendar.CalendarRepo
+import com.ascend.lifeos.data.calendar.DayTimeline
+import com.ascend.lifeos.data.calendar.TimelineBlock
+import com.ascend.lifeos.data.life.HabitMetrics
+import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
+import com.ascend.lifeos.data.rules.CustomRule
+import com.ascend.lifeos.data.rules.CustomRules
+import com.ascend.lifeos.data.sleep.NightLog
+import com.ascend.lifeos.data.sleep.SleepStore
+import com.ascend.lifeos.data.training.Muscle
+import com.ascend.lifeos.data.training.MuscleRecovery
+import com.ascend.lifeos.data.training.SessionWithSets
+import com.ascend.lifeos.data.training.SportCatalog
+import com.ascend.lifeos.data.training.TrainingDatabase
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.JarvisVoice
@@ -123,9 +145,9 @@ fun HomeScreen(
     val water = day?.water ?: 0
     // Hydration truth incl. logged drinks (matches Repo.completion + Prime + Fuel).
     val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
-    val waterGoalMl = (profile.waterGoal * com.ascend.lifeos.data.WaterCalc.glassMl()).coerceAtLeast(1)
+    val waterGoalMl = (profile.waterGoal * WaterCalc.glassMl()).coerceAtLeast(1)
     val waterDone = hydrationMl >= waterGoalMl
-    val waterGlassEq = hydrationMl / com.ascend.lifeos.data.WaterCalc.glassMl()
+    val waterGlassEq = hydrationMl / WaterCalc.glassMl()
     // Train mission = the SAME truth the streak uses: Room sets OR the day
     // record (activities/markTrained). Reading only todaySets meant a logged
     // run — or a hockey day — never ticked the tile while streak counted it.
@@ -157,7 +179,7 @@ fun HomeScreen(
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching {
                 val today = LocalDate.now().toEpochDay()
-                val events = com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                val events = CalendarDatabase.get(ctx).dao()
                     .eventsInRangeOnce(today, today + 7)   // exams look a week ahead
                 val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
                 val hockey = events
@@ -188,7 +210,7 @@ fun HomeScreen(
             waterGlasses = waterGlassEq,
             waterGoal = profile.waterGoal,
             hockeyToday = dayContext.first,
-            sportWord = com.ascend.lifeos.data.training.SportCatalog.byId(profile.sport)
+            sportWord = SportCatalog.byId(profile.sport)
                 .let {
                     when (it.id) {
                         "hockey" -> "Ice"                    // the proven voice for the default install
@@ -215,7 +237,7 @@ fun HomeScreen(
         if (seenDone in 0 until missionsDone) {
             if (missionsDone == 3) {   // the #1 moment: all missions complete
                 Haptics.epic(ctx)
-                runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
+                runCatching { SoundFx.levelUp(ctx) }
                 goldSweepTick++        // Gold-Sweep über die Missions-Sektion (Kap. 20)
             } else Haptics.success(ctx)
         }
@@ -317,9 +339,9 @@ fun HomeScreen(
 
             // ── BODY SCAN — your muscle map, swept by the scanner ────────
             Reveal(1) {
-                val freshness by produceState<Map<com.ascend.lifeos.data.training.Muscle, Float>?>(null) {
+                val freshness by produceState<Map<Muscle, Float>?>(null) {
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching { com.ascend.lifeos.data.training.MuscleRecovery.compute(ctx).map }.getOrNull()
+                        runCatching { MuscleRecovery.compute(ctx).map }.getOrNull()
                     }
                 }
                 val rGood = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
@@ -470,7 +492,7 @@ fun HomeScreen(
                     Modifier.clip(RoundedCornerShape(10.dp))
                         .background(Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                        .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
+                        .pressScale { Haptics.tick(ctx); JarvisSpeech.speak(ctx, JarvisSpeech.briefingText(ctx)) }
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -509,22 +531,22 @@ fun HomeScreen(
             // ── DAILY BRIEFING — directives, patterns, exams: ONE panel ──
             homeCards["briefing"] = {
                 var protoTick by remember { mutableIntStateOf(0) }
-                val directives by produceState<List<Pair<com.ascend.lifeos.data.Protocol, String>>>(emptyList(), protoTick) {
+                val directives by produceState<List<Pair<Protocol, String>>>(emptyList(), protoTick) {
                     // fire() reads prefs/data — keep it off the Main dispatcher
                     // (produceState runs its block on the composition context) — audit B2-4
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching { com.ascend.lifeos.data.Protocols.fire(ctx) }.getOrDefault(emptyList())
+                        runCatching { Protocols.fire(ctx) }.getOrDefault(emptyList())
                     }
                 }
-                val customFired by produceState<List<Pair<com.ascend.lifeos.data.rules.CustomRule, String>>>(emptyList(), protoTick) {
+                val customFired by produceState<List<Pair<CustomRule, String>>>(emptyList(), protoTick) {
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching { com.ascend.lifeos.data.rules.CustomRules.fire(ctx) }.getOrDefault(emptyList())
+                        runCatching { CustomRules.fire(ctx) }.getOrDefault(emptyList())
                     }
                 }
-                val insight by produceState<com.ascend.lifeos.data.InsightMiner.Insight?>(null) {
+                val insight by produceState<InsightMiner.Insight?>(null) {
                     if (Prefs.bool(ctx, Prefs.INSIGHTS_ON, true)) {
                         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                            runCatching { com.ascend.lifeos.data.InsightMiner.mine(ctx) }.getOrNull()
+                            runCatching { InsightMiner.mine(ctx) }.getOrNull()
                         }
                     }
                 }
@@ -535,7 +557,7 @@ fun HomeScreen(
 
                 val goalDeadlines = remember {
                     val now = java.time.LocalDate.now()
-                    com.ascend.lifeos.data.life.LifeStores.goals(ctx)
+                    LifeStores.goals(ctx)
                         .filter { !it.archived && it.deadline.isNotBlank() }
                         .mapNotNull { g ->
                             runCatching {
@@ -584,7 +606,7 @@ fun HomeScreen(
                                 BriefRow(
                                     dot = Mod.Home, overline = chip, text = text,
                                     action = "✕",
-                                ) { com.ascend.lifeos.data.Protocols.dismissToday(ctx, proto.id); protoTick++ }
+                                ) { Protocols.dismissToday(ctx, proto.id); protoTick++ }
                             }
                             customFired.forEach { (_, text) ->
                                 sep()
@@ -597,7 +619,7 @@ fun HomeScreen(
                                     overline = "PATTERN · n=${i.n} · r=${"%.2f".format(i.r)}",
                                     text = i.text,
                                     action = "Got it",
-                                ) { com.ascend.lifeos.data.InsightMiner.markSeen(ctx, i.key); insightDismissed = true }
+                                ) { InsightMiner.markSeen(ctx, i.key); insightDismissed = true }
                             }
                         }
                     }
@@ -621,10 +643,10 @@ fun HomeScreen(
             // the real lights-out time for, ask — so sleep-restriction titrates on
             // true efficiency instead of a fake ~95 %. Reads SleepStore.rev to
             // recompose the moment the user answers.
-            val sleepRev = com.ascend.lifeos.data.sleep.SleepStore.rev
+            val sleepRev = SleepStore.rev
             val pendingNight = remember(sleepRev) {
                 if (java.time.LocalTime.now().hour >= 19)
-                    com.ascend.lifeos.data.sleep.SleepStore.unconfirmedNight(ctx)
+                    SleepStore.unconfirmedNight(ctx)
                 else null
             }
             pendingNight?.let { night ->
@@ -633,9 +655,9 @@ fun HomeScreen(
                     night = night,
                     onConfirm = { latency ->
                         val realBed = ((night.bedMin - latency) % 1440 + 1440) % 1440
-                        com.ascend.lifeos.data.sleep.SleepStore.confirmNight(ctx, night.dayKey, realBed)
+                        SleepStore.confirmNight(ctx, night.dayKey, realBed)
                     },
-                    onNap = { com.ascend.lifeos.data.sleep.SleepStore.markNap(ctx, night.dayKey) },
+                    onNap = { SleepStore.markNap(ctx, night.dayKey) },
                 )
             }
             }
@@ -730,7 +752,7 @@ fun HomeScreen(
             val skillStep by produceState<Pair<String, Float>?>(null) {
                 value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     runCatching {
-                        val domains = com.ascend.lifeos.data.masterplan.MasterPlanDatabase
+                        val domains = MasterPlanDatabase
                             .get(ctx).dao().domainsOnce()
                         // most-progressed unfinished path first
                         val active = domains
@@ -788,14 +810,14 @@ fun HomeScreen(
             }
 
             // habit strip: due habits as tappable chips (mark done without leaving Home)
-            val habitRev = com.ascend.lifeos.data.life.LifeStores.rev
+            val habitRev = LifeStores.rev
             val todayHabits = remember(habitRev) {
                 val todayDate = java.time.LocalDate.now()
                 val dk = com.ascend.lifeos.core.todayKey()
-                com.ascend.lifeos.data.life.LifeStores.habits(ctx)
-                    .filter { com.ascend.lifeos.data.life.HabitMetrics.scheduledOn(it, todayDate) }
-                    .filter { !com.ascend.lifeos.data.life.HabitMetrics.skipped(ctx, it, dk) }
-                    .filter { !com.ascend.lifeos.data.life.HabitMetrics.isAuto(it) }
+                LifeStores.habits(ctx)
+                    .filter { HabitMetrics.scheduledOn(it, todayDate) }
+                    .filter { !HabitMetrics.skipped(ctx, it, dk) }
+                    .filter { !HabitMetrics.isAuto(it) }
             }
             if (todayHabits.isNotEmpty()) {
                 Spacer(Modifier.height(14.dp))
@@ -805,7 +827,7 @@ fun HomeScreen(
                 ) {
                     val dk = com.ascend.lifeos.core.todayKey()
                     todayHabits.forEach { h ->
-                        val done = com.ascend.lifeos.data.life.HabitMetrics.done(ctx, h, dk)
+                        val done = HabitMetrics.done(ctx, h, dk)
                         val icon = h.icon.ifBlank { "•" }
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
@@ -813,7 +835,7 @@ fun HomeScreen(
                                 .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                                 .then(if (!done) Modifier.pressScale {
                                     Haptics.confirm(ctx)
-                                    com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, h.id, dk, true)
+                                    LifeStores.setHabitDone(ctx, h.id, dk, true)
                                 } else Modifier)
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
@@ -897,8 +919,8 @@ fun HomeScreen(
 
             // ── LAST SESSION — what you did last time in the gym ──
             homeCards["lastSession"] = {
-                val dao = remember { com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao() }
-                val lastSess by produceState<com.ascend.lifeos.data.training.SessionWithSets?>(null) {
+                val dao = remember { TrainingDatabase.get(ctx).dao() }
+                val lastSess by produceState<SessionWithSets?>(null) {
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         runCatching { dao.recentSessions(1).firstOrNull()?.firstOrNull() }.getOrNull()
                     }
@@ -1116,7 +1138,7 @@ private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SleepConfirmCard(
-    night: com.ascend.lifeos.data.sleep.NightLog,
+    night: NightLog,
     onConfirm: (latencyMin: Int) -> Unit,
     onNap: () -> Unit,
 ) {
@@ -1165,20 +1187,20 @@ private fun SleepConfirmCard(
 @Composable
 private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpenTrain: () -> Unit, onOpenCalendar: () -> Unit) {
     val ctx = LocalContext.current
-    val timeline by produceState<com.ascend.lifeos.data.calendar.DayTimeline?>(null) {
+    val timeline by produceState<DayTimeline?>(null) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val today = java.time.LocalDate.now()
-            val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
+            val dao = CalendarRepo.dao(ctx)
             val entities = runCatching {
                 dao.eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
             }.getOrDefault(emptyList())
-            com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, today, entities)
+            CalendarRepo.timelineFor(ctx, today, entities)
         }
     }
 
     val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
     val split = trainVm.suggestedSplit()
-    fun fmt(min: Int) = com.ascend.lifeos.data.calendar.CalendarRepo.fmtMin(min)
+    fun fmt(min: Int) = CalendarRepo.fmtMin(min)
 
     val blocks = timeline?.blocks.orEmpty().filter { it.endMin > nowMin }
     val current = blocks.firstOrNull { it.startMin <= nowMin }
@@ -1236,12 +1258,12 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                     }
                     if (nowMin >= 20 * 60 && (next == null || next.endMin <= nowMin)) {
                         val tomorrow = java.time.LocalDate.now().plusDays(1)
-                        val firstTomorrow by produceState<com.ascend.lifeos.data.calendar.TimelineBlock?>(null, tomorrow) {
+                        val firstTomorrow by produceState<TimelineBlock?>(null, tomorrow) {
                             value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 runCatching {
-                                    val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
+                                    val dao = CalendarRepo.dao(ctx)
                                     val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
-                                    com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, tomorrow, entities).blocks.firstOrNull()
+                                    CalendarRepo.timelineFor(ctx, tomorrow, entities).blocks.firstOrNull()
                                 }.getOrNull()
                             }
                         }
@@ -1474,23 +1496,25 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                         fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f),
                     )
-                    if (visible) {
-                        Text(
-                            "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
-                            modifier = Modifier.clip(CircleShape).then(if (idx > 0) Modifier.pressScale {
-                                val m = order.toMutableList()
-                                m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
-                                commit(m)
-                            } else Modifier).padding(8.dp),
-                        )
-                        Text(
-                            "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
-                            modifier = Modifier.clip(CircleShape).then(if (idx < order.lastIndex) Modifier.pressScale {
-                                val m = order.toMutableList()
-                                m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }
-                                commit(m)
-                            } else Modifier).padding(8.dp),
-                        )
+                    AnimatedVisibility(visible = visible) {
+                        Row {
+                            Text(
+                                "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
+                                modifier = Modifier.clip(CircleShape).then(if (idx > 0) Modifier.pressScale {
+                                    val m = order.toMutableList()
+                                    m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
+                                    commit(m)
+                                } else Modifier).padding(8.dp),
+                            )
+                            Text(
+                                "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
+                                modifier = Modifier.clip(CircleShape).then(if (idx < order.lastIndex) Modifier.pressScale {
+                                    val m = order.toMutableList()
+                                    m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }
+                                    commit(m)
+                                } else Modifier).padding(8.dp),
+                            )
+                        }
                     }
                 }
             }

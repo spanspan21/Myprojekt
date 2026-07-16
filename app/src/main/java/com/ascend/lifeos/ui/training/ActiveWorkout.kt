@@ -3,6 +3,8 @@ package com.ascend.lifeos.ui.training
 import android.content.Context
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.SoundFx
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -245,7 +247,7 @@ fun ActiveWorkoutScreen(
                 val totalSets = vm.activeExercises.sumOf { it.loggedSets.size }
                 // der teuerste Moment im Kraftsport: der letzte Satz (Kap. 22) —
                 // eine Information, kein Nag
-                val toTarget = com.ascend.lifeos.data.Repo.recoveryScore()?.let { rec ->
+                val toTarget = Repo.recoveryScore()?.let { rec ->
                     val lo = when {
                         rec >= 75 -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14)
                         rec >= 50 -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10)
@@ -321,7 +323,7 @@ private fun ExerciseSetLogger(
     var target by remember(ex.exerciseId) { mutableStateOf<String?>(null) }
 
     // Real category icon + unit ("sec" holds vs "reps") for this exercise.
-    val exEntity by androidx.compose.runtime.produceState<com.ascend.lifeos.data.training.ExerciseEntity?>(null, ex.exerciseId) {
+    val exEntity by androidx.compose.runtime.produceState<ExerciseEntity?>(null, ex.exerciseId) {
         value = runCatching { vm.exerciseById(ex.exerciseId) }.getOrNull()
     }
     val exCategory = exEntity?.category
@@ -513,7 +515,7 @@ private fun ExerciseSetLogger(
             // LOCKED — logging only confirms what you wore, you can't re-set it.
             // Bodyweight moves carry no load field at all (nothing to set); genuine
             // extra external load is an override, tucked into Advanced below.
-            val profileW = com.ascend.lifeos.data.Repo.data.profile
+            val profileW = Repo.data.profile
             val prescribedVest = remember(ex.exerciseName) {
                 Regex("vest\\s*(\\d+)\\s*kg", RegexOption.IGNORE_CASE)
                     .find(ex.exerciseName)?.groupValues?.getOrNull(1)?.toIntOrNull()
@@ -818,7 +820,7 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
     // the Apple-Pay triple: visual + haptic + sound land on the same keyframe
     LaunchedEffect(pr) {
         Haptics.epic(ctx)
-        runCatching { com.ascend.lifeos.data.SoundFx.levelUp(ctx) }
+        runCatching { SoundFx.levelUp(ctx) }
         delay(8000); onDismiss()
     }
     // card lands with a bounce (spatial spring MAY overshoot — this is the one place it should)

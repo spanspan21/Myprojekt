@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Protocols
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -127,11 +128,11 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
         // home instead of a separate Settings section (Rules→Protocols merge).
         SectionLabel("Built-in protocols")
         Spacer(Modifier.height(8.dp))
-        com.ascend.lifeos.data.Protocols.ALL.forEach { p ->
-            var on by remember(p.id) { mutableStateOf(com.ascend.lifeos.data.Protocols.enabled(ctx, p.id)) }
+        Protocols.ALL.forEach { p ->
+            var on by remember(p.id) { mutableStateOf(Protocols.enabled(ctx, p.id)) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .pressScale { Haptics.tick(ctx); on = !on; com.ascend.lifeos.data.Protocols.setEnabled(ctx, p.id, on) }
+                    .pressScale { Haptics.tick(ctx); on = !on; Protocols.setEnabled(ctx, p.id, on) }
                     .padding(vertical = 8.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

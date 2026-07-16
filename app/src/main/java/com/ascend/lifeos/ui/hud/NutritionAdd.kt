@@ -2,6 +2,9 @@ package com.ascend.lifeos.ui.hud
 
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,6 +67,7 @@ import com.ascend.lifeos.data.FoodApi
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.FoodRank
 import com.ascend.lifeos.data.FoodScore
 import com.ascend.lifeos.data.MACRO_IDS
 import com.ascend.lifeos.data.Repo
@@ -387,36 +391,44 @@ private fun SearchPane(
                     .filter { seen.add(it.name.trim().lowercase() + "|" + (it.brand ?: "")) }
                     .take(15)
             }
-            if (loading && results.isEmpty()) {
-                ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = 14.dp)
-                Spacer(Modifier.height(8.dp))
-                ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = 14.dp)
-            } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
-                Column {
-                    com.ascend.lifeos.ui.kit.EmptyState(Icons.Rounded.Search, "No results", "Try a different name or add your own below", Mod.Fuel)
-                    // Kap. 35: drei Wege statt Sackgasse
-                    val dym = remember(query) { com.ascend.lifeos.data.BasicFoods.didYouMean(query) }
-                    if (dym != null) {
-                        Spacer(Modifier.height(10.dp))
-                        WideGhost(Icons.Rounded.Search, "Did you mean “${dym.name}”?", Modifier.fillMaxWidth()) { onPick(dym) }
+            Crossfade(targetState = !(loading && results.isEmpty()), label = "searchResults", animationSpec = tween(400)) { hasResults ->
+                if (!hasResults) {
+                    Column {
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = 14.dp)
+                        Spacer(Modifier.height(8.dp))
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = 14.dp)
                     }
-                    if (!isDrinkQuery(query)) {
+                } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
+                    Column {
+                        com.ascend.lifeos.ui.kit.EmptyState(Icons.Rounded.Search, "No results", "Try a different name or add your own below", Mod.Fuel)
+                        // Kap. 35: drei Wege statt Sackgasse
+                        val dym = remember(query) { BasicFoods.didYouMean(query) }
+                        if (dym != null) {
+                            Spacer(Modifier.height(10.dp))
+                            WideGhost(Icons.Rounded.Search, "Did you mean “${dym.name}”?", Modifier.fillMaxWidth()) { onPick(dym) }
+                        }
+                        if (!isDrinkQuery(query)) {
+                            Spacer(Modifier.height(10.dp))
+                            WideGhost(Icons.Rounded.WaterDrop, "Build as a drink", Modifier.fillMaxWidth()) { onOpenDrinks() }
+                        }
                         Spacer(Modifier.height(10.dp))
-                        WideGhost(Icons.Rounded.WaterDrop, "Build as a drink", Modifier.fillMaxWidth()) { onOpenDrinks() }
+                        WideGhost(Icons.Rounded.Add, "Create \"$query\"", Modifier.fillMaxWidth()) { onCreate() }
                     }
-                    Spacer(Modifier.height(10.dp))
-                    WideGhost(Icons.Rounded.Add, "Create \"$query\"", Modifier.fillMaxWidth()) { onCreate() }
-                }
-            } else if (off.isNotEmpty()) {
-                Section("OPEN FOOD FACTS")
-                off.forEach { p ->
-                    ResultRow(
-                        title = p.name + (p.brand?.let { " · $it" } ?: ""),
-                        sub = per100Sub(p),
-                        score = p.nutriScore.uppercase(),
-                        onPlus = { onBasket(basket + defaultEntry(p, meal)); Haptics.tick(ctx) },
-                    ) { onPick(p) }
-                    Spacer(Modifier.height(8.dp))
+                } else if (off.isNotEmpty()) {
+                    Column {
+                        Section("OPEN FOOD FACTS")
+                        off.forEach { p ->
+                            ResultRow(
+                                title = p.name + (p.brand?.let { " · $it" } ?: ""),
+                                sub = per100Sub(p),
+                                score = p.nutriScore.uppercase(),
+                                onPlus = { onBasket(basket + defaultEntry(p, meal)); Haptics.tick(ctx) },
+                            ) { onPick(p) }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.height(0.dp))
                 }
             }
         }
@@ -474,7 +486,7 @@ private val DRINK_WORDS = listOf(
 )
 
 private fun isDrinkQuery(q: String): Boolean {
-    val n = com.ascend.lifeos.data.FoodRank.normalize(q)
+    val n = FoodRank.normalize(q)
     return n.length >= 3 && DRINK_WORDS.any { n.contains(it) || it.startsWith(n) }
 }
 
@@ -645,29 +657,31 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         product.nutriScore.takeIf { it.isNotBlank() }?.let { Spacer(Modifier.width(6.dp)); DetailBadge("NUTRI ${it.uppercase()}", TextDim) }
         if (product.additives.isNotEmpty()) { Spacer(Modifier.width(6.dp)); DetailBadge("${product.additives.size} ADD.", if (FoodScore.riskyAdditives(product).isNotEmpty()) Crit else TextDim) }
     }
-    if (showDetails) {
-        Spacer(Modifier.height(10.dp))
-        // full verdict narration (un-truncated)
-        (eval.pros.map { it to Good } + eval.cons.map { it to Crit }).forEach { (line, c) ->
-            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, lineHeight = 15.sp)
-        }
-        Spacer(Modifier.height(12.dp))
-        Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-        Spacer(Modifier.height(6.dp))
-        NutrientRow("Saturated fat", product.satFat100 * f, "g", 1.5, 5.0)
-        NutrientRow("Sugar", product.sugars100 * f, "g", 5.0, 22.5)
-        NutrientRow("Salt", product.salt100 * f, "g", 0.3, 1.5)
-        NutrientRow("Fiber", product.fiber100 * f, "g", 1.5, 4.5, inverse = true)
-        val risky = FoodScore.riskyAdditives(product).map { it.first }.toSet()
-        if (product.additives.isNotEmpty()) {
+    AnimatedVisibility(visible = showDetails) {
+        Column {
             Spacer(Modifier.height(10.dp))
-            Text("ADDITIVES", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Spacer(Modifier.height(4.dp))
-            FlowRowChips(product.additives.map { FoodScore.normAdditive(it) }) { e -> e in risky }
-        }
-        product.allergens.takeIf { it.isNotEmpty() }?.let {
-            Spacer(Modifier.height(8.dp))
-            Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = FS.s10, lineHeight = 14.sp)
+            // full verdict narration (un-truncated)
+            (eval.pros.map { it to Good } + eval.cons.map { it to Crit }).forEach { (line, c) ->
+                Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, lineHeight = 15.sp)
+            }
+            Spacer(Modifier.height(12.dp))
+            Text("PER ${g} ${if (product.portions.any { it.ml }) "ml" else "g"}", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Spacer(Modifier.height(6.dp))
+            NutrientRow("Saturated fat", product.satFat100 * f, "g", 1.5, 5.0)
+            NutrientRow("Sugar", product.sugars100 * f, "g", 5.0, 22.5)
+            NutrientRow("Salt", product.salt100 * f, "g", 0.3, 1.5)
+            NutrientRow("Fiber", product.fiber100 * f, "g", 1.5, 4.5, inverse = true)
+            val risky = FoodScore.riskyAdditives(product).map { it.first }.toSet()
+            if (product.additives.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                Text("ADDITIVES", color = TextDim, fontSize = FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Spacer(Modifier.height(4.dp))
+                FlowRowChips(product.additives.map { FoodScore.normAdditive(it) }) { e -> e in risky }
+            }
+            product.allergens.takeIf { it.isNotEmpty() }?.let {
+                Spacer(Modifier.height(8.dp))
+                Text("Allergens: ${it.joinToString(", ")}", color = TextMuted, fontSize = FS.s10, lineHeight = 14.sp)
+            }
         }
     }
 

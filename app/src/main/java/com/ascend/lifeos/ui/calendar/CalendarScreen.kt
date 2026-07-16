@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,7 +56,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ascend.lifeos.data.CalendarSync
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.WeatherRepo
 import com.ascend.lifeos.data.calendar.*
+import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.kit.*
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
@@ -114,8 +118,8 @@ fun eventLabel(t: EventType): String = when (t) {
     EventType.SCHOOL -> "School"; EventType.WORK -> "Work"
     // HOCKEY is the generic "my sport" block — the label follows the athlete.
     // "General health" is a profile, not a calendar category → neutral "Sport".
-    EventType.HOCKEY -> com.ascend.lifeos.data.training.SportCatalog
-        .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull())
+    EventType.HOCKEY -> SportCatalog
+        .byId(runCatching { Repo.data.profile.sport }.getOrNull())
         .let { if (it.id == "none") "Sport" else it.label }
     EventType.TRAINING -> "Training"; EventType.EXAM -> "Exam"; EventType.HOLIDAY -> "Holiday"
     EventType.PERSONAL -> "Personal"
@@ -145,9 +149,9 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 
     // "imports itself": throttled feed refresh on open (Room flows update the UI)
     LaunchedEffect(Unit) {
-        runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(ctx) }
+        runCatching { CalendarAutoSync.maybe(ctx) }
         if (!Prefs.bool(ctx, "hint_cal_ics", false)) {
-            val streak = com.ascend.lifeos.data.Repo.data.profile.streak
+            val streak = Repo.data.profile.streak
             if (streak >= 3) {
                 Prefs.setBool(ctx, "hint_cal_ics", true)
                 AppFeedback.show("Tip: Add ICS feeds in Settings for automatic timetable sync")
@@ -209,16 +213,20 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 
             // ── timeline ─────────────────────────────────────────────
             val t = timeline
-            if (t == null) {
-                Box(Modifier.fillMaxWidth().padding(vertical = 80.dp), contentAlignment = Alignment.Center) {
-                    Text("Reading timeline…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
+            Crossfade(targetState = t != null, label = "timeline", animationSpec = tween(400)) { hasTimeline ->
+                if (!hasTimeline) {
+                    Box(Modifier.fillMaxWidth().padding(vertical = 80.dp), contentAlignment = Alignment.Center) {
+                        Text("Reading timeline…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
+                    }
+                } else {
+                    t?.let { tl ->
+                        DayTimelineView(
+                            tl,
+                            onBlockTap = { if (!it.fromDevice) detailBlock = it },
+                            onSlotTap = { slot -> prefillStart = slot.startMin; addOpen = true },
+                        )
+                    }
                 }
-            } else {
-                DayTimelineView(
-                    t,
-                    onBlockTap = { if (!it.fromDevice) detailBlock = it },
-                    onSlotTap = { slot -> prefillStart = slot.startMin; addOpen = true },
-                )
             }
         }
 
@@ -750,14 +758,14 @@ private fun DayTimelineView(
         val weatherOn = Prefs.bool(ctx, Prefs.WEATHER_SLOTS, true)
         LaunchedEffect(weatherOn, t.day) {
             if (weatherOn && t.day == LocalDate.now()) {
-                runCatching { com.ascend.lifeos.data.WeatherRepo.refresh(ctx) }
+                runCatching { WeatherRepo.refresh(ctx) }
             }
         }
         t.freeSlots.forEach { slot ->
             val topMin = slot.startMin - HOUR_START * 60
             if (topMin >= 0) {
                 val weather = if (weatherOn && t.day == LocalDate.now()) {
-                    com.ascend.lifeos.data.WeatherRepo.slotTag(slot.startMin)
+                    WeatherRepo.slotTag(slot.startMin)
                 } else null
                 Box(
                     Modifier.padding(start = 30.dp, end = 2.dp)
@@ -1065,12 +1073,12 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
             // same-named/recurring instance inherits it (Ideensammlung).
             val ctx = LocalContext.current
             var outdoorTick by remember { mutableIntStateOf(0) }
-            val outdoor = remember(outdoorTick) { com.ascend.lifeos.data.WeatherRepo.isOutdoor(ctx, b.title) }
+            val outdoor = remember(outdoorTick) { WeatherRepo.isOutdoor(ctx, b.title) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                     .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                    .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
+                    .pressScale { Haptics.tick(ctx); WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1280,8 +1288,8 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Device calendar", color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
-                        val sportWord = com.ascend.lifeos.data.training.SportCatalog
-                            .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull())
+                        val sportWord = SportCatalog
+                            .byId(runCatching { Repo.data.profile.sport }.getOrNull())
                             .label.lowercase()
                         Text(
                             if (calPermission) "Connected — $sportWord sessions merge automatically"
@@ -1320,8 +1328,8 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
 private fun TaskBlocksSheet(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.calendar.TaskBlocks.rev
-    val tasks = com.ascend.lifeos.data.calendar.TaskBlocks.tasks(ctx)
+    @Suppress("UNUSED_EXPRESSION") TaskBlocks.rev
+    val tasks = TaskBlocks.tasks(ctx)
     var title by remember { mutableStateOf("") }
     var prio by remember { mutableIntStateOf(2) }
     var durMin by remember { mutableIntStateOf(45) }
@@ -1419,7 +1427,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                     .background(if (title.isBlank()) Mod.Calendar.copy(alpha = 0.25f) else Mod.Calendar)
                     .then(if (title.isNotBlank()) Modifier.pressScale {
-                        com.ascend.lifeos.data.calendar.TaskBlocks.add(
+                        TaskBlocks.add(
                             ctx, title, prio,
                             java.time.LocalDate.now().plusDays(deadlineDays.toLong()).toEpochDay(), durMin,
                         )
@@ -1431,7 +1439,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            tasks.sortedWith(compareBy<com.ascend.lifeos.data.calendar.TaskBlocks.JTask> { it.done }.thenByDescending { it.priority }.thenBy { it.deadlineEpochDay }).forEach { t ->
+            tasks.sortedWith(compareBy<TaskBlocks.JTask> { it.done }.thenByDescending { it.priority }.thenBy { it.deadlineEpochDay }).forEach { t ->
                 Row(
                     Modifier.fillMaxWidth().padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -1440,7 +1448,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         Modifier.size(19.dp).clip(CircleShape)
                             .background(if (t.done) Mod.Calendar else Color.Transparent)
                             .border(1.dp, if (t.done) Mod.Calendar else Ivory.copy(alpha = 0.25f), CircleShape)
-                            .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
+                            .pressScale { Haptics.tick(ctx); TaskBlocks.setDone(ctx, t.id, !t.done) },
                         contentAlignment = Alignment.Center,
                     ) { if (t.done) Text("✓", color = Void, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(11.dp))
@@ -1468,7 +1476,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         modifier = Modifier.clip(CircleShape)
                             .pressScale {
                                 if (taskArmed) { scope.launch {
-                                    com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id)
+                                    TaskBlocks.delete(ctx, t.id)
                                     AppFeedback.show("Task deleted")
                                 }; armedDeleteTask = null }
                                 else armedDeleteTask = t.id
@@ -1494,7 +1502,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                             // queries per open task × days-to-deadline — must be off
                             // the main thread or "Plan now" ANRs with a few tasks.
                             val placed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                runCatching { com.ascend.lifeos.data.calendar.TaskBlocks.plan(ctx) }.getOrDefault(0)
+                                runCatching { TaskBlocks.plan(ctx) }.getOrDefault(0)
                             }
                             planNote = "$placed placed into free slots ✓"
                         }

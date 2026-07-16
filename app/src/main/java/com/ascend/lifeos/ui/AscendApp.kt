@@ -53,6 +53,7 @@ import com.ascend.lifeos.data.finance.FinanceInsights
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.life.HabitMetrics
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.data.DeepLink
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.ShellMotion
 import com.ascend.lifeos.ui.motion.pressScale
@@ -198,9 +199,9 @@ fun AscendApp() {
     }
 
     // consume pending deep links from notifications / widgets
-    val pendingLink by com.ascend.lifeos.data.DeepLink.pending
+    val pendingLink by DeepLink.pending
     LaunchedEffect(pendingLink) {
-        com.ascend.lifeos.data.DeepLink.consume()?.let { navigate(it) }
+        DeepLink.consume()?.let { navigate(it) }
     }
 
     // a mode change can hide the screen you're on — fall back gracefully

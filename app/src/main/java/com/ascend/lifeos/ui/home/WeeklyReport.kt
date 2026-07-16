@@ -26,7 +26,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.ActivityStore
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
+import com.ascend.lifeos.data.prime.PrimeEngine
+import com.ascend.lifeos.data.skill.SkillMeta
+import com.ascend.lifeos.data.training.TrainingDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -63,7 +68,7 @@ data class WeekStats(
 
 suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO) {
     val weekAgo = System.currentTimeMillis() - 7L * 86_400_000
-    val dao = com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao()
+    val dao = TrainingDatabase.get(ctx).dao()
     val workouts = runCatching { dao.sessionCountSince(weekAgo) }.getOrDefault(0)
     val sets = runCatching { dao.totalSetsSince(weekAgo) }.getOrDefault(0)
     val reps = runCatching { dao.totalRepsSince(weekAgo) }.getOrDefault(0)
@@ -72,7 +77,7 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
     }.getOrDefault(0)
 
     // the universal activity log is part of the week's story too
-    val acts = runCatching { com.ascend.lifeos.data.ActivityStore.since(ctx, weekAgo) }.getOrDefault(emptyList())
+    val acts = runCatching { ActivityStore.since(ctx, weekAgo) }.getOrDefault(emptyList())
     val actMinutes = acts.sumOf { it.minutes }
     val actKm = acts.sumOf { it.distanceKm ?: 0.0 }
 
@@ -97,15 +102,15 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
     val reclaimed = com.ascend.lifeos.wellbeing.WellbeingStore.interceptCount(ctx) * 9
 
     val focusMin = runCatching {
-        com.ascend.lifeos.data.masterplan.MasterPlanDatabase.get(ctx).dao().domainsOnce()
-            .sumOf { com.ascend.lifeos.data.skill.SkillMeta.focusMinutesThisWeek(ctx, it.domain.id) }
+        MasterPlanDatabase.get(ctx).dao().domainsOnce()
+            .sumOf { SkillMeta.focusMinutesThisWeek(ctx, it.domain.id) }
     }.getOrDefault(0)
 
     // Directives come from the ONE synthesis engine (Prime), not a second
     // parallel weak-spot aggregator — the report is Prime's Sunday-cadence view,
     // so the two never tell a different story. Falls back to a single line if
     // Prime has nothing ranked yet (fresh user).
-    val recs = runCatching { com.ascend.lifeos.data.prime.PrimeEngine.buildCached(ctx).directives }
+    val recs = runCatching { PrimeEngine.buildCached(ctx).directives }
         .getOrDefault(emptyList())
         .take(3)
         .map { d -> d.text + (d.why.takeIf { it.isNotBlank() }?.let { " — $it" } ?: "") }

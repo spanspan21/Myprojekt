@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.FoodEntry
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.RecipeDb
+import com.ascend.lifeos.data.BasicFoods
+import com.ascend.lifeos.data.OwnRecipes
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.ShopItem
 import com.ascend.lifeos.ui.kit.AppFeedback
@@ -93,10 +95,10 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     var filter by remember { mutableStateOf("all") }
     val seed by remember { mutableIntStateOf((System.currentTimeMillis() / 3_600_000L).toInt()) }
     var expanded by remember { mutableStateOf<Long?>(null) }
-    @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.OwnRecipes.rev
+    @Suppress("UNUSED_EXPRESSION") OwnRecipes.rev
     var editorOpen by remember { mutableStateOf(false) }
     // 64 curated volumes now — show a real library slice, still day-rotated
-    val recipes = remember(filter, seed, com.ascend.lifeos.data.OwnRecipes.rev) { RecipeDb.suggest(seed, filter, remainKcal, 40) }
+    val recipes = remember(filter, seed, OwnRecipes.rev) { RecipeDb.suggest(seed, filter, remainKcal, 40) }
 
     // ---- pantry: "cook with what I have" ----
     var pantry by remember { mutableStateOf(listOf<String>()) }
@@ -333,12 +335,12 @@ private fun fitScore(r: RecipeDb.Recipe, remainKcal: Int, remainProt: Int): Int 
     val prot = if (remainProt > 0) (r.protein.toDouble() / remainProt).coerceAtMost(1.0) else 0.5
     // the goal decides what "fits" means: cut/recomp live on protein, fuel on
     // carbs — the same phase logic the coach runs (Helms/Barakat/ACSM)
-    val goal = runCatching { com.ascend.lifeos.data.Repo.data.profile.dietGoal }.getOrDefault("maintain")
+    val goal = runCatching { Repo.data.profile.dietGoal }.getOrDefault("maintain")
     val score = when (goal) {
         "lose", "recomp" -> 0.55 * within + 0.45 * prot
         "fuel" -> {
-            val p = com.ascend.lifeos.data.Repo.profile()
-            val eaten = com.ascend.lifeos.data.Repo.today().meals.sumOf { it.carbs }
+            val p = Repo.profile()
+            val eaten = Repo.today().meals.sumOf { it.carbs }
             val remainCarbs = (p.carbGoal - eaten).coerceAtLeast(0)
             val carb = if (remainCarbs > 0) (r.carbs.toDouble() / remainCarbs).coerceAtMost(1.0) else 0.5
             0.55 * within + 0.15 * prot + 0.30 * carb
@@ -463,11 +465,11 @@ private fun RecipeCard(
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     HudButton("Log 1 serving", Modifier.weight(1f)) {
-                        val nut = com.ascend.lifeos.data.RecipeDb.nutrientsPerServing(r)
+                        val nut = RecipeDb.nutrientsPerServing(r)
                         Repo.addFood(FoodEntry(
                             id = "", name = r.title, meal = if (r.meal == "b") "b" else "d",
                             kcal = r.kcal, protein = r.protein, carbs = r.carbs, fat = r.fat,
-                            grams = com.ascend.lifeos.data.RecipeDb.servingGrams(r),
+                            grams = RecipeDb.servingGrams(r),
                             nutrients = nut,
                             microsEstimated = nut.isNotEmpty(),
                         ))
@@ -492,7 +494,7 @@ private fun RecipeCard(
                         modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale {
                             if (armed) {
                                 Haptics.confirm(ctx)
-                                com.ascend.lifeos.data.OwnRecipes.delete(r.id)
+                                OwnRecipes.delete(r.id)
                                 AppFeedback.show("Recipe deleted")
                             } else armed = true
                         }.padding(horizontal = 6.dp, vertical = 3.dp),
@@ -906,7 +908,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
     var ingGrams by remember { mutableStateOf("100") }
     val ingHits = remember(ingQuery) {
         if (ingQuery.trim().length < 2) emptyList()
-        else com.ascend.lifeos.data.BasicFoods.search(ingQuery).take(4)
+        else BasicFoods.search(ingQuery).take(4)
     }
 
     androidx.compose.ui.window.Dialog(
@@ -985,7 +987,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             Spacer(Modifier.height(20.dp))
             val valid = title.isNotBlank() && parts.isNotEmpty()
             HudButton("Save recipe", Modifier.fillMaxWidth(), enabled = valid) {
-                com.ascend.lifeos.data.OwnRecipes.save(
+                OwnRecipes.save(
                     RecipeDb.Recipe(
                         id = 0L, title = title.trim(), meal = if (isBreakfast) "b" else "main",
                         parts = parts, kcal = 0, protein = 0, carbs = 0, fat = 0,

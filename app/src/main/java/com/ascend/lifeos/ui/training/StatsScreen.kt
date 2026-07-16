@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.ActivityStore
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
@@ -96,8 +97,8 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         // ── Activities: endurance volume + bests (the gym isn't the only work) ──
         item {
             val actCtx = androidx.compose.ui.platform.LocalContext.current
-            val actRev = com.ascend.lifeos.data.ActivityStore.rev
-            val acts = remember(actRev) { com.ascend.lifeos.data.ActivityStore.all(actCtx) }
+            val actRev = ActivityStore.rev
+            val acts = remember(actRev) { ActivityStore.all(actCtx) }
             // review r3 #3: the CHART speaks the strain ledger's language, so it
             // must use the same deduped view (a manual same-sport log on a
             // calendar-block day counts once, exactly like ATL/CTL). The bests
@@ -105,7 +106,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             val weekLoads by produceState(initialValue = FloatArray(8), actRev) {
                 value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     val today = java.time.LocalDate.now().toEpochDay()
-                    val byDay = com.ascend.lifeos.data.ActivityStore
+                    val byDay = ActivityStore
                         .countedLoadByEpochDay(actCtx, today - 55, today)
                     FloatArray(8).also { arr ->
                         byDay.forEach { (d, load) ->
@@ -322,9 +323,9 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
     // logged activities are training days too — a runner's calendar must not
     // read as 12 empty weeks
     val freqCtx = androidx.compose.ui.platform.LocalContext.current
-    val actRev = com.ascend.lifeos.data.ActivityStore.rev
+    val actRev = ActivityStore.rev
     remember(actRev) {
-        com.ascend.lifeos.data.ActivityStore.all(freqCtx).forEach { e ->
+        ActivityStore.all(freqCtx).forEach { e ->
             val c = Calendar.getInstance().apply { timeInMillis = e.ts }
             daySet.add(c.get(Calendar.DAY_OF_YEAR) + c.get(Calendar.YEAR) * 366)
         }

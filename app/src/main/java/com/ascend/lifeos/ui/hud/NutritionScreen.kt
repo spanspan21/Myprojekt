@@ -79,8 +79,17 @@ import com.ascend.lifeos.data.NutTotals
 import com.ascend.lifeos.data.OwnRecipes
 import com.ascend.lifeos.data.Profile
 import com.ascend.lifeos.data.FastingCalc
+import com.ascend.lifeos.data.ActivityStore
+import com.ascend.lifeos.data.FoodScore
+import com.ascend.lifeos.data.MACRO_IDS
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.WaterCalc
+import com.ascend.lifeos.data.WeatherRepo
+import com.ascend.lifeos.data.calendar.CalendarDatabase
+import com.ascend.lifeos.data.nutrition.CoachRitual
+import com.ascend.lifeos.data.nutrition.DietPhase
+import com.ascend.lifeos.data.training.ActivityTypes
+import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.TickerNumber
@@ -167,16 +176,16 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
     val locPermLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
     ) { granted -> if (granted) { /* refresh happens below on recompose */ } }
-    androidx.compose.runtime.LaunchedEffect(Unit) { com.ascend.lifeos.data.WeatherRepo.refresh(ctx) }
-    val hot = com.ascend.lifeos.data.WeatherRepo.hot && isToday
-    val hasLoc = com.ascend.lifeos.data.WeatherRepo.hasLocationPermission(ctx)
+    androidx.compose.runtime.LaunchedEffect(Unit) { WeatherRepo.refresh(ctx) }
+    val hot = WeatherRepo.hot && isToday
+    val hasLoc = WeatherRepo.hasLocationPermission(ctx)
 
     // Kap. 45: Fuel kennt den Kalender — Spieltag-Zeile aus dem bestehenden Protokoll
     val gameDay by androidx.compose.runtime.produceState<String?>(null) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching {
                 val today = java.time.LocalDate.now().toEpochDay()
-                com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                CalendarDatabase.get(ctx).dao()
                     .eventsInRangeOnce(today, today)
                     .filter { it.type == "HOCKEY" && !it.allDay }
                     .minByOrNull { it.startMin }
@@ -333,12 +342,12 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             val trainingDay = day.workoutDone || hockeyToday
             // review r3 #1: memoized — the store scan must not run on every
             // water-tap recomposition (and never cold-inits the store mid-frame)
-            val actRev = com.ascend.lifeos.data.ActivityStore.rev
+            val actRev = ActivityStore.rev
             val todayActivity = remember(dayKey, day.workoutDone, actRev) {
                 if (isToday && day.workoutDone) {
-                    com.ascend.lifeos.data.ActivityStore.all(ctx)
-                        .firstOrNull { com.ascend.lifeos.data.ActivityStore.dayKeyOf(it.ts) == dayKey }
-                        ?.let { com.ascend.lifeos.data.training.ActivityTypes.byId(it.type) }
+                    ActivityStore.all(ctx)
+                        .firstOrNull { ActivityStore.dayKeyOf(it.ts) == dayKey }
+                        ?.let { ActivityTypes.byId(it.type) }
                 } else null
             }
             val trainBonusL = Prefs.int(ctx, Prefs.WATER_TRAIN_BONUS, 500) / 1000f
@@ -351,7 +360,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 hot = hot, canEdit = isToday,
                 bonusReason = when {
                     hockeyToday -> {
-                        val sp = com.ascend.lifeos.data.training.SportCatalog.byId(p.sport)
+                        val sp = SportCatalog.byId(p.sport)
                         "${sp.emoji} ${sp.label} · $bonusLabel"
                     }
                     day.workoutDone ->
@@ -419,11 +428,11 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
  */
 @Composable
 private fun JarvisReactionBanner() {
-    val reaction = com.ascend.lifeos.data.Repo.jarvisReaction.value
+    val reaction = Repo.jarvisReaction.value
     androidx.compose.runtime.LaunchedEffect(reaction) {
         if (reaction != null) {
             kotlinx.coroutines.delay(4600)
-            com.ascend.lifeos.data.Repo.jarvisReaction.value = null
+            Repo.jarvisReaction.value = null
         }
     }
     var last by remember { mutableStateOf("") }
@@ -612,10 +621,10 @@ private fun CoachCheckInCard() {
     val cctx = androidx.compose.ui.platform.LocalContext.current
     var refresh by remember { mutableIntStateOf(0) }
     var gone by remember { mutableStateOf(false) }
-    val state by androidx.compose.runtime.produceState<com.ascend.lifeos.data.nutrition.CoachRitual.State?>(null, refresh) {
+    val state by androidx.compose.runtime.produceState<CoachRitual.State?>(null, refresh) {
         value = runCatching {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                com.ascend.lifeos.data.nutrition.CoachRitual.weekly(cctx)
+                CoachRitual.weekly(cctx)
             }
         }.getOrNull()
     }
@@ -651,7 +660,7 @@ private fun CoachCheckInCard() {
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(Ivory.copy(alpha = 0.04f))
-                        .pressScale { Haptics.tick(cctx); com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
+                        .pressScale { Haptics.tick(cctx); CoachRitual.snooze(); gone = true }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text("Okay", color = TextDim, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
             } else if (c != null) {
@@ -686,13 +695,13 @@ private fun CoachCheckInCard() {
                 // Weight-holding phases (maintain/recomp/fuel) have no rate to dial.
                 if (!c.phase.holdsWeight) {
                     Spacer(Modifier.height(10.dp))
-                    val zone = if (c.phase == com.ascend.lifeos.data.nutrition.DietPhase.CUT)
+                    val zone = if (c.phase == DietPhase.CUT)
                         listOf(0.25, 0.5, 0.75, 1.0) else listOf(0.25, 0.35, 0.5)
-                    val currentRate = com.ascend.lifeos.data.Repo.data.profile.dietRatePct ?: c.phase.defaultRate
+                    val currentRate = Repo.data.profile.dietRatePct ?: c.phase.defaultRate
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         zone.forEach { r ->
                             HudChip("${r}%/wk", selected = kotlin.math.abs(currentRate - r) < 0.01) {
-                                com.ascend.lifeos.data.Repo.setDietRate(r)
+                                Repo.setDietRate(r)
                                 refresh++
                             }
                         }
@@ -707,7 +716,7 @@ private fun CoachCheckInCard() {
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(11.dp))
                             .pressScale {
                                 Haptics.confirm(cctx)
-                                com.ascend.lifeos.data.nutrition.CoachRitual.adopt(c)
+                                CoachRitual.adopt(c)
                                 gone = true
                                 AppFeedback.show("Targets adopted")
                             }
@@ -717,7 +726,7 @@ private fun CoachCheckInCard() {
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Ivory.copy(alpha = 0.04f))
                             .pressScale {
-                                com.ascend.lifeos.data.nutrition.CoachRitual.snooze()
+                                CoachRitual.snooze()
                                 gone = true
                             }
                             .padding(horizontal = 14.dp, vertical = 8.dp),
@@ -1002,7 +1011,7 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
 // ---- meal slots ----------------------------------------------------------------
 
 @Composable
-private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.data.FoodEntry>, expanded: Boolean, dayKey: String, onToggle: () -> Unit) {
+private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expanded: Boolean, dayKey: String, onToggle: () -> Unit) {
     val kcal = meals.sumOf { it.kcal }
     val logged = meals.isNotEmpty()
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -1069,7 +1078,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                         }
                         // quality badge at a glance — ultra-processing + additives (MASTERY)
                         if (e.nova != null || e.additives.isNotEmpty()) {
-                            val risky = com.ascend.lifeos.data.FoodScore.hasRiskyAdditive(e.additives)
+                            val risky = FoodScore.hasRiskyAdditive(e.additives)
                             val c = if (e.nova == 4 || risky) Crit else if (e.nova == 1) Good else TextDim
                             val txt = buildString {
                                 e.nova?.let { append("NOVA $it") }
@@ -1199,7 +1208,7 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
             grams, favorite = false, slotBias = 0.0,
             // carry the staple's vitamins/minerals onto the logged row (scaled to
             // the portion) — the classics have full micro data, don't drop it
-            micros = prod.per100.filterKeys { it !in com.ascend.lifeos.data.MACRO_IDS }.mapValues { it.value * f },
+            micros = prod.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
         )
     }
     return cands.sortedWith(compareByDescending<GapPick> { it.score }.thenBy { it.entry.kcal }).take(3)

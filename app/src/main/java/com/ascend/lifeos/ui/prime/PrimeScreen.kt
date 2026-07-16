@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -279,25 +280,29 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
                     onTap = if (loading) ({}) else onRescore,
                 )
                 Spacer(Modifier.height(14.dp))
-                when {
-                    loading -> {
-                        ShimmerBox(94.dp, 46.dp, 13.dp)     // the number, thinking
-                        Spacer(Modifier.height(9.dp))
-                        ShimmerBox(58.dp, 11.dp, 6.dp)       // the tier
+                Crossfade(targetState = loading, label = "primeHero", animationSpec = tween(400)) { isLoading ->
+                    if (isLoading) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            ShimmerBox(94.dp, 46.dp, 13.dp)     // the number, thinking
+                            Spacer(Modifier.height(9.dp))
+                            ShimmerBox(58.dp, 11.dp, 6.dp)       // the tier
+                        }
+                    } else if (index != null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            val shown = com.ascend.lifeos.ui.kit.countUp(index, durationMs = 1100)
+                            Text(
+                                "$shown", color = TextPrimary, fontFamily = Display,
+                                fontStyle = DisplayItalic,
+                                fontSize = FS.s56, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
+                            )
+                            Text(
+                                tierLabel, color = tier, fontFamily = MicroLabel,
+                                fontSize = FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
+                            )
+                        }
+                    } else {
+                        Text("—", color = TextMuted, fontFamily = Display, fontSize = FS.s46, fontWeight = FontWeight.ExtraBold)
                     }
-                    index != null -> {
-                        val shown = com.ascend.lifeos.ui.kit.countUp(index, durationMs = 1100)
-                        Text(
-                            "$shown", color = TextPrimary, fontFamily = Display,
-                            fontStyle = DisplayItalic,
-                            fontSize = FS.s56, fontWeight = FontWeight(600), letterSpacing = (-1.5).sp,
-                        )
-                        Text(
-                            tierLabel, color = tier, fontFamily = MicroLabel,
-                            fontSize = FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 3.sp,
-                        )
-                    }
-                    else -> Text("—", color = TextMuted, fontFamily = Display, fontSize = FS.s46, fontWeight = FontWeight.ExtraBold)
                 }
             } else Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
@@ -351,17 +356,22 @@ private fun PrimeHero(index: Int?, subScores: List<Triple<String, Int, String>>,
                 "PRIME INDEX", color = Champagne, fontFamily = Display, fontSize = FS.s9,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp, modifier = Modifier.padding(top = 8.dp),
             )
-            when {
-                loading -> {
-                    Spacer(Modifier.height(20.dp))
-                    repeat(6) { i ->
-                        if (i > 0) Spacer(Modifier.height(15.dp))
-                        ShimmerBar()
+            Crossfade(targetState = loading, label = "primeBars", animationSpec = tween(400)) { isLoading ->
+                if (isLoading) {
+                    Column {
+                        Spacer(Modifier.height(20.dp))
+                        repeat(6) { i ->
+                            if (i > 0) Spacer(Modifier.height(15.dp))
+                            ShimmerBar()
+                        }
                     }
-                }
-                subScores.isNotEmpty() -> {
-                    Spacer(Modifier.height(20.dp))
-                    subScores.forEachIndexed { i, (name, score, why) -> AnimatedSubBar(name, score, why, i) }
+                } else if (subScores.isNotEmpty()) {
+                    Column {
+                        Spacer(Modifier.height(20.dp))
+                        subScores.forEachIndexed { i, (name, score, why) -> AnimatedSubBar(name, score, why, i) }
+                    }
+                } else {
+                    Spacer(Modifier.height(0.dp))
                 }
             }
         }

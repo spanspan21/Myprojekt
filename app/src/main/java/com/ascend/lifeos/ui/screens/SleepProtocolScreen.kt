@@ -25,13 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.core.prevKey
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.sleep.NightLog
 import com.ascend.lifeos.data.sleep.SleepProtocol
 import com.ascend.lifeos.data.sleep.SleepStore
 import com.ascend.lifeos.ui.kit.*
-import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
 // ─── SLEEP PROTOCOL — CBT-I: restriction + stimulus control ──────────────────
@@ -70,9 +70,9 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(18.dp))
 
         // ── sleep score hero — the ONE number for last night ─────────
-        val h = com.ascend.lifeos.data.Repo.data.health
-        val sleepScore = com.ascend.lifeos.data.Repo.sleepScore(h)
-        val sleepDebt = com.ascend.lifeos.data.Repo.sleepDebtMin()
+        val h = Repo.data.health
+        val sleepScore = Repo.sleepScore(h)
+        val sleepDebt = Repo.sleepDebtMin()
         if (sleepScore != null || h?.sleepMin != null) {
             Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -189,7 +189,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
             Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    val sleepNeed = com.ascend.lifeos.data.Repo.sleepNeedMin()
+                    val sleepNeed = Repo.sleepNeedMin()
                     val targetLabel = if (sleepNeed % 60 == 0) "TARGET ${sleepNeed / 60}H" else "TARGET ${sleepNeed / 60}H ${sleepNeed % 60}M"
                     Text(targetLabel, color = TextDim, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                     Text(lastMin?.let { fmtDur(it) } ?: "—", color = if (lastMin != null && lastMin >= sleepNeed) Good else Warn, style = metricStyle(34))

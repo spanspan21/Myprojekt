@@ -25,6 +25,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.HealthBridge
+import com.ascend.lifeos.data.MonthlyPdf
+import com.ascend.lifeos.data.NutritionCalc
+import com.ascend.lifeos.data.WaterCalc
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.data.Backup
 import com.ascend.lifeos.data.CrashLog
@@ -33,7 +37,13 @@ import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Protocols
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.cloud.CloudSync
+import com.ascend.lifeos.data.finance.CsvImport
+import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.life.LifeStores
+import com.ascend.lifeos.data.masterplan.importUserPlan
+import com.ascend.lifeos.data.training.PlateMath
+import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -63,7 +73,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                 }.getOrNull()
                 val r = if (text.isNullOrBlank()) Result.failure(Exception("empty file"))
-                    else com.ascend.lifeos.data.masterplan.importUserPlan(ctx, text)
+                    else importUserPlan(ctx, text)
                 planImportState = r.fold({ "Imported plan '$it' ✓" }, { "Import failed: ${it.message}" })
             }
         }
@@ -80,7 +90,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                 }.getOrNull()
                 val r = if (text.isNullOrBlank()) Result.failure(Exception("empty file"))
-                    else com.ascend.lifeos.data.finance.CsvImport.import(ctx, text)
+                    else CsvImport.import(ctx, text)
                 csvImportState = r.fold({ "Imported $it transactions ✓" }, { "Import failed: ${it.message}" })
             }
         }
@@ -130,7 +140,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── PROFILE — the numbers every target is computed from ──────
         var profileOpen by remember { mutableStateOf(false) }
         SettingsSection("Profile") {
-            val p = com.ascend.lifeos.data.Repo.profile()
+            val p = Repo.profile()
             ActionRow(
                 "Body profile & targets",
                 "${if (p.sex == "m") "M" else "F"} · ${p.age} y · ${p.heightCm} cm · ${p.weightKg} kg · ${p.kcalGoal} kcal",
@@ -242,7 +252,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
             ToggleRow("Round-up savings", "Round each expense up to the euro into a savings goal", Prefs.ROUNDUP_ON, false)
             if (Prefs.bool(ctx, Prefs.ROUNDUP_ON, false)) {
-                val goals = remember { com.ascend.lifeos.data.finance.FinanceStore.saveGoals(ctx) }
+                val goals = remember { FinanceStore.saveGoals(ctx) }
                 if (goals.size > 1) {
                     var selGoal by remember { mutableStateOf(Prefs.string(ctx, Prefs.ROUNDUP_GOAL_ID, goals.first().id)) }
                     Row(Modifier.fillMaxWidth().padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -372,7 +382,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     Text("For the plate calculator", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    com.ascend.lifeos.data.training.PlateMath.BARS.forEach { bar ->
+                    PlateMath.BARS.forEach { bar ->
                         val sel = bar.id == barId
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
@@ -398,15 +408,15 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
             )
             Spacer(Modifier.height(7.dp))
-            var sportId by remember { mutableStateOf(com.ascend.lifeos.data.Repo.data.profile.sport) }
+            var sportId by remember { mutableStateOf(Repo.data.profile.sport) }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                com.ascend.lifeos.data.training.SportCatalog.ALL.forEach { sp ->
+                SportCatalog.ALL.forEach { sp ->
                     val on = sportId == sp.id
                     Box(
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .pressScale { sportId = sp.id; com.ascend.lifeos.data.Repo.setSport(sp.id) }
+                            .pressScale { sportId = sp.id; Repo.setSport(sp.id) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text("${sp.emoji} ${sp.label}", color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -418,7 +428,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             )
 
             // season phase — only meaningful for periodised team sports
-            if (com.ascend.lifeos.data.training.SportCatalog.byId(sportId).usesSeasons) {
+            if (SportCatalog.byId(sportId).usesSeasons) {
             Spacer(Modifier.height(10.dp))
             Text(
                 "SEASON PHASE", color = TextDim, fontFamily = Display,
@@ -490,7 +500,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 actLevel = id
                                 val p = Repo.profile()
                                 Repo.setBodyStats(p.sex, p.age, p.heightCm, p.weightKg, id, p.dietGoal)
-                                val t = com.ascend.lifeos.data.NutritionCalc.compute(p.sex, p.age, p.heightCm, p.weightKg, id, p.dietGoal)
+                                val t = NutritionCalc.compute(p.sex, p.age, p.heightCm, p.weightKg, id, p.dietGoal)
                                 Repo.setNutritionGoals(t.kcal, t.protein, t.carbs, t.fat)
                             }
                             .padding(horizontal = 11.dp, vertical = 7.dp),
@@ -580,7 +590,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { spreadG = (spreadG - 5).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.SPREAD_FULL_G, spreadG) },
                 onInc = { spreadG = (spreadG + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.SPREAD_FULL_G, spreadG) },
             )
-            var glassMl by remember { mutableIntStateOf(com.ascend.lifeos.data.WaterCalc.glassMl()) }
+            var glassMl by remember { mutableIntStateOf(WaterCalc.glassMl()) }
             GoalStepperRow("Glass size", "${glassMl} ml",
                 onDec = { glassMl = (glassMl - 50).coerceAtLeast(150); Prefs.setInt(ctx, Prefs.GLASS_ML, glassMl) },
                 onInc = { glassMl = (glassMl + 50).coerceAtMost(500); Prefs.setInt(ctx, Prefs.GLASS_ML, glassMl) },
@@ -1008,25 +1018,25 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ActionRow("Weekly report", "The last 7 days across every module") { onOpenReport() }
             ActionRow(
                 "Health bridge",
-                bridgeState ?: com.ascend.lifeos.data.HealthBridge.statusLine(ctx),
+                bridgeState ?: HealthBridge.statusLine(ctx),
             ) {
                 bridgeState = "Sync requested — check back in a moment"
-                com.ascend.lifeos.data.HealthBridge.syncNow(ctx)
+                HealthBridge.syncNow(ctx)
                 scope.launch {
                     kotlinx.coroutines.delay(6000)
-                    bridgeState = com.ascend.lifeos.data.HealthBridge.statusLine(ctx)
+                    bridgeState = HealthBridge.statusLine(ctx)
                 }
             }
             ActionRow(
                 "Sync to web dashboard",
-                syncState ?: if (com.ascend.lifeos.data.cloud.CloudSync.enabled())
+                syncState ?: if (CloudSync.enabled())
                     "Push all your data to your private online dashboard"
                 else "Not configured in this build",
             ) {
-                if (com.ascend.lifeos.data.cloud.CloudSync.enabled()) {
+                if (CloudSync.enabled()) {
                     syncState = "Syncing…"
                     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                        val r = com.ascend.lifeos.data.cloud.CloudSync.pushNow(ctx)
+                        val r = CloudSync.pushNow(ctx)
                         syncState = r.fold(
                             { "Synced ✓ ($it sections) — open your dashboard" },
                             { "Failed: ${it.message?.take(80)}" },
@@ -1092,7 +1102,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             ActionRow("Month report PDF", pdfState ?: "One page · saved to Downloads/JARVIS") {
                 pdfState = "Rendering…"
                 scope.launch {
-                    val uri = com.ascend.lifeos.data.MonthlyPdf.export(ctx)
+                    val uri = MonthlyPdf.export(ctx)
                     pdfState = if (uri != null) "Saved to Downloads/JARVIS ✓" else "Export failed"
                     if (uri != null) {
                         val view = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
@@ -1161,7 +1171,7 @@ private fun RescheduleSettings() {
     var buffer by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.AFTER_SCHOOL_BUFFER_MIN, 45)) }
     var latestH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.LATEST_TRAIN_START_MIN, 21 * 60) / 60) }
     var askH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RESCHEDULE_HOUR, 15)) }
-    fun rearm() = runCatching { com.ascend.lifeos.data.Notifier.schedule(ctx) }
+    fun rearm() = runCatching { Notifier.schedule(ctx) }
 
     ToggleRow("Reschedule missed sessions", "Ask in the afternoon to move a skipped morning session", on) {
         on = it; Prefs.setBool(ctx, Prefs.RESCHEDULE_ON, it); rearm()

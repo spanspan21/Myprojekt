@@ -9,7 +9,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ascend.lifeos.data.ActivityStore
+import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.SoundFx
+import com.ascend.lifeos.data.calendar.CalendarRepo
+import com.ascend.lifeos.data.calendar.EventType
 import com.ascend.lifeos.data.training.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -121,7 +127,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // the week counts every unit — gym sessions AND logged activities
         // (same number the dashboard header and the share card show)
         val acts = runCatching {
-            com.ascend.lifeos.data.ActivityStore.since(getApplication(), startOfWeek).size
+            ActivityStore.since(getApplication(), startOfWeek).size
         }.getOrDefault(0)
         weekSessions = dao.sessionCountSince(startOfWeek) + acts
         weekDoneNames = dao.sessionsSince(startOfWeek)
@@ -138,7 +144,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     // ── Train brain: profile · plan · placement ─────────────────────────────
 
     val fitnessProfile: FitnessProfile?
-        get() = TrainBrain.profile(com.ascend.lifeos.data.Repo.data.profile.assessResults)
+        get() = TrainBrain.profile(Repo.data.profile.assessResults)
 
     var weekPlan by mutableStateOf<WeekPlan?>(null)
         private set
@@ -164,20 +170,20 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     /** Custom mode: place one session on a chosen day + time (replacing its block). */
     fun placeSessionManually(session: PlannedSession, day: java.time.LocalDate, startMin: Int) =
         viewModelScope.launch(Dispatchers.IO) {
-            val p = com.ascend.lifeos.data.Repo.data.profile
+            val p = Repo.data.profile
             val len = maxOf(p.sessionLen, session.estMin)
             // one block per session name: drop the old planned block for this
             // session, then write the new one at the chosen slot
             runCatching {
-                val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(getApplication())
+                val dao = CalendarRepo.dao(getApplication())
                 val from = java.time.LocalDate.now().minusDays(14).toEpochDay()
                 val to = java.time.LocalDate.now().plusDays(21).toEpochDay()
                 dao.eventsInRangeOnce(from, to)
-                    .filter { it.type == com.ascend.lifeos.data.calendar.EventType.TRAINING.name && it.note == "plan" && it.title == session.name }
+                    .filter { it.type == EventType.TRAINING.name && it.note == "plan" && it.title == session.name }
                     .forEach { dao.delete(it.id) }
-                com.ascend.lifeos.data.calendar.CalendarRepo.upsert(
+                CalendarRepo.upsert(
                     getApplication(), title = session.name,
-                    type = com.ascend.lifeos.data.calendar.EventType.TRAINING,
+                    type = EventType.TRAINING,
                     day = day, startMin = startMin, endMin = startMin + len, note = "plan",
                 )
             }
@@ -192,11 +198,11 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Mesocycle week 0..4 — advances once per ISO week (4 build + 1 deload). */
     fun currentTrainWeek(): Int {
-        val p = com.ascend.lifeos.data.Repo.data.profile
+        val p = Repo.data.profile
         val week = com.ascend.lifeos.core.isoWeek()
         if (p.trainWeekStamp != week) {
             val next = if (p.trainWeekStamp == null) p.trainWeekIndex else (p.trainWeekIndex + 1) % 5
-            com.ascend.lifeos.data.Repo.setTrainWeek(next, week)
+            Repo.setTrainWeek(next, week)
             return next
         }
         return p.trainWeekIndex
@@ -225,7 +231,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // Clear stale/past training blocks first (both modes) — including legacy
         // ones written before the note="plan" marker, which is what piled up in
         // the calendar. Future manual events are untouched.
-        runCatching { com.ascend.lifeos.data.calendar.CalendarRepo.clearPastTraining(getApplication()) }
+        runCatching { CalendarRepo.clearPastTraining(getApplication()) }
         // A deload is a real 7-day week: restore it from prefs each time we build the
         // plan, so it survives an app restart and expires on its own after the week.
         val deloadUntil = Prefs.int(getApplication(), Prefs.DELOAD_UNTIL, 0)
@@ -237,20 +243,20 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             getApplication(), Prefs.TRAIN_EASY_DAY, "",
         ) == com.ascend.lifeos.core.todayKey()
         if (easyOverride) deloadActive = true
-        val p = com.ascend.lifeos.data.Repo.data.profile
+        val p = Repo.data.profile
         val best = runCatching { dao.bestRepsAll() }.getOrDefault(emptyList())
             .associate { it.exerciseId to it.best }
         val chainLv = progressions.value.associate { it.groupKey to it.currentLevel }
         val goals = p.skillGoals.mapNotNull { SkillCatalog.byId(it) }
-        val readiness = com.ascend.lifeos.data.Repo.recoveryScore()
+        val readiness = Repo.recoveryScore()
         val fresh = runCatching { MuscleRecovery.compute(getApplication()) }.getOrNull()
         muscleFreshness = fresh
         // exam within the next 7 days → trimmed volume
         val examSoon = runCatching {
             val today = java.time.LocalDate.now()
-            com.ascend.lifeos.data.calendar.CalendarRepo.dao(getApplication())
+            CalendarRepo.dao(getApplication())
                 .eventsInRangeOnce(today.toEpochDay(), today.plusDays(7).toEpochDay())
-                .any { it.type == com.ascend.lifeos.data.calendar.EventType.EXAM.name }
+                .any { it.type == EventType.EXAM.name }
         }.getOrDefault(false)
 
         // RPE feedback loop: if the most recent session averaged RPE ≥ 9.3 across
@@ -311,7 +317,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
      * observer, so the immediate call just makes it instant.
      */
     fun applyAssessment() = viewModelScope.launch(Dispatchers.IO) {
-        val profile = TrainBrain.profile(com.ascend.lifeos.data.Repo.data.profile.assessResults)
+        val profile = TrainBrain.profile(Repo.data.profile.assessResults)
         if (profile != null) {
             val patternByChain = listOf(
                 "pushups" to Pattern.PUSH, "dips" to Pattern.DIP, "pullups" to Pattern.PULL,
@@ -329,7 +335,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun scheduleWeek() = viewModelScope.launch(Dispatchers.IO) {
-        val p = com.ascend.lifeos.data.Repo.data.profile
+        val p = Repo.data.profile
         runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }
         scheduledOk = true
     }
@@ -339,7 +345,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Self-repair pass: fix scheduled sessions that reality broke. */
     fun autoRescheduleCheck() = viewModelScope.launch(Dispatchers.IO) {
-        val p = com.ascend.lifeos.data.Repo.data.profile
+        val p = Repo.data.profile
         val moved = runCatching {
             PlanGenerator.autoReschedule(getApplication(), p.sessionLen)
         }.getOrDefault(emptyList())
@@ -758,8 +764,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val ctx = getApplication<Application>()
         if (Prefs.bool(ctx, Prefs.REST_NOTIFICATION, true)) {
             runCatching {
-                com.ascend.lifeos.data.Notifier.ensureChannel(ctx)
-                val n = androidx.core.app.NotificationCompat.Builder(ctx, com.ascend.lifeos.data.Notifier.CHANNEL)
+                Notifier.ensureChannel(ctx)
+                val n = androidx.core.app.NotificationCompat.Builder(ctx, Notifier.CHANNEL)
                     .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                     .setContentTitle("Rest · ${seconds}s")
                     .setContentText("Back under the bar when it ends")
@@ -821,20 +827,20 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             }.getOrDefault(emptyList())
             lastSummary = WorkoutSummary(sessionName, totalSets, totalReps, durMin, sessionPrs, prim, sec, delta, tonnage)
             if (sessionPrs.isNotEmpty()) {
-                runCatching { com.ascend.lifeos.data.SoundFx.levelUp(getApplication()) }
+                runCatching { SoundFx.levelUp(getApplication()) }
             } else if (totalSets > 0) {
-                runCatching { com.ascend.lifeos.data.SoundFx.confirm(getApplication()) }
+                runCatching { SoundFx.confirm(getApplication()) }
             }
             refreshTodayStats()
             refreshFreshness()
         }
         // protein window: nudge in ~90 min unless food gets logged first
         if (totalSets > 0) {
-            runCatching { com.ascend.lifeos.data.Notifier.scheduleProteinNudge(getApplication()) }
+            runCatching { Notifier.scheduleProteinNudge(getApplication()) }
             // bridge into the day record: streak, widget, water bonus, load headroom
-            runCatching { com.ascend.lifeos.data.Repo.markTrained(totalSets) }
+            runCatching { Repo.markTrained(totalSets) }
             // learn when you actually train → smarter reschedule default (idea #5)
-            runCatching { com.ascend.lifeos.data.training.TrainingReschedule.recordTrainedNow(getApplication()) }
+            runCatching { TrainingReschedule.recordTrainedNow(getApplication()) }
         }
 
         activeSessionId = null
@@ -935,9 +941,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             rpes.size >= 6 && rpes.average() >= 8.8
         }.getOrDefault(false)
         val underslept = runCatching {
-            val need = com.ascend.lifeos.data.Repo.sleepNeedMin()
-            val nights = com.ascend.lifeos.data.Repo.lastDayKeys(3)
-                .mapNotNull { com.ascend.lifeos.data.Repo.bodyDay(it)?.sleepMin }
+            val need = Repo.sleepNeedMin()
+            val nights = Repo.lastDayKeys(3)
+                .mapNotNull { Repo.bodyDay(it)?.sleepMin }
             nights.size >= 2 && nights.average() < need * 0.85
         }.getOrDefault(false)
 
