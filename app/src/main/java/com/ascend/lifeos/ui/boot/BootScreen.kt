@@ -415,7 +415,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Spacer(Modifier.height(22.dp))
         Box(
             Modifier.fillMaxWidth()
-                .pressScale { if (!leaving) leaving = true }
+                .pressScale { if (!leaving) { com.ascend.lifeos.data.Haptics.epic(ctx); leaving = true } }
                 .clip(RoundedCornerShape(15.dp)).background(Mod.Home)
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,

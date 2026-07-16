@@ -198,6 +198,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
 
 @Composable
 private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit) {
+    val ctx = LocalContext.current
     var armed by remember(rule.id) { mutableStateOf(false) }
     LaunchedEffect(armed) { if (armed) { delay(2500); armed = false } }
 
@@ -222,7 +223,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     color = if (armed) Crit else TextDim,
                     fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp))
-                        .pressScale { if (armed) { onDelete(); com.ascend.lifeos.ui.kit.AppFeedback.show("Rule deleted") } else armed = true }
+                        .pressScale { if (armed) { com.ascend.lifeos.data.Haptics.warn(ctx); onDelete(); com.ascend.lifeos.ui.kit.AppFeedback.show("Rule deleted") } else armed = true }
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }
@@ -310,6 +311,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                     .background(if (canSave) Mod.Home else Mod.Home.copy(alpha = 0.25f))
                     .then(if (canSave) Modifier.pressScale {
+                        com.ascend.lifeos.data.Haptics.confirm(ctx)
                         CustomRules.upsert(
                             ctx,
                             CustomRule(

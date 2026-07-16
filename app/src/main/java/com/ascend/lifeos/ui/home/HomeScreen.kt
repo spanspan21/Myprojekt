@@ -1066,6 +1066,7 @@ fun HomeScreen(
 
 @Composable
 private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val qlCtx = LocalContext.current
     val breath by rememberInfiniteTransition(label = "ql").animateFloat(
         0f, 1f,
         infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
@@ -1094,7 +1095,7 @@ private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
         Box(
             Modifier.size(52.dp).clip(CircleShape)
                 .background(Mod.Home)
-                .pressScale(onClick),
+                .pressScale { com.ascend.lifeos.data.Haptics.tick(qlCtx); onClick() },
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.Rounded.Add, "Quick log", tint = Void, modifier = Modifier.size(26.dp))
@@ -1114,6 +1115,7 @@ private fun SleepConfirmCard(
     onConfirm: (latencyMin: Int) -> Unit,
     onNap: () -> Unit,
 ) {
+    val scCtx = LocalContext.current
     val accent = com.ascend.lifeos.ui.theme.Accent
     Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(18.dp)) {
@@ -1138,7 +1140,7 @@ private fun SleepConfirmCard(
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                             .background(accent.copy(alpha = 0.10f))
                             .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(11.dp))
-                            .pressScale { onConfirm(mins) }
+                            .pressScale { com.ascend.lifeos.data.Haptics.confirm(scCtx); onConfirm(mins) }
                             .padding(vertical = 9.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
