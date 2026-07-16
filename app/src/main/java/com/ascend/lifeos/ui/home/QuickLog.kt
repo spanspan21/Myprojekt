@@ -92,13 +92,13 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
                         QlMode.JOURNAL -> "JOURNAL"
                         else -> "QUICK LOG"
                     },
-                    color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                    color = Mod.Home, fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                 )
                 Spacer(Modifier.weight(1f))
                 if (mode == QlMode.PURCHASE || mode == QlMode.WEIGHT || mode == QlMode.MOOD || mode == QlMode.JOURNAL) {
                     Text(
-                        "BACK", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+                        "BACK", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
                             .clickable { mode = QlMode.ACTIONS }
@@ -244,8 +244,8 @@ private fun RowScope.QlTile(
     Column(
         Modifier.weight(1f)
             .clip(RoundedCornerShape(16.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+            .background(Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
             .pressScale(onClick)
             .padding(vertical = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -254,7 +254,7 @@ private fun RowScope.QlTile(
         Spacer(Modifier.height(9.dp))
         Text(
             label, color = TextPrimary, fontFamily = Body,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1,
+            fontSize = FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1,
         )
         Spacer(Modifier.height(2.dp))
         Text(stat, color = statColor, style = metricStyle(10, FontWeight.SemiBold), maxLines = 1)
@@ -279,8 +279,8 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         Box(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                .border(0.5.dp, if (cents > 0) Mod.Finance.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
+                .background(Ivory.copy(alpha = 0.04f))
+                .border(0.5.dp, if (cents > 0) Mod.Finance.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
                 .padding(vertical = 18.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -316,8 +316,8 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowCats.forEach { c ->
                     val on = cat == c
-                    val bg by animateColorAsState(if (on) Mod.Finance.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
-                    val edge by animateColorAsState(if (on) Mod.Finance.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
+                    val bg by animateColorAsState(if (on) Mod.Finance.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "qcB")
+                    val edge by animateColorAsState(if (on) Mod.Finance.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), tween(Motion.quick), label = "qcE")
                     val fg by animateColorAsState(if (on) Mod.Finance else TextMuted, tween(Motion.quick), label = "qcF")
                     Box(
                         Modifier.weight(1f)
@@ -330,7 +330,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                     ) {
                         Text(
                             c, color = fg,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -344,17 +344,17 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         Box(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(13.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
-                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.09f), RoundedCornerShape(13.dp))
+                .background(Ivory.copy(alpha = 0.03f))
+                .border(0.5.dp, Ivory.copy(alpha = 0.09f), RoundedCornerShape(13.dp))
                 .padding(horizontal = 14.dp, vertical = 11.dp),
         ) {
-            if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
+            if (note.isEmpty()) Text("note (optional)", color = TextDim, fontSize = FS.s12_5, fontFamily = Body)
             val noteFm = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value = note,
                 onValueChange = { if (it.length <= Prefs.int(ctx, Prefs.QUICK_NOTE_LIMIT, 60)) note = it },
                 singleLine = true,
-                textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium),
+                textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium),
                 cursorBrush = SolidColor(Mod.Finance),
                 keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { noteFm.clearFocus() }),
@@ -378,7 +378,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
         ) {
             Text(
                 "Save", color = if (canSave) Void else TextDim,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
             )
         }
     }
@@ -406,7 +406,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
             QlStep("+1") { kg = (kg + 1.0).coerceAtMost(250.0) }
         }
         Spacer(Modifier.height(4.dp))
-        Text("kilograms", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+        Text("kilograms", color = TextDim, fontSize = FS.s11, fontFamily = Body)
         Spacer(Modifier.height(18.dp))
         Box(
             Modifier.fillMaxWidth()
@@ -420,7 +420,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
                 .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Save", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+            Text("Save", color = Void, fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
     }
 }
@@ -429,12 +429,12 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
 private fun QlStep(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(44.dp).clip(CircleShape)
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+        Text(label, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -471,16 +471,16 @@ private fun DonePane(onDismiss: () -> Unit) {
                     .background(Good.copy(alpha = 0.14f))
                     .border(0.5.dp, Good.copy(alpha = 0.4f), CircleShape),
                 contentAlignment = Alignment.Center,
-            ) { Text("✓", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
+            ) { Text("✓", color = Good, fontSize = FS.s22, fontWeight = FontWeight.Bold) }
         }
         Spacer(Modifier.height(10.dp))
         val comp = Repo.completion()
-        Text("Logged", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+        Text("Logged", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
         if (comp.done < comp.total) {
             Spacer(Modifier.height(3.dp))
             Text(
                 "${comp.done}/${comp.total} missions today",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
         }
     }
@@ -508,18 +508,18 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Text(
             "How are you feeling right now?",
-            color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+            color = TextMuted, fontFamily = Body, fontSize = FS.s13_5,
         )
         Spacer(Modifier.height(20.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             MOOD_LEVELS.forEachIndexed { i, (level, label) ->
                 val on = selected == level
                 val bg by animateColorAsState(
-                    if (on) MOOD_COLORS[i].copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+                    if (on) MOOD_COLORS[i].copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f),
                     tween(Motion.quick), label = "mbg$i",
                 )
                 val edge by animateColorAsState(
-                    if (on) MOOD_COLORS[i].copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+                    if (on) MOOD_COLORS[i].copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f),
                     tween(Motion.quick), label = "medge$i",
                 )
                 Column(
@@ -531,11 +531,11 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
                         .padding(horizontal = 12.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(MOOD_EMOJIS[i], fontSize = com.ascend.lifeos.ui.theme.FS.s22)
+                    Text(MOOD_EMOJIS[i], fontSize = FS.s22)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         label, color = if (on) MOOD_COLORS[i] else TextDim,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
+                        fontSize = FS.s10, fontFamily = Body,
                         fontWeight = FontWeight.Bold,
                     )
                 }
@@ -546,10 +546,10 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
         val moodFm = androidx.compose.ui.platform.LocalFocusManager.current
         androidx.compose.material3.OutlinedTextField(
             value = moodNote, onValueChange = { moodNote = it.take(120) },
-            placeholder = { Text("What's behind this feeling?", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12) },
+            placeholder = { Text("What's behind this feeling?", color = TextDim, fontFamily = Body, fontSize = FS.s12) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().height(48.dp),
-            textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12),
+            textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = FS.s12),
             keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { moodFm.clearFocus() }),
         )
@@ -568,7 +568,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
         ) {
             Text(
                 "Log mood", color = if (selected > 0) Void else TextDim,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
             )
         }
     }
@@ -584,7 +584,7 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
     val journalFm = androidx.compose.ui.platform.LocalFocusManager.current
     Column(Modifier.fillMaxWidth()) {
         prompts.forEachIndexed { i, prompt ->
-            Text(prompt, color = Mod.Mind, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.SemiBold)
+            Text(prompt, color = Mod.Mind, fontFamily = Body, fontSize = FS.s11_5, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(4.dp))
             val isLast = i == prompts.lastIndex
             androidx.compose.material3.OutlinedTextField(
@@ -592,7 +592,7 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
                 onValueChange = { v -> answers = answers.toMutableList().also { it[i] = v.take(100) } },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().height(48.dp).focusRequester(journalFocuses[i]),
-                textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s13),
+                textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = FS.s13),
                 placeholder = { Text("…", color = TextDim, fontFamily = Body) },
                 keyboardOptions = KeyboardOptions(imeAction = if (isLast) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next),
                 keyboardActions = KeyboardActions(
@@ -619,7 +619,7 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
             Text(
                 if (existing.isEmpty()) "Save journal" else "Update journal",
                 color = if (filled) Void else TextDim,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
             )
         }
     }

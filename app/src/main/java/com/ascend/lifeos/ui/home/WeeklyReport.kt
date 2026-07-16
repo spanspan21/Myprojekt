@@ -138,15 +138,15 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(
                     "WEEKLY REPORT", color = Mod.Home, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                    fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
                 )
-                Text("The last 7 days", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold)
+                Text("The last 7 days", color = TextPrimary, fontFamily = Display, fontSize = FS.s24, fontWeight = FontWeight.Bold)
             }
             // share as image — rendered on demand, goes through the system sheet
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .then(if (!sharing) Modifier.pressScale {
                         sharing = true
                         Haptics.confirm(ctx)
@@ -169,8 +169,8 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -215,10 +215,10 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         s.sleepAvgMin?.let { "Ø sleep ${it / 60}h ${it % 60}m" } ?: "No sleep data",
-                        color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                     s.rhrAvg?.let {
-                        Text("Ø resting HR $it bpm", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
+                        Text("Ø resting HR $it bpm", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
                     }
                 }
                 if (s.sleepSeries.count { it > 0 } >= 2) {
@@ -231,10 +231,10 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
         ReportSection("Fuel", Mod.Fuel) {
             Text(
                 s.kcalAvg?.let { "Ø $it kcal / day (goal ${s.kcalGoal})" } ?: "Not enough logged days",
-                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
             s.proteinAvg?.let {
-                Text("Ø protein ${it}g", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body)
+                Text("Ø protein ${it}g", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
             }
         }
 
@@ -244,10 +244,10 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         s.screenAvgMin?.let { "Ø screen ${it / 60}h ${it % 60}m / day" } ?: "No screen data",
-                        color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                     if (s.reclaimedMin > 0) {
-                        Text("≈${s.reclaimedMin} min reclaimed total", color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("≈${s.reclaimedMin} min reclaimed total", color = Mod.Guard, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
                 if (s.screenSeries.count { it > 0 } >= 2) {
@@ -261,7 +261,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
             Text(
                 if (s.focusMinutes > 0) "${s.focusMinutes / 60}h ${s.focusMinutes % 60}m of focused learning"
                 else "No focus sessions this week",
-                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
         }
 
@@ -271,7 +271,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
         Spacer(Modifier.height(10.dp))
         s.recommendations.forEach { rec ->
             Panel(Modifier.fillMaxWidth(), corner = 14.dp, line = Mod.Home.copy(alpha = 0.3f)) {
-                Text(rec, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 18.sp, modifier = Modifier.padding(13.dp))
+                Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp, modifier = Modifier.padding(13.dp))
             }
             Spacer(Modifier.height(8.dp))
         }
@@ -286,7 +286,7 @@ private fun ReportSection(title: String, accent: Color, content: @Composable Col
             Column(Modifier.padding(16.dp)) {
                 Text(
                     title.uppercase(), color = accent, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                    fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
                 Spacer(Modifier.height(8.dp))
                 content()
@@ -300,6 +300,6 @@ private fun ReportSection(title: String, accent: Color, content: @Composable Col
 private fun RStat(value: String, label: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = metricStyle(22))
-        Text(label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp)
+        Text(label, color = TextDim, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp)
     }
 }

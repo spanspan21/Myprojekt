@@ -543,13 +543,13 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "COMMAND", color = Mod.Home, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
-                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                        .background(Ivory.copy(alpha = 0.05f))
                         .border(0.5.dp, Mod.Home.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
                         .padding(horizontal = 15.dp, vertical = 13.dp),
                 ) {
@@ -566,11 +566,11 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                             parts.add("focus 25")
                             parts.take(4).joinToString(" · ")
                         }
-                        Text(hints, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+                        Text(hints, color = TextDim, fontSize = FS.s13, fontFamily = Body)
                     }
                     BasicTextField(
                         value = input, onValueChange = { input = it }, singleLine = true,
-                        textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold),
+                        textStyle = TextStyle(color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold),
                         cursorBrush = SolidColor(Mod.Home),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                         keyboardActions = KeyboardActions(onGo = {
@@ -599,14 +599,14 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Text(
                     text, color = if (ok) Good else Warn,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
 
             Spacer(Modifier.height(16.dp))
             Text(
                 "WHAT I UNDERSTAND", color = TextDim, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(6.dp))
             // ── contextual quick chips: time-aware suggestions ──────
@@ -634,7 +634,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                             }
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) {
-                        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                        Text(label, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -656,7 +656,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 "settings · prime · heatmap · notes — jump",
                 "train · fuel · body · skills · report — jump",
             ).forEach {
-                Text("· $it", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 18.sp)
+                Text("· $it", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 18.sp)
             }
             Spacer(Modifier.height(14.dp))
         }

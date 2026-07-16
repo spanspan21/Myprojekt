@@ -245,7 +245,7 @@ fun HomeScreen(
                 ) {
                     Text(
                         "JARVIS", color = TextDim, fontFamily = Display,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp,
+                        fontSize = FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp,
                     )
                     Spacer(Modifier.width(10.dp))
                     Box(Modifier.size(5.dp).clip(CircleShape).background(Mod.Home))
@@ -253,7 +253,7 @@ fun HomeScreen(
                 Spacer(Modifier.weight(1f))
                 Text(
                     LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)).uppercase(),
-                    color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                    color = TextDim, fontFamily = Display, fontSize = FS.s10_5,
                     fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.width(12.dp))
@@ -271,7 +271,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(7.dp))
                     Text(
                         voice, color = TextMuted, fontFamily = Body,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontWeight = FontWeight.Medium, lineHeight = 19.sp,
+                        fontSize = FS.s13_5, fontWeight = FontWeight.Medium, lineHeight = 19.sp,
                     )
                 }
             }
@@ -288,7 +288,7 @@ fun HomeScreen(
                     Text(
                         "🤒 Sick mode — tap to deactivate",
                         color = Warn, fontFamily = Body,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s12, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -306,7 +306,7 @@ fun HomeScreen(
                         Text(
                             "🧊 Deload week — $daysLeft day${if (daysLeft != 1) "s" else ""} left · reduced volume",
                             color = Cyan, fontFamily = Body,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                            fontSize = FS.s12, fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -354,12 +354,12 @@ fun HomeScreen(
                         Text(
                             // große Ziffern flüstern: Medium statt ExtraBold (Kap. 13)
                             if (readiness == null) "—" else "${(rise.value * 100).toInt().coerceAtMost(readiness)}",
-                            color = rColor, fontFamily = Display, fontStyle = DisplayItalic, fontSize = com.ascend.lifeos.ui.theme.FS.s48,
+                            color = rColor, fontFamily = Display, fontStyle = DisplayItalic, fontSize = FS.s48,
                             fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp,
                         )
                         Text(
                             if (readiness == null) "CONNECT WATCH" else "READINESS",
-                            color = TextDim, fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+                            color = TextDim, fontFamily = MicroLabel, fontSize = FS.s9,
                             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
                             modifier = if (readiness != null) Modifier.clickable {
                                 AppFeedback.show("Sleep (40%) + deep/REM (20%) + resting HR (25%) + training load (15%) + morning check-in")
@@ -382,7 +382,7 @@ fun HomeScreen(
                         }
                         Text(
                             scanLine, color = TextMuted, fontFamily = Body,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
+                            fontSize = FS.s11_5, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp,
                         )
                         Spacer(Modifier.height(11.dp))
                         HairLine()
@@ -395,7 +395,7 @@ fun HomeScreen(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 "STREAK", color = TextDim, fontFamily = Display,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                             )
                             Spacer(Modifier.width(6.dp))
                             repeat(profile.freezeAvail.coerceIn(0, 3)) {
@@ -454,7 +454,7 @@ fun HomeScreen(
                                     profile.streak > 0 || habit >= consistThresh -> Champagne
                                     else -> TextMuted
                                 },
-                                fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                                fontFamily = Display, fontSize = FS.s12, fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -467,15 +467,15 @@ fun HomeScreen(
                 Spacer(Modifier.height(10.dp))
                 Row(
                     Modifier.clip(RoundedCornerShape(10.dp))
-                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                        .background(Ivory.copy(alpha = 0.04f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                         .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.JarvisSpeech.speak(ctx, com.ascend.lifeos.data.JarvisSpeech.briefingText(ctx)) }
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(Icons.Rounded.Bolt, "Speak briefing", tint = Mod.Home, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(7.dp))
-                    Text("Speak briefing", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("Speak briefing", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -493,7 +493,7 @@ fun HomeScreen(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         "Streak saved — a freeze covered yesterday. ${profile.streak} days stand. (${profile.freezeAvail} left this week)",
-                        color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                        color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -658,7 +658,7 @@ fun HomeScreen(
                         left == 1 -> Champagne
                         else -> TextDim
                     },
-                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                    fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                 )
             }
@@ -780,9 +780,9 @@ fun HomeScreen(
                 ) {
                     Icon(Icons.Rounded.WaterDrop, "Add water", tint = Mod.Body, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("+ Water", color = Mod.Body, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold)
+                    Text("+ Water", color = Mod.Body, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
-                    Text("$waterGlassEq/${profile.waterGoal}", color = TextDim, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold)
+                    Text("$waterGlassEq/${profile.waterGoal}", color = TextDim, fontFamily = Body, fontSize = FS.s11, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -819,7 +819,7 @@ fun HomeScreen(
                             Text(
                                 "$icon ${h.title}",
                                 color = if (done) Good else TextMuted,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                                fontSize = FS.s10_5, fontFamily = Body,
                                 fontWeight = if (done) FontWeight.Bold else FontWeight.Medium,
                                 maxLines = 1,
                             )
@@ -1014,9 +1014,9 @@ fun HomeScreen(
                 Reveal(2) {
                     Panel(Modifier.fillMaxWidth(), corner = 20.dp, fill = Mod.Home.copy(alpha = 0.06f), line = Mod.Home.copy(alpha = 0.25f)) {
                         Column(Modifier.padding(18.dp)) {
-                            Text("YOUR FIRST DAY", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+                            Text("YOUR FIRST DAY", color = Mod.Home, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
                             Spacer(Modifier.height(6.dp))
-                            Text("Three steps to activate JARVIS", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold)
+                            Text("Three steps to activate JARVIS", color = TextPrimary, fontFamily = Display, fontSize = FS.s16, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(12.dp))
                             FirstDayStep("1", "Log your first meal", "Tap + below or swipe to Fuel") { onOpenModule("fuel") }
                             Spacer(Modifier.height(8.dp))
@@ -1041,7 +1041,7 @@ fun HomeScreen(
             Spacer(Modifier.height(12.dp))
             Text(
                 "Edit dashboard",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = com.ascend.lifeos.ui.theme.Body,
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -1120,22 +1120,22 @@ private fun SleepConfirmCard(
     onNap: () -> Unit,
 ) {
     val scCtx = LocalContext.current
-    val accent = com.ascend.lifeos.ui.theme.Accent
+    val accent = Accent
     Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.padding(18.dp)) {
             Text(
-                "SLEEP · CONFIRM", color = accent, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+                "SLEEP · CONFIRM", color = accent, fontFamily = Display, fontSize = FS.s9,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 "How long to fall asleep last night?", color = TextPrimary,
-                fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+                fontFamily = Display, fontSize = FS.s16, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(3.dp))
             Text(
                 "Your watch only sees when you slept — this keeps the sleep window honest.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, lineHeight = 15.sp,
+                color = TextDim, fontSize = FS.s11_5, lineHeight = 15.sp,
             )
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -1147,12 +1147,12 @@ private fun SleepConfirmCard(
                             .pressScale { Haptics.confirm(scCtx); onConfirm(mins) }
                             .padding(vertical = 9.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text(label, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
+                    ) { Text(label, color = accent, fontSize = FS.s11, fontWeight = FontWeight.Bold) }
                 }
             }
             Spacer(Modifier.height(9.dp))
             Text(
-                "That was a power nap →", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold,
+                "That was a power nap →", color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
             )
         }
@@ -1247,7 +1247,7 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                     Spacer(Modifier.height(10.dp))
                     Text(
                         "Tomorrow · ${firstTomorrow!!.title} at ${fmt(firstTomorrow!!.startMin)}",
-                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                        color = TextDim, fontSize = FS.s11, fontFamily = Body,
                     )
                 }
             }
@@ -1268,12 +1268,12 @@ private fun EventLine(tag: String, title: String, sub: String, color: Color, onC
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                tag, color = color, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+                tag, color = color, fontFamily = Display, fontSize = FS.s9_5,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(2.dp))
-            Text(title, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1)
-            Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, maxLines = 1)
+            Text(title, color = TextPrimary, fontFamily = Body, fontSize = FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+            Text(sub, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, maxLines = 1)
         }
         Icon(Icons.Rounded.Bolt, title, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
     }
@@ -1285,19 +1285,19 @@ private fun HeroStatRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             label, color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+            fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
         )
         Spacer(Modifier.weight(1f))
         Text(
             value, color = TextMuted, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+            fontSize = FS.s12, fontWeight = FontWeight.Bold,
         )
     }
 }
 
 @Composable
 private fun HairLine() {
-    Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
+    Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.08f)))
 }
 
 @Composable
@@ -1432,12 +1432,12 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(22.dp)) {
             Text(
                 "DASHBOARD", color = Mod.Home, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 "Your Today, your order", color = TextPrimary,
-                fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold,
+                fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(14.dp))
             HomeCards.ALL.forEach { (key, label) ->
@@ -1450,11 +1450,11 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                     Text(
                         if (visible) "ON" else "OFF",
                         color = if (visible) Mod.Home else TextDim,
-                        fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold,
+                        fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp,
                         modifier = Modifier
                             .clip(RoundedCornerShape(9.dp))
-                            .background(if (visible) Mod.Home.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                            .background(if (visible) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.05f))
                             .clickable {
                                 commit(if (visible) order - key else order + key)
                             }
@@ -1465,12 +1465,12 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                     Text(
                         label,
                         color = if (visible) TextPrimary else TextDim,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                        fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f),
                     )
                     if (visible) {
                         Text(
-                            "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                            "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
                             modifier = Modifier.clip(CircleShape).clickable(enabled = idx > 0) {
                                 val m = order.toMutableList()
                                 m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
@@ -1478,7 +1478,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                             }.padding(8.dp),
                         )
                         Text(
-                            "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                            "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
                             modifier = Modifier.clip(CircleShape).clickable(enabled = idx < order.lastIndex) {
                                 val m = order.toMutableList()
                                 m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }
@@ -1491,7 +1491,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Text(
                 "Hidden cards stop computing entirely — less noise, less battery.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
             Spacer(Modifier.height(10.dp))
         }
@@ -1600,7 +1600,7 @@ private fun SystemOrb(label: String, icon: androidx.compose.ui.graphics.vector.I
         Spacer(Modifier.height(6.dp))
         Text(
             label, color = TextMuted, fontFamily = Body,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, maxLines = 1,
+            fontSize = FS.s10, fontWeight = FontWeight.SemiBold, maxLines = 1,
         )
     }
 }
@@ -1623,18 +1623,18 @@ private fun BriefRow(
         Column(Modifier.weight(1f)) {
             Text(
                 overline, color = dot, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.8.sp,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.8.sp,
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body,
+                text, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body,
                 fontWeight = FontWeight.Medium, lineHeight = 17.sp,
             )
         }
         if (action != null) {
             Spacer(Modifier.width(8.dp))
             Text(
-                action, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                action, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction).padding(6.dp),
             )
         }

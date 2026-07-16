@@ -62,14 +62,14 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { Haptics.tick(ctx); onBack() })
                 Spacer(Modifier.width(12.dp))
-                Text("Statistics", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
+                Text("Statistics", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
             }
             Spacer(Modifier.height(22.dp))
         }
 
         // ── Volume graph ────────────────────────────────────────────
         item {
-            Text("VOLUME (RECENT WORKOUTS)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Text("VOLUME (RECENT WORKOUTS)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
             GlassPanel(Modifier.fillMaxWidth().height(180.dp), corner = 18.dp) {
                 VolumeGraph(sessions.take(12).reversed(), Modifier.fillMaxSize().padding(16.dp))
@@ -79,7 +79,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
         // ── Muscle heatmap ──────────────────────────────────────────
         item {
-            Text("MUSCLE VOLUME (THIS WEEK)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Text("MUSCLE VOLUME (THIS WEEK)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
             MuscleHeatmap(sessions, allExercises)
             Spacer(Modifier.height(22.dp))
@@ -87,7 +87,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
         // ── Training frequency calendar (GitHub-style) ──────────────
         item {
-            Text("TRAINING FREQUENCY (12 WEEKS)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Text("TRAINING FREQUENCY (12 WEEKS)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Spacer(Modifier.height(10.dp))
             FrequencyCalendar(sessions)
             Spacer(Modifier.height(22.dp))
@@ -116,7 +116,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                 }
             }
             if (acts.isNotEmpty()) {
-                Text("ACTIVITY LOAD (8 WEEKS)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                Text("ACTIVITY LOAD (8 WEEKS)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(10.dp))
                 GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
                     ActivityWeekBars(weekLoads, Modifier.fillMaxWidth().height(120.dp).padding(16.dp))
@@ -128,10 +128,10 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     if (bests.isNotEmpty()) {
                         val ty = ActivityTypes.byId(t)
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = FS.s12, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                             Text(
                                 bests.joinToString("  ") { "${it.emoji} ${it.value}" },
-                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold,
+                                color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }
@@ -149,7 +149,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             item {
                 com.ascend.lifeos.ui.kit.EmptyState(
                     androidx.compose.material.icons.Icons.Rounded.FitnessCenter, "No records yet",
-                    "Personal records appear as you train", com.ascend.lifeos.ui.theme.Amber,
+                    "Personal records appear as you train", Amber,
                 )
             }
         } else {
@@ -190,9 +190,9 @@ private fun ActivityWeekBars(loads: FloatArray, modifier: Modifier) {
         }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth()) {
-            Text("7 wks ago", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9)
+            Text("7 wks ago", color = TextDim, fontSize = FS.s9)
             Spacer(Modifier.weight(1f))
-            Text("this week · load in hard-set units", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9)
+            Text("this week · load in hard-set units", color = TextDim, fontSize = FS.s9)
         }
     }
 }
@@ -235,7 +235,7 @@ private fun VolumeGraph(sessions: List<SessionWithSets>, modifier: Modifier) {
         }
         drawPath(fillPath, Brush.verticalGradient(listOf(Accent.copy(alpha = 0.15f), Color.Transparent)))
 
-        val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+        val glowF = themeSpec.value.glow
         if (glowF > 0f) drawPath(path, Accent.copy(alpha = 0.20f * glowF), style = Stroke(6.dp.toPx(), cap = StrokeCap.Round))
         drawPath(path, Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.7f), Cyan.copy(alpha = 0.7f))), style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
 
@@ -287,13 +287,13 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>, allExercises: List<Ex
                     else -> TextDim.copy(alpha = 0.3f)
                 }
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(muscleLabel(muscle), color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, modifier = Modifier.width(80.dp))
+                    Text(muscleLabel(muscle), color = TextMuted, fontSize = FS.s10, fontWeight = FontWeight.Bold, modifier = Modifier.width(80.dp))
                     Box(
-                        Modifier.weight(1f).height(10.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)),
+                        Modifier.weight(1f).height(10.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.04f)),
                     ) {
                         Box(Modifier.fillMaxHeight().fillMaxWidth(frac.coerceIn(0f, 1f)).clip(CircleShape).background(color))
                     }
-                    Text("$vol", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, modifier = Modifier.width(30.dp), textAlign = TextAlign.End)
+                    Text("$vol", color = TextDim, fontSize = FS.s10, modifier = Modifier.width(30.dp), textAlign = TextAlign.End)
                 }
             }
             if (muscleMap.isEmpty()) {
@@ -346,7 +346,7 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
                         val isToday = dayOffset == 0
                         Box(
                             Modifier.size(12.dp).clip(RoundedCornerShape(2.dp))
-                                .background(if (trained) Accent.copy(alpha = 0.7f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                                .background(if (trained) Accent.copy(alpha = 0.7f) else Ivory.copy(alpha = 0.04f))
                                 .then(if (isToday) Modifier.border(1.dp, Accent.copy(alpha = 0.6f), RoundedCornerShape(2.dp)) else Modifier),
                         )
                     }
@@ -373,22 +373,22 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(26.dp).clip(CircleShape).background(Amber.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                Text("PR", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold)
+                Text("PR", color = Amber, fontSize = FS.s9, fontWeight = FontWeight.ExtraBold)
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(pr.exerciseName, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold)
+                    Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s13, fontWeight = FontWeight.Bold)
                     if (isToday) {
                         Spacer(Modifier.width(6.dp))
-                        Text("NEW", color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                        Text("NEW", color = Amber, fontSize = FS.s8, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
                     }
                 }
-                Text(prLabel(pr.type), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
+                Text(prLabel(pr.type), color = TextDim, fontSize = FS.s10)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(prValueStr(pr), color = Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold)
-                Text(date, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10)
+                Text(prValueStr(pr), color = Amber, fontSize = FS.s14, fontWeight = FontWeight.ExtraBold)
+                Text(date, color = TextDim, fontSize = FS.s10)
             }
         }
     }

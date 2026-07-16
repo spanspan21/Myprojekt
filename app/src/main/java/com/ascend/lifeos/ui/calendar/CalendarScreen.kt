@@ -200,7 +200,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                                 .pressScale { Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                         ) {
-                            Text(b.title, color = c, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(b.title, color = c, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -211,7 +211,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             val t = timeline
             if (t == null) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 80.dp), contentAlignment = Alignment.Center) {
-                    Text("Reading timeline…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body)
+                    Text("Reading timeline…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
                 }
             } else {
                 DayTimelineView(
@@ -308,7 +308,7 @@ private fun DayChip(d: LocalDate, selected: Boolean, isToday: Boolean, entities:
     val edge by animateColorAsState(
         when {
             selected -> Mod.Calendar.copy(alpha = 0.5f)
-            isToday -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.18f)
+            isToday -> Ivory.copy(alpha = 0.18f)
             else -> Color.Transparent
         },
         tween(Motion.quick), label = "dcE",
@@ -326,7 +326,7 @@ private fun DayChip(d: LocalDate, selected: Boolean, isToday: Boolean, entities:
         Text(
             d.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase().take(2),
             color = over,
-            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+            fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
         Spacer(Modifier.height(2.dp))
         Text(
@@ -371,7 +371,7 @@ private fun MonthOverlay(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "MONTH", color = Mod.Calendar, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
+                    fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                     modifier = Modifier.weight(1f),
                 )
                 IconOrb(Icons.Rounded.Close, "Close", size = 34.dp) { onClose() }
@@ -383,7 +383,7 @@ private fun MonthOverlay(
                 IconOrb(Icons.Rounded.ChevronLeft, "Previous month", size = 36.dp) { month = month.minusMonths(1) }
                 Text(
                     month.format(DateTimeFormatter.ofPattern("MMMM uuuu", Locale.ENGLISH)).uppercase(),
-                    color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s19,
+                    color = TextPrimary, fontFamily = Display, fontSize = FS.s19,
                     fontWeight = FontWeight.Bold, letterSpacing = 3.sp,
                     textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
                 )
@@ -395,7 +395,7 @@ private fun MonthOverlay(
             Row(Modifier.fillMaxWidth()) {
                 listOf("MO", "TU", "WE", "TH", "FR", "SA", "SU").forEach {
                     Text(
-                        it, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+                        it, color = TextDim, fontFamily = Display, fontSize = FS.s9,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
                         textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
                     )
@@ -434,14 +434,14 @@ private fun MonthOverlay(
             ) {
                 Text(
                     "CELL TINT = DAY LOAD", color = TextDim, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
+                    fontSize = FS.s8_5, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.width(14.dp))
                 Box(Modifier.size(7.dp).clip(CornerTriangle).background(eventColor(EventType.HOCKEY)))
                 Spacer(Modifier.width(5.dp))
                 Text(
                     "HOCKEY", color = TextDim, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
+                    fontSize = FS.s8_5, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                 )
             }
         }
@@ -482,7 +482,7 @@ private fun MonthDayCell(
                 0.5.dp,
                 when {
                     isSelected -> Mod.Calendar.copy(alpha = 0.55f)
-                    isToday -> com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.30f)
+                    isToday -> Ivory.copy(alpha = 0.30f)
                     else -> Color.Transparent
                 },
                 RoundedCornerShape(11.dp),
@@ -568,7 +568,7 @@ private fun IcsFeedRow() {
                 "last sync %02d:%02d".format(t.hour, t.minute)
             } else "not synced yet"
             Text(
-                "Timetable feed · $lastTxt", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                "Timetable feed · $lastTxt", color = TextMuted, fontSize = FS.s11_5,
                 fontFamily = Body, fontWeight = FontWeight.Medium,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             )
@@ -602,23 +602,23 @@ private fun IcsFeedRow() {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
                 Text(
                     "TIMETABLE FEED", color = Mod.Calendar, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                    fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
                 Spacer(Modifier.height(9.dp))
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
-                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                        .background(Ivory.copy(alpha = 0.05f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                 ) {
                     if (input.isEmpty()) Text(
                         "Paste ICS URL (https:// or webcal://)",
-                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
+                        color = TextDim, fontSize = FS.s12, fontFamily = Body,
                     )
                     val icsFm = androidx.compose.ui.platform.LocalFocusManager.current
                     BasicTextField(
                         input, { input = it }, singleLine = true,
-                        textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium),
+                        textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium),
                         cursorBrush = SolidColor(Mod.Calendar),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { icsFm.clearFocus() }),
@@ -646,7 +646,7 @@ private fun IcsFeedRow() {
                     ) {
                         Text(
                             if (syncing) "Syncing…" else "Sync",
-                            color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                            color = Void, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                         )
                     }
                     Spacer(Modifier.width(12.dp))
@@ -654,7 +654,7 @@ private fun IcsFeedRow() {
                         CircularProgressIndicator(Modifier.size(13.dp), color = Mod.Calendar, strokeWidth = 1.5.dp)
                     } else {
                         Text(
-                            "Cancel", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Medium,
+                            "Cancel", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Medium,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
                                 .clickable { expanded = false; error = null }
                                 .padding(horizontal = 6.dp, vertical = 4.dp),
@@ -674,7 +674,7 @@ private fun IcsFeedRow() {
             Icon(Icons.Rounded.RssFeed, null, tint = TextDim, modifier = Modifier.size(13.dp))
             Spacer(Modifier.width(8.dp))
             Text(
-                "Subscribe to a timetable feed (ICS)", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                "Subscribe to a timetable feed (ICS)", color = TextDim, fontSize = FS.s11_5,
                 fontFamily = Body, fontWeight = FontWeight.Medium,
             )
         }
@@ -684,7 +684,7 @@ private fun IcsFeedRow() {
         Spacer(Modifier.height(4.dp))
         Text(
             "Sync failed · $it", color = Crit.copy(alpha = 0.9f),
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Medium,
+            fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Medium,
         )
     }
     Spacer(Modifier.height(12.dp))
@@ -736,11 +736,11 @@ private fun DayTimelineView(
                 Row(Modifier.height(HOUR_DP)) {
                     Text(
                         "%02d".format(h), color = TextDim.copy(alpha = 0.6f),
-                        fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Medium,
+                        fontFamily = Display, fontSize = FS.s9_5, fontWeight = FontWeight.Medium,
                         modifier = Modifier.width(26.dp).padding(top = 0.dp),
                     )
                     Column(Modifier.weight(1f)) {
-                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)))
+                        Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.05f)))
                     }
                 }
             }
@@ -772,7 +772,7 @@ private fun DayTimelineView(
                     Text(
                         "+ ${slot.durationMin} min free" + (weather?.let { " · $it" } ?: ""),
                         color = Mod.Calendar.copy(alpha = 0.4f),
-                        fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Medium, letterSpacing = 1.sp,
+                        fontFamily = Display, fontSize = FS.s9_5, fontWeight = FontWeight.Medium, letterSpacing = 1.sp,
                     )
                 }
             }
@@ -805,7 +805,7 @@ private fun DayTimelineView(
                                 b.title,
                                 color = if (b.cancelled) TextDim else TextPrimary,
                                 fontFamily = Body,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                                fontSize = FS.s12, fontWeight = FontWeight.Bold,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 textDecoration = if (b.cancelled) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
                                 modifier = Modifier.weight(1f, fill = false),
@@ -814,7 +814,7 @@ private fun DayTimelineView(
                                 Spacer(Modifier.width(6.dp))
                                 Text(
                                     "CANCELLED · FREE", color = Good, fontFamily = Display,
-                                    fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+                                    fontSize = FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
                                 )
                             }
                             if (b.fromDevice) {
@@ -827,7 +827,7 @@ private fun DayTimelineView(
                         if (blockH >= 38.dp) {
                             Text(
                                 "${CalendarRepo.fmtMin(b.startMin)}–${CalendarRepo.fmtMin(b.endMin)} · ${eventLabel(b.type)}",
-                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, maxLines = 1, lineHeight = 11.sp,
+                                color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1, lineHeight = 11.sp,
                             )
                         }
                     }
@@ -846,7 +846,7 @@ private fun DayTimelineView(
                 ) {
                     Text(
                         CalendarRepo.fmtMin(now.hour * 60 + now.minute),
-                        color = Crit, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold,
+                        color = Crit, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.Bold,
                         modifier = Modifier.width(26.dp),
                     )
                     Box(Modifier.size(5.dp).clip(CircleShape).background(Crit))
@@ -881,30 +881,30 @@ private fun QuickAddSheet(
         Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
             Text(
                 "NEW BLOCK", color = Mod.Calendar, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 day.format(DateTimeFormatter.ofPattern("EEEE, d MMM", Locale.ENGLISH)),
-                color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s19, fontWeight = FontWeight.Bold,
+                color = TextPrimary, fontFamily = Display, fontSize = FS.s19, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(16.dp))
 
             // title
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+                    .background(Ivory.copy(alpha = 0.05f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 if (title.isEmpty()) Text(
                     if (isHoliday) "Holiday name (e.g. Summer break)" else "Title (e.g. School, Shift, Practice)",
-                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body,
+                    color = TextDim, fontSize = FS.s14, fontFamily = Body,
                 )
                 val titleFm = androidx.compose.ui.platform.LocalFocusManager.current
                 BasicTextField(
                     title, { title = it }, singleLine = true,
-                    textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold),
+                    textStyle = TextStyle(color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold),
                     cursorBrush = SolidColor(Mod.Calendar),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                     keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { titleFm.clearFocus() }),
@@ -920,12 +920,12 @@ private fun QuickAddSheet(
                     val on = t == type
                     Box(
                         Modifier.clip(RoundedCornerShape(10.dp))
-                            .background(if (on) c.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                            .background(if (on) c.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) c.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
                             .clickable { Haptics.tick(addCtx); type = t }
                             .padding(horizontal = 11.dp, vertical = 7.dp),
                     ) {
-                        Text(eventLabel(t), color = if (on) c else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text(eventLabel(t), color = if (on) c else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -947,7 +947,7 @@ private fun QuickAddSheet(
                 // weekly repeat
                 Text(
                     "REPEATS WEEKLY ON", color = TextDim, fontFamily = Display,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                    fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -956,35 +956,35 @@ private fun QuickAddSheet(
                         val on = repeatMask and (1 shl i) != 0
                         Box(
                             Modifier.size(34.dp).clip(CircleShape)
-                                .background(if (on) Mod.Calendar.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                                .border(0.5.dp, if (on) Mod.Calendar.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
+                                .background(if (on) Mod.Calendar.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
+                                .border(0.5.dp, if (on) Mod.Calendar.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), CircleShape)
                                 .clickable { repeatMask = repeatMask xor (1 shl i) },
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(letters[i], color = if (on) Mod.Calendar else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold)
+                            Text(letters[i], color = if (on) Mod.Calendar else TextDim, fontSize = FS.s12, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             } else {
                 // holiday length
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Length", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text("Length", color = TextMuted, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Box(
-                        Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
+                        Modifier.size(38.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
                             .clickable { Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
-                    ) { Text("−", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
+                    ) { Text("−", color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
                     Text(
                         "$holidayDays days", color = TextPrimary, style = metricStyle(16),
                         modifier = Modifier.widthIn(min = 78.dp), textAlign = TextAlign.Center,
                     )
                     Box(
-                        Modifier.size(38.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
+                        Modifier.size(38.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
+                            .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
                             .clickable { Haptics.tick(addCtx); holidayDays += 1 },
                         contentAlignment = Alignment.Center,
-                    ) { Text("+", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
+                    ) { Text("+", color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
                 }
             }
 
@@ -1002,7 +1002,7 @@ private fun QuickAddSheet(
                     }
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Add to timeline", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Add to timeline", color = Void, fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(18.dp))
         }
     }
@@ -1014,18 +1014,18 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
     Column(modifier) {
         Text(
             label.uppercase(), color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
         )
         Spacer(Modifier.height(6.dp))
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
+                .background(Ivory.copy(alpha = 0.04f))
+                .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(13.dp))
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                "−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                "−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(CircleShape).clickable { Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
             Text(
@@ -1033,7 +1033,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
                 modifier = Modifier.weight(1f), textAlign = TextAlign.Center,
             )
             Text(
-                "+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                "+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(CircleShape).clickable { Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
@@ -1051,13 +1051,13 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(10.dp).clip(CircleShape).background(c))
                 Spacer(Modifier.width(10.dp))
-                Text(b.title, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s19, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(b.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s19, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             }
             Spacer(Modifier.height(6.dp))
             Text(
                 if (b.allDay) "All day · ${eventLabel(b.type)}"
                 else "${CalendarRepo.fmtMin(b.startMin)}–${CalendarRepo.fmtMin(b.endMin)} · ${eventLabel(b.type)}",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body,
+                color = TextMuted, fontSize = FS.s13, fontFamily = Body,
             )
             Spacer(Modifier.height(14.dp))
 
@@ -1068,23 +1068,23 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
             val outdoor = remember(outdoorTick) { com.ascend.lifeos.data.WeatherRepo.isOutdoor(ctx, b.title) }
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                    .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                    .background(if (outdoor) Mod.Calendar.copy(alpha = 0.10f) else Ivory.copy(alpha = 0.04f))
+                    .border(0.5.dp, if (outdoor) Mod.Calendar.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
                     .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.WeatherRepo.toggleOutdoor(ctx, b.title); outdoorTick++ }
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Weather-dependent", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                    Text("Weather-dependent", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                     Text(
                         "Applies to every \"${b.title}\" — Jarvis checks the forecast and suggests, never moves.",
-                        color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
                     )
                 }
                 Text(
                     if (outdoor) "ON" else "OFF",
                     color = if (outdoor) Mod.Calendar else TextDim,
-                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+                    fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -1106,7 +1106,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
                     Spacer(Modifier.width(8.dp))
                     Text(
                         if (armedDelete) "Tap again to confirm" else "Remove from timeline",
-                        color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        color = Crit, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -1157,20 +1157,20 @@ private fun UntisRow() {
                     Text(
                         if (configured) "WebUntis · ${UntisSync.user(ctx)}" else "Connect WebUntis login (no ICS needed)",
                         color = if (configured) TextPrimary else TextMuted,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                     val sub = status ?: if (configured) {
                         val last = UntisSync.lastSync(ctx)
                         if (last > 0) "last sync " + java.text.SimpleDateFormat("HH:mm", Locale.getDefault()).format(java.util.Date(last))
                         else "not synced yet"
                     } else "Your timetable imports itself — cancelled lessons excluded"
-                    Text(sub, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                    Text(sub, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                 }
                 if (syncing) {
                     CircularProgressIndicator(Modifier.size(14.dp), color = Mod.Calendar, strokeWidth = 1.5.dp)
                 } else if (configured) {
                     Text(
-                        "SYNC", color = Mod.Calendar, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                        "SYNC", color = Mod.Calendar, fontFamily = Display, fontSize = FS.s10,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { runSync() }.padding(6.dp),
                     )
@@ -1206,7 +1206,7 @@ private fun UntisRow() {
                 ) {
                     Text(
                         if (syncing) "Connecting…" else "Connect & sync",
-                        color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                        color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                     )
                 }
             }
@@ -1220,19 +1220,19 @@ private fun UntisField(label: String, value: String, hint: String, password: Boo
     Column {
         Text(
             label.uppercase(), color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
         )
         Spacer(Modifier.height(3.dp))
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                .background(Ivory.copy(alpha = 0.05f))
+                .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
-            if (value.isEmpty()) Text(hint, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body)
+            if (value.isEmpty()) Text(hint, color = TextDim, fontSize = FS.s12_5, fontFamily = Body)
             BasicTextField(
                 value = value, onValueChange = onValue, singleLine = true,
-                textStyle = TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold),
+                textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold),
                 cursorBrush = SolidColor(Mod.Calendar),
                 visualTransformation = if (password) androidx.compose.ui.text.input.PasswordVisualTransformation()
                 else androidx.compose.ui.text.input.VisualTransformation.None,
@@ -1259,12 +1259,12 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
         ) {
             Text(
                 "CALENDAR FEEDS", color = Mod.Calendar, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 "Every source can be connected or removed here — the timeline itself stays clean.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, lineHeight = 16.sp,
+                color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = 16.sp,
             )
             Spacer(Modifier.height(16.dp))
 
@@ -1273,25 +1273,25 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier.size(8.dp).clip(CircleShape)
-                            .background(if (calPermission) Good else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f)),
+                            .background(if (calPermission) Good else Ivory.copy(alpha = 0.15f)),
                     )
                     Spacer(Modifier.width(10.dp))
                     Icon(Icons.Rounded.Link, null, tint = Mod.Calendar, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Device calendar", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("Device calendar", color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                         val sportWord = com.ascend.lifeos.data.training.SportCatalog
                             .byId(runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrNull())
                             .label.lowercase()
                         Text(
                             if (calPermission) "Connected — $sportWord sessions merge automatically"
                             else "Your $sportWord sessions appear automatically",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                         )
                     }
                     if (!calPermission) {
                         Text(
-                            "CONNECT", color = Mod.Calendar, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                            "CONNECT", color = Mod.Calendar, fontFamily = Display, fontSize = FS.s10,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
                                 .pressScale { permLauncher.launch(android.Manifest.permission.READ_CALENDAR) }
@@ -1338,29 +1338,29 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
         ) {
             Text(
                 "TIME BLOCKING", color = Mod.Calendar, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(4.dp))
-            Text("Tasks find their own slot", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.Bold)
+            Text("Tasks find their own slot", color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
             Text(
                 "Priority beats deadline beats duration — transparent rules, fixed events never move.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
+                color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
             )
             Spacer(Modifier.height(14.dp))
 
             // add form
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(13.dp))
+                    .background(Ivory.copy(alpha = 0.05f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.1f), RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
-                if (title.isEmpty()) Text("Task title…", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body)
+                if (title.isEmpty()) Text("Task title…", color = TextDim, fontSize = FS.s14, fontFamily = Body)
                 val taskFm = androidx.compose.ui.platform.LocalFocusManager.current
                 androidx.compose.foundation.text.BasicTextField(
                     value = title, onValueChange = { title = it.take(60) }, singleLine = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = FS.s14),
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(Mod.Calendar),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                     keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { taskFm.clearFocus() }),
@@ -1373,9 +1373,9 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     val sel = prio == p
                     Text(
                         label, color = if (sel) Mod.Calendar else TextMuted,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(10.dp))
-                            .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                            .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .clickable { prio = p }
                             .padding(horizontal = 11.dp, vertical = 6.dp),
                     )
@@ -1384,33 +1384,33 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Duration", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
+                Text("Duration", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
-                    "−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+                    "−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).clickable { durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
-                    "$durMin min", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
+                    "$durMin min", color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
                 Text(
-                    "+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+                    "+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).clickable { durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Deadline", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
+                Text("Deadline", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
-                    "−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+                    "−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).clickable { deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
                     if (deadlineDays == 0) "today" else "+$deadlineDays d",
-                    color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold,
+                    color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
                 Text(
-                    "+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+                    "+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(CircleShape).clickable { deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
@@ -1427,7 +1427,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     } else Modifier)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Add task", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Add task", color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
 
             Spacer(Modifier.height(16.dp))
 
@@ -1439,16 +1439,16 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                     Box(
                         Modifier.size(19.dp).clip(CircleShape)
                             .background(if (t.done) Mod.Calendar else Color.Transparent)
-                            .border(1.dp, if (t.done) Mod.Calendar else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), CircleShape)
+                            .border(1.dp, if (t.done) Mod.Calendar else Ivory.copy(alpha = 0.25f), CircleShape)
                             .clickable { Haptics.tick(ctx); com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
                         contentAlignment = Alignment.Center,
-                    ) { if (t.done) Text("✓", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold) }
+                    ) { if (t.done) Text("✓", color = Void, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(11.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
                             t.title,
                             color = if (t.done) TextDim else TextPrimary,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                            fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         )
                         val due = java.time.LocalDate.ofEpochDay(t.deadlineEpochDay)
                         val sched = if (t.scheduledDay >= 0) {
@@ -1458,12 +1458,12 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         Text(
                             "P${t.priority} · due ${due.dayOfMonth}.${due.monthValue}. · ${t.durationMin}m · $sched",
                             color = if (t.scheduledDay >= 0 || t.done) TextDim else Warn,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                            fontSize = FS.s10_5, fontFamily = Body,
                         )
                     }
                     val taskArmed = armedDeleteTask == t.id
                     Text(
-                        "✕", color = if (taskArmed) Crit else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                        "✕", color = if (taskArmed) Crit else TextDim, fontSize = FS.s13,
                         fontWeight = if (taskArmed) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.clip(CircleShape)
                             .clickable {
@@ -1484,7 +1484,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(14.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    .background(Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Mod.Calendar.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
                     .then(if (tasks.any { !it.done }) Modifier.pressScale {
                         Haptics.confirm(ctx)
@@ -1504,7 +1504,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
             ) {
                 Text(
                     planNote ?: "Plan now → free slots",
-                    color = Mod.Calendar, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    color = Mod.Calendar, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
             Spacer(Modifier.height(10.dp))

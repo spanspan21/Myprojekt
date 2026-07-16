@@ -21,10 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.ascend.lifeos.ui.theme.Accent
-import com.ascend.lifeos.ui.theme.Bg
-import com.ascend.lifeos.ui.theme.Line2
-import com.ascend.lifeos.ui.theme.SurfaceHi
+import com.ascend.lifeos.ui.theme.*
 
 @Composable
 fun ProgressBar(progress: Float, color: Color = Accent, height: Dp = 7.dp, modifier: Modifier = Modifier) {

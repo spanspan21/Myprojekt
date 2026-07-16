@@ -71,15 +71,7 @@ import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Display
-import com.ascend.lifeos.ui.theme.FS
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos

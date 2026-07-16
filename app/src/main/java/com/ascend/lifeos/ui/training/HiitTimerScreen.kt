@@ -87,7 +87,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable { Haptics.tick(hCtx); onBack() })
             Spacer(Modifier.width(12.dp))
-            Text("HIIT Timer", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
+            Text("HIIT Timer", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(20.dp))
 
@@ -103,8 +103,8 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                 }, corner = 14.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(p.name, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
-                            Text("${p.workSec}s/${p.restSec}s · ${p.rounds}×${p.sets}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+                            Text(p.name, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                            Text("${p.workSec}s/${p.restSec}s · ${p.rounds}×${p.sets}", color = TextDim, fontSize = FS.s11)
                         }
                         Icon(Icons.Rounded.PlayArrow, "Start preset", tint = Accent, modifier = Modifier.size(20.dp))
                     }
@@ -145,7 +145,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
 
                 Canvas(Modifier.size(220.dp)) {
                     val stroke = Stroke(8.dp.toPx(), cap = StrokeCap.Round)
-                    drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
+                    drawArc(Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
                     drawArc(arcColor, -90f, fraction * 360f, false, style = stroke)
 
                     val angle = (-90 + fraction * 360) * PI / 180
@@ -156,9 +156,9 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                     ))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (isWork) "WORK" else "REST", color = if (isWork) Crit else Cyan, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
-                    Text("$remaining", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s64, fontWeight = FontWeight.ExtraBold)
-                    Text("Round $currentRound/${preset?.rounds ?: 0} · Set $currentSet/${preset?.sets ?: 0}", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13)
+                    Text(if (isWork) "WORK" else "REST", color = if (isWork) Crit else Cyan, fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
+                    Text("$remaining", color = TextPrimary, fontSize = FS.s64, fontWeight = FontWeight.ExtraBold)
+                    Text("Round $currentRound/${preset?.rounds ?: 0} · Set $currentSet/${preset?.sets ?: 0}", color = TextDim, fontSize = FS.s13)
                 }
             }
 
@@ -166,7 +166,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)) {
                 Box(
-                    Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
+                    Modifier.size(56.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, HudLine, CircleShape).pressScale { Haptics.tick(hCtx); paused = !paused },
                     contentAlignment = Alignment.Center,
                 ) { Icon(if (paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, if (paused) "Resume" else "Pause", tint = TextPrimary, modifier = Modifier.size(24.dp)) }

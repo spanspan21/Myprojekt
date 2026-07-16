@@ -235,14 +235,14 @@ fun GuardScreen() {
                 Box(
                     Modifier.weight(1f).pressScale { segment = key }
                         .clip(RoundedCornerShape(11.dp))
-                        .background(if (on) Mod.Guard.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+                        .background(if (on) Mod.Guard.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, if (on) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(11.dp))
                         .padding(vertical = 9.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         label, color = if (on) Mod.Guard else TextMuted,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold,
+                        fontSize = FS.s12, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -282,13 +282,13 @@ fun GuardScreen() {
                             } else Text("…", color = scoreColor, style = metricStyle(28))
                             Text(
                                 "FOCUS", color = TextDim, fontFamily = Display,
-                                fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                                fontSize = FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                             )
                         }
                     }
                     Spacer(Modifier.width(18.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Your score, decoded:", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                        Text("Your score, decoded:", color = TextDim, fontSize = FS.s9, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(3.dp))
                         ScoreRow("Budget", "${usedMin}m / ${budget}m", budgetPart / 45f)
                         ScoreRow("Unlocks", "$unlocks×", unlockPart / 20f)
@@ -309,7 +309,7 @@ fun GuardScreen() {
                                 (if (reclaimed > 0) "$reclaimed min reclaimed by Guard" else "") +
                                     (if (reclaimed > 0 && streak >= 2) " · " else "") +
                                     (if (streak >= 2) "🔥 $streak-day line" else ""),
-                                color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                color = Mod.Guard, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -321,8 +321,8 @@ fun GuardScreen() {
             if (segment == "rules") {
                 Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                        Text("Presets", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
-                        Text("One tap arms a whole day.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                        Text("Presets", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("One tap arms a whole day.", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                         Spacer(Modifier.height(9.dp))
                         val lastPreset = remember(tick) {
                             ctx.getSharedPreferences("wellbeing", android.content.Context.MODE_PRIVATE)
@@ -367,7 +367,7 @@ fun GuardScreen() {
                         }
                         if (lastPreset.isNotBlank()) {
                             Spacer(Modifier.height(7.dp))
-                            Text("applied: $lastPreset", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body)
+                            Text("applied: $lastPreset", color = TextDim, fontSize = FS.s10, fontFamily = Body)
                         }
                     }
                 }
@@ -388,8 +388,8 @@ fun GuardScreen() {
                     // guard master switch
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Guard override", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Text("Blocks limited apps with a full-screen intercept", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                            Text("Guard override", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("Blocks limited apps with a full-screen intercept", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         TogglePill(enabled) {
                             val next = !enabled
@@ -404,17 +404,17 @@ fun GuardScreen() {
                     // morning block
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Morning block", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("Morning block", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text(
                                 if (morningUntil > 0) "No limited apps before ${morningUntil / 60}:${"%02d".format(morningUntil % 60)}"
-                                else "Off", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                                else "Off", color = TextDim, fontSize = FS.s11, fontFamily = Body,
                             )
                         }
                         if (morningUntil > 0) {
-                            Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                            Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
                                 modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
-                            Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                            Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
                                 modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Spacer(Modifier.width(6.dp))
                         }
@@ -429,10 +429,10 @@ fun GuardScreen() {
                     // budget stepper
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Daily budget", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Text("Drives the focus score and Home mission", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                            Text("Daily budget", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("Drives the focus score and Home mission", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
-                        Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                        Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable {
                                 WellbeingStore.setBudgetMin(ctx, budget - 30); tick++
                             }.padding(horizontal = 8.dp))
@@ -440,7 +440,7 @@ fun GuardScreen() {
                             "${budget / 60}h${if (budget % 60 != 0) " ${budget % 60}m" else ""}",
                             color = Mod.Guard, style = metricStyle(15),
                         )
-                        Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
+                        Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable {
                                 WellbeingStore.setBudgetMin(ctx, budget + 30); tick++
                             }.padding(horizontal = 8.dp))
@@ -455,10 +455,10 @@ fun GuardScreen() {
                             val wdM = if (windDown > 0) windDown % 60 else 0
                             Text(
                                 "Grayscale wind-down · %02d:%02d".format(wdH, wdM),
-                                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+                                color = TextPrimary, fontSize = FS.s13_5,
                                 fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
-                            Text("Screen drains to gray at night — scrolling loses its pull", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                            Text("Screen drains to gray at night — scrolling loses its pull", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         TogglePill(windDown > 0) {
                             WellbeingStore.setWindDownStartMin(ctx, if (windDown > 0) 0 else 22 * 60)
@@ -473,13 +473,13 @@ fun GuardScreen() {
                                 val sel = windDown == m
                                 Box(
                                     Modifier.clip(RoundedCornerShape(10.dp))
-                                        .background(if (sel) Mod.Guard.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
+                                        .background(if (sel) Mod.Guard.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
                                         .clickable { WellbeingStore.setWindDownStartMin(ctx, m); tick++; Haptics.tick(ctx) }
                                         .padding(horizontal = 10.dp, vertical = 7.dp),
                                 ) {
                                     Text(
                                         "%d:%02d".format(h, mm), color = if (sel) Mod.Guard else TextDim,
-                                        fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                                     )
                                 }
                             }
@@ -489,7 +489,7 @@ fun GuardScreen() {
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "needs one-time: adb shell pm grant com.ascend.lifeos android.permission.WRITE_SECURE_SETTINGS",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontFamily = Body, lineHeight = 13.sp,
+                            color = TextDim, fontSize = FS.s9_5, fontFamily = Body, lineHeight = 13.sp,
                         )
                     }
                 }
@@ -512,7 +512,7 @@ fun GuardScreen() {
                             val cur = catBudgets[key]
                             Text(
                                 "$label · $count ${if (count == 1) "app" else "apps"} share one pool",
-                                color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                             Spacer(Modifier.height(8.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -548,10 +548,10 @@ fun GuardScreen() {
                     val casOn = cas.enabled(ctx)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("House of Time", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("House of Time", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text(
                                 "Gamble minutes at the limit wall. The house edge works for you.",
-                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
+                                color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = 14.sp,
                             )
                         }
                         Spacer(Modifier.width(10.dp))
@@ -568,7 +568,7 @@ fun GuardScreen() {
                                 .padding(vertical = 13.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("🎮  Practice table — try it risk-free", color = CasinoViolet, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("🎮  Practice table — try it risk-free", color = CasinoViolet, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
                         MiniStepper(
@@ -581,7 +581,7 @@ fun GuardScreen() {
                         val earned = remember(tick) { cas.earnedAttempts(ctx, skillMin) }
                         Text(
                             "Skill-time earns extra spins · 20 min = +1 (max 5). Today: ${skillMin}m → +$earned earned.",
-                            color = if (earned > 0) Champagne else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, lineHeight = 13.sp,
+                            color = if (earned > 0) Champagne else TextDim, fontSize = FS.s10, fontFamily = Body, lineHeight = 13.sp,
                         )
                         Spacer(Modifier.height(10.dp))
                         MiniStepper(
@@ -590,7 +590,7 @@ fun GuardScreen() {
                             onPlus = { cas.setWinCapDay(ctx, cas.winCapDay(ctx) + 15); tick++ },
                         )
                         Spacer(Modifier.height(12.dp))
-                        Text("Max stake", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                        Text("Max stake", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
                         Spacer(Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                             listOf(25, 40, 60, 120).forEach { m ->
@@ -598,7 +598,7 @@ fun GuardScreen() {
                             }
                         }
                         Spacer(Modifier.height(12.dp))
-                        Text("Loss lockout · lose 25m → locked 25/50/75m", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                        Text("Loss lockout · lose 25m → locked 25/50/75m", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
                         Spacer(Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                             listOf(1, 2, 3).forEach { f ->
@@ -606,7 +606,7 @@ fun GuardScreen() {
                             }
                         }
                         Spacer(Modifier.height(12.dp))
-                        Text("Break after last attempt", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                        Text("Break after last attempt", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
                         Spacer(Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                             listOf("midnight" to "Tomorrow", "60" to "1h", "180" to "3h", "360" to "6h").forEach { (v, l) ->
@@ -622,7 +622,7 @@ fun GuardScreen() {
                         val attemptsLeft = remember(tick) { cas.attemptsLeft(ctx, skillMin) }
                         Text(
                             "Today: $attemptsLeft of ${cas.attemptsTotal(ctx, skillMin)} attempts left · won ${cas.wonToday(ctx)}m of ${cas.winCapDay(ctx)}m cap",
-                            color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                         if (todayBonuses.isNotEmpty()) {
                             Spacer(Modifier.height(6.dp))
@@ -633,7 +633,7 @@ fun GuardScreen() {
                                     "· ${DigitalWellbeingManager.appLabel(ctx, pkg)}: +${won}m won" +
                                         (if (cover > 0) " (+${cover}m overrun cleared)" else "") +
                                         " — expires 06:00",
-                                    color = Champagne, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                                    color = Champagne, fontSize = FS.s10_5, fontFamily = Body,
                                 )
                             }
                         }
@@ -642,13 +642,13 @@ fun GuardScreen() {
                             Spacer(Modifier.height(6.dp))
                             Text(
                                 "Tables closed until ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(breakUntil))}",
-                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                             )
                         }
                         Spacer(Modifier.height(10.dp))
                         Text(
                             "This month: you +${cas.statWon(ctx)}m · house +${cas.statLost(ctx)}m",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                         )
                     }
                 }
@@ -665,7 +665,7 @@ fun GuardScreen() {
                         WeekChart(week, budget, Modifier.fillMaxWidth().height(110.dp))
                         Spacer(Modifier.height(8.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            week.forEach { (s, _) -> Text(weekday(s), color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body) }
+                            week.forEach { (s, _) -> Text(weekday(s), color = TextDim, fontSize = FS.s10, fontFamily = Body) }
                         }
                     }
                 }
@@ -685,7 +685,7 @@ fun GuardScreen() {
                     val hot = (0 until 24).maxByOrNull { sums[it] } ?: 0
                     Text(
                         if (sums.sum() == 0) "No unlocks recorded yet." else "Hottest hour: $hot–${hot + 1}",
-                        color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                 }
             }
@@ -822,13 +822,13 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                 Text(
                     if (active) "⏸ WALLS PAUSED" else "PAUSE",
                     color = if (active) Warn else TextDim,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
+                    fontSize = FS.s9, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp,
                 )
                 Spacer(Modifier.weight(1f))
                 if (active) {
                     Text(
                         "Resume now",
-                        color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
+                        color = Accent, fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onResume(); Haptics.confirm(ctx); AppFeedback.show("Guard resumed") }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
@@ -840,7 +840,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                 Spacer(Modifier.height(3.dp))
                 Text(
                     "Every wall is down · auto-resumes in $leftStr",
-                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.SemiBold,
+                    color = TextMuted, fontSize = FS.s11_5, fontWeight = FontWeight.SemiBold,
                 )
             } else {
                 Spacer(Modifier.height(7.dp))
@@ -852,7 +852,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                 Spacer(Modifier.height(5.dp))
                 Text(
                     "Intercepts sleep, maintenance keeps running. It resumes by itself.",
-                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                    color = TextDim, fontSize = FS.s10,
                 )
             }
         }
@@ -881,8 +881,8 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
 
     Panel(
         Modifier.fillMaxWidth(), corner = 18.dp,
-        fill = if (active) Mod.Guard.copy(alpha = 0.07f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f),
-        line = if (active) Mod.Guard.copy(alpha = 0.45f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
+        fill = if (active) Mod.Guard.copy(alpha = 0.07f) else Ivory.copy(alpha = 0.03f),
+        line = if (active) Mod.Guard.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.10f),
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -890,7 +890,7 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                 Spacer(Modifier.width(10.dp))
                 Text(
                     if (active) "FOCUS SESSION RUNNING" else "FOCUS SESSION",
-                    color = Mod.Guard, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                    color = Mod.Guard, fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                 )
             }
@@ -908,13 +908,13 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                             .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
                             .pressScale { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); Haptics.warn(ctx); AppFeedback.show("Focus session ended") }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
-                    ) { Text("End early", color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text("End early", color = Crit, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
-                Text("Every limited app is hard-blocked until the timer ends.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                Text("Every limited app is hard-blocked until the timer ends.", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             } else {
                 Text(
                     "Hard-block all limited apps for a deep-work block.",
-                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body,
+                    color = TextMuted, fontSize = FS.s12_5, fontFamily = Body,
                 )
                 Spacer(Modifier.height(10.dp))
                 val customMin = Prefs.int(ctx, Prefs.FOCUS_CUSTOM_MIN, 45)
@@ -930,12 +930,12 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                                     AppFeedback.show("Focus: $min min — apps locked")
                                 } else Modifier)
                                 .padding(horizontal = 16.dp, vertical = 9.dp),
-                        ) { Text("$min min", color = Mod.Guard, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                        ) { Text("$min min", color = Mod.Guard, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                 }
                 if (!overlayOk) {
                     Spacer(Modifier.height(6.dp))
-                    Text("Needs the overlay permission above.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                    Text("Needs the overlay permission above.", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                 }
             }
         }
@@ -961,7 +961,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
                 "Every guarded app is hard-blocked during a window.",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body,
             )
             if (windows.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
@@ -975,7 +975,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                         )
                         if (w.first > w.second) {
                             Spacer(Modifier.width(8.dp))
-                            Text("overnight", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                            Text("overnight", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                         }
                         Spacer(Modifier.weight(1f))
                         Icon(
@@ -1018,7 +1018,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                         start > end -> "Spans midnight"
                         else -> "15-minute steps"
                     },
-                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
+                    color = TextDim, fontSize = FS.s10, fontFamily = Body,
                     modifier = Modifier.weight(1f),
                 )
                 LimitChip("Add", false) {
@@ -1037,22 +1037,22 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
 @Composable
 private fun ScoreRow(label: String, value: String, quality: Float) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, modifier = Modifier.width(84.dp))
-        Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))) {
+        Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.width(84.dp))
+        Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Ivory.copy(alpha = 0.06f))) {
             Box(
                 Modifier.fillMaxWidth(quality.coerceIn(0.04f, 1f)).height(4.dp).clip(RoundedCornerShape(2.dp))
                     .background(if (quality >= 0.66f) Good else if (quality >= 0.35f) Warn else Crit),
             )
         }
         Spacer(Modifier.width(10.dp))
-        Text(value, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+        Text(value, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 private fun TogglePill(on: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.15f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f), tween(Motion.quick), label = "tpB")
-    val edge by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), tween(Motion.quick), label = "tpE")
+    val bg by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.05f), tween(Motion.quick), label = "tpB")
+    val edge by animateColorAsState(if (on) Mod.Guard.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.12f), tween(Motion.quick), label = "tpE")
     val fg by animateColorAsState(if (on) Mod.Guard else TextDim, tween(Motion.quick), label = "tpF")
     Box(
         Modifier.pressScale(onClick)
@@ -1064,14 +1064,14 @@ private fun TogglePill(on: Boolean, onClick: () -> Unit) {
         Text(
             if (on) "ON" else "OFF",
             color = fg,
-            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+            fontFamily = Display, fontSize = FS.s11, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
     }
 }
 
 @Composable
 private fun HairRow() {
-    Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f)))
+    Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.07f)))
 }
 
 private fun fmtDur(ms: Long): String {
@@ -1110,7 +1110,7 @@ private fun WeekChart(week: List<Pair<Long, Long>>, budgetMin: Int, modifier: Mo
         // budget line
         val by = size.height - (budgetMin * 60_000L.toFloat() / max) * size.height
         drawLine(
-            com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.25f), Offset(0f, by), Offset(size.width, by),
+            Ivory.copy(alpha = 0.25f), Offset(0f, by), Offset(size.width, by),
             strokeWidth = 1.5f,
             pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(8f, 8f)),
         )
@@ -1152,13 +1152,13 @@ private fun AppRow(
                 .padding(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
                     if (icon != null) Image(icon, null, modifier = Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)))
-                    else Text(app.label.take(1), color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold)
+                    else Text(app.label.take(1), color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(app.label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(app.label, color = TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.SemiBold, maxLines = 1)
                     val sub = when {
                         limit != null ->
                             "Limit ${limit}m" +
@@ -1173,10 +1173,10 @@ private fun AppRow(
                     if (sub != null) Text(
                         sub,
                         color = if (over || opensOver) Red else if (bonusWon > 0) Champagne else TextDim,
-                        fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold,
+                        fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Text(fmtDur(app.ms), color = if (over) Red else TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.Bold)
+                Text(fmtDur(app.ms), color = if (over) Red else TextPrimary, fontSize = FS.s14, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(9.dp))
             NeonBar(app.ms.toFloat() / maxMs, if (over) Red else Mod.Guard, Modifier.fillMaxWidth(), height = 5.dp)
@@ -1212,8 +1212,8 @@ private fun AppRow(
                     }
                     1 -> Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Pause gate", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            Text("6-second breath before every open", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+                            Text("Pause gate", color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("6-second breath before every open", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                         }
                         TogglePill(gated) { onSetGate(!gated) }
                     }
@@ -1227,7 +1227,7 @@ private fun AppRow(
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "Apps of one category share a single minute pool",
-                            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
+                            color = TextDim, fontSize = FS.s10, fontFamily = Body,
                         )
                     }
                     else -> Column {
@@ -1247,7 +1247,7 @@ private fun AppRow(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 if (budget == null) "Adjust a stepper to enable" else "Counts every open · resets at 06:00",
-                                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, modifier = Modifier.weight(1f),
+                                color = TextDim, fontSize = FS.s10, fontFamily = Body, modifier = Modifier.weight(1f),
                             )
                             if (budget != null) LimitChip("Off", false) { onSetBudget(null) }
                         }
@@ -1268,7 +1268,7 @@ private fun UnlockHeatmap(hours: Map<Int, IntArray>) {
     Column(Modifier.fillMaxWidth()) {
         days.forEachIndexed { d, label ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(label, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontFamily = Body, modifier = Modifier.width(24.dp))
+                Text(label, color = TextDim, fontSize = FS.s9, fontFamily = Body, modifier = Modifier.width(24.dp))
                 Canvas(Modifier.weight(1f).height(12.dp)) {
                     val gap = 2.dp.toPx()
                     val cw = (size.width - gap * 23) / 24f
@@ -1276,7 +1276,7 @@ private fun UnlockHeatmap(hours: Map<Int, IntArray>) {
                     for (h in 0 until 24) {
                         val c = arr?.getOrNull(h) ?: 0
                         val color =
-                            if (c <= 0) com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)
+                            if (c <= 0) Ivory.copy(alpha = 0.05f)
                             else Mod.Guard.copy(alpha = (0.18f + 0.82f * c.toFloat() / max).coerceAtMost(1f))
                         drawRoundRect(
                             color,
@@ -1294,7 +1294,7 @@ private fun UnlockHeatmap(hours: Map<Int, IntArray>) {
             Spacer(Modifier.width(24.dp))
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceBetween) {
                 listOf("00", "06", "12", "18", "23").forEach {
-                    Text(it, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontFamily = Body)
+                    Text(it, color = TextDim, fontSize = FS.s8_5, fontFamily = Body)
                 }
             }
         }
@@ -1313,11 +1313,11 @@ private fun stepMinutes(cur: Int, dir: Int): Int {
 @Composable
 private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, modifier = Modifier.weight(1f))
-        Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+        Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.weight(1f))
+        Text("−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onMinus).padding(horizontal = 10.dp, vertical = 2.dp))
         Text(value, color = Mod.Guard, style = metricStyle(14), textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
-        Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold,
+        Text("+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onPlus).padding(horizontal = 10.dp, vertical = 2.dp))
     }
 }
@@ -1326,10 +1326,10 @@ private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlu
 private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, a11yOk: Boolean, batteryOk: Boolean, ctx: android.content.Context) {
     GlassPanel(Modifier.fillMaxWidth(), line = Mod.Guard.copy(alpha = 0.35f)) {
         Column(Modifier.fillMaxWidth().padding(18.dp)) {
-            Text("Guard setup", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold)
+            Text("Guard setup", color = TextPrimary, fontSize = FS.s15, fontWeight = FontWeight.Bold)
             Text(
                 "Every green row makes the wall harder to slip past.",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, lineHeight = 16.sp,
+                color = TextMuted, fontSize = FS.s12, lineHeight = 16.sp,
             )
             Spacer(Modifier.height(12.dp))
             PermRow("Usage access", "reads real screen time", usageOk) { DigitalWellbeingManager.requestUsageAccess(ctx) }
@@ -1363,11 +1363,11 @@ private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit
         )
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontWeight = FontWeight.Bold)
-            Text(why, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5)
+            Text(title, color = TextPrimary, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
+            Text(why, color = TextDim, fontSize = FS.s10_5)
         }
         if (ok) {
-            Text("ON", color = Good, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("ON", color = Good, fontSize = FS.s10_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         } else {
             LimitChip("Grant", false, onGrant)
         }
@@ -1378,7 +1378,7 @@ private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit
 private fun EmptyHint(text: String) {
     GlassPanel(Modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth().padding(22.dp), contentAlignment = Alignment.Center) {
-            Text(text, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5)
+            Text(text, color = TextMuted, fontSize = FS.s12_5)
         }
     }
 }
@@ -1388,18 +1388,18 @@ private fun PresetChip(label: String, modifier: Modifier = Modifier, onClick: ()
     Box(
         modifier.pressScale(onClick)
             .clip(RoundedCornerShape(11.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
+            .background(Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, HudLine, RoundedCornerShape(11.dp))
             .padding(vertical = 9.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(label, color = TextMuted, fontSize = FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
 @Composable
 private fun LimitChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.18f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "lcB")
+    val bg by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.04f), tween(Motion.quick), label = "lcB")
     val edge by animateColorAsState(if (selected) Mod.Guard.copy(alpha = 0.5f) else HudLine, tween(Motion.quick), label = "lcE")
     val fg by animateColorAsState(if (selected) Mod.Guard else TextMuted, tween(Motion.quick), label = "lcF")
     Box(
@@ -1408,7 +1408,7 @@ private fun LimitChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .background(bg)
             .border(0.5.dp, edge, RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 7.dp),
-    ) { Text(label, color = fg, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = fg, fontSize = FS.s11_5, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
@@ -1418,5 +1418,5 @@ private fun PillButton(label: String, primary: Boolean, onClick: () -> Unit) {
             .background(if (primary) Mod.Guard.copy(alpha = 0.18f) else HudFill)
             .border(0.5.dp, if (primary) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(13.dp))
             .pressScale(onClick = onClick).padding(horizontal = 16.dp, vertical = 11.dp),
-    ) { Text(label, color = if (primary) Mod.Guard else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = if (primary) Mod.Guard else TextMuted, fontSize = FS.s13, fontWeight = FontWeight.Bold) }
 }

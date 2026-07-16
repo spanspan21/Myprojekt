@@ -21,11 +21,7 @@ import com.ascend.lifeos.R
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.home.buildWeekStats
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextMuted
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Void
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate

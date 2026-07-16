@@ -90,13 +90,13 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp).padding(top = 14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Form Check", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.Bold)
-                Text(exercise.ifBlank { "Any exercise" }, color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text("Form Check", color = TextPrimary, fontFamily = Display, fontSize = FS.s24, fontWeight = FontWeight.Bold)
+                Text(exercise.ifBlank { "Any exercise" }, color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(Ivory.copy(alpha = 0.06f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale { recording?.stop(); onClose() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -106,15 +106,15 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
         if (!camGranted) {
             Panel(Modifier.fillMaxWidth(), corner = 18.dp, onClick = { permLauncher.launch(android.Manifest.permission.CAMERA) }) {
                 Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Camera permission needed", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    Text("Tap to grant — clips never leave the device.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
+                    Text("Camera permission needed", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text("Tap to grant — clips never leave the device.", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                 }
             }
         } else {
             // live preview
             Box(
                 Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(RoundedCornerShape(20.dp))
-                    .border(0.5.dp, if (recording != null) Crit.copy(alpha = 0.7f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
+                    .border(0.5.dp, if (recording != null) Crit.copy(alpha = 0.7f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
             ) {
                 AndroidView(
                     factory = { c ->
@@ -143,17 +143,17 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                             .padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(7.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory))
+                        Box(Modifier.size(7.dp).clip(CircleShape).background(Ivory))
                         Spacer(Modifier.width(6.dp))
-                        Text("REC %d:%02d".format(elapsed / 60, elapsed % 60), color = com.ascend.lifeos.ui.theme.Ivory, style = metricStyle(12))
+                        Text("REC %d:%02d".format(elapsed / 60, elapsed % 60), color = Ivory, style = metricStyle(12))
                     }
                 }
                 // record orb
                 Box(
                     Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp).size(64.dp)
                         .clip(CircleShape)
-                        .background(if (recording != null) Crit else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f))
-                        .border(2.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.8f), CircleShape)
+                        .background(if (recording != null) Crit else Ivory.copy(alpha = 0.15f))
+                        .border(2.dp, Ivory.copy(alpha = 0.8f), CircleShape)
                         .then(if (camReady) Modifier.pressScale {
                             Haptics.tick(ctx)
                             val rec = recording
@@ -171,14 +171,14 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                     Box(
                         Modifier.size(if (recording != null) 22.dp else 30.dp)
                             .clip(if (recording != null) RoundedCornerShape(5.dp) else CircleShape)
-                            .background(if (recording != null) com.ascend.lifeos.ui.theme.Ivory else Crit),
+                            .background(if (recording != null) Ivory else Crit),
                     )
                 }
             }
             Spacer(Modifier.height(8.dp))
             Text(
                 "Film from the side · full body in frame · max 60 s",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body,
                 modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
@@ -201,11 +201,11 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                             Icon(Icons.Rounded.PlayArrow, "Play video", tint = Mod.Train, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(11.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(clipLabel(f), color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(clipLabel(f), color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 Text(
                                     SimpleDateFormat("EEE dd.MM · HH:mm", Locale.ENGLISH).format(Date(f.lastModified())) +
                                         " · ${"%.1f".format(f.length() / 1_048_576.0)} MB",
-                                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+                                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                                 )
                             }
                             val armed = armedDelete == f.absolutePath
@@ -240,7 +240,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
             )
             Text(
-                "tap anywhere to close", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
+                "tap anywhere to close", color = TextDim, fontSize = FS.s12, fontFamily = Body,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
             )
         }

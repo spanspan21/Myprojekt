@@ -25,13 +25,7 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.Crit
-import com.ascend.lifeos.ui.theme.FS
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.Mod
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate

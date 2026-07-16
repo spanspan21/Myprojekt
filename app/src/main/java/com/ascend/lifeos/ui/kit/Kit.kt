@@ -58,7 +58,7 @@ import com.ascend.lifeos.ui.theme.*
  *  voll spec-gesteuert (ATELIER Kap. 21), alles statisch (Gesetz 8). */
 @Composable
 fun ModuleBackground(accent: Color, modifier: Modifier = Modifier) {
-    val spec = com.ascend.lifeos.ui.theme.themeSpec.value
+    val spec = themeSpec.value
     // LUMEN: white light path — bright canvas, aurora blooms, circuit filigree.
     if (spec.light) { LumenBackground(accent, modifier); return }
     // Nebel-Ton: Metall-Beimischung je Welt; warmth == 1 → modul-unabhängig (TERRA)
@@ -168,7 +168,7 @@ fun Panel(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(corner)
-    val spec = com.ascend.lifeos.ui.theme.themeSpec.value
+    val spec = themeSpec.value
 
     // ── LUMEN light path: white glass lifted by a soft blue-tinted shadow.
     //    Press drops the elevation, dips the scale and blooms an electric-blue
@@ -233,7 +233,7 @@ fun JarvisHeader(
     overline: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val editorial = com.ascend.lifeos.ui.theme.themeSpec.value.displaySerif
+    val editorial = themeSpec.value.displaySerif
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f)) {
             if (overline != null) {
@@ -250,7 +250,7 @@ fun JarvisHeader(
                 Spacer(Modifier.height(if (editorial) 5.dp else 3.dp))
                 Text(
                     context, color = if (editorial) TextMuted else accent,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -296,7 +296,7 @@ fun SectionLabel(
         if (number != null) {
             Text(
                 number.toString().padStart(2, '0'), color = accent.copy(alpha = 0.9f),
-                fontFamily = MicroLabel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+                fontFamily = MicroLabel, fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
             )
             Spacer(Modifier.width(7.dp))
         }
@@ -317,7 +317,7 @@ fun StatTile(value: String, label: String, color: Color = TextPrimary, modifier:
         Spacer(Modifier.height(3.dp))
         Text(
             label.uppercase(), color = TextDim, fontFamily = MicroLabel,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 1.4.sp,
+            fontSize = FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 1.4.sp,
         )
     }
 }
@@ -329,7 +329,7 @@ fun Ring(
     color: Color,
     modifier: Modifier = Modifier,
     stroke: Dp = 5.dp,
-    track: Color = com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f),
+    track: Color = Ivory.copy(alpha = 0.06f),
     animate: Boolean = true,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -344,7 +344,7 @@ fun Ring(
             drawArc(track, -90f, 360f, false, topLeft = tl, size = sz, style = s)
             if (p > 0f) {
                 // glow underlay (Faktor der Welt) — a soft wide arc, then the crisp value
-                val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+                val glowF = themeSpec.value.glow
                 if (glowF > 0f) drawArc(
                     color.copy(alpha = 0.22f * glowF), -90f, p * 360f, false,
                     topLeft = tl, size = sz, style = Stroke(stroke.toPx() * 2.4f, cap = StrokeCap.Round),
@@ -392,7 +392,7 @@ fun Spark(
         baseline?.let {
             val by = y(it)
             drawLine(
-                com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.15f), Offset(0f, by), Offset(size.width, by),
+                Ivory.copy(alpha = 0.15f), Offset(0f, by), Offset(size.width, by),
                 strokeWidth = 1.dp.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f)),
             )
@@ -411,7 +411,7 @@ fun Spark(
             drawPath(area, Brush.verticalGradient(listOf(color.copy(alpha = 0.18f * p), Color.Transparent)))
         }
         // glow first (Faktor der Welt — MONO: 0), line on top
-        val glowF = com.ascend.lifeos.ui.theme.themeSpec.value.glow
+        val glowF = themeSpec.value.glow
         if (glowF > 0f) drawPath(shown, color.copy(alpha = 0.22f * glowF), style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
         drawPath(shown, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
         // Endpunkt-Halo (Web-Signatur): Ring + Kern markieren den jüngsten Wert
@@ -428,7 +428,7 @@ fun ProgressDots(total: Int, reached: Int, color: Color, modifier: Modifier = Mo
             val current = i == reached - 1
             Box(
                 Modifier.size(if (current) dot + 3.dp else dot).clip(CircleShape)
-                    .background(if (filled) color else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f))
+                    .background(if (filled) color else Ivory.copy(alpha = 0.08f))
                     .then(if (current) Modifier.border(1.dp, color.copy(alpha = 0.5f), CircleShape) else Modifier),
             )
         }
@@ -444,7 +444,7 @@ fun VerdictPill(text: String, color: Color, modifier: Modifier = Modifier) {
     ) {
         Text(
             text.uppercase(), color = color, fontFamily = MicroLabel,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+            fontSize = FS.s9_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
     }
 }
@@ -480,16 +480,16 @@ fun EmptyState(
             contentAlignment = Alignment.Center,
         ) { Icon(icon, null, tint = accent, modifier = Modifier.size(24.dp)) }
         Spacer(Modifier.height(12.dp))
-        Text(title, color = TextPrimary, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s14_5, fontWeight = FontWeight.Bold)
+        Text(title, color = TextPrimary, fontFamily = Body, fontSize = FS.s14_5, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(3.dp))
-        Text(hint, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body)
+        Text(hint, color = TextDim, fontSize = FS.s12, fontFamily = Body)
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(14.dp))
             Box(
                 Modifier.clip(RoundedCornerShape(12.dp)).background(accent.copy(alpha = 0.14f))
                     .border(0.5.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                     .pressScale(onClick = onAction).padding(horizontal = 16.dp, vertical = 9.dp),
-            ) { Text(actionLabel, color = accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+            ) { Text(actionLabel, color = accent, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
     }
 }
@@ -550,7 +550,7 @@ fun MissionChip(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     label, color = if (done) color else TextMuted, fontFamily = Body,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    fontSize = FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -596,15 +596,15 @@ fun ShimmerPanel(modifier: Modifier = Modifier, height: Dp = 96.dp, corner: Dp =
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(corner))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.03f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), RoundedCornerShape(corner))
+            .background(Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.06f), RoundedCornerShape(corner))
             .drawBehind {
                 val band = size.width * 0.32f
                 val start = -band + (size.width + 2f * band) * x
                 drawRect(
                     Brush.linearGradient(
                         0f to Color.Transparent,
-                        0.5f to com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f),
+                        0.5f to Ivory.copy(alpha = 0.07f),
                         1f to Color.Transparent,
                         start = Offset(start, 0f),
                         end = Offset(start + band, size.height),

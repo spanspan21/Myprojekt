@@ -48,10 +48,10 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
     ) {
         Text(
             "SESSION COMPLETE", color = ember, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
         )
         Spacer(Modifier.height(6.dp))
-        Text(s.name, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontWeight = FontWeight.Bold)
+        Text(s.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(18.dp))
 
         // headline numbers
@@ -69,7 +69,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
             Text(
                 (if (d >= 0) "+" else "") + "$d% volume vs. your last ${s.name}",
                 color = if (d >= 0) Good else Warn,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
             )
         }
@@ -87,7 +87,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "${s.prs.size} PERSONAL RECORD${if (s.prs.size > 1) "S" else ""}",
-                            color = Amber, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5,
+                            color = Amber, fontFamily = Display, fontSize = FS.s10_5,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                         )
                     }
@@ -100,7 +100,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
                             PrType.LONGEST_HOLD -> "${pr.value.toInt()}s hold"
                             PrType.MAX_VOLUME -> "${pr.value.toInt()} volume"
                         }
-                        Text("· ${pr.exerciseName} — $v", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("· ${pr.exerciseName} — $v", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(3.dp))
                     }
                 }
@@ -111,7 +111,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         // muscles hit
         Text(
             "MUSCLES HIT TODAY", color = TextDim, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+            fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
         )
         Spacer(Modifier.height(12.dp))
         MuscleMap(
@@ -124,7 +124,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         com.ascend.lifeos.ui.kit.Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Text(
                 "Protein window: aim for 30–40 g within the next ~2 hours. Fuel has your top sources.",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
+                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = 18.sp,
                 modifier = Modifier.padding(14.dp),
             )
         }
@@ -135,7 +135,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
                 .pressScale { Haptics.confirm(sumCtx); vm.dismissSummary(); onDone() }
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Done", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
+        ) { Text("Done", color = Void, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.ExtraBold) }
     }
 }
 
@@ -143,7 +143,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
 private fun SumStat(value: String, label: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, style = metricStyle(34))
-        Text(label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+        Text(label, color = TextDim, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
     }
 }
 
@@ -176,21 +176,21 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
             Spacer(Modifier.weight(1f))
             Text(
                 "TEST DAY", color = ember, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
         }
         Spacer(Modifier.height(40.dp))
 
         when (result) {
             null -> {
-                Text(chain.groupName, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text(chain.groupName, color = TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
-                Text(level.exerciseName, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s27, fontWeight = FontWeight.Bold)
+                Text(level.exerciseName, color = TextPrimary, fontFamily = Display, fontSize = FS.s27, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     if (isHold) "Hold for $target seconds — clean form, then log your best hold."
                     else "Target: $target clean reps in one set. Warm up first, then send it.",
-                    color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, lineHeight = 20.sp,
+                    color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = 20.sp,
                 )
                 Spacer(Modifier.height(36.dp))
 
@@ -205,7 +205,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                         Text("$value", color = TextPrimary, style = metricStyle(60))
                         Text(
                             if (isHold) "SECONDS" else "REPS", color = TextDim, fontFamily = Display,
-                            fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                            fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                         )
                     }
                     Spacer(Modifier.width(22.dp))
@@ -213,7 +213,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "PASS AT $target", color = ember, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s11,
+                    "PASS AT $target", color = ember, fontFamily = Display, fontSize = FS.s11,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                 )
@@ -232,7 +232,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                 ) {
                     Text(
                         "Log test result", color = if (value > 0) Void else TextDim,
-                        fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold,
+                        fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.ExtraBold,
                     )
                 }
             }
@@ -245,11 +245,11 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                 }
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.height(30.dp))
-                    Text("LEVEL UP", color = Good, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
+                    Text("LEVEL UP", color = Good, fontFamily = Display, fontSize = FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
                     Spacer(Modifier.height(10.dp))
                     Text(
                         chain.levels.find { it.level == userLevel + 1 }?.exerciseName ?: "Mastery",
-                        color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s26, fontWeight = FontWeight.Bold,
+                        color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(14.dp))
@@ -257,40 +257,40 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Spacer(Modifier.height(18.dp))
                     Text(
                         "$value ${if (isHold) "seconds" else "reps"} — earned, not given.",
-                        color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body,
+                        color = TextMuted, fontSize = FS.s13_5, fontFamily = Body,
                     )
                     Spacer(Modifier.height(36.dp))
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Good)
                             .pressScale { Haptics.success(ctx); onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Continue", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
+                    ) { Text("Continue", color = Void, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.ExtraBold) }
                 }
             }
             false -> {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.height(30.dp))
-                    Text("NOT YET", color = Warn, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
+                    Text("NOT YET", color = Warn, fontFamily = Display, fontSize = FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
                     Spacer(Modifier.height(10.dp))
                     Text(
                         "$value/$target — closer than last time.",
-                        color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold,
+                        color = TextPrimary, fontFamily = Display, fontSize = FS.s22, fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(10.dp))
                     Text(
                         "The reps you just did still count as training. Keep feeding the pattern — the next test will fall.",
-                        color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, lineHeight = 20.sp,
+                        color = TextMuted, fontSize = FS.s13_5, fontFamily = Body, lineHeight = 20.sp,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(36.dp))
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+                            .background(Ivory.copy(alpha = 0.06f))
+                            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
                             .pressScale { Haptics.tick(ctx); onDone() }.padding(vertical = 15.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Back to training", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.Bold) }
+                    ) { Text("Back to training", color = TextMuted, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -300,9 +300,9 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
 @Composable
 private fun TestStep(label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(58.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
+        Modifier.size(58.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s23, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = TextPrimary, fontSize = FS.s23, fontWeight = FontWeight.Bold) }
 }

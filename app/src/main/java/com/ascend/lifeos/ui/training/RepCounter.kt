@@ -70,13 +70,13 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
         Column(Modifier.fillMaxSize().statusBarsPadding().padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Rep Counter", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold)
-                    Text("EXPERIMENTAL · on-device only", color = Warn, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                    Text("Rep Counter", color = TextPrimary, fontFamily = Display, fontSize = FS.s22, fontWeight = FontWeight.Bold)
+                    Text("EXPERIMENTAL · on-device only", color = Warn, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                 }
                 Box(
                     Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                        .background(Ivory.copy(alpha = 0.06f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                         .pressScale(onClick = onClose),
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
@@ -86,16 +86,16 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
             if (!camGranted) {
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                        .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-                        .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
+                        .background(Ivory.copy(alpha = 0.05f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
                         .pressScale { Haptics.tick(ctx); permLauncher.launch(android.Manifest.permission.CAMERA) }
                         .padding(20.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                ) { Text("Tap to grant camera access", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
             } else {
                 Box(
                     Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(20.dp))
-                        .border(0.5.dp, if (tracking) Good.copy(alpha = 0.6f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
+                        .border(0.5.dp, if (tracking) Good.copy(alpha = 0.6f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(20.dp)),
                 ) {
                     AndroidView(
                         factory = { c ->
@@ -145,33 +145,33 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                         Text(
                             if (tracking) "TRACKING" else "STEP INTO FRAME",
                             color = if (tracking) Good else TextDim,
-                            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                            fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                         )
                     }
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "Prop the phone up · whole body visible · steady light",
-                    color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
+                    color = TextDim, fontSize = FS.s11, fontFamily = Body,
                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(
                         Modifier.weight(1f).clip(RoundedCornerShape(13.dp))
-                            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-                            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
+                            .background(Ivory.copy(alpha = 0.06f))
+                            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
                             .pressScale { Haptics.warn(ctx); reps = 0; counter.reset() }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Reset", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text("Reset", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Box(
                         Modifier.weight(2f).clip(RoundedCornerShape(13.dp))
                             .background(if (reps > 0) Mod.Train else Mod.Train.copy(alpha = 0.25f))
                             .then(if (reps > 0) Modifier.pressScale { Haptics.confirm(ctx); onUseCount(reps); onClose() } else Modifier)
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Use $reps reps", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+                    ) { Text("Use $reps reps", color = Void, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
                 }
                 Spacer(Modifier.height(6.dp))
             }

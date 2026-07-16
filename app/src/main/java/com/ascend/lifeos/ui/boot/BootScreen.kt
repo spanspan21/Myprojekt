@@ -184,11 +184,11 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             .padding(horizontal = 26.dp).padding(top = 40.dp, bottom = 30.dp),
     ) {
         com.ascend.lifeos.ui.home.Reveal(0) {
-        Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+        Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = FS.s10,
             fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp)
         Spacer(Modifier.height(6.dp))
         Text("The numbers everything is computed from", color = TextPrimary,
-            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s21, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
+            fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
         }
         Spacer(Modifier.height(18.dp))
 
@@ -207,7 +207,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         Spacer(Modifier.height(14.dp))
         com.ascend.lifeos.ui.home.Reveal(2) {
-        Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -229,7 +229,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         // the universality question: which sport is YOURS — calendar words,
         // load model and game-day logic all follow this choice
         Spacer(Modifier.height(14.dp))
-        Text("YOUR SPORT", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("YOUR SPORT", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         var sport by remember { mutableStateOf(com.ascend.lifeos.data.Repo.data.profile.sport) }
@@ -247,7 +247,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         // activity level — drives TDEE multiplier, was hardcoded to 3
         Spacer(Modifier.height(14.dp))
-        Text("ACTIVITY LEVEL", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("ACTIVITY LEVEL", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         val activityLabels = listOf(1 to "Sedentary", 2 to "Light", 3 to "Moderate", 4 to "Active", 5 to "Very active")
@@ -262,16 +262,16 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         // training schedule
         Spacer(Modifier.height(14.dp))
-        Text("TRAINING", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("TRAINING", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
-        Text("Sessions per week", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Text("Sessions per week", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(5.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             (2..6).forEach { f -> BootChip("${f}×", trainFreq == f) { trainFreq = f } }
         }
         Spacer(Modifier.height(10.dp))
-        Text("Session length", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Text("Session length", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(5.dp))
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
@@ -282,7 +282,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         // …and which KIND of goal: weight is only one of five stories
         Spacer(Modifier.height(14.dp))
-        Text("YOUR GOAL", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("YOUR GOAL", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         Row(
@@ -297,10 +297,10 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         // wake time — sets morning briefing notification
         Spacer(Modifier.height(14.dp))
-        Text("WAKE TIME", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("WAKE TIME", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(4.dp))
-        Text("When JARVIS sends your morning briefing", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Text("When JARVIS sends your morning briefing", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(8.dp))
         var wakeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.NOTIF_MORNING_MIN, 420)) }
         Row(
@@ -317,10 +317,10 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         // sleep target — drives recovery scoring and sleep debt
         Spacer(Modifier.height(14.dp))
-        Text("SLEEP", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("SLEEP", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(4.dp))
-        Text("Your target — JARVIS measures debt against this", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Text("Your target — JARVIS measures debt against this", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(8.dp))
         var sleepTarget by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_TARGET_MIN, 0).let { if (it == 0) 480 else it }) }
         Row(
@@ -335,7 +335,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             }
         }
         Spacer(Modifier.height(10.dp))
-        Text("Bedtime", color = TextMuted, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+        Text("Bedtime", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(6.dp))
         var bedtimeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GREET_NIGHT_START, 22) * 60) }
         Row(
@@ -352,7 +352,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         Spacer(Modifier.height(14.dp))
         com.ascend.lifeos.ui.home.Reveal(3) {
-        Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("SYSTEMS", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         BootPanel {
@@ -372,7 +372,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         }
         Text(
             "Each one is optional — JARVIS stays honest about what it can't see.",
-            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             modifier = Modifier.padding(top = 8.dp),
         )
         }
@@ -384,7 +384,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         }
         val targets = bd.targets
         val waterMl = weight * Prefs.int(ctx, Prefs.WATER_ML_PER_KG, 30)
-        Text("YOUR TARGETS", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+        Text("YOUR TARGETS", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
         BootPanel {
@@ -392,25 +392,25 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
                 TargetStat("${targets.kcal}", "KCAL", Mod.Fuel)
                 TargetStat("${targets.protein}g", "PROTEIN", Mod.Train)
                 TargetStat("${targets.carbs}g", "CARBS", Mod.Fuel)
-                TargetStat("${targets.fat}g", "FAT", com.ascend.lifeos.ui.theme.Amber)
+                TargetStat("${targets.fat}g", "FAT", Amber)
             }
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TargetStat("${waterMl / 1000.0}L", "WATER", com.ascend.lifeos.ui.theme.Cyan)
+                TargetStat("${waterMl / 1000.0}L", "WATER", Cyan)
                 TargetStat("${trainFreq}×", "SESSIONS", Mod.Train)
                 TargetStat("${sessionLen}m", "LENGTH", Mod.Train)
             }
             Spacer(Modifier.height(10.dp))
             Text(
                 "BMR ${bd.bmr} × ${bd.activityFactor} = TDEE ${bd.tdee} → ${bd.goalAdj}",
-                color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body,
+                color = TextDim, fontSize = FS.s10, fontFamily = Body,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
         Text(
             "Mifflin–St Jeor formula — adjusts as JARVIS learns you",
-            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body,
+            color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             modifier = Modifier.padding(top = 8.dp),
         )
 
@@ -422,7 +422,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5,
+            Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = FS.s13_5,
                 fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         }
         }
@@ -436,7 +436,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             Box(
                 Modifier.fillMaxWidth(curtain.value).height(1.dp).background(
                     Brush.horizontalGradient(
-                        listOf(Color.Transparent, com.ascend.lifeos.ui.theme.Champagne, Color.Transparent),
+                        listOf(Color.Transparent, Champagne, Color.Transparent),
                     ),
                 ),
             )
@@ -449,8 +449,8 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.035f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f), RoundedCornerShape(18.dp))
+            .background(Ivory.copy(alpha = 0.035f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.1f), RoundedCornerShape(18.dp))
             .padding(14.dp),
         content = content,
     )
@@ -460,11 +460,11 @@ private fun BootPanel(content: @Composable ColumnScope.() -> Unit) {
 private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val bg by animateColorAsState(
-        if (selected) Mod.Home.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f),
+        if (selected) Mod.Home.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f),
         tween(Motion.quick), label = "bcB",
     )
     val edge by animateColorAsState(
-        if (selected) Mod.Home.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.1f),
+        if (selected) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.1f),
         tween(Motion.quick), label = "bcE",
     )
     val fg by animateColorAsState(
@@ -479,7 +479,7 @@ private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .border(0.5.dp, edge, RoundedCornerShape(11.dp))
             .padding(horizontal = 13.dp, vertical = 8.dp),
     ) {
-        Text(label, color = fg, fontSize = com.ascend.lifeos.ui.theme.FS.s12,
+        Text(label, color = fg, fontSize = FS.s12,
             fontFamily = Body, fontWeight = FontWeight.Bold)
     }
 }
@@ -487,11 +487,11 @@ private fun BootChip(label: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 private fun TuneStepper(label: String, value: Int, unit: String, onDelta: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body,
+        Text(label, color = TextMuted, fontSize = FS.s13, fontFamily = Body,
             fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         StepBtn("−") { onDelta(-1) }
         Text(
-            "$value $unit", color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s16,
+            "$value $unit", color = TextPrimary, fontFamily = Display, fontSize = FS.s16,
             fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
             modifier = Modifier.width(86.dp),
         )
@@ -504,18 +504,18 @@ private fun StepBtn(sign: String, onClick: () -> Unit) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+            .background(Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
             .clickable { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
-    ) { Text(sign, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold) }
+    ) { Text(sign, color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
 }
 
 @Composable
 private fun TargetStat(value: String, label: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = color, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.ExtraBold)
-        Text(label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+        Text(value, color = color, fontFamily = Display, fontSize = FS.s17, fontWeight = FontWeight.ExtraBold)
+        Text(label, color = TextDim, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
     }
 }
 
@@ -529,17 +529,17 @@ private fun PermRow(title: String, hint: String, granted: Boolean, onRequest: ()
     ) {
         Box(
             Modifier.size(8.dp).clip(CircleShape)
-                .background(if (granted) Good else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.18f)),
+                .background(if (granted) Good else Ivory.copy(alpha = 0.18f)),
         )
         Spacer(Modifier.width(11.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
-            Text(hint, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontFamily = Body)
+            Text(title, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+            Text(hint, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
         }
         Text(
             if (granted) "ONLINE" else "GRANT",
             color = if (granted) Good else Mod.Home,
-            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+            fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
         )
     }
 }
@@ -571,7 +571,7 @@ private fun ParticleField() {
     Canvas(Modifier.fillMaxSize()) {
         parts.forEach { p ->
             val y = (((p.y - drift * p.speed) % 1f) + 1f) % 1f
-            val col = if (p.mint) Mod.Home.copy(alpha = p.alpha + 0.05f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = p.alpha)
+            val col = if (p.mint) Mod.Home.copy(alpha = p.alpha + 0.05f) else Ivory.copy(alpha = p.alpha)
             drawCircle(col, p.radius.dp.toPx(), Offset(p.x * size.width, y * size.height))
         }
     }
@@ -618,7 +618,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                             close()
                         }
                         // ghost track
-                        drawPath(hex, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f), style = Stroke(1.5.dp.toPx()))
+                        drawPath(hex, Ivory.copy(alpha = 0.06f), style = Stroke(1.5.dp.toPx()))
                         // animated stroke
                         val pm = PathMeasure().apply { setPath(hex, true) }
                         if (hexSweep.value > 0f) {
@@ -633,7 +633,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                             val a = Math.toRadians(i * 30.0)
                             val p1 = Offset(c.x + (r2 - 4.dp.toPx()) * cos(a).toFloat(), c.y + (r2 - 4.dp.toPx()) * sin(a).toFloat())
                             val p2 = Offset(c.x + r2 * cos(a).toFloat(), c.y + r2 * sin(a).toFloat())
-                            drawLine(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), p1, p2, 1.dp.toPx())
+                            drawLine(Ivory.copy(alpha = 0.12f), p1, p2, 1.dp.toPx())
                         }
                     }
                     Box(Modifier.size(7.dp).clip(CircleShape).background(Mod.Home))
@@ -647,7 +647,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                         val a by animateFloatAsState(if (i < lit) 1f else 0f, tween(300), label = "l$i")
                         Text(
                             "$ch", color = lerp(Mod.Home, TextPrimary, a),
-                            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s36, fontWeight = FontWeight.Bold,
+                            fontFamily = Display, fontSize = FS.s36, fontWeight = FontWeight.Bold,
                             modifier = Modifier.graphicsLayer {
                                 alpha = a
                                 translationY = (1f - a) * 10.dp.toPx()
@@ -660,7 +660,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
                 val capA by animateFloatAsState(if (lit >= 6) 1f else 0f, tween(400), label = "cap")
                 Text(
                     "PERSONAL OPERATING SYSTEM", color = TextDim.copy(alpha = capA),
-                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+                    fontFamily = Display, fontSize = FS.s9_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
                 )
             }
@@ -683,7 +683,7 @@ private fun MaterializePhase(onNext: () -> Unit) {
 
         Text(
             "INITIALIZING · TAP TO SKIP", color = TextDim.copy(alpha = 0.6f),
-            fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9,
+            fontFamily = Display, fontSize = FS.s9,
             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
         )
         Spacer(Modifier.height(52.dp))
@@ -740,12 +740,12 @@ private fun CalibratePhase(onNext: () -> Unit) {
 
         Text(
             "CALIBRATION", color = Mod.Home, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             "Bringing systems online", color = TextPrimary, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s23, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp,
+            fontSize = FS.s23, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp,
         )
 
         Spacer(Modifier.height(30.dp))
@@ -757,25 +757,25 @@ private fun CalibratePhase(onNext: () -> Unit) {
                 Text(
                     s.label,
                     color = if (on) TextPrimary else TextMuted,
-                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5,
+                    fontFamily = Display, fontSize = FS.s11_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp,
                     modifier = Modifier.width(84.dp),
                 )
                 Column(Modifier.weight(1f)) {
-                    Box(Modifier.fillMaxWidth().height(2.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.07f))) {
+                    Box(Modifier.fillMaxWidth().height(2.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.07f))) {
                         Box(
                             Modifier.fillMaxWidth(p.coerceIn(0f, 1f)).fillMaxHeight()
                                 .clip(CircleShape).background(s.accent),
                         )
                     }
                     Spacer(Modifier.height(5.dp))
-                    Text(s.readout, color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontFamily = Body, maxLines = 1)
+                    Text(s.readout, color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 1)
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(
                     if (on) "ONLINE" else "· · ·",
                     color = if (on) s.accent else TextDim,
-                    fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+                    fontFamily = Display, fontSize = FS.s9_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                     modifier = Modifier.width(46.dp), textAlign = TextAlign.End,
                 )
@@ -792,7 +792,7 @@ private fun CalibratePhase(onNext: () -> Unit) {
             Spacer(Modifier.weight(1f))
             Text(
                 "TAP TO SKIP", color = TextDim.copy(alpha = 0.6f), fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
+                fontSize = FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
             )
         }
         Spacer(Modifier.height(52.dp))
@@ -836,7 +836,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
 
         Text(
             "OPERATOR", color = Mod.Home, fontFamily = Display,
-            fontSize = com.ascend.lifeos.ui.theme.FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
+            fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
         )
         Spacer(Modifier.height(10.dp))
 
@@ -848,7 +848,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 onValueChange = { if (it.length <= 24) onName(it) },
                 singleLine = true,
                 textStyle = TextStyle(
-                    color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s30,
+                    color = TextPrimary, fontFamily = Display, fontSize = FS.s30,
                     fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                 ),
                 cursorBrush = SolidColor(Mod.Home),
@@ -859,7 +859,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         } else {
             Text(
                 name.ifBlank { DEFAULT_NAME }, color = TextPrimary, fontFamily = Display,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontWeight = FontWeight.Bold,
+                fontSize = FS.s30, fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
                     .clickable(
@@ -872,7 +872,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         Spacer(Modifier.height(6.dp))
         Text(
             "profile calibrated · tap name to change",
-            color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body,
+            color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
         )
 
         Spacer(Modifier.height(44.dp))
@@ -881,7 +881,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         Box(Modifier.size(196.dp), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {
                 val base = 68.dp.toPx()
-                drawCircle(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f), radius = base + 12.dp.toPx(), style = Stroke(1.dp.toPx()))
+                drawCircle(Ivory.copy(alpha = 0.08f), radius = base + 12.dp.toPx(), style = Stroke(1.dp.toPx()))
                 if (!engaged) {
                     val pr = base + 8.dp.toPx() + pulse * 24.dp.toPx()
                     drawCircle(Mod.Home.copy(alpha = (1f - pulse) * 0.32f), radius = pr, style = Stroke(1.5.dp.toPx()))
@@ -901,7 +901,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
             ) {
                 Text(
                     if (engaged) "ONLINE" else "GO ONLINE",
-                    color = Void, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13,
+                    color = Void, fontFamily = Display, fontSize = FS.s13,
                     fontWeight = FontWeight.Bold, letterSpacing = 2.5.sp,
                 )
             }
@@ -912,8 +912,8 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         if (showHc) {
             Row(
                 Modifier.clip(RoundedCornerShape(12.dp))
-                    .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-                    .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .background(Ivory.copy(alpha = 0.04f))
+                    .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .clickable { hcLauncher.launch(HealthConnect.requestPermissions()) }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -922,7 +922,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 Spacer(Modifier.width(9.dp))
                 Text(
                     "Connect Health Connect", color = TextMuted,
-                    fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
         }

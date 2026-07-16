@@ -72,7 +72,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
             Spacer(Modifier.width(12.dp))
-            Text("Metronome", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold)
+            Text("Metronome", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
         }
         Spacer(Modifier.height(24.dp))
 
@@ -97,19 +97,19 @@ fun MetronomeScreen(onBack: () -> Unit) {
             val fraction = remaining.toFloat() / totalPhase
             Canvas(Modifier.size(200.dp)) {
                 val stroke = Stroke(6.dp.toPx(), cap = StrokeCap.Round)
-                drawArc(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
+                drawArc(Ivory.copy(alpha = 0.04f), 0f, 360f, false, style = stroke)
                 if (running) {
                     drawArc(phaseColors[phase], -90f, fraction * 360f, false, style = stroke)
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (running) {
-                    Text(phaseNames[phase], color = phaseColors[phase], fontSize = com.ascend.lifeos.ui.theme.FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
-                    Text("$remaining", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s56, fontWeight = FontWeight.ExtraBold)
+                    Text(phaseNames[phase], color = phaseColors[phase], fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                    Text("$remaining", color = TextPrimary, fontSize = FS.s56, fontWeight = FontWeight.ExtraBold)
                 } else {
-                    Text(tempo, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s32, fontWeight = FontWeight.ExtraBold)
+                    Text(tempo, color = TextPrimary, fontSize = FS.s32, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(4.dp))
-                    Text("Ecc-Pause-Con-Pause", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11)
+                    Text("Ecc-Pause-Con-Pause", color = TextDim, fontSize = FS.s11)
                 }
             }
         }

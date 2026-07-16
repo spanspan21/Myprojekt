@@ -61,7 +61,7 @@ fun DecisionJournalScreen(onClose: () -> Unit) {
         } else {
             Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = { newOpen = true }) {
                 Text(
-                    "+ New decision", color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    "+ New decision", color = Mod.Home, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
                 )
             }
@@ -107,7 +107,7 @@ private fun DecisionCard(d: Decision, expanded: Boolean, onToggle: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    d.title, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s14,
+                    d.title, color = TextPrimary, fontSize = FS.s14,
                     fontFamily = Body, fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.weight(1f),
                 )
@@ -120,7 +120,7 @@ private fun DecisionCard(d: Decision, expanded: Boolean, onToggle: () -> Unit) {
             ScoreRow(d.optionB, b, other = a, color = TextDim, leads = rec == "B")
             if (rec == "tie" && d.factors.isNotEmpty()) {
                 Spacer(Modifier.height(7.dp))
-                Text("Tie — within 5%. Add the factor that actually matters.", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body)
+                Text("Tie — within 5%. Add the factor that actually matters.", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             }
             if (expanded) ExpandedBody(d)
         }
@@ -145,12 +145,12 @@ private fun ScoreRow(label: String, score: Int, other: Int, color: Color, leads:
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 label.ifBlank { "—" }, color = if (leads) TextPrimary else TextMuted,
-                fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
             if (leads) {
                 Text(
-                    "LEADS", color = color, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
+                    "LEADS", color = color, fontFamily = Display, fontSize = FS.s8_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
                 )
                 Spacer(Modifier.width(8.dp))
@@ -158,7 +158,7 @@ private fun ScoreRow(label: String, score: Int, other: Int, color: Color, leads:
             Text("$score", color = if (leads) TextPrimary else TextMuted, style = metricStyle(13))
         }
         Spacer(Modifier.height(4.dp))
-        Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))) {
+        Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))) {
             Box(
                 Modifier.fillMaxWidth((score / top.toFloat()).coerceIn(0f, 1f))
                     .fillMaxHeight().clip(CircleShape).background(color),
@@ -174,7 +174,7 @@ private fun ExpandedBody(d: Decision) {
     val ctx = LocalContext.current
     Column {
         Spacer(Modifier.height(13.dp))
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f)))
+        Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.08f)))
         Spacer(Modifier.height(12.dp))
 
         if (d.factors.isNotEmpty()) {
@@ -183,11 +183,11 @@ private fun ExpandedBody(d: Decision) {
             d.factors.forEach { f ->
                 Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        f.name, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body,
+                        f.name, color = TextMuted, fontSize = FS.s12, fontFamily = Body,
                         fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
                     )
                     Text(
-                        "W${f.weight}", color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5,
+                        "W${f.weight}", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
                     )
                     Spacer(Modifier.width(10.dp))
@@ -219,7 +219,7 @@ private fun ExpandedBody(d: Decision) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "Chose ${d.chosen} — ${if (d.chosen == "A") d.optionA else d.optionB}",
-                color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(7.dp))
             var note by remember(d.id) { mutableStateOf(d.outcomeNote) }
@@ -245,7 +245,7 @@ private fun ExpandedBody(d: Decision) {
         Text(
             if (armed) "Tap again to delete" else "Delete decision",
             color = if (armed) Crit else TextDim.copy(alpha = 0.8f),
-            fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+            fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
                 .pressScale { if (armed) { Haptics.confirm(ctx); Decisions.delete(ctx, d.id); AppFeedback.show("Decision deleted") } else { Haptics.warn(ctx); armed = true } }
@@ -263,19 +263,19 @@ private fun DecideButton(label: String, modifier: Modifier = Modifier, onClick: 
             .pressScale(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = Mod.Home, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+    ) { Text(label, color = Mod.Home, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
 }
 
 @Composable
 private fun OutcomeButton(label: String, color: Color, on: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier.clip(RoundedCornerShape(11.dp))
-            .background(if (on) color.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f))
-            .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+            .background(if (on) color.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
+            .border(0.5.dp, if (on) color.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
             .pressScale(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
-    ) { Text(label, color = if (on) color else TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+    ) { Text(label, color = if (on) color else TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
 // ─── add factor ──────────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ private fun AddFactorForm(d: Decision) {
                         name = ""; weight = 3; scoreA = 3; scoreB = 3
                     } else Modifier)
                     .padding(horizontal = 14.dp, vertical = 9.dp),
-            ) { Text("Add", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Add", color = Void, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
         }
     }
 }
@@ -321,7 +321,7 @@ private fun AddFactorForm(d: Decision) {
 private fun Stepper(label: String, value: Int, onValue: (Int) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            label, color = TextDim, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5,
+            label, color = TextDim, fontFamily = Display, fontSize = FS.s8_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
         )
         Spacer(Modifier.height(4.dp))
@@ -338,11 +338,11 @@ private fun StepBox(sign: String, onClick: () -> Unit) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
-            .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
+            .background(Ivory.copy(alpha = 0.06f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
             .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
-    ) { Text(sign, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold) }
+    ) { Text(sign, color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
 }
 
 // ─── new decision ────────────────────────────────────────────────────────────
@@ -359,7 +359,7 @@ private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "NEW DECISION", color = Mod.Home, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
+                    "NEW DECISION", color = Mod.Home, fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp, modifier = Modifier.weight(1f),
                 )
                 Icon(
@@ -392,7 +392,7 @@ private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
                     } else Modifier)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Create decision", color = Void, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Create decision", color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
         }
     }
 }

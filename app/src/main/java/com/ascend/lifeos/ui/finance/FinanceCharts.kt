@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.ascend.lifeos.ui.theme.*
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -66,7 +67,7 @@ internal fun CategoryDonut(
                     val dx = cos(rad).toFloat()
                     val dy = sin(rad).toFloat()
                     drawLine(
-                        com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.35f),
+                        Ivory.copy(alpha = 0.35f),
                         Offset(c.x + dx * rIn, c.y + dy * rIn),
                         Offset(c.x + dx * rOut, c.y + dy * rOut),
                         strokeWidth = 1.2.dp.toPx(),
@@ -96,7 +97,7 @@ internal fun MonthBars(values: List<Long>, modifier: Modifier = Modifier) {
             val x = slot * i + (slot - barW) / 2
             if (v <= 0L) {
                 drawRoundRect(
-                    com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.08f),
+                    Ivory.copy(alpha = 0.08f),
                     Offset(x, size.height - 2.dp.toPx()), Size(barW, 2.dp.toPx()),
                     CornerRadius(1.dp.toPx(), 1.dp.toPx()),
                 )

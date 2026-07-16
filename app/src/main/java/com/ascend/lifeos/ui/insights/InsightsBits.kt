@@ -18,8 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.ui.motion.pressScale
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.TextPrimary
+import com.ascend.lifeos.ui.theme.*
 
 // Small shared pieces of the insights module (Explorer / Heatmap / Wrapped).
 

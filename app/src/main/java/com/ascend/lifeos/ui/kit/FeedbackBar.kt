@@ -27,14 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ascend.lifeos.ui.theme.BgElevated
-import com.ascend.lifeos.ui.theme.Body
-import com.ascend.lifeos.ui.theme.FS
-import com.ascend.lifeos.ui.theme.Good
-import com.ascend.lifeos.ui.theme.Ivory
-import com.ascend.lifeos.ui.theme.TextDim
-import com.ascend.lifeos.ui.theme.TextPrimary
-import com.ascend.lifeos.ui.theme.Warn
+import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
 data class FeedbackMsg(
