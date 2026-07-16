@@ -613,7 +613,7 @@ private fun ExerciseSetLogger(
 private fun StepperButton(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(56.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, HudLine, CircleShape).clickable(onClick = onClick),
+            .border(0.5.dp, HudLine, CircleShape).pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.Bold) }
 }
@@ -627,6 +627,7 @@ private fun SetRow(
     onDelete: () -> Unit,
     onSave: (reps: Int, weight: Float?, rpe: Int?, holdSecs: Int?) -> Unit,
 ) {
+    val ctx = LocalContext.current
     val color = setTypeColor(set.setType)
     val isHold = set.holdSeconds != null
     var editing by remember(set.id) { mutableStateOf(false) }
@@ -669,8 +670,17 @@ private fun SetRow(
                     if (set.isPersonalRecord) {
                         Text("PR", color = ChampagneDeep, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
                     }
-                    Icon(Icons.Rounded.Close, "Delete set", tint = TextDim.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp).clickable(onClick = onDelete))
+                    var armedDel by remember { mutableStateOf(false) }
+                    LaunchedEffect(armedDel) { if (armedDel) { delay(2500); armedDel = false } }
+                    Icon(
+                        if (armedDel) Icons.Rounded.Delete else Icons.Rounded.Close,
+                        if (armedDel) "Tap again" else "Delete set",
+                        tint = if (armedDel) Crit else TextDim.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp).clickable {
+                            if (armedDel) { Haptics.confirm(ctx); onDelete() }
+                            else { Haptics.warn(ctx); armedDel = true }
+                        },
+                    )
                 }
             }
             if (editing) {
@@ -775,7 +785,7 @@ private fun RestTimerCard(vm: TrainingViewModel) {
                         Box(
                             Modifier.clip(RoundedCornerShape(8.dp))
                                 .background(if (sel) Accent.copy(alpha = 0.16f) else Color.Transparent)
-                                .clickable { vm.adjustRestTimer(sec - vm.restTimerTotal) }
+                                .pressScale { vm.adjustRestTimer(sec - vm.restTimerTotal) }
                                 .padding(horizontal = 7.dp, vertical = 3.dp),
                         ) {
                             Text("${sec}s", color = if (sel) Accent else TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s9_5, fontWeight = FontWeight.Bold)
@@ -791,7 +801,7 @@ private fun RestTimerCard(vm: TrainingViewModel) {
 private fun MiniBtn(label: String, onClick: () -> Unit) {
     Box(
         Modifier.clip(RoundedCornerShape(10.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, HudLine, RoundedCornerShape(10.dp)).clickable(onClick = onClick)
+            .border(0.5.dp, HudLine, RoundedCornerShape(10.dp)).pressScale(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) { Text(label, color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontWeight = FontWeight.Bold) }
 }

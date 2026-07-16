@@ -29,6 +29,9 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
+        "TickerNumber odometer on recovery hero, sleep score, nutrition hero stats, rep counter and logged-days counter — every key number rolls in with animated digits",
+        "Haptic feedback on all armed deletes: workout set, session history, notes, finance entries, food entries, school subjects, Guard windows — first tap warns, second tap confirms with a buzz",
+        "pressScale wave 6: stepper buttons, rest timer presets, mini buttons, finance chips, goal save/archive/restore, check-in chips, weight steppers, Guard resume, calendar sync/connect, budget remove — every button presses and springs back",
         "Keyboard Done button on all text fields: GlassField, LifeField, FinanceField, RuleBuilder, QuickLog spend/note, BootScreen name, CalendarScreen URL/title/task — tapping Done dismisses the keyboard",
         "TickerNumber odometer on exam countdown and nutrition weekly score — numbers roll in with animated digit transitions",
         "UX safety wave 4: calendar event delete and budget remove now require double-tap confirmation",

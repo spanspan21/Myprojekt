@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import com.google.mlkit.vision.common.InputImage
@@ -139,7 +140,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                             .padding(horizontal = 26.dp, vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("$reps", color = if (tracking) Good else TextMuted, style = metricStyle(46))
+                        TickerNumber(reps, 46, if (tracking) Good else TextMuted)
                         Text(
                             if (tracking) "TRACKING" else "STEP INTO FRAME",
                             color = if (tracking) Good else TextDim,

@@ -913,7 +913,7 @@ private fun HydrationCard(
                     }
                     if (showHeat) {
                         Spacer(Modifier.width(7.dp))
-                        Text("+ Heat", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.clickable { onEnableHeat() })
+                        Text("+ Heat", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s10, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.pressScale { onEnableHeat() })
                     }
                 }
             }
@@ -1097,8 +1097,8 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                         LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
                         Box(
                             Modifier.size(30.dp).clip(CircleShape).clickable {
-                                if (armed) { Repo.removeFood(e.id, dayKey); com.ascend.lifeos.ui.kit.AppFeedback.show("Entry removed") }
-                                else armed = true
+                                if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); Repo.removeFood(e.id, dayKey); com.ascend.lifeos.ui.kit.AppFeedback.show("Entry removed") }
+                                else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true }
                             },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -1107,7 +1107,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 15.dp, end = 15.dp, bottom = 12.dp)) {
-                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { Repo.saveMeal(name, meals); com.ascend.lifeos.ui.kit.AppFeedback.show("Meal saved") })
+                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.success(ctx); Repo.saveMeal(name, meals); com.ascend.lifeos.ui.kit.AppFeedback.show("Meal saved") })
                 }
             }
         }

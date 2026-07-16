@@ -264,6 +264,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 
     detailBlock?.let { b ->
         EventDetailSheet(b, onDelete = {
+            com.ascend.lifeos.data.Haptics.confirm(ctx)
             vm.delete(b.id); detailBlock = null
             com.ascend.lifeos.ui.kit.AppFeedback.show("Event deleted")
         }, onDismiss = { detailBlock = null })
@@ -1169,7 +1170,7 @@ private fun UntisRow() {
                     Text(
                         "SYNC", color = Mod.Calendar, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { runSync() }.padding(6.dp),
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { runSync() }.padding(6.dp),
                     )
                     Spacer(Modifier.width(4.dp))
                     Icon(
@@ -1291,7 +1292,7 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
                             "CONNECT", color = Mod.Calendar, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s10,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                .clickable { permLauncher.launch(android.Manifest.permission.READ_CALENDAR) }
+                                .pressScale { permLauncher.launch(android.Manifest.permission.READ_CALENDAR) }
                                 .padding(6.dp),
                         )
                     }

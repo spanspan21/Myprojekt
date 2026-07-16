@@ -826,7 +826,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
                     Text(
                         "Resume now",
                         color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onResume(); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard resumed") }
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onResume(); com.ascend.lifeos.data.Haptics.confirm(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Guard resumed") }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
@@ -982,11 +982,12 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                                 .clip(RoundedCornerShape(6.dp))
                                 .clickable {
                                     if (armed) {
+                                        com.ascend.lifeos.data.Haptics.confirm(ctx)
                                         WellbeingStore.removePhoneFreeWindow(ctx, w.first, w.second)
                                         onChanged()
                                         armedRemoveWindow = -1
                                         com.ascend.lifeos.ui.kit.AppFeedback.show("Window removed")
-                                    } else armedRemoveWindow = i
+                                    } else { com.ascend.lifeos.data.Haptics.warn(ctx); armedRemoveWindow = i }
                                 },
                         )
                     }

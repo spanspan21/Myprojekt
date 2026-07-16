@@ -269,7 +269,7 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
                 color = Crit, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(10.dp))
-                    .clickable {
+                    .pressScale {
                         if (armedRemoveBudget) { com.ascend.lifeos.data.Haptics.confirm(ctx); FinanceStore.setBudget(ctx, category, 0); com.ascend.lifeos.ui.kit.AppFeedback.show("Budget removed"); onDismiss() }
                         else { com.ascend.lifeos.data.Haptics.warn(ctx); armedRemoveBudget = true }
                     }

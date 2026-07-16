@@ -20,11 +20,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +45,7 @@ import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.Accent
 import com.ascend.lifeos.ui.theme.Bg
 import com.ascend.lifeos.ui.theme.Body
+import com.ascend.lifeos.ui.theme.Crit
 import com.ascend.lifeos.ui.theme.Display
 import com.ascend.lifeos.ui.theme.FS
 import com.ascend.lifeos.ui.theme.Ivory
@@ -155,9 +161,17 @@ private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, 
                 }
             }
             Spacer(Modifier.width(10.dp))
+            val seCtx = androidx.compose.ui.platform.LocalContext.current
+            var armed by remember { mutableStateOf(false) }
+            LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
             Icon(
-                Icons.Rounded.Close, "Delete set", tint = TextDim.copy(alpha = 0.6f),
-                modifier = Modifier.size(16.dp).clickable(onClick = onDelete),
+                if (armed) Icons.Rounded.Delete else Icons.Rounded.Close,
+                if (armed) "Tap again" else "Delete set",
+                tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
+                modifier = Modifier.size(16.dp).clickable {
+                    if (armed) { com.ascend.lifeos.data.Haptics.confirm(seCtx); onDelete() }
+                    else { com.ascend.lifeos.data.Haptics.warn(seCtx); armed = true }
+                },
             )
         }
     }

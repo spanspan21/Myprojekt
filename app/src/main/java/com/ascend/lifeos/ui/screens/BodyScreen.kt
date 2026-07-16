@@ -36,6 +36,7 @@ import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.ui.kit.*
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.Dispatchers
@@ -157,7 +158,7 @@ fun BodyScreen() {
                             modifier = Modifier.size(96.dp), stroke = 7.dp,
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(score?.toString() ?: "—", color = scoreColor, style = metricStyle(30))
+                                score?.let { TickerNumber(it, 30, scoreColor) } ?: Text("—", color = scoreColor, style = metricStyle(30))
                                 Text(
                                     "RECOVERY", color = TextDim, fontFamily = Display,
                                     fontSize = com.ascend.lifeos.ui.theme.FS.s8, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
@@ -292,7 +293,7 @@ fun BodyScreen() {
                                     color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s11, fontFamily = Body,
                                 )
                             }
-                            Text("$sScore", color = sColor, style = metricStyle(26))
+                            TickerNumber(sScore, 26, sColor)
                         }
                         val recScore = Repo.recoveryScore(h)
                         if (recScore != null) {
@@ -312,7 +313,7 @@ fun BodyScreen() {
                                     recScore >= com.ascend.lifeos.domain.RecoveryEngine.THRESHOLD_RED -> Warn
                                     else -> Crit
                                 }
-                                Text("$recScore", color = rColor, fontSize = com.ascend.lifeos.ui.theme.FS.s13_5, fontFamily = Display, fontWeight = FontWeight.ExtraBold)
+                                TickerNumber(recScore, 13, rColor, fontWeight = FontWeight.ExtraBold, fontFamily = Display)
                             }
                         }
                         Spacer(Modifier.height(12.dp))
@@ -1061,7 +1062,7 @@ private fun CheckChip(label: String, color: Color, onClick: () -> Unit) {
         Modifier.clip(RoundedCornerShape(11.dp))
             .background(color.copy(alpha = 0.10f))
             .border(0.5.dp, color.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-            .clickable { com.ascend.lifeos.data.Haptics.tick(ccCtx); onClick() }
+            .pressScale { com.ascend.lifeos.data.Haptics.tick(ccCtx); onClick() }
             .padding(horizontal = 15.dp, vertical = 9.dp),
     ) { Text(label, color = color, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -1264,7 +1265,7 @@ private fun WeightStep(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(46.dp).clip(CircleShape).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold) }
 }

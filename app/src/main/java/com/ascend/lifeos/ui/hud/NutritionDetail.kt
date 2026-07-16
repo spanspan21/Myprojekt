@@ -59,6 +59,7 @@ import com.ascend.lifeos.data.hasMicroData
 import com.ascend.lifeos.data.prime.PrimeMath
 import com.ascend.lifeos.data.targetFor
 import com.ascend.lifeos.ui.kit.JarvisSheet
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.kit.endpointHalo
 import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.theme.Accent
@@ -358,7 +359,7 @@ fun StatsView(onBack: () -> Unit) {
         GlassPanel(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth().padding(18.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text("$avg", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s30, fontWeight = FontWeight.ExtraBold)
+                    TickerNumber(avg, 30, TextPrimary, fontWeight = FontWeight.ExtraBold)
                     Text(" avg kcal / day", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
                     Spacer(Modifier.weight(1f))
                     Text("Target $goal", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
@@ -380,7 +381,10 @@ fun StatsView(onBack: () -> Unit) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     val avgProt = prot14.filter { it > 0 }.average().let { if (it.isNaN()) 0 else it.roundToInt() }
-                    Text("$avgProt g", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        TickerNumber(avgProt, 22, TextPrimary, fontWeight = FontWeight.ExtraBold)
+                        Text(" g", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s22, fontWeight = FontWeight.ExtraBold)
+                    }
                     Text(" Ø / day", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
                     Spacer(Modifier.weight(1f))
                     Text("Target $protGoal g", color = Cyan, fontSize = com.ascend.lifeos.ui.theme.FS.s11_5, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
@@ -395,13 +399,17 @@ fun StatsView(onBack: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GlassPanel(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                    Text("$streak", color = Accent, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
+                    TickerNumber(streak, 24, Accent, fontWeight = FontWeight.ExtraBold)
                     Text("DAY LOG STREAK", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
             GlassPanel(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                    Text("$logged30/30", color = if (logged30 >= 24) Accent else Amber, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        val logColor = if (logged30 >= 24) Accent else Amber
+                        TickerNumber(logged30, 24, logColor, fontWeight = FontWeight.ExtraBold)
+                        Text("/30", color = logColor, fontSize = com.ascend.lifeos.ui.theme.FS.s24, fontWeight = FontWeight.ExtraBold)
+                    }
                     Text("DAYS LOGGED", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s8_5, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }

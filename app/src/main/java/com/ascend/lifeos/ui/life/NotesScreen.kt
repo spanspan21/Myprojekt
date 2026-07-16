@@ -197,10 +197,12 @@ fun NotesScreen(onClose: () -> Unit) {
                                     modifier = Modifier.size(16.dp).clip(CircleShape)
                                         .clickable {
                                             if (armedNote == id) {
+                                                com.ascend.lifeos.data.Haptics.confirm(ctx)
                                                 LifeStores.deleteNote(ctx, id)
                                                 armedNote = null
                                                 com.ascend.lifeos.ui.kit.AppFeedback.show("Note deleted")
                                             } else {
+                                                com.ascend.lifeos.data.Haptics.warn(ctx)
                                                 armedNote = id
                                             }
                                         },

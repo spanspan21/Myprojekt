@@ -155,7 +155,7 @@ internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent
                 if (selected) accent.copy(alpha = 0.5f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
-            .clickable(onClick = onClick)
+            .pressScale(onClick = onClick)
             .padding(horizontal = 11.dp, vertical = 7.dp),
     ) {
         Text(
@@ -202,12 +202,16 @@ internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () 
 /** Two-tap delete: first tap arms (turns red), second within 2.5 s deletes. */
 @Composable
 internal fun ArmedDelete(modifier: Modifier = Modifier, onDelete: () -> Unit) {
+    val adCtx = androidx.compose.ui.platform.LocalContext.current
     var armed by remember { mutableStateOf(false) }
     LaunchedEffect(armed) { if (armed) { delay(2500); armed = false } }
     Icon(
         Icons.Rounded.Delete, if (armed) "Tap again to delete" else "Delete",
         tint = if (armed) Crit else TextDim,
-        modifier = modifier.size(16.dp).clickable { if (armed) onDelete() else armed = true },
+        modifier = modifier.size(16.dp).clickable {
+            if (armed) { com.ascend.lifeos.data.Haptics.confirm(adCtx); onDelete() }
+            else { com.ascend.lifeos.data.Haptics.warn(adCtx); armed = true }
+        },
     )
 }
 
@@ -328,7 +332,7 @@ internal fun StepperOrb(label: String, onClick: () -> Unit) {
         Modifier.size(40.dp).clip(CircleShape)
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.10f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s18, fontWeight = FontWeight.Bold) }
 }

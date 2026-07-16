@@ -378,7 +378,7 @@ private fun SubjectCard(
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Crit.copy(alpha = if (armed) 0.22f else 0.10f))
                             .border(0.5.dp, Crit.copy(alpha = if (armed) 0.6f else 0.3f), RoundedCornerShape(11.dp))
-                            .clickable { if (armed) onDeleteSubject() else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
+                            .clickable { if (armed) { com.ascend.lifeos.data.Haptics.confirm(ctx); onDeleteSubject() } else { com.ascend.lifeos.data.Haptics.warn(ctx); armed = true } }
                             .padding(horizontal = 14.dp, vertical = 11.dp),
                         contentAlignment = Alignment.Center,
                     ) {

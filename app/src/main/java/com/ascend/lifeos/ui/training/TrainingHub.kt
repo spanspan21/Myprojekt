@@ -186,11 +186,11 @@ fun TrainingHub(
                         }
                         Text(
                             "Resume", color = Mod.Train, fontSize = com.ascend.lifeos.ui.theme.FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
+                            modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.resumeAbandoned { onStartWorkout() } }.padding(6.dp),
                         )
                         Text(
                             "Close", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
-                            modifier = Modifier.clickable { com.ascend.lifeos.data.Haptics.tick(ctx); vm.dismissAbandoned() }.padding(6.dp),
+                            modifier = Modifier.pressScale { com.ascend.lifeos.data.Haptics.tick(ctx); vm.dismissAbandoned() }.padding(6.dp),
                         )
                     }
                 }
@@ -302,7 +302,7 @@ fun TrainingHub(
                             Modifier.clip(RoundedCornerShape(11.dp))
                                 .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                                .clickable { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.regeneratePlan(); com.ascend.lifeos.ui.kit.AppFeedback.show("Plan regenerated") }
+                                .pressScale { com.ascend.lifeos.data.Haptics.confirm(ctx); vm.regeneratePlan(); com.ascend.lifeos.ui.kit.AppFeedback.show("Plan regenerated") }
                                 .padding(horizontal = 13.dp, vertical = 8.dp),
                         ) {
                             Text("Re-plan now", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -739,7 +739,7 @@ private fun StepBox(label: String, onClick: () -> Unit) {
         Modifier.size(34.dp).clip(RoundedCornerShape(9.dp))
             .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.12f), RoundedCornerShape(9.dp))
-            .clickable { com.ascend.lifeos.data.Haptics.tick(sbCtx); onClick() },
+            .pressScale { com.ascend.lifeos.data.Haptics.tick(sbCtx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s16, fontWeight = FontWeight.Bold) }
 }
@@ -839,12 +839,12 @@ private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOp
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "Skill targets (${p.skillGoals.size})", color = Purple, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(9.dp)).clickable(onClick = onOpenSkillGoals).padding(horizontal = 6.dp, vertical = 4.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(9.dp)).pressScale(onClick = onOpenSkillGoals).padding(horizontal = 6.dp, vertical = 4.dp),
                 )
                 Spacer(Modifier.weight(1f))
                 Text(
                     "Re-test", color = TextDim, fontSize = com.ascend.lifeos.ui.theme.FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(9.dp)).clickable(onClick = onOpenAssess).padding(horizontal = 6.dp, vertical = 4.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(9.dp)).pressScale(onClick = onOpenAssess).padding(horizontal = 6.dp, vertical = 4.dp),
                 )
             }
         }
@@ -856,10 +856,10 @@ private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     val stCtx = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("−", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).pressScale { com.ascend.lifeos.data.Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
         Text(value, color = TextPrimary, fontFamily = Display, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.ExtraBold)
         Text("+", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s17, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).clickable { com.ascend.lifeos.data.Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).pressScale { com.ascend.lifeos.data.Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
 
@@ -910,7 +910,7 @@ private fun TodayStrip(sets: Int, reps: Int, weekSessions: Int) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 15.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TickerStatBlock("SETS", sets, Accent)
                 TickerStatBlock("REPS", reps, Cyan)
-                StatBlock("WEEK", "$weekSessions unit" + (if (weekSessions == 1) "" else "s"), Amber)
+                TickerStatBlock("WEEK", weekSessions, Amber)
             }
         }
     }
