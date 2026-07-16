@@ -222,7 +222,7 @@ fun DrinkBuilderPane(
     }
 
     Spacer(Modifier.height(14.dp))
-    GlassPanel(Modifier.fillMaxWidth()) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
         Column(Modifier.fillMaxWidth().padding(14.dp)) {
             Text(name, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2)
             Spacer(Modifier.height(4.dp))

@@ -1382,7 +1382,7 @@ private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit
 
 @Composable
 private fun EmptyHint(text: String) {
-    GlassPanel(Modifier.fillMaxWidth()) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
         Box(Modifier.fillMaxWidth().padding(22.dp), contentAlignment = Alignment.Center) {
             Text(text, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
         }

@@ -190,7 +190,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                             }
                         }
                     } else {
-                        Panel(Modifier.animateItem().fillMaxWidth()) {
+                        Panel(Modifier.animateItem().fillMaxWidth(), corner = 14.dp) {
                             Column(Modifier.fillMaxWidth().padding(14.dp)) {
                                 Text(ex.title, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.height(2.dp))
@@ -212,7 +212,7 @@ fun SchoolScreen(onClose: () -> Unit) {
 
             if (subjects.isEmpty()) {
                 item(key = "empty") {
-                    Panel(Modifier.fillMaxWidth()) {
+                    Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
                         EmptyState(
                             Icons.Rounded.School,
                             "No subjects yet",

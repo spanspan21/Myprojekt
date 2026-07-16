@@ -204,7 +204,7 @@ private fun FocusNowCard(
     onMinutes: (Int) -> Unit,
 ) {
     val ctx = LocalContext.current
-    Panel(Modifier.fillMaxWidth()) {
+    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             SectionLabel(
                 plan.readiness?.let { "Do next · readiness $it" } ?: "Do next",

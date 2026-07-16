@@ -285,7 +285,7 @@ fun FinanceHome(onClose: () -> Unit) {
             }
             if (goals.isEmpty()) {
                 item(key = "goals_empty") {
-                    Panel(Modifier.fillMaxWidth()) {
+                    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
                         EmptyState(
                             Icons.Rounded.Savings, "No savings goals yet",
                             "Give the next big thing a target and a pace",
@@ -312,7 +312,7 @@ fun FinanceHome(onClose: () -> Unit) {
             }
             if (txns.isEmpty()) {
                 item(key = "history_empty") {
-                    Panel(Modifier.fillMaxWidth()) {
+                    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
                         EmptyState(
                             Icons.Rounded.History, "No transactions yet",
                             "Everything you log lands here — searchable and exportable",
@@ -381,7 +381,7 @@ private fun BalanceHero(
     onAddAccount: () -> Unit,
 ) {
     if (accounts.isEmpty()) {
-        Panel(Modifier.fillMaxWidth()) {
+        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
             EmptyState(
                 Icons.Rounded.AccountBalanceWallet, "No accounts yet",
                 "Add Cash, Bank or PayPal — every log moves its balance",
@@ -612,7 +612,7 @@ private fun BreakdownPanel(
             .sortedWith(compareByDescending<String> { byCat[it] ?: 0L }.thenBy { it })
     }
     if (rows.isEmpty()) {
-        Panel(Modifier.fillMaxWidth()) {
+        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
             EmptyState(
                 Icons.Rounded.PieChart, "No spending yet",
                 "Your category split appears with the first expense",
@@ -727,7 +727,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
 @Composable
 private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>) {
     if (series.size < 2) {
-        Panel(Modifier.fillMaxWidth()) {
+        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
             EmptyState(
                 Icons.AutoMirrored.Rounded.TrendingUp, "Not enough history yet",
                 "The month-by-month trend unlocks in your second month of logging",
@@ -791,7 +791,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
 private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
     val ctx = LocalContext.current
     if (recurrings.isEmpty()) {
-        Panel(Modifier.fillMaxWidth()) {
+        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
             EmptyState(
                 Icons.Rounded.Repeat, "No recurring yet",
                 "Subscriptions & pocket money — or run Scan to auto-detect them",

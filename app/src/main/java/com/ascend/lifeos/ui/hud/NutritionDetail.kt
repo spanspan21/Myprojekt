@@ -131,7 +131,7 @@ fun MicrosView(onBack: () -> Unit) {
         }
         Spacer(Modifier.height(14.dp))
 
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(if (range == 0) "TODAY'S RADAR" else "7-DAY RADAR", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(12.dp))
@@ -152,7 +152,7 @@ fun MicrosView(onBack: () -> Unit) {
             }.sortedBy { it.third }.take(3)
             if (gaps.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                GlassPanel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.06f), line = Amber.copy(alpha = 0.3f)) {
+                GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp, fill = Amber.copy(alpha = 0.06f), line = Amber.copy(alpha = 0.3f)) {
                     Column(Modifier.padding(14.dp)) {
                         Text("LOW ALL WEEK", color = Amber, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                         Spacer(Modifier.height(6.dp))
@@ -174,7 +174,7 @@ fun MicrosView(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         Text("ALL 16 · % OF DAILY TARGET · TAP FOR SOURCES", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 MICRO_16.forEachIndexed { i, id ->
                     val nd = NUTRIENTS_BY_ID[id] ?: return@forEachIndexed
@@ -350,7 +350,7 @@ fun StatsView(onBack: () -> Unit) {
         SubHeader("Stats", onBack)
 
         // Week
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(18.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     TickerNumber(avg, 30, TextPrimary, fontWeight = FontWeight.ExtraBold)
@@ -371,7 +371,7 @@ fun StatsView(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         Text("PROTEIN · 14 DAYS", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     val avgProt = prot14.filter { it > 0 }.average().let { if (it.isNaN()) 0 else it.roundToInt() }
@@ -391,13 +391,13 @@ fun StatsView(onBack: () -> Unit) {
         // ── Konstanz: die eigentliche Superkraft (F4.1) ──
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            GlassPanel(Modifier.weight(1f)) {
+            GlassPanel(Modifier.weight(1f), corner = 16.dp) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     TickerNumber(streak, 24, Accent, fontWeight = FontWeight.ExtraBold)
                     Text("DAY LOG STREAK", color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
-            GlassPanel(Modifier.weight(1f)) {
+            GlassPanel(Modifier.weight(1f), corner = 16.dp) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         val logColor = if (logged30 >= 24) Accent else Amber
@@ -414,7 +414,7 @@ fun StatsView(onBack: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             Text("WEEKLY GAPS · Ø < 50% OF TARGET", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(10.dp))
-            GlassPanel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
+            GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp, fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     microGaps.forEachIndexed { i, (label, p) ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -433,7 +433,7 @@ fun StatsView(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         Text("MONTH · ON TARGET / OVER / UNDER", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 month.chunked(7).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -453,7 +453,7 @@ fun StatsView(onBack: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             Text("TOP 5 FOODS", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
             Spacer(Modifier.height(10.dp))
-            GlassPanel(Modifier.fillMaxWidth()) {
+            GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     top5.forEachIndexed { i, e ->
                         Row(Modifier.padding(vertical = 5.dp)) {
@@ -470,7 +470,7 @@ fun StatsView(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         SectionLabel("Correlations", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 CorrRow("Protein ↔ training volume", corr.proteinTraining)
                 Spacer(Modifier.height(10.dp))
@@ -687,7 +687,7 @@ fun GoalsSheet(sheetState: SheetState, onDismiss: () -> Unit) {
             }
 
             Spacer(Modifier.height(18.dp))
-            GlassPanel(Modifier.fillMaxWidth()) {
+            GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
                 Row(Modifier.fillMaxWidth().padding(18.dp)) {
                     TargetStat("${targets.kcal}", "kcal", Modifier.weight(1f))
                     TargetStat("${targets.protein}g", "Protein", Modifier.weight(1f))

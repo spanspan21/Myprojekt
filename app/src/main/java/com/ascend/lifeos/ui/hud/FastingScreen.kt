@@ -125,7 +125,7 @@ fun FastingScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(22.dp))
         SectionLabel("Zones", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 FastingCalc.ZONES.forEachIndexed { i, z ->
                     val active = state.active && zone == z
@@ -143,7 +143,7 @@ fun FastingScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         SectionLabel("Stats", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth()) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
             Row(Modifier.fillMaxWidth().padding(18.dp)) {
                 FastStat("${stats.streak}", "Streak", Modifier.weight(1f))
                 FastStat(if (stats.count == 0) "–" else hm(stats.avgHours), "Avg", Modifier.weight(1f))
