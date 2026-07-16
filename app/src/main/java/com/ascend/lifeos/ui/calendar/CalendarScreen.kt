@@ -282,7 +282,7 @@ private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSel
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             Icons.Rounded.ChevronLeft, "Previous week", tint = TextDim,
-            modifier = Modifier.size(22.dp).clickable { Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
+            modifier = Modifier.size(22.dp).pressScale { Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
         )
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceEvenly) {
             for (i in 0..6) {
@@ -292,7 +292,7 @@ private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSel
         }
         Icon(
             Icons.Rounded.ChevronRight, "Next week", tint = TextDim,
-            modifier = Modifier.size(22.dp).clickable { Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
+            modifier = Modifier.size(22.dp).pressScale { Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
         )
     }
 }
@@ -487,7 +487,7 @@ private fun MonthDayCell(
                 },
                 RoundedCornerShape(11.dp),
             )
-            .clickable { Haptics.tick(mdcCtx); onClick() },
+            .pressScale { Haptics.tick(mdcCtx); onClick() },
     ) {
         if (hasHockey) {
             Box(
@@ -577,14 +577,14 @@ private fun IcsFeedRow() {
             } else {
                 Icon(
                     Icons.Rounded.Sync, "Sync calendar", tint = TextMuted,
-                    modifier = Modifier.clip(CircleShape).clickable { runSync() }.padding(5.dp).size(15.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { runSync() }.padding(5.dp).size(15.dp),
                 )
             }
             Spacer(Modifier.width(6.dp))
             Icon(
                 Icons.Rounded.Close, if (armedRemoveFeed) "Confirm remove" else "Remove timetable feed",
                 tint = if (armedRemoveFeed) Crit else TextDim,
-                modifier = Modifier.clip(CircleShape).clickable {
+                modifier = Modifier.clip(CircleShape).pressScale {
                     if (armedRemoveFeed) {
                         scope.launch {
                             IcsSync.removeFeed(ctx)
@@ -656,7 +656,7 @@ private fun IcsFeedRow() {
                         Text(
                             "Cancel", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Medium,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                .clickable { expanded = false; error = null }
+                                .pressScale { expanded = false; error = null }
                                 .padding(horizontal = 6.dp, vertical = 4.dp),
                         )
                     }
@@ -766,7 +766,7 @@ private fun DayTimelineView(
                         .height(HOUR_DP * (slot.durationMin / 60f) - 4.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .border(0.5.dp, Mod.Calendar.copy(alpha = 0.18f), RoundedCornerShape(10.dp))
-                        .clickable { onSlotTap(slot) },
+                        .pressScale { onSlotTap(slot) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -795,7 +795,7 @@ private fun DayTimelineView(
                         0.5.dp, c.copy(alpha = if (b.cancelled) 0.2f else 0.35f),
                         RoundedCornerShape(10.dp),
                     )
-                    .clickable { onBlockTap(b) },
+                    .pressScale { onBlockTap(b) },
             ) {
                 Row(Modifier.fillMaxSize()) {
                     Box(Modifier.width(3.dp).fillMaxHeight().background(c.copy(alpha = if (b.cancelled) 0.35f else 1f)))
@@ -972,7 +972,7 @@ private fun QuickAddSheet(
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-                            .clickable { Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
+                            .pressScale { Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
                     ) { Text("−", color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
                     Text(
@@ -982,7 +982,7 @@ private fun QuickAddSheet(
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-                            .clickable { Haptics.tick(addCtx); holidayDays += 1 },
+                            .pressScale { Haptics.tick(addCtx); holidayDays += 1 },
                         contentAlignment = Alignment.Center,
                     ) { Text("+", color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
                 }
@@ -1026,7 +1026,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
         ) {
             Text(
                 "−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(CircleShape).clickable { Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(tsCtx); onValue(value - 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
             Text(
                 CalendarRepo.fmtMin(value), color = TextPrimary, style = metricStyle(16),
@@ -1034,7 +1034,7 @@ private fun TimeStepper(label: String, value: Int, modifier: Modifier = Modifier
             )
             Text(
                 "+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(CircleShape).clickable { Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(tsCtx); onValue(value + 15) }.padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
     }
@@ -1148,7 +1148,7 @@ private fun UntisRow() {
     Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
             Row(
-                Modifier.fillMaxWidth().clickable { if (!configured) expanded = !expanded },
+                Modifier.fillMaxWidth().pressScale { if (!configured) expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Rounded.Sync, "WebUntis sync", tint = Mod.Calendar, modifier = Modifier.size(16.dp))
@@ -1177,7 +1177,7 @@ private fun UntisRow() {
                     Spacer(Modifier.width(4.dp))
                     Icon(
                         Icons.Rounded.Close, "Remove WebUntis", tint = TextDim,
-                        modifier = Modifier.size(16.dp).clickable {
+                        modifier = Modifier.size(16.dp).pressScale {
                             scope.launch { UntisSync.remove(ctx); AppFeedback.show("WebUntis removed"); tick++; status = "Removed" }
                         },
                     )
@@ -1376,7 +1376,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
-                            .clickable { prio = p }
+                            .pressScale { prio = p }
                             .padding(horizontal = 11.dp, vertical = 6.dp),
                     )
                     Spacer(Modifier.width(7.dp))
@@ -1387,7 +1387,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 Text("Duration", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
                     "−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).clickable { durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
                     "$durMin min", color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
@@ -1395,14 +1395,14 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 )
                 Text(
                     "+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).clickable { durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Deadline", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
                     "−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).clickable { deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
                     if (deadlineDays == 0) "today" else "+$deadlineDays d",
@@ -1411,7 +1411,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 )
                 Text(
                     "+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).clickable { deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -1440,7 +1440,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         Modifier.size(19.dp).clip(CircleShape)
                             .background(if (t.done) Mod.Calendar else Color.Transparent)
                             .border(1.dp, if (t.done) Mod.Calendar else Ivory.copy(alpha = 0.25f), CircleShape)
-                            .clickable { Haptics.tick(ctx); com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
+                            .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.calendar.TaskBlocks.setDone(ctx, t.id, !t.done) },
                         contentAlignment = Alignment.Center,
                     ) { if (t.done) Text("✓", color = Void, fontSize = FS.s10, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(11.dp))
@@ -1466,7 +1466,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         "✕", color = if (taskArmed) Crit else TextDim, fontSize = FS.s13,
                         fontWeight = if (taskArmed) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.clip(CircleShape)
-                            .clickable {
+                            .pressScale {
                                 if (taskArmed) { scope.launch {
                                     com.ascend.lifeos.data.calendar.TaskBlocks.delete(ctx, t.id)
                                     AppFeedback.show("Task deleted")

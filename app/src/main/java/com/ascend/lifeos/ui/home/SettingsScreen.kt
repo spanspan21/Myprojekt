@@ -2,7 +2,6 @@ package com.ascend.lifeos.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -170,7 +169,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 if (sel) Mod.Home.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.1f),
                                 RoundedCornerShape(11.dp),
                             )
-                            .clickable { com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
+                            .pressScale { com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
                     )
                 }
@@ -255,7 +254,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 Box(
                                     Modifier.clip(RoundedCornerShape(10.dp))
                                         .background(if (sel) Mod.Finance.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                        .clickable { selGoal = g.id; Prefs.setString(ctx, Prefs.ROUNDUP_GOAL_ID, g.id) }
+                                        .pressScale { selGoal = g.id; Prefs.setString(ctx, Prefs.ROUNDUP_GOAL_ID, g.id) }
                                         .padding(horizontal = 8.dp, vertical = 5.dp),
                                 ) {
                                     Text(
@@ -378,7 +377,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (sel) Mod.Train.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                .clickable { barId = bar.id; Prefs.setString(ctx, Prefs.PLATE_BAR, bar.id) }
+                                .pressScale { barId = bar.id; Prefs.setString(ctx, Prefs.PLATE_BAR, bar.id) }
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                         ) {
                             Text(
@@ -407,7 +406,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .clickable { sportId = sp.id; com.ascend.lifeos.data.Repo.setSport(sp.id) }
+                            .pressScale { sportId = sp.id; com.ascend.lifeos.data.Repo.setSport(sp.id) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text("${sp.emoji} ${sp.label}", color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -434,7 +433,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .clickable { season = v; Prefs.setString(ctx, Prefs.SEASON_PHASE, v) }
+                            .pressScale { season = v; Prefs.setString(ctx, Prefs.SEASON_PHASE, v) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -460,7 +459,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .clickable { ssRest = v; Prefs.setInt(ctx, Prefs.SS_INTRA_REST, v) }
+                            .pressScale { ssRest = v; Prefs.setInt(ctx, Prefs.SS_INTRA_REST, v) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -487,7 +486,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .clickable {
+                            .pressScale {
                                 actLevel = id
                                 val p = Repo.profile()
                                 Repo.setBodyStats(p.sex, p.age, p.heightCm, p.weightKg, id, p.dietGoal)
@@ -875,7 +874,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 if (on) spec.metal.copy(alpha = 0.60f) else Line,
                                 RoundedCornerShape(12.dp),
                             )
-                            .clickable {
+                            .pressScale {
                                 themeId = spec.id
                                 Prefs.setString(ctx, Prefs.THEME, spec.id)
                                 applyTheme(spec.id)
@@ -957,7 +956,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .clickable { if (!on) { switchIconAlias(ctx, alias); icon = alias } }
+                            .pressScale { if (!on) { switchIconAlias(ctx, alias); icon = alias } }
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -1245,7 +1244,7 @@ private fun CategoryEditor() {
                         Spacer(Modifier.width(4.dp))
                         Text(
                             "×", color = TextDim, fontFamily = Body, fontSize = FS.s11_5,
-                            modifier = Modifier.clip(CircleShape).clickable {
+                            modifier = Modifier.clip(CircleShape).pressScale {
                                 cats = cats - c
                                 LifeStores.setCategories(ctx, cats + "Income")
                             }.padding(horizontal = 2.dp),
@@ -1258,7 +1257,7 @@ private fun CategoryEditor() {
                     .clip(RoundedCornerShape(10.dp))
                     .background(Mod.Finance.copy(alpha = 0.12f))
                     .border(0.5.dp, Mod.Finance.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                    .clickable { adding = true }
+                    .pressScale { adding = true }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 Text("+", color = Mod.Finance, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold)
@@ -1282,7 +1281,7 @@ private fun CategoryEditor() {
                     Modifier
                         .clip(RoundedCornerShape(10.dp))
                         .background(Mod.Finance.copy(alpha = 0.18f))
-                        .clickable {
+                        .pressScale {
                             val name = newCat.trim()
                             if (name.isNotBlank() && name !in cats) {
                                 cats = cats + name
@@ -1329,7 +1328,7 @@ private fun NotifToggleRow(
     val hh = "%02d".format(minuteOfDay / 60)
     val mm = "%02d".format(minuteOfDay % 60)
     Row(
-        Modifier.fillMaxWidth().clickable { Prefs.setBool(ctx, toggleKey, !on) }.padding(vertical = 7.dp),
+        Modifier.fillMaxWidth().pressScale { Prefs.setBool(ctx, toggleKey, !on) }.padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1342,7 +1341,7 @@ private fun NotifToggleRow(
                     .clip(RoundedCornerShape(8.dp))
                     .background(Mod.Home.copy(alpha = 0.12f))
                     .border(0.5.dp, Mod.Home.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                    .clickable { picking = true }
+                    .pressScale { picking = true }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 Text("$hh:$mm", color = Mod.Home, fontSize = FS.s11, fontFamily = Display, fontWeight = FontWeight.Bold)
@@ -1366,7 +1365,7 @@ private fun NotifToggleRow(
 @Composable
 private fun ToggleRow(title: String, sub: String, on: Boolean, onToggle: (Boolean) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable { onToggle(!on) }.padding(vertical = 7.dp),
+        Modifier.fillMaxWidth().pressScale { onToggle(!on) }.padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1395,7 +1394,7 @@ private fun TogglePill(on: Boolean) {
 @Composable
 private fun ActionRow(title: String, sub: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 7.dp),
+        Modifier.fillMaxWidth().pressScale(onClick = onClick).padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1437,7 +1436,7 @@ private fun TimePickerSheet(currentMin: Int, onResult: (Int?) -> Unit) {
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
                     .background(Mod.Home)
-                    .clickable { onResult(hour * 60 + minute) }
+                    .pressScale { onResult(hour * 60 + minute) }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) {

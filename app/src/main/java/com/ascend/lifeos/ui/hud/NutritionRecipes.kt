@@ -200,7 +200,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                             Text("${r.ingredients.size} ingredients found", color = TextDim, fontSize = FS.s11_5)
                         }
                         Spacer(Modifier.width(10.dp))
-                        Icon(Icons.Rounded.Close, "Dismiss import", tint = TextDim, modifier = Modifier.size(18.dp).clickable { imported = null })
+                        Icon(Icons.Rounded.Close, "Dismiss import", tint = TextDim, modifier = Modifier.size(18.dp).pressScale { imported = null })
                     }
                     Spacer(Modifier.height(10.dp))
                     r.ingredients.forEach { ing ->
@@ -268,7 +268,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                                     }
                                 }
                                 Spacer(Modifier.width(8.dp))
-                                Icon(Icons.Rounded.Close, "Remove item", tint = TextDim, modifier = Modifier.size(16.dp).clickable { clearPlan(row.key) })
+                                Icon(Icons.Rounded.Close, "Remove item", tint = TextDim, modifier = Modifier.size(16.dp).pressScale { clearPlan(row.key) })
                             }
                         }
                     }
@@ -848,7 +848,7 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
                 Text(r.title, color = TextPrimary, fontSize = FS.s18, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2)
                 Icon(
                     Icons.Rounded.Close, null, tint = TextMuted,
-                    modifier = Modifier.size(26.dp).clickable { onClose() },
+                    modifier = Modifier.size(26.dp).pressScale { onClose() },
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -916,7 +916,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Custom recipe", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(20.dp).clickable { onClose() })
+                Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(20.dp).pressScale { onClose() })
             }
             Spacer(Modifier.height(14.dp))
             GlassField("Title", title, KeyboardType.Text, Modifier.fillMaxWidth()) { title = it.take(48) }
@@ -940,7 +940,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                     Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = FS.s12_5, modifier = Modifier.weight(1f))
                     Icon(
                         Icons.Rounded.Close, null, tint = TextDim,
-                        modifier = Modifier.size(16.dp).clickable { parts = parts.filterIndexed { j, _ -> j != i } },
+                        modifier = Modifier.size(16.dp).pressScale { parts = parts.filterIndexed { j, _ -> j != i } },
                     )
                 }
             }
@@ -969,7 +969,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                     Text("${i + 1}. $s", color = TextMuted, fontSize = FS.s12_5, modifier = Modifier.weight(1f))
                     Icon(
                         Icons.Rounded.Close, null, tint = TextDim,
-                        modifier = Modifier.size(16.dp).clickable { steps = steps.filterIndexed { j, _ -> j != i } },
+                        modifier = Modifier.size(16.dp).pressScale { steps = steps.filterIndexed { j, _ -> j != i } },
                     )
                 }
             }

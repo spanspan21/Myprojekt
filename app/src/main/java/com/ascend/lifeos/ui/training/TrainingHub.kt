@@ -120,7 +120,7 @@ fun TrainingHub(
                         strainLabel,
                         color = if (doneSets > hi) Amber else TextDim,
                         fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable {
+                        modifier = Modifier.pressScale {
                             Haptics.tick(ctx)
                             AppFeedback.show("$strainZone — recovery $rec%. Green ≥75: full volume, Amber ≥50: moderate, Red: light day")
                         },
@@ -163,7 +163,7 @@ fun TrainingHub(
                             Text("Deload week active", color = Amber, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Text("End", color = TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
-                                modifier = Modifier.clickable { Haptics.tick(ctx); vm.endDeload(); AppFeedback.show("Deload ended") })
+                                modifier = Modifier.pressScale { Haptics.tick(ctx); vm.endDeload(); AppFeedback.show("Deload ended") })
                         }
                     }
                     Spacer(Modifier.height(14.dp))
@@ -205,7 +205,7 @@ fun TrainingHub(
         vm.rescheduleNote?.let { note ->
             item {
                 GlassPanel(
-                    Modifier.fillMaxWidth().clickable { vm.dismissRescheduleNote() },
+                    Modifier.fillMaxWidth().pressScale { vm.dismissRescheduleNote() },
                     fill = Purple.copy(alpha = 0.06f), line = Purple.copy(alpha = 0.35f), corner = 14.dp,
                 ) {
                     Row(Modifier.padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -404,7 +404,7 @@ fun TrainingHub(
         item {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                    .clickable { offPlanOpen = !offPlanOpen }.padding(vertical = 6.dp),
+                    .pressScale { offPlanOpen = !offPlanOpen }.padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SectionLabel("Off-plan · Extra", accent = Mod.Train)
@@ -724,7 +724,7 @@ private fun ScheduleModeToggle(recommended: Boolean, onChange: (Boolean) -> Unit
             Box(
                 Modifier.clip(RoundedCornerShape(10.dp))
                     .background(if (on) Mod.Train.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
-                    .clickable { onChange(isRec) }
+                    .pressScale { onChange(isRec) }
                     .padding(horizontal = 16.dp, vertical = 7.dp),
             ) { Text(label, color = if (on) Mod.Train else TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
@@ -763,7 +763,7 @@ private fun CustomPlaceRow(
     GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
         Column(Modifier.padding(12.dp)) {
             Row(
-                Modifier.fillMaxWidth().clickable { expanded = !expanded },
+                Modifier.fillMaxWidth().pressScale { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (done) {
@@ -789,7 +789,7 @@ private fun CustomPlaceRow(
                                 Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
                                     .background(if (sel) Mod.Train.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
                                     .border(0.5.dp, if (sel) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                                    .clickable { day = d }
+                                    .pressScale { day = d }
                                     .padding(vertical = 6.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -809,7 +809,7 @@ private fun CustomPlaceRow(
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp)).background(Mod.Train.copy(alpha = 0.16f))
                                 .border(0.5.dp, Mod.Train.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                                .clickable { onPlace(day, min); expanded = false }
+                                .pressScale { onPlace(day, min); expanded = false }
                                 .padding(horizontal = 16.dp, vertical = 7.dp),
                         ) { Text("Place", color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
@@ -1135,7 +1135,7 @@ private fun ActivityQuickLog() {
                 .padding(horizontal = 14.dp, vertical = 12.dp),
         ) {
             Row(
-                Modifier.fillMaxWidth().clickable { open = !open },
+                Modifier.fillMaxWidth().pressScale { open = !open },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("⚡", fontSize = FS.s16)
@@ -1235,7 +1235,7 @@ private fun ActivityQuickLog() {
                         Icon(
                             Icons.Rounded.Close, if (actArmed) "Confirm delete" else "Delete activity",
                             tint = if (actArmed) Crit else TextDim.copy(alpha = 0.5f),
-                            modifier = Modifier.size(14.dp).clickable {
+                            modifier = Modifier.size(14.dp).pressScale {
                                 if (actArmed) {
                                     Haptics.warn(ctx)
                                     com.ascend.lifeos.data.ActivityStore.delete(ctx, e.id)

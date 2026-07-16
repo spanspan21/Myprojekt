@@ -151,7 +151,7 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Exercises", color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.weight(1f))
@@ -253,7 +253,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                 Modifier.clip(RoundedCornerShape(11.dp))
                     .background(catColor(ex.category).copy(alpha = 0.10f))
                     .border(0.5.dp, catColor(ex.category).copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                    .clickable {
+                    .pressScale {
                         val q = java.net.URLEncoder.encode("${ex.name} proper form tutorial", "UTF-8")
                         runCatching {
                             ctx.startActivity(
@@ -348,7 +348,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).clickable(onClick = onBack))
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
             Spacer(Modifier.width(12.dp))
             Text("Add exercise", color = TextPrimary, fontSize = FS.s18, fontWeight = FontWeight.ExtraBold)
         }

@@ -503,7 +503,7 @@ private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, l
         Modifier.size(32.dp).clip(CircleShape)
             .background(Ivory.copy(alpha = if (enabled) 0.05f else 0.02f))
             .border(0.5.dp, if (enabled) HudLine else Ivory.copy(alpha = 0.04f), CircleShape)
-            .clickable(enabled = enabled, onClick = onClick),
+            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label, tint = if (enabled) TextPrimary else TextDim.copy(alpha = 0.35f), modifier = Modifier.size(18.dp)) }
 }
@@ -651,7 +651,7 @@ private fun CoachCheckInCard() {
                 Box(
                     Modifier.clip(RoundedCornerShape(11.dp))
                         .background(Ivory.copy(alpha = 0.04f))
-                        .clickable { Haptics.tick(cctx); com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
+                        .pressScale { Haptics.tick(cctx); com.ascend.lifeos.data.nutrition.CoachRitual.snooze(); gone = true }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 ) { Text("Okay", color = TextDim, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
             } else if (c != null) {
@@ -716,7 +716,7 @@ private fun CoachCheckInCard() {
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Ivory.copy(alpha = 0.04f))
-                            .clickable {
+                            .pressScale {
                                 com.ascend.lifeos.data.nutrition.CoachRitual.snooze()
                                 gone = true
                             }
@@ -1011,7 +1011,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
             Modifier.fillMaxWidth().animateContentSize(Motion.springSmoothOf()),
         ) {
             Row(
-                Modifier.fillMaxWidth().clickable { if (logged) onToggle() }.padding(horizontal = 15.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().then(if (logged) Modifier.pressScale { onToggle() } else Modifier).padding(horizontal = 15.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (logged) {
@@ -1035,7 +1035,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                         Text(
                             "⟳ like yesterday · ${y.sumOf { it.kcal }} kcal",
                             color = Mod.Fuel.copy(alpha = 0.85f), fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable {
+                            modifier = Modifier.pressScale {
                                 y.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
                                 Haptics.confirm(ctx)
                             },
@@ -1084,7 +1084,7 @@ private fun MealSlot(name: String, code: String, meals: List<com.ascend.lifeos.d
                         var armed by remember(e.id) { mutableStateOf(false) }
                         LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
                         Box(
-                            Modifier.size(30.dp).clip(CircleShape).clickable {
+                            Modifier.size(30.dp).clip(CircleShape).pressScale {
                                 if (armed) { Haptics.confirm(ctx); Repo.removeFood(e.id, dayKey); AppFeedback.show("Entry removed") }
                                 else { Haptics.warn(ctx); armed = true }
                             },

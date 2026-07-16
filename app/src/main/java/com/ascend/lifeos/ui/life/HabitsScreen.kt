@@ -223,7 +223,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
 private fun StepMini(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(28.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.07f))
-            .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape).clickable(onClick = onClick),
+            .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape).pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
 }
@@ -235,7 +235,7 @@ private fun TimerMini(running: Boolean, onClick: () -> Unit) {
         Modifier.size(28.dp).clip(CircleShape)
             .background(if (running) Mod.Mind else Mod.Mind.copy(alpha = 0.14f))
             .border(0.5.dp, Mod.Mind.copy(alpha = if (running) 0.9f else 0.4f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(if (running) "■" else "▶", color = if (running) Void else Mod.Mind, fontSize = FS.s11, fontWeight = FontWeight.Black) }
 }
@@ -286,7 +286,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s20); Spacer(Modifier.width(8.dp)) }
                 Text(h.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clickable(onClick = onDismiss))
+                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
             }
             if (auto) {
                 Spacer(Modifier.height(4.dp))
@@ -575,7 +575,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Add a habit", color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clickable(onClick = onDismiss))
+                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
             }
             Spacer(Modifier.height(4.dp))
             Text("Auto ones fill themselves in from your data. Tap to add.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
@@ -656,7 +656,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
             modifier.clip(RoundedCornerShape(9.dp))
                 .background(if (on) Mod.Mind.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
                 .border(0.5.dp, if (on) Mod.Mind.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                .clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
+                .pressScale(onClick = onClick).padding(horizontal = 10.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center,
         ) { Text(text, color = if (on) Mod.Mind else TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
     }
@@ -665,7 +665,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Build a habit", color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clickable(onClick = onDismiss))
+                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
             }
             Spacer(Modifier.height(14.dp))
             LifeField("Name (e.g. Read before bed)", name, Mod.Mind) { name = it }
@@ -678,7 +678,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
                         Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
                             .background(if (emoji == e) Mod.Mind.copy(alpha = 0.2f) else Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, if (emoji == e) Mod.Mind.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                            .clickable { emoji = if (emoji == e) "" else e },
+                            .pressScale { emoji = if (emoji == e) "" else e },
                         contentAlignment = Alignment.Center,
                     ) { Text(e, fontSize = FS.s17) }
                 }

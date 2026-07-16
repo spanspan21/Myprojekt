@@ -412,10 +412,10 @@ fun GuardScreen() {
                         }
                         if (morningUntil > 0) {
                             Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                                modifier = Modifier.pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.clickable { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                                modifier = Modifier.pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
                             Spacer(Modifier.width(6.dp))
                         }
                         TogglePill(morningUntil > 0) {
@@ -433,7 +433,7 @@ fun GuardScreen() {
                             Text("Drives the focus score and Home mission", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         Text("−", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable {
+                            modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale {
                                 WellbeingStore.setBudgetMin(ctx, budget - 30); tick++
                             }.padding(horizontal = 8.dp))
                         Text(
@@ -441,7 +441,7 @@ fun GuardScreen() {
                             color = Mod.Guard, style = metricStyle(15),
                         )
                         Text("+", color = TextMuted, fontSize = FS.s17, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable {
+                            modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale {
                                 WellbeingStore.setBudgetMin(ctx, budget + 30); tick++
                             }.padding(horizontal = 8.dp))
                     }
@@ -474,7 +474,7 @@ fun GuardScreen() {
                                 Box(
                                     Modifier.clip(RoundedCornerShape(10.dp))
                                         .background(if (sel) Mod.Guard.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                        .clickable { WellbeingStore.setWindDownStartMin(ctx, m); tick++; Haptics.tick(ctx) }
+                                        .pressScale { WellbeingStore.setWindDownStartMin(ctx, m); tick++; Haptics.tick(ctx) }
                                         .padding(horizontal = 10.dp, vertical = 7.dp),
                                 ) {
                                     Text(
@@ -983,7 +983,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
                             tint = if (armed) Crit else TextDim,
                             modifier = Modifier.size(18.dp)
                                 .clip(RoundedCornerShape(6.dp))
-                                .clickable {
+                                .pressScale {
                                     if (armed) {
                                         Haptics.confirm(ctx)
                                         WellbeingStore.removePhoneFreeWindow(ctx, w.first, w.second)
@@ -1315,10 +1315,10 @@ private fun MiniStepper(label: String, value: String, onMinus: () -> Unit, onPlu
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.weight(1f))
         Text("−", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onMinus).padding(horizontal = 10.dp, vertical = 2.dp))
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onMinus).padding(horizontal = 10.dp, vertical = 2.dp))
         Text(value, color = Mod.Guard, style = metricStyle(14), textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
         Text("+", color = TextMuted, fontSize = FS.s16, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onPlus).padding(horizontal = 10.dp, vertical = 2.dp))
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onPlus).padding(horizontal = 10.dp, vertical = 2.dp))
     }
 }
 

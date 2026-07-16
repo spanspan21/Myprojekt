@@ -506,7 +506,7 @@ private fun StepBtn(sign: String, onClick: () -> Unit) {
         Modifier.size(34.dp).clip(RoundedCornerShape(11.dp))
             .background(Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-            .clickable { Haptics.tick(ctx); onClick() },
+            .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(sign, color = TextPrimary, fontSize = FS.s17, fontWeight = FontWeight.Bold) }
 }
@@ -523,7 +523,7 @@ private fun TargetStat(value: String, label: String, color: Color) {
 private fun PermRow(title: String, hint: String, granted: Boolean, onRequest: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-            .clickable(enabled = !granted, onClick = onRequest)
+            .then(if (!granted) Modifier.pressScale(onClick = onRequest) else Modifier)
             .padding(vertical = 8.dp, horizontal = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -914,7 +914,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 Modifier.clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .clickable { hcLauncher.launch(HealthConnect.requestPermissions()) }
+                    .pressScale { hcLauncher.launch(HealthConnect.requestPermissions()) }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

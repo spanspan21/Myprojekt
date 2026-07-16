@@ -236,7 +236,7 @@ private fun BreathingOverlay(inhale: Int, hold: Int, exhale: Int, onClose: () ->
 
     Box(
         Modifier.fillMaxSize().background(Void.copy(alpha = 0.97f))
-            .clickable(onClick = onClose),
+            .pressScale(onClick = onClose),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -328,7 +328,7 @@ fun GoalsScreen(onClose: () -> Unit) {
                         Icon(
                             Icons.Rounded.Close, "Delete goal",
                             tint = if (armedGoal == g.id) Crit else TextDim.copy(alpha = 0.5f),
-                            modifier = Modifier.size(15.dp).clickable {
+                            modifier = Modifier.size(15.dp).pressScale {
                                 if (armedGoal == g.id) { Haptics.confirm(ctx); LifeStores.deleteGoal(ctx, g.id); armedGoal = null; AppFeedback.show("Goal deleted") }
                                 else { Haptics.warn(ctx); armedGoal = g.id }
                             },
@@ -347,11 +347,11 @@ fun GoalsScreen(onClose: () -> Unit) {
                             if (kr.metric.isBlank()) {
                                 Spacer(Modifier.width(10.dp))
                                 Text("−", color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.clip(CircleShape).clickable {
+                                    modifier = Modifier.clip(CircleShape).pressScale {
                                         Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress - 0.1f).coerceAtLeast(0f))
                                     }.padding(horizontal = 7.dp))
                                 Text("+", color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.clip(CircleShape).clickable {
+                                    modifier = Modifier.clip(CircleShape).pressScale {
                                         Haptics.tick(ctx); LifeStores.updateKrProgress(ctx, g.id, kr.id, (kr.manualProgress + 0.1f).coerceAtMost(1f))
                                     }.padding(horizontal = 7.dp))
                             } else {
@@ -475,7 +475,7 @@ private fun HabitsBlock() {
                 Icon(
                     Icons.Rounded.Close, "Delete habit",
                     tint = if (armedHabit == h.id) Crit else TextDim.copy(alpha = 0.5f),
-                    modifier = Modifier.size(14.dp).clickable {
+                    modifier = Modifier.size(14.dp).pressScale {
                         if (armedHabit == h.id) { Haptics.confirm(ctx); LifeStores.deleteHabit(ctx, h.id); armedHabit = null; AppFeedback.show("Habit deleted") }
                         else { Haptics.warn(ctx); armedHabit = h.id }
                     },

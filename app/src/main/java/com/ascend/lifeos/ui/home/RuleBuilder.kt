@@ -249,7 +249,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                 )
                 Text(
                     "Cancel", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable(onClick = onDone)
+                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale(onClick = onDone)
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }
@@ -287,7 +287,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                     Spacer(Modifier.weight(1f))
                     Text(
                         "Remove", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clip(RoundedCornerShape(7.dp)).clickable { second = false }
+                        modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { second = false }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
                     )
                 }
@@ -385,7 +385,7 @@ private fun StepOrb(label: String, onClick: () -> Unit) {
         Modifier.size(30.dp).clip(CircleShape)
             .background(Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), CircleShape)
-            .clickable(onClick = onClick),
+            .pressScale(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextMuted, fontSize = FS.s15, fontWeight = FontWeight.Bold) }
 }

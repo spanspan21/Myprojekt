@@ -433,7 +433,7 @@ private fun SearchPane(
                 }
                 Text(
                     "Clear", color = TextDim, fontSize = FS.s11_5, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onBasket(emptyList()) }.padding(8.dp),
+                    modifier = Modifier.pressScale { onBasket(emptyList()) }.padding(8.dp),
                 )
                 Spacer(Modifier.width(6.dp))
                 HudButton("Log", Modifier.width(110.dp)) {
@@ -580,7 +580,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
                 Spacer(Modifier.width(8.dp))
                 Box(
                     Modifier.size(30.dp).clip(CircleShape).background(Mod.Fuel.copy(alpha = 0.14f))
-                        .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), CircleShape).clickable { onPlus() },
+                        .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), CircleShape).pressScale { onPlus() },
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Add, "Add to basket", tint = Mod.Fuel, modifier = Modifier.size(16.dp)) }
             }
@@ -635,7 +635,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     var showDetails by remember(product) { mutableStateOf(false) }
     Spacer(Modifier.height(12.dp))
     Row(
-        Modifier.fillMaxWidth().clickable { showDetails = !showDetails },
+        Modifier.fillMaxWidth().pressScale { showDetails = !showDetails },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = FS.s11_5, fontWeight = FontWeight.Bold)

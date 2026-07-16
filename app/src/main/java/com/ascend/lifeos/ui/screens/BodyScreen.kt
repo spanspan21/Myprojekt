@@ -285,7 +285,7 @@ fun BodyScreen() {
                                     Spacer(Modifier.width(4.dp))
                                     Icon(
                                         Icons.Rounded.Info, "Sleep score info", tint = TextDim.copy(alpha = 0.4f),
-                                        modifier = Modifier.size(13.dp).clickable {
+                                        modifier = Modifier.size(13.dp).pressScale {
                                             AppFeedback.show("Duration vs target (55%) + deep/REM share (30%) + wake penalty (15%)")
                                         },
                                     )
@@ -305,7 +305,7 @@ fun BodyScreen() {
                                 Spacer(Modifier.width(4.dp))
                                 Icon(
                                     Icons.Rounded.Info, "Recovery info", tint = TextDim.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(13.dp).clickable {
+                                    modifier = Modifier.size(13.dp).pressScale {
                                         AppFeedback.show("Sleep performance (40%) + deep/REM share (20%) + resting HR delta (25%) + training load (15%) + morning check-in")
                                     },
                                 )
@@ -369,7 +369,7 @@ fun BodyScreen() {
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (sel) Mod.Body.copy(alpha = 0.14f) else Color.Transparent)
-                        .clickable { Haptics.tick(ctx); trendDays = d }
+                        .pressScale { Haptics.tick(ctx); trendDays = d }
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                 )
             }
@@ -728,7 +728,7 @@ private fun MeasurementsCard() {
             measures.forEachIndexed { i, (label, key) ->
                 val hist = m[key].orEmpty()
                 Row(
-                    Modifier.fillMaxWidth().clickable { editKey = label to key }
+                    Modifier.fillMaxWidth().pressScale { editKey = label to key }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -814,7 +814,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
 private fun WhyRow(label: String, value: String, quality: Float, hint: String? = null) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 3.dp)
-            .then(if (hint != null) Modifier.clickable { AppFeedback.show(hint) } else Modifier),
+            .then(if (hint != null) Modifier.pressScale { AppFeedback.show(hint) } else Modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.width(86.dp))
@@ -974,7 +974,7 @@ private fun FactorChip(label: String, on: Boolean, onToggle: (Boolean) -> Unit) 
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (on) Mod.Body.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, if (on) Mod.Body.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-            .clickable { Haptics.tick(ctx); onToggle(!on) }
+            .pressScale { Haptics.tick(ctx); onToggle(!on) }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { Text(label, color = if (on) Mod.Body else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

@@ -69,7 +69,7 @@ fun NotesScreen(onClose: () -> Unit) {
                 .padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 100.dp),
         ) {
             JarvisHeader("Notes", "${notes.size} captured", Mod.Skills) {
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clip(CircleShape).clickable(onClick = onClose))
+                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clip(CircleShape).pressScale(onClick = onClose))
             }
             Spacer(Modifier.height(12.dp))
 
@@ -96,7 +96,7 @@ fun NotesScreen(onClose: () -> Unit) {
                             Spacer(Modifier.width(6.dp))
                             Icon(
                                 Icons.Rounded.Close, "Clear search", tint = TextDim,
-                                modifier = Modifier.size(16.dp).clip(CircleShape).clickable { searchQuery = "" },
+                                modifier = Modifier.size(16.dp).clip(CircleShape).pressScale { searchQuery = "" },
                             )
                         }
                     }
@@ -191,14 +191,14 @@ fun NotesScreen(onClose: () -> Unit) {
                                 Icon(
                                     Icons.Rounded.Edit, "Edit note", tint = TextDim.copy(alpha = 0.4f),
                                     modifier = Modifier.size(16.dp).clip(CircleShape)
-                                        .clickable { editingId = id; editText = text },
+                                        .pressScale { editingId = id; editText = text },
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Icon(
                                     Icons.Rounded.Delete, "Delete note",
                                     tint = if (armedNote == id) Crit else TextDim.copy(alpha = 0.3f),
                                     modifier = Modifier.size(16.dp).clip(CircleShape)
-                                        .clickable {
+                                        .pressScale {
                                             if (armedNote == id) {
                                                 Haptics.confirm(ctx)
                                                 LifeStores.deleteNote(ctx, id)

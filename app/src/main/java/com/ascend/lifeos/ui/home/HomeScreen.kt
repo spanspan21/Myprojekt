@@ -239,7 +239,7 @@ fun HomeScreen(
             // ── status row (wordmark = command palette) ──────────────────
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onOpenPalette)
+                    Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onOpenPalette)
                         .padding(vertical = 4.dp, horizontal = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -361,7 +361,7 @@ fun HomeScreen(
                             if (readiness == null) "CONNECT WATCH" else "READINESS",
                             color = TextDim, fontFamily = MicroLabel, fontSize = FS.s9,
                             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
-                            modifier = if (readiness != null) Modifier.clickable {
+                            modifier = if (readiness != null) Modifier.pressScale {
                                 AppFeedback.show("Sleep (40%) + deep/REM (20%) + resting HR (25%) + training load (15%) + morning check-in")
                             } else Modifier,
                         )
@@ -1153,7 +1153,7 @@ private fun SleepConfirmCard(
             Spacer(Modifier.height(9.dp))
             Text(
                 "That was a power nap →", color = TextDim, fontSize = FS.s11, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
             )
         }
     }
@@ -1258,7 +1258,7 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
 @Composable
 private fun EventLine(tag: String, title: String, sub: String, color: Color, onClick: (() -> Unit)? = null) {
     Row(
-        if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
+        if (onClick != null) Modifier.pressScale(onClick = onClick) else Modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -1455,7 +1455,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                         modifier = Modifier
                             .clip(RoundedCornerShape(9.dp))
                             .background(if (visible) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.05f))
-                            .clickable {
+                            .pressScale {
                                 commit(if (visible) order - key else order + key)
                             }
                             .padding(horizontal = 11.dp, vertical = 6.dp)
@@ -1471,19 +1471,19 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                     if (visible) {
                         Text(
                             "▲", color = if (idx > 0) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
-                            modifier = Modifier.clip(CircleShape).clickable(enabled = idx > 0) {
+                            modifier = Modifier.clip(CircleShape).then(if (idx > 0) Modifier.pressScale {
                                 val m = order.toMutableList()
                                 m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
                                 commit(m)
-                            }.padding(8.dp),
+                            } else Modifier).padding(8.dp),
                         )
                         Text(
                             "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13,
-                            modifier = Modifier.clip(CircleShape).clickable(enabled = idx < order.lastIndex) {
+                            modifier = Modifier.clip(CircleShape).then(if (idx < order.lastIndex) Modifier.pressScale {
                                 val m = order.toMutableList()
                                 m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }
                                 commit(m)
-                            }.padding(8.dp),
+                            } else Modifier).padding(8.dp),
                         )
                     }
                 }
@@ -1635,7 +1635,7 @@ private fun BriefRow(
             Spacer(Modifier.width(8.dp))
             Text(
                 action, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction).padding(6.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onAction).padding(6.dp),
             )
         }
     }
