@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.hud
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,7 +81,7 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp).padding(bottom = 20.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Custom food", color = TextPrimary, fontSize = com.ascend.lifeos.ui.theme.FS.s20, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-            Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { favorite = !favorite }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { favorite = !favorite }, contentAlignment = Alignment.Center) {
                 Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, if (favorite) "Remove from favorites" else "Add to favorites", tint = if (favorite) Amber else TextDim, modifier = Modifier.size(20.dp))
             }
         }
@@ -109,7 +110,7 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
 
         Spacer(Modifier.height(14.dp))
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).clickable { showMicros = !showMicros }.padding(14.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.04f)).pressScale { showMicros = !showMicros }.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Micronutrients (optional)", color = TextMuted, fontSize = com.ascend.lifeos.ui.theme.FS.s13, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))

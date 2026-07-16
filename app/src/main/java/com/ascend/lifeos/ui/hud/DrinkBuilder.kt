@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Star
@@ -168,7 +169,7 @@ fun DrinkBuilderPane(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
-                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).clickable { onBack() },
+                .background(com.ascend.lifeos.ui.theme.Ivory.copy(alpha = 0.05f)).pressScale { onBack() },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         Spacer(Modifier.width(12.dp))
@@ -259,7 +260,7 @@ fun DrinkBuilderPane(
         Box(
             Modifier.size(48.dp).clip(RoundedCornerShape(13.dp))
                 .background(Amber.copy(alpha = if (starred) 0.30f else 0.14f))
-                .clickable {
+                .pressScale {
                     // ★ „Mein Latte" — als Favorit in die eigene Speisekarte (Kap. 36)
                     Repo.saveCustomFood(
                         CustomFood(

@@ -29,7 +29,9 @@ object Changelog {
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
-        "Empty states everywhere: goals, workouts, records, exercises and skill domains show helpful guidance instead of blank space when lists are empty",
+        "pressScale wave 4: every card, CTA and action button across all screens now press-and-spring — 100+ interactive surfaces upgraded",
+        "Vibration centralized: all 6 remaining screens with local vibrate() boilerplate now use the Haptics class — cleaner code, consistent feel",
+        "Empty states everywhere: goals, workouts, records, exercises, skill domains, bank search and recipe filter show helpful guidance instead of blank space",
         "Boot calibration now includes sleep target and bedtime — JARVIS measures sleep debt and night greetings from your actual schedule",
         "WhyRow tap-to-explain: tap Sleep, Restorative or Resting HR on the Body screen to learn what each metric means and how it's scored",
         "Fat multiplier configurable: standard and fuel-mode fat targets are now Settings steppers — tune your macro split per kg",
