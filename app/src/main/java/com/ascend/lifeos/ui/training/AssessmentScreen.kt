@@ -9,6 +9,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -238,7 +239,7 @@ private fun NextButton(label: String, enabled: Boolean, onClick: () -> Unit) {
         Modifier.fillMaxWidth().padding(bottom = 36.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(if (enabled) Mod.Train else Mod.Train.copy(alpha = 0.2f))
-            .clickable(enabled = enabled, onClick = onClick)
+            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier)
             .padding(vertical = 15.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -318,7 +319,7 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
         Box(
             Modifier.fillMaxWidth().padding(bottom = 36.dp)
                 .clip(RoundedCornerShape(16.dp)).background(Mod.Train)
-                .clickable { com.ascend.lifeos.data.Haptics.epic(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Profile saved"); onDone() }.padding(vertical = 15.dp),
+                .pressScale { com.ascend.lifeos.data.Haptics.epic(ctx); com.ascend.lifeos.ui.kit.AppFeedback.show("Profile saved"); onDone() }.padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Save profile", color = Void, fontFamily = Body, fontSize = com.ascend.lifeos.ui.theme.FS.s15, fontWeight = FontWeight.ExtraBold) }
     }

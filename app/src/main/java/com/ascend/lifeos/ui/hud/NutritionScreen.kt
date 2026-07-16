@@ -415,7 +415,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
         // ---- Quick-Add FAB — logs to the selected day ----
         Box(
             Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 22.dp, bottom = 96.dp)
-                .size(58.dp).clip(CircleShape).background(Mod.Fuel).clickable { addOpen = true },
+                .size(58.dp).clip(CircleShape).background(Mod.Fuel).pressScale { addOpen = true },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.Add, "Add food", tint = Void, modifier = Modifier.size(28.dp)) }
     }
@@ -717,7 +717,7 @@ private fun CoachCheckInCard() {
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Mod.Fuel.copy(alpha = 0.16f))
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(11.dp))
-                            .clickable {
+                            .pressScale {
                                 com.ascend.lifeos.data.Haptics.confirm(cctx)
                                 com.ascend.lifeos.data.nutrition.CoachRitual.adopt(c)
                                 gone = true
@@ -985,7 +985,7 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
         modifier.clip(RoundedCornerShape(14.dp))
             .background(Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
-            .clickable { onOpen() }
+            .pressScale { onOpen() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1150,7 +1150,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
                 Modifier.clip(RoundedCornerShape(12.dp))
                     .background(Mod.Fuel.copy(alpha = 0.12f))
                     .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                    .clickable {
+                    .pressScale {
                         Repo.addFood(pick.entry, dayKey)
                         com.ascend.lifeos.data.Haptics.confirm(hCtx)
                     }
