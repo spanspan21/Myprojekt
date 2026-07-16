@@ -359,7 +359,7 @@ private fun SearchPane(
                 }
                 mealMatches.forEach { m ->
                     val kcal = m.entries.sumOf { it.kcal }
-                    ResultRow(m.name, "Saved meal · ${m.entries.size} items · $kcal kcal", "★") { addAll(m.entries, meal, dayKey); onDismiss() }
+                    ResultRow(m.name, "Saved meal · ${m.entries.size} items · $kcal kcal", "★") { Haptics.confirm(ctx); addAll(m.entries, meal, dayKey); onDismiss() }
                     Spacer(Modifier.height(8.dp))
                 }
             }

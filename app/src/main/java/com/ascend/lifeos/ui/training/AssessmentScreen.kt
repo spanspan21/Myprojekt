@@ -38,6 +38,7 @@ import com.ascend.lifeos.data.training.Pattern
 import com.ascend.lifeos.data.training.TrainBrain
 import com.ascend.lifeos.data.training.prescribedMobility
 import com.ascend.lifeos.ui.kit.ProgressDots
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
 
 // ─── CALIBRATION PROTOCOL ────────────────────────────────────────────────────
@@ -161,7 +162,7 @@ private fun StepPage(
             BigStep("−", enabled = value > 0, onClick = onMinus)
             Spacer(Modifier.width(22.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("$value", color = TextPrimary, style = metricStyle(64), textAlign = TextAlign.Center)
+                TickerNumber(value, 64, color = TextPrimary)
                 Text(unit.uppercase(), color = TextDim, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             }
             Spacer(Modifier.width(22.dp))

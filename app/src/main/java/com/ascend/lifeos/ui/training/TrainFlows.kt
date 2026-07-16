@@ -30,6 +30,7 @@ import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.training.PrType
 import com.ascend.lifeos.data.training.TrainBrain
 import com.ascend.lifeos.ui.kit.ProgressDots
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -202,7 +203,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     TestStep("−") { value = (value - 1).coerceAtLeast(0) }
                     Spacer(Modifier.width(22.dp))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("$value", color = TextPrimary, style = metricStyle(60))
+                        TickerNumber(value, 60, color = TextPrimary)
                         Text(
                             if (isHold) "SECONDS" else "REPS", color = TextDim, fontFamily = Display,
                             fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,

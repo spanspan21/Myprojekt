@@ -374,7 +374,7 @@ private fun ExerciseSetLogger(
         Modifier.fillMaxWidth(), corner = 18.dp,
         line = ssColor?.copy(alpha = 0.35f) ?: HudLine,
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(catIcon(exCategory ?: ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))

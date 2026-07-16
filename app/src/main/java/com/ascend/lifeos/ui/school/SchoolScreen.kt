@@ -1,9 +1,11 @@
 package com.ascend.lifeos.ui.school
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.ui.kit.TickerNumber
+import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -307,7 +309,7 @@ private fun SubjectCard(
     val grade = remember(tick, subject.id) { SchoolStore.subjectGrade(ctx, subject) }
 
     Panel(modifier.fillMaxWidth(), corner = 14.dp, onClick = onToggle) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.animateContentSize(animationSpec = Motion.springSmoothOf()).padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(subject.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s15, fontWeight = FontWeight.Bold)

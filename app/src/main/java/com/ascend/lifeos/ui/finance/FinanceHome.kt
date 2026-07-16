@@ -197,7 +197,7 @@ fun FinanceHome(onClose: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
                 BalanceHero(
                     accounts = accounts, totalBal = totalBal, income = income, spend = spend,
-                    onAccount = { editAccount = it }, onAddAccount = { showNewAccount = true },
+                    onAccount = { editAccount = it }, onAddAccount = { Haptics.tick(ctx); showNewAccount = true },
                 )
                 Spacer(Modifier.height(14.dp))
             }
@@ -805,7 +805,7 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
                 RecurringRow(
                     r,
                     onToggle = { FinanceStore.setRecurringActive(ctx, r.id, !r.active) },
-                    onBook = { FinanceStore.bookRecurring(ctx, r.id) },
+                    onBook = { Haptics.confirm(ctx); FinanceStore.bookRecurring(ctx, r.id) },
                     onDelete = { FinanceStore.deleteRecurring(ctx, r.id); AppFeedback.show("Recurring deleted") },
                 )
             }

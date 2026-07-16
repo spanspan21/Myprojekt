@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.ui.hud.*
 import com.ascend.lifeos.ui.motion.pressScale
@@ -105,7 +106,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (running) {
                     Text(phaseNames[phase], color = phaseColors[phase], fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
-                    Text("$remaining", color = TextPrimary, fontSize = FS.s56, fontWeight = FontWeight.ExtraBold)
+                    TickerNumber(remaining, 56, color = TextPrimary)
                 } else {
                     Text(tempo, color = TextPrimary, fontSize = FS.s32, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(4.dp))

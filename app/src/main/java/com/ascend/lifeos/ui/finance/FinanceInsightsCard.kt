@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.finance
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,6 +112,7 @@ fun FinanceInsightsCard() {
                                     withContext(Dispatchers.IO) {
                                         FinanceInsights.dueRecurrings(ctx).forEach { FinanceStore.bookRecurring(ctx, it.id) }
                                     }
+                                    Haptics.success(ctx)
                                     localRev++
                                 }
                             }

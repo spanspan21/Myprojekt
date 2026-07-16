@@ -657,7 +657,7 @@ private fun CoachCheckInCard() {
             } else if (c != null) {
                 // headline: the new program
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text("${c.newKcal}", color = TextPrimary, fontSize = FS.s26, fontWeight = FontWeight.ExtraBold)
+                    TickerNumber(c.newKcal, 26, color = TextPrimary)
                     Spacer(Modifier.width(5.dp))
                     Text("kcal", color = TextDim, fontSize = FS.s12, fontWeight = FontWeight.Bold)
                     if (c.newKcal != c.prevKcal) {

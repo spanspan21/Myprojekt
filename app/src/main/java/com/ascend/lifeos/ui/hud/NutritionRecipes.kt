@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.hud
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,6 +64,7 @@ import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.ShopItem
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
@@ -397,7 +399,7 @@ private fun RecipeCard(
     val pantryActive = pantry.isNotEmpty()
     val matched = if (pantryActive) r.parts.count { matchesPantry(it.name, pantry) } else 0
     GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.fillMaxWidth().pressScale { onToggle() }.padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().animateContentSize(animationSpec = Motion.springSmoothOf()).pressScale { onToggle() }.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

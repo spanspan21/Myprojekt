@@ -878,7 +878,7 @@ fun HomeScreen(
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                 weekData.forEach { stat ->
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(stat.value.toString(), color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold)
+                                        TickerNumber(stat.value, 20, color = TextPrimary, fontFamily = Display)
                                         Text(stat.label, color = TextDim, fontSize = FS.s8_5, fontFamily = Body)
                                         if (stat.prev > 0 && stat.label != "streak") {
                                             val delta = stat.value - stat.prev

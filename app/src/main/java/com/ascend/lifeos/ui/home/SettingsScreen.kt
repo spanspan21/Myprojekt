@@ -1410,6 +1410,7 @@ private fun ActionRow(title: String, sub: String, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimePickerSheet(currentMin: Int, onResult: (Int?) -> Unit) {
+    val ctx = LocalContext.current
     var hour by remember { mutableIntStateOf(currentMin / 60) }
     var minute by remember { mutableIntStateOf(currentMin % 60) }
     ModalBottomSheet(
@@ -1436,7 +1437,7 @@ private fun TimePickerSheet(currentMin: Int, onResult: (Int?) -> Unit) {
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
                     .background(Mod.Home)
-                    .pressScale { onResult(hour * 60 + minute) }
+                    .pressScale { Haptics.confirm(ctx); onResult(hour * 60 + minute) }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center,
             ) {

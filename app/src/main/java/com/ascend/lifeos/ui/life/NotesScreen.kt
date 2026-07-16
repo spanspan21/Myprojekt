@@ -166,6 +166,7 @@ fun NotesScreen(onClose: () -> Unit) {
                                         Modifier.clip(RoundedCornerShape(10.dp))
                                             .background(Mod.Skills)
                                             .pressScale {
+                                                Haptics.confirm(ctx)
                                                 LifeStores.editNote(ctx, id, editText)
                                                 editingId = null
                                                 AppFeedback.show("Note updated")

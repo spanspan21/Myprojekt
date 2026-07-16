@@ -39,6 +39,7 @@ import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.Ring
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -252,7 +253,7 @@ private fun BreathingOverlay(inhale: Int, hold: Int, exhale: Int, onClose: () ->
                         color = Mod.Mind, fontFamily = Display, fontSize = FS.s13,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
                     )
-                    Text("$secondsLeft", color = TextPrimary, style = metricStyle(44))
+                    TickerNumber(secondsLeft, 44, color = TextPrimary)
                 }
             }
             Spacer(Modifier.height(22.dp))

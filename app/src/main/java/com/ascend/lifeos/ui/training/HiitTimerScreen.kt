@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.ui.kit.SectionLabel
+import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -157,7 +158,7 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(if (isWork) "WORK" else "REST", color = if (isWork) Crit else Cyan, fontSize = FS.s14, fontWeight = FontWeight.ExtraBold, letterSpacing = 3.sp)
-                    Text("$remaining", color = TextPrimary, fontSize = FS.s64, fontWeight = FontWeight.ExtraBold)
+                    TickerNumber(remaining, 64, color = TextPrimary)
                     Text("Round $currentRound/${preset?.rounds ?: 0} · Set $currentSet/${preset?.sets ?: 0}", color = TextDim, fontSize = FS.s13)
                 }
             }

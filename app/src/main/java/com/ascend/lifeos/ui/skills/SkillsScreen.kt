@@ -2,6 +2,8 @@ package com.ascend.lifeos.ui.skills
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import com.ascend.lifeos.ui.motion.Motion
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -314,6 +316,7 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(Ivory.copy(alpha = if (expanded) 0.05f else 0.03f))
             .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+            .animateContentSize(animationSpec = Motion.springSmoothOf())
             .pressScale(onToggle)
             .padding(horizontal = 12.dp, vertical = 9.dp),
     ) {

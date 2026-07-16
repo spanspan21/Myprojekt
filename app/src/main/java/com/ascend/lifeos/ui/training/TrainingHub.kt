@@ -761,7 +761,7 @@ private fun CustomPlaceRow(
     var min by remember(session.index, placement) { mutableStateOf(placement?.startMin ?: (6 * 60)) }
     fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
     GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
-        Column(Modifier.padding(12.dp)) {
+        Column(Modifier.animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(12.dp)) {
             Row(
                 Modifier.fillMaxWidth().pressScale { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
