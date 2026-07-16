@@ -49,6 +49,8 @@ import com.ascend.lifeos.data.training.ActivityTypes
 import com.ascend.lifeos.data.training.SportCatalog
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.theme.*
+import com.ascend.lifeos.core.prevKey
+import com.ascend.lifeos.core.todayKey
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -73,12 +75,12 @@ object CommandEngine {
         // ---- yesterday prefix — backdates the command one day ----
         val isYesterday = q.startsWith("yesterday ") || q.startsWith("gestern ")
         val qEff = if (isYesterday) q.substringAfter(" ").trim() else q
-        val yesterdayKey = com.ascend.lifeos.core.prevKey(com.ascend.lifeos.core.todayKey())
+        val yesterdayKey = prevKey(todayKey())
 
         // ---- water: "water", "water 3", "500 ml" -------------------------
         Regex("^water( (\\d+))?$").find(qEff)?.let { m ->
             val n = m.groupValues[2].toIntOrNull() ?: 1
-            val dk = if (isYesterday) yesterdayKey else com.ascend.lifeos.core.todayKey()
+            val dk = if (isYesterday) yesterdayKey else todayKey()
             Repo.addWater(n, dk)
             val tag = if (isYesterday) " (yesterday)" else ""
             return CmdResult.Done("Logged $n glass${if (n > 1) "es" else ""} of water$tag")
@@ -86,7 +88,7 @@ object CommandEngine {
         Regex("^(\\d{2,4}) ?ml$").find(qEff)?.let { m ->
             val ml = m.groupValues[1].toInt()
             val glasses = Math.round(ml / 250f).coerceAtLeast(1)
-            val dk = if (isYesterday) yesterdayKey else com.ascend.lifeos.core.todayKey()
+            val dk = if (isYesterday) yesterdayKey else todayKey()
             Repo.addWater(glasses, dk)
             val tag = if (isYesterday) " (yesterday)" else ""
             return CmdResult.Done("Logged ${ml}ml (≈$glasses glasses)$tag")
@@ -105,7 +107,7 @@ object CommandEngine {
         Regex("^(kcal (\\d{2,4})|(\\d{2,4}) ?kcal)( .+)?$").find(qEff)?.let { m ->
             val kcal = (m.groupValues[2].ifBlank { m.groupValues[3] }).toIntOrNull() ?: return@let
             val name = m.groupValues[4].trim().ifBlank { "Quick add" }
-            val dk = if (isYesterday) yesterdayKey else com.ascend.lifeos.core.todayKey()
+            val dk = if (isYesterday) yesterdayKey else todayKey()
             Repo.addFood(
                 FoodEntry(
                     id = "", name = name.replaceFirstChar { it.uppercase() },
@@ -125,7 +127,7 @@ object CommandEngine {
             if (prot !in 1..300) return@let
             val name = m.groupValues.getOrNull(2)?.trim()?.ifBlank { null }?.replaceFirstChar { it.uppercase() } ?: "Protein"
             val estKcal = prot * 4
-            val dk = if (isYesterday) yesterdayKey else com.ascend.lifeos.core.todayKey()
+            val dk = if (isYesterday) yesterdayKey else todayKey()
             Repo.addFood(
                 FoodEntry(id = "", name = name, kcal = estKcal, protein = prot, carbs = 0, fat = 0, meal = defaultMealSlot(), incomplete = true),
                 dayKey = dk,
@@ -248,7 +250,7 @@ object CommandEngine {
 
         // ---- share today: copy a day summary to clipboard ─────────────────
         if (q == "share today" || q == "export" || q == "zusammenfassung") {
-            val dk = com.ascend.lifeos.core.todayKey()
+            val dk = todayKey()
             val day = Repo.data.days[dk]
             val p = Repo.data.profile
             val health = Repo.data.health

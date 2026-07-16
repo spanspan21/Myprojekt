@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
@@ -25,12 +27,13 @@ import com.ascend.lifeos.ui.theme.*
 /** Guard-overlay close pattern: floating glass orb, top-right. */
 @Composable
 internal fun BoxScope.CloseOrb(onClose: () -> Unit) {
+    val ctx = LocalContext.current
     Box(
         Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(16.dp)
             .size(40.dp).clip(RoundedCornerShape(13.dp))
             .background(Ivory.copy(alpha = 0.06f))
             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-            .pressScale(onClick = onClose),
+            .pressScale { Haptics.tick(ctx); onClose() },
         contentAlignment = Alignment.Center,
     ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
 }

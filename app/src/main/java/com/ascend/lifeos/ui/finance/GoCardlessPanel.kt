@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -180,7 +181,7 @@ private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: 
                     "No banks found", "Try a different search term", Mod.Finance,
                 )
             } else {
-                LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                LazyColumn(Modifier.heightIn(max = 360.dp), contentPadding = PaddingValues(bottom = 12.dp)) {
                     items(filtered, key = { it.id }) { b ->
                         Text(
                             b.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5,

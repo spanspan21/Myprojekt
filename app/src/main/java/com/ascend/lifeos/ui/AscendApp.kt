@@ -67,6 +67,7 @@ import com.ascend.lifeos.ui.screens.BodyScreen
 import com.ascend.lifeos.ui.skills.SkillsScreen
 import com.ascend.lifeos.ui.theme.*
 import com.ascend.lifeos.ui.training.TrainingScreen
+import com.ascend.lifeos.core.todayKey
 
 // ─── JARVIS shell v3 — three levels, one thumb ───────────────────────────────
 // Level 1: TODAY is the start screen. Level 2: four life-area groups on the
@@ -367,7 +368,7 @@ private fun badgeCount(g: Group): Int {
         }
         Group.BODY -> 0
         Group.LIFE -> {
-            val dk = com.ascend.lifeos.core.todayKey()
+            val dk = todayKey()
             val today = java.time.LocalDate.parse(dk)
             val dueHabits = LifeStores.habits(ctx).count { h ->
                 HabitMetrics.scheduledOn(h, today)

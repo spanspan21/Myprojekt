@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -187,7 +188,7 @@ private fun BankPickerSheet(onDismiss: () -> Unit) {
                 if (hits.isEmpty()) {
                     com.ascend.lifeos.ui.kit.EmptyState(androidx.compose.material.icons.Icons.Rounded.AccountBalance, "Keine Treffer", "Anders schreiben?", Mod.Finance)
                 } else {
-                    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
+                    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp), contentPadding = PaddingValues(bottom = 12.dp)) {
                         items(hits, key = { it.name }) { bank ->
                             Row(
                                 Modifier.animateItem().fillMaxWidth().clip(RoundedCornerShape(11.dp))

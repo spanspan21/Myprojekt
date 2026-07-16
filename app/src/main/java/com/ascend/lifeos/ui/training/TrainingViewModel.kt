@@ -17,6 +17,8 @@ import com.ascend.lifeos.data.SoundFx
 import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.data.calendar.EventType
 import com.ascend.lifeos.data.training.*
+import com.ascend.lifeos.core.isoWeek
+import com.ascend.lifeos.core.todayKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -199,7 +201,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     /** Mesocycle week 0..4 — advances once per ISO week (4 build + 1 deload). */
     fun currentTrainWeek(): Int {
         val p = Repo.data.profile
-        val week = com.ascend.lifeos.core.isoWeek()
+        val week = isoWeek()
         if (p.trainWeekStamp != week) {
             val next = if (p.trainWeekStamp == null) p.trainWeekIndex else (p.trainWeekIndex + 1) % 5
             Repo.setTrainWeek(next, week)
@@ -241,7 +243,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // reusing the tested deload path rather than new plan logic (audit F3/F5).
         val easyOverride = Prefs.string(
             getApplication(), Prefs.TRAIN_EASY_DAY, "",
-        ) == com.ascend.lifeos.core.todayKey()
+        ) == todayKey()
         if (easyOverride) deloadActive = true
         val p = Repo.data.profile
         val best = runCatching { dao.bestRepsAll() }.getOrDefault(emptyList())

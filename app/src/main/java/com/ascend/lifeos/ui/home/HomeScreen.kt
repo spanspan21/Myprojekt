@@ -813,7 +813,7 @@ fun HomeScreen(
             val habitRev = LifeStores.rev
             val todayHabits = remember(habitRev) {
                 val todayDate = java.time.LocalDate.now()
-                val dk = com.ascend.lifeos.core.todayKey()
+                val dk = todayKey()
                 LifeStores.habits(ctx)
                     .filter { HabitMetrics.scheduledOn(it, todayDate) }
                     .filter { !HabitMetrics.skipped(ctx, it, dk) }
@@ -825,7 +825,7 @@ fun HomeScreen(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    val dk = com.ascend.lifeos.core.todayKey()
+                    val dk = todayKey()
                     todayHabits.forEach { h ->
                         val done = HabitMetrics.done(ctx, h, dk)
                         val icon = h.icon.ifBlank { "•" }

@@ -70,7 +70,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
         // ── Volume graph ────────────────────────────────────────────
         item {
-            Text("VOLUME (RECENT WORKOUTS)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Volume (recent workouts)", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             GlassPanel(Modifier.fillMaxWidth().height(180.dp), corner = 18.dp) {
                 VolumeGraph(sessions.take(12).reversed(), Modifier.fillMaxSize().padding(16.dp))
@@ -80,7 +80,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
         // ── Muscle heatmap ──────────────────────────────────────────
         item {
-            Text("MUSCLE VOLUME (THIS WEEK)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Muscle volume (this week)", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             MuscleHeatmap(sessions, allExercises)
             Spacer(Modifier.height(22.dp))
@@ -88,7 +88,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
         // ── Training frequency calendar (GitHub-style) ──────────────
         item {
-            Text("TRAINING FREQUENCY (12 WEEKS)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            SectionLabel("Training frequency (12 weeks)", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             FrequencyCalendar(sessions)
             Spacer(Modifier.height(22.dp))
@@ -117,7 +117,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                 }
             }
             if (acts.isNotEmpty()) {
-                Text("ACTIVITY LOAD (8 WEEKS)", color = TextDim, fontSize = FS.s10, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                SectionLabel("Activity load (8 weeks)", accent = Mod.Train)
                 Spacer(Modifier.height(10.dp))
                 GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
                     ActivityWeekBars(weekLoads, Modifier.fillMaxWidth().height(120.dp).padding(16.dp))

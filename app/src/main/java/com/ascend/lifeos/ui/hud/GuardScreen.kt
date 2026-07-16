@@ -76,6 +76,10 @@ import com.ascend.lifeos.wellbeing.DayUsage
 import com.ascend.lifeos.wellbeing.DigitalWellbeingManager
 import com.ascend.lifeos.wellbeing.JarvisGuardService
 import com.ascend.lifeos.wellbeing.WellbeingStore
+import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.wellbeing.CasinoScreen
+import com.ascend.lifeos.wellbeing.JarvisAccessibilityService
+import com.ascend.lifeos.wellbeing.PracticeLedger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -100,7 +104,7 @@ fun GuardScreen() {
 
     val usageOk = remember(tick) { DigitalWellbeingManager.hasUsageAccess(ctx) }
     val overlayOk = remember(tick) { DigitalWellbeingManager.canOverlay(ctx) }
-    val a11yOk = remember(tick) { com.ascend.lifeos.wellbeing.JarvisAccessibilityService.isEnabled(ctx) }
+    val a11yOk = remember(tick) { JarvisAccessibilityService.isEnabled(ctx) }
     val enabled = remember(tick) { WellbeingStore.isEnabled(ctx) }
     val limits = remember(tick) { WellbeingStore.limits(ctx) }
     val gates = remember(tick) { WellbeingStore.gateApps(ctx) }
@@ -132,7 +136,7 @@ fun GuardScreen() {
         val hb = withContext(Dispatchers.Default) { runCatching { DigitalWellbeingManager.unlockHours(ctx) }.getOrDefault(IntArray(24)) }
         data = d; week = w; firstPickup = fp; loading = false
         // persist today's numbers — UsageStats forgets after ~7 days, we don't
-        WellbeingStore.recordDay(ctx, com.ascend.lifeos.core.todayKey(), (d.totalMs / 60_000L).toInt(), d.unlocks)
+        WellbeingStore.recordDay(ctx, todayKey(), (d.totalMs / 60_000L).toInt(), d.unlocks)
         runCatching {
             // hour buckets are keyed by real calendar date so weekdays line up
             WellbeingStore.recordHours(ctx, java.time.LocalDate.now().toString(), hb)
@@ -147,8 +151,8 @@ fun GuardScreen() {
     // budget 45 · unlocks 20 · first pickup 10 · doomscroll snoozes 15 · schedule adherence 10
     val usedMin = ((data?.totalMs ?: 0L) / 60_000L).toInt()
     val unlocks = data?.unlocks ?: 0
-    val dsSnoozes = remember(tick) { WellbeingStore.dsSnoozesTotal(ctx, com.ascend.lifeos.core.todayKey()) }
-    val windowViolations = remember(tick) { WellbeingStore.windowViolationsToday(ctx, com.ascend.lifeos.core.todayKey()) }
+    val dsSnoozes = remember(tick) { WellbeingStore.dsSnoozesTotal(ctx, todayKey()) }
+    val windowViolations = remember(tick) { WellbeingStore.windowViolationsToday(ctx, todayKey()) }
     val budgetPart = (45f * (1f - usedMin.toFloat() / budget)).coerceIn(0f, 45f)
     val unlockPart = (20f * (1f - unlocks / 60f)).coerceIn(0f, 20f)
     val puGood = Prefs.int(ctx, Prefs.PICKUP_HOUR_GOOD, 8)
@@ -716,7 +720,7 @@ fun GuardScreen() {
                             budget = openBudgets[app.pkg],
                             category = appCats[app.pkg],
                             opens = if (openBudgets.containsKey(app.pkg))
-                                WellbeingStore.opensToday(ctx, app.pkg, com.ascend.lifeos.core.todayKey()) else 0,
+                                WellbeingStore.opensToday(ctx, app.pkg, todayKey()) else 0,
                             expanded = expandedPkg == app.pkg,
                             onToggle = { expandedPkg = if (expandedPkg == app.pkg) null else app.pkg },
                             onSetLimit = { m ->
@@ -770,14 +774,14 @@ fun GuardScreen() {
             onDismissRequest = { practiceOpen = false },
             properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
         ) {
-            val ledger = remember { com.ascend.lifeos.wellbeing.PracticeLedger(ctx, ctx.packageName) }
+            val ledger = remember { PracticeLedger(ctx, ctx.packageName) }
             Box(
                 Modifier.fillMaxSize().background(Void)
                     .statusBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 14.dp),
             ) {
-                com.ascend.lifeos.wellbeing.CasinoScreen(
+                CasinoScreen(
                     appLabel = "Practice",
                     ledger = ledger,
                     deficitMin = 0,
@@ -1335,7 +1339,7 @@ private fun PermissionCard(usageOk: Boolean, overlayOk: Boolean, a11yOk: Boolean
             PermRow("Usage access", "reads real screen time", usageOk) { DigitalWellbeingManager.requestUsageAccess(ctx) }
             PermRow("Display over apps", "raises the wall over the app", overlayOk) { DigitalWellbeingManager.requestOverlay(ctx) }
             PermRow("Instant detection", "lock appears the moment an app opens", a11yOk) {
-                com.ascend.lifeos.wellbeing.JarvisAccessibilityService.openSettings(ctx)
+                JarvisAccessibilityService.openSettings(ctx)
             }
             PermRow("Run unthrottled", "One UI can't put the watchdog to sleep", batteryOk) {
                 runCatching {
