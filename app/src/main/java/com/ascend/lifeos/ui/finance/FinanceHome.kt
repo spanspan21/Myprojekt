@@ -110,7 +110,12 @@ fun FinanceHome(onClose: () -> Unit) {
     val income = remember(lrev) { LifeStores.monthIncome(ctx) }
     val byCat = remember(lrev) { LifeStores.monthByCategory(ctx) }
     val budgets = remember(frev) { FinanceStore.budgets(ctx) }
-    val totalBudget = remember(budgets) { budgets.values.sum() }
+    val rolloverOn = remember(frev) { FinanceStore.rolloverOn(ctx) }
+    // effective caps carry last month's leftover when rollover is enabled
+    val effBudgets = remember(frev) { budgets.mapValues { FinanceStore.effectiveBudget(ctx, it.key) } }
+    val totalBudget = remember(budgets, effBudgets, rolloverOn) {
+        if (rolloverOn) effBudgets.values.sum() else budgets.values.sum()
+    }
     val recurrings = remember(frev) { FinanceStore.recurrings(ctx) }
     val recurringCost = remember(frev) { FinanceStore.monthlyRecurringCost(ctx) }
     val goals = remember(frev, lrev) { FinanceStore.saveGoals(ctx) }
@@ -619,6 +624,8 @@ private fun BreakdownPanel(
     spend: Long,
     onCategory: (String) -> Unit,
 ) {
+    val bpCtx = androidx.compose.ui.platform.LocalContext.current
+    val rolloverOn = remember { FinanceStore.rolloverOn(bpCtx) }
     val rows = remember(byCat, budgets) {
         (byCat.keys + budgets.keys).filter { it != "Income" }.distinct()
             .sortedWith(compareByDescending<String> { byCat[it] ?: 0L }.thenBy { it })
@@ -674,7 +681,11 @@ private fun BreakdownPanel(
                 Spacer(Modifier.height(6.dp))
             }
 
-            rows.forEach { c -> CategoryRow(c, byCat[c] ?: 0L, budgets[c], spend) { onCategory(c) } }
+            rows.forEach { c ->
+                val rolled = if (rolloverOn && budgets[c] != null) FinanceStore.lastMonthLeftover(bpCtx, c) else 0L
+                val cap = if (rolloverOn) FinanceStore.effectiveBudget(bpCtx, c).takeIf { it > 0 } ?: budgets[c] else budgets[c]
+                CategoryRow(c, byCat[c] ?: 0L, cap, spend, rolled) { onCategory(c) }
+            }
 
             if (budgets.isEmpty()) {
                 Spacer(Modifier.height(6.dp))
@@ -688,7 +699,7 @@ private fun BreakdownPanel(
 }
 
 @Composable
-private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend: Long, onClick: () -> Unit) {
+private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend: Long, rolled: Long = 0L, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).pressScale(onClick)
             .padding(horizontal = 2.dp, vertical = 8.dp),
@@ -727,6 +738,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
                     if (budget != null) {
                         if (isNotEmpty()) append(" · ")
                         append("cap ${euros(budget)}")
+                        if (rolled != 0L) append(if (rolled > 0) " (+${euros(rolled)} rolled)" else " (${euros(rolled)} rolled)")
                     }
                 }.ifEmpty { "no spend yet" },
                 color = TextDim, fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,

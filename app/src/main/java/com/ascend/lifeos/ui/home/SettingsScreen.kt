@@ -511,6 +511,12 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
                 modifier = Modifier.padding(bottom = 6.dp),
             )
+            var rollover by remember { mutableStateOf(com.ascend.lifeos.data.finance.FinanceStore.rolloverOn(ctx)) }
+            ToggleRow(
+                "Budget rollover", "Carry last month's leftover (or overspend) into this month",
+                on = rollover,
+                onToggle = { rollover = it; com.ascend.lifeos.data.finance.FinanceStore.setRolloverOn(ctx, it) },
+            )
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
             ToggleRow("Round-up savings", "Round each expense up to the euro into a savings goal", Prefs.ROUNDUP_ON, false)
             if (Prefs.bool(ctx, Prefs.ROUNDUP_ON, false)) {

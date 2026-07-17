@@ -281,6 +281,30 @@ object FinanceStore {
 
     fun totalBudget(ctx: Context): Long = budgets(ctx).values.sum()
 
+    // ─── Budget rollover ──────────────────────────────────────────────────────
+    // Opt-in YNAB-style carry: last month's leftover (base − spend) rolls into
+    // this month's cap. Underspend gives you more room; overspend carries the
+    // debt forward (clamped so a category can't roll below zero available).
+    fun rolloverOn(ctx: Context): Boolean =
+        ctx.getSharedPreferences("settings", Context.MODE_PRIVATE).getBoolean("budget_rollover", false)
+    fun setRolloverOn(ctx: Context, on: Boolean) =
+        ctx.getSharedPreferences("settings", Context.MODE_PRIVATE).edit().putBoolean("budget_rollover", on).apply()
+
+    /** Last month's leftover for a category (base − spend); 0 if no base set. */
+    fun lastMonthLeftover(ctx: Context, category: String): Long {
+        val base = budgets(ctx)[category] ?: return 0L
+        val prevSpend = spendByCategoryIn(ctx, YearMonth.now().minusMonths(1))[category] ?: 0L
+        return base - prevSpend
+    }
+
+    /** Effective cap for a category this month, rollover applied when enabled. */
+    fun effectiveBudget(ctx: Context, category: String): Long {
+        val base = budgets(ctx)[category] ?: return 0L
+        if (!rolloverOn(ctx)) return base
+        // clamp so a big prior overspend can't drive the cap negative
+        return (base + lastMonthLeftover(ctx, category)).coerceAtLeast(0L)
+    }
+
     // ─── Recurring ──────────────────────────────────────────────────────────
 
     private fun recurringFrom(o: JSONObject) = Recurring(
