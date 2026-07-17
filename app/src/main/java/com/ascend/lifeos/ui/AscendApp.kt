@@ -9,7 +9,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -323,6 +325,7 @@ fun AscendApp() {
                 accentOf = { g -> (lastSub[g] ?: visibleSubs(g).firstOrNull() ?: g.subs.first()).accent() },
                 onSelectGroup = { g -> openGroup(g) },
                 onSelectSub = { open(it) },
+                onLongPress = { paletteOpen = true },
             )
         }
 
@@ -434,6 +437,7 @@ private fun badgeCount(g: Group): Int {
 // depth never costs a second row of screen height.
 
 @Composable
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 private fun MorphingDock(
     group: Group,
     current: Sub,
@@ -442,6 +446,7 @@ private fun MorphingDock(
     onSelectGroup: (Group) -> Unit,
     onSelectSub: (Sub) -> Unit,
     modifier: Modifier = Modifier,
+    onLongPress: () -> Unit = {},
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var zoomedOut by remember(group) { mutableStateOf(false) }
@@ -452,6 +457,14 @@ private fun MorphingDock(
             Modifier
                 .tourTarget("dock")
                 .clip(RoundedCornerShape(28.dp))
+                // Long-press anywhere on the console = command palette, from
+                // every tab (was Home-only via the COMMAND chip).
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                    onLongClick = { Haptics.confirm(ctx); onLongPress() },
+                )
                 // Cockpit-Konsole: warmes Obsidian + Elfenbein-Kante mit
                 // Specular oben — die höchste ständige Ebene (Kap. 16)
                 .background(BgElevated.copy(alpha = 0.92f))

@@ -177,4 +177,23 @@ class MasterPlanImporter(
         dao.importDomain(rows.domain, rows.nodes, rows.tasks, rows.resources)
         rows.domain.id
     }
+
+    /** The bundled plans as a browsable gallery (fresh installs pick, not inherit). */
+    fun listBundled(dir: String = "masterplans"): List<BundledTemplate> = runCatching {
+        context.assets.list(dir)?.filter { it.endsWith(".json") }.orEmpty().mapNotNull { file ->
+            runCatching {
+                val text = context.assets.open("$dir/$file").bufferedReader().use { it.readText() }
+                val plan = json.decodeFromString<DomainPlanDto>(text)
+                BundledTemplate(file, plan.id, plan.title, plan.tagline)
+            }.getOrNull()
+        }
+    }.getOrDefault(emptyList())
+
+    /** Import ONE bundled plan by asset file name. */
+    suspend fun importBundled(file: String, dir: String = "masterplans"): Result<String> = runCatching {
+        val text = context.assets.open("$dir/$file").bufferedReader().use { it.readText() }
+        importJson(text).getOrThrow()
+    }
 }
+
+data class BundledTemplate(val file: String, val id: String, val title: String, val tagline: String)

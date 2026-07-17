@@ -39,12 +39,13 @@ class MasterPlanViewModel(app: Application) : AndroidViewModel(app) {
     private val prefs = app.getSharedPreferences("masterplan_prefs", android.content.Context.MODE_PRIVATE)
 
     init {
-        // Seed on first run, and re-seed whenever the bundled plans are bumped
-        // (PLAN_VERSION). Version-gating means updated assets actually land on
-        // the next launch instead of being skipped because the DB is non-empty.
+        // Fresh installs get an EMPTY vault + a template gallery — the bundled
+        // plans are the developer's personal paths, not everyone's defaults.
+        // Installs that already adopted them keep receiving version-bumped
+        // updates so re-seeds still land.
         viewModelScope.launch {
             val seeded = prefs.getInt(KEY_PLAN_VERSION, 0)
-            if (dao.domainCount() == 0 || seeded != PLAN_VERSION) {
+            if (dao.domainCount() > 0 && seeded != PLAN_VERSION) {
                 // only persist the version on success — a failed import used to
                 // leave an empty vault locked in until the next version bump
                 val result = importer.importBundledPlans()
@@ -52,6 +53,19 @@ class MasterPlanViewModel(app: Application) : AndroidViewModel(app) {
                     prefs.edit().putInt(KEY_PLAN_VERSION, PLAN_VERSION).apply()
                 }
             }
+        }
+    }
+
+    /** Bundled starter paths for the empty-state gallery. */
+    fun starterTemplates() = importer.listBundled()
+
+    /** Add ONE starter path from the gallery. */
+    fun addStarterTemplate(file: String, onDone: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val ok = importer.importBundled(file).isSuccess
+            // mark the version so a later bump re-imports adopted plans
+            if (ok) prefs.edit().putInt(KEY_PLAN_VERSION, PLAN_VERSION).apply()
+            onDone(ok)
         }
     }
 

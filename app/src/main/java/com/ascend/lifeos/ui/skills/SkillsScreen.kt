@@ -83,13 +83,13 @@ fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
             },
         ) { pathId ->
             if (pathId == null) {
-                PathsOverview(domains, onOpen = { openPath = it }, onConstellation = { constellation = true })
+                PathsOverview(domains, vm, onOpen = { openPath = it }, onConstellation = { constellation = true })
             } else {
                 val domain = domains.find { it.domain.id == pathId }
                 if (domain != null) {
                     PathDetail(domain, vm, onBack = { openPath = null })
                 } else {
-                    PathsOverview(domains, onOpen = { openPath = it }, onConstellation = { constellation = true })
+                    PathsOverview(domains, vm, onOpen = { openPath = it }, onConstellation = { constellation = true })
                 }
             }
         }
@@ -145,7 +145,7 @@ private fun formatFocus(min: Int): String =
 // ─── paths overview ──────────────────────────────────────────────────────────
 
 @Composable
-private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Unit, onConstellation: () -> Unit) {
+private fun PathsOverview(domains: List<DomainWithGraph>, vm: MasterPlanViewModel, onOpen: (String) -> Unit, onConstellation: () -> Unit) {
     val ctx = LocalContext.current
     var metaTick by remember { mutableStateOf(0) }
     val due = remember(domains, metaTick) { dueReviewItems(ctx, domains) }
@@ -183,8 +183,52 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
                 }
             }
             if (domains.isEmpty()) {
+                // Starter gallery instead of a dead end: fresh installs are no
+                // longer auto-seeded with the developer's personal paths — they
+                // pick what fits (or import their own JSON in Settings → Data).
                 item(key = "empty") {
-                    EmptyState(Icons.Rounded.Psychology, "No skill domains", "Add a domain to start building your skill tree", Mod.Skills, actionLabel = "Explore Vault", onAction = onConstellation)
+                    val templates = remember { vm.starterTemplates() }
+                    var importing by remember { mutableStateOf<String?>(null) }
+                    SectionLabel("Starter paths", accent = Mod.Skills)
+                    Spacer(Modifier.height(10.dp))
+                    templates.forEach { t ->
+                        Panel(Modifier.fillMaxWidth()) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 13.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(t.title, color = TextPrimary, fontFamily = Body, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(t.tagline, color = TextDim, fontFamily = Body, fontSize = FS.s10_5, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    if (importing == t.file) "…" else "ADD",
+                                    color = Mod.Skills, fontFamily = Display, fontSize = FS.s11,
+                                    fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+                                    modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                                        .background(Mod.Skills.copy(alpha = 0.12f))
+                                        .pressScale {
+                                            if (importing == null) {
+                                                importing = t.file
+                                                vm.addStarterTemplate(t.file) { ok ->
+                                                    importing = null
+                                                    AppFeedback.show(if (ok) "${t.title} added" else "Import failed")
+                                                }
+                                            }
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 9.dp),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
+                    }
+                    Text(
+                        "Or import your own plan: Settings → Data → Import masterplan JSON.",
+                        color = TextDim, fontFamily = Body, fontSize = FS.s10_5,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
                 }
             } else {
                 items(domains, key = { it.domain.id }) { d ->
