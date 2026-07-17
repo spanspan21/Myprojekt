@@ -602,6 +602,71 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
 
+            // ── disciplines: which plan engines build your week ──────────
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "YOUR DISCIPLINES", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(7.dp))
+            var discs by remember {
+                mutableStateOf(
+                    Repo.data.profile.disciplines.ifEmpty {
+                        com.ascend.lifeos.data.training.engine.Disciplines.fromSport(Repo.data.profile.sport)
+                    },
+                )
+            }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                com.ascend.lifeos.data.training.engine.Disciplines.ALL.forEach { d ->
+                    val on = d.id in discs
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale {
+                                Haptics.tick(ctx)
+                                val next = if (on) discs - d.id else discs + d.id
+                                if (next.isNotEmpty()) { discs = next; Repo.setDisciplines(next) }
+                            }
+                            .padding(horizontal = 9.dp, vertical = 6.dp),
+                    ) { Text("${d.emoji} ${d.label}", color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Your weekly sessions are split across these — a runner gets running weeks, a yogi gets flows.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+            )
+            // per-discipline experience level (drives each engine's program)
+            discs.filter { it != com.ascend.lifeos.data.training.engine.Disciplines.CALISTHENICS }.forEach { id ->
+                val def = com.ascend.lifeos.data.training.engine.Disciplines.byId(id) ?: return@forEach
+                Spacer(Modifier.height(8.dp))
+                var lvl by remember(id) {
+                    mutableStateOf(com.ascend.lifeos.data.training.engine.PlanOrchestrator.level(ctx, id))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${def.emoji} ${def.label}", color = TextMuted,
+                        fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(1 to "New", 2 to "Regular", 3 to "Advanced").forEach { (v, label) ->
+                            val on = lvl == v
+                            Box(
+                                Modifier.clip(RoundedCornerShape(8.dp))
+                                    .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                                    .pressScale {
+                                        Haptics.tick(ctx); lvl = v
+                                        com.ascend.lifeos.data.training.engine.PlanOrchestrator.setLevel(ctx, id, v)
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                            ) { Text(label, color = if (on) Mod.Train else TextDim, fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                        }
+                    }
+                }
+            }
+
             // season phase — only meaningful for periodised team sports
             if (SportCatalog.byId(sportId).usesSeasons) {
             Spacer(Modifier.height(10.dp))

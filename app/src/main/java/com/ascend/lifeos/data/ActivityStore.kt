@@ -33,6 +33,7 @@ object ActivityStore {
         val minutes: Int,
         val rpe: Int,             // 1..10 session RPE (Foster)
         val distanceKm: Double? = null,
+        val label: String? = null, // plan-session name (sequence player) — ticks the week strip
     )
 
     private const val PREF = "activities"
@@ -63,7 +64,7 @@ object ActivityStore {
     fun since(ctx: Context, sinceMs: Long): List<Entry> = all(ctx).filter { it.ts >= sinceMs }
 
     @Synchronized
-    fun add(ctx: Context, type: String, minutes: Int, rpe: Int, distanceKm: Double? = null, ts: Long = System.currentTimeMillis()): Entry {
+    fun add(ctx: Context, type: String, minutes: Int, rpe: Int, distanceKm: Double? = null, ts: Long = System.currentTimeMillis(), label: String? = null): Entry {
         init(ctx)
         val e = Entry(
             id = UUID.randomUUID().toString().take(12),
@@ -72,6 +73,7 @@ object ActivityStore {
             minutes = minutes.coerceIn(1, 24 * 60),
             rpe = rpe.coerceIn(1, 10),
             distanceKm = distanceKm?.takeIf { it.isFinite() && it > 0.0 },   // review #7
+            label = label,
         )
         cache = (listOf(e) + cache).take(400)   // ~a year of daily logging
         persist()

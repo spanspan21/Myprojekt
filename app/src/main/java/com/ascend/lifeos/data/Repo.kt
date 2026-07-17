@@ -500,6 +500,10 @@ object Repo {
     fun setDietRate(pct: Double?) = updateProfile { it.copy(dietRatePct = pct) }
 
     /** The athlete's primary sport (SportCatalog id) — the universality dial. */
+    fun setDisciplines(ids: List<String>) {
+        updateProfile { it.copy(disciplines = ids) }
+    }
+
     fun setSport(id: String) {
         updateProfile { it.copy(sport = id) }
         // review #3: a non-seasonal sport must not inherit a hidden IN/PLAYOFF

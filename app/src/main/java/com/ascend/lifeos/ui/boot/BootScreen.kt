@@ -252,6 +252,13 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             if (Repo.data.profile.sport.isBlank()) Repo.setSport(initial)
             mutableStateOf(initial)
         }
+        var discs by remember {
+            mutableStateOf(
+                Repo.data.profile.disciplines.ifEmpty {
+                    com.ascend.lifeos.data.training.engine.Disciplines.fromSport(Repo.data.profile.sport.ifBlank { "gym" })
+                },
+            )
+        }
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -260,9 +267,36 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
                 BootChip("${sp.emoji} ${sp.label}", sport == sp.id) {
                     sport = sp.id
                     Repo.setSport(sp.id)
+                    // A new sport re-seeds the discipline default — the picker
+                    // below stays in charge for fine-tuning.
+                    discs = com.ascend.lifeos.data.training.engine.Disciplines.fromSport(sp.id)
+                    Repo.setDisciplines(discs)
                 }
             }
         }
+
+        // which plan engines build the training week — a runner gets running
+        // plans, a yogi gets flows; multi-select splits the week
+        Spacer(Modifier.height(14.dp))
+        Text("WHAT DO YOU TRAIN?", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            com.ascend.lifeos.data.training.engine.Disciplines.ALL.forEach { d ->
+                BootChip("${d.emoji} ${d.label}", d.id in discs) {
+                    val next = if (d.id in discs) discs - d.id else discs + d.id
+                    if (next.isNotEmpty()) { discs = next; Repo.setDisciplines(next) }
+                }
+            }
+        }
+        Spacer(Modifier.height(5.dp))
+        Text(
+            "Pick more than one and your week is split across them.",
+            color = TextDim, fontFamily = Body, fontSize = FS.s10_5,
+        )
 
         // activity level — drives TDEE multiplier, was hardcoded to 3
         Spacer(Modifier.height(14.dp))

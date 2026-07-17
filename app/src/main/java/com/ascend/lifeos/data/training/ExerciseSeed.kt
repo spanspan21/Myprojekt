@@ -147,7 +147,7 @@ object ExerciseSeed {
         ex("plyo_depth", "Depth Drops", LEGS, QUADS, listOf(GLUTES, CALVES), "Step off a low box and absorb the landing — freeze on impact, chest up.", 16),
     )
 
-    val ALL_EXERCISES: List<ExerciseEntity> = push + pull + legs + core + skill + cardio + mobility + grip + plyo
+    val ALL_EXERCISES: List<ExerciseEntity> = push + pull + legs + core + skill + cardio + mobility + grip + plyo + GymExercises.ALL
 
     private fun ex(
         id: String, name: String, cat: ExCategory,

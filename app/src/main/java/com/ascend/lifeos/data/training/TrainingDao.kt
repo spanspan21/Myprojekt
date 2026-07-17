@@ -139,6 +139,13 @@ interface TrainingDao {
     """)
     suspend fun bestRepsAll(): List<BestRep>
 
+    /** Best estimated 1RM (Epley) per exercise — feeds the gym plan engine. */
+    @Query("""
+        SELECT exerciseId, MAX(weight * (1 + reps / 30.0)) AS best FROM workout_sets
+        WHERE setType = 'NORMAL' AND weight IS NOT NULL AND weight > 0 GROUP BY exerciseId
+    """)
+    suspend fun bestE1RmAll(): List<BestE1Rm>
+
     @Query("SELECT * FROM workout_sets WHERE loggedAt >= :since")
     suspend fun setsLoggedSince(since: Long): List<WorkoutSetEntity>
 
@@ -169,6 +176,8 @@ interface TrainingDao {
 }
 
 data class BestRep(val exerciseId: String, val best: Int)
+
+data class BestE1Rm(val exerciseId: String, val best: Double)
 
 // ─── Database ───────────────────────────────────────────────────────────────
 

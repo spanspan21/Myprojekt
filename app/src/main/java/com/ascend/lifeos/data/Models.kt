@@ -75,6 +75,7 @@ data class Profile(
     val skillGoals: List<String> = emptyList(),       // SkillCatalog ids
     val trainFreq: Int = 3,                            // sessions per week 2..6
     val sessionLen: Int = 45,                          // minutes
+    val disciplines: List<String> = emptyList(),       // engine ids (empty = derive from sport, legacy = calisthenics)
     val hasVest: Boolean = true,
     val vestMaxKg: Int = 25,
     val trainWeekIndex: Int = 0,                       // 0..4 → mesocycle week (4 build + 1 deload)

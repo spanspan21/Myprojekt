@@ -40,7 +40,7 @@ import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Spark
 import com.ascend.lifeos.ui.theme.*
 
-private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY }
+private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY, SEQUENCE }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -58,7 +58,7 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
     }
 
     LaunchedEffect(route) {
-        onDockVisible(route != TrainRoute.WORKOUT && route != TrainRoute.ASSESS && route != TrainRoute.SUMMARY && route != TrainRoute.TEST_DAY)
+        onDockVisible(route != TrainRoute.WORKOUT && route != TrainRoute.ASSESS && route != TrainRoute.SUMMARY && route != TrainRoute.TEST_DAY && route != TrainRoute.SEQUENCE)
     }
 
     BackHandler(route != TrainRoute.HUB) {
@@ -90,6 +90,7 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
             TrainRoute.HUB -> TrainingHub(
                 vm = vm,
                 onStartWorkout = { route = TrainRoute.WORKOUT },
+                onOpenSequence = { route = TrainRoute.SEQUENCE },
                 onOpenHiit = { route = TrainRoute.HIIT },
                 onOpenStretch = { route = TrainRoute.STRETCH },
                 onOpenStats = { route = TrainRoute.STATS },
@@ -110,6 +111,7 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
                 onDone = { vm.regeneratePlan(); route = TrainRoute.HUB },
                 onBack = { route = TrainRoute.HUB },
             )
+            TrainRoute.SEQUENCE -> SequencePlayerScreen(vm = vm, onBack = { route = TrainRoute.HUB })
             TrainRoute.HIIT -> HiitTimerScreen(onBack = { route = TrainRoute.HUB })
             TrainRoute.STRETCH -> StretchScreen(onBack = { route = TrainRoute.HUB })
             TrainRoute.STATS -> StatsScreen(vm = vm, onBack = { route = TrainRoute.HUB })

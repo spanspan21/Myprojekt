@@ -46,6 +46,10 @@ data class PlannedExercise(
     val section: BlockType = BlockType.STRENGTH,   // which block this belongs to
     val note: String? = null,                       // progression / coaching note
     val supersetGroup: Int? = null,                 // paired-set group (SupersetPlanner)
+    // Discipline engines (running/HIIT/swim): a timed segment instead of reps.
+    val workSec: Int? = null,                       // != null → timed work segment
+    val paceCue: String? = null,                    // "easy — you could chat" / "5:30-5:45 /km"
+    val weightKg: Double? = null,                   // gym: prescribed external load
 )
 
 data class PlannedSession(
@@ -56,6 +60,7 @@ data class PlannedSession(
     val estMin: Int,
     val blocks: List<PlannedBlock> = emptyList(),   // per-block minutes, display order
     val why: String = "",                            // "Recovery 82 · fresh chest · off-season build"
+    val discipline: String = "calisthenics",         // Disciplines id — routes the player on start
 )
 
 data class WeekPlan(val sessions: List<PlannedSession>, val note: String?)

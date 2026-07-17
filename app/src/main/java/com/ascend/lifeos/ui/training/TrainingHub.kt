@@ -70,6 +70,7 @@ import com.ascend.lifeos.ui.theme.*
 fun TrainingHub(
     vm: TrainingViewModel = viewModel(),
     onStartWorkout: () -> Unit,
+    onOpenSequence: () -> Unit = {},
     onOpenHiit: () -> Unit,
     onOpenStretch: () -> Unit,
     onOpenStats: () -> Unit = {},
@@ -82,6 +83,16 @@ fun TrainingHub(
     val sessions by vm.recentSessions.collectAsState()
     val progs by vm.progressions.collectAsState()
     val profile = vm.fitnessProfile
+
+    // Discipline routing: set-based sessions open the workout logger; timed
+    // sessions (running/yoga/HIIT/swim) open the sequence player.
+    fun startSession(session: PlannedSession) {
+        if (session.discipline in setOf("calisthenics", "gym")) {
+            vm.startPlannedSession(session); onStartWorkout()
+        } else {
+            vm.activeSequence = session; onOpenSequence()
+        }
+    }
     val ctx = LocalContext.current
     var resumeTick by remember { mutableIntStateOf(0) }
     val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
@@ -270,7 +281,7 @@ fun TrainingHub(
                                 session = hero,
                                 placement = vm.placements.find { it.session.index == hero.index },
                                 done = hero.name in vm.weekDoneNames,
-                            ) { vm.startPlannedSession(hero); onStartWorkout() }
+                            ) { startSession(hero) }
                         }
                     }
                     }
@@ -303,7 +314,7 @@ fun TrainingHub(
                                 session = session,
                                 placement = vm.placements.find { it.session.index == session.index },
                                 done = session.name in vm.weekDoneNames,
-                            ) { vm.startPlannedSession(session); onStartWorkout() }
+                            ) { startSession(session) }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -560,7 +571,9 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                                 Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(6.dp))
                             }
-                            Text(session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            val dEmoji = com.ascend.lifeos.data.training.engine.Disciplines.byId(session.discipline)
+                                ?.takeIf { it.id != "calisthenics" }?.emoji
+                            Text((dEmoji?.let { "$it " } ?: "") + session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         Text(session.focus, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         placement?.let {
@@ -648,7 +661,9 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
                         Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(5.dp))
                     }
-                    Text(session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    val dEmoji = com.ascend.lifeos.data.training.engine.Disciplines.byId(session.discipline)
+                        ?.takeIf { it.id != "calisthenics" }?.emoji
+                    Text((dEmoji?.let { "$it " } ?: "") + session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text("~${session.estMin} min", color = accent, fontFamily = Display, fontSize = FS.s11, fontWeight = FontWeight.Bold)
                 }
                 Text(

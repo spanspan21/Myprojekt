@@ -18,6 +18,8 @@ import com.ascend.lifeos.data.SoundFx
 import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.data.calendar.EventType
 import com.ascend.lifeos.data.training.*
+import com.ascend.lifeos.data.training.engine.Disciplines
+import com.ascend.lifeos.data.training.engine.PlanOrchestrator
 import com.ascend.lifeos.core.isoWeek
 import com.ascend.lifeos.core.todayKey
 import kotlinx.coroutines.Dispatchers
@@ -137,10 +139,15 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             ActivityStore.since(getApplication(), startOfWeek).size
         }.getOrDefault(0)
         weekSessions = dao.sessionCountSince(startOfWeek) + acts
+        // Done = completed workout sessions (by template name) PLUS timed plan
+        // sessions the sequence player logged as activities (by label).
+        val actLabels = runCatching {
+            ActivityStore.since(getApplication(), startOfWeek).mapNotNull { it.label }
+        }.getOrDefault(emptyList())
         weekDoneNames = dao.sessionsSince(startOfWeek)
             .filter { it.session.isComplete }
             .map { it.session.templateName }
-            .toSet()
+            .toSet() + actLabels
         checkDeload()
     }
 
@@ -155,6 +162,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     var weekPlan by mutableStateOf<WeekPlan?>(null)
         private set
+
+    /** Timed session handed to the SequencePlayer (running/yoga/HIIT/swim). */
+    var activeSequence by mutableStateOf<PlannedSession?>(null)
     var placements by mutableStateOf<List<Placement>>(emptyList())
         private set
     var scheduledOk by mutableStateOf(false)
@@ -284,9 +294,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             if (last == null) 0 else ((System.currentTimeMillis() - last) / 86_400_000L).toInt()
         }.getOrDefault(0)
 
-        val plan = PlanGenerator.generate(
+        fun calisthenicsWeek(share: Int) = PlanGenerator.generate(
             profile = fitnessProfile, skillGoals = goals,
-            freq = p.trainFreq, sessionLen = p.sessionLen,
+            freq = share, sessionLen = p.sessionLen,
             chainLevels = chainLv, bestReps = best,
             allExercises = exercises.value,
             bodyweightKg = p.weightKg, hasVest = p.hasVest, vestMaxKg = p.vestMaxKg,
@@ -299,6 +309,26 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             mevSets = Prefs.int(getApplication(), Prefs.MEV_SETS, VolumeModel.MEV_SETS_PER_EX),
             mrvSets = Prefs.int(getApplication(), Prefs.MRV_SETS, VolumeModel.MRV_SETS_PER_EX),
         )
+        // Discipline engines: users who picked disciplines get a merged week
+        // (running/yoga/gym engines + calisthenics share); everyone else keeps
+        // the untouched legacy path — zero behavior change.
+        val discs = p.disciplines.ifEmpty { Disciplines.fromSport(p.sport) }
+        val plan = if (discs == listOf(Disciplines.CALISTHENICS)) {
+            calisthenicsWeek(p.trainFreq)
+        } else {
+            PlanOrchestrator.gymBestsCache = runCatching {
+                dao.bestE1RmAll().associate { it.exerciseId to it.best }
+            }.getOrDefault(emptyMap())
+            PlanOrchestrator.generate(
+                ctx = getApplication(),
+                disciplines = discs,
+                freq = p.trainFreq,
+                sessionLenMin = p.sessionLen,
+                deload = deloadActive || currentTrainWeek() == 4,
+                bodyweightKg = p.weightKg,
+                calisthenics = ::calisthenicsWeek,
+            )
+        }
         weekPlan = plan
         placements = runCatching {
             PlanGenerator.placeWeek(getApplication(), plan, p.sessionLen)
