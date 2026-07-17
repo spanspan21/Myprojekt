@@ -91,6 +91,8 @@ data class Profile(
     val tdeeLastSuggest: String? = null,               // dayKey of last accepted/shown suggestion
     val dietRatePct: Double? = null,                   // desired %BW/week (null → phase default)
     val dietPhaseSince: String? = null,                // dayKey the current dietGoal was set (diet-break rhythm)
+    val dietPref: String = "",                         // "" | vegetarian | vegan | pescatarian (DietCheck)
+    val allergens: List<String> = emptyList(),         // allergen ids to warn on before logging
     val recentFoods: List<FoodEntry> = emptyList(), // quick re-log of last-used foods
     val customFoods: List<CustomFood> = emptyList(), // user-created foods
     val savedMeals: List<SavedMeal> = emptyList(),   // saved meal combinations

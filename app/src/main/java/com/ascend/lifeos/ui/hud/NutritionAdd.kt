@@ -636,6 +636,30 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
         VerdictPill("${eval.score}/10 · ${eval.label}", Color(eval.color))
     }
 
+    // Diet / allergen conflict — the one warning that must precede logging.
+    val dietWarnings = remember(product) {
+        val p = Repo.data.profile
+        if (p.dietPref.isBlank() && p.allergens.isEmpty()) emptyList()
+        else com.ascend.lifeos.data.DietCheck.check(
+            name = product.name, ingredients = product.ingredients,
+            allergenTags = product.allergens, dietPref = p.dietPref, allergens = p.allergens,
+        )
+    }
+    dietWarnings.forEach { w ->
+        Spacer(Modifier.height(10.dp))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                .background(Crit.copy(alpha = 0.12f))
+                .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
+                .padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("⚠", color = Crit, fontSize = FS.s14)
+            Spacer(Modifier.width(9.dp))
+            Text(w.text, color = Crit, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+    }
+
     // Why the verdict — the two strongest points each way.
     val evalLines = eval.pros.take(2).map { it to Good } + eval.cons.take(2).map { it to Crit }
     if (evalLines.isNotEmpty()) {

@@ -939,6 +939,55 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── FUEL ─────────────────────────────────────────────────────
         if (page == "modules") SettingsSection("Fuel") {
             val p = Repo.data.profile
+            // ── diet preference + allergen watch ─────────────────────
+            Text(
+                "DIET PREFERENCE", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            var dietPref by remember { mutableStateOf(p.dietPref) }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                com.ascend.lifeos.data.DietCheck.DIETS.forEach { d ->
+                    val on = dietPref == d.id
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Fuel.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Fuel.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale { Haptics.tick(ctx); dietPref = d.id; Repo.setDietPref(d.id) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                    ) { Text(d.label, color = if (on) Mod.Fuel else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "ALLERGEN WATCH", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            var allergens by remember { mutableStateOf(p.allergens) }
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                com.ascend.lifeos.data.DietCheck.ALLERGENS.forEach { a ->
+                    val on = a.id in allergens
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Crit.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Crit.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale {
+                                Haptics.tick(ctx)
+                                allergens = if (on) allergens - a.id else allergens + a.id
+                                Repo.setAllergens(allergens)
+                            }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                    ) { Text(a.label, color = if (on) Crit else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "JARVIS warns before you log a conflicting food — it never blocks.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
             val phaseLabel = when (p.dietGoal) { "lose" -> "Cut"; "gain" -> "Build"; "fuel" -> "Fuel"; "recomp" -> "Recomp"; else -> "Maintain" }
             val phaseDays = p.dietPhaseSince?.let {
                 runCatching { (com.ascend.lifeos.core.todayDate().toEpochDay() - java.time.LocalDate.parse(it).toEpochDay()).toInt() }.getOrNull()

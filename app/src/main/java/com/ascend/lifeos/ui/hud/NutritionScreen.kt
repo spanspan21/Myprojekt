@@ -1263,7 +1263,10 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
     if (!show) return
 
     val hCtx = androidx.compose.ui.platform.LocalContext.current
-    val picks = remember(kcalLeft, protLeft) { gapPicks(kcalLeft, protLeft) }
+    val prof = Repo.data.profile
+    val picks = remember(kcalLeft, protLeft, prof.dietPref, prof.allergens) {
+        gapPicks(kcalLeft, protLeft, prof.dietPref, prof.allergens)
+    }
     if (picks.isEmpty()) return
 
     Spacer(Modifier.height(12.dp))
@@ -1295,10 +1298,14 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
 }
 
 /** Kap.-44-Formel: fit = 2·P-Deckung + 1·kcal-Deckung − Überschuss-Strafe + Boni. */
-private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
+private fun gapPicks(kcalLeft: Int, protLeft: Int, dietPref: String = "", allergens: List<String> = emptyList()): List<GapPick> {
     val cands = ArrayList<GapPick>()
-    fun consider(name: String, kcal: Int, prot: Int, carbs: Int, fat: Int, grams: Int, favorite: Boolean, slotBias: Double, micros: Map<String, Double> = emptyMap()) {
+    val diet = dietPref.isNotBlank() || allergens.isNotEmpty()
+    fun consider(name: String, kcal: Int, prot: Int, carbs: Int, fat: Int, grams: Int, favorite: Boolean, slotBias: Double, micros: Map<String, Double> = emptyMap(), ingredients: String = "") {
         if (kcal <= 0) return
+        // never suggest a food that conflicts with the diet/allergen profile —
+        // a vegan must not be told to log Quark (the diet feature would ring hollow)
+        if (diet && com.ascend.lifeos.data.DietCheck.check(name, ingredients, emptyList(), emptyList(), dietPref, allergens).isNotEmpty()) return
         val pFit = if (protLeft > 0) (prot.toDouble() / protLeft).coerceAtMost(1.0) else 0.5
         val kFit = if (kcalLeft > 0) (kcal.toDouble() / kcalLeft).coerceAtMost(1.0) else 0.0
         val overshoot = ((kcal - kcalLeft).coerceAtLeast(0)) / 200.0
@@ -1341,6 +1348,7 @@ private fun gapPicks(kcalLeft: Int, protLeft: Int): List<GapPick> {
             // carry the staple's vitamins/minerals onto the logged row (scaled to
             // the portion) — the classics have full micro data, don't drop it
             micros = prod.per100.filterKeys { it !in MACRO_IDS }.mapValues { it.value * f },
+            ingredients = prod.ingredients,
         )
     }
     return cands.sortedWith(compareByDescending<GapPick> { it.score }.thenBy { it.entry.kcal }).take(3)

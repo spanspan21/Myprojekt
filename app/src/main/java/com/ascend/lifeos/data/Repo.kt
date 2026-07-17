@@ -548,6 +548,9 @@ object Repo {
         updateProfile { it.copy(equipment = ids) }
     }
 
+    fun setDietPref(id: String) = updateProfile { it.copy(dietPref = id) }
+    fun setAllergens(ids: List<String>) = updateProfile { it.copy(allergens = ids) }
+
     fun setSport(id: String) {
         updateProfile { it.copy(sport = id) }
         // review #3: a non-seasonal sport must not inherit a hidden IN/PLAYOFF
