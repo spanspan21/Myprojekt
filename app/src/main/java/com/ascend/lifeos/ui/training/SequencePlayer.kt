@@ -71,12 +71,16 @@ private data class SeqPhase(val name: String, val seconds: Int, val cue: String?
 
 /** The tiny label under the countdown ring. Every phase in this player is a
  *  timed segment (running / yoga / HIIT / swim), so a STRENGTH block is really
- *  just the work interval — "STRENGTH" reads wrong on a run, show "WORK". Rest
- *  phases inherit the surrounding section, so name them explicitly to avoid a
- *  "Rest" title sitting under a "WORK" label. */
-private fun ringLabelOf(phase: SeqPhase): String = when {
+ *  just the work interval — "STRENGTH" reads wrong on a run, show "WORK" (or
+ *  "FLOW" for yoga, where the working poses are the flow). Rest phases inherit
+ *  the surrounding section, so name them explicitly to avoid a "Rest" title
+ *  sitting under a "WORK" label. */
+private fun ringLabelOf(phase: SeqPhase, discipline: String): String = when {
     phase.name == "Rest" -> "REST"
-    phase.section == BlockType.STRENGTH -> "WORK"
+    phase.section == BlockType.STRENGTH -> if (discipline == "yoga") "FLOW" else "WORK"
+    // COOLDOWN.label is "Mobility" (right for the strength app), but every timed
+    // cooldown here is easy walking/swimming or savasana — "COOL-DOWN" fits all.
+    phase.section == BlockType.COOLDOWN -> "COOL-DOWN"
     else -> phase.section.label.uppercase()
 }
 
@@ -209,7 +213,7 @@ fun SequencePlayerScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                             color = TextPrimary, fontFamily = Display, fontSize = FS.s46, fontWeight = FontWeight.Medium,
                         )
                         Text(
-                            ringLabelOf(phase), color = TextDim, fontFamily = MicroLabel,
+                            ringLabelOf(phase, session.discipline), color = TextDim, fontFamily = MicroLabel,
                             fontSize = FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 2.sp,
                         )
                     }
