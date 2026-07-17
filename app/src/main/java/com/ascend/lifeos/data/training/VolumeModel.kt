@@ -34,7 +34,7 @@ object VolumeModel {
 
     /** Honest one-liner explaining today's volume choice. */
     fun rationale(trainWeek: Int, readiness: Int?, deload: Boolean): String = when {
-        deload -> "Deload week — volume pulled back so you rebound stronger, not because you're soft."
+        deload -> CoachTone.deloadRationale()
         trainWeek >= 3 -> "Peak week — max recoverable volume. This is the overreach. Chase every rep."
         else -> "Build week ${trainWeek + 1}/5 — volume climbing toward your ceiling. Add reps, then load."
     }

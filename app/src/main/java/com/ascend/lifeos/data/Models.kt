@@ -80,6 +80,7 @@ data class Profile(
     val equipment: List<String> = emptyList(),         // bar|rings|dumbbell|barbell|bench|band|vest (empty = assume everything, legacy)
     val hasVest: Boolean = true,
     val vestMaxKg: Int = 25,
+    val coachTone: String = "iron",                    // iron (drill) | coach (autonomy-supportive) — new installs default coach
     val trainWeekIndex: Int = 0,                       // 0..4 → mesocycle week (4 build + 1 deload)
     val trainWeekStamp: String? = null,                // iso-week the index was last advanced
 

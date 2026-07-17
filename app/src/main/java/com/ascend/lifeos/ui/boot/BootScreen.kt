@@ -217,6 +217,9 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
                 else -> Repo.profile().hasVest
             }
             Repo.setTrainPrefs(trainFreq, sessionLen, vest)
+            // Fresh installs get the autonomy-supportive coach voice by default;
+            // existing (recalibrating) users keep whatever they chose.
+            if (!recal) Repo.setCoachTone("coach")
             if (!Prefs.has(ctx, Prefs.NOTIF_MORNING_MIN)) Prefs.setInt(ctx, Prefs.NOTIF_MORNING_MIN, 420)
             if (!Prefs.has(ctx, Prefs.SLEEP_TARGET_MIN)) Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, 480)
             if (!Prefs.has(ctx, Prefs.GREET_NIGHT_START)) Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, 22)

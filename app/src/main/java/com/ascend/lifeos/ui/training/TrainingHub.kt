@@ -1088,7 +1088,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             Spacer(Modifier.width(14.dp))
             Column {
                 Text("Start $name", color = TextPrimary, fontFamily = Body, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("Today's assignment · non-negotiable", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
+                Text(com.ascend.lifeos.data.training.CoachTone.assignmentLabel(), color = TextMuted, fontSize = FS.s11, fontFamily = Body)
             }
         }
     }

@@ -548,6 +548,7 @@ object Repo {
         updateProfile { it.copy(equipment = ids) }
     }
 
+    fun setCoachTone(tone: String) = updateProfile { it.copy(coachTone = tone) }
     fun setDietPref(id: String) = updateProfile { it.copy(dietPref = id) }
     fun setAllergens(ids: List<String>) = updateProfile { it.copy(allergens = ids) }
 

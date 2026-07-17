@@ -187,7 +187,7 @@ object PlanGenerator {
         // day. Discipline over comfort.
 
         val note = when {
-            examWeek -> "Exam week — volume trimmed 30% so school gets your focus. Still show up."
+            examWeek -> CoachTone.examNote()
             season == "IN" -> "In-season — maintain strength, stay sharp for match day."
             season == "PLAYOFF" -> "Playoffs — activation only. The games are the training."
             season == "PRE" -> "Pre-season — explosive quality over volume."

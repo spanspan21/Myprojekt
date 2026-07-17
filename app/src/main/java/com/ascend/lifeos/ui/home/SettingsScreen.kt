@@ -581,6 +581,30 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { restSec = (restSec - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.DEFAULT_REST_SEC, restSec) },
                 onInc = { restSec = (restSec + 15).coerceAtMost(300); Prefs.setInt(ctx, Prefs.DEFAULT_REST_SEC, restSec) },
             )
+            Text(
+                "COACHING VOICE", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            var tone by remember { mutableStateOf(Repo.data.profile.coachTone) }
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("coach" to "Coach", "iron" to "Iron").forEach { (id, label) ->
+                    val on = tone == id
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale { Haptics.tick(ctx); tone = id; Repo.setCoachTone(id) }
+                            .padding(horizontal = 11.dp, vertical = 7.dp),
+                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Coach encourages; Iron drills. The plan itself is identical.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
             ToggleRow("Strain target", "Recovery-based set range on the hub", Prefs.STRAIN_TARGET_ON, true)
             if (Prefs.bool(ctx, Prefs.STRAIN_TARGET_ON, true)) {
                 Spacer(Modifier.height(2.dp))
