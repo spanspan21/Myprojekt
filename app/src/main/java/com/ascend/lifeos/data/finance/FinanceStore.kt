@@ -43,6 +43,7 @@ data class Recurring(
     val dayOfMonth: Int,
     val active: Boolean,
     val lastBookedTs: Long,
+    val interval: String = "monthly",   // weekly | monthly | quarterly | yearly
 )
 
 /** A detected repeat-pattern in the txn history, offered as a new [Recurring]. */
@@ -315,11 +316,13 @@ object FinanceStore {
         dayOfMonth = o.optInt("day", 1).coerceIn(1, 31),
         active = o.optBoolean("active", true),
         lastBookedTs = o.optLong("booked"),
+        interval = o.optString("interval", "monthly").ifBlank { "monthly" },
     )
 
     private fun Recurring.toJson() = JSONObject()
         .put("id", id).put("name", name).put("cents", amountCents).put("cat", category)
         .put("day", dayOfMonth).put("active", active).put("booked", lastBookedTs)
+        .put("interval", interval)
 
     fun recurrings(ctx: Context): List<Recurring> {
         val arr = array(ctx, "recurring")
@@ -335,12 +338,12 @@ object FinanceStore {
     }
 
     /** Adds a recurring booking ([amountCents] signed) and returns its id. */
-    fun addRecurring(ctx: Context, name: String, amountCents: Long, category: String, dayOfMonth: Int): String {
+    fun addRecurring(ctx: Context, name: String, amountCents: Long, category: String, dayOfMonth: Int, interval: String = "monthly"): String {
         val id = newId("r")
         if (name.isBlank() || amountCents == 0L) return id
         writeRecurrings(
             ctx,
-            recurrings(ctx) + Recurring(id, name.trim(), amountCents, category, dayOfMonth.coerceIn(1, 31), true, 0L),
+            recurrings(ctx) + Recurring(id, name.trim(), amountCents, category, dayOfMonth.coerceIn(1, 31), true, 0L, interval),
         )
         return id
     }
@@ -353,29 +356,65 @@ object FinanceStore {
         writeRecurrings(ctx, recurrings(ctx).filter { it.id != id })
     }
 
-    /** Sum of active recurring COSTS per month, as positive cents. */
-    fun monthlyRecurringCost(ctx: Context): Long =
-        recurrings(ctx).filter { it.active && it.amountCents < 0 }.sumOf { -it.amountCents }
-
-    private fun bookedThisMonth(r: Recurring): Boolean =
-        r.lastBookedTs > 0 && ymOf(r.lastBookedTs) == YearMonth.now()
-
-    /**
-     * Next due date as epoch day. If it is unbooked and this month's day already
-     * passed, the (past) date of this month is returned — i.e. "due now".
-     */
-    fun nextDueEpochDay(r: Recurring): Long {
-        val ym = YearMonth.now()
-        val target = if (bookedThisMonth(r)) ym.plusMonths(1) else ym
-        val day = r.dayOfMonth.coerceAtMost(target.lengthOfMonth())
-        return target.atDay(day).toEpochDay()
+    /** A charge NORMALIZED to a per-month figure (weekly ×52/12, quarterly ÷3,
+     *  yearly ÷12) so the monthly-cost projection stays honest across intervals. */
+    private fun monthlyEquivalent(r: Recurring): Long = when (r.interval) {
+        "weekly" -> Math.round(-r.amountCents * 52.0 / 12.0)
+        "quarterly" -> Math.round(-r.amountCents / 3.0)
+        "yearly" -> Math.round(-r.amountCents / 12.0)
+        else -> -r.amountCents
     }
 
-    /** Due = active, not booked this month, and this month's day is reached. */
-    fun isDue(r: Recurring): Boolean {
-        if (!r.active || bookedThisMonth(r)) return false
+    /** Sum of active recurring COSTS per month, normalized across intervals. */
+    fun monthlyRecurringCost(ctx: Context): Long =
+        recurrings(ctx).filter { it.active && it.amountCents < 0 }.sumOf { monthlyEquivalent(it) }
+
+    // Booked within the current period of this recurring's interval?
+    private fun bookedThisPeriod(r: Recurring): Boolean {
+        if (r.lastBookedTs <= 0) return false
+        val booked = Instant.ofEpochMilli(r.lastBookedTs).atZone(ZoneId.systemDefault()).toLocalDate()
         val today = com.ascend.lifeos.core.todayDate()
-        return today.dayOfMonth >= r.dayOfMonth.coerceAtMost(today.lengthOfMonth())
+        return when (r.interval) {
+            "weekly" -> booked.get(java.time.temporal.WeekFields.ISO.weekOfWeekBasedYear()) ==
+                today.get(java.time.temporal.WeekFields.ISO.weekOfWeekBasedYear()) &&
+                booked.get(java.time.temporal.WeekFields.ISO.weekBasedYear()) ==
+                today.get(java.time.temporal.WeekFields.ISO.weekBasedYear())
+            "quarterly" -> booked.year == today.year && (booked.monthValue - 1) / 3 == (today.monthValue - 1) / 3
+            "yearly" -> booked.year == today.year
+            else -> ymOf(r.lastBookedTs) == YearMonth.now()
+        }
+    }
+
+    /**
+     * Next due date as epoch day. If it is unbooked and this period's target day
+     * already passed, the (past) date of this period is returned — "due now".
+     */
+    fun nextDueEpochDay(r: Recurring): Long {
+        val today = com.ascend.lifeos.core.todayDate()
+        val booked = bookedThisPeriod(r)
+        return when (r.interval) {
+            "weekly" -> {
+                // next Monday if booked this week, else this week's Monday (due-now)
+                val monday = today.with(java.time.DayOfWeek.MONDAY)
+                (if (booked) monday.plusWeeks(1) else monday).toEpochDay()
+            }
+            else -> {
+                val ym = YearMonth.now()
+                val step = if (r.interval == "quarterly") 3L else if (r.interval == "yearly") 12L else 1L
+                val target = if (booked) ym.plusMonths(step) else ym
+                target.atDay(r.dayOfMonth.coerceAtMost(target.lengthOfMonth())).toEpochDay()
+            }
+        }
+    }
+
+    /** Due = active, not booked this period, and this period's target day reached. */
+    fun isDue(r: Recurring): Boolean {
+        if (!r.active || bookedThisPeriod(r)) return false
+        val today = com.ascend.lifeos.core.todayDate()
+        return when (r.interval) {
+            "weekly" -> true   // one charge per week; due any day the week hasn't been booked
+            else -> today.dayOfMonth >= r.dayOfMonth.coerceAtMost(today.lengthOfMonth())
+        }
     }
 
     /** Books the recurring as a real txn via LifeStores and stamps lastBooked. */

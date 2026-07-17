@@ -861,9 +861,10 @@ private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit,
                 fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
+            val intervalTag = if (r.interval != "monthly") " · ${r.interval}" else ""
             Text(
-                if (!r.active) "paused · day ${r.dayOfMonth}"
-                else "${r.category} · ${dueInLabel(FinanceStore.nextDueEpochDay(r))}",
+                if (!r.active) "paused$intervalTag"
+                else "${r.category}$intervalTag · ${dueInLabel(FinanceStore.nextDueEpochDay(r))}",
                 color = if (due && r.active) Warn else TextDim,
                 fontSize = FS.s10_5, fontFamily = Body,
             )

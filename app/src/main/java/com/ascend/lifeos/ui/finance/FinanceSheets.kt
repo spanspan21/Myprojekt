@@ -292,6 +292,7 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
     var isCost by rememberSaveable { mutableStateOf(true) }
     var category by rememberSaveable { mutableStateOf("Other") }
     var day by rememberSaveable { mutableIntStateOf(1) }
+    var interval by rememberSaveable { mutableStateOf("monthly") }
     val cents = parseCents(amount)
 
     SheetShell("New recurring", onDismiss) {
@@ -302,7 +303,15 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
             FinChip("Income", !isCost) { isCost = false; category = "Income" }
         }
         Spacer(Modifier.height(12.dp))
-        GlassField(amount, { amount = it }, "Amount in ${com.ascend.lifeos.data.finance.Currency.symbol()} per month — e.g. 9.99", keyboard = KeyboardType.Decimal)
+        GlassField(amount, { amount = it }, "Amount in ${com.ascend.lifeos.data.finance.Currency.symbol()} — e.g. 9.99", keyboard = KeyboardType.Decimal)
+        Spacer(Modifier.height(12.dp))
+        Overline("How often")
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            listOf("weekly" to "Weekly", "monthly" to "Monthly", "quarterly" to "Quarterly", "yearly" to "Yearly").forEach { (id, label) ->
+                FinChip(label, interval == id) { interval = id }
+            }
+        }
         if (isCost) {
             Spacer(Modifier.height(12.dp))
             Overline("Category")
@@ -311,22 +320,28 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
                 spendCategories().forEach { c -> FinChip(c, category == c) { category = c } }
             }
         }
-        Spacer(Modifier.height(14.dp))
-        Overline("Booking day")
-        Spacer(Modifier.height(6.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            StepperOrb("−") { day = (day - 1).coerceAtLeast(1) }
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("$day", color = TextPrimary, style = metricStyle(28))
-                Text("of the month", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+        // day-of-period only matters when it isn't weekly (weekly = once/week)
+        if (interval != "weekly") {
+            Spacer(Modifier.height(14.dp))
+            Overline("Booking day")
+            Spacer(Modifier.height(6.dp))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                StepperOrb("−") { day = (day - 1).coerceAtLeast(1) }
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("$day", color = TextPrimary, style = metricStyle(28))
+                    Text(
+                        when (interval) { "quarterly" -> "of the quarter's month"; "yearly" -> "of the anniversary month"; else -> "of the month" },
+                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                    )
+                }
+                StepperOrb("+") { day = (day + 1).coerceAtMost(31) }
             }
-            StepperOrb("+") { day = (day + 1).coerceAtMost(31) }
         }
         Spacer(Modifier.height(18.dp))
         ActionButton("Save recurring", enabled = name.isNotBlank() && cents != null) {
             val c = cents ?: return@ActionButton
             Haptics.confirm(ctx)
-            FinanceStore.addRecurring(ctx, name, if (isCost) -c else c, if (isCost) category else "Income", day)
+            FinanceStore.addRecurring(ctx, name, if (isCost) -c else c, if (isCost) category else "Income", day, interval)
             AppFeedback.show("Recurring charge saved")
             onDismiss()
         }
