@@ -403,9 +403,71 @@ fun GuardScreen() {
                         }
                         TogglePill(enabled) {
                             val next = !enabled
-                            WellbeingStore.setEnabled(ctx, next)
-                            if (next) JarvisGuardService.start(ctx) else JarvisGuardService.stop(ctx)
+                            if (!next && WellbeingStore.isStrict(ctx) && WellbeingStore.disableAt(ctx) == 0L) {
+                                // strict: don't turn off yet — start the cooling-off timer
+                                WellbeingStore.requestDisable(ctx)
+                                Haptics.warn(ctx)
+                                AppFeedback.show("Strict mode — Guard turns off in ${WellbeingStore.strictDelayMin(ctx)} min")
+                            } else {
+                                WellbeingStore.setEnabled(ctx, next)
+                                WellbeingStore.cancelDisable(ctx)
+                                if (next) JarvisGuardService.start(ctx) else JarvisGuardService.stop(ctx)
+                            }
                             tick++
+                        }
+                    }
+                    // strict-mode cooling-off countdown + cancel
+                    val disableAt = WellbeingStore.disableAt(ctx)
+                    if (disableAt > 0L) {
+                        var nowMs by remember { mutableStateOf(System.currentTimeMillis()) }
+                        LaunchedEffect(disableAt) {
+                            while (WellbeingStore.disableAt(ctx) > System.currentTimeMillis()) {
+                                nowMs = System.currentTimeMillis(); kotlinx.coroutines.delay(1000)
+                            }
+                            tick++
+                        }
+                        val leftMs = (disableAt - nowMs).coerceAtLeast(0)
+                        Spacer(Modifier.height(10.dp))
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                                .background(Amber.copy(alpha = 0.12f))
+                                .border(0.5.dp, Amber.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Turning off in ${leftMs / 60_000}:${"%02d".format((leftMs / 1000) % 60)}", color = Amber, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text("The wall holds until then — ride it out.", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                            }
+                            Text(
+                                "Keep it on", color = Good, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Good.copy(alpha = 0.14f))
+                                    .pressScale { Haptics.confirm(ctx); WellbeingStore.cancelDisable(ctx); tick++ }
+                                    .padding(horizontal = 11.dp, vertical = 7.dp),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(13.dp))
+                    HairRow()
+                    Spacer(Modifier.height(13.dp))
+                    // strict mode toggle + delay
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Strict mode", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("A cooling-off delay before Guard can turn off", color = TextDim, fontSize = FS.s11, fontFamily = Body)
+                        }
+                        val strict = WellbeingStore.isStrict(ctx)
+                        if (strict) {
+                            val dMin = WellbeingStore.strictDelayMin(ctx)
+                            Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { WellbeingStore.setStrictDelayMin(ctx, dMin - 5); tick++; Haptics.tick(ctx) }.defaultMinSize(minHeight = 44.dp, minWidth = 40.dp).padding(horizontal = 6.dp))
+                            Text("${dMin}m", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { WellbeingStore.setStrictDelayMin(ctx, dMin + 5); tick++; Haptics.tick(ctx) }.defaultMinSize(minHeight = 44.dp, minWidth = 40.dp).padding(horizontal = 6.dp))
+                            Spacer(Modifier.width(6.dp))
+                        }
+                        TogglePill(strict) {
+                            WellbeingStore.setStrict(ctx, !strict); tick++; Haptics.tick(ctx)
                         }
                     }
                     Spacer(Modifier.height(13.dp))

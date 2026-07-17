@@ -62,6 +62,32 @@ object WellbeingStore {
     fun setPausedUntil(ctx: Context, ms: Long) = prefs(ctx).edit().putLong("wb_pause_until", ms).apply()
     fun isPaused(ctx: Context): Boolean = System.currentTimeMillis() < pausedUntil(ctx)
 
+    // ---- strict mode: a cooling-off delay before Guard can actually turn off ----
+    // Anti-tamper (audit guard i5): in a weak moment you can hit the switch, but
+    // the wall stays up for the delay — long enough for the urge to pass. During
+    // the countdown Guard remains fully active; the completion fires from the
+    // service tick (still running while enabled) or the screen, whichever first.
+    fun isStrict(ctx: Context): Boolean = prefs(ctx).getBoolean("wb_strict", false)
+    fun setStrict(ctx: Context, on: Boolean) = prefs(ctx).edit().putBoolean("wb_strict", on)
+        .also { if (!on) it.remove("wb_disable_at") }.apply()
+    fun strictDelayMin(ctx: Context): Int = prefs(ctx).getInt("wb_strict_min", 10)
+    fun setStrictDelayMin(ctx: Context, m: Int) = prefs(ctx).edit().putInt("wb_strict_min", m.coerceIn(5, 120)).apply()
+
+    /** ms at which a strict-mode disable completes; 0 = none pending. */
+    fun disableAt(ctx: Context): Long = prefs(ctx).getLong("wb_disable_at", 0L)
+    fun requestDisable(ctx: Context) = prefs(ctx).edit()
+        .putLong("wb_disable_at", System.currentTimeMillis() + strictDelayMin(ctx) * 60_000L).apply()
+    fun cancelDisable(ctx: Context) = prefs(ctx).edit().remove("wb_disable_at").apply()
+    /** If a pending disable is due, complete it (turn Guard off). Returns true if it fired. */
+    fun settleDisableIfDue(ctx: Context): Boolean {
+        val at = disableAt(ctx)
+        if (at in 1..System.currentTimeMillis()) {
+            prefs(ctx).edit().remove("wb_disable_at").putBoolean(KEY_ENABLED, false).apply()
+            return true
+        }
+        return false
+    }
+
     // ---- morning block: limited apps stay shut before this minute-of-day ----
     fun morningBlockUntil(ctx: Context): Int = prefs(ctx).getInt("morning_until", 0) // 0 = off
     fun setMorningBlockUntil(ctx: Context, minuteOfDay: Int) =

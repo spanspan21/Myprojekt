@@ -156,6 +156,9 @@ class JarvisGuardService : Service() {
         // during play) would consume the worst-case pending a live Blackjack/Mines
         // round wrote at deal time, double-settling essentially every round.
         runCatching { com.ascend.lifeos.data.casino.CasinoStore.settlePendingIfAny(this) }
+        // Strict-mode disable: complete the cooling-off shutdown when its timer
+        // is up (the switch was flipped earlier; the wall held until now).
+        if (WellbeingStore.settleDisableIfDue(this)) { stop(this); return }
         // Guard pause (D3): everything above is maintenance and keeps running;
         // from here on it's walls — and walls sleep while the pause stands.
         if (WellbeingStore.isPaused(this)) return
