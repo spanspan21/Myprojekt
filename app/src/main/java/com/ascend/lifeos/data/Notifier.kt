@@ -129,9 +129,16 @@ object Notifier {
         }
     }.getOrNull()
 
-    /** The event the heads-up alarm is firing FOR: closest upcoming today. */
+    /**
+     * The event the heads-up alarm is firing FOR: closest event around now. A
+     * delayed alarm (Doze) must still describe the event it was armed for —
+     * with a plain >= now filter it used to skip a just-started event and
+     * announce a LATER one with wrong timing. Grace window looks 10 min back;
+     * events not yet inside their lead window stay silent (the chain re-arms).
+     */
     internal fun eventSoonMessage(ctx: Context): Pair<String, String>? = runCatching {
         kotlinx.coroutines.runBlocking {
+            val lead = Prefs.int(ctx, Prefs.EVENT_REMINDER_MIN, 15)
             val today = com.ascend.lifeos.core.todayDate()
             val bit = 1 shl (today.dayOfWeek.value - 1)
             val now = Calendar.getInstance().let { it.get(Calendar.HOUR_OF_DAY) * 60 + it.get(Calendar.MINUTE) }
@@ -139,12 +146,16 @@ object Notifier {
                 .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
                 .filter { it.type != "TRAINING" && !it.allDay }
                 .filter { it.repeatMask == 0 || (it.repeatMask and bit) != 0 }
-                .filter { it.startMin >= now }
+                .filter { it.startMin >= now - 10 }
                 .minByOrNull { it.startMin } ?: return@runBlocking null
             val inMin = e.startMin - now
+            if (inMin > lead + 3) return@runBlocking null   // not this event's window yet
             val at = "%02d:%02d".format(e.startMin / 60, e.startMin % 60)
-            e.title.ifBlank { "Upcoming event" } to
-                (if (inMin > 1) "Starts at $at — in $inMin min." else "Starts now — $at.")
+            e.title.ifBlank { "Upcoming event" } to when {
+                inMin > 1 -> "Starts at $at — in $inMin min."
+                inMin >= 0 -> "Starts now — $at."
+                else -> "Started ${-inMin} min ago — $at."
+            }
         }
     }.getOrNull()
 

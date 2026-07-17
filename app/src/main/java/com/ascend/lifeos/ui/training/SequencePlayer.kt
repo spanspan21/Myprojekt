@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,11 +106,14 @@ fun SequencePlayerScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     }
     val ctx = LocalContext.current
     val phases = remember(session) { phasesOf(session) }
-    var idx by remember { mutableIntStateOf(0) }
-    var remaining by remember { mutableIntStateOf(phases.firstOrNull()?.seconds ?: 0) }
-    var paused by remember { mutableStateOf(false) }
-    var finished by remember { mutableStateOf(false) }
-    var elapsed by remember { mutableIntStateOf(0) }
+    // rememberSaveable keyed on the session: a dark-mode flip or split-screen
+    // recreation must NOT restart a live flow from phase 1 (the ViewModel keeps
+    // activeSequence alive, so the keys match across recreation).
+    var idx by rememberSaveable(session) { mutableIntStateOf(0) }
+    var remaining by rememberSaveable(session) { mutableIntStateOf(phases.firstOrNull()?.seconds ?: 0) }
+    var paused by rememberSaveable(session) { mutableStateOf(false) }
+    var finished by rememberSaveable(session) { mutableStateOf(false) }
+    var elapsed by rememberSaveable(session) { mutableIntStateOf(0) }
 
     // The screen stays awake mid-flow — phones on yoga mats go dark otherwise.
     val view = LocalView.current
@@ -168,6 +172,7 @@ fun SequencePlayerScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         if (finished) {
             SequenceFinish(session = session, minutes = (elapsed / 60).coerceAtLeast(1), onDone = {
                 vm.activeSequence = null
+                vm.refreshTodayStats()   // week tick appears immediately, not on next resume
                 onBack()
             })
         } else phases.getOrNull(idx)?.let { phase ->

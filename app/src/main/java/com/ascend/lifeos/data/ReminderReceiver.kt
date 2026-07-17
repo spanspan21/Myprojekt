@@ -53,16 +53,21 @@ class ReminderReceiver : BroadcastReceiver() {
             )
             return
         }
-        Notifier.show(ctx, kind)
-        // Arm the "training in 30 min" heads-up off the daily anchors, so a
-        // block placed later in the morning still gets its warning.
-        if (kind == "morning" || kind == "fuel") {
-            runCatching { Notifier.scheduleWorkoutHeadsUp(ctx) }
-        }
-        // Event heads-ups chain: firing one arms the next event of the day.
+        // morning/fuel/event_soon all touch Room (heads-up scheduling, event
+        // lookup) — run them off the receiver main thread like reschedule does.
         if (kind == "morning" || kind == "fuel" || kind == "event_soon") {
-            runCatching { Notifier.scheduleEventHeadsUp(ctx) }
+            val pending = goAsync()
+            Thread {
+                try {
+                    Notifier.show(ctx, kind)
+                    if (kind != "event_soon") runCatching { Notifier.scheduleWorkoutHeadsUp(ctx) }
+                    // Event heads-ups chain: firing one arms the next of the day.
+                    runCatching { Notifier.scheduleEventHeadsUp(ctx) }
+                } finally { pending.finish() }
+            }.start()
+            return
         }
+        Notifier.show(ctx, kind)
     }
 }
 

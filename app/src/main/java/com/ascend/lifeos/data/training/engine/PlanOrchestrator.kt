@@ -73,7 +73,11 @@ object PlanOrchestrator {
             if (share <= 0) continue
             if (d == Disciplines.CALISTHENICS) {
                 val plan = calisthenics(share)
-                sessions += plan.sessions.map { it.copy(index = index++) }
+                // PlanGenerator clamps freq to >=2 internally — trim to the share
+                // so the merged week never exceeds the user's total frequency.
+                // Prefix-taking is safe: the freshness sort puts the best-recovered
+                // session first and the orchestrator re-stamps indexes anyway.
+                sessions += plan.sessions.take(share).map { it.copy(index = index++) }
                 note = note ?: plan.note
             } else {
                 val engine = engines[d] ?: continue

@@ -234,6 +234,7 @@ fun AscendApp() {
                 com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true
             }
             "stats" -> open(Sub.TRAIN)
+            "recipes" -> open(Sub.FUEL)
         }
     }
 
@@ -457,7 +458,10 @@ private fun MorphingDock(
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var zoomedOut by remember(group) { mutableStateOf(false) }
-    val subMode = subs.size > 1 && !zoomedOut
+    // The tour's dock step describes the four-group bar — show it while the
+    // spotlight is on (doubles as a live demo of the morph).
+    val tourGroups by com.ascend.lifeos.ui.boot.TourSignals.dockGroupMode
+    val subMode = subs.size > 1 && !zoomedOut && !tourGroups
 
     Box(modifier.navigationBarsPadding().padding(bottom = 14.dp)) {
         Box(

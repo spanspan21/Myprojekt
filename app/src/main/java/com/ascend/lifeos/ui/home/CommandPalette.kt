@@ -187,6 +187,15 @@ object CommandEngine {
             if (mod != null && !com.ascend.lifeos.data.Modules.isOn(ctx, mod)) {
                 return CmdResult.Done("${mod.replaceFirstChar { it.uppercase() }} is switched off — Settings → Modules to restore")
             }
+            // context mode (exam/holiday) hides too — be honest instead of
+            // announcing "Opening finance" and landing somewhere else
+            val subOf = mapOf(
+                "finance" to "FINANCE", "skills" to "SKILLS", "school" to "SCHOOL",
+            )
+            val mode = com.ascend.lifeos.ui.ShellMode.current.value
+            if (subOf[target] in com.ascend.lifeos.ui.ShellMode.hiddenSubs(mode)) {
+                return CmdResult.Done("${target.replaceFirstChar { it.uppercase() }} is hidden in $mode mode — switch the context mode in Settings")
+            }
             return CmdResult.Navigate(target, "Opening $target")
         }
         if (q.startsWith("start") && ("workout" in q || "push" in q || "pull" in q || "leg" in q)) {
@@ -608,7 +617,7 @@ private object CommandSuggest {
         Tpl("breathe", "breathe", "breathing exercise", execute = true),
         Tpl("timer", "timer", "simple timer", execute = true),
         Tpl("winddown", "winddown", "evening wind-down", execute = true),
-        Tpl("undo", "undo", "remove last food", execute = true),
+        Tpl("undo", "undo food", "remove last food", execute = true),
     )
 
     private val NAV = listOf(
@@ -630,9 +639,11 @@ private object CommandSuggest {
         TEMPLATES.filter { it.key.startsWith(q) }.forEach {
             out += Sugg(it.example, it.hint, it.example, it.execute)
         }
+        val hiddenByMode = com.ascend.lifeos.ui.ShellMode.hiddenSubs(com.ascend.lifeos.ui.ShellMode.current.value)
+        val subOf = mapOf("finance" to "FINANCE", "skills" to "SKILLS", "school" to "SCHOOL")
         NAV.filter { it.startsWith(q) }.forEach { t ->
             val mod = NAV_MODULE[t]
-            if (mod == null || com.ascend.lifeos.data.Modules.isOn(ctx, mod)) {
+            if ((mod == null || com.ascend.lifeos.data.Modules.isOn(ctx, mod)) && subOf[t] !in hiddenByMode) {
                 out += Sugg("open $t", "navigate", t, execute = true)
             }
         }

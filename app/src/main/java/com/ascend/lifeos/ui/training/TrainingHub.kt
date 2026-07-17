@@ -113,6 +113,21 @@ fun TrainingHub(
         vm.autoRescheduleCheck()
         vm.checkAbandonedSession()
     }
+    // Every activity write (sequence player, quick log) refreshes the week
+    // ticks live — they used to appear only on the next resume.
+    LaunchedEffect(com.ascend.lifeos.data.ActivityStore.rev) { vm.refreshTodayStats() }
+    // Done-ticks by session INDEX: completion counts are consumed in index
+    // order, so one logged "Easy Run 30 min" ticks exactly one of two
+    // identically named sessions instead of both.
+    val doneByIndex = remember(vm.weekPlan, vm.weekDoneCounts) {
+        val counts = vm.weekDoneCounts.toMutableMap()
+        buildSet {
+            vm.weekPlan?.sessions?.sortedBy { it.index }?.forEach { s ->
+                val c = counts[s.name] ?: 0
+                if (c > 0) { counts[s.name] = c - 1; add(s.index) }
+            }
+        }
+    }
 
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
@@ -301,7 +316,7 @@ fun TrainingHub(
                             NextSessionHero(
                                 session = hero,
                                 placement = vm.placements.find { it.session.index == hero.index },
-                                done = hero.name in vm.weekDoneNames,
+                                done = hero.index in doneByIndex,
                             ) { startSession(hero) }
                         }
                     }
@@ -314,7 +329,7 @@ fun TrainingHub(
             if (rest.isNotEmpty()) {
                 item {
                     val allSessions = vm.weekPlan?.sessions.orEmpty()
-                    val weekDone = allSessions.count { it.name in vm.weekDoneNames }
+                    val weekDone = allSessions.count { it.index in doneByIndex }
                     val weekTotal = allSessions.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         SectionLabel("Your week", accent = Mod.Train, modifier = Modifier.weight(1f))
@@ -334,7 +349,7 @@ fun TrainingHub(
                                 modifier = Modifier.animateItem(),
                                 session = session,
                                 placement = vm.placements.find { it.session.index == session.index },
-                                done = session.name in vm.weekDoneNames,
+                                done = session.index in doneByIndex,
                             ) { startSession(session) }
                         }
                     }
@@ -380,7 +395,7 @@ fun TrainingHub(
                         CustomPlaceRow(
                             session = session,
                             placement = vm.placements.find { it.session.index == session.index },
-                            done = session.name in vm.weekDoneNames,
+                            done = session.index in doneByIndex,
                             onPlace = { d, m -> vm.placeSessionManually(session, d, m) },
                         )
                         Spacer(Modifier.height(8.dp))

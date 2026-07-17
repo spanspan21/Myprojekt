@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.UUID
@@ -104,6 +105,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var weekDoneNames by mutableStateOf<Set<String>>(emptySet())
         private set
+    var weekDoneCounts by mutableStateOf<Map<String, Int>>(emptyMap())
+        private set
 
     // ── Deload state ────────────────────────────────────────────────────────
 
@@ -140,14 +143,17 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         }.getOrDefault(0)
         weekSessions = dao.sessionCountSince(startOfWeek) + acts
         // Done = completed workout sessions (by template name) PLUS timed plan
-        // sessions the sequence player logged as activities (by label).
+        // sessions the sequence player logged as activities (by label). Kept as
+        // COUNTS, not a set: a running week holds identically named sessions
+        // ("Easy Run 30 min" ×2) and one completion must not tick both.
         val actLabels = runCatching {
             ActivityStore.since(getApplication(), startOfWeek).mapNotNull { it.label }
         }.getOrDefault(emptyList())
-        weekDoneNames = dao.sessionsSince(startOfWeek)
+        val doneLabels = dao.sessionsSince(startOfWeek)
             .filter { it.session.isComplete }
-            .map { it.session.templateName }
-            .toSet() + actLabels
+            .map { it.session.templateName } + actLabels
+        weekDoneCounts = doneLabels.groupingBy { it }.eachCount()
+        weekDoneNames = doneLabels.toSet()
         checkDeload()
     }
 
@@ -244,7 +250,17 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     fun dismissSummary() { lastSummary = null }
 
+    // Serialize plan regeneration: applyAssessment triggers one run directly
+    // and a second via the Hub's progressions observer — unserialized, the two
+    // could interleave weekPlan/placements (index cross-matching) and duplicate
+    // calendar blocks in schedule()'s clear-then-write.
+    private val planMutex = kotlinx.coroutines.sync.Mutex()
+
     fun regeneratePlan() = viewModelScope.launch(Dispatchers.IO) {
+        planMutex.withLock { regeneratePlanLocked() }
+    }
+
+    private suspend fun regeneratePlanLocked() {
         // Clear stale/past training blocks first (both modes) — including legacy
         // ones written before the note="plan" marker, which is what piled up in
         // the calendar. Future manual events are untouched.
@@ -315,9 +331,12 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         )
         // Discipline engines: users who picked disciplines get a merged week
         // (running/yoga/gym engines + calisthenics share); everyone else keeps
-        // the untouched legacy path — zero behavior change.
+        // the untouched legacy path — zero behavior change. Sick mode ALWAYS
+        // routes through the calisthenics generator: its recovery short-circuit
+        // is the promised "mobility only" week — engines must not prescribe
+        // full-intensity HIIT to a sick user.
         val discs = p.disciplines.ifEmpty { Disciplines.fromSport(p.sport) }
-        val plan = if (discs == listOf(Disciplines.CALISTHENICS)) {
+        val plan = if (p.sickMode || discs == listOf(Disciplines.CALISTHENICS)) {
             calisthenicsWeek(p.trainFreq)
         } else {
             PlanOrchestrator.gymBestsCache = runCatching {
@@ -333,10 +352,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 calisthenics = ::calisthenicsWeek,
             )
         }
-        weekPlan = plan
-        placements = runCatching {
+        // Compute placements BEFORE publishing, then assign adjacently — the UI
+        // must never see a fresh plan matched against stale placements.
+        val placed = runCatching {
             PlanGenerator.placeWeek(getApplication(), plan, p.sessionLen)
         }.getOrDefault(emptyList())
+        weekPlan = plan
+        placements = placed
         // Recommended mode keeps the calendar in sync by itself: wipe the old
         // auto-placed blocks and write the fresh week. So changing anything (freq,
         // session length, deload, a new obligation) re-distributes and clears the
@@ -378,10 +400,12 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun scheduleWeek() = viewModelScope.launch(Dispatchers.IO) {
-        val p = Repo.data.profile
-        runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }
-            .onSuccess { scheduledOk = true }
-            .onFailure { scheduledOk = false }
+        planMutex.withLock {
+            val p = Repo.data.profile
+            runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }
+                .onSuccess { scheduledOk = true }
+                .onFailure { scheduledOk = false }
+        }
     }
 
     var rescheduleNote by mutableStateOf<String?>(null)
@@ -389,11 +413,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Self-repair pass: fix scheduled sessions that reality broke. */
     fun autoRescheduleCheck() = viewModelScope.launch(Dispatchers.IO) {
-        val p = Repo.data.profile
-        val moved = runCatching {
-            PlanGenerator.autoReschedule(getApplication(), p.sessionLen)
-        }.getOrDefault(emptyList())
-        rescheduleNote = if (moved.isEmpty()) null else "Plan repaired: " + moved.joinToString(" · ")
+        planMutex.withLock {
+            val p = Repo.data.profile
+            val moved = runCatching {
+                PlanGenerator.autoReschedule(getApplication(), p.sessionLen)
+            }.getOrDefault(emptyList())
+            rescheduleNote = if (moved.isEmpty()) null else "Plan repaired: " + moved.joinToString(" · ")
+        }
     }
 
     fun dismissRescheduleNote() { rescheduleNote = null }

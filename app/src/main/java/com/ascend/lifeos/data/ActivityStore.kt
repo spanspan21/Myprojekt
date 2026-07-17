@@ -174,6 +174,7 @@ object ActivityStore {
                     minutes = o.optInt("min"),
                     rpe = o.optInt("rpe", 6),
                     distanceKm = o.optDouble("km").takeIf { !it.isNaN() && it.isFinite() && it > 0 },
+                    label = o.optString("label").takeIf { it.isNotEmpty() },
                 )
             }
         }.getOrDefault(emptyList())
@@ -186,6 +187,7 @@ object ActivityStore {
                 put("id", e.id); put("ts", e.ts); put("type", e.type)
                 put("min", e.minutes); put("rpe", e.rpe)
                 e.distanceKm?.let { put("km", it) }
+                e.label?.let { put("label", it) }
             })
         }
         prefs?.edit()?.putString("v1", arr.toString())?.apply()

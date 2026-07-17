@@ -275,7 +275,7 @@ object Repo {
             it.copy(
                 name = name.trim(), sex = sex, age = age, heightCm = heightCm, weightKg = weightKg,
                 activity = activity,
-                objectives = objectives, onboarded = true, reminders = true,
+                objectives = objectives, onboarded = true, everOnboarded = true, reminders = true,
                 kcalGoal = t.kcal, proteinGoal = t.protein, carbGoal = t.carbs, fatGoal = t.fat,
                 waterGoal = WaterCalc.targetGlasses(weightKg, trainedToday = false),
                 dietGoal = goal, dietPhaseSince = todayKey(),
@@ -366,9 +366,16 @@ object Repo {
         val cur = data.days[dayKey] ?: return
         val old = cur.meals.firstOrNull { it.id == id } ?: return
         val e = entry.copy(id = old.id, ts = old.ts)
+        // The recents mirror (quick re-log) must carry the corrected portion
+        // too, or the typo comes back on the next one-tap log. Same name-key
+        // dedupe addFood uses.
+        val recents = data.profile.recentFoods.map { r ->
+            if (r.name == old.name) e.copy(id = r.id, ts = r.ts, meal = "b") else r
+        }
         commit(
             data.copy(
                 days = data.days + (dayKey to cur.copy(meals = cur.meals.map { if (it.id == id) e else it })),
+                profile = data.profile.copy(recentFoods = recents),
             ),
         )
         refreshStreak()

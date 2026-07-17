@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -81,6 +82,9 @@ fun Modifier.tourTarget(id: String): Modifier =
 /** Cross-screen signals (Settings → "Replay the tour"). */
 object TourSignals {
     val replay = mutableStateOf(false)
+
+    /** While the dock step is spotlighted, the dock shows its four-group bar. */
+    val dockGroupMode = mutableStateOf(false)
 }
 
 private data class TourStep(
@@ -90,6 +94,7 @@ private data class TourStep(
     val title: String,
     val body: String,
     val accent: Color,
+    val moduleId: String? = null,   // skip the step when this module is switched off
 )
 
 private val STEPS = listOf(
@@ -132,6 +137,7 @@ private val STEPS = listOf(
         null, "guard", "SYSTEM · GUARD", "Walls that hold",
         "Per-app screen-time limits that actually block. Optional — arm it when you want your evenings back.",
         Mod.Guard,
+        moduleId = "guard",
     ),
     TourStep(
         null, "home", "YOURS NOW", "Make it yours",
@@ -146,15 +152,32 @@ fun InteractiveTour(
     onDone: () -> Unit,
 ) {
     val ctx = LocalContext.current
+    // Steps whose module is switched off drop out (a guard-less user must not
+    // land on Skills with a card that says "Guard").
+    val steps = remember {
+        STEPS.filter { it.moduleId == null || com.ascend.lifeos.data.Modules.isOn(ctx, it.moduleId) }
+    }
     var step by remember { mutableIntStateOf(0) }
-    val s = STEPS[step]
+    val s = steps[step]
 
-    // Drive the shell to the screen this step talks about.
-    LaunchedEffect(step) { STEPS[step].navigate?.let(onNavigate) }
+    // Drive the shell to this step's EFFECTIVE screen — the nearest declared
+    // route at or before it. Plain forward stepping is unchanged, but going
+    // BACK from a module step now re-navigates (e.g. back to Home for the
+    // palette step) instead of spotlighting stale bounds over Guard.
+    LaunchedEffect(step) {
+        (step downTo 0).firstNotNullOfOrNull { steps[it].navigate }?.let(onNavigate)
+        TourSignals.dockGroupMode.value = steps[step].target == "dock"
+    }
+    DisposableEffect(Unit) {
+        onDispose { TourSignals.dockGroupMode.value = false }
+    }
 
-    fun finish() { Haptics.confirm(ctx); onDone() }
+    fun finish() {
+        TourSignals.dockGroupMode.value = false
+        Haptics.confirm(ctx); onDone()
+    }
     fun advance() {
-        if (step == STEPS.lastIndex) finish()
+        if (step == steps.lastIndex) finish()
         else { Haptics.tick(ctx); step++ }
     }
     BackHandler(enabled = true) { if (step > 0) step-- else finish() }
@@ -245,7 +268,7 @@ fun InteractiveTour(
             transitionSpec = { fadeIn(tween(320, delayMillis = 120)) togetherWith fadeOut(tween(140)) },
             modifier = cardMod.padding(horizontal = 24.dp).fillMaxWidth(),
         ) { i ->
-            val st = STEPS[i]
+            val st = steps[i]
             Column(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(RCard))
@@ -280,7 +303,7 @@ fun InteractiveTour(
                 Spacer(Modifier.height(14.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        STEPS.indices.forEach { d ->
+                        steps.indices.forEach { d ->
                             Box(
                                 Modifier.height(5.dp).width(if (d == i) 16.dp else 5.dp)
                                     .clip(CircleShape)
@@ -290,7 +313,7 @@ fun InteractiveTour(
                     }
                     Spacer(Modifier.weight(1f))
                     Text(
-                        if (i == STEPS.lastIndex) "LET'S GO" else "NEXT",
+                        if (i == steps.lastIndex) "LET'S GO" else "NEXT",
                         color = st.accent, fontFamily = Display, fontSize = FS.s11,
                         fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
                         modifier = Modifier.clip(RoundedCornerShape(10.dp))

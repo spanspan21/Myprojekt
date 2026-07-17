@@ -88,6 +88,12 @@ private enum class Phase { MATERIALIZE, CALIBRATE, OPERATOR, TUNE }
 private const val DEFAULT_NAME = "Operator" // neutral, on-theme — not a developer's name (audit A10)
 private val DEFAULT_OBJECTIVES = listOf("train", "learn", "sleep", "focus", "fuel")
 
+/** Objective chip → module it drives (single source for seeding AND applying). */
+private val OBJECTIVE_MODULES = mapOf(
+    "sleep" to "sleep", "learn" to "skills", "focus" to "guard",
+    "school" to "school", "money" to "finance",
+)
+
 @Composable
 fun BootScreen() {
     var phase by rememberSaveable { mutableStateOf(Phase.MATERIALIZE) }
@@ -142,24 +148,30 @@ fun BootScreen() {
 private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String>) -> Unit) {
     val ctx = LocalContext.current
     val p = Repo.profile()
-    // Recalibrate keeps your numbers; a fresh boot starts from the house defaults.
-    var sex by rememberSaveable { mutableStateOf(if (p.onboarded) p.sex else "") }
-    var age by rememberSaveable { mutableStateOf(if (p.onboarded) p.age else 16) }
-    var height by rememberSaveable { mutableStateOf(if (p.onboarded) p.heightCm else 170) }
-    var weight by rememberSaveable { mutableStateOf(if (p.onboarded) p.weightKg else 70) }
-    var activity by rememberSaveable { mutableIntStateOf(if (p.onboarded) p.activity else 3) }
+    // Recalibrate keeps your numbers; a fresh boot starts from the house
+    // defaults. `p.onboarded` was ALWAYS false here (rebootOnboarding clears it
+    // before this screen renders) — every recalibrate silently reset body stats
+    // to defaults. everOnboarded survives; sex covers legacy profiles that
+    // predate the field (only completeBoot ever writes sex).
+    val recal = p.everOnboarded || p.sex.isNotBlank()
+    var sex by rememberSaveable { mutableStateOf(if (recal) p.sex else "") }
+    var age by rememberSaveable { mutableStateOf(if (recal) p.age else 16) }
+    var height by rememberSaveable { mutableStateOf(if (recal) p.heightCm else 170) }
+    var weight by rememberSaveable { mutableStateOf(if (recal) p.weightKg else 70) }
+    var activity by rememberSaveable { mutableIntStateOf(if (recal) p.activity else 3) }
     var trainFreq by rememberSaveable { mutableIntStateOf(p.trainFreq) }
     var sessionLen by rememberSaveable { mutableIntStateOf(p.sessionLen) }
-    var goal by rememberSaveable { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
+    var goal by rememberSaveable { mutableStateOf(if (recal) p.dietGoal else "maintain") }
     var equip by remember { mutableStateOf(Repo.data.profile.equipment) }
     val objectives = remember {
         mutableStateListOf<String>().apply {
             addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES })
             // Re-onboarding must not silently strip modules the user lives in:
-            // seed the chips from the CURRENT module state.
-            if (p.onboarded) {
-                if (com.ascend.lifeos.data.Modules.isOn(ctx, "school") && "school" !in this) add("school")
-                if (com.ascend.lifeos.data.Modules.isOn(ctx, "finance") && "money" !in this) add("money")
+            // seed EVERY module-backed chip from the CURRENT module state.
+            if (recal) {
+                OBJECTIVE_MODULES.forEach { (obj, mod) ->
+                    if (com.ascend.lifeos.data.Modules.isOn(ctx, mod) && obj !in this) add(obj)
+                }
             }
         }
     }
@@ -193,10 +205,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             onFinish(sex, age, height, weight, activity, goal, objectives.toList())
             // Objectives are REAL now: unchecked life areas leave the app
             // (dock, home, palette) until re-enabled in Settings → Modules.
-            mapOf(
-                "sleep" to "sleep", "learn" to "skills", "focus" to "guard",
-                "school" to "school", "money" to "finance",
-            ).forEach { (obj, mod) ->
+            OBJECTIVE_MODULES.forEach { (obj, mod) ->
                 com.ascend.lifeos.data.Modules.setOn(ctx, mod, obj in objectives)
             }
             // Vest prescriptions follow the equipment answer. Fresh installs
@@ -204,7 +213,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             // vest for everyone); re-onboarding keeps the stored choice.
             val vest = when {
                 equip.isNotEmpty() -> "vest" in equip
-                !p.onboarded -> false
+                !recal -> false
                 else -> Repo.profile().hasVest
             }
             Repo.setTrainPrefs(trainFreq, sessionLen, vest)

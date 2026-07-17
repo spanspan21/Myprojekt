@@ -60,6 +60,12 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
     LaunchedEffect(route) {
         onDockVisible(route != TrainRoute.WORKOUT && route != TrainRoute.ASSESS && route != TrainRoute.SUMMARY && route != TrainRoute.TEST_DAY && route != TrainRoute.SEQUENCE)
     }
+    // Leaving the Train tab entirely (tour navigation, deep link) must never
+    // strand the shell with a hidden dock — a stale `false` made the bottom
+    // navigation dead app-wide after touring away from an active workout.
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { onDockVisible(true) }
+    }
 
     BackHandler(route != TrainRoute.HUB) {
         route = when (route) {

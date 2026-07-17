@@ -260,21 +260,24 @@ object PlanGenerator {
             }
             val morningStart = maxOf(earlyWake, nowMin)
             val morningLatestEnd = candidate.firstObligationMin?.minus(preObligationBuffer) ?: (11 * 60)
-            val morningFits = morningLatestEnd - morningStart >= needMin
+            // Morning pick is SLOT-AWARE: the old fast path returned wakeStart
+            // unvalidated and double-booked over early events already on the
+            // calendar (e.g. an existing 06:00 training block).
+            fun morningSlot(): Int? = candidate.slots.firstNotNullOfOrNull { s ->
+                val start = maxOf(s.startMin, morningStart)
+                if (start + needMin <= minOf(s.endMin, morningLatestEnd)) start else null
+            }
             val startMin = when (timePref) {
                 "midday" -> inWindow(11 * 60, 16 * 60)
                     ?: inWindow(9 * 60, 20 * 60)
                     ?: fitting.firstOrNull()?.startMin ?: continue
                 "evening" -> inWindow(16 * 60, 22 * 60)
                     ?: fitting.lastOrNull()?.startMin ?: continue
-                "morning" -> if (morningFits) morningStart
-                    else inWindow(earlyWake, 12 * 60) ?: fitting.firstOrNull()?.startMin ?: continue
-                else -> if (morningFits) {
-                    morningStart                                // train first thing, before the day starts
-                } else {
+                "morning" -> morningSlot()
+                    ?: inWindow(earlyWake, 12 * 60) ?: fitting.firstOrNull()?.startMin ?: continue
+                else -> morningSlot()                           // train first thing, before the day starts
                     // no morning room → earliest free slot of the day (late afternoon bias)
-                    (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.firstOrNull())?.startMin ?: continue
-                }
+                    ?: (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.firstOrNull())?.startMin ?: continue
             }
             out.add(Placement(session, candidate.day, startMin))
             used.add(candidate.day)

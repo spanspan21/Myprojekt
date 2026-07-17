@@ -48,6 +48,7 @@ data class DayData(
 data class Profile(
     val name: String = "",
     val onboarded: Boolean = false,
+    val everOnboarded: Boolean = false,  // survives rebootOnboarding — distinguishes recalibrate from fresh install
     val reminders: Boolean = false,
     val waterGoal: Int = 8,
     val streak: Int = 0,
