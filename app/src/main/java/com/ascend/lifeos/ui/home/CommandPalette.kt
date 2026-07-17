@@ -113,17 +113,35 @@ object CommandEngine {
             val kcal = (m.groupValues[2].ifBlank { m.groupValues[3] }).toIntOrNull() ?: return@let
             val name = m.groupValues[4].trim().ifBlank { "Quick add" }
             val dk = if (isYesterday) yesterdayKey else todayKey()
-            Repo.addFood(
+            // "kcal 400 pizza": the named food's library profile fills the
+            // macros scaled to the stated calories — no more zero-macro rows.
+            val hit = if (name != "Quick add") {
+                com.ascend.lifeos.data.BasicFoods.search(name).firstOrNull()
+            } else null
+            val entry = if (hit != null && hit.kcal100 > 0) {
+                val f = kcal.toDouble() / hit.kcal100
                 FoodEntry(
-                    id = "", name = name.replaceFirstChar { it.uppercase() },
-                    kcal = kcal, protein = 0, carbs = 0, fat = 0,
+                    id = "", name = hit.name, kcal = kcal,
+                    protein = (hit.protein100 * f).toInt(),
+                    carbs = (hit.carbs100 * f).toInt(),
+                    fat = (hit.fat100 * f).toInt(),
+                    grams = (100 * f).toInt(),
                     meal = defaultMealSlot(),
-                    incomplete = true,
-                ),
-                dayKey = dk,
+                    nutrients = hit.per100.mapValues { it.value * f },
+                    nova = hit.nova, additives = hit.additives,
+                )
+            } else FoodEntry(
+                id = "", name = name.replaceFirstChar { it.uppercase() },
+                kcal = kcal, protein = 0, carbs = 0, fat = 0,
+                meal = defaultMealSlot(),
+                incomplete = true,
             )
+            Repo.addFood(entry, dayKey = dk)
             val tag = if (isYesterday) " (yesterday)" else ""
-            return CmdResult.Done("Logged $kcal kcal$tag")
+            return CmdResult.Done(
+                if (hit != null) "Logged ${entry.name} · $kcal kcal · P${entry.protein}$tag"
+                else "Logged $kcal kcal$tag",
+            )
         }
 
         // ---- quick protein: "protein 30 chicken", "eiweiß 25" ----------------
@@ -474,7 +492,45 @@ object CommandEngine {
             )
         }
 
-        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · protein 30 · mood 4 · spend 12 coffee · income 500 · fast · sleep 7h30 · habit read · undo food · yesterday water 3 · lauf 45 · focus 50 · ${sportHintWord()} tue 17-19 · help")
+        // ---- bare food name: "banana", "banane 150" → real macros from the
+        // library instead of a zero-macro quick add (checked LAST so it can
+        // never shadow a command). Exact-ish matches only.
+        Regex("^([a-zäöüß][a-zäöüß .-]{2,})(?:\\s+(\\d{2,4})\\s?g?)?$").find(qEff)?.let { m ->
+            val nameQ = m.groupValues[1].trim()
+            val grams = m.groupValues[2].toIntOrNull()
+            // only STRONG matches log food — a weak substring hit on a typo'd
+            // command must fall through to the unknown hint, not book calories
+            val qn = com.ascend.lifeos.data.FoodRank.normalize(nameQ)
+            val hit = com.ascend.lifeos.data.BasicFoods.search(nameQ).firstOrNull()?.takeIf { p ->
+                val n = com.ascend.lifeos.data.FoodRank.normalize(p.name)
+                n.startsWith(qn) || n.split(' ', '(', ',').any { it.startsWith(qn) }
+            } ?: com.ascend.lifeos.data.BasicFoods.didYouMean(nameQ)
+            if (hit != null) {
+                val g = grams ?: hit.portions.firstOrNull()?.grams ?: hit.servingG ?: 100
+                val f = g / 100.0
+                val kcal = (hit.kcal100 * f).toInt()
+                val dk = if (isYesterday) yesterdayKey else todayKey()
+                Repo.addFood(
+                    FoodEntry(
+                        id = "", name = hit.name,
+                        kcal = kcal,
+                        protein = (hit.protein100 * f).toInt(),
+                        carbs = (hit.carbs100 * f).toInt(),
+                        fat = (hit.fat100 * f).toInt(),
+                        grams = g,
+                        meal = defaultMealSlot(),
+                        nutrients = hit.per100.mapValues { it.value * f },
+                        nova = hit.nova,
+                        additives = hit.additives,
+                    ),
+                    dayKey = dk,
+                )
+                val tag = if (isYesterday) " (yesterday)" else ""
+                return CmdResult.Done("🍽 ${hit.name} · ${g}g · $kcal kcal logged$tag")
+            }
+        }
+
+        return CmdResult.Unknown("Try: water 2 · 71.5 kg · banana 120 · kcal 400 · protein 30 · mood 4 · spend 12 coffee · income 500 · fast · sleep 7h30 · habit read · undo food · yesterday water 3 · lauf 45 · focus 50 · ${sportHintWord()} tue 17-19 · help")
     }
 
     private fun defaultMealSlot(): String {
