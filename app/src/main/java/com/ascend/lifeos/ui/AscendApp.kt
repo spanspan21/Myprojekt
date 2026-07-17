@@ -227,6 +227,13 @@ fun AscendApp() {
             "report" -> reportOpen = true
             "heatmap", "achievements", "decisions", "rules", "notes", "breathe", "timer", "winddown" -> overlay = target
             "quicklog" -> { open(Sub.HOME); com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
+            // palette targets that used to dismiss into nothing (audit: dead ends)
+            "quicklog_journal" -> {
+                open(Sub.HOME)
+                com.ascend.lifeos.ui.home.HomeSignals.quickLogMode.value = "journal"
+                com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true
+            }
+            "stats" -> open(Sub.TRAIN)
         }
     }
 

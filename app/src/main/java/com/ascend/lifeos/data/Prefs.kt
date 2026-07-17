@@ -162,6 +162,8 @@ object Prefs {
     const val FOCUS_CARD_CUTOFF = "focus_card_cutoff"    // 12 — hour after which Today's Focus card hides
     const val PROTEIN_NUDGE_MIN = "protein_nudge_min"    // 90 — minutes after workout for protein reminder
     const val WORKOUT_HEADSUP_MIN = "workout_headsup_min" // 30 — minutes before scheduled session for heads-up
+    const val EVENT_REMINDER_ON = "event_reminder_on"     // true — heads-up before timed calendar events
+    const val EVENT_REMINDER_MIN = "event_reminder_min"   // 15 — minutes of lead time
     const val STUDY_BLOCK_MIN = "study_block_min"        // 45 — duration of auto-scheduled study blocks
     const val PANIC_FOCUS_MIN = "panic_focus_min"        // 30 — default panic focus duration
     const val DOOMSCROLL_SNOOZES = "doomscroll_snoozes"  // 2 — max snoozes before lockout

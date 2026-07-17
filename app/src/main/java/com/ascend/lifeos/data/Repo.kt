@@ -356,6 +356,24 @@ object Repo {
         commit(data.copy(days = data.days + (dayKey to cur.copy(meals = cur.meals.filter { it.id != id }))))
     }
 
+    /**
+     * Replace a logged entry in place (mistyped 300 g instead of 30 g used to
+     * mean delete + re-search + re-portion). Keeps the original id/timestamp so
+     * ordering and any references survive; one atomic commit.
+     */
+    @Synchronized
+    fun updateFood(id: String, dayKey: String, entry: FoodEntry) {
+        val cur = data.days[dayKey] ?: return
+        val old = cur.meals.firstOrNull { it.id == id } ?: return
+        val e = entry.copy(id = old.id, ts = old.ts)
+        commit(
+            data.copy(
+                days = data.days + (dayKey to cur.copy(meals = cur.meals.map { if (it.id == id) e else it })),
+            ),
+        )
+        refreshStreak()
+    }
+
     // ---- custom foods ----
     fun customFoods(): List<CustomFood> = data.profile.customFoods
 

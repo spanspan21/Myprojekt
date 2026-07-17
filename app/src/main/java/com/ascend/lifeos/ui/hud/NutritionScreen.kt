@@ -105,6 +105,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.PI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 private enum class NView { DASH, MICROS, STATS, FASTING, RECIPES, SHOPPING }
@@ -1035,6 +1036,9 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
     val kcal = meals.sumOf { it.kcal }
     val logged = meals.isNotEmpty()
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    // Tap-to-edit: a mistyped 300 g no longer means delete + re-search.
+    var editing by remember { mutableStateOf<FoodEntry?>(null) }
+    editing?.let { EntryEditor(it, dayKey, onClose = { editing = null }) }
     GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(
             Modifier.fillMaxWidth().animateContentSize(Motion.springSmoothOf()),
@@ -1081,7 +1085,11 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
                         Modifier.fillMaxWidth().padding(start = 15.dp, end = 10.dp, bottom = 11.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Column(Modifier.weight(1f)) {
+                        Column(
+                            Modifier.weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .pressScale { Haptics.tick(ctx); editing = e },
+                        ) {
                             // ◌ = Quick-Add ohne volle Makros, ≈ = ehrliche Teller-Schätzung (Kap. 37/42)
                             Text((if (e.incomplete) "◌ " else "") + e.name, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             // Drinks carry volumeMl → show "300 ml", not "300 g".
@@ -1126,6 +1134,108 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 15.dp, end = 15.dp, bottom = 12.dp)) {
                     Text("＋ Save as meal", color = Mod.Fuel, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.success(ctx); Repo.saveMeal(name, meals); AppFeedback.show("Meal saved") }.padding(vertical = 8.dp, horizontal = 4.dp))
+                }
+            }
+        }
+    }
+}
+
+// ─── Entry editor — fix a portion or move a meal without re-logging ──────────
+// Macros, micros and hydration scale with the new amount; per-serving entries
+// (amount 0) edit calories directly instead. One atomic Repo.updateFood.
+
+@Composable
+private fun EntryEditor(e: FoodEntry, dayKey: String, onClose: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val isMl = e.volumeMl > 0
+    val oldAmt = if (isMl) e.volumeMl else e.grams
+    var amount by remember(e.id) { mutableStateOf(if (oldAmt > 0) oldAmt.toString() else e.kcal.toString()) }
+    var meal by remember(e.id) { mutableStateOf(e.meal) }
+
+    fun save() {
+        val v = amount.toIntOrNull()?.coerceIn(1, 5000) ?: return
+        val f = when {
+            oldAmt > 0 -> v.toDouble() / oldAmt
+            e.kcal > 0 -> v.toDouble() / e.kcal
+            else -> 1.0
+        }
+        fun s(x: Int) = (x * f).roundToInt()
+        val updated = e.copy(
+            meal = meal,
+            grams = if (!isMl && e.grams > 0) v else if (e.grams > 0) s(e.grams) else e.grams,
+            volumeMl = if (isMl) v else 0,
+            kcal = s(e.kcal), protein = s(e.protein), carbs = s(e.carbs), fat = s(e.fat),
+            nutrients = e.nutrients.mapValues { it.value * f },
+        )
+        Repo.updateFood(e.id, dayKey, updated)
+        Haptics.confirm(ctx)
+        AppFeedback.show("Entry updated")
+        onClose()
+    }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = RCard) {
+            Column(Modifier.fillMaxWidth().padding(18.dp)) {
+                Text(e.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s17, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "${e.kcal} kcal · P${e.protein} C${e.carbs} F${e.fat}" + (if (oldAmt > 0) " · $oldAmt ${if (isMl) "ml" else "g"}" else ""),
+                    color = TextDim, fontSize = FS.s11, fontFamily = Body,
+                )
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    if (oldAmt > 0) (if (isMl) "AMOUNT (ML)" else "AMOUNT (G)") else "CALORIES",
+                    color = TextDim, fontFamily = Display, fontSize = FS.s8_5,
+                    fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    GlassField(
+                        placeholder = if (oldAmt > 0) "$oldAmt" else "${e.kcal}", value = amount,
+                        keyboard = androidx.compose.ui.text.input.KeyboardType.Number,
+                        modifier = Modifier.weight(1f),
+                    ) { amount = it.filter { c -> c.isDigit() }.take(4) }
+                    // half / double shortcuts cover the two classic mistakes
+                    listOf("½" to 0.5, "×2" to 2.0).forEach { (label, mult) ->
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            Modifier.clip(RoundedCornerShape(10.dp))
+                                .background(Ivory.copy(alpha = 0.06f))
+                                .pressScale {
+                                    Haptics.tick(ctx)
+                                    amount = ((amount.toIntOrNull() ?: oldAmt).toDouble() * mult).roundToInt().coerceAtLeast(1).toString()
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                        ) { Text(label, color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    }
+                }
+                Spacer(Modifier.height(14.dp))
+                Text("MEAL", color = TextDim, fontFamily = Display, fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    listOf("b" to "Breakfast", "l" to "Lunch", "d" to "Dinner", "s" to "Snack").forEach { (code, label) ->
+                        val sel = meal == code
+                        Box(
+                            Modifier.clip(RoundedCornerShape(9.dp))
+                                .background(if (sel) Mod.Fuel.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
+                                .pressScale { Haptics.tick(ctx); meal = code }
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                        ) { Text(label, color = if (sel) Mod.Fuel else TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    }
+                }
+                Spacer(Modifier.height(18.dp))
+                Row {
+                    Text(
+                        "Cancel", color = TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp)).pressScale { onClose() }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Box(
+                        Modifier.clip(RoundedCornerShape(12.dp)).background(Mod.Fuel)
+                            .pressScale { save() }
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                    ) { Text("Save changes", color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
                 }
             }
         }

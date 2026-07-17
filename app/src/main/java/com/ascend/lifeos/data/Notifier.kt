@@ -38,6 +38,7 @@ object Notifier {
     private const val REQ_WEEKLY = 4104
     private const val REQ_WORKOUT_SOON = 4106
     private const val REQ_RESCHEDULE = 4108
+    private const val REQ_EVENT_SOON = 4111
 
     fun hasPermission(ctx: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
@@ -91,7 +92,61 @@ object Notifier {
         if (Prefs.bool(ctx, Prefs.RESCHEDULE_ON, true)) {
             scheduleDaily(ctx, REQ_RESCHEDULE, Prefs.int(ctx, Prefs.RESCHEDULE_HOUR, 15), 0, "reschedule")
         }
+        scheduleEventHeadsUp(ctx)
     }
+
+    /**
+     * One-shot heads-up before today's NEXT timed calendar event (training has
+     * its own warning above). Chains itself: when one fires, the receiver arms
+     * the next — so every event of the day gets its reminder from one alarm.
+     */
+    fun scheduleEventHeadsUp(ctx: Context) {
+        if (!Prefs.bool(ctx, Prefs.EVENT_REMINDER_ON, true)) return
+        val lead = Prefs.int(ctx, Prefs.EVENT_REMINDER_MIN, 15)
+        val startMin = nextEventStartMin(ctx, lead) ?: return
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, startMin / 60); set(Calendar.MINUTE, startMin % 60)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            add(Calendar.MINUTE, -lead)
+        }
+        if (cal.timeInMillis <= System.currentTimeMillis()) return
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        runCatching { am.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pending(ctx, REQ_EVENT_SOON, "event_soon")) }
+    }
+
+    /** Today's next timed non-training event that still has lead time left. */
+    private fun nextEventStartMin(ctx: Context, leadMin: Int): Int? = runCatching {
+        kotlinx.coroutines.runBlocking {
+            val today = com.ascend.lifeos.core.todayDate()
+            val bit = 1 shl (today.dayOfWeek.value - 1)
+            val now = Calendar.getInstance().let { it.get(Calendar.HOUR_OF_DAY) * 60 + it.get(Calendar.MINUTE) }
+            com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
+                .filter { it.type != "TRAINING" && !it.allDay }
+                .filter { it.repeatMask == 0 || (it.repeatMask and bit) != 0 }
+                .filter { it.startMin - leadMin > now }
+                .minByOrNull { it.startMin }?.startMin
+        }
+    }.getOrNull()
+
+    /** The event the heads-up alarm is firing FOR: closest upcoming today. */
+    internal fun eventSoonMessage(ctx: Context): Pair<String, String>? = runCatching {
+        kotlinx.coroutines.runBlocking {
+            val today = com.ascend.lifeos.core.todayDate()
+            val bit = 1 shl (today.dayOfWeek.value - 1)
+            val now = Calendar.getInstance().let { it.get(Calendar.HOUR_OF_DAY) * 60 + it.get(Calendar.MINUTE) }
+            val e = com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
+                .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
+                .filter { it.type != "TRAINING" && !it.allDay }
+                .filter { it.repeatMask == 0 || (it.repeatMask and bit) != 0 }
+                .filter { it.startMin >= now }
+                .minByOrNull { it.startMin } ?: return@runBlocking null
+            val inMin = e.startMin - now
+            val at = "%02d:%02d".format(e.startMin / 60, e.startMin % 60)
+            e.title.ifBlank { "Upcoming event" } to
+                (if (inMin > 1) "Starts at $at — in $inMin min." else "Starts now — $at.")
+        }
+    }.getOrNull()
 
     /**
      * One-shot heads-up 30 min before today's first scheduled TRAINING block
@@ -220,13 +275,14 @@ object Notifier {
             "evening" -> Prefs.bool(ctx, Prefs.NOTIF_EVENING, true)
             "weekly" -> Prefs.bool(ctx, Prefs.NOTIF_WEEKLY, true)
             "protein" -> Prefs.bool(ctx, Prefs.PROTEIN_NUDGE, true)
+            "event_soon" -> Prefs.bool(ctx, Prefs.EVENT_REMINDER_ON, true)
             else -> true
         }
         if (!allowed) return
-        val msg = message(ctx, kind) ?: return   // nothing worth saying → stay silent
+        val msg = (if (kind == "event_soon") eventSoonMessage(ctx) else message(ctx, kind)) ?: return
         // every kind gets its own id — protein sharing 4 with weekly used to
         // overwrite the Sunday report
-        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; "bedtime" -> 10; else -> 4 }
+        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; "bedtime" -> 10; "event_soon" -> 13; else -> 4 }
 
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -274,6 +330,7 @@ object Notifier {
             "weekly" -> builder.addAction(0, "Open report", openApp("report"))
             "workout_soon" -> builder.addAction(0, "Start session", openApp("train"))
             "screen80" -> builder.addAction(0, "Open Guard", openApp("guard"))
+            "event_soon" -> builder.addAction(0, "Open calendar", openApp("calendar"))
         }
 
         runCatching { NotificationManagerCompat.from(ctx).notify(id, builder.build()) }

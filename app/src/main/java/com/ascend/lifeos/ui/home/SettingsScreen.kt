@@ -405,6 +405,18 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             NotifToggleRow("Fuel check", "only if nothing is logged", Prefs.NOTIF_FUEL, true, Prefs.NOTIF_FUEL_MIN, 780)
             NotifToggleRow("Evening review", "with 1-tap check-in", Prefs.NOTIF_EVENING, true, Prefs.NOTIF_EVENING_MIN, 1230)
             NotifToggleRow("Weekly report", "Sunday", Prefs.NOTIF_WEEKLY, true, Prefs.NOTIF_WEEKLY_MIN, 1140)
+            var evOn by remember { mutableStateOf(Prefs.bool(ctx, Prefs.EVENT_REMINDER_ON, true)) }
+            ToggleRow("Event reminders", "Heads-up before timed calendar events", on = evOn, onToggle = {
+                evOn = it; Prefs.setBool(ctx, Prefs.EVENT_REMINDER_ON, it)
+                if (it) runCatching { Notifier.scheduleEventHeadsUp(ctx) }
+            })
+            if (evOn) {
+                var evLead by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.EVENT_REMINDER_MIN, 15)) }
+                GoalStepperRow("Lead time", "$evLead min",
+                    onDec = { evLead = (evLead - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.EVENT_REMINDER_MIN, evLead) },
+                    onInc = { evLead = (evLead + 5).coerceAtMost(60); Prefs.setInt(ctx, Prefs.EVENT_REMINDER_MIN, evLead) },
+                )
+            }
         }
 
         // ── FINANCE ──────────────────────────────────────────────────

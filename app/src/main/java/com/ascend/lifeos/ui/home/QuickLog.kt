@@ -75,7 +75,17 @@ private enum class QlMode { ACTIONS, PURCHASE, WEIGHT, MOOD, JOURNAL, DONE }
 @Composable
 fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
     val ctx = LocalContext.current
-    var mode by remember { mutableStateOf(QlMode.ACTIONS) }
+    var mode by remember {
+        // a deep link ("journal" via palette) can open a pane directly
+        val start = when (HomeSignals.quickLogMode.value) {
+            "journal" -> QlMode.JOURNAL
+            "weight" -> QlMode.WEIGHT
+            "mood" -> QlMode.MOOD
+            else -> QlMode.ACTIONS
+        }
+        HomeSignals.quickLogMode.value = null
+        mutableStateOf(start)
+    }
 
     JarvisSheet(onDismiss = onDismiss) {
         Column(
@@ -631,4 +641,7 @@ private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
 /** Cross-screen signals into Home (widget deep link → quick-log sheet). */
 object HomeSignals {
     val quickLog = androidx.compose.runtime.mutableStateOf(false)
+
+    /** Optional pane the sheet should open on ("journal") — consumed on open. */
+    val quickLogMode = androidx.compose.runtime.mutableStateOf<String?>(null)
 }

@@ -59,6 +59,10 @@ class ReminderReceiver : BroadcastReceiver() {
         if (kind == "morning" || kind == "fuel") {
             runCatching { Notifier.scheduleWorkoutHeadsUp(ctx) }
         }
+        // Event heads-ups chain: firing one arms the next event of the day.
+        if (kind == "morning" || kind == "fuel" || kind == "event_soon") {
+            runCatching { Notifier.scheduleEventHeadsUp(ctx) }
+        }
     }
 }
 
