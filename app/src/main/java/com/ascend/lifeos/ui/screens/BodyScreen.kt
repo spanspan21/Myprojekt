@@ -702,6 +702,9 @@ fun BodyScreen() {
             }
         }
 
+        // ── cycle awareness (opt-in) ─────────────────────────────────
+        CycleCard()
+
         // ── progress photos ──────────────────────────────────────────
         ProgressPhotosCard(onOpenSheet = { photoSheetOpen = true })
 
@@ -1456,6 +1459,72 @@ private fun ProgressPhotosCard(onOpenSheet: () -> Unit) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// ─── Menstrual-cycle awareness card (opt-in) ─────────────────────────────────
+@Composable
+private fun CycleCard() {
+    val ctx = LocalContext.current
+    var tick by remember { mutableIntStateOf(0) }
+    val on = remember(tick) { com.ascend.lifeos.data.CycleTracker.isOn(ctx) }
+    // Off: a discreet invite only if this could be relevant (sex f or unspecified).
+    val sex = Repo.data.profile.sex
+    if (!on) {
+        if (sex == "m") return
+        Spacer(Modifier.height(14.dp))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.CycleTracker.setOn(ctx, true); tick++ }
+                .padding(horizontal = 2.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("🌙", fontSize = FS.s14)
+            Spacer(Modifier.width(8.dp))
+            Text("Track your cycle — phase-aware recovery", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Medium)
+        }
+        return
+    }
+    val state = remember(tick) { com.ascend.lifeos.data.CycleTracker.state(ctx) }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Cycle")
+    Spacer(Modifier.height(10.dp))
+    Panel(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            if (state == null) {
+                Text("Log your last period start to see your phase.", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(state.phase.emoji, fontSize = FS.s20)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("${state.phase.label} · day ${state.cycleDay}", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("~${state.nextPeriodInDays} days to next period", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(com.ascend.lifeos.data.CycleTracker.note(state.phase), color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16)
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Period started today", color = Mod.Body, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(RoundedCornerShape(9.dp)).background(Mod.Body.copy(alpha = 0.12f))
+                        .pressScale {
+                            Haptics.confirm(ctx)
+                            com.ascend.lifeos.data.CycleTracker.logPeriodStart(ctx, com.ascend.lifeos.core.todayDate())
+                            tick++
+                        }
+                        .padding(horizontal = 11.dp, vertical = 7.dp),
+                )
+                Text(
+                    "Turn off", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(RoundedCornerShape(9.dp)).background(Ivory.copy(alpha = 0.04f))
+                        .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.CycleTracker.setOn(ctx, false); tick++ }
+                        .padding(horizontal = 11.dp, vertical = 7.dp),
+                )
             }
         }
     }

@@ -1217,6 +1217,17 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 },
             )
             ToggleRow("Growth tracking", "Height measurements + growth-spurt adjustments", Prefs.GROWTH_TRACKING, false)
+            var cycleOn by remember { mutableStateOf(com.ascend.lifeos.data.CycleTracker.isOn(ctx)) }
+            ToggleRow("Cycle awareness", "Phase-aware recovery notes — log period start on the Body screen", on = cycleOn, onToggle = {
+                cycleOn = it; com.ascend.lifeos.data.CycleTracker.setOn(ctx, it)
+            })
+            if (cycleOn) {
+                var cLen by remember { mutableIntStateOf(com.ascend.lifeos.data.CycleTracker.avgLen(ctx)) }
+                GoalStepperRow("Average cycle length", "$cLen days",
+                    onDec = { cLen = (cLen - 1).coerceAtLeast(21); com.ascend.lifeos.data.CycleTracker.setAvgLen(ctx, cLen) },
+                    onInc = { cLen = (cLen + 1).coerceAtMost(40); com.ascend.lifeos.data.CycleTracker.setAvgLen(ctx, cLen) },
+                )
+            }
             var checkInHour by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CHECKIN_SWITCH_HOUR, 15)) }
             GoalStepperRow("Check-in switches at", "%02d:00".format(checkInHour),
                 onDec = { checkInHour = (checkInHour - 1).coerceAtLeast(12); Prefs.setInt(ctx, Prefs.CHECKIN_SWITCH_HOUR, checkInHour) },
