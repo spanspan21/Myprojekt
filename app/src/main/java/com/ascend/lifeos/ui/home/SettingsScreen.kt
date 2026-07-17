@@ -505,6 +505,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     onInc = { if (rHi < 15) { rLo++; rHi++; Prefs.setInt(ctx, Prefs.STRAIN_RED_LO, rLo); Prefs.setInt(ctx, Prefs.STRAIN_RED_HI, rHi) } },
                 )
             }
+            AdvancedBlock {
             var freshPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FRESHNESS_THRESHOLD, 45)) }
             GoalStepperRow("Freshness threshold", "${freshPct}%",
                 onDec = { freshPct = (freshPct - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.FRESHNESS_THRESHOLD, freshPct) },
@@ -551,6 +552,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onInc = { recCap = (recCap + 2).coerceAtMost(40); Prefs.setInt(ctx, Prefs.RECOVERY_CAPACITY, recCap) },
             )
             ToggleRow("Camera rep counter", "Experimental — pose detection counts for you", Prefs.AUTO_COUNT, false)
+            }
             ToggleRow(
                 "Weight vest", "Include vest exercises in plans",
                 on = Repo.profile().hasVest,
@@ -907,6 +909,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { backDays = (backDays - 5).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.BACKDATE_DAYS, backDays) },
                 onInc = { backDays = (backDays + 5).coerceAtMost(90); Prefs.setInt(ctx, Prefs.BACKDATE_DAYS, backDays) },
             )
+            AdvancedBlock {
             Spacer(Modifier.height(6.dp))
             Text(
                 "CALORIE FORMULA", color = TextDim, fontFamily = Display,
@@ -964,6 +967,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { kcalAdh = (kcalAdh - 5).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.KCAL_ADHERENCE_PCT, kcalAdh) },
                 onInc = { kcalAdh = (kcalAdh + 5).coerceAtMost(25); Prefs.setInt(ctx, Prefs.KCAL_ADHERENCE_PCT, kcalAdh) },
             )
+            }
         }
 
         // ── BODY ─────────────────────────────────────────────────────
@@ -992,6 +996,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { stepGoal = (stepGoal - 1000).coerceAtLeast(3000); Prefs.setInt(ctx, Prefs.STEP_GOAL, stepGoal) },
                 onInc = { stepGoal = (stepGoal + 1000).coerceAtMost(25000); Prefs.setInt(ctx, Prefs.STEP_GOAL, stepGoal) },
             )
+            AdvancedBlock {
             var rdGood by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.READINESS_GOOD, 75)) }
             GoalStepperRow("Readiness green", "$rdGood%",
                 onDec = { rdGood = (rdGood - 5).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.READINESS_GOOD, rdGood) },
@@ -1135,6 +1140,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { dsWindow = (dsWindow - 1).coerceAtLeast(2); Prefs.setInt(ctx, Prefs.DOOMSCROLL_WINDOW_MIN, dsWindow) },
                 onInc = { dsWindow = (dsWindow + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.DOOMSCROLL_WINDOW_MIN, dsWindow) },
             )
+            }
         }
 
         // ── SCHOOL & CALENDAR ────────────────────────────────────────
@@ -1779,6 +1785,38 @@ private fun ToggleRow(title: String, sub: String, on: Boolean, onToggle: (Boolea
             Text(sub, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
         }
         TogglePill(on)
+    }
+}
+
+/**
+ * Collapsible home for expert knobs — the algorithm dials 95% of users never
+ * touch. Keeps sections scannable without deleting any control.
+ */
+@Composable
+private fun AdvancedBlock(content: @Composable ColumnScope.() -> Unit) {
+    val ctx = LocalContext.current
+    var open by remember { mutableStateOf(false) }
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .pressScale { Haptics.tick(ctx); open = !open }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "ADVANCED", color = TextDim, fontFamily = Display,
+            fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            if (open) "algorithm dials — tap to hide" else "algorithm dials — tap to tune",
+            color = TextDim.copy(alpha = 0.7f), fontSize = FS.s10, fontFamily = Body,
+            modifier = Modifier.weight(1f),
+        )
+        Text(if (open) "▴" else "▾", color = TextDim, fontSize = FS.s11, fontFamily = Body)
+    }
+    androidx.compose.animation.AnimatedVisibility(visible = open) {
+        Column { content() }
     }
 }
 
