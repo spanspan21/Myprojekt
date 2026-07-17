@@ -1351,9 +1351,26 @@ private fun ProgressPhotosCard(onOpenSheet: () -> Unit) {
     val ctx = LocalContext.current
     val photos = remember { ProgressPhotos.list(ctx) }
     val latest = remember(photos) { ProgressPhotos.latestByPose(ctx) }
+    // a pose is comparable once it has ≥2 photos (oldest vs newest)
+    val comparablePoses = remember(photos) {
+        photos.groupBy { it.pose }.filterValues { it.size >= 2 }.keys.sorted()
+    }
+    var comparePose by remember { mutableStateOf<String?>(null) }
+    comparePose?.let { pose -> ProgressCompareDialog(pose, onClose = { comparePose = null }) }
 
     Spacer(Modifier.height(14.dp))
-    SectionLabel("Progress photos")
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        SectionLabel("Progress photos", modifier = Modifier.weight(1f))
+        if (comparablePoses.isNotEmpty()) {
+            Text(
+                "Compare", color = Mod.Body, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                modifier = Modifier.clip(RoundedCornerShape(9.dp))
+                    .background(Mod.Body.copy(alpha = 0.12f))
+                    .pressScale { Haptics.tick(ctx); comparePose = comparablePoses.first() }
+                    .padding(horizontal = 11.dp, vertical = 6.dp),
+            )
+        }
+    }
     Spacer(Modifier.height(10.dp))
 
     if (photos.isEmpty()) {
@@ -1435,6 +1452,101 @@ private fun ProgressPhotosCard(onOpenSheet: () -> Unit) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// ─── Side-by-side compare: oldest vs newest of a pose, with the weight delta
+//     between the two shoot dates (the whole point of progress photos).
+@Composable
+private fun ProgressCompareDialog(initialPose: String, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val all = remember { ProgressPhotos.list(ctx) }
+    val poses = remember { all.groupBy { it.pose }.filterValues { it.size >= 2 }.keys.sorted().toList() }
+    var pose by remember { mutableStateOf(initialPose.takeIf { it in poses } ?: poses.firstOrNull() ?: "Front") }
+    val forPose = remember(pose) { all.filter { it.pose == pose }.sortedBy { it.ts } }
+    val oldest = forPose.firstOrNull()
+    val newest = forPose.lastOrNull()
+
+    fun weightNear(ts: Long): Double? {
+        val log = Repo.data.weightLog
+        if (log.isEmpty()) return null
+        // nearest weigh-in within 10 days of the shoot
+        return log.minByOrNull { kotlin.math.abs(it.ts - ts) }
+            ?.takeIf { kotlin.math.abs(it.ts - ts) < 10L * 86_400_000 }?.kg
+    }
+    fun loadBmp(id: String): androidx.compose.ui.graphics.ImageBitmap? = runCatching {
+        val f = ProgressPhotos.photoFile(ctx, id)
+        android.graphics.BitmapFactory.decodeFile(
+            f.absolutePath, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 },
+        )?.asImageBitmap()
+    }.getOrNull()
+
+    val dateFmt = java.time.format.DateTimeFormatter.ofPattern("d MMM", java.util.Locale.ENGLISH)
+    fun label(p: com.ascend.lifeos.data.ProgressPhoto): String =
+        java.time.Instant.ofEpochMilli(p.ts).atZone(java.time.ZoneId.systemDefault()).toLocalDate().format(dateFmt)
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
+        Panel(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Compare", color = TextPrimary, fontFamily = Display, fontSize = FS.s18, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text("✕", color = TextDim, fontSize = FS.s14, modifier = Modifier.clip(CircleShape).pressScale { onClose() }.padding(6.dp))
+                }
+                if (poses.size > 1) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        poses.forEach { pName ->
+                            val on = pName == pose
+                            Text(
+                                pName, color = if (on) Mod.Body else TextMuted,
+                                fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                    .background(if (on) Mod.Body.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                                    .pressScale { Haptics.tick(ctx); pose = pName }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    listOf(oldest to "THEN", newest to "NOW").forEach { (photo, tag) ->
+                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                            val bmp = remember(photo?.id) { photo?.id?.let { loadBmp(it) } }
+                            if (bmp != null) {
+                                androidx.compose.foundation.Image(
+                                    bitmap = bmp, contentDescription = tag,
+                                    modifier = Modifier.fillMaxWidth().aspectRatio(0.72f).clip(RoundedCornerShape(12.dp)),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                )
+                            } else Box(Modifier.fillMaxWidth().aspectRatio(0.72f).clip(RoundedCornerShape(12.dp)).background(Ivory.copy(alpha = 0.05f)))
+                            Spacer(Modifier.height(6.dp))
+                            Text(tag, color = TextDim, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                            photo?.let {
+                                val w = weightNear(it.ts)
+                                Text(
+                                    label(it) + (w?.let { kg -> " · ${com.ascend.lifeos.data.Units.fmtWeight(ctx, kg)}" } ?: ""),
+                                    color = TextMuted, fontSize = FS.s10_5, fontFamily = Body,
+                                )
+                            }
+                        }
+                    }
+                }
+                // the headline delta
+                val wThen = oldest?.let { weightNear(it.ts) }
+                val wNow = newest?.let { weightNear(it.ts) }
+                val days = if (oldest != null && newest != null) ((newest.ts - oldest.ts) / 86_400_000L).toInt() else 0
+                Spacer(Modifier.height(12.dp))
+                val deltaTxt = if (wThen != null && wNow != null) {
+                    val d = wNow - wThen
+                    "${if (d >= 0) "+" else "−"}${com.ascend.lifeos.data.Units.fmtWeight(ctx, kotlin.math.abs(d))} over $days days"
+                } else "$days days apart"
+                Box(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(Mod.Body.copy(alpha = 0.10f)).padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text(deltaTxt, color = Mod.Body, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
             }
         }
     }
