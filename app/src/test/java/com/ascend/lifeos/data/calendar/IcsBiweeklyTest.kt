@@ -88,4 +88,24 @@ class IcsBiweeklyTest {
         ))
         assertEquals(3, events.size)
     }
+
+    @Test
+    fun `id salt keeps colliding uids from different feeds distinct`() {
+        // two feeds can legitimately publish the same UID — the salt (feed URL)
+        // must namespace the ids so one feed can't overwrite the other's event
+        val start = LocalDate.now().plusDays(1)
+        val body = ics(
+            "BEGIN:VEVENT",
+            "UID:shared-uid",
+            "DTSTART;VALUE=DATE:${start.format(fmt)}",
+            "SUMMARY:Meeting",
+            "END:VEVENT",
+        )
+        val a = IcsSync.parse(body, idSalt = "https://feed-a.example/cal.ics")
+        val b = IcsSync.parse(body, idSalt = "https://feed-b.example/cal.ics")
+        assertEquals(1, a.size); assertEquals(1, b.size)
+        assertNotEquals(a[0].id, b[0].id)
+        // and stable: same salt → same id (idempotent re-sync)
+        assertEquals(a[0].id, IcsSync.parse(body, idSalt = "https://feed-a.example/cal.ics")[0].id)
+    }
 }

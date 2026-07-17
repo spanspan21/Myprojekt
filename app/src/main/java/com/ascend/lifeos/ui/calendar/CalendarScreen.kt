@@ -564,27 +564,31 @@ private fun IcsFeedRow() {
     val scope = rememberCoroutineScope()
 
     var tick by remember { mutableIntStateOf(0) }
-    val feed = remember(tick) { IcsSync.feedUrl(ctx) }
+    val feedList = remember(tick) { IcsSync.feeds(ctx) }
     val last = remember(tick) { IcsSync.lastSync(ctx) }
 
     var expanded by remember { mutableStateOf(false) }
     var input by rememberSaveable { mutableStateOf("") }
+    var nameInput by rememberSaveable { mutableStateOf("") }
     var syncing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var armedRemoveFeed by remember { mutableStateOf(false) }
-    LaunchedEffect(armedRemoveFeed) { if (armedRemoveFeed) { kotlinx.coroutines.delay(2500); armedRemoveFeed = false } }
+    var armedRemoveIdx by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(armedRemoveIdx) { if (armedRemoveIdx >= 0) { kotlinx.coroutines.delay(2500); armedRemoveIdx = -1 } }
 
-    fun runSync(firstAttempt: Boolean = false) {
+    fun runSync(firstUrl: String? = null) {
         if (syncing) return
         error = null
         syncing = true
         scope.launch {
             IcsSync.sync(ctx) // hops to Dispatchers.IO internally
-                .onSuccess { expanded = false; input = "" }
+                .onSuccess { expanded = false; input = ""; nameInput = "" }
                 .onFailure {
                     error = shortIcsError(it)
-                    // bad first paste → drop the feed, stay in the editor to correct it
-                    if (firstAttempt) IcsSync.removeFeed(ctx)
+                    // bad first paste → drop just that feed, stay in the editor
+                    firstUrl?.let { u ->
+                        val idx = IcsSync.feeds(ctx).indexOfFirst { f -> f.url == u }
+                        if (idx >= 0) IcsSync.removeFeedAt(ctx, idx)
+                    }
                 }
             syncing = false
             tick++
@@ -592,48 +596,53 @@ private fun IcsFeedRow() {
     }
 
     when {
-        // feed configured → status row: last sync + re-sync + remove
-        feed != null -> Row(
-            Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Rounded.RssFeed, "Synced calendar", tint = Mod.Calendar.copy(alpha = 0.75f), modifier = Modifier.size(13.dp))
-            Spacer(Modifier.width(8.dp))
+        // ≥1 feed configured → list of feeds + status + add
+        feedList.isNotEmpty() && !expanded -> Column(Modifier.fillMaxWidth()) {
             val lastTxt = if (last > 0L) {
                 val t = Instant.ofEpochMilli(last).atZone(ZoneId.systemDefault()).toLocalTime()
                 "last sync %02d:%02d".format(t.hour, t.minute)
             } else "not synced yet"
-            Text(
-                "Timetable feed · $lastTxt", color = TextMuted, fontSize = FS.s11_5,
-                fontFamily = Body, fontWeight = FontWeight.Medium,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
-            )
-            if (syncing) {
-                CircularProgressIndicator(Modifier.size(13.dp), color = Mod.Calendar, strokeWidth = 1.5.dp)
-            } else {
-                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); runSync() }, contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.Sync, "Sync calendar", tint = TextMuted, modifier = Modifier.size(16.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.RssFeed, "Synced calendars", tint = Mod.Calendar.copy(alpha = 0.75f), modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "${feedList.size} feed${if (feedList.size != 1) "s" else ""} · $lastTxt", color = TextMuted, fontSize = FS.s11_5,
+                    fontFamily = Body, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f),
+                )
+                if (syncing) CircularProgressIndicator(Modifier.size(13.dp), color = Mod.Calendar, strokeWidth = 1.5.dp)
+                else Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); runSync() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Sync, "Sync all calendars", tint = TextMuted, modifier = Modifier.size(16.dp))
                 }
             }
-            Box(
-                Modifier.size(44.dp).clip(CircleShape).pressScale {
-                    if (armedRemoveFeed) {
-                        Haptics.confirm(ctx)
-                        scope.launch {
-                            IcsSync.removeFeed(ctx)
-                            expanded = false; input = ""; error = null; tick++
-                            AppFeedback.show("Feed removed")
-                        }
-                        armedRemoveFeed = false
-                    } else { Haptics.warn(ctx); armedRemoveFeed = true }
-                },
-                contentAlignment = Alignment.Center,
+            feedList.forEachIndexed { idx, f ->
+                Row(Modifier.fillMaxWidth().padding(start = 21.dp, end = 2.dp, top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(f.name, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(f.url.removePrefix("https://").removePrefix("http://").take(42), color = TextDim, fontSize = FS.s9_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    Box(
+                        Modifier.size(40.dp).clip(CircleShape).pressScale {
+                            if (armedRemoveIdx == idx) {
+                                Haptics.confirm(ctx)
+                                scope.launch { IcsSync.removeFeedAt(ctx, idx); if (IcsSync.feeds(ctx).isNotEmpty()) IcsSync.sync(ctx) else IcsSync.removeFeed(ctx); error = null; tick++; AppFeedback.show("Feed removed") }
+                                armedRemoveIdx = -1
+                            } else { Haptics.warn(ctx); armedRemoveIdx = idx }
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(Icons.Rounded.Close, if (armedRemoveIdx == idx) "Confirm remove" else "Remove feed", tint = if (armedRemoveIdx == idx) Crit else TextDim, modifier = Modifier.size(14.dp)) }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                    .pressScale { Haptics.tick(ctx); expanded = true; input = ""; nameInput = "" }
+                    .padding(start = 21.dp, top = 5.dp, bottom = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Rounded.Close, if (armedRemoveFeed) "Confirm remove" else "Remove timetable feed", tint = if (armedRemoveFeed) Crit else TextDim, modifier = Modifier.size(15.dp))
+                Text("＋ Add another feed", color = Mod.Calendar, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
         }
 
-        // no feed, editor open → paste URL + sync
+        // editor open → paste URL + optional name + sync
         expanded -> Panel(Modifier.fillMaxWidth(), corner = RElem) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
                 Text(
@@ -661,6 +670,27 @@ private fun IcsFeedRow() {
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                        .background(Ivory.copy(alpha = 0.05f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    if (nameInput.isEmpty()) Text(
+                        "Name (e.g. School, Sports club) — optional",
+                        color = TextDim, fontSize = FS.s12, fontFamily = Body,
+                    )
+                    val nameFm = androidx.compose.ui.platform.LocalFocusManager.current
+                    BasicTextField(
+                        nameInput, { nameInput = it.take(24) }, singleLine = true,
+                        textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium),
+                        cursorBrush = SolidColor(Mod.Calendar),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { nameFm.clearFocus() }),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -674,8 +704,8 @@ private fun IcsFeedRow() {
                                     !Regex("^(https?|webcal)://", RegexOption.IGNORE_CASE).containsMatchIn(url) ->
                                         error = "URL must start with http(s):// or webcal://"
                                     else -> {
-                                        IcsSync.setFeed(ctx, url)
-                                        runSync(firstAttempt = true)
+                                        IcsSync.setFeed(ctx, url, nameInput.trim().ifBlank { "Calendar" })
+                                        runSync(firstUrl = url)
                                     }
                                 }
                             } else Modifier)

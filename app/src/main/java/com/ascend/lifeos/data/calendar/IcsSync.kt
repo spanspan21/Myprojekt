@@ -35,38 +35,85 @@ object IcsSync {
     private const val PAST_DAYS = 7L
     private const val FUTURE_DAYS = 180L
 
+    private const val KEY_FEEDS = "feeds"   // JSON array of {url,name}
+
     private fun prefs(ctx: Context) = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    fun feedUrl(ctx: Context): String? = prefs(ctx).getString(KEY_URL, null)?.takeIf { it.isNotBlank() }
+    data class Feed(val url: String, val name: String)
+
+    /** All configured feeds (migrates a legacy single feedUrl on first read). */
+    fun feeds(ctx: Context): List<Feed> {
+        val raw = prefs(ctx).getString(KEY_FEEDS, null)
+        if (raw != null) {
+            return runCatching {
+                val arr = org.json.JSONArray(raw)
+                (0 until arr.length()).map {
+                    val o = arr.getJSONObject(it)
+                    Feed(o.optString("url"), o.optString("name").ifBlank { "Feed ${it + 1}" })
+                }.filter { it.url.isNotBlank() }
+            }.getOrDefault(emptyList())
+        }
+        // migrate the old single-URL storage
+        val legacy = prefs(ctx).getString(KEY_URL, null)?.takeIf { it.isNotBlank() }
+        return if (legacy != null) listOf(Feed(legacy, "Calendar")) else emptyList()
+    }
+
+    private fun writeFeeds(ctx: Context, list: List<Feed>) {
+        val arr = org.json.JSONArray()
+        list.forEach { arr.put(org.json.JSONObject().put("url", it.url).put("name", it.name)) }
+        prefs(ctx).edit().putString(KEY_FEEDS, arr.toString()).remove(KEY_URL).apply()
+    }
+
+    /** First feed URL — kept for the auto-sync gate and legacy callers. */
+    fun feedUrl(ctx: Context): String? = feeds(ctx).firstOrNull()?.url
 
     fun lastSync(ctx: Context): Long = prefs(ctx).getLong(KEY_LAST, 0L)
 
-    fun setFeed(ctx: Context, url: String) {
-        prefs(ctx).edit().putString(KEY_URL, url.trim()).apply()
+    /** Adds (or, for a single feed, sets) a feed. Dedupes by URL. */
+    fun setFeed(ctx: Context, url: String, name: String = "Calendar") {
+        val u = url.trim()
+        val existing = feeds(ctx).filter { it.url != u }
+        writeFeeds(ctx, existing + Feed(u, name.trim().ifBlank { "Feed ${existing.size + 1}" }))
     }
 
-    /** Forget the feed and delete everything it imported. */
+    fun removeFeedAt(ctx: Context, index: Int) {
+        val list = feeds(ctx).toMutableList()
+        if (index in list.indices) { list.removeAt(index); writeFeeds(ctx, list) }
+    }
+
+    /** Forget ALL feeds and delete everything they imported. */
     suspend fun removeFeed(ctx: Context) = withContext(Dispatchers.IO) {
         CalendarRepo.dao(ctx).deleteBySource()
         prefs(ctx).edit().clear().apply()
     }
 
-    /** Fetch + parse + replace. Success value = number of imported events. */
+    /**
+     * Fetch + parse + replace across EVERY feed. Each feed's ids are salted by
+     * its URL so two feeds with colliding UIDs don't overwrite each other; the
+     * union replaces the previous import in one atomic write. A feed that fails
+     * to fetch is skipped (the others still sync); success = total imported.
+     */
     suspend fun sync(ctx: Context): Result<Int> = withContext(Dispatchers.IO) {
-        val url = feedUrl(ctx) ?: return@withContext Result.failure(IOException("No feed URL set"))
-        try {
-            val body = fetch(url)
-            if (!body.contains("BEGIN:VCALENDAR")) throw IOException("Not an ICS feed")
-            val events = parse(body)
-            // A transient empty-but-valid feed (server hiccup) must not wipe the
-            // last good import — only replace when the parse produced events.
-            if (events.isEmpty()) return@withContext Result.success(0)
-            CalendarRepo.dao(ctx).replaceIcsEvents(events)
-            prefs(ctx).edit().putLong(KEY_LAST, System.currentTimeMillis()).apply()
-            Result.success(events.size)
-        } catch (e: Exception) {
-            Result.failure(e)
+        val list = feeds(ctx)
+        if (list.isEmpty()) return@withContext Result.failure(IOException("No feed URL set"))
+        val all = ArrayList<CalEventEntity>()
+        var anyOk = false
+        var lastErr: Exception? = null
+        for (feed in list) {
+            try {
+                val body = fetch(feed.url)
+                if (!body.contains("BEGIN:VCALENDAR")) throw IOException("Not an ICS feed")
+                all += parse(body, idSalt = feed.url)
+                anyOk = true
+            } catch (e: Exception) { lastErr = e }
         }
+        if (!anyOk) return@withContext Result.failure(lastErr ?: IOException("All feeds failed"))
+        // A transient empty result across feeds must not wipe the last good import.
+        if (all.isEmpty()) return@withContext Result.success(0)
+        val deduped = all.distinctBy { it.id }.take(MAX_EVENTS)
+        CalendarRepo.dao(ctx).replaceIcsEvents(deduped)
+        prefs(ctx).edit().putLong(KEY_LAST, System.currentTimeMillis()).apply()
+        Result.success(deduped.size)
     }
 
     // ─── HTTP ────────────────────────────────────────────────────────────────
@@ -115,7 +162,7 @@ object IcsSync {
     /** Local date + minute-of-day; minute == null means a date-only (all-day) value. */
     private data class Dt(val date: LocalDate, val minute: Int?)
 
-    internal fun parse(text: String): List<CalEventEntity> {
+    internal fun parse(text: String, idSalt: String = ""): List<CalEventEntity> {
         val today = LocalDate.now()
         val winFrom = today.minusDays(PAST_DAYS)
         val winTo = today.plusDays(FUTURE_DAYS)
@@ -129,7 +176,7 @@ object IcsSync {
                 line.equals("BEGIN:VEVENT", ignoreCase = true) -> cur = HashMap()
                 line.equals("END:VEVENT", ignoreCase = true) -> {
                     cur?.let { props ->
-                        buildEvents(props, winFrom, winTo).forEach { if (seen.add(it.id)) out.add(it) }
+                        buildEvents(props, winFrom, winTo, idSalt).forEach { if (seen.add(it.id)) out.add(it) }
                     }
                     cur = null
                     if (out.size >= MAX_EVENTS) break
@@ -215,7 +262,7 @@ object IcsSync {
         }
     }
 
-    private fun buildEvents(p: Map<String, Prop>, winFrom: LocalDate, winTo: LocalDate): List<CalEventEntity> {
+    private fun buildEvents(p: Map<String, Prop>, winFrom: LocalDate, winTo: LocalDate, idSalt: String = ""): List<CalEventEntity> {
         if (p["STATUS"]?.value?.trim().equals("CANCELLED", ignoreCase = true)) return emptyList()
 
         val dtstartProp = p["DTSTART"] ?: return emptyList()
@@ -327,7 +374,7 @@ object IcsSync {
         skipWeekDays?.let { occ ->
             return occ.filter { it >= winFrom }.map { d ->
                 CalEventEntity(
-                    id = "ics_" + md5("$uid|${dtstartProp.value.trim()}|$d").take(16),
+                    id = "ics_" + md5("$idSalt|$uid|${dtstartProp.value.trim()}|$d").take(16),
                     title = summary,
                     type = guessType(summary).name,
                     dayEpoch = d.toEpochDay(),
@@ -342,7 +389,7 @@ object IcsSync {
         }
 
         return listOf(CalEventEntity(
-            id = "ics_" + md5("$uid|${dtstartProp.value.trim()}").take(16),
+            id = "ics_" + md5("$idSalt|$uid|${dtstartProp.value.trim()}").take(16),
             title = summary,
             type = guessType(summary).name,
             dayEpoch = start.date.toEpochDay(),
