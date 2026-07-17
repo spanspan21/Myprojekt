@@ -35,7 +35,7 @@ import kotlin.math.abs
 // Drop it into any finance column — it subscribes to LifeStores.rev itself.
 
 /** Cents → "12.50 €" (sign dropped — the radar shows charge magnitudes). */
-private fun eur(cents: Long): String = String.format(Locale.ENGLISH, "%.2f €", abs(cents) / 100.0)
+private fun eur(cents: Long): String = com.ascend.lifeos.data.finance.Currency.format(abs(cents))
 
 @Composable
 fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {

@@ -371,12 +371,12 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
                     GlassField(units, { units = it }, if (kind == HoldingKind.STOCK) "Shares" else "Amount", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Next)
                 }
                 Box(Modifier.weight(1f)) {
-                    GlassField(amount, { amount = it }, "Price / unit €", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal)
+                    GlassField(amount, { amount = it }, "Price / unit ${com.ascend.lifeos.data.finance.Currency.symbol()}", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal)
                 }
             }
         } else {
             Spacer(Modifier.height(10.dp))
-            GlassField(amount, { amount = it }, "Value €", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal)
+            GlassField(amount, { amount = it }, "Value ${com.ascend.lifeos.data.finance.Currency.symbol()}", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal)
         }
 
         Spacer(Modifier.height(8.dp))

@@ -40,8 +40,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private fun eur(cents: Long) = String.format(java.util.Locale.ENGLISH, "%.2f €", cents / 100.0)
-private fun eur0(cents: Long) = String.format(java.util.Locale.ENGLISH, "%.0f €", cents / 100.0)
+private fun eur(cents: Long) = com.ascend.lifeos.data.finance.Currency.format(cents)
+private fun eur0(cents: Long) = com.ascend.lifeos.data.finance.Currency.format0(cents)
 
 /**
  * Finance co-pilot card (ideas #1–#4): "safe to spend" today/week, subscriptions

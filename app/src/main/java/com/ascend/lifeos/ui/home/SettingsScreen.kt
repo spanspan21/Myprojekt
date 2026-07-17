@@ -487,6 +487,30 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         if (page == "modules") SettingsSection("Finance") {
+            Text(
+                "CURRENCY", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            val curNow by com.ascend.lifeos.data.finance.Currency.current
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                com.ascend.lifeos.data.finance.Currency.PRESETS.forEach { def ->
+                    val on = curNow.code == def.code
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Finance.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Finance.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale { Haptics.tick(ctx); com.ascend.lifeos.data.finance.Currency.apply(ctx, def.code) }
+                            .padding(horizontal = 11.dp, vertical = 7.dp),
+                    ) { Text("${def.symbol} ${def.code}", color = if (on) Mod.Finance else TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Only the display changes — your amounts are untouched.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                modifier = Modifier.padding(bottom = 6.dp),
+            )
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
             ToggleRow("Round-up savings", "Round each expense up to the euro into a savings goal", Prefs.ROUNDUP_ON, false)
             if (Prefs.bool(ctx, Prefs.ROUNDUP_ON, false)) {

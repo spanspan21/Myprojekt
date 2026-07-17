@@ -47,6 +47,7 @@ class MainActivity : ComponentActivity() {
             com.ascend.lifeos.ui.theme.applyTheme(id)
         }
         com.ascend.lifeos.ui.theme.applyAccent(Repo.profile().accent)
+        com.ascend.lifeos.data.finance.Currency.init(applicationContext)
         if (Repo.profile().reminders && Notifier.hasPermission(applicationContext)) {
             Notifier.schedule(applicationContext)
         } else if (Repo.profile().reminders && android.os.Build.VERSION.SDK_INT >= 33) {

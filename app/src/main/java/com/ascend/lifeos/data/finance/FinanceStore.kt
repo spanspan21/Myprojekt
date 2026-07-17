@@ -105,7 +105,7 @@ object FinanceStore {
     private fun ymOf(ts: Long): YearMonth =
         YearMonth.from(Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault()).toLocalDate())
 
-    private fun eur(cents: Long): String = String.format(Locale.ENGLISH, "%.2f €", cents / 100.0)
+    private fun eur(cents: Long): String = Currency.format(cents)
 
     // ─── Accounts ───────────────────────────────────────────────────────────
 

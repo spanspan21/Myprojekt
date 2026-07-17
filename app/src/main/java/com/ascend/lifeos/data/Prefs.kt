@@ -167,6 +167,7 @@ object Prefs {
     const val TRAIN_TIME_PREF = "train_time_pref"         // auto|morning|midday|evening — where sessions land
     const val SETUP_DISMISSED = "setup_dismissed"         // false — first-week checklist hidden by hand
     const val MISSIONS = "missions"                        // csv of daily missions (train/kcal/water/protein), "" = classic trio
+    const val CURRENCY = "currency"                        // ISO code (EUR default) — symbol/position for all money rendering
     const val SETUP_MODULES_SEEN = "setup_modules_seen"   // false — user opened Settings > Modules once
     const val PRE_OBLIGATION_BUFFER_MIN = "pre_obligation_buffer_min" // 60 — session must end this early before the first booked block
     const val STUDY_BLOCK_MIN = "study_block_min"        // 45 — duration of auto-scheduled study blocks

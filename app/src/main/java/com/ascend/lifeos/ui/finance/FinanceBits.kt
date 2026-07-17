@@ -95,9 +95,10 @@ internal fun shadeFor(category: String): Color {
 
 // ---- money ------------------------------------------------------------------
 
-/** "12.50 €"; negative values use the typographic minus ("−3.20 €"). */
-internal fun euros(cents: Long): String =
-    (if (cents < 0) "−" else "") + String.format(Locale.ENGLISH, "%.2f €", abs(cents) / 100.0)
+/** Localized amount ("12.50 €" / "$12.50"); typographic minus for negatives.
+ *  Name kept as euros() so the ~40 call sites need no churn — it now renders
+ *  the user's configured currency via [com.ascend.lifeos.data.finance.Currency]. */
+internal fun euros(cents: Long): String = com.ascend.lifeos.data.finance.Currency.format(cents)
 
 /** "+12.50 €" / "−12.50 €" (true minus sign, matching the HUD idiom). */
 internal fun signedEuros(cents: Long): String = (if (cents < 0) "−" else "+") + euros(abs(cents))
@@ -321,7 +322,7 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
         }
         Spacer(Modifier.height(6.dp))
         Text(
-            if (parsed != null) "= ${euros(parsed)}" else "Amount in €",
+            if (parsed != null) "= ${euros(parsed)}" else "Amount in ${com.ascend.lifeos.data.finance.Currency.symbol()}",
             color = if (parsed != null) FinAccent else TextDim,
             fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )

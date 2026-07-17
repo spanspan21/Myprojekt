@@ -179,7 +179,7 @@ private fun ActionsPane(
     Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             QlTile(
-                Icons.Rounded.ShoppingBag, "Purchase", "€", Mod.Finance,
+                Icons.Rounded.ShoppingBag, "Purchase", com.ascend.lifeos.data.finance.Currency.symbol(), Mod.Finance,
                 onClick = onPurchase,
             )
             QlTile(
@@ -318,7 +318,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                     )
                 }
                 Spacer(Modifier.width(6.dp))
-                Text("€", color = TextMuted, style = metricStyle(22))
+                Text(com.ascend.lifeos.data.finance.Currency.symbol(), color = TextMuted, style = metricStyle(22))
             }
         }
 

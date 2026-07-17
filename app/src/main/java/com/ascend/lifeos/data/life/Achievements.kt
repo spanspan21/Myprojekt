@@ -178,7 +178,7 @@ object Achievements {
                 val key = title.trim().lowercase(Locale.US).replace(Regex("\\s+"), "_")
                 val newHit = add(
                     ctx, "save_$key", "money",
-                    "${title.trim()} saved", "Goal reached: ${String.format(Locale.ENGLISH, "%.2f", target / 100.0)} €",
+                    "${title.trim()} saved", "Goal reached: ${com.ascend.lifeos.data.finance.Currency.format(target)}",
                 )
                 if (newHit) added++
             }

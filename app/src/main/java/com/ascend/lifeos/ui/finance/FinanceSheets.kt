@@ -188,7 +188,7 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
         Spacer(Modifier.height(10.dp))
         GlassField(icon, { icon = it }, "Short label (optional, e.g. N26)", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(10.dp))
-        GlassField(balance, { balance = it }, "Balance in € — e.g. 32.50", keyboard = KeyboardType.Decimal)
+        GlassField(balance, { balance = it }, "Balance in ${com.ascend.lifeos.data.finance.Currency.symbol()} — e.g. 32.50", keyboard = KeyboardType.Decimal)
         if (existing != null) {
             Spacer(Modifier.height(6.dp))
             Text(
@@ -254,7 +254,7 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
             color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(12.dp))
-        GlassField(amount, { amount = it }, "Monthly cap in € — e.g. 50", keyboard = KeyboardType.Decimal)
+        GlassField(amount, { amount = it }, "Monthly cap in ${com.ascend.lifeos.data.finance.Currency.symbol()} — e.g. 50", keyboard = KeyboardType.Decimal)
         Spacer(Modifier.height(18.dp))
         ActionButton(if (existing == null) "Set budget" else "Update budget", enabled = cents != null) {
             val c = cents ?: return@ActionButton
@@ -302,7 +302,7 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
             FinChip("Income", !isCost) { isCost = false; category = "Income" }
         }
         Spacer(Modifier.height(12.dp))
-        GlassField(amount, { amount = it }, "Amount in € per month — e.g. 9.99", keyboard = KeyboardType.Decimal)
+        GlassField(amount, { amount = it }, "Amount in ${com.ascend.lifeos.data.finance.Currency.symbol()} per month — e.g. 9.99", keyboard = KeyboardType.Decimal)
         if (isCost) {
             Spacer(Modifier.height(12.dp))
             Overline("Category")
@@ -409,7 +409,7 @@ internal fun GoalSheet(onDismiss: () -> Unit) {
     SheetShell("New savings goal", onDismiss) {
         GlassField(title, { title = it }, "What for? — e.g. New skates", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(10.dp))
-        GlassField(target, { target = it }, "Target in € — e.g. 250", keyboard = KeyboardType.Decimal)
+        GlassField(target, { target = it }, "Target in ${com.ascend.lifeos.data.finance.Currency.symbol()} — e.g. 250", keyboard = KeyboardType.Decimal)
         Spacer(Modifier.height(18.dp))
         ActionButton("Start goal", enabled = title.isNotBlank() && cents != null) {
             val c = cents ?: return@ActionButton

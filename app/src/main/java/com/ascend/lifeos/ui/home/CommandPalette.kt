@@ -245,7 +245,7 @@ object CommandEngine {
             val note = m.groupValues.getOrNull(2)?.trim().orEmpty()
             val cat = guessCategory(note)
             FinanceStore.bookTxn(ctx, cents, cat, note)
-            return CmdResult.Done("%.2f € logged → $cat${if (note.isNotBlank()) " ($note)" else ""}".format(amount))
+            return CmdResult.Done("${com.ascend.lifeos.data.finance.Currency.format((amount * 100).toLong())} logged → $cat${if (note.isNotBlank()) " ($note)" else ""}")
         }
 
         // ---- income: "income 500 freelance" -----------------------------------------
@@ -255,7 +255,7 @@ object CommandEngine {
             val cents = (amount * 100).toLong()
             val note = m.groupValues.getOrNull(2)?.trim().orEmpty()
             FinanceStore.bookTxn(ctx, cents, "Income", note)
-            return CmdResult.Done("+%.2f € income${if (note.isNotBlank()) " ($note)" else ""}".format(amount))
+            return CmdResult.Done("+${com.ascend.lifeos.data.finance.Currency.format((amount * 100).toLong())} income${if (note.isNotBlank()) " ($note)" else ""}")
         }
 
         // ---- nap: "nap 20" -------------------------------------------------------

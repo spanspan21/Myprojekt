@@ -435,7 +435,7 @@ object PrimeEngine {
     }
 
     private fun fmt(v: Double): String = if (v >= 100) v.roundToInt().toString() else "%.1f".format(v)
-    private fun euro(cents: Long): String = "%.0f €".format(cents / 100.0)
+    private fun euro(cents: Long): String = com.ascend.lifeos.data.finance.Currency.format0(cents)
 
     private fun muscleDe(m: Muscle): String = when (m) {
         Muscle.CHEST -> "Chest"; Muscle.SHOULDERS -> "Shoulders"; Muscle.TRICEPS -> "Triceps"
