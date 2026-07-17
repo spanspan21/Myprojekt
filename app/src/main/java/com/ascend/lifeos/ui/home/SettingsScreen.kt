@@ -694,6 +694,37 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 "Your weekly sessions are split across these — a runner gets running weeks, a yogi gets flows.",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "YOUR EQUIPMENT", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(7.dp))
+            var equip by remember { mutableStateOf(Repo.data.profile.equipment) }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf(
+                    "bar" to "Pull-up bar", "rings" to "Rings", "dumbbell" to "Dumbbells",
+                    "barbell" to "Barbell", "bench" to "Bench", "band" to "Bands", "vest" to "Weight vest",
+                ).forEach { (id, label) ->
+                    val on = id in equip
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale {
+                                Haptics.tick(ctx)
+                                equip = if (on) equip - id else equip + id
+                                Repo.setEquipment(equip)
+                            }
+                            .padding(horizontal = 9.dp, vertical = 6.dp),
+                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Plans only prescribe gear you own — the vest toggle below follows this once set.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+            )
             // per-discipline experience level (drives each engine's program)
             discs.filter { it != com.ascend.lifeos.data.training.engine.Disciplines.CALISTHENICS }.forEach { id ->
                 val def = com.ascend.lifeos.data.training.engine.Disciplines.byId(id) ?: return@forEach

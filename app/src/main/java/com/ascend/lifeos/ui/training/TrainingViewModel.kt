@@ -295,12 +295,15 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             if (last == null) 0 else ((System.currentTimeMillis() - last) / 86_400_000L).toInt()
         }.getOrDefault(0)
 
+        // Equipment answer overrides the legacy hasVest flag once it exists —
+        // an empty list means "never asked" and keeps the stored choice.
+        val vestAvailable = if (p.equipment.isEmpty()) p.hasVest else "vest" in p.equipment
         fun calisthenicsWeek(share: Int) = PlanGenerator.generate(
             profile = fitnessProfile, skillGoals = goals,
             freq = share, sessionLen = p.sessionLen,
             chainLevels = chainLv, bestReps = best,
             allExercises = exercises.value,
-            bodyweightKg = p.weightKg, hasVest = p.hasVest, vestMaxKg = p.vestMaxKg,
+            bodyweightKg = p.weightKg, hasVest = vestAvailable, vestMaxKg = p.vestMaxKg,
             deload = deloadActive, readiness = readiness,
             trainWeek = currentTrainWeek(), freshness = fresh,
             sickMode = p.sickMode, examWeek = examSoon,

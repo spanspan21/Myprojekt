@@ -151,6 +151,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
     var trainFreq by rememberSaveable { mutableIntStateOf(p.trainFreq) }
     var sessionLen by rememberSaveable { mutableIntStateOf(p.sessionLen) }
     var goal by rememberSaveable { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
+    var equip by remember { mutableStateOf(Repo.data.profile.equipment) }
     val objectives = remember {
         mutableStateListOf<String>().apply {
             addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES })
@@ -198,7 +199,15 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             ).forEach { (obj, mod) ->
                 com.ascend.lifeos.data.Modules.setOn(ctx, mod, obj in objectives)
             }
-            Repo.setTrainPrefs(trainFreq, sessionLen, Repo.profile().hasVest)
+            // Vest prescriptions follow the equipment answer. Fresh installs
+            // that picked nothing get NO vest (the old default assumed a 25 kg
+            // vest for everyone); re-onboarding keeps the stored choice.
+            val vest = when {
+                equip.isNotEmpty() -> "vest" in equip
+                !p.onboarded -> false
+                else -> Repo.profile().hasVest
+            }
+            Repo.setTrainPrefs(trainFreq, sessionLen, vest)
             if (!Prefs.has(ctx, Prefs.NOTIF_MORNING_MIN)) Prefs.setInt(ctx, Prefs.NOTIF_MORNING_MIN, 420)
             if (!Prefs.has(ctx, Prefs.SLEEP_TARGET_MIN)) Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, 480)
             if (!Prefs.has(ctx, Prefs.GREET_NIGHT_START)) Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, 22)
@@ -321,6 +330,31 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Spacer(Modifier.height(5.dp))
         Text(
             "Pick more than one and your week is split across them.",
+            color = TextDim, fontFamily = Body, fontSize = FS.s10_5,
+        )
+
+        // equipment: plans only prescribe gear you actually own
+        Spacer(Modifier.height(14.dp))
+        Text("YOUR EQUIPMENT", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            listOf(
+                "bar" to "Pull-up bar", "rings" to "Rings", "dumbbell" to "Dumbbells",
+                "barbell" to "Barbell", "bench" to "Bench", "band" to "Bands", "vest" to "Weight vest",
+            ).forEach { (id, label) ->
+                BootChip(label, id in equip) {
+                    equip = if (id in equip) equip - id else equip + id
+                    Repo.setEquipment(equip)
+                }
+            }
+        }
+        Spacer(Modifier.height(5.dp))
+        Text(
+            "Nothing selected = bodyweight only is fine — plans adapt.",
             color = TextDim, fontFamily = Body, fontSize = FS.s10_5,
         )
 
