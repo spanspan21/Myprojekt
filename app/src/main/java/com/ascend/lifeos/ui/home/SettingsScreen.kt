@@ -240,6 +240,53 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 "${when (p.sex) { "m" -> "M"; "f" -> "F"; else -> "•" }} · ${p.age} y · ${Units.fmtHeight(ctx, p.heightCm)} · ${Units.fmtWeight(ctx, p.weightKg.toDouble())} · ${p.kcalGoal} kcal",
             ) { profileOpen = true }
 
+            // ── daily missions: which goals carry the streak ─────────
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "DAILY MISSIONS", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            var missions by remember { mutableStateOf(Repo.missionIds()) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(
+                    "train" to "Train", "kcal" to "Calories",
+                    "water" to "Water", "protein" to "Protein",
+                ).forEach { (id, label) ->
+                    val on = id in missions
+                    Text(
+                        label,
+                        color = if (on) Mod.Home else TextMuted,
+                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(
+                                0.5.dp,
+                                if (on) Mod.Home.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.1f),
+                                RoundedCornerShape(11.dp),
+                            )
+                            .pressScale {
+                                Haptics.tick(ctx)
+                                val next = if (on) missions - id else missions + id
+                                if (next.size in 2..4) {
+                                    missions = next
+                                    Prefs.setString(ctx, Prefs.MISSIONS, next.joinToString(","))
+                                } else {
+                                    AppFeedback.show("Pick 2–4 missions")
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "These carry your streak — the day counts when every mission lands.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+            )
+            Spacer(Modifier.height(8.dp))
+
             var unitSys by remember { mutableStateOf(Prefs.string(ctx, Prefs.UNIT_SYSTEM, "metric")) }
             Spacer(Modifier.height(4.dp))
             Text(

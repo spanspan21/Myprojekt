@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Hexagon
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Psychology
+import androidx.compose.material.icons.rounded.Egg
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.SelfImprovement
@@ -233,15 +234,19 @@ fun HomeScreen(
     )
 
     // mission edge detection: crossing a goal WHILE here earns its moment —
-    // opening the app with goals already met stays silent (edges, not states)
-    val missionsDone = (if (trainedToday) 1 else 0) +
-        (if (kcalToday >= profile.kcalGoal) 1 else 0) +
-        (if (waterDone) 1 else 0)
+    // opening the app with goals already met stays silent (edges, not states).
+    // Missions are user-configurable now — ONE truth via Repo.completion()
+    // (train mission additionally honors the live in-progress session).
+    val missionIds = Repo.missionIds()
+    val missionsTotal = missionIds.size
+    val missionsDone = missionIds.count { id ->
+        if (id == "train") trainedToday else day?.let { Repo.missionDone(id, it, profile) } == true
+    }
     var seenDone by remember { mutableIntStateOf(-1) }
     var goldSweepTick by remember { mutableIntStateOf(0) }
     LaunchedEffect(missionsDone) {
         if (seenDone in 0 until missionsDone) {
-            if (missionsDone == 3) {   // the #1 moment: all missions complete
+            if (missionsDone == missionsTotal) {   // the #1 moment: all missions complete
                 Haptics.epic(ctx)
                 runCatching { SoundFx.levelUp(ctx) }
                 goldSweepTick++        // Gold-Sweep über die Missions-Sektion (Kap. 20)
@@ -493,7 +498,7 @@ fun HomeScreen(
                             // up — surface the forgiving 30-day consistency instead.
                             val habit = remember(profile.streak, missionsDone) { Repo.habitStrength() }
                             val consistThresh = Prefs.int(ctx, Prefs.HABIT_CONSIST_THRESH, 40)
-                            val atRisk = profile.streak > 0 && missionsDone < 3 && java.time.LocalTime.now().hour >= 18
+                            val atRisk = profile.streak > 0 && missionsDone < missionsTotal && java.time.LocalTime.now().hour >= 18
                             Text(
                                 when {
                                     profile.streak > 0 && atRisk -> "${profile.streak} days · at risk"
@@ -703,7 +708,7 @@ fun HomeScreen(
                 SectionLabel("Today's missions")
                 Spacer(Modifier.weight(1f))
                 // Fast-fertig-Zeile (Kap. 22): der Tag zählt sichtbar herunter
-                val left = 3 - missionsDone
+                val left = missionsTotal - missionsDone
                 Text(
                     when {
                         left <= 0 -> "all clear"
@@ -747,38 +752,73 @@ fun HomeScreen(
                     }
                 },
             ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MissionChip(
-                    Icons.Rounded.FitnessCenter, if (trainedToday) "Trained" else "Train",
-                    progress = if (trainedToday) 1f else 0f, color = Mod.Train,
-                    done = trainedToday, modifier = Modifier.weight(1f), onClick = onOpenTrain,
-                )
-                MissionChip(
-                    Icons.Rounded.Restaurant, "$kcalToday kcal",
-                    progress = kcalToday / profile.kcalGoal.toFloat(), color = Mod.Fuel,
-                    done = kcalToday >= profile.kcalGoal, modifier = Modifier.weight(1f), onClick = onOpenFuel,
-                )
+            // Chips follow the user's mission pick (Settings → You); the last
+            // slot stays informational (screen time / skill step).
+            val protToday = day?.meals?.sumOf { it.protein } ?: 0
+            data class MC(
+                val icon: androidx.compose.ui.graphics.vector.ImageVector,
+                val label: String, val progress: Float,
+                val color: Color, val done: Boolean, val onClick: () -> Unit,
+            )
+            val missionChips = missionIds.mapNotNull { id ->
+                when (id) {
+                    "train" -> MC(
+                        Icons.Rounded.FitnessCenter, if (trainedToday) "Trained" else "Train",
+                        if (trainedToday) 1f else 0f, Mod.Train, trainedToday, onOpenTrain,
+                    )
+                    "kcal" -> MC(
+                        Icons.Rounded.Restaurant, "$kcalToday kcal",
+                        kcalToday / profile.kcalGoal.toFloat().coerceAtLeast(1f), Mod.Fuel,
+                        kcalToday >= profile.kcalGoal, onOpenFuel,
+                    )
+                    "water" -> MC(
+                        Icons.Rounded.WaterDrop, "$waterGlassEq/${profile.waterGoal} water",
+                        hydrationMl / waterGoalMl.toFloat(), Mod.Body, waterDone, onOpenFuel,
+                    )
+                    "protein" -> MC(
+                        Icons.Rounded.Egg, "${protToday}/${profile.proteinGoal}g protein",
+                        if (profile.proteinGoal > 0) protToday / profile.proteinGoal.toFloat() else 0f,
+                        Mod.Fuel, profile.proteinGoal > 0 && protToday >= profile.proteinGoal, onOpenFuel,
+                    )
+                    else -> null
+                }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MissionChip(
-                    Icons.Rounded.WaterDrop, "$waterGlassEq/${profile.waterGoal} water",
-                    progress = hydrationMl / waterGoalMl.toFloat(), color = Mod.Body,
-                    done = waterDone, modifier = Modifier.weight(1f), onClick = onOpenFuel,
-                )
+            val infoChip: @Composable (Modifier) -> Unit = { mod ->
                 if (screenMin != null) {
                     val h = screenMin / 60; val m = screenMin % 60
                     MissionChip(
                         Icons.Rounded.Shield, "${h}h ${m}m screen",
-                        progress = if (screenBudget > 0) screenMin / screenBudget.toFloat() else 0f, color = if (screenBudget > 0 && screenMin > screenBudget) Crit else Mod.Guard,
-                        modifier = Modifier.weight(1f), onClick = onOpenGuard,
+                        progress = if (screenBudget > 0) screenMin / screenBudget.toFloat() else 0f,
+                        color = if (screenBudget > 0 && screenMin > screenBudget) Crit else Mod.Guard,
+                        modifier = mod, onClick = onOpenGuard,
                     )
                 } else {
                     MissionChip(
                         Icons.Rounded.Psychology, "Skill step",
                         progress = 0f, color = Mod.Skills,
-                        modifier = Modifier.weight(1f), onClick = onOpenSkills,
+                        modifier = mod, onClick = onOpenSkills,
                     )
+                }
+            }
+            // mission chips + info chip laid out two per row
+            val slots = missionChips.size + 1
+            (0 until (slots + 1) / 2).forEach { row ->
+                if (row > 0) Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    (0..1).forEach { col ->
+                        val i = row * 2 + col
+                        when {
+                            i < missionChips.size -> {
+                                val c = missionChips[i]
+                                MissionChip(
+                                    c.icon, c.label, progress = c.progress, color = c.color,
+                                    done = c.done, modifier = Modifier.weight(1f), onClick = c.onClick,
+                                )
+                            }
+                            i == missionChips.size -> infoChip(Modifier.weight(1f))
+                            else -> Spacer(Modifier.weight(1f))
+                        }
+                    }
                 }
             }
 

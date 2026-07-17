@@ -30,6 +30,9 @@ data class NutTotals(val kcal: Int, val protein: Int, val carbs: Int, val fat: I
  * as Compose snapshot state so the UI recomposes on change.
  */
 object Repo {
+
+    /** Missions that can be evaluated for ANY stored day (streak-safe). */
+    val MISSION_POOL = setOf("train", "kcal", "water", "protein")
     private const val PREF = "ascend_v2"
     private const val KEY = "data"
     private const val KEY_PREV = "data_prev"
@@ -145,16 +148,28 @@ object Repo {
 
     // The three home missions — train · fuel · water. Must stay in lockstep with
     // HomeScreen's missionsDone; the old seeded daily goals no longer exist.
-    fun completion(day: DayData = today(), p: Profile = data.profile): CompletionInfo {
-        val total = 3
-        var done = 0
-        if (day.workoutDone || day.trainSets > 0 || day.cali.values.any { it.isNotEmpty() }) done++
-        if (day.meals.sumOf { it.kcal } >= p.kcalGoal) done++
+    /** The user's chosen daily missions (2-4 of train/kcal/water/protein). */
+    fun missionIds(): List<String> {
+        val raw = appContextOrNull()?.let { Prefs.string(it, Prefs.MISSIONS, "") } ?: ""
+        val ids = raw.split(',').map { it.trim() }.filter { it in MISSION_POOL }
+        return if (ids.size in 2..4) ids else listOf("train", "kcal", "water")
+    }
+
+    /** One mission, evaluated for ANY stored day — keeps streak history honest. */
+    fun missionDone(id: String, day: DayData, p: Profile = data.profile): Boolean = when (id) {
+        "train" -> day.workoutDone || day.trainSets > 0 || day.cali.values.any { it.isNotEmpty() }
+        "kcal" -> day.meals.sumOf { it.kcal } >= p.kcalGoal
         // Hydration counts logged drinks too — the ONE hydration truth, so the
         // mission/streak agree with Prime and the Fuel card (audit: glasses vs
         // drinks disagreed across screens).
-        if (hydrationMl(day) >= p.waterGoal * WaterCalc.glassMl()) done++
-        return CompletionInfo(done, total)
+        "water" -> hydrationMl(day) >= p.waterGoal * WaterCalc.glassMl()
+        "protein" -> p.proteinGoal > 0 && day.meals.sumOf { it.protein } >= p.proteinGoal
+        else -> false
+    }
+
+    fun completion(day: DayData = today(), p: Profile = data.profile): CompletionInfo {
+        val ids = missionIds()
+        return CompletionInfo(ids.count { missionDone(it, day, p) }, ids.size)
     }
 
     fun dayCompletion(key: String): CompletionInfo? {
