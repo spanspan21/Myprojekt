@@ -109,6 +109,7 @@ object Repo {
     @Synchronized
     private fun write(d: AppData) {
         runCatching { prefs.edit().putString(KEY, json.encodeToString(d)).commit() }
+            .onFailure { android.util.Log.e("Repo", "Persistence failed", it) }
     }
 
     /** Called from Activity.onPause so process death never loses the last edits. */
@@ -129,6 +130,7 @@ object Repo {
         save()
     }
 
+    @Synchronized
     private fun ensureToday() {
         val k = todayKey()
         if (data.days[k] == null) {
@@ -175,13 +177,7 @@ object Repo {
     fun hydrationMl(day: DayData): Int = day.water * WaterCalc.glassMl() + drinkMl(day)
 
     // ---- mutations ----
-    private fun updateDay(block: (DayData) -> DayData) {
-        val k = todayKey()
-        val cur = data.days[k] ?: DayData()
-        commit(data.copy(days = data.days + (k to block(cur))))
-        refreshStreak()
-    }
-
+    @Synchronized
     private fun updateProfile(block: (Profile) -> Profile) {
         commit(data.copy(profile = block(data.profile)))
         refreshStreak()
@@ -190,6 +186,7 @@ object Repo {
     /** Persist the global accent colour (ARGB long) — used by the theme migration. */
     fun setAccent(color: Long) = updateProfile { it.copy(accent = color) }
 
+    @Synchronized
     fun addWater(n: Int, dayKey: String = todayKey()) {
         val cur = data.days[dayKey] ?: DayData()
         commit(data.copy(days = data.days + (dayKey to cur.copy(water = (cur.water + n).coerceAtLeast(0)))))
@@ -201,6 +198,7 @@ object Repo {
      * module into the day record. Feeds completion/streak, the widget, water
      * bonus, sleep boost and training-load headroom.
      */
+    @Synchronized
     fun markTrained(sets: Int, dayKey: String = todayKey()) {
         if (sets <= 0) return
         val cur = data.days[dayKey] ?: DayData()
@@ -219,6 +217,7 @@ object Repo {
      * sources remain — their sets live in the same counter, so trainSets > 0
      * is exactly "something else still trained today".
      */
+    @Synchronized
     fun unmarkTrained(sets: Int, dayKey: String = todayKey()) {
         val cur = data.days[dayKey] ?: return
         val newSets = (cur.trainSets - sets).coerceAtLeast(0)
@@ -234,21 +233,24 @@ object Repo {
     }
 
     /** One-minute journal: three lines + a mood tap. */
+    @Synchronized
     fun setJournal(answers: List<String>, mood: Int?) {
         val k = todayKey()
         val cur = data.days[k] ?: DayData()
-        commit(data.copy(days = data.days + (k to cur.copy(journal = answers.take(3)))))
-        mood?.let {
-            val prev = data.bodyDays[k] ?: BodyDay()
-            commit(data.copy(bodyDays = data.bodyDays + (k to prev.copy(mood = it))))
+        var next = data.copy(days = data.days + (k to cur.copy(journal = answers.take(3))))
+        if (mood != null) {
+            val prev = next.bodyDays[k] ?: BodyDay()
+            next = next.copy(bodyDays = next.bodyDays + (k to prev.copy(mood = mood)))
         }
+        commit(next)
     }
 
+    @Synchronized
     fun logMood(level: Int, note: String = "") {
         val k = todayKey()
         val prev = data.bodyDays[k] ?: BodyDay()
-        val now = java.util.Calendar.getInstance()
-        val minuteOfDay = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
+        val t = java.time.LocalTime.now()
+        val minuteOfDay = t.hour * 60 + t.minute
         val entry = MoodEntry(minuteOfDay = minuteOfDay, level = level.coerceIn(1, 5), note = note)
         commit(
             data.copy(
@@ -304,6 +306,7 @@ object Repo {
     /** The latest one-line JARVIS reaction to a log — the UI shows it briefly, then clears it. */
     val jarvisReaction = androidx.compose.runtime.mutableStateOf<String?>(null)
 
+    @Synchronized
     fun addFood(entry: FoodEntry, dayKey: String = todayKey()) {
         val e = if (entry.id.isBlank()) entry.copy(id = newId("f"), ts = System.currentTimeMillis()) else entry
         val cur = data.days[dayKey] ?: DayData()
@@ -347,6 +350,7 @@ object Repo {
         return (flag + prog).trim().ifEmpty { "Logged — keeping count." }
     }
 
+    @Synchronized
     fun removeFood(id: String, dayKey: String = todayKey()) {
         val cur = data.days[dayKey] ?: return
         commit(data.copy(days = data.days + (dayKey to cur.copy(meals = cur.meals.filter { it.id != id }))))
@@ -419,20 +423,25 @@ object Repo {
     // ---- bodyweight log (for correlations) ----
     fun weightLog(): List<WeightPoint> = data.weightLog
 
+    @Synchronized
     fun logWeight(kg: Double) {
         if (kg < 30 || kg > 400) return
-        commit(data.copy(weightLog = (data.weightLog + WeightPoint(System.currentTimeMillis(), kg)).takeLast(400)))
-        updateProfile { it.copy(weightKg = kg.roundToInt()) }
+        val d = data
+        commit(d.copy(
+            weightLog = (d.weightLog + WeightPoint(System.currentTimeMillis(), kg)).takeLast(400),
+            profile = d.profile.copy(weightKg = kg.roundToInt()),
+        ))
     }
 
     // ---- fasting ----
     fun fasting(): FastingState = data.fasting
     fun fastLog(): List<FastLog> = data.fastLog
 
-    fun startFast(protocol: String) = commit(data.copy(fasting = FastingState(protocol, System.currentTimeMillis())))
+    @Synchronized fun startFast(protocol: String) = commit(data.copy(fasting = FastingState(protocol, System.currentTimeMillis())))
 
-    fun setFastProtocol(protocol: String) = commit(data.copy(fasting = data.fasting.copy(protocol = protocol)))
+    @Synchronized fun setFastProtocol(protocol: String) = commit(data.copy(fasting = data.fasting.copy(protocol = protocol)))
 
+    @Synchronized
     fun stopFast() {
         val f = data.fasting
         val log = if (f.active) (data.fastLog + FastLog(f.protocol, f.startEpoch, System.currentTimeMillis())).takeLast(90)
@@ -506,6 +515,7 @@ object Repo {
     // (data/training), money in LifeStores/FinanceStore, scheduling in the
     // calendar. day.cali/caliRpe stay readable as the archive of old days.
 
+    @Synchronized
     fun setHealth(h: HealthSnapshot) {
         // persist a daily snapshot so trends & baselines survive past the live read
         val k = todayKey()
@@ -531,6 +541,7 @@ object Repo {
      * recovery aren't hollow on nights without a watch (audit F9). Feeds both the
      * daily snapshot (trends) and data.health (recovery/sleep scores).
      */
+    @Synchronized
     fun logManualSleep(minutes: Int) {
         val m = minutes.coerceIn(0, 16 * 60)
         val k = todayKey()
@@ -551,6 +562,7 @@ object Repo {
         return out.reversed()
     }
 
+    @Synchronized
     fun setCheckIn(morningEnergy: Int? = null, soreness: Int? = null, eveningStress: Int? = null) {
         val k = todayKey()
         val prev = data.bodyDays[k] ?: BodyDay()
@@ -566,6 +578,7 @@ object Repo {
     }
 
     /** Whoop-style journal factors for tonight; alcohol/late meal can be auto-tagged from Fuel. */
+    @Synchronized
     fun setJournalFactor(
         caffeineLate: Boolean? = null, alcohol: Boolean? = null,
         lateMeal: Boolean? = null, screenLate: Boolean? = null,
@@ -604,7 +617,8 @@ object Repo {
             val sleepMin = next.sleepMin ?: continue
             // reconstruct a pure sleep-driven score for the following night
             val perf = (sleepMin / sleepNeedMin().toDouble()).coerceIn(0.0, 1.0)
-            val rest = if (sleepMin > 0) ((next.rem + next.deep).toDouble() / sleepMin).coerceIn(0.0, 0.45) / 0.45 else 0.5
+            val restCeil = appContextOrNull()?.let { Prefs.int(it, Prefs.RESTORATIVE_CEIL, 45) / 100.0 } ?: 0.45
+            val rest = if (sleepMin > 0) ((next.rem + next.deep).toDouble() / sleepMin).coerceIn(0.0, restCeil) / restCeil else 0.5
             val score = ((0.65 * perf + 0.35 * rest) * 100).toInt()
             if (flag) withR.add(score) else withoutR.add(score)
         }
@@ -657,6 +671,7 @@ object Repo {
     }
 
     /** Merge one historical day (Health Connect backfill) without clobbering check-ins. */
+    @Synchronized
     fun mergeBodyDay(key: String, sleepMin: Int?, rem: Int, deep: Int, light: Int, awake: Int, restingHr: Int?, steps: Int?, sleepStartMin: Int?) {
         val prev = data.bodyDays[key] ?: BodyDay()
         commit(
@@ -775,9 +790,14 @@ object Repo {
 
     fun exportJson(): String = json.encodeToString(data)
 
-    fun importJson(s: String): Boolean = try {
-        commit(json.decodeFromString<AppData>(s)); ensureToday(); true
-    } catch (e: Exception) { false }
+    @Synchronized
+    fun importJson(s: String): String? = try {
+        commit(json.decodeFromString<AppData>(s)); ensureToday(); null
+    } catch (e: kotlinx.serialization.SerializationException) {
+        android.util.Log.e("Repo", "importJson failed", e); "Backup file is corrupted or incompatible"
+    } catch (e: Exception) {
+        android.util.Log.e("Repo", "importJson failed", e); e.message ?: "Import failed"
+    }
 
     // ---- streak v2 (weekly freeze · sick-mode pause · strength fallback) ----
     private fun refreshStreak() {

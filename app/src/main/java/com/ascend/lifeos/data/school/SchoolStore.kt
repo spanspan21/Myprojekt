@@ -43,8 +43,8 @@ object SchoolStore {
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
-    private var seq = 0
-    private fun newId(p: String): String { seq++; return "$p${System.currentTimeMillis()}x$seq" }
+    private val seq = java.util.concurrent.atomic.AtomicInteger(0)
+    private fun newId(p: String): String = "$p${System.currentTimeMillis()}x${seq.incrementAndGet()}"
 
     private fun readArray(ctx: Context, key: String): JSONArray =
         runCatching { JSONArray(prefs(ctx).getString(key, "[]") ?: "[]") }.getOrDefault(JSONArray())
@@ -74,6 +74,7 @@ object SchoolStore {
         return out.sortedBy { it.order }
     }
 
+    @Synchronized
     fun addSubject(ctx: Context, name: String, points: Boolean): String {
         if (name.isBlank()) return ""
         // Resolve the existing subjects FIRST — that runs the legacy migration and
@@ -87,6 +88,7 @@ object SchoolStore {
         return id
     }
 
+    @Synchronized
     fun renameSubject(ctx: Context, id: String, name: String) {
         if (name.isBlank()) return
         val arr = readArray(ctx, KEY_SUBJECTS)
@@ -98,6 +100,7 @@ object SchoolStore {
     }
 
     /** Switch a subject between the 1–6 and 0–15 systems (leaves grade numbers untouched). */
+    @Synchronized
     fun setSubjectSystem(ctx: Context, id: String, points: Boolean) {
         val arr = readArray(ctx, KEY_SUBJECTS)
         for (i in 0 until arr.length()) {
@@ -107,6 +110,7 @@ object SchoolStore {
         writeArray(ctx, KEY_SUBJECTS, arr)
     }
 
+    @Synchronized
     fun deleteSubject(ctx: Context, id: String) {
         writeArray(ctx, KEY_SUBJECTS, without(readArray(ctx, KEY_SUBJECTS), "id", id))
         val g = readArray(ctx, KEY_GRADES)
@@ -139,6 +143,7 @@ object SchoolStore {
     fun gradesFor(ctx: Context, subjectId: String): List<Grade> =
         grades(ctx).filter { it.subjectId == subjectId }.sortedByDescending { it.ts }
 
+    @Synchronized
     fun addGrade(ctx: Context, subjectId: String, value: Double, oral: Boolean, weight: Int, note: String) {
         val arr = readArray(ctx, KEY_GRADES)
         arr.put(
@@ -149,6 +154,7 @@ object SchoolStore {
         writeArray(ctx, KEY_GRADES, arr)
     }
 
+    @Synchronized
     fun deleteGrade(ctx: Context, id: String) =
         writeArray(ctx, KEY_GRADES, without(readArray(ctx, KEY_GRADES), "id", id))
 
@@ -237,7 +243,7 @@ object SchoolStore {
      * each other. Suspends: it reads the calendar Room DB.
      */
     suspend fun upcomingExams(ctx: Context, days: Int = 21): List<UpcomingExam> {
-        val today = java.time.LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val subs = subjects(ctx)
         val events = runCatching {
             com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()

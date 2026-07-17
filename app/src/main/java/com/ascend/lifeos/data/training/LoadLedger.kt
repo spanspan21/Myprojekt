@@ -13,7 +13,7 @@ object LoadLedger {
 
     /** The last 60 days in hard-set units, oldest first. */
     suspend fun series(ctx: Context): List<Double> {
-        val today = java.time.LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val since = System.currentTimeMillis() - 60L * 86_400_000
         val byDay = HashMap<Long, Double>()
 

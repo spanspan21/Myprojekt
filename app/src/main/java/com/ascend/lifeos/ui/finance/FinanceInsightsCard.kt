@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.finance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.finance.FinanceInsights
 import com.ascend.lifeos.data.finance.FinanceRoom
@@ -38,8 +40,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private fun eur(cents: Long) = "%.2f €".format(cents / 100.0)
-private fun eur0(cents: Long) = "%.0f €".format(cents / 100.0)
+private fun eur(cents: Long) = String.format(java.util.Locale.ENGLISH, "%.2f €", cents / 100.0)
+private fun eur0(cents: Long) = String.format(java.util.Locale.ENGLISH, "%.0f €", cents / 100.0)
 
 /**
  * Finance co-pilot card (ideas #1–#4): "safe to spend" today/week, subscriptions
@@ -79,7 +81,7 @@ fun FinanceInsightsCard() {
     // nothing meaningful to show yet
     if (d.safe == null && d.dueCount == 0 && d.audit.count == 0 && d.goal == null && d.top == null) return
 
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SectionLabel("Co-pilot", accent = Mod.Finance)
 
@@ -113,6 +115,7 @@ fun FinanceInsightsCard() {
                                         FinanceInsights.dueRecurrings(ctx).forEach { FinanceStore.bookRecurring(ctx, it.id) }
                                     }
                                     Haptics.success(ctx)
+                                    AppFeedback.show("All booked")
                                     localRev++
                                 }
                             }
@@ -138,7 +141,7 @@ fun FinanceInsightsCard() {
             d.goal?.let { g ->
                 Spacer(Modifier.height(12.dp))
                 val remaining = g.targetCents - g.savedCents
-                Text(g.title, color = TextPrimary, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
+                Text(g.title, color = TextPrimary, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     d.goalWeekly?.let { weekly ->
                         // Real ETA from the actual weekly rate, not a hardcoded "~3
@@ -161,6 +164,7 @@ fun FinanceInsightsCard() {
                 Text(
                     "Biggest this month: ${t.category} · ${eur0(t.cents)} (${t.sharePct}%)",
                     color = TextMuted, fontFamily = Body, fontSize = FS.s12,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
         }

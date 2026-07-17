@@ -53,6 +53,7 @@ object AboRadar {
             val run = bestRun(group.sortedBy { it.ts }) ?: continue
 
             val amounts = run.map { abs(it.amountCents) }
+            if (amounts.size < 2) continue
             val latest = amounts.last()
             val earlierMedian = median(amounts.dropLast(1))
             val increased = latest.toDouble() > earlierMedian.toDouble() * PRICE_UP
@@ -157,12 +158,14 @@ object AboRadar {
     }
 
     private fun median(values: List<Long>): Long {
+        if (values.isEmpty()) return 0L
         val s = values.sorted()
         val mid = s.size / 2
         return if (s.size % 2 == 1) s[mid] else (s[mid - 1] + s[mid]) / 2
     }
 
     private fun medianD(values: List<Double>): Double {
+        if (values.isEmpty()) return 0.0
         val s = values.sorted()
         val mid = s.size / 2
         return if (s.size % 2 == 1) s[mid] else (s[mid - 1] + s[mid]) / 2

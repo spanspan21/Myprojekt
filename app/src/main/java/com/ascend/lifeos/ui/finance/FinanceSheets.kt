@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,11 +66,11 @@ private fun spendCategories(): List<String> {
 @Composable
 internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    var amount by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf(if (isExpense) "Other" else "Income") }
-    var note by remember { mutableStateOf("") }
-    var accountId by remember { mutableStateOf(if (accounts.size == 1) accounts[0].id else null) }
-    var dayOffset by remember { mutableIntStateOf(0) } // 0 = today, N = N days ago
+    var amount by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf(if (isExpense) "Other" else "Income") }
+    var note by rememberSaveable { mutableStateOf("") }
+    var accountId by rememberSaveable { mutableStateOf(if (accounts.size == 1) accounts[0].id else null) }
+    var dayOffset by rememberSaveable { mutableIntStateOf(0) } // 0 = today, N = N days ago
     val cents = parseCents(amount)
 
     SheetShell(if (isExpense) "Add expense" else "Add income", onDismiss) {
@@ -109,11 +110,12 @@ internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss:
 
         Spacer(Modifier.height(18.dp))
         ActionButton(if (isExpense) "Save expense" else "Save income", enabled = cents != null) {
+            val c = cents ?: return@ActionButton
             // Back-date to noon on the chosen day so day-key bucketing is unambiguous.
             val at = if (dayOffset == 0) System.currentTimeMillis()
-            else java.time.LocalDate.now().minusDays(dayOffset.toLong())
+            else com.ascend.lifeos.core.todayDate().minusDays(dayOffset.toLong())
                 .atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-            FinanceStore.bookTxn(ctx, if (isExpense) -cents!! else cents!!, category, note, accountId, at = at)
+            FinanceStore.bookTxn(ctx, if (isExpense) -c else c, category, note, accountId, at = at)
             Haptics.confirm(ctx)
             AppFeedback.show(if (isExpense) "Expense logged" else "Income logged")
             onDismiss()
@@ -126,9 +128,9 @@ internal fun AddTxnSheet(isExpense: Boolean, accounts: List<Account>, onDismiss:
 @Composable
 internal fun MoveSheet(accounts: List<Account>, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    var fromId by remember { mutableStateOf(accounts.getOrNull(0)?.id) }
-    var toId by remember { mutableStateOf(accounts.getOrNull(1)?.id) }
-    var amount by remember { mutableStateOf("") }
+    var fromId by rememberSaveable { mutableStateOf(accounts.getOrNull(0)?.id) }
+    var toId by rememberSaveable { mutableStateOf(accounts.getOrNull(1)?.id) }
+    var amount by rememberSaveable { mutableStateOf("") }
     val cents = parseCents(amount)
 
     SheetShell("Move money", onDismiss) {
@@ -153,7 +155,8 @@ internal fun MoveSheet(accounts: List<Account>, onDismiss: () -> Unit) {
             BigAmountField(amount) { amount = it }
             Spacer(Modifier.height(18.dp))
             ActionButton("Move", enabled = cents != null && fromId != null && toId != null && fromId != toId) {
-                FinanceStore.move(ctx, fromId!!, toId!!, cents!!)
+                val f = fromId ?: return@ActionButton; val t = toId ?: return@ActionButton; val c = cents ?: return@ActionButton
+                FinanceStore.move(ctx, f, t, c)
                 Haptics.confirm(ctx)
                 AppFeedback.show("Transfer complete")
                 onDismiss()
@@ -171,9 +174,9 @@ internal fun MoveSheet(accounts: List<Account>, onDismiss: () -> Unit) {
 @Composable
 internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var icon by remember { mutableStateOf(existing?.icon ?: "") }
-    var balance by remember {
+    var name by rememberSaveable { mutableStateOf(existing?.name ?: "") }
+    var icon by rememberSaveable { mutableStateOf(existing?.icon ?: "") }
+    var balance by rememberSaveable {
         mutableStateOf(existing?.let { String.format(Locale.ENGLISH, "%.2f", it.balanceCents / 100.0) } ?: "")
     }
     var deleteArmed by remember { mutableStateOf(false) }
@@ -181,9 +184,9 @@ internal fun AccountSheet(existing: Account?, onDismiss: () -> Unit) {
     val parsedBalance = parseCentsLoose(balance)
 
     SheetShell(if (existing == null) "New account" else "Edit account", onDismiss) {
-        GlassField(name, { name = it }, "Name — e.g. Cash, Bank, PayPal")
+        GlassField(name, { name = it }, "Name — e.g. Cash, Bank, PayPal", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(10.dp))
-        GlassField(icon, { icon = it }, "Short label (optional, e.g. N26)")
+        GlassField(icon, { icon = it }, "Short label (optional, e.g. N26)", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(10.dp))
         GlassField(balance, { balance = it }, "Balance in € — e.g. 32.50", keyboard = KeyboardType.Decimal)
         if (existing != null) {
@@ -254,8 +257,9 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
         GlassField(amount, { amount = it }, "Monthly cap in € — e.g. 50", keyboard = KeyboardType.Decimal)
         Spacer(Modifier.height(18.dp))
         ActionButton(if (existing == null) "Set budget" else "Update budget", enabled = cents != null) {
+            val c = cents ?: return@ActionButton
             Haptics.confirm(ctx)
-            FinanceStore.setBudget(ctx, category, cents!!)
+            FinanceStore.setBudget(ctx, category, c)
             AppFeedback.show("Budget set")
             onDismiss()
         }
@@ -269,7 +273,7 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
                 modifier = Modifier.align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(10.dp))
                     .pressScale {
-                        if (armedRemoveBudget) { Haptics.confirm(ctx); FinanceStore.setBudget(ctx, category, 0); AppFeedback.show("Budget removed"); onDismiss() }
+                        if (armedRemoveBudget) { Haptics.confirm(ctx); FinanceStore.setBudget(ctx, category, 0); AppFeedback.show("Budget cleared"); onDismiss() }
                         else { Haptics.warn(ctx); armedRemoveBudget = true }
                     }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
@@ -283,15 +287,15 @@ internal fun BudgetSheet(category: String, spentCents: Long, onDismiss: () -> Un
 @Composable
 internal fun RecurringSheet(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var isCost by remember { mutableStateOf(true) }
-    var category by remember { mutableStateOf("Other") }
-    var day by remember { mutableIntStateOf(1) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var isCost by rememberSaveable { mutableStateOf(true) }
+    var category by rememberSaveable { mutableStateOf("Other") }
+    var day by rememberSaveable { mutableIntStateOf(1) }
     val cents = parseCents(amount)
 
     SheetShell("New recurring", onDismiss) {
-        GlassField(name, { name = it }, "Name — e.g. Spotify, Pocket money")
+        GlassField(name, { name = it }, "Name — e.g. Spotify, Pocket money", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             FinChip("Cost", isCost) { isCost = true }
@@ -320,7 +324,9 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
         }
         Spacer(Modifier.height(18.dp))
         ActionButton("Save recurring", enabled = name.isNotBlank() && cents != null) {
-            FinanceStore.addRecurring(ctx, name, if (isCost) -cents!! else cents!!, if (isCost) category else "Income", day)
+            val c = cents ?: return@ActionButton
+            Haptics.confirm(ctx)
+            FinanceStore.addRecurring(ctx, name, if (isCost) -c else c, if (isCost) category else "Income", day)
             AppFeedback.show("Recurring charge saved")
             onDismiss()
         }
@@ -396,17 +402,19 @@ internal fun ScanSheet(onDismiss: () -> Unit) {
 @Composable
 internal fun GoalSheet(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    var title by remember { mutableStateOf("") }
-    var target by remember { mutableStateOf("") }
+    var title by rememberSaveable { mutableStateOf("") }
+    var target by rememberSaveable { mutableStateOf("") }
     val cents = parseCents(target)
 
     SheetShell("New savings goal", onDismiss) {
-        GlassField(title, { title = it }, "What for? — e.g. New skates")
+        GlassField(title, { title = it }, "What for? — e.g. New skates", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(10.dp))
         GlassField(target, { target = it }, "Target in € — e.g. 250", keyboard = KeyboardType.Decimal)
         Spacer(Modifier.height(18.dp))
         ActionButton("Start goal", enabled = title.isNotBlank() && cents != null) {
-            FinanceStore.addSaveGoal(ctx, title, cents!!)
+            val c = cents ?: return@ActionButton
+            Haptics.confirm(ctx)
+            FinanceStore.addSaveGoal(ctx, title, c)
             AppFeedback.show("Savings goal created")
             onDismiss()
         }
@@ -421,9 +429,9 @@ private val DF_FULL = DateTimeFormatter.ofPattern("EEE d MMM yyyy · HH:mm", Loc
 internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     val isIncome = txn.amountCents > 0
-    var category by remember(txn.id) { mutableStateOf(txn.category) }
-    var note by remember(txn.id) { mutableStateOf(txn.note) }
-    var accountId by remember(txn.id) { mutableStateOf(FinanceStore.accountIdOf(ctx, txn.id)) }
+    var category by rememberSaveable(txn.id) { mutableStateOf(txn.category) }
+    var note by rememberSaveable(txn.id) { mutableStateOf(txn.note) }
+    var accountId by rememberSaveable(txn.id) { mutableStateOf(FinanceStore.accountIdOf(ctx, txn.id)) }
     var deleteArmed by remember(txn.id) { mutableStateOf(false) }
     LaunchedEffect(deleteArmed) { if (deleteArmed) { delay(2500); deleteArmed = false } }
 
@@ -445,7 +453,7 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
         Overline("Category")
         Spacer(Modifier.height(8.dp))
         if (isIncome) {
-            FinChip("Income", true) {}
+            Text("Income", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
         } else {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 spendCategories().forEach { c -> FinChip(c, category == c) { category = c } }

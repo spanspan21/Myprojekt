@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.life
 
 import androidx.compose.animation.animateContentSize
+import com.ascend.lifeos.ui.motion.Motion
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
@@ -53,17 +56,19 @@ fun DecisionJournalScreen(onClose: () -> Unit) {
     var newOpen by remember { mutableStateOf(false) }
 
     LifeScaffold("Decisions", "Weighted calls, honest outcomes", Mod.Home, onClose) {
-        if (newOpen) {
-            NewDecisionForm(
-                onCreate = { id -> newOpen = false; expandedId = id },
-                onCancel = { newOpen = false },
-            )
-        } else {
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = { newOpen = true }) {
-                Text(
-                    "+ New decision", color = Mod.Home, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
+        Column(Modifier.animateContentSize(animationSpec = Motion.springSmoothOf())) {
+            if (newOpen) {
+                NewDecisionForm(
+                    onCreate = { id -> newOpen = false; expandedId = id },
+                    onCancel = { newOpen = false },
                 )
+            } else {
+                Panel(Modifier.fillMaxWidth(), corner = RElem, onClick = { Haptics.tick(ctx); newOpen = true }) {
+                    Text(
+                        "+ New decision", color = Mod.Home, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -96,7 +101,7 @@ private fun DecisionCard(d: Decision, expanded: Boolean, onToggle: () -> Unit) {
     val b = Decisions.scoreB(d)
     val rec = Decisions.recommendation(d)
 
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(
             Modifier
                 .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
@@ -109,7 +114,7 @@ private fun DecisionCard(d: Decision, expanded: Boolean, onToggle: () -> Unit) {
                 Text(
                     d.title, color = TextPrimary, fontSize = FS.s14,
                     fontFamily = Body, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.weight(1f),
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(8.dp))
                 StatusChip(d)
@@ -146,7 +151,7 @@ private fun ScoreRow(label: String, score: Int, other: Int, color: Color, leads:
             Text(
                 label.ifBlank { "—" }, color = if (leads) TextPrimary else TextMuted,
                 fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             )
             if (leads) {
                 Text(
@@ -184,7 +189,7 @@ private fun ExpandedBody(d: Decision) {
                 Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         f.name, color = TextMuted, fontSize = FS.s12, fontFamily = Body,
-                        fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                     )
                     Text(
                         "W${f.weight}", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
@@ -220,6 +225,7 @@ private fun ExpandedBody(d: Decision) {
             Text(
                 "Chose ${d.chosen} — ${if (d.chosen == "A") d.optionA else d.optionB}",
                 color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(7.dp))
             var note by remember(d.id) { mutableStateOf(d.outcomeNote) }
@@ -350,22 +356,21 @@ private fun StepBox(sign: String, onClick: () -> Unit) {
 @Composable
 private fun NewDecisionForm(onCreate: (String) -> Unit, onCancel: () -> Unit) {
     val ctx = LocalContext.current
-    var title by remember { mutableStateOf("") }
-    var optionA by remember { mutableStateOf("") }
-    var optionB by remember { mutableStateOf("") }
+    var title by rememberSaveable { mutableStateOf("") }
+    var optionA by rememberSaveable { mutableStateOf("") }
+    var optionB by rememberSaveable { mutableStateOf("") }
     val ready = title.isNotBlank() && optionA.isNotBlank() && optionB.isNotBlank()
 
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "NEW DECISION", color = Mod.Home, fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp, modifier = Modifier.weight(1f),
                 )
-                Icon(
-                    Icons.Rounded.Close, "Cancel", tint = TextDim,
-                    modifier = Modifier.size(15.dp).pressScale(onClick = onCancel),
-                )
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onCancel), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Cancel", tint = TextDim, modifier = Modifier.size(15.dp))
+                }
             }
             Spacer(Modifier.height(11.dp))
             LifeField("What are you deciding?", title, Mod.Home) { title = it }

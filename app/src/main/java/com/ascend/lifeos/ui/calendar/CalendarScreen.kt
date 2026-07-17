@@ -1,7 +1,11 @@
 package com.ascend.lifeos.ui.calendar
 
 import android.app.Application
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -140,20 +144,31 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
     var settingsOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember { mutableStateOf(false) }
 
+    // minute tick — refreshes "next:" context line and now indicator
+    var minuteTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(30_000); minuteTick++ } }
+
+    var resumeTick by remember { mutableIntStateOf(0) }
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(owner) {
+        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) resumeTick++ }
+        owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
+    }
+
     // timeline: own events are instant; device events load off the main thread
     var timeline by remember { mutableStateOf<DayTimeline?>(null) }
-    LaunchedEffect(day, entities, permTick) {
+    LaunchedEffect(day, entities, permTick, resumeTick) {
         timeline = withContext(Dispatchers.IO) {
             CalendarRepo.timelineFor(ctx, day, entities)
         }
     }
 
     // "imports itself": throttled feed refresh on open (Room flows update the UI)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(resumeTick) {
         runCatching { CalendarAutoSync.maybe(ctx) }
         if (!Prefs.bool(ctx, "hint_cal_ics", false)) {
             val streak = Repo.data.profile.streak
-            if (streak >= 3) {
+            if (streak >= 1) {
                 Prefs.setBool(ctx, "hint_cal_ics", true)
                 AppFeedback.show("Tip: Add ICS feeds in Settings for automatic timetable sync")
             }
@@ -165,18 +180,20 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             Spacer(Modifier.height(14.dp))
 
             val tl = timeline
-            val contextLine = when {
-                tl == null -> "reading timeline…"
-                tl.isHoliday -> "Holiday — school is off the books"
-                tl.blocks.isEmpty() -> "Clear day · all yours"
-                else -> {
-                    val free = tl.freeSlots.sumOf { it.durationMin } / 60f
-                    val base = "${tl.blocks.size} blocks · %.1fh free".format(free)
-                    if (tl.day == java.time.LocalDate.now()) {
-                        val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
-                        val next = tl.blocks.firstOrNull { !it.cancelled && it.startMin > nowMin }
-                        if (next != null) "$base · next: ${next.title.take(18)} at ${CalendarRepo.fmtMin(next.startMin)}" else base
-                    } else base
+            val contextLine = remember(tl, minuteTick) {
+                when {
+                    tl == null -> "reading timeline…"
+                    tl.isHoliday -> "Holiday — school is off the books"
+                    tl.blocks.isEmpty() -> "Clear day · all yours"
+                    else -> {
+                        val free = tl.freeSlots.sumOf { it.durationMin } / 60f
+                        val base = "${tl.blocks.size} blocks · %.1fh free".format(free)
+                        if (tl.day == java.time.LocalDate.now()) {
+                            val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+                            val next = tl.blocks.firstOrNull { !it.cancelled && it.startMin > nowMin }
+                            if (next != null) "$base · next: ${next.title.take(18)} at ${CalendarRepo.fmtMin(next.startMin)}" else base
+                        } else base
+                    }
                 }
             }
             JarvisHeader("Calendar", contextLine, Mod.Calendar) {
@@ -205,7 +222,7 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
                                 .pressScale { Haptics.tick(ctx); if (!b.fromDevice) detailBlock = b }
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                         ) {
-                            Text(b.title, color = c, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(b.title, color = c, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -216,8 +233,11 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
             val t = timeline
             Crossfade(targetState = t != null, label = "timeline", animationSpec = tween(400)) { hasTimeline ->
                 if (!hasTimeline) {
-                    Box(Modifier.fillMaxWidth().padding(vertical = 80.dp), contentAlignment = Alignment.Center) {
-                        Text("Reading timeline…", color = TextDim, fontSize = FS.s13, fontFamily = Body)
+                    Column(Modifier.fillMaxWidth().padding(vertical = 20.dp)) {
+                        repeat(4) {
+                            ShimmerPanel(Modifier.fillMaxWidth(), height = 44.dp, corner = RElem)
+                            Spacer(Modifier.height(8.dp))
+                        }
                     }
                 } else {
                     t?.let { tl ->
@@ -287,22 +307,24 @@ fun CalendarScreen(vm: CalendarViewModel = viewModel()) {
 @Composable
 private fun WeekStrip(selected: LocalDate, entities: List<CalEventEntity>, onSelect: (LocalDate) -> Unit) {
     val wsCtx = LocalContext.current
-    val weekStart = selected.with(DayOfWeek.MONDAY)
+    val wsDow = if (Prefs.string(wsCtx, Prefs.WEEK_START, "monday") == "sunday") DayOfWeek.SUNDAY else DayOfWeek.MONDAY
+    var weekStart = selected.with(wsDow)
+    if (weekStart.isAfter(selected)) weekStart = weekStart.minusWeeks(1)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            Icons.Rounded.ChevronLeft, "Previous week", tint = TextDim,
-            modifier = Modifier.size(22.dp).pressScale { Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
-        )
+        Box(
+            Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(wsCtx); onSelect(selected.minusWeeks(1)) },
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Rounded.ChevronLeft, "Previous week", tint = TextDim, modifier = Modifier.size(22.dp)) }
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceEvenly) {
             for (i in 0..6) {
                 val d = weekStart.plusDays(i.toLong())
                 DayChip(d, d == selected, d == LocalDate.now(), entities) { onSelect(d) }
             }
         }
-        Icon(
-            Icons.Rounded.ChevronRight, "Next week", tint = TextDim,
-            modifier = Modifier.size(22.dp).pressScale { Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
-        )
+        Box(
+            Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(wsCtx); onSelect(selected.plusWeeks(1)) },
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Rounded.ChevronRight, "Next week", tint = TextDim, modifier = Modifier.size(22.dp)) }
     }
 }
 
@@ -400,9 +422,12 @@ private fun MonthOverlay(
             }
             Spacer(Modifier.height(18.dp))
 
-            // weekday header, Mon-first
+            // weekday header — respects the same WEEK_START pref as WeekStrip
+            val moCtx = LocalContext.current
+            val sunStart = Prefs.string(moCtx, Prefs.WEEK_START, "monday") == "sunday"
+            val dayLabels = if (sunStart) listOf("SU", "MO", "TU", "WE", "TH", "FR", "SA") else listOf("MO", "TU", "WE", "TH", "FR", "SA", "SU")
             Row(Modifier.fillMaxWidth()) {
-                listOf("MO", "TU", "WE", "TH", "FR", "SA", "SU").forEach {
+                dayLabels.forEach {
                     Text(
                         it, color = TextDim, fontFamily = Display, fontSize = FS.s9,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
@@ -413,8 +438,10 @@ private fun MonthOverlay(
             Spacer(Modifier.height(8.dp))
 
             // 6 × 7 grid
-            val gridStart = remember(month) {
-                month.atDay(1).let { it.minusDays((it.dayOfWeek.value - 1).toLong()) }
+            val gridStart = remember(month, sunStart) {
+                val first = month.atDay(1)
+                val offset = if (sunStart) first.dayOfWeek.value % 7 else first.dayOfWeek.value - 1
+                first.minusDays(offset.toLong())
             }
             val today = LocalDate.now()
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -479,7 +506,7 @@ private fun MonthDayCell(
 
     val tint = when {
         load <= 0 -> Color.Transparent
-        load <= 2 -> Mod.Calendar.copy(alpha = 0.06f)
+        load <= 2 -> Mod.Calendar.copy(alpha = 0.12f)
         load <= 4 -> Mod.Calendar.copy(alpha = 0.12f)
         else -> Mod.Calendar.copy(alpha = 0.20f)
     }
@@ -541,7 +568,7 @@ private fun IcsFeedRow() {
     val last = remember(tick) { IcsSync.lastSync(ctx) }
 
     var expanded by remember { mutableStateOf(false) }
-    var input by remember { mutableStateOf("") }
+    var input by rememberSaveable { mutableStateOf("") }
     var syncing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var armedRemoveFeed by remember { mutableStateOf(false) }
@@ -570,7 +597,7 @@ private fun IcsFeedRow() {
             Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.RssFeed, null, tint = Mod.Calendar.copy(alpha = 0.75f), modifier = Modifier.size(13.dp))
+            Icon(Icons.Rounded.RssFeed, "Synced calendar", tint = Mod.Calendar.copy(alpha = 0.75f), modifier = Modifier.size(13.dp))
             Spacer(Modifier.width(8.dp))
             val lastTxt = if (last > 0L) {
                 val t = Instant.ofEpochMilli(last).atZone(ZoneId.systemDefault()).toLocalTime()
@@ -584,30 +611,30 @@ private fun IcsFeedRow() {
             if (syncing) {
                 CircularProgressIndicator(Modifier.size(13.dp), color = Mod.Calendar, strokeWidth = 1.5.dp)
             } else {
-                Icon(
-                    Icons.Rounded.Sync, "Sync calendar", tint = TextMuted,
-                    modifier = Modifier.clip(CircleShape).pressScale { runSync() }.padding(5.dp).size(15.dp),
-                )
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); runSync() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Sync, "Sync calendar", tint = TextMuted, modifier = Modifier.size(16.dp))
+                }
             }
-            Spacer(Modifier.width(6.dp))
-            Icon(
-                Icons.Rounded.Close, if (armedRemoveFeed) "Confirm remove" else "Remove timetable feed",
-                tint = if (armedRemoveFeed) Crit else TextDim,
-                modifier = Modifier.clip(CircleShape).pressScale {
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).pressScale {
                     if (armedRemoveFeed) {
+                        Haptics.confirm(ctx)
                         scope.launch {
                             IcsSync.removeFeed(ctx)
                             expanded = false; input = ""; error = null; tick++
                             AppFeedback.show("Feed removed")
                         }
                         armedRemoveFeed = false
-                    } else armedRemoveFeed = true
-                }.padding(5.dp).size(14.dp),
-            )
+                    } else { Haptics.warn(ctx); armedRemoveFeed = true }
+                },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Rounded.Close, if (armedRemoveFeed) "Confirm remove" else "Remove timetable feed", tint = if (armedRemoveFeed) Crit else TextDim, modifier = Modifier.size(15.dp))
+            }
         }
 
         // no feed, editor open → paste URL + sync
-        expanded -> Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+        expanded -> Panel(Modifier.fillMaxWidth(), corner = RElem) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
                 Text(
                     "TIMETABLE FEED", color = Mod.Calendar, fontFamily = Display,
@@ -640,6 +667,7 @@ private fun IcsFeedRow() {
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Mod.Calendar.copy(alpha = if (syncing) 0.55f else 1f))
                             .then(if (!syncing) Modifier.pressScale {
+                                Haptics.confirm(ctx)
                                 val url = input.trim()
                                 when {
                                     url.isBlank() -> error = "paste a feed URL first"
@@ -665,7 +693,7 @@ private fun IcsFeedRow() {
                         Text(
                             "Cancel", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Medium,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                .pressScale { expanded = false; error = null }
+                                .pressScale { Haptics.tick(ctx); expanded = false; error = null }
                                 .padding(horizontal = 6.dp, vertical = 4.dp),
                         )
                     }
@@ -676,11 +704,11 @@ private fun IcsFeedRow() {
         // no feed → subtle invite
         else -> Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                .pressScale { expanded = true }
+                .pressScale { Haptics.tick(ctx); expanded = true }
                 .padding(horizontal = 2.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.RssFeed, null, tint = TextDim, modifier = Modifier.size(13.dp))
+            Icon(Icons.Rounded.RssFeed, "Synced calendar", tint = TextDim, modifier = Modifier.size(13.dp))
             Spacer(Modifier.width(8.dp))
             Text(
                 "Subscribe to a timetable feed (ICS)", color = TextDim, fontSize = FS.s11_5,
@@ -739,7 +767,7 @@ private fun DayTimelineView(
         )
         Spacer(Modifier.height(8.dp))
     }
-    Box(Modifier.fillMaxSize().verticalScroll(scroll).padding(bottom = 110.dp)) {
+    Box(Modifier.fillMaxSize().verticalScroll(scroll).padding(bottom = 120.dp)) {
         Column {
             for (h in HOUR_START until HOUR_END) {
                 Row(Modifier.height(HOUR_DP)) {
@@ -775,7 +803,7 @@ private fun DayTimelineView(
                         .height(HOUR_DP * (slot.durationMin / 60f) - 4.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .border(0.5.dp, Mod.Calendar.copy(alpha = 0.18f), RoundedCornerShape(10.dp))
-                        .pressScale { onSlotTap(slot) },
+                        .pressScale { Haptics.tick(ctx); onSlotTap(slot) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -804,7 +832,7 @@ private fun DayTimelineView(
                         0.5.dp, c.copy(alpha = if (b.cancelled) 0.2f else 0.35f),
                         RoundedCornerShape(10.dp),
                     )
-                    .pressScale { onBlockTap(b) },
+                    .pressScale { Haptics.tick(ctx); onBlockTap(b) },
             ) {
                 Row(Modifier.fillMaxSize()) {
                     Box(Modifier.width(3.dp).fillMaxHeight().background(c.copy(alpha = if (b.cancelled) 0.35f else 1f)))
@@ -828,7 +856,7 @@ private fun DayTimelineView(
                             }
                             if (b.fromDevice) {
                                 Spacer(Modifier.width(5.dp))
-                                Icon(Icons.Rounded.Link, null, tint = c.copy(alpha = 0.6f), modifier = Modifier.size(11.dp))
+                                Icon(Icons.Rounded.Link, "Device calendar event", tint = c.copy(alpha = 0.6f), modifier = Modifier.size(11.dp))
                             }
                         }
                         // only show the time line when the block is tall enough to
@@ -844,9 +872,11 @@ private fun DayTimelineView(
             }
         }
 
-        // now line
+        // now line — refreshes every 30s so it stays accurate
+        var nowTick by remember { mutableIntStateOf(0) }
+        LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(30_000); nowTick++ } }
         if (t.day == LocalDate.now()) {
-            val now = LocalTime.now()
+            val now = remember(nowTick) { LocalTime.now() }
             val nowMin = now.hour * 60 + now.minute - HOUR_START * 60
             if (nowMin in 0..((HOUR_END - HOUR_START) * 60)) {
                 Row(
@@ -877,12 +907,14 @@ private fun QuickAddSheet(
     onDismiss: () -> Unit,
 ) {
     val addCtx = LocalContext.current
-    var title by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(EventType.PERSONAL) }
-    var startMin by remember { mutableIntStateOf(prefillStart ?: 15 * 60) }
-    var endMin by remember { mutableIntStateOf((prefillStart ?: (15 * 60)) + 60) }
-    var repeatMask by remember { mutableIntStateOf(0) }
-    var holidayDays by remember { mutableIntStateOf(7) }
+    var title by rememberSaveable { mutableStateOf("") }
+    var type by rememberSaveable(stateSaver = androidx.compose.runtime.saveable.Saver(
+        save = { it.name }, restore = { EventType.valueOf(it) },
+    )) { mutableStateOf(EventType.PERSONAL) }
+    var startMin by rememberSaveable { mutableIntStateOf(prefillStart ?: 15 * 60) }
+    var endMin by rememberSaveable { mutableIntStateOf((prefillStart ?: (15 * 60)) + 60) }
+    var repeatMask by rememberSaveable { mutableIntStateOf(0) }
+    var holidayDays by rememberSaveable { mutableIntStateOf(7) }
 
     val isHoliday = type == EventType.HOLIDAY
 
@@ -967,7 +999,7 @@ private fun QuickAddSheet(
                             Modifier.size(34.dp).clip(CircleShape)
                                 .background(if (on) Mod.Calendar.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
                                 .border(0.5.dp, if (on) Mod.Calendar.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), CircleShape)
-                                .pressScale { repeatMask = repeatMask xor (1 shl i) },
+                                .pressScale { Haptics.tick(addCtx); repeatMask = repeatMask xor (1 shl i) },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(letters[i], color = if (on) Mod.Calendar else TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -979,7 +1011,7 @@ private fun QuickAddSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Length", color = TextMuted, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Box(
-                        Modifier.size(38.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
+                        Modifier.size(44.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
                             .pressScale { Haptics.tick(addCtx); holidayDays = (holidayDays - 1).coerceAtLeast(1) },
                         contentAlignment = Alignment.Center,
@@ -989,7 +1021,7 @@ private fun QuickAddSheet(
                         modifier = Modifier.widthIn(min = 78.dp), textAlign = TextAlign.Center,
                     )
                     Box(
-                        Modifier.size(38.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
+                        Modifier.size(44.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
                             .pressScale { Haptics.tick(addCtx); holidayDays += 1 },
                         contentAlignment = Alignment.Center,
@@ -998,20 +1030,21 @@ private fun QuickAddSheet(
             }
 
             Spacer(Modifier.height(20.dp))
+            val canSave = title.isNotBlank()
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-                    .background(Mod.Calendar)
-                    .pressScale {
+                    .background(if (canSave) Mod.Calendar else Mod.Calendar.copy(alpha = 0.25f))
+                    .then(if (canSave) Modifier.pressScale {
                         Haptics.confirm(addCtx)
                         onSave(
                             title, type, day,
                             if (isHoliday) day.plusDays((holidayDays - 1).toLong()) else day,
                             startMin, endMin, isHoliday, if (isHoliday) 0 else repeatMask,
                         )
-                    }
+                    } else Modifier)
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Add to timeline", color = Void, fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+            ) { Text("Add to timeline", color = if (canSave) Void else Void.copy(alpha = 0.5f), fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
             Spacer(Modifier.height(18.dp))
         }
     }
@@ -1060,7 +1093,7 @@ private fun EventDetailSheet(b: TimelineBlock, onDelete: () -> Unit, onDismiss: 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(10.dp).clip(CircleShape).background(c))
                 Spacer(Modifier.width(10.dp))
-                Text(b.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s19, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(b.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s19, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             }
             Spacer(Modifier.height(6.dp))
             Text(
@@ -1134,10 +1167,10 @@ private fun UntisRow() {
     val configured = remember(tick) { UntisSync.configured(ctx) }
 
     var expanded by remember { mutableStateOf(false) }
-    var host by remember { mutableStateOf(UntisSync.host(ctx)) }
-    var school by remember { mutableStateOf(UntisSync.school(ctx)) }
-    var user by remember { mutableStateOf(UntisSync.user(ctx)) }
-    var pass by remember { mutableStateOf("") }
+    var host by rememberSaveable { mutableStateOf(UntisSync.host(ctx)) }
+    var school by rememberSaveable { mutableStateOf(UntisSync.school(ctx)) }
+    var user by rememberSaveable { mutableStateOf(UntisSync.user(ctx)) }
+    var pass by rememberSaveable { mutableStateOf("") }
     var syncing by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
 
@@ -1154,10 +1187,10 @@ private fun UntisRow() {
         }
     }
 
-    Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
+    Panel(Modifier.fillMaxWidth(), corner = RElem) {
+        Column(Modifier.animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(horizontal = 14.dp, vertical = 11.dp)) {
             Row(
-                Modifier.fillMaxWidth().pressScale { if (!configured) expanded = !expanded },
+                Modifier.fillMaxWidth().pressScale { if (!configured) { Haptics.tick(ctx); expanded = !expanded } },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Rounded.Sync, "WebUntis sync", tint = Mod.Calendar, modifier = Modifier.size(16.dp))
@@ -1167,6 +1200,7 @@ private fun UntisRow() {
                         if (configured) "WebUntis · ${UntisSync.user(ctx)}" else "Connect WebUntis login (no ICS needed)",
                         color = if (configured) TextPrimary else TextMuted,
                         fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                     val sub = status ?: if (configured) {
                         val last = UntisSync.lastSync(ctx)
@@ -1181,15 +1215,19 @@ private fun UntisRow() {
                     Text(
                         "SYNC", color = Mod.Calendar, fontFamily = Display, fontSize = FS.s10,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { runSync() }.padding(6.dp),
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.tick(ctx); runSync() }.padding(6.dp),
                     )
                     Spacer(Modifier.width(4.dp))
-                    Icon(
-                        Icons.Rounded.Close, "Remove WebUntis", tint = TextDim,
-                        modifier = Modifier.size(16.dp).pressScale {
-                            scope.launch { UntisSync.remove(ctx); AppFeedback.show("WebUntis removed"); tick++; status = "Removed" }
-                        },
-                    )
+                    var armedRemoveUntis by remember { mutableStateOf(false) }
+                    LaunchedEffect(armedRemoveUntis) { if (armedRemoveUntis) { kotlinx.coroutines.delay(2500); armedRemoveUntis = false } }
+                    Box(Modifier.size(44.dp).clip(CircleShape)
+                        .then(if (armedRemoveUntis) Modifier.background(Crit.copy(alpha = 0.12f)) else Modifier)
+                        .pressScale {
+                            if (armedRemoveUntis) { Haptics.confirm(ctx); scope.launch { UntisSync.remove(ctx); AppFeedback.show("WebUntis removed"); tick++; status = "Removed" } }
+                            else { Haptics.warn(ctx); armedRemoveUntis = true }
+                        }, contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Close, if (armedRemoveUntis) "Tap to confirm" else "Remove WebUntis", tint = if (armedRemoveUntis) Crit else TextDim, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
 
@@ -1208,7 +1246,7 @@ private fun UntisRow() {
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(if (user.isNotBlank() && pass.isNotBlank()) Mod.Calendar else Mod.Calendar.copy(alpha = 0.25f))
                         .then(if (user.isNotBlank() && pass.isNotBlank() && !syncing) Modifier.pressScale {
-                            UntisSync.save(ctx, host, school, user, pass)
+                            Haptics.confirm(ctx); UntisSync.save(ctx, host, school, user, pass)
                             runSync()
                         } else Modifier)
                         .padding(vertical = 11.dp),
@@ -1241,10 +1279,13 @@ private fun UntisField(label: String, value: String, hint: String, password: Boo
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
             if (value.isEmpty()) Text(hint, color = TextDim, fontSize = FS.s12_5, fontFamily = Body)
+            val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value = value, onValueChange = onValue, singleLine = true,
                 textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold),
                 cursorBrush = SolidColor(Mod.Calendar),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
                 visualTransformation = if (password) androidx.compose.ui.text.input.PasswordVisualTransformation()
                 else androidx.compose.ui.text.input.VisualTransformation.None,
                 modifier = Modifier.fillMaxWidth(),
@@ -1280,14 +1321,14 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             // ── device calendar ──────────────────────────────────────
-            Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier.size(8.dp).clip(CircleShape)
                             .background(if (calPermission) Good else Ivory.copy(alpha = 0.15f)),
                     )
                     Spacer(Modifier.width(10.dp))
-                    Icon(Icons.Rounded.Link, null, tint = Mod.Calendar, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.Link, "Linked to device calendar", tint = Mod.Calendar, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Device calendar", color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -1305,7 +1346,7 @@ private fun CalendarSettingsSheet(onDismiss: () -> Unit) {
                             "CONNECT", color = Mod.Calendar, fontFamily = Display, fontSize = FS.s10,
                             fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                .pressScale { permLauncher.launch(android.Manifest.permission.READ_CALENDAR) }
+                                .pressScale { Haptics.tick(ctx); permLauncher.launch(android.Manifest.permission.READ_CALENDAR) }
                                 .padding(6.dp),
                         )
                     }
@@ -1333,10 +1374,10 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_EXPRESSION") TaskBlocks.rev
     val tasks = TaskBlocks.tasks(ctx)
-    var title by remember { mutableStateOf("") }
-    var prio by remember { mutableIntStateOf(2) }
-    var durMin by remember { mutableIntStateOf(45) }
-    var deadlineDays by remember { mutableIntStateOf(3) }
+    var title by rememberSaveable { mutableStateOf("") }
+    var prio by rememberSaveable { mutableIntStateOf(2) }
+    var durMin by rememberSaveable { mutableIntStateOf(45) }
+    var deadlineDays by rememberSaveable { mutableIntStateOf(3) }
     var planNote by remember { mutableStateOf<String?>(null) }
     var armedDeleteTask by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(armedDeleteTask) { if (armedDeleteTask != null) { kotlinx.coroutines.delay(2500); armedDeleteTask = null } }
@@ -1345,7 +1386,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp).padding(top = 20.dp, bottom = 22.dp),
+                .padding(horizontal = 20.dp).padding(top = 20.dp, bottom = 22.dp),
         ) {
             Text(
                 "TIME BLOCKING", color = Mod.Calendar, fontFamily = Display,
@@ -1387,7 +1428,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         modifier = Modifier.clip(RoundedCornerShape(10.dp))
                             .background(if (sel) Mod.Calendar.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
-                            .pressScale { prio = p }
+                            .pressScale { Haptics.tick(ctx); prio = p }
                             .padding(horizontal = 11.dp, vertical = 6.dp),
                     )
                     Spacer(Modifier.width(7.dp))
@@ -1398,7 +1439,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 Text("Duration", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
                     "−", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).pressScale { durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(ctx); durMin = (durMin - 15).coerceAtLeast(15) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
                     "$durMin min", color = TextPrimary, fontFamily = Display, fontSize = FS.s14, fontWeight = FontWeight.Bold,
@@ -1406,14 +1447,14 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 )
                 Text(
                     "+", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).pressScale { durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(ctx); durMin = (durMin + 15).coerceAtMost(240) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Deadline", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.weight(1f))
                 Text(
                     "−", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).pressScale { deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(ctx); deadlineDays = (deadlineDays - 1).coerceAtLeast(0) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
                 Text(
                     if (deadlineDays == 0) "today" else "+$deadlineDays d",
@@ -1422,7 +1463,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 )
                 Text(
                     "+", color = TextMuted, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(CircleShape).pressScale { deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(ctx); deadlineDays = (deadlineDays + 1).coerceAtMost(21) }.padding(horizontal = 10.dp, vertical = 2.dp),
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -1430,6 +1471,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                     .background(if (title.isBlank()) Mod.Calendar.copy(alpha = 0.25f) else Mod.Calendar)
                     .then(if (title.isNotBlank()) Modifier.pressScale {
+                        Haptics.confirm(ctx)
                         TaskBlocks.add(
                             ctx, title, prio,
                             java.time.LocalDate.now().plusDays(deadlineDays.toLong()).toEpochDay(), durMin,
@@ -1460,6 +1502,7 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                             t.title,
                             color = if (t.done) TextDim else TextPrimary,
                             fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                         val due = java.time.LocalDate.ofEpochDay(t.deadlineEpochDay)
                         val sched = if (t.scheduledDay >= 0) {
@@ -1478,11 +1521,11 @@ private fun TaskBlocksSheet(onDismiss: () -> Unit) {
                         fontWeight = if (taskArmed) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.clip(CircleShape)
                             .pressScale {
-                                if (taskArmed) { scope.launch {
+                                if (taskArmed) { Haptics.confirm(ctx); scope.launch {
                                     TaskBlocks.delete(ctx, t.id)
                                     AppFeedback.show("Task deleted")
                                 }; armedDeleteTask = null }
-                                else armedDeleteTask = t.id
+                                else { Haptics.warn(ctx); armedDeleteTask = t.id }
                             }
                             .padding(6.dp),
                     )

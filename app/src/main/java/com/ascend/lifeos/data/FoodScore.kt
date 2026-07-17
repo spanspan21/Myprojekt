@@ -115,6 +115,7 @@ object FoodScore {
 
     /** Nutri-Score-style fallback: negative points minus positive points → 1..10. */
     private fun computedBase(p: FoodApi.Product): Int {
+        if (p.kcal100 == 0 && p.protein100 == 0.0 && p.fat100 == 0.0 && p.carbs100 == 0.0) return 5
         var neg = 0
         neg += when { p.kcal100 >= 560 -> 6; p.kcal100 >= 400 -> 4; p.kcal100 >= 240 -> 2; else -> 0 }
         neg += when { p.sugars100 >= 31 -> 6; p.sugars100 >= 18 -> 4; p.sugars100 >= 9 -> 2; p.sugars100 >= 4.5 -> 1; else -> 0 }
@@ -180,5 +181,5 @@ object FoodScore {
         additives.map(::normAdditive).any { it in RISKY_ADDITIVES }
 
     private fun fmt(v: Double) = if (v % 1.0 == 0.0) "${v.toInt()}" else "%.1f".format(v)
-    private fun pct(v: Double, limit: Double) = ((v / limit) * 100).toInt()
+    private fun pct(v: Double, limit: Double) = if (limit <= 0.0) 0 else ((v / limit) * 100).toInt()
 }

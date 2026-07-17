@@ -34,8 +34,8 @@ import kotlin.math.abs
 // and surfaces recurring charges, price raises and probable service overlap.
 // Drop it into any finance column — it subscribes to LifeStores.rev itself.
 
-/** Cents → "€12.50" (sign dropped — the radar shows charge magnitudes). */
-private fun eur(cents: Long): String = "€%.2f".format(Locale.ENGLISH, abs(cents) / 100.0)
+/** Cents → "12.50 €" (sign dropped — the radar shows charge magnitudes). */
+private fun eur(cents: Long): String = String.format(Locale.ENGLISH, "%.2f €", abs(cents) / 100.0)
 
 @Composable
 fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
@@ -52,7 +52,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth()) {
         SectionLabel("Subscription radar")
         Spacer(Modifier.height(8.dp))
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 if (subs.isEmpty()) {
                     EmptyState(
@@ -95,6 +95,7 @@ fun SubscriptionRadarPanel(modifier: Modifier = Modifier) {
                             "${a.payee} + ${b.payee} overlap — one may be enough$more",
                             color = Warn, fontSize = FS.s11_5, fontFamily = Body,
                             fontWeight = FontWeight.Bold, lineHeight = FS.s16,
+                            maxLines = 2, overflow = TextOverflow.Ellipsis,
                         )
                     }
 

@@ -199,7 +199,7 @@ object CalendarRepo {
 
     /** Remove training blocks already in the past (any marker) — stale clutter. */
     suspend fun clearPastTraining(ctx: Context) =
-        dao(ctx).deletePastTraining(LocalDate.now().toEpochDay())
+        dao(ctx).deletePastTraining(com.ascend.lifeos.core.todayDate().toEpochDay())
 
     fun fmtMin(min: Int): String = "%02d:%02d".format(min / 60, min % 60)
 }

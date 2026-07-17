@@ -98,7 +98,7 @@ fun Modifier.pressScale(onClick: () -> Unit): Modifier = composed {
     )
     this
         .graphicsLayer { scaleX = scale; scaleY = scale }
-        .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+        .clickable(interactionSource = interaction, indication = null, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
 }
 
 /** Press feel for elements that already own their clickable (visual only). */

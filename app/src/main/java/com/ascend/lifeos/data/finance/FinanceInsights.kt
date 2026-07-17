@@ -25,7 +25,7 @@ object FinanceInsights {
         val budget = FinanceStore.totalBudget(ctx)
         if (budget <= 0) return null
         val spent = LifeStores.monthSpend(ctx)                       // positive cents
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val monthEnd = today.withDayOfMonth(today.lengthOfMonth()).toEpochDay()
         // subscriptions not yet booked this month (nextDue lands within this month)
         val upcoming = FinanceStore.recurrings(ctx)
@@ -64,6 +64,7 @@ object FinanceInsights {
      * to finish within [weeks]. Null once the goal is reached.
      */
     fun weeklyForGoal(goal: SaveGoal, weeks: Int = 12): Long? {
+        if (weeks <= 0) return null
         val remaining = goal.targetCents - goal.savedCents
         if (remaining <= 0) return null
         return (remaining + weeks - 1) / weeks   // ceil-divide → per-week cents
@@ -74,7 +75,7 @@ object FinanceInsights {
     /** Biggest spending category this month + its share (#8 patterns). */
     fun topCategory(ctx: Context): TopCategory? {
         val zone = java.time.ZoneId.systemDefault()
-        val monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        val monthStart = com.ascend.lifeos.core.todayDate().withDayOfMonth(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val byCat = LifeStores.txns(ctx)
             .filter { it.ts >= monthStart && it.amountCents < 0 }
             .groupBy { it.category.ifBlank { "Other" } }

@@ -80,7 +80,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
                 item(key = "ch_${ch.n}") {
                     SectionLabel(ch.title, number = ch.n, accent = ch.accent)
                     Spacer(Modifier.height(8.dp))
-                    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                    Panel(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(horizontal = 15.dp, vertical = 12.dp)) {
                             Text(ch.lead, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s19)
                             Spacer(Modifier.height(6.dp))
@@ -102,7 +102,7 @@ fun DocumentationScreen(onClose: () -> Unit) {
 private fun DocRow(topic: DocTopic, accent: Color) {
     var open by remember { mutableStateOf(false) }
     val rot by animateFloatAsState(if (open) 180f else 0f, label = "chev")
-    Column(Modifier.fillMaxWidth().animateContentSize()) {
+    Column(Modifier.fillMaxWidth().animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         Row(
             Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); open = !open }.padding(vertical = 11.dp),

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
@@ -42,8 +44,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun StretchScreen(onBack: () -> Unit) {
     var activeRoutine by remember { mutableStateOf<StretchRoutine?>(null) }
-    var exIndex by remember { mutableIntStateOf(0) }
-    var isSecondSide by remember { mutableStateOf(false) }
+    var exIndex by rememberSaveable { mutableIntStateOf(0) }
+    var isSecondSide by rememberSaveable { mutableStateOf(false) }
     var remaining by remember { mutableIntStateOf(0) }
     var running by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
@@ -92,10 +94,10 @@ fun StretchScreen(onBack: () -> Unit) {
         }
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onBack() }, contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp)) }
             Spacer(Modifier.width(12.dp))
             Text("Stretching", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
@@ -103,17 +105,17 @@ fun StretchScreen(onBack: () -> Unit) {
 
         if (!running) {
             // ── Routine picker ──────────────────────────────────────
-            LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+            LazyColumn(contentPadding = PaddingValues(bottom = 120.dp)) {
                 items(routines, key = { it.id }) { routine ->
                     val isSuggested = routine.id in suggested
                     GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale {
                         Haptics.tick(ctx)
                         activeRoutine = routine; exIndex = 0; isSecondSide = false
                         remaining = routine.exercises.first().holdSec; running = true
-                    }, corner = 16.dp) {
+                    }, corner = RElem) {
                         Column(Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(routine.name, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                Text(routine.name, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                 if (isSuggested) {
                                     Box(
                                         Modifier.clip(RoundedCornerShape(8.dp)).background(Good.copy(alpha = 0.16f))
@@ -131,7 +133,7 @@ fun StretchScreen(onBack: () -> Unit) {
                             Text("${routine.durationMin} min · ${routine.exercises.size} drills · ${routine.focus}", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                             if (routine.purpose.isNotBlank()) {
                                 Spacer(Modifier.height(6.dp))
-                                Text(routine.purpose, color = TextMuted, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15)
+                                Text(routine.purpose, color = TextMuted, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15, maxLines = 3, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
@@ -163,7 +165,7 @@ fun StretchScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
 
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(ex.name, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(ex.name, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (ex.cue.isNotBlank()) {
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -173,7 +175,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 }
                 Spacer(Modifier.height(6.dp))
                 if (ex.hasSides) {
-                    GlassPanel(corner = 10.dp, fill = if (isSecondSide) Purple.copy(alpha = 0.1f) else Cyan.copy(alpha = 0.1f)) {
+                    GlassPanel(corner = RMicro, fill = if (isSecondSide) Purple.copy(alpha = 0.1f) else Cyan.copy(alpha = 0.1f)) {
                         Text(
                             if (isSecondSide) "Right side" else "Left side",
                             color = if (isSecondSide) Purple else Cyan,
@@ -204,7 +206,7 @@ fun StretchScreen(onBack: () -> Unit) {
                 Box(
                     Modifier.clip(RoundedCornerShape(16.dp)).background(Red.copy(alpha = 0.12f))
                         .border(0.5.dp, Red.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .pressScale { running = false; AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
+                        .pressScale { Haptics.warn(ctx); running = false; AppFeedback.show("Stretch ended") }.padding(horizontal = 20.dp, vertical = 16.dp),
                 ) { Text("End", color = Red, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold) }
             }
             Spacer(Modifier.weight(0.3f))

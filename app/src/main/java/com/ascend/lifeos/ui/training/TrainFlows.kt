@@ -24,9 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.training.PrType
 import com.ascend.lifeos.data.training.TrainBrain
 import com.ascend.lifeos.ui.kit.Panel
@@ -45,15 +47,15 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
     val ember = Orange
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp).padding(top = 18.dp, bottom = 40.dp),
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp).padding(top = 18.dp, bottom = 40.dp),
     ) {
         Text(
             "SESSION COMPLETE", color = ember, fontFamily = Display,
             fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
         )
         Spacer(Modifier.height(6.dp))
-        Text(s.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold)
+        Text(s.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.height(18.dp))
 
         // headline numbers
@@ -72,6 +74,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
                 (if (d >= 0) "+" else "") + "$d% volume vs. your last ${s.name}",
                 color = if (d >= 0) Good else Warn,
                 fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
             )
         }
@@ -80,12 +83,12 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         // PRs
         if (s.prs.isNotEmpty()) {
             Panel(
-                Modifier.fillMaxWidth(), corner = 18.dp,
+                Modifier.fillMaxWidth(),
                 fill = Amber.copy(alpha = 0.06f), line = Amber.copy(alpha = 0.35f),
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.EmojiEvents, null, tint = Amber, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.EmojiEvents, "Personal record", tint = Amber, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "${s.prs.size} PERSONAL RECORD${if (s.prs.size > 1) "S" else ""}",
@@ -97,12 +100,12 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
                     s.prs.forEach { pr ->
                         val v = when (pr.type) {
                             PrType.MAX_REPS -> "${pr.value.toInt()} reps"
-                            PrType.MAX_WEIGHT -> "%.1f kg".format(pr.value)
-                            PrType.EST_1RM -> "%.1f kg est. 1RM".format(pr.value)
+                            PrType.MAX_WEIGHT -> Units.fmtWeight(sumCtx, pr.value.toDouble())
+                            PrType.EST_1RM -> "${Units.fmtWeight(sumCtx, pr.value.toDouble())} est. 1RM"
                             PrType.LONGEST_HOLD -> "${pr.value.toInt()}s hold"
                             PrType.MAX_VOLUME -> "${pr.value.toInt()} volume"
                         }
-                        Text("· ${pr.exerciseName} — $v", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                        Text("· ${pr.exerciseName} — $v", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Spacer(Modifier.height(3.dp))
                     }
                 }
@@ -123,7 +126,7 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
         Spacer(Modifier.height(18.dp))
 
         // recovery bridge — the network effect
-        Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Panel(Modifier.fillMaxWidth(), corner = RElem) {
             Text(
                 "Protein window: aim for 30–40 g within the next ~2 hours. Fuel has your top sources.",
                 color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
@@ -168,13 +171,12 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
     var value by remember { mutableIntStateOf(0) }
     var result by remember { mutableStateOf<Boolean?>(null) }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 24.dp)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
-                modifier = Modifier.size(22.dp).pressScale(onClick = onBack),
-            )
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onBack), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp))
+            }
             Spacer(Modifier.weight(1f))
             Text(
                 "TEST DAY", color = ember, fontFamily = Display,
@@ -187,7 +189,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
             null -> {
                 Text(chain.groupName, color = TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
-                Text(level.exerciseName, color = TextPrimary, fontFamily = Display, fontSize = FS.s27, fontWeight = FontWeight.Bold)
+                Text(level.exerciseName, color = TextPrimary, fontFamily = Display, fontSize = FS.s27, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     if (isHold) "Hold for $target seconds — clean form, then log your best hold."
@@ -252,7 +254,7 @@ fun TestDayScreen(vm: TrainingViewModel, groupKey: String, onDone: () -> Unit, o
                     Text(
                         chain.levels.find { it.level == userLevel + 1 }?.exerciseName ?: "Mastery",
                         color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(14.dp))
                     ProgressDots(total = 6, reached = (userLevel + 1).coerceAtMost(6), color = Good)

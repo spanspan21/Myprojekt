@@ -49,7 +49,6 @@ import com.ascend.lifeos.ui.theme.*
 
 @Composable
 fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
-    val ctx = androidx.compose.ui.platform.LocalContext.current
     var step by remember { mutableIntStateOf(0) }
     val results = remember {
         mutableStateMapOf<String, Int>().apply {
@@ -62,13 +61,12 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
     val total = strengthN + metricN + mobilityN
     val finished = step >= total
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 24.dp)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack, if (step == 0) "Go back" else "Previous step", tint = TextMuted,
-                modifier = Modifier.size(22.dp).pressScale { if (step == 0) onBack() else step-- },
-            )
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale { if (step == 0) onBack() else step-- }, contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, if (step == 0) "Go back" else "Previous step", tint = TextMuted, modifier = Modifier.size(22.dp))
+            }
             Spacer(Modifier.weight(1f))
             if (!finished) {
                 val phase = when { step < strengthN -> "STRENGTH"; step < strengthN + metricN -> "PERFORMANCE"; else -> "MOBILITY" }
@@ -115,7 +113,7 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
                     ) { results[test.id] = value; step++ }
                 }
                 s < strengthN + metricN -> {
-                    val m = ATHLETE_METRICS[s - strengthN]
+                    val m = ATHLETE_METRICS.getOrNull(s - strengthN) ?: return@AnimatedContent
                     var value by remember(s) { mutableIntStateOf(results[m.id] ?: 0) }
                     StepPage(
                         overline = "CALIBRATION · PERFORMANCE",
@@ -128,7 +126,7 @@ fun AssessmentScreen(onDone: () -> Unit, onBack: () -> Unit) {
                     ) { results[m.id] = value; step++ }
                 }
                 else -> {
-                    val c = MOBILITY_CHECKS[s - strengthN - metricN]
+                    val c = MOBILITY_CHECKS.getOrNull(s - strengthN - metricN) ?: return@AnimatedContent
                     MobilityPage(
                         check = c, current = results[c.id],
                         isLast = s == total - 1,
@@ -202,7 +200,7 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
     var rating by remember(check.id) { mutableIntStateOf(current ?: 0) }
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.height(44.dp))
-        SectionLabel("Calibration · Mobility", accent = Mod.Body)
+        SectionLabel("Calibration · Mobility", accent = Mod.Train)
         Spacer(Modifier.height(8.dp))
         Text(check.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s26, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp)
         Spacer(Modifier.height(10.dp))
@@ -239,11 +237,12 @@ private fun MobilityPage(check: com.ascend.lifeos.data.training.MobilityCheck, c
 
 @Composable
 private fun NextButton(label: String, enabled: Boolean, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.fillMaxWidth().padding(bottom = 36.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(if (enabled) Mod.Train else Mod.Train.copy(alpha = 0.2f))
-            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier)
+            .then(if (enabled) Modifier.pressScale { Haptics.confirm(ctx); onClick() } else Modifier)
             .padding(vertical = 15.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -253,11 +252,12 @@ private fun NextButton(label: String, enabled: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun BigStep(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(60.dp).clip(CircleShape)
             .background(Ivory.copy(alpha = if (enabled) 0.06f else 0.03f))
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier),
+            .then(if (enabled) Modifier.pressScale { Haptics.tick(ctx); onClick() } else Modifier),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = if (enabled) TextPrimary else TextDim, fontSize = FS.s24, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -310,13 +310,13 @@ private fun ResultPage(results: Map<String, Int>, onDone: () -> Unit) {
 
         // prescribed mobility
         Spacer(Modifier.height(18.dp))
-        SectionLabel("Mobility prescription", accent = Mod.Body)
+        SectionLabel("Mobility prescription", accent = Mod.Train)
         Spacer(Modifier.height(8.dp))
         if (prescribed.isEmpty()) {
             Text("Mobility is solid — no daily routine forced. Keep the pre-training prep.", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s17)
         } else {
             val names = com.ascend.lifeos.data.training.ExerciseSeed.STRETCH_ROUTINES.filter { it.id in prescribed }.map { it.name }
-            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Body, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s17)
+            Text("JARVIS will push these until you loosen up: ${names.joinToString(" · ")}.", color = Mod.Train, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s17)
         }
 
         Spacer(Modifier.height(28.dp))

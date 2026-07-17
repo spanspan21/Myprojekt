@@ -40,7 +40,7 @@ private class WeekDay(val kcal: Int, val protein: Int, val logged: Boolean)
 @Composable
 fun WeeklyFuelReview(isToday: Boolean) {
     if (!isToday) return
-    val now = LocalDate.now()
+    val now = com.ascend.lifeos.core.todayDate()
     val show = now.dayOfWeek == DayOfWeek.MONDAY ||
         (now.dayOfWeek == DayOfWeek.SUNDAY && LocalTime.now().hour >= 17)
     if (!show) return

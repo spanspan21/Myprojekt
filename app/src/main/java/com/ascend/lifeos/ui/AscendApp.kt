@@ -46,7 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.finance.FinanceInsights
@@ -141,6 +143,17 @@ fun AscendApp() {
         return
     }
 
+    // auto-show changelog once per app update
+    var changelogShown by rememberSaveable {
+        mutableStateOf(!com.ascend.lifeos.ui.home.Changelog.shouldShow(ctx))
+    }
+    if (!changelogShown) {
+        com.ascend.lifeos.ui.home.ChangelogSheet(onDismiss = {
+            com.ascend.lifeos.ui.home.Changelog.markSeen(ctx)
+            changelogShown = true
+        })
+    }
+
     LaunchedEffect(Unit) { ShellMode.current.value = Prefs.string(ctx, Prefs.CONTEXT_MODE, "normal") }
 
     var sub by rememberSaveable { mutableStateOf(Sub.HOME) }
@@ -150,7 +163,7 @@ fun AscendApp() {
     val lastSub = remember { mutableStateMapOf<Group, Sub>() }
     var reportOpen by rememberSaveable { mutableStateOf(false) }
     var paletteOpen by remember { mutableStateOf(false) }
-    var overlay by rememberSaveable { mutableStateOf<String?>(null) } // heatmap|wrapped|achievements|decisions|rules
+    var overlay by rememberSaveable { mutableStateOf<String?>(null) } // heatmap|achievements|decisions|rules
     var dockVisible by remember { mutableStateOf(true) }
 
     val mode by ShellMode.current
@@ -398,8 +411,7 @@ private fun MorphingDock(
     onSelectSub: (Sub) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Zoomed in whenever the group has real sub-navigation; the anchor zooms out.
-    // Seit PRIME gilt das auch für TODAY — die alte Ausnahme versteckte die Pills.
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var zoomedOut by remember(group) { mutableStateOf(false) }
     val subMode = subs.size > 1 && !zoomedOut
 
@@ -457,7 +469,7 @@ private fun MorphingDock(
                         val groupAccent = accentOf(group)
                         Column(
                             Modifier
-                                .pressScale { zoomedOut = true }
+                                .pressScale { Haptics.tick(ctx); zoomedOut = true }
                                 .clip(RoundedCornerShape(18.dp))
                                 .padding(horizontal = 10.dp, vertical = 7.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -490,7 +502,7 @@ private fun MorphingDock(
                             )
                             Column(
                                 Modifier
-                                    .pressScale { onSelectSub(s) }
+                                    .pressScale { Haptics.tick(ctx); onSelectSub(s) }
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(bg)
                                     .padding(horizontal = 11.dp, vertical = 10.dp),
@@ -522,6 +534,7 @@ private fun MorphingDock(
                             Column(
                                 Modifier
                                     .pressScale {
+                                        Haptics.tick(ctx)
                                         if (g == group) zoomedOut = false
                                         else onSelectGroup(g)
                                     }
@@ -562,7 +575,7 @@ private fun MorphingDock(
                                     g.label,
                                     color = fg,
                                     fontFamily = Body, fontSize = FS.s8_5, fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp, maxLines = 1, softWrap = false,
+                                    letterSpacing = 0.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
                                     lineHeight = FS.s11,
                                 )
                             }

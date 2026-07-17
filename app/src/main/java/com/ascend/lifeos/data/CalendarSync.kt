@@ -4,7 +4,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.provider.CalendarContract
 import androidx.core.content.ContextCompat
-import java.util.Calendar
 
 data class CalEvent(val title: String, val start: Long, val end: Long, val allDay: Boolean)
 
@@ -15,12 +14,7 @@ object CalendarSync {
     fun granted(ctx: Context): Boolean =
         ContextCompat.checkSelfPermission(ctx, PERMISSION) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
-    fun readToday(ctx: Context): List<CalEvent> {
-        val start = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        return readRange(ctx, start, start + 24L * 60 * 60 * 1000)
-    }
+    fun readToday(ctx: Context): List<CalEvent> = readDay(ctx, com.ascend.lifeos.core.todayDate())
 
     fun readDay(ctx: Context, day: java.time.LocalDate): List<CalEvent> {
         val zone = java.time.ZoneId.systemDefault()

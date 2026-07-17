@@ -99,8 +99,9 @@ fun HudButton(label: String, modifier: Modifier = Modifier, primary: Boolean = t
         if (primary) (if (enabled) accent else accent.copy(alpha = 0.25f)) else HudFill,
         tween(Motion.quick), label = "btnFill",
     )
+    val hbCtx = LocalContext.current
     var m = modifier
-    if (enabled) m = m.pressScale(onClick)
+    if (enabled) m = m.pressScale { Haptics.confirm(hbCtx); onClick() }
     Box(
         m
             .clip(RoundedCornerShape(14.dp))

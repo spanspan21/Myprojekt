@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.training
 
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Repo
@@ -65,10 +67,9 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
-                modifier = Modifier.size(22.dp).pressScale(onClick = onBack),
-            )
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onBack), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp))
+            }
             Spacer(Modifier.width(12.dp))
             Column {
                 Text("Skill targets", color = TextPrimary, fontFamily = Display, fontSize = FS.s22, fontWeight = FontWeight.Bold)
@@ -107,6 +108,7 @@ fun SkillGoalsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                 items(skills, key = { it.id }) { skill ->
                     SkillCard(skill, profile, adherence, skill.id in selected, Modifier.animateItem()) {
                         val wasSelected = skill.id in selected
+                        Haptics.tick(ctx)
                         Repo.toggleSkillGoal(skill.id)
                         AppFeedback.show(if (wasSelected) "Target removed" else "Target added")
                     }
@@ -125,7 +127,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
 
     Panel(
         modifier.fillMaxWidth(),
-        corner = 16.dp,
+        corner = RElem,
         fill = if (selected) Mod.Train.copy(alpha = 0.07f) else Ivory.copy(alpha = 0.03f),
         line = if (selected) Mod.Train.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.10f),
         onClick = onToggle,
@@ -137,7 +139,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(skill.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s14_5, fontWeight = FontWeight.ExtraBold)
+                        Text(skill.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s14_5, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Spacer(Modifier.width(8.dp))
                         // tier dots
                         Row(horizontalArrangement = Arrangement.spacedBy(2.5.dp)) {
@@ -150,7 +152,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                         }
                     }
                     Spacer(Modifier.height(3.dp))
-                    Text(skill.blurb, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16)
+                    Text(skill.blurb, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16, maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.width(10.dp))
                 Column(horizontalAlignment = Alignment.End) {
@@ -202,6 +204,7 @@ private fun SkillCard(skill: SkillDef, profile: FitnessProfile?, adherence: Floa
                     "In your sessions: " + skill.feeders.take(2).joinToString(" · "),
                     color = Mod.Train.copy(alpha = 0.85f), fontSize = FS.s10_5,
                     fontFamily = Body, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
         }

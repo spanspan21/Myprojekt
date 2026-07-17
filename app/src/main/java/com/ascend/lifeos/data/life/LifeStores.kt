@@ -50,6 +50,10 @@ data class Goal(
 
 /**
  * A recurring habit. [daysMask] bit0 = Monday … bit6 = Sunday.
+ * NOTE: The bit positions are a persisted data format — bit0 is always Monday
+ * regardless of the user's WEEK_START preference. Changing the mapping would
+ * break all existing stored habits. Display code must translate between the
+ * fixed storage order and the user-visible week order.
  * [autoMetric] (blank = manual): a data source that auto-completes the habit —
  * "steps"/"sleep"/"trained"/"protein"/"water" — done when the day's measured
  * value reaches [threshold]. Auto habits are never toggled by hand.
@@ -102,11 +106,9 @@ object LifeStores {
     private fun prefs(ctx: Context): SharedPreferences =
         ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
-    private var idSeq = 0
-    private fun newId(prefix: String): String {
-        idSeq++
-        return "$prefix${System.currentTimeMillis()}x$idSeq"
-    }
+    private val idSeq = java.util.concurrent.atomic.AtomicInteger(0)
+    private fun newId(prefix: String): String =
+        "$prefix${System.currentTimeMillis()}x${idSeq.incrementAndGet()}"
 
     private fun array(ctx: Context, key: String): JSONArray =
         runCatching { JSONArray(prefs(ctx).getString(key, "[]") ?: "[]") }.getOrDefault(JSONArray())
@@ -165,7 +167,7 @@ object LifeStores {
     }
 
     private fun monthStartMs(): Long =
-        LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        com.ascend.lifeos.core.todayDate().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
     /** Total spent this calendar month, as positive cents. */
     fun monthSpend(ctx: Context): Long {
@@ -280,6 +282,7 @@ object LifeStores {
         return out
     }
 
+    @Synchronized
     private fun writeGoals(ctx: Context, goals: List<Goal>) {
         val arr = JSONArray()
         goals.forEach { arr.put(it.toJson()) }
@@ -287,6 +290,7 @@ object LifeStores {
     }
 
     /** Adds a goal (max [MAX_GOALS]); KRs get ids assigned. Returns false when full. */
+    @Synchronized
     fun addGoal(ctx: Context, title: String, krs: List<Kr>): Boolean {
         if (title.isBlank() || krs.isEmpty()) return false
         val cur = goals(ctx)
@@ -300,6 +304,7 @@ object LifeStores {
         return true
     }
 
+    @Synchronized
     fun updateKrProgress(ctx: Context, goalId: String, krId: String, progress: Float) {
         val next = goals(ctx).map { g ->
             if (g.id != goalId) g
@@ -310,6 +315,7 @@ object LifeStores {
         writeGoals(ctx, next)
     }
 
+    @Synchronized
     fun updateGoal(ctx: Context, id: String, title: String? = null, deadline: String? = null, archived: Boolean? = null, krs: List<Kr>? = null) {
         writeGoals(ctx, goals(ctx).map { g ->
             if (g.id != id) g
@@ -322,6 +328,7 @@ object LifeStores {
         })
     }
 
+    @Synchronized
     fun deleteGoal(ctx: Context, id: String) = writeGoals(ctx, goals(ctx).filter { it.id != id })
 
     // ─── Habits ─────────────────────────────────────────────────────────────
@@ -354,12 +361,14 @@ object LifeStores {
         return out.sortedBy { it.order }   // stable: legacy order=0 keeps insertion order
     }
 
+    @Synchronized
     private fun writeHabits(ctx: Context, habits: List<Habit>) {
         val arr = JSONArray()
         habits.forEach { arr.put(it.toJson()) }
         put(ctx, "habits", arr.toString())
     }
 
+    @Synchronized
     fun addHabit(
         ctx: Context, title: String, daysMask: Int, icon: String = "",
         autoMetric: String = "", threshold: Int = 0,
@@ -374,7 +383,7 @@ object LifeStores {
             habits(ctx) + Habit(
                 newId("h"), title.trim(), daysMask and 0b1111111, icon,
                 autoMetric, threshold, target, unit, avoid, nextOrder,
-                startEpochDay = java.time.LocalDate.now().toEpochDay(),
+                startEpochDay = com.ascend.lifeos.core.todayDate().toEpochDay(),
             ),
         )
     }
@@ -394,6 +403,7 @@ object LifeStores {
         updateHabit(ctx, id) { it.copy(reminderMin = if (minuteOfDay in 0..1439) minuteOfDay else -1) }
 
     /** Move a habit up/down; rewrites sequential order so it persists. */
+    @Synchronized
     fun moveHabit(ctx: Context, id: String, up: Boolean) {
         val list = habits(ctx).toMutableList()   // already sorted by order
         val i = list.indexOfFirst { it.id == id }
@@ -410,6 +420,7 @@ object LifeStores {
 
     fun habitCount(ctx: Context, id: String, dayKey: String): Int = countMap(ctx).optInt("$id|$dayKey", 0)
 
+    @Synchronized
     fun setHabitCount(ctx: Context, id: String, dayKey: String, count: Int) {
         val o = countMap(ctx)
         if (count > 0) o.put("$id|$dayKey", count) else o.remove("$id|$dayKey")
@@ -423,11 +434,13 @@ object LifeStores {
     /** Epoch-millis the current session started, or 0 if the habit isn't running. */
     fun habitTimerStart(ctx: Context, id: String): Long = timerMap(ctx).optLong(id, 0L)
 
+    @Synchronized
     fun startHabitTimer(ctx: Context, id: String) {
         put(ctx, "habit_timer", timerMap(ctx).put(id, System.currentTimeMillis()).toString())
     }
 
     /** Stop the running session, add the elapsed whole minutes to today's count, return them. */
+    @Synchronized
     fun stopHabitTimer(ctx: Context, id: String, dayKey: String): Int {
         val started = timerMap(ctx).optLong(id, 0L)
         put(ctx, "habit_timer", timerMap(ctx).also { it.remove(id) }.toString())
@@ -443,12 +456,14 @@ object LifeStores {
 
     fun habitSkipped(ctx: Context, id: String, dayKey: String): Boolean = skipMap(ctx).optBoolean("$id|$dayKey", false)
 
+    @Synchronized
     fun toggleHabitSkip(ctx: Context, id: String, dayKey: String) {
         val o = skipMap(ctx)
         if (o.optBoolean("$id|$dayKey", false)) o.remove("$id|$dayKey") else o.put("$id|$dayKey", true)
         put(ctx, "habit_skip", o.toString())
     }
 
+    @Synchronized
     fun deleteHabit(ctx: Context, id: String) {
         writeHabits(ctx, habits(ctx).filter { it.id != id })
         // drop its per-day marks (done / count / skip) too
@@ -466,6 +481,7 @@ object LifeStores {
     private fun doneMap(ctx: Context): JSONObject =
         runCatching { JSONObject(prefs(ctx).getString("habit_done", "{}") ?: "{}") }.getOrDefault(JSONObject())
 
+    @Synchronized
     fun setHabitDone(ctx: Context, id: String, dayKey: String, done: Boolean) {
         val o = doneMap(ctx)
         if (done) o.put("$id|$dayKey", true) else o.remove("$id|$dayKey")

@@ -26,10 +26,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.life.Achievement
 import com.ascend.lifeos.data.life.Achievements
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
@@ -75,8 +77,10 @@ fun AchievementsScreen(onClose: () -> Unit) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_EXPRESSION") Achievements.rev
 
+    var scanned by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         runCatching { withContext(Dispatchers.IO) { Achievements.scan(ctx) } }
+        scanned = true
     }
 
     val allEntries = Achievements.list(ctx)
@@ -96,14 +100,14 @@ fun AchievementsScreen(onClose: () -> Unit) {
                 }
             }
         }
-        if (entries.isEmpty()) {
+        if (scanned && entries.isEmpty()) {
             EmptyState(
                 icon = Icons.Rounded.EmojiEvents,
                 title = "No milestones yet",
                 hint = "Milestones appear as you train, save and keep streaks — automatically.",
                 accent = Mod.Home,
             )
-        } else {
+        } else if (entries.isNotEmpty()) {
             // ── Münzkabinett (Kap. 20): die jüngsten Prägungen + der nächste Rohling ──
             SectionLabel("Cabinet")
             Spacer(Modifier.height(12.dp))
@@ -150,7 +154,7 @@ private fun Plaque(a: Achievement) {
         Spacer(Modifier.height(6.dp))
         Text(
             a.title, color = TextMuted, fontSize = FS.s10_5, fontFamily = Body,
-            fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = FS.s13,
+            fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = FS.s13,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
         Text(DAY_FMT.format(localDate(a.ts)), color = TextDim, fontSize = FS.s9, fontFamily = Body)
@@ -206,7 +210,7 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
                 Text(
                     a.title, color = TextPrimary, fontSize = FS.s13_5,
                     fontFamily = Body, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.weight(1f),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -216,7 +220,7 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
             }
             if (a.detail.isNotBlank()) {
                 Spacer(Modifier.height(2.dp))
-                Text(a.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s16)
+                Text(a.detail, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s16, maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -225,11 +229,12 @@ private fun TimelineRow(a: Achievement, last: Boolean) {
 @Composable
 private fun FilterChip(module: String?, label: String, selected: Boolean, onClick: () -> Unit) {
     val c = if (module != null) moduleColor(module) else Mod.Home
+    val fcCtx = LocalContext.current
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (selected) c.copy(alpha = 0.18f) else Surface)
             .border(0.5.dp, if (selected) c.copy(alpha = 0.5f) else Line2, RoundedCornerShape(10.dp))
-            .pressScale(onClick = onClick)
+            .pressScale { Haptics.tick(fcCtx); onClick() }
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         Text(label, color = if (selected) c else TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)

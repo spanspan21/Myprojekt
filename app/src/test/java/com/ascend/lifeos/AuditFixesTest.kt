@@ -158,6 +158,17 @@ class AuditFixesTest {
     }
 
     @Test
+    fun `custom MEV and MRV ramp correctly`() {
+        // Custom range 4→8 should ramp linearly across 4 build weeks
+        assertEquals(4, VolumeModel.setsPerExercise(0, null, false, mev = 4, mrv = 8))
+        assertEquals(5, VolumeModel.setsPerExercise(1, null, false, mev = 4, mrv = 8))
+        assertEquals(6, VolumeModel.setsPerExercise(2, null, false, mev = 4, mrv = 8))
+        assertEquals(8, VolumeModel.setsPerExercise(3, null, false, mev = 4, mrv = 8))
+        // Deload ignores mev/mrv
+        assertEquals(2, VolumeModel.setsPerExercise(2, null, true, mev = 4, mrv = 8))
+    }
+
+    @Test
     fun `baseline test level seeds a real starting chain level, not L1`() {
         // The wiring gap that WAS "training too lax": a strong athlete must not
         // start on knee push-ups. Conservative but never Level 1 for a capable one.

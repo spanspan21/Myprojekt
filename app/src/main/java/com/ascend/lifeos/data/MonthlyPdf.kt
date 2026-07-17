@@ -97,14 +97,13 @@ object MonthlyPdf {
         val steps = keys.mapNotNull { Repo.bodyDay(it)?.steps }
         val kcals = keys.mapNotNull { k -> Repo.data.days[k]?.meals?.sumOf { it.kcal }?.takeIf { it > 0 } }
         val prots = keys.mapNotNull { k -> Repo.data.days[k]?.meals?.sumOf { it.protein }?.takeIf { it > 0 } }
-        val weights = Repo.weightLog().filter {
-            it.ts >= monthStart.toEpochDay() * 86_400_000L
-        }
+        val monthStartMs = monthStart.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val weights = Repo.weightLog().filter { it.ts >= monthStartMs }
         val sets = keys.sumOf { k -> Repo.data.days[k]?.let { Repo.workoutSets(it) } ?: 0 }
         val sessions = runCatching {
             kotlinx.coroutines.runBlocking {
                 com.ascend.lifeos.data.training.TrainingDatabase.get(ctx).dao()
-                    .sessionCountSince(monthStart.toEpochDay() * 86_400_000L)
+                    .sessionCountSince(monthStartMs)
             }
         }.getOrDefault(0)
 
@@ -123,8 +122,8 @@ object MonthlyPdf {
             Triple(
                 "", "Weight",
                 when {
-                    weights.size >= 2 -> "%.1f → %.1f kg".format(weights.first().kg, weights.last().kg)
-                    weights.size == 1 -> "%.1f kg".format(weights.first().kg)
+                    weights.size >= 2 -> "${Units.fmtWeight(ctx, weights.first().kg)} → ${Units.fmtWeight(ctx, weights.last().kg)}"
+                    weights.size == 1 -> Units.fmtWeight(ctx, weights.first().kg)
                     else -> "—"
                 },
             ),

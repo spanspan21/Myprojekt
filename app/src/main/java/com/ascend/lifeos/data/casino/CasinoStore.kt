@@ -60,6 +60,7 @@ object CasinoStore {
 
     // ── Daily counters (lazy rollover) ───────────────────────────────────────
 
+    @Synchronized
     private fun ensureDay(ctx: Context) {
         val today = todayKey()
         if (sp(ctx).getString("cas_day", "") != today) {
@@ -89,24 +90,26 @@ object CasinoStore {
      * base+earned so the break-after-last-attempt fires when the FULL allotment
      * (including skill-earned spins) is spent, not just the base.
      */
+    @Synchronized
     fun reserveAttempt(ctx: Context, total: Int = attemptsPerDay(ctx)) {
         ensureDay(ctx)
         val used = sp(ctx).getInt("cas_attempts_used", 0) + 1
-        sp(ctx).edit().putInt("cas_attempts_used", used).apply()
+        val editor = sp(ctx).edit().putInt("cas_attempts_used", used)
         if (used >= total) {
-            sp(ctx).edit().putLong(
+            editor.putLong(
                 "cas_break_until",
                 CasinoEngine.breakUntil(breakMode(ctx), System.currentTimeMillis(), nextRollover()),
-            ).apply()
+            )
         }
+        editor.commit()
     }
 
+    @Synchronized
     fun refundAttempt(ctx: Context, total: Int = attemptsPerDay(ctx)) {
         ensureDay(ctx)
         val used = (sp(ctx).getInt("cas_attempts_used", 0) - 1).coerceAtLeast(0)
-        // a refund can reopen the tables — clear the break if it was just set
-        sp(ctx).edit().putInt("cas_attempts_used", used).apply()
-        if (used < total) sp(ctx).edit().putLong("cas_break_until", 0L).apply()
+        sp(ctx).edit().putInt("cas_attempts_used", used).commit()
+        if (used < total) sp(ctx).edit().putLong("cas_break_until", 0L).commit()
     }
 
     fun breakUntil(ctx: Context): Long = sp(ctx).getLong("cas_break_until", 0L)
@@ -134,6 +137,7 @@ object CasinoStore {
         return total to won
     }
 
+    @Synchronized
     private fun addBonus(ctx: Context, pkg: String, wonMin: Int, coverMin: Int) {
         ensureDay(ctx)
         val (total, won) = bonusParts(ctx, pkg)
@@ -155,6 +159,7 @@ object CasinoStore {
 
     fun lockoutUntil(ctx: Context, pkg: String): Long = sp(ctx).getLong("cas_lockout_$pkg", 0L)
 
+    @Synchronized
     private fun setLockout(ctx: Context, pkg: String, minutes: Int) {
         sp(ctx).edit().putLong("cas_lockout_$pkg", System.currentTimeMillis() + minutes * 60_000L).apply()
         addStat(ctx, won = 0, lost = minutes)
@@ -178,6 +183,7 @@ object CasinoStore {
      * overlay died mid-animation (force-kill, system kill), it still lands —
      * a win pays, a loss locks. Nobody out-kills the house.
      */
+    @Synchronized
     fun settlePendingIfAny(ctx: Context) {
         val raw = sp(ctx).getString("cas_pending", "") ?: ""
         if (raw.isBlank()) return
@@ -215,7 +221,7 @@ object CasinoStore {
 
     // ── Monthly honesty stats ────────────────────────────────────────────────
 
-    private fun month(): String = LocalDate.now().toString().substring(0, 7)
+    private fun month(): String = com.ascend.lifeos.core.todayDate().toString().substring(0, 7)
 
     private fun addStat(ctx: Context, won: Int, lost: Int) {
         val key = month()

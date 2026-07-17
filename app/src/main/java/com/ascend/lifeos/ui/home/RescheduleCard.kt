@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.training.TrainingReschedule
 import com.ascend.lifeos.ui.kit.AppFeedback
@@ -61,7 +62,7 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
 
     fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
 
-    Panel(modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SectionLabel("Reschedule training", accent = Mod.Train)
             Spacer(Modifier.height(8.dp))
@@ -70,13 +71,16 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
                 color = TextPrimary, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(2.dp))
-            Text(s.reason, color = TextDim, fontFamily = Body, fontSize = FS.s11_5)
+            Text(s.reason, color = TextDim, fontFamily = Body, fontSize = FS.s11_5, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pill("Fits", filled = true, modifier = Modifier.weight(1f)) {
-                    scope.launch { TrainingReschedule.accept(ctx, s); dismissed = true }
-                    Haptics.confirm(ctx)
-                    AppFeedback.show("Session rescheduled")
+                    scope.launch {
+                        TrainingReschedule.accept(ctx, s)
+                        dismissed = true
+                        Haptics.confirm(ctx)
+                        AppFeedback.show("Session rescheduled")
+                    }
                 }
                 Pill("Other time", modifier = Modifier.weight(1f)) { pickOpen = true }
                 Pill("Skip", modifier = Modifier.weight(1f)) {
@@ -98,9 +102,9 @@ fun RescheduleCard(modifier: Modifier = Modifier) {
                 scope.launch {
                     TrainingReschedule.accept(ctx, s.copy(startMin = start, endMin = start + len))
                     pickOpen = false; dismissed = true
+                    Haptics.confirm(ctx)
+                    AppFeedback.show("Session moved")
                 }
-                Haptics.confirm(ctx)
-                AppFeedback.show("Session moved")
             },
         )
     }

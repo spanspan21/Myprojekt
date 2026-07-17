@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.hud
 
 import android.content.Context
+import com.ascend.lifeos.ui.kit.AppFeedback
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -123,7 +124,9 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
         if (query.trim().length < 2) { results = emptyList(); loading = false; return@LaunchedEffect }
         loading = true
         delay(350)
-        FoodApi.search(query).onSuccess { results = it }.onFailure { results = emptyList() }
+        FoodApi.search(query)
+            .onSuccess { results = it }
+            .onFailure { results = emptyList(); AppFeedback.show("Search failed — check connection") }
         loading = false
     }
 
@@ -166,7 +169,7 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
                     onBack = { drinkBuilder = false }, onAdded = onDismiss,
                 )
                 selected != null -> PortionPane(
-                    selected!!, meal, { meal = it }, dayKey = dayKey, fromCache = selectedFromCache,
+                    selected ?: return@ModalBottomSheet, meal, { meal = it }, dayKey = dayKey, fromCache = selectedFromCache,
                     onBack = { selected = null; selectedFromCache = false },
                     // Korb nicht wegwerfen: solange er voll ist, zurück zur Liste statt schließen.
                     onAdded = { if (basket.isEmpty()) onDismiss() else { selected = null; selectedFromCache = false } },
@@ -251,13 +254,13 @@ private fun SearchPane(
                         WideGhost(Icons.Rounded.ContentCopy, "Slot like yesterday", Modifier.weight(1f)) {
                             val prev = Repo.dayFor(prevKey(dayKey))?.meals?.filter { it.meal == meal }.orEmpty()
                             prev.forEach { Repo.addFood(it.copy(id = "", ts = 0, meal = meal), dayKey) }
-                            if (prev.isNotEmpty()) Haptics.confirm(ctx)
+                            if (prev.isNotEmpty()) { Haptics.confirm(ctx); AppFeedback.show("${prev.size} items copied") }
                             onDismiss()
                         }
                         WideGhost(Icons.Rounded.ContentCopy, "Whole day", Modifier.weight(1f)) {
                             val prev = Repo.dayFor(prevKey(dayKey))?.meals.orEmpty()
                             prev.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
-                            if (prev.isNotEmpty()) Haptics.confirm(ctx)
+                            if (prev.isNotEmpty()) { Haptics.confirm(ctx); AppFeedback.show("${prev.size} items copied") }
                             onDismiss()
                         }
                     }
@@ -273,7 +276,7 @@ private fun SearchPane(
                             accent = Mod.Fuel,
                         )
                     } else {
-                        Section("RECENT — 1 TAP LOGS, ＋ COLLECTS")
+                        Section("RECENT — TAP LOGS · HOLD EDITS · ＋ COLLECTS")
                         val recentCount = Prefs.int(ctx, Prefs.RECENT_FOODS_COUNT, 12)
                         recents.take(recentCount).forEach { e ->
                             ResultRow(
@@ -290,8 +293,8 @@ private fun SearchPane(
                 }
                 // ── Favoriten: Sterne + gespeicherte Mahlzeiten ──
                 1 -> {
-                    val favorites = Repo.customFoods().filter { it.favorite }
-                    val savedMeals = Repo.savedMeals()
+                    val favorites = remember(Repo.data) { Repo.customFoods().filter { it.favorite } }
+                    val savedMeals = remember(Repo.data) { Repo.savedMeals() }
                     WideGhost(Icons.Rounded.Add, "Create custom food", Modifier.fillMaxWidth()) { onCreate() }
                     Spacer(Modifier.height(10.dp))
                     if (savedMeals.isNotEmpty()) {
@@ -355,8 +358,8 @@ private fun SearchPane(
             }
 
             // ---- 1) your own foods + saved meals ----
-            val customMatches = Repo.customFoods().filter { it.name.contains(query, ignoreCase = true) }
-            val mealMatches = Repo.savedMeals().filter { it.name.contains(query, ignoreCase = true) }
+            val customMatches = remember(Repo.data, query) { Repo.customFoods().filter { it.name.contains(query, ignoreCase = true) } }
+            val mealMatches = remember(Repo.data, query) { Repo.savedMeals().filter { it.name.contains(query, ignoreCase = true) } }
             if (customMatches.isNotEmpty() || mealMatches.isNotEmpty()) {
                 Section("MY FOODS")
                 customMatches.forEach { cf ->
@@ -377,7 +380,7 @@ private fun SearchPane(
             }
 
             // ---- 2) verified offline staples (relevanz-sortiert, Kap. 34) ----
-            val verified = results.filter { it.brand == VERIFIED_BRAND }
+            val verified = remember(results) { results.filter { it.brand == VERIFIED_BRAND } }
             verified.forEach { p ->
                 ResultRow(
                     p.name, portionSub(p), "", verified = true,
@@ -396,9 +399,9 @@ private fun SearchPane(
             Crossfade(targetState = !(loading && results.isEmpty()), label = "searchResults", animationSpec = tween(400)) { hasResults ->
                 if (!hasResults) {
                     Column {
-                        ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = 14.dp)
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = RElem)
                         Spacer(Modifier.height(8.dp))
-                        ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = 14.dp)
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 52.dp, corner = RElem)
                     }
                 } else if (off.isEmpty() && verified.isEmpty() && customMatches.isEmpty() && mealMatches.isEmpty() && quickKcal == null) {
                     Column {
@@ -439,15 +442,21 @@ private fun SearchPane(
     // ── Der Korb (Kap. 40): sammeln mit ＋, einmal loggen — Mensa in ≤5 Taps ──
     if (basket.isNotEmpty()) {
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("${basket.size} in basket", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     Text("${basket.sumOf { it.kcal }} kcal · ${basket.sumOf { it.protein }} g protein", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                 }
+                var armedClear by remember { mutableStateOf(false) }
+                LaunchedEffect(armedClear) { if (armedClear) { kotlinx.coroutines.delay(2500); armedClear = false } }
                 Text(
-                    "Clear", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.pressScale { onBasket(emptyList()) }.padding(8.dp),
+                    if (armedClear) "Tap to confirm" else "Clear",
+                    color = if (armedClear) Crit else TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.pressScale {
+                        if (armedClear) { Haptics.confirm(ctx); onBasket(emptyList()); AppFeedback.show("Basket cleared") }
+                        else { Haptics.warn(ctx); armedClear = true }
+                    }.padding(8.dp),
                 )
                 Spacer(Modifier.width(6.dp))
                 HudButton("Log", Modifier.width(110.dp)) {
@@ -544,17 +553,19 @@ private fun Section(title: String) {
 
 @Composable
 private fun SquareIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String = "", onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(48.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
-            .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).pressScale { onClick() },
+            .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label.ifBlank { null }, tint = Mod.Fuel, modifier = Modifier.size(22.dp)) }
 }
 
 @Composable
 private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Row(
-        modifier.clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).pressScale { onClick() }.padding(vertical = 13.dp),
+        modifier.clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.04f)).border(0.5.dp, HudLine, RoundedCornerShape(13.dp)).pressScale { Haptics.tick(ctx); onClick() }.padding(vertical = 13.dp),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, label, tint = Mod.Fuel, modifier = Modifier.size(16.dp))
@@ -567,8 +578,8 @@ private fun WideGhost(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
 @Composable
 private fun ResultRow(title: String, sub: String, score: String = "", verified: Boolean = false, onLong: (() -> Unit)? = null, onPlus: (() -> Unit)? = null, onClick: () -> Unit) {
     GlassPanel(
-        Modifier.fillMaxWidth().combinedClickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick, onLongClick = onLong),
-        corner = 14.dp,
+        Modifier.fillMaxWidth().combinedClickable(indication = null, interactionSource = remember { MutableInteractionSource() }, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick, onLongClick = onLong),
+        corner = RElem,
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -581,7 +592,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
             } else if (score.isNotBlank()) {
                 Spacer(Modifier.width(8.dp))
                 if (score == "★") {
-                    Icon(Icons.Rounded.Star, null, tint = Amber, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.Star, "Favorite", tint = Amber, modifier = Modifier.size(16.dp))
                 } else {
                     val c = when (score) { "A" -> Good; "B" -> Mod.Fuel; "C" -> Warn; "D" -> Orange; else -> Crit }
                     Box(Modifier.size(24.dp).clip(RoundedCornerShape(7.dp)).background(c.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
@@ -604,7 +615,7 @@ private fun ResultRow(title: String, sub: String, score: String = "", verified: 
 
 @Composable
 private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String) -> Unit, dayKey: String, fromCache: Boolean = false, onBack: () -> Unit, onAdded: () -> Unit) {
-    // Portion memory: the grams logged last time win over the serving default.
+    val ctx = LocalContext.current
     val lastGrams = remember(product.name) { Repo.data.profile.lastPortion[product.name] }
     var grams by remember { mutableStateOf((lastGrams ?: product.servingG ?: 100).toString()) }
     val g = grams.toIntOrNull() ?: 0
@@ -612,13 +623,13 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     val eval = remember(product) { FoodScore.evaluate(product) }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { Haptics.tick(ctx); onBack() }, contentAlignment = Alignment.Center) {
             Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(product.name, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2)
-            product.brand?.let { Text(it, color = TextDim, fontSize = FS.s11_5, fontFamily = Body) }
+            Text(product.name, color = TextPrimary, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            product.brand?.let { Text(it, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             if (fromCache) Text("cached", color = Mod.Fuel.copy(alpha = 0.85f), fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
         }
         Spacer(Modifier.width(8.dp))
@@ -630,7 +641,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     if (evalLines.isNotEmpty()) {
         Spacer(Modifier.height(10.dp))
         evalLines.forEach { (line, c) ->
-            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s15, maxLines = 2)
+            Text((if (c == Good) "+ " else "– ") + line, color = c.copy(alpha = 0.9f), fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s15, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 
@@ -649,7 +660,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
     var showDetails by remember(product) { mutableStateOf(false) }
     Spacer(Modifier.height(12.dp))
     Row(
-        Modifier.fillMaxWidth().pressScale { showDetails = !showDetails },
+        Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); showDetails = !showDetails },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(if (showDetails) "Details ▴" else "Details ▾", color = Mod.Fuel, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -744,6 +755,7 @@ private fun PortionPane(product: FoodApi.Product, meal: String, onMeal: (String)
             dayKey,
         )
         Repo.rememberPortion(product.name, g)
+        AppFeedback.show("${product.name} logged")
         onAdded()
     }
     Spacer(Modifier.height(6.dp))

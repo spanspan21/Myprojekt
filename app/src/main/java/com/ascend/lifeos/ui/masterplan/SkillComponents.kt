@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.masterplan
 
 import android.content.Intent
 import android.net.Uri
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.masterplan.EnergyLevel
@@ -123,7 +125,7 @@ fun NodeSheet(
             }
         },
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp).navigationBarsPadding().padding(bottom = 20.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).navigationBarsPadding().padding(bottom = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(34.dp).clip(RoundedCornerShape(11.dp)).background(accent.copy(alpha = 0.15f)),
@@ -131,9 +133,9 @@ fun NodeSheet(
                 ) { Icon(Icons.Rounded.Bolt, null, tint = accent, modifier = Modifier.size(18.dp)) }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(node.node.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold, fontFamily = Body)
+                    Text(node.node.title, color = TextPrimary, fontSize = FS.s20, fontWeight = FontWeight.Bold, fontFamily = Body, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     if (node.node.subtitle.isNotBlank()) {
-                        Text(node.node.subtitle, color = TextMuted, fontSize = FS.s13, lineHeight = FS.s17, fontFamily = Body)
+                        Text(node.node.subtitle, color = TextMuted, fontSize = FS.s13, lineHeight = FS.s17, fontFamily = Body, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -153,10 +155,11 @@ fun NodeSheet(
                 Text("${node.doneCount}/${node.tasks.size}", color = TextMuted, fontSize = FS.s12, fontWeight = FontWeight.SemiBold, fontFamily = Body)
             }
 
-            // keep the spacing the old components.SectionLabel carried built in
-            SectionLabel("Tasks", Modifier.padding(start = 3.dp, top = 24.dp, bottom = 12.dp))
-            node.tasks.sortedBy { it.orderIndex }.forEach { task ->
-                TaskRow(task = task) { onToggleTask(task.id, it) }
+            if (node.tasks.isNotEmpty()) {
+                SectionLabel("Tasks", Modifier.padding(start = 3.dp, top = 24.dp, bottom = 12.dp))
+                node.tasks.sortedBy { it.orderIndex }.forEach { task ->
+                    TaskRow(task = task) { onToggleTask(task.id, it) }
+                }
             }
 
             if (node.resources.isNotEmpty()) {
@@ -173,12 +176,13 @@ fun NodeSheet(
 
 @Composable
 fun TaskRow(task: TaskEntity, onToggle: (Boolean) -> Unit) {
+    val trCtx = androidx.compose.ui.platform.LocalContext.current
     val done = task.status == TaskStatus.DONE
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).pressScale { onToggle(!done) }.padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).pressScale { Haptics.confirm(trCtx); onToggle(!done) }.padding(vertical = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        CheckBox(checked = done, onClick = { onToggle(!done) })
+        CheckBox(checked = done, onClick = { Haptics.confirm(trCtx); onToggle(!done) })
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f).padding(top = 1.dp)) {
             Text(
@@ -186,9 +190,10 @@ fun TaskRow(task: TaskEntity, onToggle: (Boolean) -> Unit) {
                 color = if (done) TextDim else TextPrimary,
                 fontSize = FS.s15, fontWeight = FontWeight.SemiBold, lineHeight = FS.s20, fontFamily = Body,
                 textDecoration = if (done) TextDecoration.LineThrough else TextDecoration.None,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
             )
             if (task.detail.isNotBlank()) {
-                Text(task.detail, color = TextMuted, fontSize = FS.s12_5, lineHeight = FS.s17, fontFamily = Body)
+                Text(task.detail, color = TextMuted, fontSize = FS.s12_5, lineHeight = FS.s17, fontFamily = Body, maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -214,9 +219,9 @@ fun ResourceRow(r: ResourceEntity, accent: Color) {
         Icon(iconFor(r.kind), r.title, tint = accent, modifier = Modifier.size(17.dp))
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(r.title, color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.SemiBold, fontFamily = Body)
+            Text(r.title, color = TextPrimary, fontSize = FS.s13_5, fontWeight = FontWeight.SemiBold, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (r.provider.isNotBlank()) {
-                Text(r.provider, color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Medium, fontFamily = Body)
+                Text(r.provider, color = TextDim, fontSize = FS.s10_5, fontWeight = FontWeight.Medium, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         Spacer(Modifier.width(8.dp))

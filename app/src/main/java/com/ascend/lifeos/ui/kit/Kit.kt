@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
@@ -184,7 +186,7 @@ fun Panel(
         val addGlow by animateFloatAsState(if (down) 0.26f else 0f, tween(150), label = "pGlow")
         val hue = if (lux) spec.glowInk else spec.shadowTint
         var lm = modifier.graphicsLayer { scaleX = scale; scaleY = scale }
-        if (onClick != null) lm = lm.clickable(interaction, indication = null, onClick = onClick)
+        if (onClick != null) lm = lm.clickable(interaction, indication = null, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
         lm = lm
             .shadow(
                 elevation = elev, shape = shape, clip = false,
@@ -266,11 +268,12 @@ fun JarvisHeader(
  */
 @Composable
 fun IconOrb(icon: ImageVector, label: String, tint: Color = TextMuted, size: Dp = 38.dp, onClick: () -> Unit) {
+    val ioCtx = LocalContext.current
     Box(
         Modifier
             .minimumInteractiveComponentSize()
             .size(size)
-            .pressScale(onClick)
+            .pressScale { Haptics.tick(ioCtx); onClick() }
             .clip(CircleShape)
             .background(Ivory.copy(alpha = 0.05f))
             // kleines Uhrengehäuse: Gefälle + Elfenbein-Kante
@@ -543,7 +546,7 @@ fun MissionChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
-    Panel(modifier, corner = 16.dp, onClick = onClick) {
+    Panel(modifier, corner = RElem, onClick = onClick) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, label, tint = if (done) color else TextMuted, modifier = Modifier.size(15.dp))

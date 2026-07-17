@@ -49,17 +49,19 @@ object CrashLog {
             val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
             SimpleDateFormat("dd.MM HH:mm", Locale.US).format(Date(pi.lastUpdateTime))
         }.getOrDefault("?")
-        File(d, "crash_$ts.txt").writeText(
-            buildString {
-                appendLine("JARVIS crash report")
-                appendLine("Time:    ${ts.replace('_', ' ')}")
-                appendLine("Thread:  ${thread.name}")
-                appendLine("Build:   installed $installed")
-                appendLine("Device:  ${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE}")
-                appendLine()
-                append(Log.getStackTraceString(e))
-            },
-        )
-        d.listFiles()?.sortedByDescending { it.name }?.drop(KEEP)?.forEach { it.delete() }
+        runCatching {
+            File(d, "crash_$ts.txt").writeText(
+                buildString {
+                    appendLine("JARVIS crash report")
+                    appendLine("Time:    ${ts.replace('_', ' ')}")
+                    appendLine("Thread:  ${thread.name}")
+                    appendLine("Build:   installed $installed")
+                    appendLine("Device:  ${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE}")
+                    appendLine()
+                    append(Log.getStackTraceString(e))
+                },
+            )
+            d.listFiles()?.sortedByDescending { it.name }?.drop(KEEP)?.forEach { it.delete() }
+        }
     }
 }

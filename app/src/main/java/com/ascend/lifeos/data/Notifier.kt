@@ -10,7 +10,9 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.ascend.lifeos.R
 import com.ascend.lifeos.core.todayKey
+import com.ascend.lifeos.data.Prefs
 import java.util.Calendar
 
 /**
@@ -24,6 +26,11 @@ import java.util.Calendar
  */
 object Notifier {
     const val CHANNEL = "ascend_reminders"
+    const val CH_BRIEFINGS = "jarvis_briefings"
+    const val CH_TRAINING  = "jarvis_training"
+    const val CH_NUTRITION = "jarvis_nutrition"
+    const val CH_HABITS    = "jarvis_habits"
+    const val CH_WELLBEING = "jarvis_wellbeing"
 
     private const val REQ_MORNING = 4101
     private const val REQ_EVENING = 4102
@@ -37,15 +44,36 @@ object Notifier {
             ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED
 
+    private fun channelFor(kind: String): String = when (kind) {
+        "morning", "evening", "weekly" -> CH_BRIEFINGS
+        "workout_soon", "protein", "reschedule", "reschedule_accept", "reschedule_skip" -> CH_TRAINING
+        "fuel" -> CH_NUTRITION
+        "bedtime", "screen80" -> CH_WELLBEING
+        else -> CH_BRIEFINGS
+    }
+
     fun ensureChannel(ctx: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
             val mgr = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (mgr.getNotificationChannel(CHANNEL) == null) {
-                val ch = NotificationChannel(CHANNEL, "JARVIS briefings", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                    description = "Morning briefing, fuel check, evening review, weekly report"
-                }
-                mgr.createNotificationChannel(ch)
-            }
+            val channels = listOf(
+                NotificationChannel(CH_BRIEFINGS, "Briefings", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Morning briefing, evening review, weekly report"
+                },
+                NotificationChannel(CH_TRAINING, "Training", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Workout reminders, protein window, reschedule nudges"
+                },
+                NotificationChannel(CH_NUTRITION, "Nutrition", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Fuel check and food logging reminders"
+                },
+                NotificationChannel(CH_HABITS, "Habits", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Daily habit reminders"
+                },
+                NotificationChannel(CH_WELLBEING, "Wellbeing", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Bedtime, screen budget, wind-down"
+                },
+            )
+            mgr.createNotificationChannels(channels)
+            mgr.deleteNotificationChannel(CHANNEL)
         }
     }
 
@@ -85,7 +113,7 @@ object Notifier {
 
     private fun todaysTrainingStartMin(ctx: Context): Int? = runCatching {
         kotlinx.coroutines.runBlocking {
-            val today = java.time.LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val bit = 1 shl (today.dayOfWeek.value - 1)
             com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
                 .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
@@ -137,8 +165,8 @@ object Notifier {
         val open = Intent(ctx, Class.forName("com.ascend.lifeos.MainActivity"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val openPi = PendingIntent.getActivity(ctx, 4209, open, flags)
-        val n = NotificationCompat.Builder(ctx, CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+        val n = NotificationCompat.Builder(ctx, CH_TRAINING)
+            .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle("Training still open")
             .setContentText("Move it to ${hm(startMin)}–${hm(endMin)}? · $reason")
             .setStyle(NotificationCompat.BigTextStyle().bigText("Move today's session to ${hm(startMin)}–${hm(endMin)}? · $reason"))
@@ -210,8 +238,8 @@ object Notifier {
             return PendingIntent.getActivity(ctx, 4200 + (tab?.hashCode() ?: 0) % 100, open, flags)
         }
 
-        val builder = NotificationCompat.Builder(ctx, CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+        val builder = NotificationCompat.Builder(ctx, channelFor(kind))
+            .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle(msg.first)
             .setContentText(msg.second)
             .setStyle(NotificationCompat.BigTextStyle().bigText(msg.second))
@@ -261,7 +289,7 @@ object Notifier {
         ensureChannel(ctx)
         runCatching { Repo.initIfNeeded(ctx) }
         val h = com.ascend.lifeos.data.life.LifeStores.habits(ctx).firstOrNull { it.id == id } ?: return
-        val today = java.time.LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val dayKey = todayKey()
         if (!com.ascend.lifeos.data.life.HabitMetrics.scheduledOn(h, today)) return
         if (com.ascend.lifeos.data.life.HabitMetrics.skipped(ctx, h, dayKey)) return
@@ -277,8 +305,8 @@ object Notifier {
         val label = (if (icon.isNotBlank()) "$icon " else "") + title.ifBlank { "Habit" }
         val text = if (h.avoid) "Stay clean today — you've got this." else "Time to get it done. Tap to check it off."
         val notifId = 12_000 + (id.hashCode() and 0x7FFF)
-        val builder = NotificationCompat.Builder(ctx, CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+        val builder = NotificationCompat.Builder(ctx, CH_HABITS)
+            .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle(label)
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -299,8 +327,8 @@ object Notifier {
             "morning" -> {
                 val rec = when {
                     recovery == null -> "No recovery data yet — sync your watch."
-                    recovery >= 75 -> "Recovery $recovery. Green light — push today."
-                    recovery >= 50 -> "Recovery $recovery. Solid — train with headroom."
+                    recovery >= Prefs.int(ctx, Prefs.READINESS_GOOD, 75) -> "Recovery $recovery. Green light — push today."
+                    recovery >= Prefs.int(ctx, Prefs.READINESS_WARN, 50) -> "Recovery $recovery. Solid — train with headroom."
                     else -> "Recovery $recovery. Keep it light, the gains happen when you rest."
                 }
                 "Morning briefing" to "$rec Check Home for today's plan, $name."
@@ -310,14 +338,24 @@ object Notifier {
                 else "Fuel check" to "Nothing logged today. Even a quick entry keeps the data honest."
             }
             "evening" -> {
-                // hydration in glass-equivalents (logged drinks included), matching
-                // completion()/Home — not raw water taps, which under-report
+                val comp = Repo.completion(day, p)
                 val water = Repo.hydrationMl(day) / WaterCalc.glassMl()
+                val habits = runCatching {
+                    val all = com.ascend.lifeos.data.life.LifeStores.habits(ctx)
+                    val today = com.ascend.lifeos.core.todayDate()
+                    val key = com.ascend.lifeos.core.todayKey()
+                    val due = all.count { com.ascend.lifeos.data.life.HabitMetrics.scheduledOn(it, today) }
+                    val done = all.count { com.ascend.lifeos.data.life.HabitMetrics.scheduledOn(it, today) && com.ascend.lifeos.data.life.HabitMetrics.done(ctx, it, key) }
+                    if (due > 0) "$done/$due habits" else null
+                }.getOrNull()
                 val parts = buildList {
-                    add(if (kcal > 0) "$kcal kcal logged" else "no food logged")
+                    add("missions ${comp.done}/${comp.total}")
+                    add(if (kcal > 0) "$kcal kcal" else "no food logged")
                     add("water $water/${p.waterGoal}")
+                    habits?.let { add(it) }
                     val debt = Repo.sleepDebtMin()
-                    if (debt > 120) add("sleep debt ${debt / 60}h ${debt % 60}m — tonight is the payback")
+                    val debtThresh = Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60) * 2
+                    if (debt > debtThresh) add("sleep debt ${debt / 60}h ${debt % 60}m — tonight is the payback")
                 }
                 "Evening review" to parts.joinToString(" · ").replaceFirstChar { it.uppercase() }
             }
@@ -355,7 +393,7 @@ object Notifier {
                 // Behavioural nudge for the prescribed / earlier bedtime — the SRT
                 // and sleep-debt targets used to be computed but never fired (audit F6).
                 val debt = Repo.sleepDebtMin()
-                val tail = if (debt > 60) " Sleep debt ${debt / 60}h — tonight pays it back." else ""
+                val tail = if (debt > Prefs.int(ctx, Prefs.SLEEP_DEBT_WARN, 60)) " Sleep debt ${debt / 60}h — tonight pays it back." else ""
                 "Wind-down time" to "Lights out soon, $name — recovery is your multiplier.$tail"
             }
             "weekly" -> {

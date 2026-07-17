@@ -35,6 +35,7 @@ import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
@@ -78,7 +80,6 @@ import java.util.Locale
 private val DF_DM = DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)
 
 private fun fmt1(v: Double) = String.format(Locale.ENGLISH, "%.1f", v)
-private fun fmt2(v: Double) = String.format(Locale.ENGLISH, "%.2f", v)
 private fun dateOfTs(ts: Long) =
     if (ts <= 0) "" else Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault()).toLocalDate().format(DF_DM)
 
@@ -135,7 +136,7 @@ fun SchoolScreen(onClose: () -> Unit) {
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 120.dp),
         ) {
             item(key = "header") {
-                JarvisHeader("School", context, Mod.School) {}
+                JarvisHeader("School", context, Mod.School)
                 Spacer(Modifier.height(18.dp))
             }
 
@@ -152,7 +153,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                 }
                 itemsIndexed(exams, key = { _, it -> "exam_${it.title}_${it.dayEpoch}" }) { i, ex ->
-                    val daysLeft = (ex.dayEpoch - java.time.LocalDate.now().toEpochDay()).toInt()
+                    val daysLeft = (ex.dayEpoch - com.ascend.lifeos.core.todayDate().toEpochDay()).toInt()
                     val subj = ex.subject
                     // A real, aspirational target: the grade needed on this exam to
                     // climb HALF a grade better (points → +1.5, 1–6 → −0.5) — not the
@@ -180,7 +181,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                                 }
                                 Spacer(Modifier.width(16.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(ex.title, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                    Text(ex.title, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(whenTxt, color = Mod.School, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                                     needTxt?.let {
                                         Spacer(Modifier.height(2.dp))
@@ -190,9 +191,9 @@ fun SchoolScreen(onClose: () -> Unit) {
                             }
                         }
                     } else {
-                        Panel(Modifier.animateItem().fillMaxWidth(), corner = 14.dp) {
+                        Panel(Modifier.animateItem().fillMaxWidth(), corner = RElem) {
                             Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                                Text(ex.title, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(ex.title, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Spacer(Modifier.height(2.dp))
                                 Text(
                                     whenTxt + (needTxt?.let { " · $it" } ?: ""),
@@ -212,7 +213,7 @@ fun SchoolScreen(onClose: () -> Unit) {
 
             if (subjects.isEmpty()) {
                 item(key = "empty") {
-                    Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+                    Panel(Modifier.fillMaxWidth(), corner = RElem) {
                         EmptyState(
                             Icons.Rounded.School,
                             "No subjects yet",
@@ -230,7 +231,7 @@ fun SchoolScreen(onClose: () -> Unit) {
                         tick = tick,
                         expanded = expanded == s.id,
                         modifier = Modifier.animateItem(),
-                        onToggle = { expanded = if (expanded == s.id) null else s.id },
+                        onToggle = { Haptics.tick(ctx); expanded = if (expanded == s.id) null else s.id },
                         onAddGrade = { addGradeFor = s },
                         onDeleteGrade = { g ->
                             Haptics.confirm(ctx)
@@ -264,7 +265,7 @@ fun SchoolScreen(onClose: () -> Unit) {
 @Composable
 private fun GradeHero(overall: Double, subjectCount: Int) {
     Panel(
-        Modifier.fillMaxWidth(), corner = 20.dp,
+        Modifier.fillMaxWidth(),
         fill = Mod.School.copy(alpha = 0.05f), line = Mod.School.copy(alpha = 0.25f),
     ) {
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -308,11 +309,11 @@ private fun SubjectCard(
     val avg = remember(tick, subject.id) { SchoolStore.avgFor(ctx, subject.id) }
     val grade = remember(tick, subject.id) { SchoolStore.subjectGrade(ctx, subject) }
 
-    Panel(modifier.fillMaxWidth(), corner = 14.dp, onClick = onToggle) {
+    Panel(modifier.fillMaxWidth(), corner = RElem, onClick = onToggle) {
         Column(Modifier.animateContentSize(animationSpec = Motion.springSmoothOf()).padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(subject.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s15, fontWeight = FontWeight.Bold)
+                    Text(subject.name, color = TextPrimary, fontFamily = Display, fontSize = FS.s15, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(2.dp))
                     Text(
                         (if (subject.points) "0–15 points" else "grades 1–6") +
@@ -339,8 +340,8 @@ private fun SubjectCard(
                 val written = SchoolStore.avgFor(ctx, subject.id, oral = false)
                 val oral = SchoolStore.avgFor(ctx, subject.id, oral = true)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SplitStat("schriftlich", written, subject, Modifier.weight(1f))
-                    SplitStat("mündlich", oral, subject, Modifier.weight(1f))
+                    SplitStat("Written", written, subject, Modifier.weight(1f))
+                    SplitStat("Oral", oral, subject, Modifier.weight(1f))
                 }
                 if (grades.size >= 2) {
                     Spacer(Modifier.height(10.dp))
@@ -414,9 +415,10 @@ private fun GradeTrendChart(grades: List<Grade>, isPoints: Boolean) {
         var wSum = 0.0; var wCount = 0
         sorted.map { g ->
             wSum += g.value * g.weight; wCount += g.weight
-            wSum / wCount
+            if (wCount == 0) 0.0 else wSum / wCount
         }
     }
+    if (sorted.isEmpty()) return
 
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -467,6 +469,7 @@ private fun GradeTrendChart(grades: List<Grade>, isPoints: Boolean) {
 
 @Composable
 private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
+    val ctx = LocalContext.current
     var armed by remember { mutableStateOf(false) }
     LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
     Row(
@@ -482,7 +485,7 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    if (g.oral) "mündlich" else "schriftlich",
+                    if (g.oral) "Oral" else "Written",
                     color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 )
                 if (g.weight == SchoolStore.WEIGHT_DOUBLE) {
@@ -493,16 +496,15 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
             if (g.note.isNotBlank() || g.ts > 0) {
                 Text(
                     listOfNotNull(g.note.ifBlank { null }, dateOfTs(g.ts).ifBlank { null }).joinToString(" · "),
-                    color = TextDim, fontSize = FS.s10, fontFamily = Body,
+                    color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-        Icon(
-            Icons.Rounded.Delete, "Delete", tint = if (armed) Crit else TextDim,
-            modifier = Modifier.size(16.dp).pressScale {
-                if (armed) onDelete() else armed = true
-            },
-        )
+        Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+            if (armed) { Haptics.confirm(ctx); onDelete() } else { Haptics.warn(ctx); armed = true }
+        }, contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.Delete, "Delete", tint = if (armed) Crit else TextDim, modifier = Modifier.size(16.dp))
+        }
     }
 }
 
@@ -511,8 +513,8 @@ private fun GradeRow(subject: Subject, g: Grade, onDelete: () -> Unit) {
 @Composable
 private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
     val ctx = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var points by remember { mutableStateOf(true) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var points by rememberSaveable { mutableStateOf(true) }
 
     JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
@@ -547,13 +549,13 @@ private fun AddSubjectSheet(onDismiss: () -> Unit, onSaved: () -> Unit) {
 private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -> Unit) {
     val ctx = LocalContext.current
     // points-system state
-    var pts by remember { mutableIntStateOf(10) }
+    var pts by rememberSaveable { mutableIntStateOf(10) }
     // 1-6-system state
-    var whole by remember { mutableIntStateOf(2) }
-    var tend by remember { mutableStateOf("") }        // "+", "", "-"
-    var oral by remember { mutableStateOf(false) }
-    var weight by remember { mutableIntStateOf(SchoolStore.WEIGHT_DOUBLE) }
-    var note by remember { mutableStateOf("") }
+    var whole by rememberSaveable { mutableIntStateOf(2) }
+    var tend by rememberSaveable { mutableStateOf("") }        // "+", "", "-"
+    var oral by rememberSaveable { mutableStateOf(false) }
+    var weight by rememberSaveable { mutableIntStateOf(SchoolStore.WEIGHT_DOUBLE) }
+    var note by rememberSaveable { mutableStateOf("") }
 
     val value = if (subject.points) pts.toDouble()
     else (whole + when (tend) { "+" -> -0.25; "-" -> 0.25; else -> 0.0 }).coerceIn(1.0, 6.0)
@@ -562,7 +564,7 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
     JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Text("New grade", color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold)
-            Text(subject.name, color = TextDim, fontSize = FS.s12, fontFamily = Body)
+            Text(subject.name, color = TextDim, fontSize = FS.s12, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(14.dp))
 
             SectionLabel("Grade  ·  $preview", accent = Mod.School)
@@ -587,8 +589,8 @@ private fun AddGradeSheet(subject: Subject, onDismiss: () -> Unit, onSaved: () -
             SectionLabel("Type", accent = Mod.School)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                pill("schriftlich", !oral, Modifier.weight(1f)) { oral = false; weight = SchoolStore.WEIGHT_DOUBLE }
-                pill("mündlich", oral, Modifier.weight(1f)) { oral = true; weight = SchoolStore.WEIGHT_SINGLE }
+                pill("Written", !oral, Modifier.weight(1f)) { oral = false; weight = SchoolStore.WEIGHT_DOUBLE }
+                pill("Oral", oral, Modifier.weight(1f)) { oral = true; weight = SchoolStore.WEIGHT_SINGLE }
             }
             Spacer(Modifier.height(14.dp))
 

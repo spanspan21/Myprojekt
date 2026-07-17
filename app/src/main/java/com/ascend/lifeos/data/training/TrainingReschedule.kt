@@ -57,7 +57,7 @@ object TrainingReschedule {
         if (!enabled(ctx)) return null
         if (Repo.today().workoutDone) return null
 
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val entities = runCatching {
             CalendarRepo.dao(ctx).eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
         }.getOrDefault(emptyList())
@@ -85,7 +85,7 @@ object TrainingReschedule {
         // Bias toward the time you usually train, if it fits a free slot (idea #5)
         val learned = learnedStartMin(ctx)
         val slot = if (learned != null)
-            candidates.minByOrNull { c -> kotlin.math.abs(learned.coerceIn(c.startMin, c.endMin - len) - learned) }!!
+            candidates.minBy { c -> kotlin.math.abs(learned.coerceIn(c.startMin, c.endMin - len) - learned) }
         else candidates.first()
         val start = if (learned != null) learned.coerceIn(slot.startMin, slot.endMin - len) else slot.startMin
         val end = (start + len).coerceAtMost(slot.endMin)
@@ -102,7 +102,7 @@ object TrainingReschedule {
         runCatching { CalendarRepo.clearPastTraining(ctx) }
         CalendarRepo.upsert(
             ctx, title = "Training", type = EventType.TRAINING,
-            day = LocalDate.now(), startMin = s.startMin, endMin = s.endMin, note = "plan",
+            day = com.ascend.lifeos.core.todayDate(), startMin = s.startMin, endMin = s.endMin, note = "plan",
         )
         markHandled(ctx)
     }

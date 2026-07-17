@@ -139,10 +139,9 @@ fun BreathingScreen(onClose: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             JarvisHeader("Breathe", "${rounds} rounds", BreatheAccent) {
-                Icon(
-                    Icons.Rounded.Close, "Close", tint = TextDim,
-                    modifier = Modifier.size(20.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onClose() },
-                )
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onClose() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(Modifier.height(12.dp))
 

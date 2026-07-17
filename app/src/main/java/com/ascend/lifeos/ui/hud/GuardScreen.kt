@@ -5,6 +5,7 @@ import com.ascend.lifeos.data.Prefs
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -34,6 +37,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.LockOpen
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +71,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.Panel
@@ -141,7 +147,7 @@ fun GuardScreen() {
         WellbeingStore.recordDay(ctx, todayKey(), (d.totalMs / 60_000L).toInt(), d.unlocks)
         runCatching {
             // hour buckets are keyed by real calendar date so weekdays line up
-            WellbeingStore.recordHours(ctx, java.time.LocalDate.now().toString(), hb)
+            WellbeingStore.recordHours(ctx, com.ascend.lifeos.core.todayDate().toString(), hb)
             hourMap = WellbeingStore.hourHistory(ctx)
         }
     }
@@ -160,11 +166,12 @@ fun GuardScreen() {
     val puGood = Prefs.int(ctx, Prefs.PICKUP_HOUR_GOOD, 8)
     val puOk = Prefs.int(ctx, Prefs.PICKUP_HOUR_OK, 7)
     val puLate = Prefs.int(ctx, Prefs.PICKUP_HOUR_LATE, 6)
+    val fp = firstPickup
     val pickupPart = when {
-        firstPickup == null -> 7f
-        firstPickup!! >= puGood * 60 -> 10f
-        firstPickup!! >= puOk * 60 -> 7f
-        firstPickup!! >= puLate * 60 -> 3f
+        fp == null -> 7f
+        fp >= puGood * 60 -> 10f
+        fp >= puOk * 60 -> 7f
+        fp >= puLate * 60 -> 3f
         else -> 0f
     }
     val doomPart = (15f - dsSnoozes * 5f).coerceIn(0f, 15f)
@@ -184,20 +191,17 @@ fun GuardScreen() {
     )
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
         val guardedCount = (limits.keys + gates + openBudgets.keys).size
         // R5: proof of life — intercepts today + liveness instead of a mute title
         val icptToday = remember(tick) { WellbeingStore.interceptsToday(ctx) }
-        JarvisHeader(
-            "Guard",
-            if (data != null) {
-                "${fmtDur(data!!.totalMs)} today · $guardedCount guarded" +
-                    (if (icptToday > 0) " · $icptToday intercepts" else "")
-            } else "Real screen time. Hard boundaries.",
-            Mod.Guard,
-        )
+        val guardSub = data?.let { du ->
+            "${fmtDur(du.totalMs)} today · $guardedCount guarded" +
+                (if (icptToday > 0) " · $icptToday intercepts" else "")
+        } ?: "Real screen time. Hard boundaries."
+        JarvisHeader("Guard", guardSub, Mod.Guard)
         Spacer(Modifier.height(16.dp))
 
         // A6 watchdog: enabled but the service went quiet (One UI kill, crash)
@@ -234,12 +238,12 @@ fun GuardScreen() {
 
         // ── segments: the daily action (apps) first, reading matter last ──
         // Kills the 5.5-screen scroll to the app list (masterplan §9).
-        var segment by remember { mutableStateOf("apps") }
+        var segment by rememberSaveable { mutableStateOf("apps") }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             listOf("apps" to "Apps", "rules" to "Rules", "casino" to "Casino", "insights" to "Insights").forEach { (key, label) ->
                 val on = segment == key
                 Box(
-                    Modifier.weight(1f).pressScale { segment = key }
+                    Modifier.weight(1f).pressScale { Haptics.tick(ctx); segment = key }
                         .clip(RoundedCornerShape(11.dp))
                         .background(if (on) Mod.Guard.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, if (on) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(11.dp))
@@ -273,7 +277,7 @@ fun GuardScreen() {
             Column(Modifier.fillMaxWidth()) {
 
             // ── focus score hero — das Wappen trägt den Goldfaden ────
-            if (segment == "insights") Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true) {
+            if (segment == "insights") Panel(Modifier.fillMaxWidth(), corner = RHero, lux = true) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Ring(
                         progress = animProg, color = scoreColor,
@@ -325,7 +329,7 @@ fun GuardScreen() {
 
             // ── presets: profiles for real days (masterplan §11) ─────
             if (segment == "rules") {
-                Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                Panel(Modifier.fillMaxWidth()) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         Text("Presets", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         Text("One tap arms a whole day.", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
@@ -389,7 +393,7 @@ fun GuardScreen() {
             if (segment == "rules") Spacer(Modifier.height(12.dp))
 
             // ── controls ─────────────────────────────────────────────
-            if (segment == "rules") Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            if (segment == "rules") Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     // guard master switch
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -418,10 +422,10 @@ fun GuardScreen() {
                         }
                         if (morningUntil > 0) {
                             Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil - 60).coerceAtLeast(6 * 60)); tick++; Haptics.tick(ctx) }.defaultMinSize(minHeight = 44.dp, minWidth = 44.dp).padding(horizontal = 8.dp))
                             Text("${morningUntil / 60}:${"%02d".format(morningUntil % 60)}", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.padding(horizontal = 8.dp))
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { WellbeingStore.setMorningBlockUntil(ctx, (morningUntil + 60).coerceAtMost(16 * 60)); tick++; Haptics.tick(ctx) }.defaultMinSize(minHeight = 44.dp, minWidth = 44.dp).padding(horizontal = 8.dp))
                             Spacer(Modifier.width(6.dp))
                         }
                         TogglePill(morningUntil > 0) {
@@ -440,7 +444,7 @@ fun GuardScreen() {
                         }
                         Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale {
-                                WellbeingStore.setBudgetMin(ctx, budget - 30); tick++
+                                Haptics.tick(ctx); WellbeingStore.setBudgetMin(ctx, budget - 30); tick++
                             }.padding(horizontal = 8.dp))
                         Text(
                             "${budget / 60}h${if (budget % 60 != 0) " ${budget % 60}m" else ""}",
@@ -448,7 +452,7 @@ fun GuardScreen() {
                         )
                         Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale {
-                                WellbeingStore.setBudgetMin(ctx, budget + 30); tick++
+                                Haptics.tick(ctx); WellbeingStore.setBudgetMin(ctx, budget + 30); tick++
                             }.padding(horizontal = 8.dp))
                     }
                     Spacer(Modifier.height(13.dp))
@@ -508,7 +512,7 @@ fun GuardScreen() {
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Category budgets")
                 Spacer(Modifier.height(10.dp))
-                Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                Panel(Modifier.fillMaxWidth()) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         usedCats.forEachIndexed { i, (key, label) ->
                             if (i > 0) {
@@ -547,7 +551,7 @@ fun GuardScreen() {
             // ── casino unlock (optional, CASINO_GUARD_PLAN.md §20) ───
             if (segment == "casino") {
             Spacer(Modifier.height(4.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     tick // settings below re-read on every change
                     val cas = com.ascend.lifeos.data.casino.CasinoStore
@@ -567,14 +571,14 @@ fun GuardScreen() {
                         Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
                         // Practice table (plan §8) — try every game risk-free.
                         Box(
-                            Modifier.fillMaxWidth().pressScale { practiceOpen = true }
+                            Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); practiceOpen = true }
                                 .clip(RoundedCornerShape(13.dp))
-                                .background(CasinoViolet.copy(alpha = 0.12f))
-                                .border(0.5.dp, CasinoViolet.copy(alpha = 0.45f), RoundedCornerShape(13.dp))
+                                .background(Mod.Skills.copy(alpha = 0.12f))
+                                .border(0.5.dp, Mod.Skills.copy(alpha = 0.45f), RoundedCornerShape(13.dp))
                                 .padding(vertical = 13.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("🎮  Practice table — try it risk-free", color = CasinoViolet, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("🎮  Practice table — try it risk-free", color = Mod.Skills, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.height(12.dp)); HairRow(); Spacer(Modifier.height(12.dp))
                         MiniStepper(
@@ -666,7 +670,7 @@ fun GuardScreen() {
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("Last 7 days")
                 Spacer(Modifier.height(10.dp))
-                Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                Panel(Modifier.fillMaxWidth()) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         WeekChart(week, budget, Modifier.fillMaxWidth().height(110.dp))
                         Spacer(Modifier.height(8.dp))
@@ -682,7 +686,7 @@ fun GuardScreen() {
             Spacer(Modifier.height(18.dp))
             SectionLabel("Unlock pattern")
             Spacer(Modifier.height(10.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     UnlockHeatmap(hourMap)
                     Spacer(Modifier.height(10.dp))
@@ -704,8 +708,8 @@ fun GuardScreen() {
             SectionLabel("Tap a chip — rule set. · for more")
             Spacer(Modifier.height(10.dp))
             when {
-                d == null && loading -> EmptyHint("Reading screen time…")
-                d == null || d.apps.isEmpty() -> EmptyHint("No app usage yet today.")
+                d == null && loading -> EmptyState(Icons.Rounded.Timer, "Reading screen time…", "Usage data is loading", Mod.Guard)
+                d == null || d.apps.isEmpty() -> EmptyState(Icons.Rounded.PhoneAndroid, "No app usage yet today", "Open a guarded app to see it here", Mod.Guard)
                 else -> {
                     val maxMs = d.apps.maxOf { it.ms }.coerceAtLeast(1)
                     d.apps.forEach { app ->
@@ -724,7 +728,7 @@ fun GuardScreen() {
                             opens = if (openBudgets.containsKey(app.pkg))
                                 WellbeingStore.opensToday(ctx, app.pkg, todayKey()) else 0,
                             expanded = expandedPkg == app.pkg,
-                            onToggle = { expandedPkg = if (expandedPkg == app.pkg) null else app.pkg },
+                            onToggle = { Haptics.tick(ctx); expandedPkg = if (expandedPkg == app.pkg) null else app.pkg },
                             onSetLimit = { m ->
                                 if (m == null) WellbeingStore.removeLimit(ctx, app.pkg)
                                 else {
@@ -796,8 +800,6 @@ fun GuardScreen() {
     }
 }
 
-private val CasinoViolet = Color(0xFF9B8CFF)
-
 // ─── guard pause card (D3) ──────────────────────────────────────────────────
 
 /**
@@ -819,7 +821,7 @@ private fun PauseCard(pausedUntil: Long, onPause: (Long) -> Unit, onResume: () -
     }
     val active = pausedUntil > now
     Panel(
-        Modifier.fillMaxWidth(), corner = 16.dp,
+        Modifier.fillMaxWidth(), corner = RElem,
         line = if (active) Warn.copy(alpha = 0.45f) else HudLine,
         fill = if (active) Warn.copy(alpha = 0.06f) else HudFill,
     ) {
@@ -886,13 +888,13 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
     }
 
     Panel(
-        Modifier.fillMaxWidth(), corner = 18.dp,
+        Modifier.fillMaxWidth(),
         fill = if (active) Mod.Guard.copy(alpha = 0.07f) else Ivory.copy(alpha = 0.03f),
         line = if (active) Mod.Guard.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.10f),
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.Timer, null, tint = Mod.Guard, modifier = Modifier.size(18.dp))
+                Icon(Icons.Rounded.Timer, "Focus session", tint = Mod.Guard, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(10.dp))
                 Text(
                     if (active) "FOCUS SESSION RUNNING" else "FOCUS SESSION",
@@ -909,12 +911,17 @@ private fun FocusSessionCard(guardEnabled: Boolean, overlayOk: Boolean, onArm: (
                         color = TextPrimary, style = metricStyle(34),
                     )
                     Spacer(Modifier.weight(1f))
+                    var endArmed by remember { mutableStateOf(false) }
+                    LaunchedEffect(endArmed) { if (endArmed) { kotlinx.coroutines.delay(2500); endArmed = false } }
                     Box(
-                        Modifier.clip(RoundedCornerShape(11.dp)).background(Crit.copy(alpha = 0.12f))
-                            .border(0.5.dp, Crit.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-                            .pressScale { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); Haptics.warn(ctx); AppFeedback.show("Focus session ended") }
+                        Modifier.clip(RoundedCornerShape(11.dp)).background(Crit.copy(alpha = if (endArmed) 0.25f else 0.12f))
+                            .border(0.5.dp, Crit.copy(alpha = if (endArmed) 0.7f else 0.4f), RoundedCornerShape(11.dp))
+                            .pressScale {
+                                if (endArmed) { WellbeingStore.cancelFocus(ctx); now = System.currentTimeMillis(); Haptics.confirm(ctx); AppFeedback.show("Focus session ended") }
+                                else { Haptics.warn(ctx); endArmed = true }
+                            }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
-                    ) { Text("End early", color = Crit, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text(if (endArmed) "Tap to confirm" else "End early", color = Crit, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
                 Text("Every limited app is hard-blocked until the timer ends.", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             } else {
@@ -963,7 +970,7 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
     var armedRemoveWindow by remember { mutableStateOf(-1) }
     LaunchedEffect(armedRemoveWindow) { if (armedRemoveWindow >= 0) { kotlinx.coroutines.delay(2500); armedRemoveWindow = -1 } }
 
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
                 "Every guarded app is hard-blocked during a window.",
@@ -1042,11 +1049,12 @@ private fun PhoneFreePanel(windows: List<Pair<Int, Int>>, onChanged: () -> Unit)
 
 @Composable
 private fun ScoreRow(label: String, value: String, quality: Float) {
+    val animQ by animateFloatAsState(quality.coerceIn(0.04f, 1f), Motion.springSmoothOf(), label = "scoreBar")
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.width(84.dp))
         Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Ivory.copy(alpha = 0.06f))) {
             Box(
-                Modifier.fillMaxWidth(quality.coerceIn(0.04f, 1f)).height(4.dp).clip(RoundedCornerShape(2.dp))
+                Modifier.fillMaxWidth(animQ).height(4.dp).clip(RoundedCornerShape(2.dp))
                     .background(if (quality >= 0.66f) Good else if (quality >= 0.35f) Warn else Crit),
             )
         }
@@ -1150,11 +1158,11 @@ private fun AppRow(
     val effLimit = limit?.plus(bonusTotal)
     val over = effLimit != null && app.ms >= effLimit * 60_000L
     val opensOver = budget != null && opens > budget.first
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(
             Modifier.fillMaxWidth()
                 .animateContentSize(Motion.springSmoothOf())
-                .pressScale { onToggle() }
+                .pressScale { Haptics.tick(ctx); onToggle() }
                 .padding(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1381,15 +1389,6 @@ private fun PermRow(title: String, why: String, ok: Boolean, onGrant: () -> Unit
 }
 
 @Composable
-private fun EmptyHint(text: String) {
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
-        Box(Modifier.fillMaxWidth().padding(22.dp), contentAlignment = Alignment.Center) {
-            Text(text, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body)
-        }
-    }
-}
-
-@Composable
 private fun PresetChip(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier.pressScale(onClick)
@@ -1417,12 +1416,3 @@ private fun LimitChip(label: String, selected: Boolean, onClick: () -> Unit) {
     ) { Text(label, color = fg, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
 
-@Composable
-private fun PillButton(label: String, primary: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier.clip(RoundedCornerShape(13.dp))
-            .background(if (primary) Mod.Guard.copy(alpha = 0.18f) else HudFill)
-            .border(0.5.dp, if (primary) Mod.Guard.copy(alpha = 0.5f) else HudLine, RoundedCornerShape(13.dp))
-            .pressScale(onClick = onClick).padding(horizontal = 16.dp, vertical = 11.dp),
-    ) { Text(label, color = if (primary) Mod.Guard else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
-}

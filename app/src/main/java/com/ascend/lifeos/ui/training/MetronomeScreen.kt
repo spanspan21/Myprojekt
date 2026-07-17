@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,7 +40,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun MetronomeScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
-    var tempo by remember { mutableStateOf("3-1-2-0") }
+    var tempo by rememberSaveable { mutableStateOf("3-1-2-0") }
     var running by remember { mutableStateOf(false) }
     var phase by remember { mutableIntStateOf(0) } // 0=eccentric 1=pause 2=concentric 3=pause
     var remaining by remember { mutableIntStateOf(0) }
@@ -49,7 +50,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
     val phaseColors = listOf(Cyan, TextDim, Crit, TextDim)
 
     LaunchedEffect(running) {
-        if (!running || parts.size != 4) return@LaunchedEffect
+        if (!running || parts.size != 4 || parts.all { it <= 0 }) return@LaunchedEffect
         phase = 0; remaining = parts[0]
         while (running) {
             if (remaining > 0) {
@@ -57,12 +58,12 @@ fun MetronomeScreen(onBack: () -> Unit) {
                 delay(1000)
                 remaining--
             } else {
-                phase = (phase + 1) % 4
-                remaining = parts[phase]
-                if (remaining == 0) {
+                var skipped = 0
+                do {
                     phase = (phase + 1) % 4
                     remaining = parts[phase]
-                }
+                    skipped++
+                } while (remaining <= 0 && skipped < 4)
                 Haptics.tick(ctx)
             }
         }
@@ -71,7 +72,7 @@ fun MetronomeScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp)) }
             Spacer(Modifier.width(12.dp))
             Text("Metronome", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }

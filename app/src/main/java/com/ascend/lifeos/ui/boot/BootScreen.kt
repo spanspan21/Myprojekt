@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
@@ -33,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,8 +90,8 @@ private val DEFAULT_OBJECTIVES = listOf("train", "learn", "sleep", "focus", "fue
 
 @Composable
 fun BootScreen() {
-    var phase by remember { mutableStateOf(Phase.MATERIALIZE) }
-    var name by remember { mutableStateOf(Repo.profile().name.ifBlank { DEFAULT_NAME }) }
+    var phase by rememberSaveable { mutableStateOf(Phase.MATERIALIZE) }
+    var name by rememberSaveable { mutableStateOf(Repo.profile().name.ifBlank { DEFAULT_NAME }) }
 
     // idempotent advance: auto-timer and tap-to-skip can both fire safely
     fun advance(from: Phase) {
@@ -141,14 +143,14 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
     val ctx = LocalContext.current
     val p = Repo.profile()
     // Recalibrate keeps your numbers; a fresh boot starts from the house defaults.
-    var sex by remember { mutableStateOf(p.sex) }
-    var age by remember { mutableStateOf(if (p.onboarded) p.age else 16) }
-    var height by remember { mutableStateOf(p.heightCm) }
-    var weight by remember { mutableStateOf(if (p.onboarded) p.weightKg else 70) }
-    var activity by remember { mutableIntStateOf(if (p.onboarded) p.activity else 3) }
-    var trainFreq by remember { mutableIntStateOf(p.trainFreq) }
-    var sessionLen by remember { mutableIntStateOf(p.sessionLen) }
-    var goal by remember { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
+    var sex by rememberSaveable { mutableStateOf(if (p.onboarded) p.sex else "") }
+    var age by rememberSaveable { mutableStateOf(if (p.onboarded) p.age else 16) }
+    var height by rememberSaveable { mutableStateOf(if (p.onboarded) p.heightCm else 170) }
+    var weight by rememberSaveable { mutableStateOf(if (p.onboarded) p.weightKg else 70) }
+    var activity by rememberSaveable { mutableIntStateOf(if (p.onboarded) p.activity else 3) }
+    var trainFreq by rememberSaveable { mutableIntStateOf(p.trainFreq) }
+    var sessionLen by rememberSaveable { mutableIntStateOf(p.sessionLen) }
+    var goal by rememberSaveable { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
     val objectives = remember {
         mutableStateListOf<String>().apply { addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES }) }
     }
@@ -181,14 +183,18 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             }
             onFinish(sex, age, height, weight, activity, goal, objectives.toList())
             Repo.setTrainPrefs(trainFreq, sessionLen, Repo.profile().hasVest)
+            if (!Prefs.has(ctx, Prefs.NOTIF_MORNING_MIN)) Prefs.setInt(ctx, Prefs.NOTIF_MORNING_MIN, 420)
+            if (!Prefs.has(ctx, Prefs.SLEEP_TARGET_MIN)) Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, 480)
+            if (!Prefs.has(ctx, Prefs.GREET_NIGHT_START)) Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, 22)
+            com.ascend.lifeos.data.Notifier.schedule(ctx)
         }
     }
 
     Box(Modifier.fillMaxSize()) {
     Column(
-        Modifier.fillMaxSize().statusBarsPadding()
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 26.dp).padding(top = 40.dp, bottom = 30.dp),
+            .padding(horizontal = 20.dp).padding(top = 40.dp, bottom = 30.dp),
     ) {
         com.ascend.lifeos.ui.home.Reveal(0) {
         Text("CALIBRATION", color = Mod.Home, fontFamily = Display, fontSize = FS.s10,
@@ -207,8 +213,8 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             }
             Spacer(Modifier.height(12.dp))
             TuneStepper("Age", age, "y") { age = (age + it).coerceIn(12, 100) }
-            TuneStepper("Height", height, "cm") { height = (height + it).coerceIn(120, 230) }
-            TuneStepper("Weight", weight, "kg") { weight = (weight + it).coerceIn(30, 250) }
+            TuneStepper("Height", height, Units.heightLabel(ctx)) { height = (height + it).coerceIn(120, 230) }
+            TuneStepper("Weight", weight, Units.weightLabel(ctx)) { weight = (weight + it).coerceIn(30, 250) }
         }
         }
 
@@ -216,6 +222,8 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         com.ascend.lifeos.ui.home.Reveal(2) {
         Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
+        Spacer(Modifier.height(3.dp))
+        Text("Modules you care about — shapes your daily missions and briefing", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             listOf("train" to "Train", "fuel" to "Fuel", "sleep" to "Sleep").forEach { (id, label) ->
@@ -239,7 +247,11 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Text("YOUR SPORT", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
-        var sport by remember { mutableStateOf(Repo.data.profile.sport) }
+        var sport by remember {
+            val initial = Repo.data.profile.sport.ifBlank { "gym" }
+            if (Repo.data.profile.sport.isBlank()) Repo.setSport(initial)
+            mutableStateOf(initial)
+        }
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -257,7 +269,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Text("ACTIVITY LEVEL", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
-        val activityLabels = listOf(1 to "Sedentary", 2 to "Light", 3 to "Moderate", 4 to "Active", 5 to "Very active")
+        val activityLabels = listOf(1 to "Sedentary · desk job", 2 to "Light · 1-2×/wk", 3 to "Moderate · 3-4×/wk", 4 to "Active · daily", 5 to "Very active · physical job")
         Row(
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
@@ -349,10 +361,10 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            listOf(1260 to "21:00", 1290 to "21:30", 1320 to "22:00", 1350 to "22:30", 1380 to "23:00", 1410 to "23:30").forEach { (m, label) ->
-                BootChip(label, bedtimeMin == m) {
-                    bedtimeMin = m
-                    Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, m / 60)
+            listOf(21 to "21:00", 22 to "22:00", 23 to "23:00", 24 to "00:00").forEach { (h, label) ->
+                BootChip(label, bedtimeMin == h * 60) {
+                    bedtimeMin = h * 60
+                    Prefs.setInt(ctx, Prefs.GREET_NIGHT_START, h)
                 }
             }
         }
@@ -422,15 +434,21 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         )
 
         Spacer(Modifier.height(22.dp))
+        val canLaunch = sex.isNotBlank()
         Box(
             Modifier.fillMaxWidth()
-                .pressScale { if (!leaving) { Haptics.epic(ctx); leaving = true } }
-                .clip(RoundedCornerShape(15.dp)).background(Mod.Home)
+                .then(if (canLaunch) Modifier.pressScale { if (!leaving) { Haptics.epic(ctx); leaving = true } } else Modifier)
+                .clip(RoundedCornerShape(15.dp)).background(if (canLaunch) Mod.Home else Mod.Home.copy(alpha = 0.25f))
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text("ALL SYSTEMS ONLINE", color = Void, fontFamily = Display, fontSize = FS.s13_5,
+            Text("ALL SYSTEMS ONLINE", color = if (canLaunch) Void else Void.copy(alpha = 0.5f), fontFamily = Display, fontSize = FS.s13_5,
                 fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        }
+        if (!canLaunch) {
+            Spacer(Modifier.height(6.dp))
+            Text("Select Male or Female above to continue", color = TextMuted, fontFamily = Body, fontSize = FS.s11,
+                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
         }
     }
@@ -850,19 +868,25 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
         if (editing) {
             LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
             val bootFm = androidx.compose.ui.platform.LocalFocusManager.current
-            BasicTextField(
-                value = name,
-                onValueChange = { if (it.length <= 24) onName(it) },
-                singleLine = true,
-                textStyle = TextStyle(
-                    color = TextPrimary, fontFamily = Display, fontSize = FS.s30,
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                if (name.isEmpty()) Text(
+                    "Your name", color = TextDim, fontFamily = Display, fontSize = FS.s30,
                     fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-                ),
-                cursorBrush = SolidColor(Mod.Home),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { bootFm.clearFocus(); editing = false }),
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-            )
+                )
+                BasicTextField(
+                    value = name,
+                    onValueChange = { if (it.length <= 24) onName(it) },
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        color = TextPrimary, fontFamily = Display, fontSize = FS.s30,
+                        fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                    ),
+                    cursorBrush = SolidColor(Mod.Home),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { bootFm.clearFocus(); editing = false }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                )
+            }
         } else {
             Text(
                 name.ifBlank { DEFAULT_NAME }, color = TextPrimary, fontFamily = Display,
@@ -872,7 +896,8 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                    ) { editing = true }
+                        role = androidx.compose.ui.semantics.Role.Button,
+                    ) { Haptics.tick(ctx); editing = true }
                     .padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
@@ -903,7 +928,8 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                         enabled = !engaged,
-                    ) { engaged = true },
+                        role = androidx.compose.ui.semantics.Role.Button,
+                    ) { Haptics.epic(ctx); engaged = true },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -921,7 +947,7 @@ private fun OperatorPhase(name: String, onName: (String) -> Unit, onGo: () -> Un
                 Modifier.clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .pressScale { hcLauncher.launch(HealthConnect.requestPermissions()) }
+                    .pressScale { Haptics.tick(ctx); hcLauncher.launch(HealthConnect.requestPermissions()) }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

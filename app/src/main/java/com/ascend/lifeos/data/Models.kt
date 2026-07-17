@@ -68,7 +68,7 @@ data class Profile(
     val activity: Int = 3,             // 1..5
     val dietGoal: String = "maintain", // lose | maintain | gain
     val objectives: List<String> = emptyList(), // onboarding: what Jarvis prioritizes
-    val sport: String = "hockey",      // SportCatalog id — calendar/season/game-day adapt to it
+    val sport: String = "",             // SportCatalog id — calendar/season/game-day adapt to it; boot defaults to "gym"
 
     // ---- train brain (assessment · goals · equipment) ----
     val assessResults: Map<String, Int> = emptyMap(), // testId -> reps/seconds

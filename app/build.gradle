@@ -18,8 +18,8 @@ android {
         applicationId "com.ascend.lifeos"
         minSdk 26
         targetSdk 34
-        versionCode 29
-        versionName "2.27"
+        versionCode 31
+        versionName "2.29"
         vectorDrawables { useSupportLibrary true }
 
         buildConfigField "String", "SYNC_URL", "\"${_localProps.getProperty('JARVIS_SYNC_URL', '')}\""

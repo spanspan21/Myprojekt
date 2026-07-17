@@ -85,29 +85,34 @@ object FinanceRoom {
     fun txnAccounts(): Map<String, String> = acctOfCache
 
     // ── writes (cache-first, persisted async) ──
+    @Synchronized
     fun addTxn(id: String, ts: Long, amountCents: Long, category: String, note: String, accountId: String?) {
         txnsCache = (listOf(Txn(id, ts, amountCents, category, note)) + txnsCache).sortedByDescending { it.ts }
         if (accountId != null) acctOfCache = acctOfCache + (id to accountId)
         persist { upsertTxn(TxnEntity(id, ts, amountCents, category, note, accountId)) }
     }
 
+    @Synchronized
     fun deleteTxn(id: String) {
         txnsCache = txnsCache.filterNot { it.id == id }
         acctOfCache = acctOfCache - id
         persist { deleteTxn(id) }
     }
 
+    @Synchronized
     fun updateTxn(id: String, category: String, note: String) {
         val cur = txnsCache.firstOrNull { it.id == id } ?: return
         txnsCache = txnsCache.map { if (it.id == id) it.copy(category = category, note = note) else it }
         persist { upsertTxn(TxnEntity(id, cur.ts, cur.amountCents, category, note, acctOfCache[id])) }
     }
 
+    @Synchronized
     fun setTxnAccount(txnId: String, accountId: String?) {
         acctOfCache = if (accountId == null) acctOfCache - txnId else acctOfCache + (txnId to accountId)
         persist { setTxnAccount(txnId, accountId) }
     }
 
+    @Synchronized
     fun upsertAccount(a: Account, orderIdx: Int) {
         // replace in place (preserve display order) or append
         accountsCache = if (accountsCache.any { it.id == a.id })
@@ -117,6 +122,7 @@ object FinanceRoom {
     }
 
     /** Adjust one account's running balance by [deltaCents] (txn book/reverse/move). */
+    @Synchronized
     fun adjustBalance(accountId: String, deltaCents: Long) {
         val idx = accountsCache.indexOfFirst { it.id == accountId }
         if (idx < 0) return
@@ -124,6 +130,27 @@ object FinanceRoom {
         upsertAccount(cur.copy(balanceCents = cur.balanceCents + deltaCents), idx)
     }
 
+    @Synchronized
+    fun transferBalance(fromId: String, toId: String, cents: Long) {
+        val fi = accountsCache.indexOfFirst { it.id == fromId }
+        val ti = accountsCache.indexOfFirst { it.id == toId }
+        if (fi < 0 || ti < 0) return
+        val from = accountsCache[fi]
+        val to = accountsCache[ti]
+        accountsCache = accountsCache.mapIndexed { i, a ->
+            when (i) {
+                fi -> a.copy(balanceCents = a.balanceCents - cents)
+                ti -> a.copy(balanceCents = a.balanceCents + cents)
+                else -> a
+            }
+        }
+        persist {
+            upsertAccount(AccountEntity(from.id, from.name, from.icon, from.balanceCents - cents, fi))
+            upsertAccount(AccountEntity(to.id, to.name, to.icon, to.balanceCents + cents, ti))
+        }
+    }
+
+    @Synchronized
     fun setBalance(accountId: String, balanceCents: Long) {
         val idx = accountsCache.indexOfFirst { it.id == accountId }
         if (idx < 0) return
@@ -132,6 +159,7 @@ object FinanceRoom {
 
     fun accountCount(): Int = accountsCache.size
 
+    @Synchronized
     fun deleteAccount(id: String) {
         accountsCache = accountsCache.filterNot { it.id == id }
         // FK onDelete=SET_NULL clears the link; mirror it in the cache

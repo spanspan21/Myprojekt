@@ -1,6 +1,8 @@
 package com.ascend.lifeos.data.training
 
 import android.content.Context
+import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.calendar.CalendarRepo
 import com.ascend.lifeos.data.calendar.EventType
 import java.time.LocalDate
@@ -85,6 +87,8 @@ object PlanGenerator {
         gameDayNextDay: Boolean = false,      // optional plumbing: skip the finisher before a game
         highStrain: Boolean = false,          // last session ground to RPE ≥ 9.3 → autoregulate down
         daysSinceLastSession: Int = 0,        // detraining: long breaks re-enter lower, not at zero
+        mevSets: Int = VolumeModel.MEV_SETS_PER_EX,
+        mrvSets: Int = VolumeModel.MRV_SETS_PER_EX,
     ): WeekPlan {
         // season phase (ice-hockey year): shifts frequency + volume character
         val season = seasonPhase
@@ -135,6 +139,7 @@ object PlanGenerator {
             allExercises.ifEmpty { ExerciseSeed.ALL_EXERCISES },
             bodyweightKg, hasVest, vestMaxKg, isDeload, len, extScale,
             trainWeek.coerceIn(0, 4), readiness, freshness, season, seasonWord,
+            mev = mevSets, mrv = mrvSets,
         )
 
         // sick mode: recovery is the program
@@ -193,7 +198,7 @@ object PlanGenerator {
      * and at least the rest of today must still fit the session.
      */
     suspend fun placeWeek(ctx: Context, plan: WeekPlan, sessionLen: Int): List<Placement> {
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val days = (0..6).map { today.plusDays(it.toLong()) }
         val dao = CalendarRepo.dao(ctx)
         val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.plusDays(6).toEpochDay())
@@ -250,7 +255,7 @@ object PlanGenerator {
                 morningStart                                    // train first thing, before school
             } else {
                 // no morning room → earliest free slot of the day (evening after school)
-                (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.first()).startMin
+                (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.firstOrNull())?.startMin ?: continue
             }
             out.add(Placement(session, candidate.day, startMin))
             used.add(candidate.day)
@@ -286,7 +291,7 @@ object PlanGenerator {
      */
     suspend fun autoReschedule(ctx: Context, sessionLen: Int): List<String> {
         val dao = CalendarRepo.dao(ctx)
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.plusDays(7).toEpochDay())
         val trainings = entities.filter {
             it.type == EventType.TRAINING.name && it.repeatMask == 0 &&
@@ -373,6 +378,8 @@ object PlanGenerator {
         val freshness: MuscleRecovery.Freshness?,
         val season: String,
         val seasonWord: String,
+        val mev: Int = VolumeModel.MEV_SETS_PER_EX,
+        val mrv: Int = VolumeModel.MRV_SETS_PER_EX,
     ) {
         /** Accessories already used this week — keeps variety across sessions. */
         val weekPicked = HashSet<String>()
@@ -388,10 +395,9 @@ object PlanGenerator {
         // then the external season/exam/detrain scale is applied and re-bounded to
         // MEV..MRV. Deload volume is already correct (2) and is left un-scaled.
         val setsBase: Int get() {
-            val base = VolumeModel.setsPerExercise(trainWeek, readiness, deload)
+            val base = VolumeModel.setsPerExercise(trainWeek, readiness, deload, mev, mrv)
             if (deload) return base
-            return Math.round(base * extScale).toInt()
-                .coerceIn(VolumeModel.MEV_SETS_PER_EX, VolumeModel.MRV_SETS_PER_EX)
+            return Math.round(base * extScale).toInt().coerceIn(mev, mrv)
         }
 
         // Mesocycle RIR ramp (evidence: proximity-to-failure should tighten across
@@ -762,7 +768,8 @@ object PlanGenerator {
                 // fits, the prescribed work stands as written.
                 val prim = byId[pe.exerciseId]?.primaryMuscle
                 val f = if (prim != null) freshness?.of(prim) else null
-                if (f != null && f < 0.45f && prim != null) {
+                val freshThresh = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.FRESHNESS_THRESHOLD, 45) / 100f } ?: 0.45f
+                if (f != null && f < freshThresh && prim != null) {
                     swapForFresh(pe, prim, used)?.let { pe = it }
                 }
                 out.add(pe)

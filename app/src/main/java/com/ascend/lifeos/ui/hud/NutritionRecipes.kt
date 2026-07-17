@@ -3,6 +3,7 @@ package com.ascend.lifeos.ui.hud
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,9 +18,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -103,7 +106,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
 
     // ---- pantry: "cook with what I have" ----
     var pantry by remember { mutableStateOf(listOf<String>()) }
-    var pantryInput by remember { mutableStateOf("") }
+    var pantryInput by rememberSaveable { mutableStateOf("") }
     fun addPantry() {
         val t = pantryInput.trim()
         if (t.isNotEmpty() && pantry.none { it.equals(t, ignoreCase = true) }) pantry = pantry + t
@@ -119,7 +122,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     }
 
     // ---- recipe URL import (#17) ----
-    var importUrl by remember { mutableStateOf("") }
+    var importUrl by rememberSaveable { mutableStateOf("") }
     var importing by remember { mutableStateOf(false) }
     var importError by remember { mutableStateOf<String?>(null) }
     var imported by remember { mutableStateOf<ImportedRecipe?>(null) }
@@ -146,7 +149,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     var assignDay by remember { mutableStateOf<String?>(null) }
     var planTick by remember { mutableIntStateOf(0) }
     val weekDays = remember { currentWeekDays() }
-    val todayIso = remember { java.time.LocalDate.now().toString() }
+    val todayIso = remember { com.ascend.lifeos.core.todayDate().toString() }
     val planned = remember(planTick) {
         weekDays.mapNotNull { (key, label) ->
             val title = planPrefs.getString("plan_$key", null) ?: return@mapNotNull null
@@ -164,7 +167,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
     }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 14.dp)) {
@@ -172,11 +175,11 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             Spacer(Modifier.width(14.dp))
             Text("Recipes", color = TextPrimary, fontSize = FS.s24, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
             // Kap. 41 (P19-Fix): eigene Rezepte anlegen
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { editorOpen = true }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { Haptics.tick(ctx); editorOpen = true }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.Add, "Add recipe", tint = Mod.Fuel, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(8.dp))
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { onShopping() }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale { Haptics.tick(ctx); onShopping() }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.ShoppingCart, "Shopping list", tint = Mod.Fuel, modifier = Modifier.size(20.dp))
             }
         }
@@ -197,15 +200,15 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         }
         imported?.let { r ->
             Spacer(Modifier.height(10.dp))
-            GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            GlassPanel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(r.name, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Text(r.name, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             Text("${r.ingredients.size} ingredients found", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
                         }
                         Spacer(Modifier.width(10.dp))
-                        Icon(Icons.Rounded.Close, "Dismiss import", tint = TextDim, modifier = Modifier.size(18.dp).pressScale { imported = null })
+                        Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); imported = null }, contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Close, "Dismiss import", tint = TextDim, modifier = Modifier.size(18.dp)) }
                     }
                     Spacer(Modifier.height(10.dp))
                     r.ingredients.forEach { ing ->
@@ -230,7 +233,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                .pressScale { planOpen = !planOpen; if (!planOpen) assignDay = null }.padding(vertical = 4.dp),
+                .pressScale { Haptics.tick(ctx); planOpen = !planOpen; if (!planOpen) assignDay = null }.padding(vertical = 4.dp),
         ) {
             Text(if (planOpen) "PLAN ▾" else "PLAN ▸", color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             if (planned.isNotEmpty()) {
@@ -253,7 +256,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             }
             if (planned.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
-                GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                GlassPanel(Modifier.fillMaxWidth()) {
                     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
                         planned.forEach { row ->
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
@@ -265,6 +268,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                                         Text(
                                             "Missing → shopping", color = Mod.Fuel, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                                             modifier = Modifier.pressScale {
+                                                Haptics.tick(ctx)
                                                 val missing = rec.parts.filter { !matchesPantry(it.name, pantry) }
                                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = rec.title) })
                                                 AppFeedback.show("Added to shopping list")
@@ -273,7 +277,11 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                                     }
                                 }
                                 Spacer(Modifier.width(8.dp))
-                                Icon(Icons.Rounded.Close, "Remove item", tint = TextDim, modifier = Modifier.size(16.dp).pressScale { clearPlan(row.key) })
+                                var armed by remember { mutableStateOf(false) }
+                                LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
+                                Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                                    if (armed) { Haptics.confirm(ctx); clearPlan(row.key) } else { Haptics.warn(ctx); armed = true }
+                                }, contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Close, if (armed) "Tap again" else "Remove item", tint = if (armed) Crit else TextDim, modifier = Modifier.size(16.dp)) }
                             }
                         }
                     }
@@ -291,7 +299,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
             Spacer(Modifier.width(10.dp))
             Box(
                 Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
-                    .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).pressScale { addPantry() },
+                    .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(13.dp)).pressScale { Haptics.tick(ctx); addPantry() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Rounded.Add, "Add to pantry", tint = Mod.Fuel, modifier = Modifier.size(20.dp)) }
         }
@@ -323,7 +331,7 @@ fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {
                     r, fit, pantry, expanded == r.id,
                     assignLabel = assignLabel,
                     onAssign = { assignDay?.let { d -> assignPlan(d, r) } },
-                    onToggle = { expanded = if (expanded == r.id) null else r.id },
+                    onToggle = { Haptics.tick(ctx); expanded = if (expanded == r.id) null else r.id },
                 )
                 Spacer(Modifier.height(10.dp))
             }
@@ -381,10 +389,11 @@ private fun IngredientField(value: String, onValue: (String) -> Unit, onAdd: () 
 
 @Composable
 private fun PantryChip(label: String, onRemove: () -> Unit) {
+    val pcCtx = LocalContext.current
     Row(
         Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Fuel.copy(alpha = 0.14f))
             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.4f), RoundedCornerShape(11.dp))
-            .pressScale { onRemove() }.padding(horizontal = 11.dp, vertical = 7.dp),
+            .pressScale { Haptics.tick(pcCtx); onRemove() }.padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = Mod.Fuel, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -401,15 +410,15 @@ private fun RecipeCard(
     val ctx = LocalContext.current
     val pantryActive = pantry.isNotEmpty()
     val matched = if (pantryActive) r.parts.count { matchesPantry(it.name, pantry) } else 0
-    GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.fillMaxWidth().animateContentSize(animationSpec = Motion.springSmoothOf()).pressScale { onToggle() }.padding(16.dp)) {
+    GlassPanel(Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().animateContentSize(animationSpec = Motion.springSmoothOf()).pressScale { Haptics.tick(ctx); onToggle() }.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (r.own) {
                             Text("★ ", color = Amber, fontSize = FS.s13, fontFamily = Body)
                         }
-                        Text(r.title, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2)
+                        Text(r.title, color = TextPrimary, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                     // Kap. 41: pro Portion + Portionenzahl + Zeit — kochbare Wahrheit
                     Text(
@@ -426,7 +435,7 @@ private fun RecipeCard(
                     Box(
                         Modifier.clip(RoundedCornerShape(9.dp)).background(Mod.Fuel.copy(alpha = 0.16f))
                             .border(0.5.dp, Mod.Fuel.copy(alpha = 0.5f), RoundedCornerShape(9.dp))
-                            .pressScale { onAssign() }.padding(horizontal = 9.dp, vertical = 6.dp),
+                            .pressScale { Haptics.tick(ctx); onAssign() }.padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text("→ $assignLabel", color = Mod.Fuel, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(8.dp))
                 }
@@ -511,6 +520,7 @@ private fun RecipeCard(
                             "Add ${missing.size} missing → shopping list",
                             color = Mod.Fuel, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
                             modifier = Modifier.pressScale {
+                                Haptics.confirm(ctx)
                                 Repo.addToShoppingQty(missing.map { ShopItem(it.name, qty = it.grams.toDouble(), unit = "g", fromRecipe = r.title) })
                                 AppFeedback.show("${missing.size} items added to list")
                             },
@@ -569,7 +579,7 @@ fun ShoppingView(onBack: () -> Unit) {
     val done = items.count { it.checked }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
@@ -582,7 +592,8 @@ fun ShoppingView(onBack: () -> Unit) {
                 }
             }
             if (items.isNotEmpty()) {
-                Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale {
+                Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Mod.Fuel.copy(alpha = 0.16f)).pressScale {
+                    Haptics.tick(ctx)
                     val text = items.joinToString("\n") { "• ${it.name}${shopQtyLabel(it)}" }
                     // (Mengen-Suffix via shopQtyLabel — Kap. 41)
                     runCatching { ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "Shopping list\n$text"), "Share")) }
@@ -593,7 +604,7 @@ fun ShoppingView(onBack: () -> Unit) {
         }
 
         // Manual add — the list works without a recipe as the entry point.
-        var newItem by remember { mutableStateOf("") }
+        var newItem by rememberSaveable { mutableStateOf("") }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 14.dp)) {
             Box(Modifier.weight(1f)) {
                 GlassField("Add item…", newItem, KeyboardType.Text) { newItem = it.take(40) }
@@ -603,6 +614,7 @@ fun ShoppingView(onBack: () -> Unit) {
                 Modifier.size(44.dp).clip(RoundedCornerShape(13.dp))
                     .background(if (newItem.isBlank()) Mod.Fuel.copy(alpha = 0.15f) else Mod.Fuel)
                     .then(if (newItem.isNotBlank()) Modifier.pressScale {
+                        Haptics.tick(ctx)
                         Repo.addToShopping(listOf(newItem.trim()))
                         newItem = ""
                     } else Modifier),
@@ -634,7 +646,7 @@ fun ShoppingView(onBack: () -> Unit) {
                     Column(Modifier.fillMaxWidth().padding(8.dp)) {
                         inCat.forEach { it ->
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).pressScale { Repo.toggleShop(it.name) }.padding(horizontal = 10.dp, vertical = 11.dp),
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).pressScale { Haptics.tick(ctx); Repo.toggleShop(it.name) }.padding(horizontal = 10.dp, vertical = 11.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(if (it.checked) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked, if (it.checked) "Uncheck" else "Check", tint = if (it.checked) Mod.Fuel else TextDim, modifier = Modifier.size(20.dp))
@@ -654,11 +666,24 @@ fun ShoppingView(onBack: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 if (done > 0) {
-                    Text("Clear checked", color = Mod.Fuel, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale {
-                        Haptics.tick(ctx)
-                        Repo.clearShoppingChecked()
-                        AppFeedback.show("Checked items cleared")
-                    }.padding(horizontal = 12.dp, vertical = 8.dp))
+                    var armedChecked by remember { mutableStateOf(false) }
+                    LaunchedEffect(armedChecked) { if (armedChecked) { kotlinx.coroutines.delay(2500); armedChecked = false } }
+                    Text(
+                        if (armedChecked) "Tap again" else "Clear checked",
+                        color = if (armedChecked) Crit else Mod.Fuel,
+                        fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.pressScale {
+                            if (armedChecked) {
+                                Haptics.confirm(ctx)
+                                Repo.clearShoppingChecked()
+                                AppFeedback.show("Checked items cleared")
+                                armedChecked = false
+                            } else {
+                                Haptics.tick(ctx)
+                                armedChecked = true
+                            }
+                        }.padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
                 }
                 var armedClearAll by remember { mutableStateOf(false) }
                 LaunchedEffect(armedClearAll) { if (armedClearAll) { kotlinx.coroutines.delay(2500); armedClearAll = false } }
@@ -682,7 +707,8 @@ fun ShoppingView(onBack: () -> Unit) {
 
 @Composable
 private fun BackBox(onBack: () -> Unit) {
-    Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
+    val bbCtx = LocalContext.current
+    Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { Haptics.tick(bbCtx); onBack() }, contentAlignment = Alignment.Center) {
         Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
     }
 }
@@ -791,7 +817,7 @@ private val DAY_LABELS = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 /** Mon–Sun of the current ISO week as (yyyy-MM-dd, short label). */
 private fun currentWeekDays(): List<Pair<String, String>> {
-    val monday = java.time.LocalDate.now().with(java.time.DayOfWeek.MONDAY)
+    val monday = com.ascend.lifeos.core.todayDate().with(java.time.DayOfWeek.MONDAY)
     return (0..6).map { i -> monday.plusDays(i.toLong()).toString() to DAY_LABELS[i] }
 }
 
@@ -803,6 +829,7 @@ private fun recipeFromPlanId(id: Long): RecipeDb.Recipe? {
 
 @Composable
 private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planned: Boolean, onClick: () -> Unit) {
+    val pdCtx = LocalContext.current
     val borderColor = when {
         active -> Mod.Fuel
         isToday -> Mod.Fuel.copy(alpha = 0.45f)
@@ -817,7 +844,7 @@ private fun PlanDayChip(label: String, isToday: Boolean, active: Boolean, planne
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clip(RoundedCornerShape(11.dp)).background(bg)
             .border(if (active) 1.dp else 0.5.dp, borderColor, RoundedCornerShape(11.dp))
-            .pressScale { onClick() }.padding(horizontal = 13.dp, vertical = 7.dp),
+            .pressScale { Haptics.tick(pdCtx); onClick() }.padding(horizontal = 13.dp, vertical = 7.dp),
     ) {
         Text(label, color = if (active || isToday) Mod.Fuel else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(3.dp))
@@ -836,6 +863,7 @@ private fun shopQtyLabel(s: ShopItem): String {
 
 @Composable
 private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
+    val cmCtx = LocalContext.current
     var step by remember(r.id) { mutableIntStateOf(0) }
     val view = androidx.compose.ui.platform.LocalView.current
     androidx.compose.runtime.DisposableEffect(Unit) {
@@ -851,11 +879,10 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             verticalArrangement = Arrangement.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(r.title, color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2)
-                Icon(
-                    Icons.Rounded.Close, "Close", tint = TextMuted,
-                    modifier = Modifier.size(26.dp).pressScale { onClose() },
-                )
+                Text(r.title, color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(cmCtx); onClose() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(26.dp))
+                }
             }
             Spacer(Modifier.height(6.dp))
             Text(
@@ -879,7 +906,7 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
             // Zutaten-Spickzettel — immer sichtbar
             Text(
                 r.parts.joinToString("  ·  ") { "${it.name} ${it.grams}g" },
-                color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s16, maxLines = 3,
+                color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s16, maxLines = 3, overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(18.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -899,15 +926,16 @@ private fun CookingModeDialog(r: RecipeDb.Recipe, onClose: () -> Unit) {
 
 @Composable
 private fun RecipeEditorDialog(onClose: () -> Unit) {
-    var title by remember { mutableStateOf("") }
-    var isBreakfast by remember { mutableStateOf(false) }
-    var servings by remember { mutableIntStateOf(2) }
-    var minutes by remember { mutableStateOf("25") }
+    val edCtx = LocalContext.current
+    var title by rememberSaveable { mutableStateOf("") }
+    var isBreakfast by rememberSaveable { mutableStateOf(false) }
+    var servings by rememberSaveable { mutableIntStateOf(2) }
+    var minutes by rememberSaveable { mutableStateOf("25") }
     var parts by remember { mutableStateOf(listOf<RecipeDb.Ing>()) }
     var steps by remember { mutableStateOf(listOf<String>()) }
-    var stepInput by remember { mutableStateOf("") }
-    var ingQuery by remember { mutableStateOf("") }
-    var ingGrams by remember { mutableStateOf("100") }
+    var stepInput by rememberSaveable { mutableStateOf("") }
+    var ingQuery by rememberSaveable { mutableStateOf("") }
+    var ingGrams by rememberSaveable { mutableStateOf("100") }
     val ingHits = remember(ingQuery) {
         if (ingQuery.trim().length < 2) emptyList()
         else BasicFoods.search(ingQuery).take(4)
@@ -922,10 +950,12 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Custom recipe", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(20.dp).pressScale { onClose() })
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(edCtx); onClose() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(Modifier.height(14.dp))
-            GlassField("Title", title, KeyboardType.Text, Modifier.fillMaxWidth()) { title = it.take(48) }
+            GlassField("Title", title, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = ImeAction.Next) { title = it.take(48) }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 HudChip("Main dish", !isBreakfast) { isBreakfast = false }
@@ -943,11 +973,10 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             parts.forEachIndexed { i, ing ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                    Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
-                    Icon(
-                        Icons.Rounded.Close, "Remove", tint = TextDim,
-                        modifier = Modifier.size(16.dp).pressScale { parts = parts.filterIndexed { j, _ -> j != i } },
-                    )
+                    Text("${ing.name} - ${ing.grams} g", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(edCtx); parts = parts.filterIndexed { j, _ -> j != i } }, contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Close, "Remove", tint = TextDim, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
             Spacer(Modifier.height(6.dp))
@@ -960,6 +989,7 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
                     "+ ${p.name}",
                     color = Mod.Fuel, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth().pressScale {
+                        Haptics.tick(edCtx)
                         val g = ingGrams.toIntOrNull() ?: 100
                         parts = parts + RecipeDb.Ing(p.name, p.kcal100, p.protein100, p.carbs100, p.fat100, g)
                         ingQuery = ""
@@ -973,10 +1003,9 @@ private fun RecipeEditorDialog(onClose: () -> Unit) {
             steps.forEachIndexed { i, s ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
                     Text("${i + 1}. $s", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
-                    Icon(
-                        Icons.Rounded.Close, "Remove", tint = TextDim,
-                        modifier = Modifier.size(16.dp).pressScale { steps = steps.filterIndexed { j, _ -> j != i } },
-                    )
+                    Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(edCtx); steps = steps.filterIndexed { j, _ -> j != i } }, contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Close, "Remove", tint = TextDim, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

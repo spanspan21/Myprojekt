@@ -87,8 +87,9 @@ object DigitalWellbeingManager {
                     curPkg = e.packageName; curSince = e.timeStamp
                 }
                 UsageEvents.Event.MOVE_TO_BACKGROUND, 23 /* ACTIVITY_STOPPED */ -> {
-                    if (curPkg != null && e.packageName == curPkg) {
-                        totals.merge(curPkg!!, (e.timeStamp - curSince).coerceAtLeast(0)) { a, b -> a + b }
+                    val cp = curPkg
+                    if (cp != null && e.packageName == cp) {
+                        totals.merge(cp, (e.timeStamp - curSince).coerceAtLeast(0)) { a, b -> a + b }
                         curPkg = null; curSince = e.timeStamp
                     }
                 }

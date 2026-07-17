@@ -101,7 +101,7 @@ object TaskBlocks {
      */
     suspend fun plan(ctx: Context): Int {
         val dao = CalendarDatabase.get(ctx).dao()
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
         val open = tasks(ctx).filter { !it.done }
         if (open.isEmpty()) return 0

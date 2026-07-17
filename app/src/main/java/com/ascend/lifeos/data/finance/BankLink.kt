@@ -114,8 +114,8 @@ object BankLink {
     private class ApiException(val httpCode: Int, message: String) : Exception(message)
 
     private fun request(ctx: Context, method: String, path: String, body: JSONObject? = null): JSONObject {
-        val id = appId(ctx) ?: throw ApiException(0, "App-ID fehlt (assets/eb_app_id.txt)")
-        val key = privateKey(ctx) ?: throw ApiException(0, "Schlüssel fehlt (assets/eb_key.pem)")
+        val id = appId(ctx) ?: throw ApiException(0, "App-ID missing (assets/eb_app_id.txt)")
+        val key = privateKey(ctx) ?: throw ApiException(0, "Key missing (assets/eb_key.pem)")
         val conn = URL(BASE + path).openConnection() as HttpURLConnection
         return try {
             conn.requestMethod = method
@@ -202,12 +202,12 @@ object BankLink {
             .put("psu_type", "personal")
         val res = request(ctx, "POST", "/auth", body)
         val url = res.optString("url")
-        if (url.isBlank()) throw ApiException(0, "Keine Auth-URL erhalten")
+        if (url.isBlank()) throw ApiException(0, "No auth URL received")
         prefs(ctx).edit()
             .putString("pending_state", state)
             .putString("pending_bank", bank.name)
             .apply()
-        status = "Warte auf Freigabe bei ${bank.name} …"
+        status = "Waiting for consent at ${bank.name}…"
         url
     }
 
@@ -217,24 +217,29 @@ object BankLink {
         val state = uri.getQueryParameter("state")
         val expected = prefs(ctx).getString("pending_state", null)
         if (code.isNullOrBlank()) {
-            status = "Freigabe abgebrochen."
+            status = "Consent cancelled."
             touch(); return
         }
         if (expected != null && state != null && state != expected) {
-            status = "Freigabe verworfen (State-Mismatch)."
+            status = "Consent rejected (state mismatch)."
             touch(); return
         }
         busy = true
-        status = "Verbinde Konto …"
+        status = "Connecting account…"
         touch()
         scope.launch {
             try {
                 completeAuth(ctx.applicationContext, code)
                 val n = syncNow(ctx.applicationContext)
-                status = "Verbunden ✓ · $n Umsätze importiert"
+                status = "Connected ✓ · $n transactions imported"
                 Haptics.success(ctx.applicationContext)
             } catch (e: Exception) {
-                status = "Fehler: ${e.message?.take(160)}"
+                status = when (e) {
+                    is java.net.UnknownHostException -> "No internet connection"
+                    is java.net.SocketTimeoutException -> "Connection timed out"
+                    is javax.net.ssl.SSLException -> "Secure connection failed"
+                    else -> "Error: ${e.message?.take(160)}"
+                }
             } finally {
                 busy = false
                 touch()
@@ -245,7 +250,7 @@ object BankLink {
     private fun completeAuth(ctx: Context, code: String) {
         val res = request(ctx, "POST", "/sessions", JSONObject().put("code", code))
         val sessionId = res.optString("session_id")
-        if (sessionId.isBlank()) throw ApiException(0, "Keine Session erhalten")
+        if (sessionId.isBlank()) throw ApiException(0, "No session received")
         val bank = res.optJSONObject("aspsp")?.optString("name")
             ?: prefs(ctx).getString("pending_bank", null) ?: "Bank"
         val validUntil = res.optJSONObject("access")?.optString("valid_until") ?: ""
@@ -268,7 +273,7 @@ object BankLink {
                 ?: FinanceStore.addAccount(ctx, label.take(28), icon = "BANK")
             accounts.add(BankAccountLink(uid, iban, label, fid))
         }
-        if (accounts.isEmpty()) throw ApiException(0, "Session ohne Konten")
+        if (accounts.isEmpty()) throw ApiException(0, "Session has no accounts")
 
         prefs(ctx).edit()
             .putString("session_id", sessionId)
@@ -297,12 +302,12 @@ object BankLink {
     fun requestSync(ctx: Context) {
         if (busy || !linked(ctx)) return
         busy = true
-        status = "Synchronisiere …"
+        status = "Syncing…"
         touch()
         scope.launch {
             try {
                 val n = syncNow(ctx.applicationContext)
-                status = if (n > 0) "$n neue Umsätze" else "Alles aktuell"
+                status = if (n > 0) "$n new transactions" else "Up to date"
             } catch (e: Exception) {
                 status = friendlyError(e)
             } finally {
@@ -320,8 +325,10 @@ object BankLink {
     }
 
     private fun friendlyError(e: Exception): String = when {
-        e is ApiException && e.httpCode == 401 -> "Freigabe abgelaufen — bitte neu verbinden"
-        else -> "Sync-Fehler: ${e.message?.take(140)}"
+        e is ApiException && e.httpCode == 401 -> "Consent expired — please reconnect"
+        e is java.net.UnknownHostException -> "No internet connection"
+        e is java.net.SocketTimeoutException -> "Connection timed out"
+        else -> "Sync error: ${e.message?.take(140)}"
     }
 
     /** Importiert neue Umsätze aller Konten; setzt danach die Kontostände. Gibt Anzahl zurück. */
@@ -339,10 +346,9 @@ object BankLink {
         var imported = 0
         for (acc in accounts) {
             imported += importTransactions(ctx, acc, from, seen)
-            // Kontostand autoritativ von der Bank (nach den Buchungen!)
+            writeSeen(ctx, seen)
             bankBalanceCents(ctx, acc.uid)?.let { FinanceStore.setAccountBalance(ctx, acc.financeAccountId, it) }
         }
-        writeSeen(ctx, seen)
         prefs(ctx).edit().putLong("last_sync", System.currentTimeMillis()).apply()
         touch()
         return imported

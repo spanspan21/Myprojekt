@@ -2,6 +2,8 @@ package com.ascend.lifeos.ui.training
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -10,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -22,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,22 +142,25 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val exercises by vm.exercises.collectAsState()
-    var search by remember { mutableStateOf("") }
+    var search by rememberSaveable { mutableStateOf("") }
     var filterCat by remember { mutableStateOf<ExCategory?>(null) }
     var detail by remember { mutableStateOf<ExerciseEntity?>(null) }
 
-    val filtered = exercises
-        .filter { filterCat == null || it.category == filterCat }
-        .filter { search.isBlank() || it.name.contains(search, ignoreCase = true) }
+    val filtered = remember(exercises, filterCat, search) {
+        exercises
+            .filter { filterCat == null || it.category == filterCat }
+            .filter { search.isBlank() || it.name.contains(search, ignoreCase = true) }
+    }
 
-    val grouped = filtered.groupBy { it.category }
+    val grouped = remember(filtered) { filtered.groupBy { it.category } }
     val categoryOrder = listOf(ExCategory.PUSH, ExCategory.PULL, ExCategory.LEGS, ExCategory.CORE, ExCategory.SKILL, ExCategory.CARDIO, ExCategory.MOBILITY)
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp)) }
             Spacer(Modifier.width(12.dp))
             Text("Exercises", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.weight(1f))
@@ -207,12 +214,12 @@ private fun ExerciseBrowser(vm: TrainingViewModel, onBack: () -> Unit) {
                     }
                 }
                 items(exInCat, key = { it.id }) { ex ->
-                    GlassPanel(Modifier.animateItem().fillMaxWidth().pressScale { detail = ex }, corner = 14.dp) {
+                    GlassPanel(Modifier.animateItem().fillMaxWidth().pressScale { Haptics.tick(ctx); detail = ex }, corner = RElem) {
                         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(
                                     "${muscleLabel(ex.primaryMuscle)} · ${ex.unit}",
                                     color = TextDim, fontSize = FS.s11, fontFamily = Body,
@@ -237,7 +244,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                 Icon(catIcon(ex.category), null, tint = catColor(ex.category), modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(ex.name, color = TextPrimary, fontSize = FS.s19, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                    Text(ex.name, color = TextPrimary, fontSize = FS.s19, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
                         "${catLabel(ex.category)} · ${muscleLabel(ex.primaryMuscle)} · ${ex.unit}",
                         color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
@@ -246,7 +253,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
             }
             if (ex.description.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text(ex.description, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s19)
+                Text(ex.description, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s19, maxLines = 6, overflow = TextOverflow.Ellipsis)
             }
             Spacer(Modifier.height(10.dp))
             // form check: curated-quality via YouTube search — never a dead link
@@ -322,7 +329,7 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
                     val best = history.maxByOrNull { it.reps }
                     Row {
                         Text(
-                            "Best: ${best?.reps ?: 0} reps" + (best?.weight?.takeIf { it > 0 }?.let { " +${it}kg" } ?: ""),
+                            "Best: ${best?.reps ?: 0} reps" + (best?.weight?.takeIf { it > 0 }?.let { " +${Units.fmtWeightShort(ctx, it.toDouble())}" } ?: ""),
                             color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.weight(1f))
@@ -339,18 +346,21 @@ internal fun ExerciseDetailSheet(ex: ExerciseEntity, vm: TrainingViewModel? = nu
 
 @Composable
 private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> Unit, onBack: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val exercises by vm.exercises.collectAsState()
-    var search by remember { mutableStateOf("") }
+    var search by rememberSaveable { mutableStateOf("") }
     var filterCat by remember { mutableStateOf<ExCategory?>(null) }
 
-    val filtered = exercises
-        .filter { filterCat == null || it.category == filterCat }
-        .filter { search.isBlank() || it.name.contains(search, ignoreCase = true) }
+    val filtered = remember(exercises, filterCat, search) {
+        exercises
+            .filter { filterCat == null || it.category == filterCat }
+            .filter { search.isBlank() || it.name.contains(search, ignoreCase = true) }
+    }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale(onClick = onBack))
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onBack), contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp)) }
             Spacer(Modifier.width(12.dp))
             Text("Add exercise", color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
@@ -371,7 +381,7 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
         }
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 120.dp)) {
             if (filtered.isEmpty()) {
                 item {
                     EmptyState(
@@ -381,12 +391,12 @@ private fun ExercisePicker(vm: TrainingViewModel, onPicked: (ExerciseEntity) -> 
                 }
             }
             items(filtered, key = { it.id }) { ex ->
-                GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale { onPicked(ex) }, corner = 14.dp) {
+                GlassPanel(Modifier.fillMaxWidth().animateItem().pressScale { Haptics.tick(ctx); onPicked(ex) }, corner = RElem) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(catIcon(ex.category), ex.name, tint = catColor(ex.category).copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(ex.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("${catLabel(ex.category)} · ${muscleLabel(ex.primaryMuscle)}", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         Icon(Icons.Rounded.Search, null, tint = TextDim.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))

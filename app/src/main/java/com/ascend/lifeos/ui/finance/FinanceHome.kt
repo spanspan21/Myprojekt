@@ -1,6 +1,8 @@
 package com.ascend.lifeos.ui.finance
 
 import android.content.Intent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +37,7 @@ import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material.icons.rounded.Radar
-import androidx.compose.material.icons.rounded.ReceiptLong
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Savings
@@ -44,7 +46,9 @@ import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -140,7 +144,7 @@ fun FinanceHome(onClose: () -> Unit) {
         val zone = ZoneId.systemDefault()
         filtered.groupBy { Instant.ofEpochMilli(it.ts).atZone(zone).toLocalDate() }
     }
-    val today = LocalDate.now()
+    val today = com.ascend.lifeos.core.todayDate()
 
     val headerContext = when {
         hasBalanceSheet -> "${euros(netWorth)} net worth"
@@ -151,12 +155,20 @@ fun FinanceHome(onClose: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Void)) {
         ModuleBackground(FinAccent)
 
-        // Bank sync on open, throttled (self-limits to ~6 h)
-        androidx.compose.runtime.LaunchedEffect(Unit) {
+        // Bank sync on open + resume, throttled (self-limits to ~6 h)
+        var resumeTick by remember { mutableIntStateOf(0) }
+        val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+        DisposableEffect(owner) {
+            val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) resumeTick++ }
+            owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
+        }
+        androidx.compose.runtime.LaunchedEffect(resumeTick) {
             runCatching { com.ascend.lifeos.data.finance.GoCardlessLink.maybeAutoSync(ctx) }
         }
+        val listState = androidx.compose.foundation.lazy.rememberLazyListState()
         LazyColumn(
             Modifier.fillMaxSize().statusBarsPadding(),
+            state = listState,
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 120.dp),
         ) {
             item(key = "header") {
@@ -205,10 +217,10 @@ fun FinanceHome(onClose: () -> Unit) {
             // ── quick actions ────────────────────────────────────────────────
             item(key = "quick") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    QuickAction(Icons.Rounded.Remove, "Expense") { addExpense = true }
-                    QuickAction(Icons.Rounded.Add, "Income") { addExpense = false }
-                    QuickAction(Icons.Rounded.SwapHoriz, "Move") { showMove = true }
-                    QuickAction(Icons.Rounded.Radar, "Scan") { showScan = true }
+                    QuickAction(Icons.Rounded.Remove, "Expense") { Haptics.tick(ctx); addExpense = true }
+                    QuickAction(Icons.Rounded.Add, "Income") { Haptics.tick(ctx); addExpense = false }
+                    QuickAction(Icons.Rounded.SwapHoriz, "Move") { Haptics.tick(ctx); showMove = true }
+                    QuickAction(Icons.Rounded.Radar, "Scan") { Haptics.tick(ctx); showScan = true }
                 }
                 Spacer(Modifier.height(26.dp))
             }
@@ -285,7 +297,7 @@ fun FinanceHome(onClose: () -> Unit) {
             }
             if (goals.isEmpty()) {
                 item(key = "goals_empty") {
-                    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+                    Panel(Modifier.fillMaxWidth()) {
                         EmptyState(
                             Icons.Rounded.Savings, "No savings goals yet",
                             "Give the next big thing a target and a pace",
@@ -312,7 +324,7 @@ fun FinanceHome(onClose: () -> Unit) {
             }
             if (txns.isEmpty()) {
                 item(key = "history_empty") {
-                    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+                    Panel(Modifier.fillMaxWidth()) {
                         EmptyState(
                             Icons.Rounded.History, "No transactions yet",
                             "Everything you log lands here — searchable and exportable",
@@ -381,7 +393,7 @@ private fun BalanceHero(
     onAddAccount: () -> Unit,
 ) {
     if (accounts.isEmpty()) {
-        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             EmptyState(
                 Icons.Rounded.AccountBalanceWallet, "No accounts yet",
                 "Add Cash, Bank or PayPal — every log moves its balance",
@@ -392,7 +404,7 @@ private fun BalanceHero(
     }
     Column {
         Panel(
-            Modifier.fillMaxWidth(), corner = 20.dp,
+            Modifier.fillMaxWidth(),
             fill = FinAccent.copy(alpha = 0.05f), line = FinAccent.copy(alpha = 0.25f),
         ) {
             Column(Modifier.padding(18.dp)) {
@@ -481,7 +493,7 @@ private fun AccountChip(a: Account, onClick: () -> Unit) {
 
 @Composable
 private fun RowScope.QuickAction(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Panel(Modifier.weight(1f), corner = 16.dp, onClick = onClick) {
+    Panel(Modifier.weight(1f), corner = RElem, onClick = onClick) {
         Column(
             Modifier.fillMaxWidth().padding(vertical = 13.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -503,11 +515,11 @@ private val DF_DM = DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)
 
 @Composable
 private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, projected: Long, streak: Int) {
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             if (spend == 0L && income == 0L) {
                 EmptyState(
-                    Icons.Rounded.ReceiptLong, "Nothing logged this month",
+                    Icons.AutoMirrored.Rounded.ReceiptLong, "Nothing logged this month",
                     "Add an expense or income — the overview builds itself",
                     FinAccent,
                 )
@@ -554,7 +566,7 @@ private fun ThisMonthPanel(spend: Long, income: Long, totalBudget: Long, project
                 Spacer(Modifier.height(12.dp))
                 Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.08f)))
                 Spacer(Modifier.height(10.dp))
-                val monthEnd = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+                val monthEnd = com.ascend.lifeos.core.todayDate().withDayOfMonth(com.ascend.lifeos.core.todayDate().lengthOfMonth())
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.AutoMirrored.Rounded.TrendingUp, null,
@@ -590,7 +602,7 @@ private fun FlowBar(label: String, cents: Long, maxCents: Long, color: Color) {
             modifier = Modifier.width(30.dp),
         )
         Box(Modifier.weight(1f).height(5.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))) {
-            val frac = (cents.toFloat() / maxCents).coerceIn(0f, 1f)
+            val frac = if (maxCents > 0) (cents.toFloat() / maxCents).coerceIn(0f, 1f) else 0f
             if (frac > 0f) Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(CircleShape).background(color))
         }
         Spacer(Modifier.width(10.dp))
@@ -612,7 +624,7 @@ private fun BreakdownPanel(
             .sortedWith(compareByDescending<String> { byCat[it] ?: 0L }.thenBy { it })
     }
     if (rows.isEmpty()) {
-        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             EmptyState(
                 Icons.Rounded.PieChart, "No spending yet",
                 "Your category split appears with the first expense",
@@ -621,7 +633,7 @@ private fun BreakdownPanel(
         }
         return
     }
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             val slices = rows.mapNotNull { c -> byCat[c]?.takeIf { it > 0 }?.let { shadeFor(c) to it } }
             if (slices.isNotEmpty()) {
@@ -650,7 +662,7 @@ private fun BreakdownPanel(
                                     modifier = Modifier.weight(1f),
                                 )
                                 Text(
-                                    "${(v * 100.0 / spend).roundToInt()}%",
+                                    "${if (spend > 0) (v * 100.0 / spend).roundToInt() else 0}%",
                                     color = TextDim, style = metricStyle(10),
                                 )
                             }
@@ -688,8 +700,9 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
             Text(
                 category, color = TextPrimary, fontSize = FS.s13,
                 fontFamily = Body, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
-            if (budget != null) {
+            if (budget != null && budget > 0) {
                 Spacer(Modifier.height(4.dp))
                 val ratio = cents.toFloat() / budget
                 val bWarn2 = Prefs.int(androidx.compose.ui.platform.LocalContext.current, Prefs.BUDGET_WARN_PCT, 75) / 100f
@@ -727,7 +740,7 @@ private fun CategoryRow(category: String, cents: Long, budget: Long?, monthSpend
 @Composable
 private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>) {
     if (series.size < 2) {
-        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             EmptyState(
                 Icons.AutoMirrored.Rounded.TrendingUp, "Not enough history yet",
                 "The month-by-month trend unlocks in your second month of logging",
@@ -736,7 +749,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
         }
         return
     }
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth()) {
                 series.forEachIndexed { i, (_, v) ->
@@ -791,7 +804,7 @@ private fun TrendPanel(series: List<Pair<String, Long>>, insights: List<String>)
 private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
     val ctx = LocalContext.current
     if (recurrings.isEmpty()) {
-        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             EmptyState(
                 Icons.Rounded.Repeat, "No recurring yet",
                 "Subscriptions & pocket money — or run Scan to auto-detect them",
@@ -800,14 +813,14 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
         }
         return
     }
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
             recurrings.forEachIndexed { i, r ->
                 if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.06f)))
                 RecurringRow(
                     r,
                     onToggle = { FinanceStore.setRecurringActive(ctx, r.id, !r.active) },
-                    onBook = { Haptics.confirm(ctx); FinanceStore.bookRecurring(ctx, r.id) },
+                    onBook = { Haptics.confirm(ctx); FinanceStore.bookRecurring(ctx, r.id); AppFeedback.show("Transaction booked") },
                     onDelete = { FinanceStore.deleteRecurring(ctx, r.id); AppFeedback.show("Recurring deleted") },
                 )
             }
@@ -817,13 +830,14 @@ private fun RecurringPanel(recurrings: List<Recurring>, onAdd: () -> Unit) {
 
 @Composable
 private fun RecurringRow(r: Recurring, onToggle: () -> Unit, onBook: () -> Unit, onDelete: () -> Unit) {
+    val fhCtx = LocalContext.current
     val due = FinanceStore.isDue(r)
     Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier.size(18.dp).clip(CircleShape)
                 .background(if (r.active) FinAccent.copy(alpha = 0.18f) else Color.Transparent)
                 .border(1.dp, if (r.active) FinAccent else Ivory.copy(alpha = 0.20f), CircleShape)
-                .pressScale(onClick = onToggle),
+                .pressScale(onClick = { Haptics.tick(fhCtx); onToggle() }),
             contentAlignment = Alignment.Center,
         ) {
             if (r.active) Box(Modifier.size(7.dp).clip(CircleShape).background(FinAccent))
@@ -878,7 +892,7 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val progress = if (g.targetCents > 0) g.savedCents.toFloat() / g.targetCents else 0f
     val done = g.savedCents >= g.targetCents
-    Panel(modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Ring(progress = progress, color = if (done) Good else FinAccent, modifier = Modifier.size(58.dp), stroke = 5.dp) {
@@ -922,11 +936,11 @@ private fun GoalCard(g: SaveGoal, modifier: Modifier = Modifier) {
                             Modifier.clip(RoundedCornerShape(9.dp))
                                 .background(FinAccent.copy(alpha = 0.10f))
                                 .border(0.5.dp, FinAccent.copy(alpha = 0.35f), RoundedCornerShape(9.dp))
-                                .pressScale { FinanceStore.addToGoal(ctx, g.id, c); Haptics.confirm(ctx); AppFeedback.show("+${c / 100} € saved") }
+                                .pressScale { FinanceStore.addToGoal(ctx, g.id, c); Haptics.confirm(ctx); AppFeedback.show("+${euros(c)} saved") }
                                 .padding(horizontal = 11.dp, vertical = 6.dp),
                         ) {
                             Text(
-                                "+${c / 100} €", color = FinAccent,
+                                "+${euros(c)}", color = FinAccent,
                                 fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                             )
                         }
@@ -972,6 +986,7 @@ private fun TxnRow(t: Txn, accountName: String?, modifier: Modifier = Modifier, 
             Text(
                 t.category + (accountName?.let { " · $it" } ?: ""),
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
         Spacer(Modifier.width(10.dp))

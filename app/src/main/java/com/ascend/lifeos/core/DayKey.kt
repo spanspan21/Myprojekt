@@ -34,13 +34,12 @@ fun dayDateOf(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): LocalDa
     dayDate(Instant.ofEpochMilli(epochMillis).atZone(zone).toLocalDateTime())
 
 fun prevKey(key: String): String {
-    val p = key.split("-")
-    val d = LocalDate.of(p[0].toInt(), p[1].toInt(), p[2].toInt()).minusDays(1)
+    val d = runCatching { LocalDate.parse(key) }.getOrNull()?.minusDays(1) ?: return key
     return "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
 }
 
 fun isoWeek(now: LocalDateTime = LocalDateTime.now()): String {
-    val d = now.toLocalDate()
+    val d = dayDate(now)
     // week-based year, NOT calendar year: around New Year they differ, and mixing
     // them made the stamp flip mid-week (double freeze refill, mesocycle jumps)
     val year = d.get(java.time.temporal.IsoFields.WEEK_BASED_YEAR)

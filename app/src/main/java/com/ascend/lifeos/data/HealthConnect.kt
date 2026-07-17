@@ -233,11 +233,8 @@ object HealthConnect {
         val rhrs = readSafe(RestingHeartRateRecord::class)
         val stepRecs = readSafe(StepsRecord::class)
 
-        // a session belongs to the day-key whose [06:00−4h .. next 06:00−4h) window contains its end
-        fun dayKeyFor(instant: Instant): String {
-            val local = instant.atZone(zone).toLocalDateTime().minusHours(2) // 06:00 rollover − 4h cutoff ≈ 02:00 boundary
-            return "%04d-%02d-%02d".format(local.year, local.monthValue, local.dayOfMonth)
-        }
+        fun dayKeyFor(instant: Instant): String =
+            com.ascend.lifeos.core.dayKeyOf(instant.toEpochMilli(), zone)
 
         data class Agg(
             var sleepMin: Long = 0, var rem: Long = 0, var deep: Long = 0, var light: Long = 0, var awake: Long = 0,

@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -126,7 +127,7 @@ internal fun dayGroupLabel(day: LocalDate, today: LocalDate): String = when (day
 
 /** "due now" / "in 1d" / "in 12d" for a recurring's next due epoch day. */
 internal fun dueInLabel(epochDay: Long): String {
-    val diff = epochDay - LocalDate.now().toEpochDay()
+    val diff = epochDay - com.ascend.lifeos.core.todayDate().toEpochDay()
     return if (diff <= 0L) "due now" else "in ${diff}d"
 }
 
@@ -142,6 +143,7 @@ internal fun Overline(text: String, color: Color = TextDim) {
 
 @Composable
 internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.clip(RoundedCornerShape(10.dp))
             .background(if (selected) accent.copy(alpha = 0.15f) else Ivory.copy(alpha = 0.04f))
@@ -150,22 +152,23 @@ internal fun FinChip(label: String, selected: Boolean, accent: Color = FinAccent
                 if (selected) accent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f),
                 RoundedCornerShape(10.dp),
             )
-            .pressScale(onClick = onClick)
+            .pressScale { Haptics.tick(ctx); onClick() }
             .padding(horizontal = 11.dp, vertical = 7.dp),
     ) {
         Text(
             label, color = if (selected) accent else TextMuted,
-            fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1,
+            fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
 internal fun ActionButton(label: String, enabled: Boolean = true, accent: Color = FinAccent, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
             .background(if (enabled) accent else Ivory.copy(alpha = 0.06f))
-            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier)
+            .then(if (enabled) Modifier.pressScale { Haptics.confirm(ctx); onClick() } else Modifier)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -178,11 +181,12 @@ internal fun ActionButton(label: String, enabled: Boolean = true, accent: Color 
 
 @Composable
 internal fun AddRowButton(label: String, accent: Color = FinAccent, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
             .background(accent.copy(alpha = 0.08f))
             .border(0.5.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
-            .pressScale(onClick = onClick)
+            .pressScale { Haptics.tick(ctx); onClick() }
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -200,14 +204,13 @@ internal fun ArmedDelete(modifier: Modifier = Modifier, onDelete: () -> Unit) {
     val adCtx = androidx.compose.ui.platform.LocalContext.current
     var armed by remember { mutableStateOf(false) }
     LaunchedEffect(armed) { if (armed) { delay(2500); armed = false } }
-    Icon(
-        Icons.Rounded.Delete, if (armed) "Tap again to delete" else "Delete",
-        tint = if (armed) Crit else TextDim,
-        modifier = modifier.size(16.dp).pressScale {
-            if (armed) { Haptics.confirm(adCtx); onDelete() }
-            else { Haptics.warn(adCtx); armed = true }
-        },
-    )
+    Box(modifier.size(44.dp).clip(CircleShape).pressScale {
+        if (armed) { Haptics.confirm(adCtx); onDelete() }
+        else { Haptics.warn(adCtx); armed = true }
+    }, contentAlignment = Alignment.Center) {
+        Icon(Icons.Rounded.Delete, if (armed) "Tap again to delete" else "Delete",
+            tint = if (armed) Crit else TextDim, modifier = Modifier.size(16.dp))
+    }
 }
 
 /** Quiet glass text field — same skin as the school/calendar sheets. */
@@ -220,7 +223,9 @@ internal fun GlassField(
     minHeight: Dp = 0.dp,
     keyboard: KeyboardType = KeyboardType.Text,
     accent: Color = FinAccent,
+    imeAction: androidx.compose.ui.text.input.ImeAction? = null,
 ) {
+    val resolvedIme = imeAction ?: if (singleLine) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Default
     Box(
         Modifier.fillMaxWidth().heightIn(min = minHeight)
             .clip(RoundedCornerShape(13.dp))
@@ -238,7 +243,7 @@ internal fun GlassField(
                 color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body,
                 fontWeight = FontWeight.SemiBold, lineHeight = FS.s19,
             ),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = if (singleLine) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Default),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = resolvedIme),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
             cursorBrush = SolidColor(accent),
             modifier = Modifier.fillMaxWidth(),
@@ -249,6 +254,7 @@ internal fun GlassField(
 /** History search — glass field with a leading search glyph. */
 @Composable
 internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder: String) {
+    val sfCtx = androidx.compose.ui.platform.LocalContext.current
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
             .background(Ivory.copy(alpha = 0.05f))
@@ -277,7 +283,7 @@ internal fun SearchField(value: String, onChange: (String) -> Unit, placeholder:
         if (value.isNotEmpty()) {
             Text(
                 "Clear", color = FinAccent, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onChange("") }.padding(4.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.tick(sfCtx); onChange("") }.padding(4.dp),
             )
         }
     }
@@ -301,12 +307,14 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
             if (value.isEmpty()) {
                 Text("0.00", style = metricStyle(34), color = TextDim.copy(alpha = 0.6f))
             }
+            val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
             BasicTextField(
                 value,
                 { s -> onChange(s.filter { it.isDigit() || it == '.' || it == ',' }.take(8)) },
                 singleLine = true,
                 textStyle = metricStyle(34).copy(color = TextPrimary, textAlign = TextAlign.Center),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
                 cursorBrush = SolidColor(FinAccent),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -323,11 +331,12 @@ internal fun BigAmountField(value: String, onChange: (String) -> Unit) {
 /** Round stepper button for the day-of-month picker. */
 @Composable
 internal fun StepperOrb(label: String, onClick: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(40.dp).clip(CircleShape)
             .background(Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-            .pressScale(onClick = onClick),
+            .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = FS.s18, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }

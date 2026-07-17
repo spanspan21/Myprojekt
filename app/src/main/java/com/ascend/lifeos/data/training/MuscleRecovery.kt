@@ -37,9 +37,9 @@ object MuscleRecovery {
      * desync with the fatigue scale — the real lever against the old "88 h"
      * floor is that fatigue no longer saturates freshness to 0 (CAPACITY = 20).
      */
-    fun hoursUntilFresh(m: Muscle, freshness: Float, target: Float = 0.85f): Int {
-        val f0 = (1f - freshness) * CAPACITY      // current fatigue units
-        val fT = (1f - target) * CAPACITY         // fatigue units at target
+    fun hoursUntilFresh(m: Muscle, freshness: Float, target: Float = 0.85f, capacity: Double = DEFAULT_CAPACITY): Int {
+        val f0 = (1f - freshness) * capacity      // current fatigue units
+        val fT = (1f - target) * capacity         // fatigue units at target
         if (f0 <= fT || fT <= 0.0) return 0
         return Math.round(halfLifeHours(m) * (Math.log(f0 / fT) / Math.log(2.0))).toInt()
     }
@@ -47,11 +47,12 @@ object MuscleRecovery {
     // Fatigue units to fully fry a muscle. 20 = freshness only hits 0 at a real
     // ~18–20-set blowout, not at 9 sets (which used to peg every hard day to the
     // 88 h saturation floor and destroy the light-vs-hard resolution).
-    private const val CAPACITY = 20.0
+    internal const val DEFAULT_CAPACITY = 20.0
 
     suspend fun compute(ctx: Context): Freshness {
         val now = System.currentTimeMillis()
         val lookbackH = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RECOVERY_LOOKBACK_H, 72)
+        val CAPACITY = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.RECOVERY_CAPACITY, 20).toDouble()
         val since = now - lookbackH.toLong() * 3600_000
 
         val dao = TrainingDatabase.get(ctx).dao()
@@ -129,7 +130,7 @@ object MuscleRecovery {
                 runCatching { com.ascend.lifeos.data.Repo.data.profile.sport }.getOrDefault("hockey"),
             )
             val calDao = CalendarRepo.dao(ctx)
-            val today = LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val entities = calDao.eventsInRangeOnce(today.minusDays(2).toEpochDay(), today.toEpochDay())
             for (offset in 0..2L) {
                 val day = today.minusDays(offset)

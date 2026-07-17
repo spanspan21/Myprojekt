@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.home
 
+import androidx.compose.animation.animateContentSize
+import com.ascend.lifeos.ui.motion.Motion
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -15,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
@@ -37,6 +41,7 @@ import com.ascend.lifeos.data.Notifier
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Protocols
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.cloud.CloudSync
 import com.ascend.lifeos.data.finance.CsvImport
 import com.ascend.lifeos.data.finance.FinanceStore
@@ -104,7 +109,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 val ok = Backup.runNow(ctx)
                 backupState = if (ok) "Backup written ✓" else "Folder set — backup failed"
-                if (ok) AppFeedback.show("Backup saved successfully")
+                if (ok) AppFeedback.show("Backup saved")
             }
         }
     }
@@ -112,8 +117,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     Box(Modifier.fillMaxSize()) {
     var showDocs by remember { mutableStateOf(false) }
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 40.dp),
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -128,7 +133,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 )
             }
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale(onClick = onClose),
@@ -143,8 +148,74 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             val p = Repo.profile()
             ActionRow(
                 "Body profile & targets",
-                "${if (p.sex == "m") "M" else "F"} · ${p.age} y · ${p.heightCm} cm · ${p.weightKg} kg · ${p.kcalGoal} kcal",
+                "${if (p.sex == "m") "M" else "F"} · ${p.age} y · ${Units.fmtHeight(ctx, p.heightCm)} · ${Units.fmtWeight(ctx, p.weightKg.toDouble())} · ${p.kcalGoal} kcal",
             ) { profileOpen = true }
+
+            var unitSys by remember { mutableStateOf(Prefs.string(ctx, Prefs.UNIT_SYSTEM, "metric")) }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "UNITS", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("metric" to "Metric (kg/cm)", "imperial" to "Imperial (lbs/in)").forEach { (id, label) ->
+                    val sel = unitSys == id
+                    Text(
+                        label,
+                        color = if (sel) Mod.Home else TextMuted,
+                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(if (sel) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(
+                                0.5.dp,
+                                if (sel) Mod.Home.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.1f),
+                                RoundedCornerShape(11.dp),
+                            )
+                            .pressScale { Haptics.tick(ctx); unitSys = id; Prefs.setString(ctx, Prefs.UNIT_SYSTEM, id) }
+                            .padding(horizontal = 13.dp, vertical = 8.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "All data is stored in metric internally — this only changes the display.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+            )
+
+            Spacer(Modifier.height(8.dp))
+            var weekStart by remember { mutableStateOf(Prefs.string(ctx, Prefs.WEEK_START, "monday")) }
+            Text(
+                "WEEK STARTS ON", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("monday" to "Monday", "sunday" to "Sunday").forEach { (id, label) ->
+                    val sel = weekStart == id
+                    Text(
+                        label,
+                        color = if (sel) Mod.Home else TextMuted,
+                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(if (sel) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(
+                                0.5.dp,
+                                if (sel) Mod.Home.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.1f),
+                                RoundedCornerShape(11.dp),
+                            )
+                            .pressScale { Haptics.tick(ctx); weekStart = id; Prefs.setString(ctx, Prefs.WEEK_START, id) }
+                            .padding(horizontal = 13.dp, vertical = 8.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Affects calendar, weekly reports & habit streaks.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+            )
         }
         if (profileOpen) {
             com.ascend.lifeos.ui.hud.GoalsSheet(
@@ -179,7 +250,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 if (sel) Mod.Home.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.1f),
                                 RoundedCornerShape(11.dp),
                             )
-                            .pressScale { com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
+                            .pressScale { Haptics.tick(ctx); com.ascend.lifeos.ui.ShellMode.set(ctx, id) }
                             .padding(horizontal = 13.dp, vertical = 8.dp),
                     )
                 }
@@ -264,7 +335,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                                 Box(
                                     Modifier.clip(RoundedCornerShape(10.dp))
                                         .background(if (sel) Mod.Finance.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                        .pressScale { selGoal = g.id; Prefs.setString(ctx, Prefs.ROUNDUP_GOAL_ID, g.id) }
+                                        .pressScale { Haptics.tick(ctx); selGoal = g.id; Prefs.setString(ctx, Prefs.ROUNDUP_GOAL_ID, g.id) }
                                         .padding(horizontal = 8.dp, vertical = 5.dp),
                                 ) {
                                     Text(
@@ -312,20 +383,20 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 var gLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14)) }
                 var gHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_GREEN_HI, 20)) }
                 GoalStepperRow("Green (≥75)", "$gLo–$gHi sets",
-                    onDec = { gLo = (gLo - 1).coerceAtLeast(4); Prefs.setInt(ctx, Prefs.STRAIN_GREEN_LO, gLo) },
-                    onInc = { gHi = (gHi + 1).coerceAtMost(30); Prefs.setInt(ctx, Prefs.STRAIN_GREEN_HI, gHi) },
+                    onDec = { if (gLo > 4) { gLo--; gHi--; Prefs.setInt(ctx, Prefs.STRAIN_GREEN_LO, gLo); Prefs.setInt(ctx, Prefs.STRAIN_GREEN_HI, gHi) } },
+                    onInc = { if (gHi < 30) { gLo++; gHi++; Prefs.setInt(ctx, Prefs.STRAIN_GREEN_LO, gLo); Prefs.setInt(ctx, Prefs.STRAIN_GREEN_HI, gHi) } },
                 )
                 var aLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10)) }
                 var aHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_AMBER_HI, 14)) }
                 GoalStepperRow("Amber (≥50)", "$aLo–$aHi sets",
-                    onDec = { aLo = (aLo - 1).coerceAtLeast(2); Prefs.setInt(ctx, Prefs.STRAIN_AMBER_LO, aLo) },
-                    onInc = { aHi = (aHi + 1).coerceAtMost(25); Prefs.setInt(ctx, Prefs.STRAIN_AMBER_HI, aHi) },
+                    onDec = { if (aLo > 2) { aLo--; aHi--; Prefs.setInt(ctx, Prefs.STRAIN_AMBER_LO, aLo); Prefs.setInt(ctx, Prefs.STRAIN_AMBER_HI, aHi) } },
+                    onInc = { if (aHi < 25) { aLo++; aHi++; Prefs.setInt(ctx, Prefs.STRAIN_AMBER_LO, aLo); Prefs.setInt(ctx, Prefs.STRAIN_AMBER_HI, aHi) } },
                 )
                 var rLo by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_RED_LO, 4)) }
                 var rHi by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STRAIN_RED_HI, 8)) }
                 GoalStepperRow("Red (<50)", "$rLo–$rHi sets",
-                    onDec = { rLo = (rLo - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.STRAIN_RED_LO, rLo) },
-                    onInc = { rHi = (rHi + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.STRAIN_RED_HI, rHi) },
+                    onDec = { if (rLo > 0) { rLo--; rHi--; Prefs.setInt(ctx, Prefs.STRAIN_RED_LO, rLo); Prefs.setInt(ctx, Prefs.STRAIN_RED_HI, rHi) } },
+                    onInc = { if (rHi < 15) { rLo++; rHi++; Prefs.setInt(ctx, Prefs.STRAIN_RED_LO, rLo); Prefs.setInt(ctx, Prefs.STRAIN_RED_HI, rHi) } },
                 )
             }
             var freshPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FRESHNESS_THRESHOLD, 45)) }
@@ -358,6 +429,21 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { cooldown = (cooldown - 1).coerceAtLeast(3); Prefs.setInt(ctx, Prefs.COOLDOWN_MIN, cooldown) },
                 onInc = { cooldown = (cooldown + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.COOLDOWN_MIN, cooldown) },
             )
+            var mev by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.MEV_SETS, 3)) }
+            GoalStepperRow("MEV sets/exercise", "$mev",
+                onDec = { mev = (mev - 1).coerceAtLeast(2); Prefs.setInt(ctx, Prefs.MEV_SETS, mev) },
+                onInc = { mev = (mev + 1).coerceAtMost(5); Prefs.setInt(ctx, Prefs.MEV_SETS, mev) },
+            )
+            var mrv by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.MRV_SETS, 6)) }
+            GoalStepperRow("MRV sets/exercise", "$mrv",
+                onDec = { mrv = (mrv - 1).coerceAtLeast(4); Prefs.setInt(ctx, Prefs.MRV_SETS, mrv) },
+                onInc = { mrv = (mrv + 1).coerceAtMost(10); Prefs.setInt(ctx, Prefs.MRV_SETS, mrv) },
+            )
+            var recCap by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RECOVERY_CAPACITY, 20)) }
+            GoalStepperRow("Recovery capacity", "$recCap",
+                onDec = { recCap = (recCap - 2).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.RECOVERY_CAPACITY, recCap) },
+                onInc = { recCap = (recCap + 2).coerceAtMost(40); Prefs.setInt(ctx, Prefs.RECOVERY_CAPACITY, recCap) },
+            )
             ToggleRow("Camera rep counter", "Experimental — pose detection counts for you", Prefs.AUTO_COUNT, false)
             ToggleRow(
                 "Weight vest", "Include vest exercises in plans",
@@ -387,7 +473,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (sel) Mod.Train.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                .pressScale { barId = bar.id; Prefs.setString(ctx, Prefs.PLATE_BAR, bar.id) }
+                                .pressScale { Haptics.tick(ctx); barId = bar.id; Prefs.setString(ctx, Prefs.PLATE_BAR, bar.id) }
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                         ) {
                             Text(
@@ -416,7 +502,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .pressScale { sportId = sp.id; Repo.setSport(sp.id) }
+                            .pressScale { Haptics.tick(ctx); sportId = sp.id; Repo.setSport(sp.id) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     ) { Text("${sp.emoji} ${sp.label}", color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -542,7 +628,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             val p = Repo.data.profile
             val phaseLabel = when (p.dietGoal) { "lose" -> "Cut"; "gain" -> "Build"; "fuel" -> "Fuel"; "recomp" -> "Recomp"; else -> "Maintain" }
             val phaseDays = p.dietPhaseSince?.let {
-                runCatching { (java.time.LocalDate.now().toEpochDay() - java.time.LocalDate.parse(it).toEpochDay()).toInt() }.getOrNull()
+                runCatching { (com.ascend.lifeos.core.todayDate().toEpochDay() - java.time.LocalDate.parse(it).toEpochDay()).toInt() }.getOrNull()
             }
             Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Diet phase", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -610,6 +696,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { trainBonus = (trainBonus - 100).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.WATER_TRAIN_BONUS, trainBonus) },
                 onInc = { trainBonus = (trainBonus + 100).coerceAtMost(1000); Prefs.setInt(ctx, Prefs.WATER_TRAIN_BONUS, trainBonus) },
             )
+            var heatBonus by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.WATER_HEAT_BONUS, 300)) }
+            GoalStepperRow("Heat bonus (>30°C)", "$heatBonus ml",
+                onDec = { heatBonus = (heatBonus - 50).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.WATER_HEAT_BONUS, heatBonus) },
+                onInc = { heatBonus = (heatBonus + 50).coerceAtMost(1000); Prefs.setInt(ctx, Prefs.WATER_HEAT_BONUS, heatBonus) },
+            )
             var kcalTol by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.KCAL_TOLERANCE, 150)) }
             GoalStepperRow("Calorie tolerance", "$kcalTol kcal",
                 onDec = { kcalTol = (kcalTol - 25).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.KCAL_TOLERANCE, kcalTol) },
@@ -670,6 +761,21 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             GoalStepperRow("Protein (build/maintain)", "${"%.1f".format(protLow / 10.0)} g/kg",
                 onDec = { protLow = (protLow - 1).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.PROTEIN_MULT_LOW, protLow) },
                 onInc = { protLow = (protLow + 1).coerceAtMost(25); Prefs.setInt(ctx, Prefs.PROTEIN_MULT_LOW, protLow) },
+            )
+            var coachFloor by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.COACH_KCAL_FLOOR, 1400)) }
+            GoalStepperRow("Kcal safety floor", "$coachFloor",
+                onDec = { coachFloor = (coachFloor - 50).coerceAtLeast(1000); Prefs.setInt(ctx, Prefs.COACH_KCAL_FLOOR, coachFloor) },
+                onInc = { coachFloor = (coachFloor + 50).coerceAtMost(1800); Prefs.setInt(ctx, Prefs.COACH_KCAL_FLOOR, coachFloor) },
+            )
+            var coachStep by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.COACH_MAX_STEP_KCAL, 250)) }
+            GoalStepperRow("Max weekly kcal step", "$coachStep",
+                onDec = { coachStep = (coachStep - 25).coerceAtLeast(50); Prefs.setInt(ctx, Prefs.COACH_MAX_STEP_KCAL, coachStep) },
+                onInc = { coachStep = (coachStep + 25).coerceAtMost(500); Prefs.setInt(ctx, Prefs.COACH_MAX_STEP_KCAL, coachStep) },
+            )
+            var dietBreak by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.COACH_DIET_BREAK_WEEKS, 8)) }
+            GoalStepperRow("Diet break after", "$dietBreak wks",
+                onDec = { dietBreak = (dietBreak - 1).coerceAtLeast(4); Prefs.setInt(ctx, Prefs.COACH_DIET_BREAK_WEEKS, dietBreak) },
+                onInc = { dietBreak = (dietBreak + 1).coerceAtMost(16); Prefs.setInt(ctx, Prefs.COACH_DIET_BREAK_WEEKS, dietBreak) },
             )
             Spacer(Modifier.height(6.dp))
             Text(
@@ -758,6 +864,26 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { debtWarn = (debtWarn - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.SLEEP_DEBT_WARN, debtWarn) },
                 onInc = { debtWarn = (debtWarn + 15).coerceAtMost(180); Prefs.setInt(ctx, Prefs.SLEEP_DEBT_WARN, debtWarn) },
             )
+            var sleepFloor by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.SLEEP_FLOOR_MIN, 330)) }
+            GoalStepperRow("SRT safety floor", "${sleepFloor / 60}h ${sleepFloor % 60}m",
+                onDec = { sleepFloor = (sleepFloor - 15).coerceAtLeast(270); Prefs.setInt(ctx, Prefs.SLEEP_FLOOR_MIN, sleepFloor) },
+                onInc = { sleepFloor = (sleepFloor + 15).coerceAtMost(420); Prefs.setInt(ctx, Prefs.SLEEP_FLOOR_MIN, sleepFloor) },
+            )
+            var morningPrep by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.MORNING_PREP_MIN, 75)) }
+            GoalStepperRow("Morning prep buffer", "${morningPrep} min",
+                onDec = { morningPrep = (morningPrep - 15).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.MORNING_PREP_MIN, morningPrep) },
+                onInc = { morningPrep = (morningPrep + 15).coerceAtMost(180); Prefs.setInt(ctx, Prefs.MORNING_PREP_MIN, morningPrep) },
+            )
+            var streakHour by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STREAK_GUARD_HOUR, 20)) }
+            GoalStepperRow("Streak guard hour", "${streakHour}:00",
+                onDec = { streakHour = (streakHour - 1).coerceAtLeast(17); Prefs.setInt(ctx, Prefs.STREAK_GUARD_HOUR, streakHour) },
+                onInc = { streakHour = (streakHour + 1).coerceAtMost(23); Prefs.setInt(ctx, Prefs.STREAK_GUARD_HOUR, streakHour) },
+            )
+            var earlyHour by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.EARLY_START_HOUR, 8)) }
+            GoalStepperRow("Early start threshold", "${earlyHour}:00",
+                onDec = { earlyHour = (earlyHour - 1).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.EARLY_START_HOUR, earlyHour) },
+                onInc = { earlyHour = (earlyHour + 1).coerceAtMost(12); Prefs.setInt(ctx, Prefs.EARLY_START_HOUR, earlyHour) },
+            )
             var restPct by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.RESTORATIVE_PCT, 45)) }
             GoalStepperRow("Restorative target", "$restPct%",
                 onDec = { restPct = (restPct - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.RESTORATIVE_PCT, restPct) },
@@ -808,6 +934,16 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { puGood = (puGood - 1).coerceAtLeast(5); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_GOOD, puGood) },
                 onInc = { puGood = (puGood + 1).coerceAtMost(12); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_GOOD, puGood) },
             )
+            var puOk by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PICKUP_HOUR_OK, 7)) }
+            GoalStepperRow("First pickup 7 pts", "${puOk}:00",
+                onDec = { puOk = (puOk - 1).coerceAtLeast(4); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_OK, puOk) },
+                onInc = { puOk = (puOk + 1).coerceAtMost(puGood - 1); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_OK, puOk) },
+            )
+            var puLate by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.PICKUP_HOUR_LATE, 6)) }
+            GoalStepperRow("First pickup 3 pts", "${puLate}:00",
+                onDec = { puLate = (puLate - 1).coerceAtLeast(3); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_LATE, puLate) },
+                onInc = { puLate = (puLate + 1).coerceAtMost(puOk - 1); Prefs.setInt(ctx, Prefs.PICKUP_HOUR_LATE, puLate) },
+            )
             var focCustom by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FOCUS_CUSTOM_MIN, 45)) }
             GoalStepperRow("Focus middle chip", "${focCustom} min",
                 onDec = { focCustom = (focCustom - 5).coerceAtLeast(15); Prefs.setInt(ctx, Prefs.FOCUS_CUSTOM_MIN, focCustom) },
@@ -832,6 +968,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── SCHOOL & CALENDAR ────────────────────────────────────────
         SettingsSection("School & Calendar") {
+            var syncH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_SYNC_HOURS, 6)) }
+            GoalStepperRow("Auto-sync interval", "${syncH}h",
+                onDec = { syncH = (syncH - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.CAL_SYNC_HOURS, syncH) },
+                onInc = { syncH = (syncH + 1).coerceAtMost(24); Prefs.setInt(ctx, Prefs.CAL_SYNC_HOURS, syncH) },
+            )
             var calStart by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_HOUR_START, 6)) }
             GoalStepperRow("Timeline start", "%02d:00".format(calStart),
                 onDec = { calStart = (calStart - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.CAL_HOUR_START, calStart) },
@@ -847,12 +988,21 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onDec = { minSlot = (minSlot - 10).coerceAtLeast(10); Prefs.setInt(ctx, Prefs.CAL_MIN_SLOT, minSlot) },
                 onInc = { minSlot = (minSlot + 10).coerceAtMost(90); Prefs.setInt(ctx, Prefs.CAL_MIN_SLOT, minSlot) },
             )
+            var wakeStart by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_WAKE_START, 420)) }
+            GoalStepperRow("Free slot from", "%02d:%02d".format(wakeStart / 60, wakeStart % 60),
+                onDec = { wakeStart = (wakeStart - 30).coerceAtLeast(300); Prefs.setInt(ctx, Prefs.CAL_WAKE_START, wakeStart) },
+                onInc = { wakeStart = (wakeStart + 30).coerceAtMost(720); Prefs.setInt(ctx, Prefs.CAL_WAKE_START, wakeStart) },
+            )
+            var wakeEnd by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_WAKE_END, 1350)) }
+            GoalStepperRow("Free slot until", "%02d:%02d".format(wakeEnd / 60, wakeEnd % 60),
+                onDec = { wakeEnd = (wakeEnd - 30).coerceAtLeast(1080); Prefs.setInt(ctx, Prefs.CAL_WAKE_END, wakeEnd) },
+                onInc = { wakeEnd = (wakeEnd + 30).coerceAtMost(1410); Prefs.setInt(ctx, Prefs.CAL_WAKE_END, wakeEnd) },
+            )
             var studyMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.STUDY_BLOCK_MIN, 45)) }
             GoalStepperRow("Study block", "${studyMin} min",
                 onDec = { studyMin = (studyMin - 5).coerceAtLeast(20); Prefs.setInt(ctx, Prefs.STUDY_BLOCK_MIN, studyMin) },
                 onInc = { studyMin = (studyMin + 5).coerceAtMost(90); Prefs.setInt(ctx, Prefs.STUDY_BLOCK_MIN, studyMin) },
             )
-            ToggleRow("Homework prompt", "Reminder after school to review the day's material", Prefs.HOMEWORK_PROMPT, true)
             ToggleRow("Exam countdown", "Home card from 7 days out", Prefs.EXAM_COUNTDOWN, true)
             ToggleRow("Timetable change alarm", "New cancellations become training suggestions", Prefs.UNTIS_CHANGE_ALARM, true)
             ToggleRow("Weather on free slots", "Sun glyph on outdoor-worthy slots", Prefs.WEATHER_SLOTS, true)
@@ -934,7 +1084,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                             spec.label,
                             color = if (on) TextPrimary else TextMuted,
                             fontFamily = displayFamilyOf(spec),
-                            fontSize = FS.s10, fontWeight = FontWeight.Bold, maxLines = 1,
+                            fontSize = FS.s10, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -966,7 +1116,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                         Modifier.clip(RoundedCornerShape(9.dp))
                             .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
                             .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .pressScale { if (!on) { switchIconAlias(ctx, alias); icon = alias } }
+                            .pressScale { Haptics.tick(ctx); if (!on) { switchIconAlias(ctx, alias); icon = alias } }
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
@@ -977,6 +1127,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
             Spacer(Modifier.height(10.dp))
+            var noteLimit by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.NOTE_CHAR_LIMIT, 1000)) }
+            GoalStepperRow("Note character limit", "$noteLimit",
+                onDec = { noteLimit = (noteLimit - 100).coerceAtLeast(200); Prefs.setInt(ctx, Prefs.NOTE_CHAR_LIMIT, noteLimit) },
+                onInc = { noteLimit = (noteLimit + 100).coerceAtMost(5000); Prefs.setInt(ctx, Prefs.NOTE_CHAR_LIMIT, noteLimit) },
+            )
             var freezes by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.FREEZE_PER_WEEK, 1)) }
             GoalStepperRow("Streak freezes / week", "$freezes",
                 onDec = { freezes = (freezes - 1).coerceAtLeast(0); Prefs.setInt(ctx, Prefs.FREEZE_PER_WEEK, freezes) },
@@ -996,6 +1151,16 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             GoalStepperRow("Screen time budget", "${screenBudget / 60}h ${screenBudget % 60}m",
                 onDec = { screenBudget = (screenBudget - 30).coerceAtLeast(30); com.ascend.lifeos.wellbeing.WellbeingStore.setBudgetMin(ctx, screenBudget) },
                 onInc = { screenBudget = (screenBudget + 30).coerceAtMost(600); com.ascend.lifeos.wellbeing.WellbeingStore.setBudgetMin(ctx, screenBudget) },
+            )
+            var gateMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GUARD_GATE_MIN, 5)) }
+            GoalStepperRow("Gate pass duration", "${gateMin} min",
+                onDec = { gateMin = (gateMin - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.GUARD_GATE_MIN, gateMin) },
+                onInc = { gateMin = (gateMin + 1).coerceAtMost(15); Prefs.setInt(ctx, Prefs.GUARD_GATE_MIN, gateMin) },
+            )
+            var snoozeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.GUARD_SNOOZE_MIN, 3)) }
+            GoalStepperRow("Snooze pass duration", "${snoozeMin} min",
+                onDec = { snoozeMin = (snoozeMin - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.GUARD_SNOOZE_MIN, snoozeMin) },
+                onInc = { snoozeMin = (snoozeMin + 1).coerceAtMost(10); Prefs.setInt(ctx, Prefs.GUARD_SNOOZE_MIN, snoozeMin) },
             )
             ToggleRow("Sounds", "PR, level-up and focus chimes", Prefs.SOUNDS_ON, true)
             ToggleRow("Haptics", "The tactile language of the app", Prefs.HAPTICS_ON, true)
@@ -1055,13 +1220,18 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                         val ok = Backup.runNow(ctx)
                         backupState = if (ok) "Backup written ✓" else "Backup failed"
-                    if (ok) AppFeedback.show("Backup saved successfully")
+                    if (ok) AppFeedback.show("Backup saved")
                     }
                 } else runCatching { folderPicker.launch(null) }
             }
             if (hasFolder) {
-                ActionRow("Restore latest backup", "Replaces current data") {
+                var armedRestore by remember { mutableStateOf(false) }
+                LaunchedEffect(armedRestore) { if (armedRestore) { kotlinx.coroutines.delay(2500); armedRestore = false } }
+                ActionRow(if (armedRestore) "Tap again to restore" else "Restore latest backup", "Replaces current data") {
                     if (backupState == "Restoring…") return@ActionRow
+                    if (!armedRestore) { Haptics.warn(ctx); armedRestore = true; return@ActionRow }
+                    armedRestore = false
+                    Haptics.confirm(ctx)
                     backupState = "Restoring…"
                     // SAF I/O + ZIP + db swaps — off the main thread (ANR risk)
                     scope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -1069,6 +1239,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     backupState = when {
                         r.ok && r.needsRestart -> "Restored ✓ — restarting…"
                         r.ok -> "Restored ✓"
+                        r.error != null -> r.error
                         else -> "No backup found"
                     }
                     if (r.ok && r.needsRestart) {
@@ -1113,8 +1284,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     }
                 }
             }
-            ActionRow("Recalibrate", "Re-run the boot sequence — data stays") {
-                Repo.rebootOnboarding(); onClose()
+            var armedRecal by remember { mutableStateOf(false) }
+            LaunchedEffect(armedRecal) { if (armedRecal) { kotlinx.coroutines.delay(2500); armedRecal = false } }
+            ActionRow(if (armedRecal) "Tap again to confirm" else "Recalibrate", "Re-run the boot sequence — data stays") {
+                if (armedRecal) { Haptics.confirm(ctx); Repo.rebootOnboarding(); onClose() }
+                else { Haptics.warn(ctx); armedRecal = true }
             }
         }
 
@@ -1141,8 +1315,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── ABOUT ────────────────────────────────────────────────────
         SettingsSection("About") {
             var whatsNew by remember { mutableStateOf(false) }
-            ActionRow("What's new", "The latest changes, on demand — no popups") { whatsNew = true }
+            ActionRow("What's new", "The latest changes — auto-shows once per update") { whatsNew = true }
             if (whatsNew) ChangelogSheet(onDismiss = { whatsNew = false })
+            var showTour by remember { mutableStateOf(false) }
+            ActionRow("Feature tour", "Replay the guided introduction to every module") { showTour = true }
+            if (showTour) com.ascend.lifeos.ui.boot.FeatureTour(onComplete = { showTour = false })
             val buildStamp = remember {
                 runCatching {
                     val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
@@ -1231,32 +1408,38 @@ private fun CategoryEditor() {
     val ctx = LocalContext.current
     var cats by remember { mutableStateOf(LifeStores.categories(ctx).filter { it != "Income" }) }
     var adding by remember { mutableStateOf(false) }
-    var newCat by remember { mutableStateOf("") }
+    var newCat by rememberSaveable { mutableStateOf("") }
+    var armedDelete by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(armedDelete) { if (armedDelete != null) { kotlinx.coroutines.delay(2500); armedDelete = null } }
 
     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Text("Spending categories", color = TextPrimary, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold)
-        Text("Tap × to remove, + to add", color = TextDim, fontFamily = Body, fontSize = FS.s10_5)
+        Text("Tap × twice to remove, + to add", color = TextDim, fontFamily = Body, fontSize = FS.s10_5)
         Spacer(Modifier.height(8.dp))
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             cats.forEach { c ->
+                val armed = armedDelete == c
                 Box(
                     Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Ivory.copy(alpha = 0.06f))
-                        .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                        .background(if (armed) Crit.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.06f))
+                        .border(0.5.dp, if (armed) Crit.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(c, color = TextPrimary, fontFamily = Body, fontSize = FS.s11_5)
+                        Text(c, color = if (armed) Crit else TextPrimary, fontFamily = Body, fontSize = FS.s11_5)
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            "×", color = TextDim, fontFamily = Body, fontSize = FS.s11_5,
+                            "×", color = if (armed) Crit else TextDim, fontFamily = Body, fontSize = FS.s11_5,
                             modifier = Modifier.clip(CircleShape).pressScale {
-                                cats = cats - c
-                                LifeStores.setCategories(ctx, cats + "Income")
+                                if (armed) {
+                                    Haptics.confirm(ctx); cats = cats - c
+                                    LifeStores.setCategories(ctx, cats + "Income")
+                                    armedDelete = null; AppFeedback.show("$c removed")
+                                } else { Haptics.tick(ctx); armedDelete = c }
                             }.padding(horizontal = 2.dp),
                         )
                     }
@@ -1313,8 +1496,8 @@ private fun CategoryEditor() {
 private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     SectionLabel(title)
     Spacer(Modifier.height(8.dp))
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), content = content)
+    Panel(Modifier.fillMaxWidth()) {
+        Column(Modifier.animateContentSize(animationSpec = Motion.springSmoothOf()).padding(horizontal = 16.dp, vertical = 10.dp), content = content)
     }
     Spacer(Modifier.height(16.dp))
 }
@@ -1338,7 +1521,7 @@ private fun NotifToggleRow(
     val hh = "%02d".format(minuteOfDay / 60)
     val mm = "%02d".format(minuteOfDay % 60)
     Row(
-        Modifier.fillMaxWidth().pressScale { Prefs.setBool(ctx, toggleKey, !on) }.padding(vertical = 7.dp),
+        Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); Prefs.setBool(ctx, toggleKey, !on) }.padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1351,7 +1534,7 @@ private fun NotifToggleRow(
                     .clip(RoundedCornerShape(8.dp))
                     .background(Mod.Home.copy(alpha = 0.12f))
                     .border(0.5.dp, Mod.Home.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                    .pressScale { picking = true }
+                    .pressScale { Haptics.tick(ctx); picking = true }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 Text("$hh:$mm", color = Mod.Home, fontSize = FS.s11, fontFamily = Display, fontWeight = FontWeight.Bold)
@@ -1374,8 +1557,9 @@ private fun NotifToggleRow(
 
 @Composable
 private fun ToggleRow(title: String, sub: String, on: Boolean, onToggle: (Boolean) -> Unit) {
+    val tCtx = LocalContext.current
     Row(
-        Modifier.fillMaxWidth().pressScale { onToggle(!on) }.padding(vertical = 7.dp),
+        Modifier.fillMaxWidth().pressScale { Haptics.tick(tCtx); onToggle(!on) }.padding(vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1459,11 +1643,12 @@ private fun TimePickerSheet(currentMin: Int, onResult: (Int?) -> Unit) {
 
 @Composable
 private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange: (Int) -> Unit) {
+    val sCtx = LocalContext.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
                 .background(Ivory.copy(alpha = 0.06f))
-                .pressScale { onChange((value + step).coerceAtMost(max)) },
+                .pressScale { Haptics.tick(sCtx); onChange((value + step).coerceAtMost(max)) },
             contentAlignment = Alignment.Center,
         ) { Text("▲", color = TextMuted, fontSize = FS.s14, fontFamily = Body) }
         Spacer(Modifier.height(6.dp))
@@ -1475,7 +1660,7 @@ private fun TimeStepper(value: Int, min: Int, max: Int, step: Int = 1, onChange:
         Box(
             Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
                 .background(Ivory.copy(alpha = 0.06f))
-                .pressScale { onChange((value - step).coerceAtLeast(min)) },
+                .pressScale { Haptics.tick(sCtx); onChange((value - step).coerceAtLeast(min)) },
             contentAlignment = Alignment.Center,
         ) { Text("▼", color = TextMuted, fontSize = FS.s14, fontFamily = Body) }
     }

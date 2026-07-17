@@ -91,10 +91,9 @@ fun TimerScreen(onClose: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             JarvisHeader("Timer", if (finished) "Done!" else "", TimerAccent) {
-                Icon(
-                    Icons.Rounded.Close, "Close timer", tint = TextDim,
-                    modifier = Modifier.size(20.dp).clip(CircleShape).pressScale(onClick = onClose),
-                )
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onClose() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Close timer", tint = TextDim, modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(Modifier.height(12.dp))
 
@@ -112,7 +111,7 @@ fun TimerScreen(onClose: () -> Unit) {
                             .clip(RoundedCornerShape(12.dp))
                             .background(bgClr)
                             .then(if (!running) Modifier.pressScale {
-                                mode = m; elapsedMs = 0; finished = false
+                                Haptics.tick(ctx); mode = m; elapsedMs = 0; finished = false
                             } else Modifier)
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
@@ -223,13 +222,18 @@ fun TimerScreen(onClose: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Reset
+                var armedReset by remember { mutableStateOf(false) }
+                LaunchedEffect(armedReset) { if (armedReset) { kotlinx.coroutines.delay(2500); armedReset = false } }
                 Box(
                     Modifier.size(52.dp).clip(CircleShape)
-                        .background(Ivory.copy(alpha = 0.08f))
-                        .pressScale { running = false; elapsedMs = 0; finished = false; laps.clear(); Haptics.tick(ctx) },
+                        .background(if (armedReset) Crit.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.08f))
+                        .pressScale {
+                            if (armedReset) { running = false; elapsedMs = 0; finished = false; laps.clear(); Haptics.confirm(ctx); armedReset = false }
+                            else { Haptics.warn(ctx); armedReset = true }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.Refresh, "Reset timer", tint = TextDim, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Rounded.Refresh, if (armedReset) "Tap to confirm reset" else "Reset timer", tint = if (armedReset) Crit else TextDim, modifier = Modifier.size(24.dp))
                 }
 
                 // Lap (stopwatch only)

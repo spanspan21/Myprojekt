@@ -57,6 +57,7 @@ object SleepStore {
         return out.sortedBy { it.dayKey }
     }
 
+    @Synchronized
     private fun writeLogs(ctx: Context, logs: List<NightLog>) {
         val arr = JSONArray()
         logs.sortedBy { it.dayKey }.takeLast(MAX_LOGS).forEach { arr.put(it.toJson()) }
@@ -65,6 +66,7 @@ object SleepStore {
     }
 
     /** Adds or replaces the log for its dayKey (one night per day, capped 120). */
+    @Synchronized
     fun upsertLog(ctx: Context, log: NightLog) {
         writeLogs(ctx, logs(ctx).filter { it.dayKey != log.dayKey } + log)
     }
@@ -80,6 +82,7 @@ object SleepStore {
      * latency = that − the real bedtime; the window (and true efficiency) then
      * reflect the whole time in bed, and the night becomes titration-eligible.
      */
+    @Synchronized
     fun confirmNight(ctx: Context, dayKey: String, realBedMin: Int) {
         val n = logs(ctx).firstOrNull { it.dayKey == dayKey } ?: return
         val onset = ((n.bedMin - realBedMin) % 1440 + 1440) % 1440
@@ -89,6 +92,7 @@ object SleepStore {
     }
 
     /** The user tags [dayKey] as a power nap — resolved, and never titrated on. */
+    @Synchronized
     fun markNap(ctx: Context, dayKey: String) {
         val n = logs(ctx).firstOrNull { it.dayKey == dayKey } ?: return
         upsertLog(ctx, n.copy(isNap = true, bedGiven = true))
@@ -117,6 +121,7 @@ object SleepStore {
      * can't know (time in bed before sleep) defaults to zero and can be
      * refined by hand. Returns how many nights were imported.
      */
+    @Synchronized
     fun syncFromHealth(ctx: Context): Int {
         val existing = logs(ctx).map { it.dayKey }.toSet()
         var imported = 0
@@ -182,7 +187,7 @@ object SleepStore {
      */
     fun startRestriction(ctx: Context): Boolean {
         val all = logs(ctx)
-        val tib = SleepProtocol.initialTib(all)
+        val tib = SleepProtocol.initialTib(all, SleepProtocol.floorMin(ctx))
         if (tib <= 0) return false
         val avg = all.map { SleepProtocol.actualSleep(it) }.average().roundToInt()
         val anchor = all.lastOrNull()?.outOfBedMin ?: DEFAULT_ANCHOR
@@ -208,7 +213,7 @@ object SleepStore {
         val base = baselineAvg(ctx) ?: return null
         // Only confirmed, non-nap nights drive the titration — otherwise imported
         // nights (efficiency ≈ 95 %) would push the window open every week (OF-1).
-        val (next, reason) = SleepProtocol.weeklyAdjust(st, SleepProtocol.titratable(logs(ctx)).takeLast(7), base)
+        val (next, reason) = SleepProtocol.weeklyAdjust(st, SleepProtocol.titratable(logs(ctx)).takeLast(7), base, SleepProtocol.floorMin(ctx))
         prefs(ctx).edit().putString("adj_week", week).apply()
         saveState(ctx, next)
         return reason

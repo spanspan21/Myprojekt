@@ -1,5 +1,10 @@
 package com.ascend.lifeos.ui.prime
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -24,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -37,6 +43,7 @@ import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -80,6 +87,11 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
     // tapping the crystal rescores — bump this and the report recomputes (the
     // previous value stays on screen until the new one lands, so no flicker)
     val reload = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0) }
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(owner) {
+        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) reload.value++ }
+        owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
+    }
     val report by produceState<PrimeReport?>(null, reload.value) {
         // Let the enter transition settle before the heavy build + rich hero
         // (crystal + subsystem bars + lists) compose — composing all of that
@@ -92,10 +104,10 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
     }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
-        JarvisHeader("Prime", report?.index?.let { "Index $it" }, Accent) {}
+        JarvisHeader("Prime", report?.index?.let { "Index $it" }, Accent)
         Spacer(Modifier.height(16.dp))
 
         val r = report
@@ -118,7 +130,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                 // Tappable when the directive knows which module to act on — it
                 // deep-links there instead of being a dead-end poster (audit F1).
                 val rowMod = if (d.route != null)
-                    Modifier.fillMaxWidth().pressScale { onNavigate(d.route) } else Modifier.fillMaxWidth()
+                    Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); onNavigate(d.route) } else Modifier.fillMaxWidth()
                 Panel(Modifier.fillMaxWidth()) {
                     Row(rowMod.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -129,9 +141,9 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(d.text, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = FS.s18)
+                            Text(d.text, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, lineHeight = FS.s18, maxLines = 3, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(2.dp))
-                            Text(d.why, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15)
+                            Text(d.why, color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15, maxLines = 3, overflow = TextOverflow.Ellipsis)
                         }
                         if (d.route != null) {
                             Spacer(Modifier.width(8.dp))
@@ -190,7 +202,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
             Panel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.05f), line = Amber.copy(alpha = 0.25f)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.anomalies.forEachIndexed { i, a ->
-                        Text(a, color = TextPrimary, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
+                        Text(a, color = TextPrimary, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17, maxLines = 4, overflow = TextOverflow.Ellipsis)
                         if (i != r.anomalies.lastIndex) Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -207,7 +219,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
                     r.insights.forEachIndexed { i, s ->
                         Row {
                             Text("◆ ", color = Champagne, fontSize = FS.s11)
-                            Text(s, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
+                            Text(s, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17, maxLines = 4, overflow = TextOverflow.Ellipsis)
                         }
                         if (i != r.insights.lastIndex) Spacer(Modifier.height(8.dp))
                     }
@@ -223,7 +235,7 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
             Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                     r.forecasts.forEachIndexed { i, f ->
-                        Text(f, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
+                        Text(f, color = TextMuted, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17, maxLines = 4, overflow = TextOverflow.Ellipsis)
                         if (i != r.forecasts.lastIndex) Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -426,13 +438,14 @@ private fun AnimatedSubBar(name: String, score: Int, why: String, indexInList: I
         tween(900, delayMillis = 250 + indexInList * 80, easing = FastOutSlowInEasing),
         label = "sub",
     )
-    val c = when { score >= 75 -> Good; score >= 45 -> Amber; else -> Warn }
-    // Tap a bar to reveal its contributor line — the index stops being opaque.
+    val pCtx = LocalContext.current
+    val c = when { score >= Prefs.int(pCtx, Prefs.READINESS_GOOD, 75) -> Good; score >= 45 -> Amber; else -> Warn }
     var open by remember { mutableStateOf(false) }
     Column(
         Modifier.fillMaxWidth()
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-            .then(if (why.isNotBlank()) Modifier.pressScale { open = !open } else Modifier)
+            .then(if (why.isNotBlank()) Modifier.pressScale { Haptics.tick(pCtx); open = !open } else Modifier)
+            .animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
             .padding(vertical = 3.5.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -449,7 +462,8 @@ private fun AnimatedSubBar(name: String, score: Int, why: String, indexInList: I
         androidx.compose.animation.AnimatedVisibility(open) {
             Text(
                 why, color = TextMuted, fontFamily = Body, fontSize = FS.s10,
-                lineHeight = FS.s13, modifier = Modifier.padding(start = 82.dp, top = 4.dp, bottom = 2.dp),
+                lineHeight = FS.s13, maxLines = 3, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 82.dp, top = 4.dp, bottom = 2.dp),
             )
         }
     }

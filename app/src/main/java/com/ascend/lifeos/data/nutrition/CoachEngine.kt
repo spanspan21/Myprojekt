@@ -95,6 +95,12 @@ object CoachEngine {
         examSoon: Boolean = false,
         weeksInPhase: Int = 0,
         loadSpike: Boolean = false,
+        proteinMultHigh: Double = 2.2,
+        proteinMultLow: Double = 1.8,
+        fatMultFuel: Double = 0.8,
+        kcalFloor: Int = KCAL_FLOOR,
+        maxStepKcal: Int = MAX_STEP_KCAL,
+        dietBreakWeeks: Int = 8,
     ): CheckIn {
         val why = ArrayList<String>(5)
         val warnings = ArrayList<String>(3)
@@ -174,26 +180,31 @@ object CoachEngine {
         }
 
         // ── 4) floor + hedge ─────────────────────────────────────────────
-        if (ideal < KCAL_FLOOR) {
-            ideal = KCAL_FLOOR.toDouble()
-            warnings.add("Hit the $KCAL_FLOOR kcal floor — lower would be reckless; the timeline just gets longer.")
+        if (ideal < kcalFloor) {
+            ideal = kcalFloor.toDouble()
+            warnings.add("Hit the $kcalFloor kcal floor — lower would be reckless; the timeline just gets longer.")
         }
         val fullDelta = ideal - currentKcal
-        val step = fullDelta.coerceIn(-MAX_STEP_KCAL.toDouble(), MAX_STEP_KCAL.toDouble())
-        val hedged = abs(fullDelta) > MAX_STEP_KCAL + 1
+        val step = fullDelta.coerceIn(-maxStepKcal.toDouble(), maxStepKcal.toDouble())
+        val hedged = abs(fullDelta) > maxStepKcal + 1
         val newKcal = ((currentKcal + step).roundToInt() / 10) * 10
 
         // ── 5) macros: protein first, fat floor, carbs are the remainder ─
         // Cut needs extra protein (Helms 2014); recomp lives on it (Barakat
         // 2020 — muscle up + fat down at maintenance only works protein-first).
-        val proteinPerKg = if (phase == DietPhase.CUT || phase == DietPhase.RECOMP) 2.2 else 1.8
+        val proteinPerKg = if (phase == DietPhase.CUT || phase == DietPhase.RECOMP) proteinMultHigh else proteinMultLow
         val protein = ceil(proteinPerKg * bw).toInt()
-        val fatFloor = (0.8 * bw).roundToInt()
+        val fatFloor = (fatMultFuel * bw).roundToInt()
         val fatFromPct = (newKcal * 0.25 / 9.0).roundToInt()
         // Fuel keeps fat AT the hormonal floor — every kcal above protein+fat
         // becomes glycogen for training (Thomas/ACSM 2016)
         val fat = if (phase == DietPhase.FUEL) fatFloor else maxOf(fatFloor, fatFromPct)
-        val carbs = ((newKcal - protein * 4 - fat * 9) / 4.0).roundToInt().coerceAtLeast(0)
+        val macroFloor = protein * 4 + fat * 9
+        val adjKcal = if (macroFloor > newKcal) {
+            warnings.add("Protein + fat already need $macroFloor kcal — calorie target raised to match.")
+            macroFloor
+        } else newKcal
+        val carbs = ((adjKcal - macroFloor) / 4.0).roundToInt()
 
         // ── 6) the reasoning, in the user's language ─────────────────────
         why.add(0, "Real expenditure ≈$expenditure kcal ($daysOfData logged days, $confidence data).")
@@ -203,7 +214,7 @@ object CoachEngine {
             )
         }
         if (hedged) {
-            why.add("Full correction would be ${fullDelta.roundToInt()} kcal — stepping $MAX_STEP_KCAL now, the rest next week if the trend holds.")
+            why.add("Full correction would be ${fullDelta.roundToInt()} kcal — stepping $maxStepKcal now, the rest next week if the trend holds.")
         }
         why.add(
             "Protein $protein g (${fmtG(proteinPerKg)} g/kg" + when (phase) {
@@ -217,7 +228,7 @@ object CoachEngine {
         }
 
         // ── 7) diet-break rhythm (MATADOR) ───────────────────────────────
-        if (phase == DietPhase.CUT && weeksInPhase >= 8) {
+        if (phase == DietPhase.CUT && weeksInPhase >= dietBreakWeeks) {
             warnings.add("$weeksInPhase weeks dieting — schedule 1–2 weeks at maintenance (MATADOR: better fat loss, less adaptation).")
         }
 
@@ -225,7 +236,7 @@ object CoachEngine {
             phase = phase, expenditure = expenditure, confidence = confidence,
             daysOfData = daysOfData, trendKgPerWeek = trendKgPerWeek,
             targetKgPerWeek = targetRate / 100.0 * bw,
-            prevKcal = currentKcal, newKcal = newKcal, hedged = hedged,
+            prevKcal = currentKcal, newKcal = adjKcal, hedged = hedged,
             protein = protein, fat = fat, carbs = carbs,
             why = why, warnings = warnings,
         )
@@ -262,7 +273,7 @@ object CoachRitual {
 
         val recovery = runCatching { com.ascend.lifeos.data.Repo.recoveryScore() }.getOrNull()
         val examSoon = runCatching {
-            val now = java.time.LocalDate.now()
+            val now = com.ascend.lifeos.core.todayDate()
             com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
                 .eventsInRangeOnce(now.toEpochDay(), now.plusDays(7).toEpochDay())
                 .any { it.type == com.ascend.lifeos.data.calendar.EventType.EXAM.name }
@@ -289,6 +300,12 @@ object CoachRitual {
             examSoon = examSoon,
             weeksInPhase = weeksInPhase,
             loadSpike = loadSpike,
+            proteinMultHigh = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_MULT_HIGH, 22) / 10.0,
+            proteinMultLow = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.PROTEIN_MULT_LOW, 18) / 10.0,
+            fatMultFuel = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.FAT_MULT_FUEL, 8) / 10.0,
+            kcalFloor = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.COACH_KCAL_FLOOR, 1400),
+            maxStepKcal = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.COACH_MAX_STEP_KCAL, 250),
+            dietBreakWeeks = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.COACH_DIET_BREAK_WEEKS, 8),
         )
         // a steady weight-holding week with nothing to say stays out of the way
         if (checkIn.phase.holdsWeight &&

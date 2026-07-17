@@ -1,6 +1,8 @@
 package com.ascend.lifeos.data.calendar
 
 import android.content.Context
+import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -59,9 +61,7 @@ object IcsSync {
             // A transient empty-but-valid feed (server hiccup) must not wipe the
             // last good import — only replace when the parse produced events.
             if (events.isEmpty()) return@withContext Result.success(0)
-            val dao = CalendarRepo.dao(ctx)
-            dao.deleteBySource()
-            events.forEach { dao.upsert(it) }
+            CalendarRepo.dao(ctx).replaceIcsEvents(events)
             prefs(ctx).edit().putLong(KEY_LAST, System.currentTimeMillis()).apply()
             Result.success(events.size)
         } catch (e: Exception) {
@@ -261,7 +261,8 @@ object IcsSync {
                 if (mask == 0) mask = 1 shl (start.date.dayOfWeek.value - 1)
                 val until = parts["UNTIL"]?.let { parseDt(it, "")?.date }
                 val count = parts["COUNT"]?.toIntOrNull()
-                fun weekIndex(d: LocalDate) = Math.floorDiv(d.toEpochDay() + 3, 7L) // +3 → Monday-aligned
+                val weekOff = if (Repo.appContextOrNull()?.let { Prefs.string(it, Prefs.WEEK_START, "monday") } == "sunday") 4L else 3L
+                fun weekIndex(d: LocalDate) = Math.floorDiv(d.toEpochDay() + weekOff, 7L)
                 val anchorWeek = weekIndex(start.date)
                 val days = ArrayList<LocalDate>()
                 var d = start.date
@@ -294,7 +295,8 @@ object IcsSync {
                         var d = start.date
                         var seen = 0
                         var lastOcc = start.date
-                        while (seen < count) {
+                        val safeCount = count.coerceAtMost(365 * 5)
+                        while (seen < safeCount) {
                             if (repeatMask and (1 shl (d.dayOfWeek.value - 1)) != 0) {
                                 seen++
                                 lastOcc = d

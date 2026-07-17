@@ -18,7 +18,7 @@ object WaterCalc {
 
     fun glassMl(): Int {
         val ctx = Repo.appContextOrNull() ?: return DEFAULT_GLASS_ML
-        return Prefs.int(ctx, Prefs.GLASS_ML, DEFAULT_GLASS_ML)
+        return Prefs.int(ctx, Prefs.GLASS_ML, DEFAULT_GLASS_ML).coerceAtLeast(1)
     }
 
     fun targetMl(weightKg: Int, trainedToday: Boolean, hot: Boolean = false): Int {

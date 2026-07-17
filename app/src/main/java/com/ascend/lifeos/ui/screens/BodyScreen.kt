@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.screens
 
+import kotlin.math.roundToInt
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Mood
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.Icon
@@ -29,16 +31,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.data.Units
+import com.ascend.lifeos.data.ProgressPhotos
 import com.ascend.lifeos.data.prime.PrimeMath
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.graphics.asImageBitmap
 import com.ascend.lifeos.ui.kit.*
 import com.ascend.lifeos.ui.kit.TickerNumber
 import com.ascend.lifeos.ui.motion.pressScale
@@ -132,9 +141,10 @@ fun BodyScreen() {
 
     var weightOpen by remember { mutableStateOf(false) }
     var sleepOpen by remember { mutableStateOf(false) }
+    var photoSheetOpen by remember { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
         JarvisHeader("Body", directive, Mod.Body) {
@@ -143,7 +153,7 @@ fun BodyScreen() {
         Spacer(Modifier.height(18.dp))
 
         // ── recovery hero with WHY rows ──────────────────────────────
-        Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
+        Panel(Modifier.fillMaxWidth(), corner = RHero) {
             Column(Modifier.padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(contentAlignment = Alignment.Center) {
@@ -175,7 +185,7 @@ fun BodyScreen() {
                         val sm = h?.sleepMin
                         if (sm != null) {
                             WhyRow("Sleep", "${sm / 60}h ${sm % 60}m", (sm / Repo.sleepNeedMin().toFloat()).coerceIn(0f, 1f), "Total sleep vs your ${Repo.sleepNeedMin() / 60}h target. Biggest single factor for recovery.")
-                            val restShare = if (sm > 0) (h.rem + h.deep) * 100 / sm else 0
+                            val restShare = if (sm > 0) ((h.rem + h.deep) * 100f / sm).roundToInt() else 0
                             val restTarget = Prefs.int(ctx, Prefs.RESTORATIVE_PCT, 45)
                             WhyRow("Restorative", "$restShare%", (restShare / restTarget.toFloat()).coerceIn(0f, 1f), "Deep + REM as % of total sleep. Target: ${restTarget}%. These stages drive muscle repair and memory consolidation.")
                             val base = Repo.rhrBaseline()
@@ -216,14 +226,14 @@ fun BodyScreen() {
                                 Box(
                                     Modifier.clip(RoundedCornerShape(11.dp)).background(Mod.Body.copy(alpha = 0.14f))
                                         .border(0.5.dp, Mod.Body.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
-                                        .pressScale { connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
+                                        .pressScale { Haptics.tick(ctx); connect() }.padding(horizontal = 13.dp, vertical = 8.dp),
                                 ) { Text(if (linked) "Sync now" else "Connect", color = Mod.Body, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                                 Spacer(Modifier.width(8.dp))
                                 // no-watch nights still get logged (audit F9)
                                 Box(
                                     Modifier.clip(RoundedCornerShape(11.dp))
                                         .border(0.5.dp, Ivory.copy(alpha = 0.14f), RoundedCornerShape(11.dp))
-                                        .pressScale { sleepOpen = true }.padding(horizontal = 13.dp, vertical = 8.dp),
+                                        .pressScale { Haptics.tick(ctx); sleepOpen = true }.padding(horizontal = 13.dp, vertical = 8.dp),
                                 ) { Text("Log sleep", color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                             }
                         }
@@ -242,7 +252,7 @@ fun BodyScreen() {
 
         // ── bedtime consistency + sick mode ──────────────────────────
         Repo.bedtimeConsistency()?.let { (median, spread) ->
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Bedtime consistency", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -271,13 +281,13 @@ fun BodyScreen() {
         if (sm != null) {
             SectionLabel("Sleep")
             Spacer(Modifier.height(10.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     val sScore = Repo.sleepScore(h)
                     if (sScore != null) {
                         val sColor = when {
-                            sScore >= 75 -> Good
-                            sScore >= 55 -> Warn
+                            sScore >= Prefs.int(ctx, Prefs.SLEEP_SCORE_GOOD, 75) -> Good
+                            sScore >= Prefs.int(ctx, Prefs.SLEEP_SCORE_WARN, 55) -> Warn
                             else -> Crit
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -285,12 +295,11 @@ fun BodyScreen() {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("Sleep score", color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                                     Spacer(Modifier.width(4.dp))
-                                    Icon(
-                                        Icons.Rounded.Info, "Sleep score info", tint = TextDim.copy(alpha = 0.4f),
-                                        modifier = Modifier.size(13.dp).pressScale {
-                                            AppFeedback.show("Duration vs target (55%) + deep/REM share (30%) + wake penalty (15%)")
-                                        },
-                                    )
+                                    Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                                        AppFeedback.show("Duration vs target (55%) + deep/REM share (30%) + wake penalty (15%)")
+                                    }, contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Rounded.Info, "Sleep score info", tint = TextDim.copy(alpha = 0.4f), modifier = Modifier.size(14.dp))
+                                    }
                                 }
                                 Text(
                                     "${sm / 60}h ${sm % 60}m total · night + naps",
@@ -305,16 +314,15 @@ fun BodyScreen() {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Recovery", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                                 Spacer(Modifier.width(4.dp))
-                                Icon(
-                                    Icons.Rounded.Info, "Recovery info", tint = TextDim.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(13.dp).pressScale {
-                                        AppFeedback.show("Sleep performance (40%) + deep/REM share (20%) + resting HR delta (25%) + training load (15%) + morning check-in")
-                                    },
-                                )
+                                Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                                    AppFeedback.show("Sleep performance (40%) + deep/REM share (20%) + resting HR delta (25%) + training load (15%) + morning check-in")
+                                }, contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Rounded.Info, "Recovery info", tint = TextDim.copy(alpha = 0.4f), modifier = Modifier.size(14.dp))
+                                }
                                 Spacer(Modifier.weight(1f))
                                 val rColor = when {
-                                    recScore >= com.ascend.lifeos.domain.RecoveryEngine.THRESHOLD_GREEN -> Good
-                                    recScore >= com.ascend.lifeos.domain.RecoveryEngine.THRESHOLD_RED -> Warn
+                                    recScore >= rdGood -> Good
+                                    recScore >= rdWarn -> Warn
                                     else -> Crit
                                 }
                                 TickerNumber(recScore, 13, rColor, fontWeight = FontWeight.ExtraBold, fontFamily = Display)
@@ -353,11 +361,6 @@ fun BodyScreen() {
 
         // ── trends: 7 / 30 / 90 days ─────────────────────────────────
         var trendDays by rememberSaveable { mutableStateOf(7) }
-        val keys = Repo.lastDayKeys(trendDays)
-        val sleepSeries = keys.map { (Repo.bodyDay(it)?.sleepMin ?: 0).toFloat() }
-        val rhrSeries = keys.mapNotNull { Repo.bodyDay(it)?.restingHr?.toFloat() }
-        val stepSeries = keys.map { (Repo.bodyDay(it)?.steps ?: 0).toFloat() }
-        val haveTrend = sleepSeries.count { it > 0 } >= 2
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             SectionLabel("Trends")
@@ -372,39 +375,48 @@ fun BodyScreen() {
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (sel) Mod.Body.copy(alpha = 0.14f) else Color.Transparent)
                         .pressScale { Haptics.tick(ctx); trendDays = d }
+                        .defaultMinSize(minHeight = 44.dp, minWidth = 44.dp)
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                 )
             }
         }
         Spacer(Modifier.height(10.dp))
-        if (!haveTrend) {
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                Text(
-                    "Collecting data — trends appear after a couple of synced days.",
-                    color = TextDim, fontSize = FS.s12, fontFamily = Body,
-                    modifier = Modifier.padding(16.dp),
-                )
-            }
-        } else {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TrendTile("SLEEP", sleepSeries, Mod.Body, Modifier.weight(1f)) { v -> "${(v / 60).toInt()}h${(v % 60).toInt().toString().padStart(2, '0')}" }
-                if (rhrSeries.size >= 2) {
-                    TrendTile("RHR", rhrSeries, Warn, Modifier.weight(1f)) { v -> "${v.toInt()} bpm" }
-                } else {
-                    TrendTile("STEPS", stepSeries, Good, Modifier.weight(1f)) { v -> "${v.toInt()}" }
-                }
-            }
-            // Long-range RHR is the quiet proof that training works.
-            if (trendDays >= 30 && rhrSeries.size >= 14) {
-                val early = rhrSeries.take(7).average()
-                val late = rhrSeries.takeLast(7).average()
-                val delta = late - early
-                if (delta <= -1.0) {
-                    Spacer(Modifier.height(8.dp))
+        androidx.compose.animation.Crossfade(targetState = trendDays, animationSpec = androidx.compose.animation.core.tween(280), label = "trend") { days ->
+            val tKeys = Repo.lastDayKeys(days)
+            val tSleep = tKeys.map { (Repo.bodyDay(it)?.sleepMin ?: 0).toFloat() }
+            val tRhr = tKeys.mapNotNull { Repo.bodyDay(it)?.restingHr?.toFloat() }
+            val tSteps = tKeys.map { (Repo.bodyDay(it)?.steps ?: 0).toFloat() }
+            val tHave = tSleep.count { it > 0 } >= 2
+            if (!tHave) {
+                Panel(Modifier.fillMaxWidth(), corner = RElem) {
                     Text(
-                        "Resting HR ${early.toInt()} → ${late.toInt()} bpm over this window — training is landing.",
-                        color = Good, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        "Collecting data — trends appear after a couple of synced days.",
+                        color = TextDim, fontSize = FS.s12, fontFamily = Body,
+                        modifier = Modifier.padding(16.dp),
                     )
+                }
+            } else {
+                Column {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        TrendTile("SLEEP", tSleep, Mod.Body, Modifier.weight(1f)) { v -> "${(v / 60).toInt()}h${(v % 60).toInt().toString().padStart(2, '0')}" }
+                        if (tRhr.size >= 2) {
+                            TrendTile("RHR", tRhr, Warn, Modifier.weight(1f)) { v -> "${v.toInt()} bpm" }
+                        } else {
+                            TrendTile("STEPS", tSteps, Good, Modifier.weight(1f)) { v -> "${v.toInt()}" }
+                        }
+                    }
+                    if (days >= 30 && tRhr.size >= 14) {
+                        val early = tRhr.take(7).average()
+                        val late = tRhr.takeLast(7).average()
+                        val delta = late - early
+                        if (delta <= -1.0) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Resting HR ${early.toInt()} → ${late.toInt()} bpm over this window — training is landing.",
+                                color = Good, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -434,7 +446,7 @@ fun BodyScreen() {
                     Column {
                         SectionLabel("Training load")
                         Spacer(Modifier.height(10.dp))
-                        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                        Panel(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
@@ -484,10 +496,17 @@ fun BodyScreen() {
 
         // ── heart rate curve (today) ─────────────────────────────────
         val series = h?.hrSeries.orEmpty()
-        if (series.size >= 8) {
+        if (series.isNotEmpty() && series.size < 8) {
             SectionLabel("Heart rate today")
             Spacer(Modifier.height(10.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            Panel(Modifier.fillMaxWidth()) {
+                Text("Collecting data — ${series.size}/8 samples so far", color = TextDim, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.padding(16.dp))
+            }
+            Spacer(Modifier.height(20.dp))
+        } else if (series.size >= 8) {
+            SectionLabel("Heart rate today")
+            Spacer(Modifier.height(10.dp))
+            Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     val bpms = series.map { it.bpm.toFloat() }
                     Spark(
@@ -509,10 +528,17 @@ fun BodyScreen() {
 
         // ── RHR long-game: proof that training works ─────────────────
         val rhr90 = Repo.lastDayKeys(90).mapNotNull { Repo.bodyDay(it)?.restingHr?.toFloat() }
-        if (rhr90.size >= 7) {
+        if (rhr90.isNotEmpty() && rhr90.size < 7) {
             SectionLabel("Resting heart rate · 90 days")
             Spacer(Modifier.height(10.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            Panel(Modifier.fillMaxWidth()) {
+                Text("${rhr90.size} days of data — trend unlocks at 7", color = TextDim, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.padding(16.dp))
+            }
+            Spacer(Modifier.height(20.dp))
+        } else if (rhr90.size >= 7) {
+            SectionLabel("Resting heart rate · 90 days")
+            Spacer(Modifier.height(10.dp))
+            Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     Spark(values = rhr90, color = Warn, modifier = Modifier.fillMaxWidth().height(56.dp))
                     Spacer(Modifier.height(8.dp))
@@ -545,7 +571,7 @@ fun BodyScreen() {
         SectionLabel("Weight")
         Spacer(Modifier.height(10.dp))
         val log = Repo.weightLog()
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp, onClick = { weightOpen = true }) {
+        Panel(Modifier.fillMaxWidth(), onClick = { weightOpen = true }) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.MonitorWeight, "Weight log", tint = Mod.Body, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
@@ -561,7 +587,7 @@ fun BodyScreen() {
                         val bmi = if (heightM > 0) latest / (heightM * heightM) else null
                         val goal = com.ascend.lifeos.data.Repo.data.profile.dietGoal
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text("%.1f kg".format(latest), color = TextPrimary, style = metricStyle(20))
+                            Text(Units.fmtWeight(ctx, latest.toDouble()), color = TextPrimary, style = metricStyle(20))
                             if (delta != null) {
                                 Spacer(Modifier.width(6.dp))
                                 val arrow = when { delta > 0.15 -> "↑"; delta < -0.15 -> "↓"; else -> "→" }
@@ -589,7 +615,7 @@ fun BodyScreen() {
                         }
                         Text(
                             delta?.let { d ->
-                                val s = "%.1f kg vs last week".format(d).let { t -> if (d >= 0) "+$t" else t }
+                                val s = ((if (d >= 0) "+" else "-") + Units.fmtWeight(ctx, kotlin.math.abs(d.toDouble())) + " vs last week")
                                 when {
                                     goal == "recomp" && kotlin.math.abs(d) < 0.4 -> "$s — steady is the recomp plan"
                                     goal == "fuel" && kotlin.math.abs(d) < 0.4 -> "$s — holding, fuelled"
@@ -612,25 +638,29 @@ fun BodyScreen() {
         // ── weight trend detail (rate of change) ──────────────────
         if (log.size >= 7) {
             Spacer(Modifier.height(12.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Weight trend", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
-                    val now = System.currentTimeMillis()
-                    val week1 = log.filter { it.ts > now - 7L * 86_400_000 }
-                    val week2 = log.filter { it.ts in (now - 14L * 86_400_000)..(now - 7L * 86_400_000) }
-                    val avg1 = week1.takeIf { it.isNotEmpty() }?.map { it.kg }?.average()
-                    val avg2 = week2.takeIf { it.isNotEmpty() }?.map { it.kg }?.average()
+                    val dayBucket = remember { System.currentTimeMillis() / 86_400_000 }
+                    val (avg1, avg2) = remember(log, dayBucket) {
+                        val now = dayBucket * 86_400_000
+                        val week1 = log.filter { it.ts > now - 7L * 86_400_000 }
+                        val week2 = log.filter { it.ts in (now - 14L * 86_400_000)..(now - 7L * 86_400_000) }
+                        val a1 = week1.takeIf { it.isNotEmpty() }?.map { it.kg }?.average()
+                        val a2 = week2.takeIf { it.isNotEmpty() }?.map { it.kg }?.average()
+                        a1 to a2
+                    }
                     if (avg1 != null) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("This week", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
-                                Text("%.1f kg".format(avg1), color = TextPrimary, style = metricStyle(16))
+                                Text(Units.fmtWeight(ctx, avg1.toDouble()), color = TextPrimary, style = metricStyle(16))
                             }
                             if (avg2 != null) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("Last week", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
-                                    Text("%.1f kg".format(avg2), color = TextPrimary, style = metricStyle(16))
+                                    Text(Units.fmtWeight(ctx, avg2.toDouble()), color = TextPrimary, style = metricStyle(16))
                                 }
                                 val rate = avg1 - avg2
                                 val rColor = when {
@@ -640,7 +670,7 @@ fun BodyScreen() {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("Rate", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                                     Text(
-                                        (if (rate >= 0) "+" else "") + "%.1f kg/wk".format(rate),
+                                        (if (rate >= 0) "+" else "") + "%.1f ${Units.weightLabel(ctx)}/wk".format(Units.kgToDisplay(ctx, rate.toDouble())),
                                         color = rColor, style = metricStyle(16),
                                     )
                                 }
@@ -668,12 +698,16 @@ fun BodyScreen() {
             }
         }
 
+        // ── progress photos ──────────────────────────────────────────
+        ProgressPhotosCard(onOpenSheet = { photoSheetOpen = true })
+
         // tape-measure progress — arms, chest, waist, thigh
         MeasurementsCard()
     }
 
     if (weightOpen) WeightSheet(onDismiss = { weightOpen = false })
     if (sleepOpen) SleepSheet(onDismiss = { sleepOpen = false })
+    if (photoSheetOpen) ProgressPhotoSheet(onDismiss = { photoSheetOpen = false })
 }
 
 @Composable
@@ -732,12 +766,12 @@ private fun MeasurementsCard() {
     Spacer(Modifier.height(20.dp))
     SectionLabel("Measurements")
     Spacer(Modifier.height(10.dp))
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 6.dp)) {
             measures.forEachIndexed { i, (label, key) ->
                 val hist = m[key].orEmpty()
                 Row(
-                    Modifier.fillMaxWidth().pressScale { editKey = label to key }
+                    Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); editKey = label to key }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -752,7 +786,7 @@ private fun MeasurementsCard() {
                     }
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        hist.lastOrNull()?.let { "%.1f cm".format(it.cm) } ?: "—",
+                        hist.lastOrNull()?.let { "%.1f ${Units.heightLabel(ctx)}".format(Units.cmToDisplay(ctx, it.cm.toDouble())) } ?: "—",
                         color = if (hist.isEmpty()) TextDim else TextPrimary, style = metricStyle(14),
                     )
                 }
@@ -788,18 +822,20 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                WeightStep("−1") { cm = (cm - 1.0).coerceAtLeast(10.0) }
+                val cmSmall = Units.displayToCm(ctx, 0.5)
+                val cmLarge = Units.displayToCm(ctx, 1.0)
+                WeightStep("−1") { cm = (cm - cmLarge).coerceAtLeast(10.0) }
                 Spacer(Modifier.width(8.dp))
-                WeightStep("−.5") { cm = (cm - 0.5).coerceAtLeast(10.0) }
+                WeightStep("−.5") { cm = (cm - cmSmall).coerceAtLeast(10.0) }
                 Text(
-                    "%.1f".format(cm), color = TextPrimary, style = metricStyle(38),
+                    "%.1f".format(Units.cmToDisplay(ctx, cm)), color = TextPrimary, style = metricStyle(38),
                     modifier = Modifier.widthIn(min = 112.dp), textAlign = TextAlign.Center,
                 )
-                WeightStep("+.5") { cm = (cm + 0.5).coerceAtMost(200.0) }
+                WeightStep("+.5") { cm = (cm + cmSmall).coerceAtMost(200.0) }
                 Spacer(Modifier.width(8.dp))
-                WeightStep("+1") { cm = (cm + 1.0).coerceAtMost(200.0) }
+                WeightStep("+1") { cm = (cm + cmLarge).coerceAtMost(200.0) }
             }
-            Text("centimeters", color = TextDim, fontSize = FS.s11, fontFamily = Body)
+            Text(if (Units.isImperial(ctx)) "inches" else "centimeters", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
@@ -821,6 +857,7 @@ private fun MeasureSheet(label: String, key: String, onDismiss: () -> Unit) {
 
 @Composable
 private fun WhyRow(label: String, value: String, quality: Float, hint: String? = null) {
+    val animQ by androidx.compose.animation.core.animateFloatAsState(quality.coerceIn(0.05f, 1f), com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "why")
     Row(
         Modifier.fillMaxWidth().padding(vertical = 3.dp)
             .then(if (hint != null) Modifier.pressScale { AppFeedback.show(hint) } else Modifier),
@@ -829,7 +866,7 @@ private fun WhyRow(label: String, value: String, quality: Float, hint: String? =
         Text(label, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, modifier = Modifier.width(86.dp))
         Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))) {
             Box(
-                Modifier.fillMaxWidth(quality.coerceIn(0.05f, 1f)).fillMaxHeight().clip(CircleShape)
+                Modifier.fillMaxWidth(animQ).fillMaxHeight().clip(CircleShape)
                     .background(if (quality >= 0.66f) Good else if (quality >= 0.4f) Warn else Crit),
             )
         }
@@ -840,11 +877,12 @@ private fun WhyRow(label: String, value: String, quality: Float, hint: String? =
 
 @Composable
 private fun StageBar(label: String, minutes: Int, total: Int, color: Color) {
+    val animF by androidx.compose.animation.core.animateFloatAsState((minutes.toFloat() / total).coerceIn(0f, 1f), com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "stage")
     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp))
         Box(Modifier.weight(1f).height(7.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))) {
             Box(
-                Modifier.fillMaxWidth((minutes.toFloat() / total).coerceIn(0f, 1f)).fillMaxHeight()
+                Modifier.fillMaxWidth(animF).fillMaxHeight()
                     .clip(CircleShape).background(color),
             )
         }
@@ -858,7 +896,7 @@ private fun StageBar(label: String, minutes: Int, total: Int, color: Color) {
 
 @Composable
 private fun TrendTile(label: String, values: List<Float>, color: Color, modifier: Modifier = Modifier, fmt: (Float) -> String) {
-    Panel(modifier, corner = 16.dp) {
+    Panel(modifier, corner = RElem) {
         Column(Modifier.padding(14.dp)) {
             Text(
                 label, color = TextDim, fontFamily = Display, fontSize = FS.s9,
@@ -905,7 +943,7 @@ private fun CheckInCard() {
             androidx.compose.animation.fadeOut(),
     ) {
     Column {
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp).animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
             if (done) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -991,23 +1029,29 @@ private fun FactorChip(label: String, on: Boolean, onToggle: (Boolean) -> Unit) 
 /** Whoop-style: a factor's real effect on YOUR next-night recovery, 5+5 rule. */
 @Composable
 private fun JournalImpactCards() {
-    val impacts = remember {
-        listOf(
-            "Alcohol" to Repo.journalImpact { it.fAlcohol },
-            "Late caffeine" to Repo.journalImpact { it.fCaffeineLate },
-            "Late meals" to Repo.journalImpact { it.fLateMeal },
-            "Screen in bed" to Repo.journalImpact { it.fScreenLate },
-            "Meditation" to Repo.journalImpact { it.fMeditation },
-            "Supplements" to Repo.journalImpact { it.fSupplements },
-            "Late exercise" to Repo.journalImpact { it.fLateExercise },
-        ).mapNotNull { (name, v) -> v?.let { name to it } }
-            .filter { kotlin.math.abs(it.second) >= 2.0 }
+    val impacts by produceState(emptyList<Pair<String, Double>>()) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            listOf(
+                "Alcohol" to Repo.journalImpact { it.fAlcohol },
+                "Late caffeine" to Repo.journalImpact { it.fCaffeineLate },
+                "Late meals" to Repo.journalImpact { it.fLateMeal },
+                "Screen in bed" to Repo.journalImpact { it.fScreenLate },
+                "Meditation" to Repo.journalImpact { it.fMeditation },
+                "Supplements" to Repo.journalImpact { it.fSupplements },
+                "Late exercise" to Repo.journalImpact { it.fLateExercise },
+            ).mapNotNull { (name, v) -> v?.let { name to it } }
+                .filter { kotlin.math.abs(it.second) >= 2.0 }
+        }
     }
-    if (impacts.isEmpty()) return
     SectionLabel("Your factors · measured")
+    if (impacts.isEmpty()) {
+        Spacer(Modifier.height(10.dp))
+        EmptyState(Icons.Rounded.Bedtime, "Not enough data yet", "Log a few weeks of sleep to see what moves the needle", Mod.Body)
+        return
+    }
     Spacer(Modifier.height(10.dp))
     impacts.forEach { (name, delta) ->
-        Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Panel(Modifier.fillMaxWidth(), corner = RElem) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(name, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -1029,7 +1073,7 @@ private fun SickModeRow() {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val sick = Repo.data.profile.sickMode
     Panel(
-        Modifier.fillMaxWidth(), corner = 16.dp,
+        Modifier.fillMaxWidth(), corner = RElem,
         fill = if (sick) Crit.copy(alpha = 0.06f) else Ivory.copy(alpha = 0.03f),
         line = if (sick) Crit.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f),
     ) {
@@ -1087,7 +1131,7 @@ private fun SleepDebtCard() {
     LaunchedEffect(Unit) {
         bedtime = withContext(Dispatchers.IO) {
             runCatching {
-                val tomorrow = LocalDate.now().plusDays(1)
+                val tomorrow = com.ascend.lifeos.core.todayDate().plusDays(1)
                 val dao = com.ascend.lifeos.data.calendar.CalendarRepo.dao(ctx)
                 val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
                 val tl = com.ascend.lifeos.data.calendar.CalendarRepo.timelineFor(ctx, tomorrow, entities)
@@ -1102,10 +1146,15 @@ private fun SleepDebtCard() {
         }
     }
 
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.Rounded.Bedtime, null,
+                Icons.Rounded.Bedtime,
+                contentDescription = when {
+                    debt > 240 -> "Sleep debt critical"
+                    debt > 90 -> "Sleep debt elevated"
+                    else -> "Sleep debt normal"
+                },
                 tint = if (debt > 240) Crit else if (debt > 90) Warn else Good,
                 modifier = Modifier.size(20.dp),
             )
@@ -1121,6 +1170,7 @@ private fun SleepDebtCard() {
                         ?: "14 nights vs your ${need / 60}h${if (need % 60 != 0) " ${need % 60}m" else ""} need" +
                         (if (need != 480) " (learned)" else ""),
                     color = TextDim, fontSize = FS.s11_5, fontFamily = Body,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -1135,33 +1185,32 @@ private fun SleepDebtCard() {
 @Composable
 private fun CorrelationCard() {
     val ctx = LocalContext.current
-    val insight = remember {
-        runCatching {
-            val screenHistory = com.ascend.lifeos.wellbeing.WellbeingStore.history(ctx)
-            val keys = Repo.lastDayKeys(31)
-            val pairs = ArrayList<Pair<Double, Double>>()
-            for (i in 0 until keys.size - 1) {
-                val screen = screenHistory[keys[i]]?.first?.toDouble() ?: continue
-                val sleep = Repo.bodyDay(keys[i + 1])?.sleepMin?.toDouble() ?: continue
-                pairs.add(screen to sleep)
-            }
-            if (pairs.size < 7) return@runCatching null
-            // minN = 2: the size-7 guard above stays authoritative. PrimeMath returns
-            // null for constant series where the old local fn returned 0.0 — both end
-            // in "no insight", so behaviour is unchanged.
-            val r = PrimeMath.pearson(pairs.map { it.first }, pairs.map { it.second }, minN = 2)
-                ?: return@runCatching null
-            when {
-                r <= -0.3 -> "High screen days are followed by shorter sleep (r=%.2f, n=${pairs.size}). The wind-down is worth it.".format(r)
-                r >= 0.3 -> "Screen time isn't cutting into your sleep so far (r=%.2f, n=${pairs.size}).".format(r)
-                else -> null
-            }
-        }.getOrNull()
+    val insight by produceState<String?>(null) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val screenHistory = com.ascend.lifeos.wellbeing.WellbeingStore.history(ctx)
+                val keys = Repo.lastDayKeys(31)
+                val pairs = ArrayList<Pair<Double, Double>>()
+                for (i in 0 until keys.size - 1) {
+                    val screen = screenHistory[keys[i]]?.first?.toDouble() ?: continue
+                    val sleep = Repo.bodyDay(keys[i + 1])?.sleepMin?.toDouble() ?: continue
+                    pairs.add(screen to sleep)
+                }
+                if (pairs.size < 7) return@runCatching null
+                val r = PrimeMath.pearson(pairs.map { it.first }, pairs.map { it.second }, minN = 2)
+                    ?: return@runCatching null
+                when {
+                    r <= -0.3 -> "High screen days are followed by shorter sleep (r=%.2f, n=${pairs.size}). The wind-down is worth it.".format(r)
+                    r >= 0.3 -> "Screen time isn't cutting into your sleep so far (r=%.2f, n=${pairs.size}).".format(r)
+                    else -> null
+                }
+            }.getOrNull()
+        }
     }
     insight?.let {
         SectionLabel("Insight")
         Spacer(Modifier.height(10.dp))
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp, line = Mod.Body.copy(alpha = 0.3f)) {
+        Panel(Modifier.fillMaxWidth(), line = Mod.Body.copy(alpha = 0.3f)) {
             Text(
                 it, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18,
                 modifier = Modifier.padding(16.dp),
@@ -1188,18 +1237,22 @@ private fun WeightSheet(onDismiss: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                WeightStep("−1") { kg = (kg - 1.0).coerceAtLeast(30.0) }
+                val wStep = Units.displayToKg(ctx, Units.weightStep(ctx))
+                val wStepLarge = Units.displayToKg(ctx, Units.weightStepLarge(ctx))
+                val wStepLabel = if (Units.isImperial(ctx)) "1" else ".5"
+                val wStepLargeLabel = if (Units.isImperial(ctx)) "5" else "2.5"
+                WeightStep("−$wStepLargeLabel") { kg = (kg - wStepLarge).coerceAtLeast(30.0) }
                 Spacer(Modifier.width(8.dp))
-                WeightStep("−.1") { kg = (kg - 0.1).coerceAtLeast(30.0) }
+                WeightStep("−$wStepLabel") { kg = (kg - wStep).coerceAtLeast(30.0) }
                 Text(
-                    "%.1f".format(kg), color = TextPrimary, style = metricStyle(40),
+                    "%.1f".format(Units.kgToDisplay(ctx, kg)), color = TextPrimary, style = metricStyle(40),
                     modifier = Modifier.widthIn(min = 120.dp), textAlign = TextAlign.Center,
                 )
-                WeightStep("+.1") { kg = (kg + 0.1).coerceAtMost(250.0) }
+                WeightStep("+$wStepLabel") { kg = (kg + wStep).coerceAtMost(250.0) }
                 Spacer(Modifier.width(8.dp))
-                WeightStep("+1") { kg = (kg + 1.0).coerceAtMost(250.0) }
+                WeightStep("+$wStepLargeLabel") { kg = (kg + wStepLarge).coerceAtMost(250.0) }
             }
-            Text("kilograms", color = TextDim, fontSize = FS.s11, fontFamily = Body)
+            Text(if (Units.isImperial(ctx)) "pounds" else "kilograms", color = TextDim, fontSize = FS.s11, fontFamily = Body)
             Spacer(Modifier.height(18.dp))
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(Mod.Body)
@@ -1224,11 +1277,20 @@ private val MOOD_DOT_COLORS @Composable get() = listOf(Crit, Orange, Warn, Good,
 @Composable
 private fun MoodTimelineCard() {
     val entries = Repo.bodyDay()?.moodTimeline.orEmpty()
-    if (entries.isEmpty()) return
+    if (entries.isEmpty()) {
+        Spacer(Modifier.height(12.dp))
+        EmptyState(
+            androidx.compose.material.icons.Icons.Rounded.Mood,
+            "No moods logged yet",
+            "Use the check-in to record how you feel",
+            Mod.Body,
+        )
+        return
+    }
     val avg = entries.map { it.level }.average()
 
     Spacer(Modifier.height(12.dp))
-    Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    Panel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Mood today", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -1261,7 +1323,7 @@ private fun MoodTimelineCard() {
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 e.note, color = TextMuted, fontSize = FS.s7_5,
-                                fontFamily = Body, maxLines = 1, textAlign = TextAlign.Center,
+                                fontFamily = Body, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
@@ -1273,10 +1335,361 @@ private fun MoodTimelineCard() {
 
 @Composable
 private fun WeightStep(label: String, onClick: () -> Unit) {
+    val wsCtx = LocalContext.current
     Box(
         Modifier.size(46.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.05f))
             .border(0.5.dp, Ivory.copy(alpha = 0.10f), CircleShape)
-            .pressScale(onClick = onClick),
+            .pressScale { Haptics.tick(wsCtx); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+}
+
+// ─── progress photos ────────────────────────────────────────────────────────
+
+@Composable
+private fun ProgressPhotosCard(onOpenSheet: () -> Unit) {
+    val ctx = LocalContext.current
+    val photos = remember { ProgressPhotos.list(ctx) }
+    val latest = remember(photos) { ProgressPhotos.latestByPose(ctx) }
+
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Progress photos")
+    Spacer(Modifier.height(10.dp))
+
+    if (photos.isEmpty()) {
+        EmptyState(
+            icon = Icons.Rounded.MonitorWeight,
+            title = "Track your transformation",
+            hint = "Front · side · back · flex — compare over weeks and months",
+            accent = Mod.Body,
+        )
+        Spacer(Modifier.height(8.dp))
+        Box(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                .background(Mod.Body.copy(alpha = 0.12f))
+                .border(0.5.dp, Mod.Body.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+                .pressScale(onClick = onOpenSheet)
+                .padding(vertical = 13.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "Take first photo",
+                color = Mod.Body, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+            )
+        }
+    } else {
+        Panel(Modifier.fillMaxWidth(), onClick = onOpenSheet) {
+            Column(Modifier.padding(16.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "${photos.size} photo${if (photos.size != 1) "s" else ""}",
+                            color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        )
+                        val poses = latest.keys.sorted().joinToString(" · ")
+                        Text(poses, color = TextDim, fontSize = FS.s11, fontFamily = Body)
+                    }
+                    Text("📸", fontSize = FS.s22)
+                }
+                if (latest.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        latest.entries.sortedBy { it.key }.forEach { (pose, photo) ->
+                            val file = ProgressPhotos.photoFile(ctx, photo.id)
+                            if (file.exists()) {
+                                val bmp = remember(photo.id) {
+                                    runCatching {
+                                        android.graphics.BitmapFactory.decodeFile(
+                                            file.absolutePath,
+                                            android.graphics.BitmapFactory.Options().apply { inSampleSize = 4 },
+                                        )
+                                    }.getOrNull()
+                                }
+                                Column(
+                                    Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    if (bmp != null) {
+                                        androidx.compose.foundation.Image(
+                                            bitmap = bmp.asImageBitmap(),
+                                            contentDescription = pose,
+                                            modifier = Modifier.fillMaxWidth().aspectRatio(0.75f)
+                                                .clip(RoundedCornerShape(10.dp)),
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                        )
+                                    } else {
+                                        Box(
+                                            Modifier.fillMaxWidth().aspectRatio(0.75f)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(Ivory.copy(alpha = 0.05f)),
+                                            contentAlignment = Alignment.Center,
+                                        ) { Text("?", color = TextDim, fontSize = FS.s14, fontFamily = Body) }
+                                    }
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        pose, color = TextDim, fontSize = FS.s9_5,
+                                        fontFamily = Display, fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProgressPhotoSheet(onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    var selectedPose by remember { mutableStateOf("Front") }
+    var note by rememberSaveable { mutableStateOf("") }
+    var photos by remember { mutableStateOf(ProgressPhotos.list(ctx)) }
+    var viewPhoto by remember { mutableStateOf<com.ascend.lifeos.data.ProgressPhoto?>(null) }
+    val scope = rememberCoroutineScope()
+
+    val photoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.TakePicturePreview(),
+    ) { bitmap ->
+        if (bitmap != null) {
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val tempFile = java.io.File(ctx.cacheDir, "pp_temp.jpg")
+                tempFile.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, it) }
+                val uri = android.net.Uri.fromFile(tempFile)
+                ProgressPhotos.save(ctx, uri, selectedPose, note.trim())
+                tempFile.delete()
+                photos = ProgressPhotos.list(ctx)
+                note = ""
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Haptics.confirm(ctx); AppFeedback.show("Photo saved") }
+            }
+        }
+    }
+
+    val galleryPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                ProgressPhotos.save(ctx, uri, selectedPose, note.trim())
+                photos = ProgressPhotos.list(ctx)
+                note = ""
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Haptics.confirm(ctx); AppFeedback.show("Photo saved") }
+            }
+        }
+    }
+
+    JarvisSheet(onDismiss = onDismiss) {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp)
+                .navigationBarsPadding(),
+        ) {
+            Text(
+                "PROGRESS PHOTOS", color = Mod.Body, fontFamily = Display,
+                fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Visual progress over time",
+                color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                "POSE", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ProgressPhotos.POSES.forEach { pose ->
+                    val sel = selectedPose == pose
+                    Text(
+                        pose,
+                        color = if (sel) Mod.Body else TextMuted,
+                        fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (sel) Mod.Body.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (sel) Mod.Body.copy(alpha = 0.45f) else Ivory.copy(alpha = 0.1f), RoundedCornerShape(10.dp))
+                            .pressScale { selectedPose = pose }
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+            androidx.compose.material3.OutlinedTextField(
+                value = note, onValueChange = { note = it.take(80) },
+                placeholder = { Text("Optional note", color = TextDim, fontFamily = Body, fontSize = FS.s12) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = Body, fontSize = FS.s13),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
+            )
+
+            Spacer(Modifier.height(14.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(
+                    Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
+                        .background(Mod.Body)
+                        .pressScale {
+                            Haptics.confirm(ctx)
+                            runCatching { photoPicker.launch(null) }
+                        }
+                        .padding(vertical = 13.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("📷 Camera", color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                }
+                Box(
+                    Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
+                        .background(Ivory.copy(alpha = 0.08f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
+                        .pressScale {
+                            Haptics.tick(ctx)
+                            runCatching { galleryPicker.launch("image/*") }
+                        }
+                        .padding(vertical = 13.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("🖼 Gallery", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                }
+            }
+
+            if (photos.isNotEmpty()) {
+                Spacer(Modifier.height(18.dp))
+                Text(
+                    "TIMELINE", color = TextDim, fontFamily = Display,
+                    fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                )
+                Spacer(Modifier.height(8.dp))
+                val byDay = remember(photos) { photos.groupBy { it.dayKey }.toSortedMap(compareByDescending { it }) }
+                byDay.entries.take(10).forEach { (dayKey, dayPhotos) ->
+                    val weight = Repo.weightLog().lastOrNull {
+                        val dt = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(it.ts), java.time.ZoneId.systemDefault())
+                        com.ascend.lifeos.core.todayKey(dt) == dayKey
+                    }?.kg
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.width(60.dp)) {
+                            Text(dayKey, color = TextMuted, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            weight?.let {
+                                Text(Units.fmtWeight(ctx, it), color = TextDim, fontSize = FS.s9, fontFamily = Body)
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            dayPhotos.forEach { photo ->
+                                val file = ProgressPhotos.photoFile(ctx, photo.id)
+                                val bmp = remember(photo.id) {
+                                    runCatching {
+                                        android.graphics.BitmapFactory.decodeFile(
+                                            file.absolutePath,
+                                            android.graphics.BitmapFactory.Options().apply { inSampleSize = 8 },
+                                        )
+                                    }.getOrNull()
+                                }
+                                Box(
+                                    Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
+                                        .background(Ivory.copy(alpha = 0.05f))
+                                        .pressScale {
+                                            viewPhoto = photo
+                                        },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (bmp != null) {
+                                        androidx.compose.foundation.Image(
+                                            bitmap = bmp.asImageBitmap(),
+                                            contentDescription = photo.pose,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                        )
+                                    }
+                                    Box(
+                                        Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                                            .background(Void.copy(alpha = 0.6f)).padding(1.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            photo.pose.take(1), color = TextPrimary,
+                                            fontSize = FS.s7_5, fontFamily = Display, fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    viewPhoto?.let { photo ->
+        val file = ProgressPhotos.photoFile(ctx, photo.id)
+        val bmp = remember(photo.id) {
+            runCatching { android.graphics.BitmapFactory.decodeFile(file.absolutePath) }.getOrNull()
+        }
+        var armedPhotoDelete by remember { mutableStateOf(false) }
+        LaunchedEffect(armedPhotoDelete) { if (armedPhotoDelete) { kotlinx.coroutines.delay(2500); armedPhotoDelete = false } }
+        androidx.compose.ui.window.Dialog(onDismissRequest = { viewPhoto = null }) {
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Void)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    "${photo.pose} · ${photo.dayKey}",
+                    color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
+                if (photo.note.isNotBlank()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(photo.note, color = TextDim, fontSize = FS.s12, fontFamily = Body, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                }
+                Spacer(Modifier.height(12.dp))
+                if (bmp != null) {
+                    androidx.compose.foundation.Image(
+                        bitmap = bmp.asImageBitmap(),
+                        contentDescription = photo.pose,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.FillWidth,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(Crit.copy(alpha = if (armedPhotoDelete) 0.25f else 0.12f))
+                            .pressScale {
+                                if (armedPhotoDelete) {
+                                    Haptics.warn(ctx)
+                                    ProgressPhotos.delete(ctx, photo.id)
+                                    AppFeedback.show("Photo deleted")
+                                    viewPhoto = null
+                                } else {
+                                    Haptics.tick(ctx)
+                                    armedPhotoDelete = true
+                                }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            if (armedPhotoDelete) "Tap again to delete" else "Delete",
+                            color = Crit, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Box(
+                        Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(Ivory.copy(alpha = 0.08f))
+                            .pressScale { viewPhoto = null }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    ) {
+                        Text("Close", color = TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
 }

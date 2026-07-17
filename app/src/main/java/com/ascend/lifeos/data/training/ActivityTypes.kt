@@ -139,12 +139,12 @@ object SportCatalog {
         SportDef("none", "General health", "✦", false, emptyList(), dayWord = "Event day"),
     )
 
-    fun byId(id: String?): SportDef = ALL.firstOrNull { it.id == id } ?: ALL.first()
+    fun byId(id: String?): SportDef = ALL.firstOrNull { it.id == id } ?: ALL.first { it.id == "gym" }
 
     /** Calendar sport blocks borrow the matching activity's muscle map. */
     fun musclesFor(id: String?): Map<Muscle, Double> =
         ActivityTypes.byId(id ?: "")?.muscleUnitsPerHour
-            ?: ActivityTypes.byId("team")!!.muscleUnitsPerHour
+            ?: ActivityTypes.byId("team")?.muscleUnitsPerHour ?: emptyMap()
 
     /**
      * Does a calendar title mean "my sport happens here"? Word-START match,

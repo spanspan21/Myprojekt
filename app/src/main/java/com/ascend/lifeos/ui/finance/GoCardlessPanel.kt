@@ -1,5 +1,10 @@
 package com.ascend.lifeos.ui.finance
 
+import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.data.Haptics
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalance
 import androidx.compose.foundation.background
@@ -21,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.finance.GcBank
 import com.ascend.lifeos.ui.motion.pressScale
@@ -68,7 +75,7 @@ fun GoCardlessPanel() {
     val accounts = remember(rev) { GoCardlessLink.linkedAccountLabels(ctx) }
     val lastSync = remember(rev) { GoCardlessLink.lastSyncTs(ctx) }
 
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SectionLabel("Bank sync · Open Banking", accent = Mod.Finance)
             Spacer(Modifier.height(10.dp))
@@ -94,8 +101,8 @@ fun GoCardlessPanel() {
                 }
 
                 else -> {
-                    Text(bankName ?: "Bank linked", color = TextPrimary, fontFamily = Body, fontSize = FS.s14, fontWeight = FontWeight.Bold)
-                    accounts.forEach { Text("· $it", color = TextDim, fontFamily = Body, fontSize = FS.s11_5) }
+                    Text(bankName ?: "Bank linked", color = TextPrimary, fontFamily = Body, fontSize = FS.s14, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    accounts.forEach { Text("· $it", color = TextDim, fontFamily = Body, fontSize = FS.s11_5, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     Text(
                         if (lastSync > 0) "read-only · re-consent every 90 days" else "not synced yet",
                         color = TextDim, fontFamily = Body, fontSize = FS.s11,
@@ -105,7 +112,12 @@ fun GoCardlessPanel() {
                         Pill(if (busy) "Syncing…" else "Sync now", filled = true, modifier = Modifier.weight(1f)) {
                             if (!busy) GoCardlessLink.requestSync(ctx)
                         }
-                        Pill("Unlink", modifier = Modifier.weight(1f)) { GoCardlessLink.unlink(ctx) }
+                        var armedUnlink by remember { mutableStateOf(false) }
+                        LaunchedEffect(armedUnlink) { if (armedUnlink) { kotlinx.coroutines.delay(2500); armedUnlink = false } }
+                        Pill(if (armedUnlink) "Confirm?" else "Unlink", modifier = Modifier.weight(1f)) {
+                            if (armedUnlink) { Haptics.confirm(ctx); GoCardlessLink.unlink(ctx); AppFeedback.show("Bank unlinked") }
+                            else { Haptics.warn(ctx); armedUnlink = true }
+                        }
                     }
                 }
             }
@@ -134,8 +146,8 @@ fun GoCardlessPanel() {
 
 @Composable
 private fun CredentialSetup(onSaved: (String, String) -> Unit) {
-    var id by remember { mutableStateOf("") }
-    var key by remember { mutableStateOf("") }
+    var id by rememberSaveable { mutableStateOf("") }
+    var key by rememberSaveable { mutableStateOf("") }
     Text(
         "Sign up free at gocardless.com/bank-account-data, then paste your Secret ID and Secret Key:",
         color = TextDim, fontFamily = Body, fontSize = FS.s12,
@@ -156,16 +168,20 @@ private fun Field(hint: String, value: String, onChange: (String) -> Unit) {
             .padding(horizontal = 12.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) Text(hint, color = TextMuted, fontFamily = Body, fontSize = FS.s13)
+        val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
         BasicTextField(
             value = value, onValueChange = onChange, singleLine = true,
             textStyle = TextStyle(color = TextPrimary, fontFamily = Body, fontSize = FS.s13),
             cursorBrush = SolidColor(Mod.Finance), modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         )
     }
 }
 
 @Composable
 private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: (GcBank) -> Unit) {
+    val ctx = LocalContext.current
     var query by remember { mutableStateOf("") }
     val filtered = remember(query, banks) {
         if (query.isBlank()) banks else banks.filter { it.name.contains(query, ignoreCase = true) }
@@ -186,7 +202,8 @@ private fun BankPickerSheet(banks: List<GcBank>, onDismiss: () -> Unit, onPick: 
                     items(filtered, key = { it.id }) { b ->
                         Text(
                             b.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5,
-                            modifier = Modifier.animateItem().fillMaxWidth().pressScale { onPick(b) }.padding(vertical = 12.dp),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.animateItem().fillMaxWidth().pressScale { Haptics.tick(ctx); onPick(b) }.padding(vertical = 12.dp),
                         )
                     }
                 }

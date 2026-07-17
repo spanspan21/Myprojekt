@@ -48,7 +48,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
     LaunchedEffect(Unit) {
         bedtime = withContext(Dispatchers.IO) {
             runCatching {
-                val tomorrow = LocalDate.now().plusDays(1)
+                val tomorrow = com.ascend.lifeos.core.todayDate().plusDays(1)
                 val dao = CalendarRepo.dao(ctx)
                 val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
                 val tl = CalendarRepo.timelineFor(ctx, tomorrow, entities)
@@ -69,14 +69,16 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
                 .padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 100.dp),
         ) {
             JarvisHeader("Wind Down", "Evening routine", WindDownAccent) {
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clip(CircleShape).pressScale(onClick = onClose))
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onClose() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(Modifier.height(20.dp))
 
             // Bedtime card
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+            Panel(Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Bedtime, null, tint = WindDownAccent, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Rounded.Bedtime, "Wind down", tint = WindDownAccent, modifier = Modifier.size(28.dp))
                     Spacer(Modifier.width(14.dp))
                     Column {
                         Text(
@@ -96,7 +98,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             // Evening check-in
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Column(Modifier.padding(16.dp)) {
                     Text("How was your day?", color = TextPrimary, fontFamily = Body, fontSize = FS.s14, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
@@ -134,8 +136,8 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
 
             // Breathing shortcut
             Panel(
-                Modifier.fillMaxWidth().pressScale(onClick = onOpenBreathe),
-                corner = 16.dp,
+                Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); onOpenBreathe() },
+                corner = RElem,
             ) {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.SelfImprovement, "Open breathing exercise", tint = Good, modifier = Modifier.size(24.dp))
@@ -150,7 +152,7 @@ fun WindDownScreen(onClose: () -> Unit, onOpenBreathe: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             // Sleep hygiene checklist
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Sleep hygiene", color = TextPrimary, fontFamily = Body, fontSize = FS.s14, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))

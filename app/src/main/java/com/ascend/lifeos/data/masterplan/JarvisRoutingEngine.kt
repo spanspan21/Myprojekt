@@ -1,5 +1,7 @@
 package com.ascend.lifeos.data.masterplan
 
+import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Repo
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -28,10 +30,15 @@ class JarvisRoutingEngine {
             (0.45 * sleepScore.coerceIn(0, 100) + 0.55 * hrvReadiness.coerceIn(0, 100))
                 .roundToInt().coerceIn(0, 100)
 
-        val ceiling: EnergyLevel = when {
-            readiness < 50 -> EnergyLevel.LOW
-            readiness < 75 -> EnergyLevel.MED
-            else -> EnergyLevel.HIGH
+        val ceiling: EnergyLevel get() {
+            val ctx = Repo.appContextOrNull()
+            val warn = ctx?.let { Prefs.int(it, Prefs.READINESS_WARN, 50) } ?: 50
+            val good = ctx?.let { Prefs.int(it, Prefs.READINESS_GOOD, 75) } ?: 75
+            return when {
+                readiness < warn -> EnergyLevel.LOW
+                readiness < good -> EnergyLevel.MED
+                else -> EnergyLevel.HIGH
+            }
         }
     }
 
@@ -113,9 +120,12 @@ class JarvisRoutingEngine {
             )
 
         if (ranked.isNotEmpty()) {
+            val ctx = Repo.appContextOrNull()
+            val rGood = ctx?.let { Prefs.int(it, Prefs.READINESS_GOOD, 75) } ?: 75
+            val rWarn = ctx?.let { Prefs.int(it, Prefs.READINESS_WARN, 50) } ?: 50
             val mode = when {
-                bio.readiness >= 75 -> Mode.PUSH
-                bio.readiness < 50 -> Mode.RECOVER
+                bio.readiness >= rGood -> Mode.PUSH
+                bio.readiness < rWarn -> Mode.RECOVER
                 else -> Mode.STEADY
             }
             return Directive(
@@ -236,11 +246,16 @@ class JarvisRoutingEngine {
     // individual tasks (time-slicing) so they fit a 15/30/60-min block.
 
     /** Maps real readiness → an energy ceiling. Null readiness ⇒ neutral MED. */
-    fun ceilingFor(readiness: Int?): EnergyLevel = when {
-        readiness == null -> EnergyLevel.MED
-        readiness < 50 -> EnergyLevel.LOW
-        readiness < 75 -> EnergyLevel.MED
-        else -> EnergyLevel.HIGH
+    fun ceilingFor(readiness: Int?): EnergyLevel {
+        val ctx = Repo.appContextOrNull()
+        val warn = ctx?.let { Prefs.int(it, Prefs.READINESS_WARN, 50) } ?: 50
+        val good = ctx?.let { Prefs.int(it, Prefs.READINESS_GOOD, 75) } ?: 75
+        return when {
+            readiness == null -> EnergyLevel.MED
+            readiness < warn -> EnergyLevel.LOW
+            readiness < good -> EnergyLevel.MED
+            else -> EnergyLevel.HIGH
+        }
     }
 
     private data class Slice(val task: TaskEntity?, val minutes: Int)

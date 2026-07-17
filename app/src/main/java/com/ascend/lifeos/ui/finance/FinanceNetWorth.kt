@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountBalance
+import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material.icons.automirrored.rounded.TrendingDown
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material3.Icon
@@ -42,9 +44,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.finance.FinanceStore
 import com.ascend.lifeos.data.finance.FinanceStore.HoldingKind
 import com.ascend.lifeos.ui.kit.AppFeedback
+import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
@@ -77,7 +81,12 @@ internal fun NetWorthSection() {
     val nw = remember(rev) { FinanceStore.netWorthCents(ctx) }
     val extremes = remember(rev) { FinanceStore.netWorthExtremes(ctx) }
     var range by remember { mutableStateOf(NwRange.ALL) }
-    val today = LocalDate.now().toEpochDay()
+    val today = com.ascend.lifeos.core.todayDate().toEpochDay()
+
+    if (snaps.isEmpty() && nw == 0L) {
+        EmptyState(Icons.Rounded.AccountBalance, "No net worth data", "Add holdings to start tracking", Mod.Finance)
+        return
+    }
 
     val pts = remember(snaps, range) {
         val from = range.days?.let { today - it }
@@ -89,7 +98,7 @@ internal fun NetWorthSection() {
     val up = delta >= 0
 
     Panel(
-        Modifier.fillMaxWidth(), corner = 22.dp,
+        Modifier.fillMaxWidth(), corner = RHero,
         fill = FinAccent.copy(alpha = 0.05f), line = FinAccent.copy(alpha = 0.22f), lux = true,
     ) {
         Column(Modifier.padding(18.dp)) {
@@ -206,9 +215,12 @@ internal fun AllocationSection() {
     val rev = FinanceStore.rev
     val alloc = remember(rev) { FinanceStore.allocation(ctx) }
     val total = alloc.sumOf { it.second }
-    if (alloc.isEmpty() || total <= 0L) return
+    if (alloc.isEmpty() || total <= 0L) {
+        EmptyState(Icons.Rounded.PieChart, "No allocation data", "Add holdings to see your asset mix", Mod.Finance)
+        return
+    }
 
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             CategoryDonut(
                 alloc.mapIndexed { i, (_, v) -> allocColors[i % allocColors.size] to v },
@@ -230,7 +242,8 @@ internal fun AllocationSection() {
                         Spacer(Modifier.width(8.dp))
                         Text(
                             name, color = TextMuted, fontSize = FS.s12,
-                            fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                            fontFamily = Body, fontWeight = FontWeight.Bold,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                         )
                         Text("${(v * 100.0 / total).roundToInt()}%", color = TextDim, style = metricStyle(11))
                     }
@@ -263,11 +276,11 @@ internal fun HoldingsSection(kind: HoldingKind, title: String, number: Int) {
         // compact — a single ghost row per empty class (reference "+ add" idiom)
         AddRowButton("Add ${singular(kind)}") { showAdd = true }
     } else {
-        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                 items.forEachIndexed { i, h ->
                     if (i > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ivory.copy(alpha = 0.06f)))
-                    HoldingRow(h, kind, onEdit = { edit = h }, onDelete = { FinanceStore.deleteHolding(ctx, h.id); AppFeedback.show("Holding deleted") })
+                    HoldingRow(h, kind, onEdit = { edit = h }, onDelete = { Haptics.confirm(ctx); FinanceStore.deleteHolding(ctx, h.id); AppFeedback.show("Holding deleted") })
                 }
             }
         }
@@ -350,12 +363,12 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
     val valid = name.isNotBlank() && valueCents != null && (!priced || unitsVal != null)
 
     SheetShell(if (existing != null) "Edit ${singular(kind)}" else "Add ${singular(kind)}", onDismiss) {
-        GlassField(name, { name = it }, nameHint(kind))
+        GlassField(name, { name = it }, nameHint(kind), imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         if (priced) {
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Box(Modifier.weight(1f)) {
-                    GlassField(units, { units = it }, if (kind == HoldingKind.STOCK) "Shares" else "Amount", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal)
+                    GlassField(units, { units = it }, if (kind == HoldingKind.STOCK) "Shares" else "Amount", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Next)
                 }
                 Box(Modifier.weight(1f)) {
                     GlassField(amount, { amount = it }, "Price / unit €", keyboard = androidx.compose.ui.text.input.KeyboardType.Decimal)
@@ -393,10 +406,11 @@ internal fun HoldingSheet(kind: HoldingKind, existing: FinanceStore.Holding?, on
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).pressScale {
                     if (armed) {
+                        Haptics.confirm(ctx)
                         FinanceStore.deleteHolding(ctx, hold.id)
                         AppFeedback.show("Holding deleted")
                         onDismiss()
-                    } else armed = true
+                    } else { Haptics.warn(ctx); armed = true }
                 }.padding(vertical = 11.dp),
                 contentAlignment = Alignment.Center,
             ) { Text(if (armed) "Tap again to delete" else "Delete", color = Crit, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -429,4 +443,4 @@ private fun parseUnits(raw: String): Double? =
     raw.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0.0 }
 
 private fun centsToInput(cents: Long): String =
-    if (cents % 100 == 0L) (cents / 100).toString() else "%.2f".format(cents / 100.0)
+    if (cents % 100 == 0L) (cents / 100).toString() else String.format(java.util.Locale.ENGLISH, "%.2f", cents / 100.0)

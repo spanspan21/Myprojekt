@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.insights
 
 import android.content.Context
+import com.ascend.lifeos.data.Prefs
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.activity.compose.BackHandler
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -114,6 +116,7 @@ private data class HeatModel(
     val waterGoal: Int,
     val budgetMin: Int,
     val todayKey: String,
+    val sundayStart: Boolean = false,
 )
 
 private fun DayFacts.metricValue(m: HeatMetric): Float? = when (m) {
@@ -146,16 +149,23 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
         if (d.workoutDone || d.cali.values.any { it.isNotEmpty() }) trained += k
     }
 
+    val sundayStart = Prefs.string(ctx, Prefs.WEEK_START, "monday") == "sunday"
+    if (keys.isEmpty()) return HeatModel(emptyMap(), 0, emptyList(), emptyMap(), profile.waterGoal, budget, todayKey(), sundayStart)
     val firstDate = LocalDate.parse(keys.first())
-    val firstMonday = firstDate.minusDays((firstDate.dayOfWeek.value - 1).toLong())
+    // firstWeekday: rewind to the first Sunday or Monday on/before firstDate
+    val firstWeekday = if (sundayStart) {
+        firstDate.minusDays((firstDate.dayOfWeek.value % 7).toLong())   // Sunday=7 → 0, Mon=1 → 1 …
+    } else {
+        firstDate.minusDays((firstDate.dayOfWeek.value - 1).toLong())   // Monday=1 → 0
+    }
 
     val facts = HashMap<String, DayFacts>(keys.size)
     val pos = HashMap<Int, String>(keys.size)
     var cols = 1
     for (key in keys) {
         val date = LocalDate.parse(key)
-        val row = date.dayOfWeek.value - 1
-        val col = (ChronoUnit.DAYS.between(firstMonday, date) / 7).toInt()
+        val row = if (sundayStart) date.dayOfWeek.value % 7 else date.dayOfWeek.value - 1
+        val col = (ChronoUnit.DAYS.between(firstWeekday, date) / 7).toInt()
         if (col + 1 > cols) cols = col + 1
 
         val day = Repo.data.days[key]
@@ -193,13 +203,13 @@ private suspend fun buildHeatModel(ctx: Context): HeatModel {
     val marks = ArrayList<Pair<Int, String>>()
     var prevMonth = -1
     for (c in 0 until cols) {
-        val monday = firstMonday.plusWeeks(c.toLong())
-        if (monday.monthValue != prevMonth) {
-            marks += c to monday.month.getDisplayName(java.time.format.TextStyle.NARROW, Locale.ENGLISH)
-            prevMonth = monday.monthValue
+        val weekday = firstWeekday.plusWeeks(c.toLong())
+        if (weekday.monthValue != prevMonth) {
+            marks += c to weekday.month.getDisplayName(java.time.format.TextStyle.NARROW, Locale.ENGLISH)
+            prevMonth = weekday.monthValue
         }
     }
-    return HeatModel(facts, cols, marks, pos, profile.waterGoal, budget, todayKey())
+    return HeatModel(facts, cols, marks, pos, profile.waterGoal, budget, todayKey(), sundayStart)
 }
 
 @Composable
@@ -216,7 +226,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
 
     Box(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 48.dp),
         ) {
             Text(
@@ -259,7 +269,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                         )
                         Spacer(Modifier.height(14.dp))
 
-                        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                        Panel(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(12.dp)) {
                                 val hs = rememberScrollState()
                                 LaunchedEffect(m) { hs.scrollTo(hs.maxValue) }
@@ -273,7 +283,8 @@ fun HeatmapScreen(onClose: () -> Unit) {
                                         val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                                             color = TextDim.toArgb(); textSize = 8.5.sp.toPx(); typeface = chakra
                                         }
-                                        listOf(0 to "M", 2 to "W", 4 to "F").forEach { (row, ch) ->
+                                        val dayLabels = if (m.sundayStart) listOf(0 to "S", 2 to "T", 4 to "T") else listOf(0 to "M", 2 to "W", 4 to "F")
+                                        dayLabels.forEach { (row, ch) ->
                                             drawContext.canvas.nativeCanvas.drawText(
                                                 ch, 2.dp.toPx(), labelH + row * step + cellPx * 0.82f, p,
                                             )
@@ -286,9 +297,9 @@ fun HeatmapScreen(onClose: () -> Unit) {
                                                     detectTapGestures { off ->
                                                         val step = STEP.dp.toPx()
                                                         val labelH = LABEL_H.dp.toPx()
-                                                        val col = (off.x / step).toInt()
+                                                        val col = (off.x / step).toInt().coerceIn(0, m.cols - 1)
                                                         val row = ((off.y - labelH) / step).toInt()
-                                                        if (row in 0..6) {
+                                                        if (row in 0..6 && m.cols > 0) {
                                                             val key = m.pos[col * 8 + row]
                                                             selected = if (key == selected) null else key
                                                         }
@@ -346,7 +357,7 @@ fun HeatmapScreen(onClose: () -> Unit) {
                         val f = selected?.let { m.facts[it] }
                         if (f != null) {
                             Spacer(Modifier.height(12.dp))
-                            Panel(Modifier.fillMaxWidth(), corner = 16.dp, line = metric.tint.copy(alpha = 0.3f)) {
+                            Panel(Modifier.fillMaxWidth(), corner = RElem, line = metric.tint.copy(alpha = 0.3f)) {
                                 Column(Modifier.padding(14.dp)) {
                                     Text(
                                         LocalDate.parse(f.key).format(DateTimeFormatter.ofPattern("EEE · d MMM yyyy", Locale.ENGLISH)),

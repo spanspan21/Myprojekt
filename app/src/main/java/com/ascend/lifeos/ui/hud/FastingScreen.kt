@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -43,13 +44,18 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.data.FastingCalc
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun FastingScreen(onBack: () -> Unit) {
+    val ctx = LocalContext.current
     val state = Repo.data.fasting
     val protocol = FastingCalc.protocol(state.protocol)
 
@@ -66,11 +72,11 @@ fun FastingScreen(onBack: () -> Unit) {
     val stats = remember(Repo.data.fastLog) { FastingCalc.stats(Repo.fastLog()) }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 18.dp)) {
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() }, contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(14.dp))
@@ -80,7 +86,10 @@ fun FastingScreen(onBack: () -> Unit) {
         // protocol picker
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FastingCalc.PROTOCOLS.forEach { pr ->
-                HudChip(pr.id, state.protocol == pr.id) { if (!state.active) Repo.setFastProtocol(pr.id) }
+                HudChip(pr.id, state.protocol == pr.id) {
+                    if (!state.active) { Repo.setFastProtocol(pr.id); AppFeedback.show("Protocol: ${pr.id}") }
+                    else AppFeedback.show("End the current fast first")
+                }
             }
         }
 
@@ -117,15 +126,33 @@ fun FastingScreen(onBack: () -> Unit) {
 
         Spacer(Modifier.height(16.dp))
         if (state.active) {
-            HudButton("End fast", Modifier.fillMaxWidth(), primary = false) { Repo.stopFast() }
+            val fCtx = LocalContext.current
+            var armed by remember { mutableStateOf(false) }
+            LaunchedEffect(armed) { if (armed) { delay(2500); armed = false } }
+            HudButton(if (armed) "Tap again to end" else "End fast", Modifier.fillMaxWidth(), primary = false) {
+                if (armed) { Repo.stopFast(); Haptics.confirm(fCtx); AppFeedback.show("Fast ended") }
+                else { armed = true; Haptics.tick(fCtx) }
+            }
         } else {
-            HudButton("Start fast · ${protocol.id}", Modifier.fillMaxWidth()) { Repo.startFast(protocol.id) }
+            HudButton("Start fast · ${protocol.id}", Modifier.fillMaxWidth()) {
+                Repo.startFast(protocol.id)
+                Haptics.confirm(ctx)
+                AppFeedback.show("Fast started")
+            }
+            if (stats.count == 0) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Pick a protocol above, then tap Start. The timer tracks your fasting window automatically.",
+                    color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = 16.sp,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
         }
 
         Spacer(Modifier.height(22.dp))
         SectionLabel("Zones", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
             Column(Modifier.fillMaxWidth().padding(16.dp)) {
                 FastingCalc.ZONES.forEachIndexed { i, z ->
                     val active = state.active && zone == z
@@ -143,7 +170,7 @@ fun FastingScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         SectionLabel("Stats", accent = Mod.Fuel)
         Spacer(Modifier.height(10.dp))
-        GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
             Row(Modifier.fillMaxWidth().padding(18.dp)) {
                 FastStat("${stats.streak}", "Streak", Modifier.weight(1f))
                 FastStat(if (stats.count == 0) "–" else hm(stats.avgHours), "Avg", Modifier.weight(1f))

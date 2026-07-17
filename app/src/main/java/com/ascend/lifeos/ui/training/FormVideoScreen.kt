@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -88,14 +89,14 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
         }
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp).padding(top = 14.dp)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 20.dp).padding(top = 14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Form Check", color = TextPrimary, fontFamily = Display, fontSize = FS.s24, fontWeight = FontWeight.Bold)
-                Text(exercise.ifBlank { "Any exercise" }, color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text(exercise.ifBlank { "Any exercise" }, color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale { recording?.stop(); onClose() },
@@ -105,7 +106,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
         Spacer(Modifier.height(14.dp))
 
         if (!camGranted) {
-            Panel(Modifier.fillMaxWidth(), corner = 18.dp, onClick = { permLauncher.launch(android.Manifest.permission.CAMERA) }) {
+            Panel(Modifier.fillMaxWidth(), onClick = { permLauncher.launch(android.Manifest.permission.CAMERA) }) {
                 Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Camera permission needed", color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                     Text("Tap to grant — clips never leave the device.", color = TextDim, fontSize = FS.s12, fontFamily = Body)
@@ -131,7 +132,7 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                                         CameraSelector.DEFAULT_BACK_CAMERA, preview, videoCapture,
                                     )
                                     camReady = true
-                                }
+                                }.onFailure { AppFeedback.show("Camera unavailable") }
                             }, ContextCompat.getMainExecutor(c))
                         }
                     },
@@ -197,12 +198,12 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp), contentPadding = PaddingValues(bottom = 30.dp)) {
                 items(clips, key = { it.absolutePath }) { f ->
-                    Panel(Modifier.animateItem().fillParentMaxWidth(), corner = 14.dp, onClick = { playing = f }) {
+                    Panel(Modifier.animateItem().fillParentMaxWidth(), corner = RElem, onClick = { playing = f }) {
                         Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Rounded.PlayArrow, "Play video", tint = Mod.Train, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(11.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(clipLabel(f), color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(clipLabel(f), color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(
                                     SimpleDateFormat("EEE dd.MM · HH:mm", Locale.ENGLISH).format(Date(f.lastModified())) +
                                         " · ${"%.1f".format(f.length() / 1_048_576.0)} MB",
@@ -210,14 +211,13 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
                                 )
                             }
                             val armed = armedDelete == f.absolutePath
-                            Icon(
-                                Icons.Rounded.Delete, if (armed) "Confirm delete" else "Delete video",
-                                tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp).pressScale {
-                                    if (armed) { f.delete(); clips = listClips(dir); armedDelete = null; AppFeedback.show("Video deleted") }
-                                    else armedDelete = f.absolutePath
-                                },
-                            )
+                            Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                                if (armed) { f.delete(); clips = listClips(dir); armedDelete = null; AppFeedback.show("Video deleted") }
+                                else armedDelete = f.absolutePath
+                            }, contentAlignment = Alignment.Center) {
+                                Icon(Icons.Rounded.Delete, if (armed) "Confirm delete" else "Delete video",
+                                    tint = if (armed) Crit else TextDim.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
@@ -227,7 +227,10 @@ fun FormVideoScreen(exercise: String, onClose: () -> Unit) {
 
     playing?.let { f ->
         Box(
-            Modifier.fillMaxSize().background(Void.copy(alpha = 0.98f)).clickable { playing = null },
+            Modifier.fillMaxSize().background(Void.copy(alpha = 0.98f)).clickable(
+                role = androidx.compose.ui.semantics.Role.Button,
+                onClickLabel = "Close video",
+            ) { playing = null },
             contentAlignment = Alignment.Center,
         ) {
             AndroidView(

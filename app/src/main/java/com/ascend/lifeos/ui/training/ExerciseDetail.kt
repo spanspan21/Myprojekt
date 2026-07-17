@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FitnessCenter
 import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.kit.ShimmerPanel
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -37,6 +39,7 @@ import com.ascend.lifeos.ui.kit.endpointHalo
 import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.theme.*
+import com.ascend.lifeos.data.Units
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -49,6 +52,7 @@ import java.util.Locale
  */
 @Composable
 fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val entity by produceState<ExerciseEntity?>(null, exerciseId) {
         value = runCatching { vm.exerciseById(exerciseId) }.getOrNull()
     }
@@ -68,25 +72,37 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(
-                                entity?.name ?: "…", color = TextPrimary,
-                                fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
-                            )
-                            entity?.let {
+                            val e = entity
+                            if (e != null) {
                                 Text(
-                                    "${muscleLabel(it.primaryMuscle)}${if (it.secondaryMuscles.isNotEmpty()) " · " + it.secondaryMuscles.joinToString("/") { m -> muscleLabel(m) } else ""}",
+                                    e.name, color = TextPrimary,
+                                    fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    "${muscleLabel(e.primaryMuscle)}${if (e.secondaryMuscles.isNotEmpty()) " · " + e.secondaryMuscles.joinToString("/") { m -> muscleLabel(m) } else ""}",
                                     color = TextDim, fontSize = FS.s11, fontFamily = Body,
                                 )
+                            } else {
+                                ShimmerPanel(Modifier.fillMaxWidth(0.6f), height = 22.dp, corner = RElem)
                             }
                         }
-                        Icon(
-                            Icons.Rounded.Close, "Close", tint = TextMuted,
-                            modifier = Modifier.size(22.dp).pressScale(onClick = onClose),
-                        )
+                        Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onClose), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(22.dp))
+                        }
                     }
                     Spacer(Modifier.height(16.dp))
                 }
 
+                if (entity == null) {
+                    item {
+                        repeat(3) {
+                            ShimmerPanel(Modifier.fillMaxWidth(), height = 56.dp, corner = RElem)
+                            Spacer(Modifier.height(10.dp))
+                        }
+                    }
+                    return@LazyColumn
+                }
                 // ── the trend that matters for this movement ────────────
                 val perSession = sessionSummaries(sets)
                 val hasWeight = sets.any { (it.weight ?: 0f) > 0f }
@@ -99,7 +115,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                     }
                     Text(title, color = TextDim, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Spacer(Modifier.height(10.dp))
-                    GlassPanel(Modifier.fillMaxWidth().height(160.dp), corner = 18.dp) {
+                    GlassPanel(Modifier.fillMaxWidth().height(160.dp)) {
                         val series = perSession.map {
                             when {
                                 hasWeight -> it.bestE1rm
@@ -128,7 +144,7 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                             else -> "BEST REPS"
                         }
                         val bestValue = when {
-                            hasWeight -> "${"%.1f".format(best)} kg"
+                            hasWeight -> Units.fmtWeight(ctx, best)
                             isHold -> "${best.toInt()}s"
                             else -> "${best.toInt()}"
                         }
@@ -213,9 +229,13 @@ private fun sessionSummaries(sets: List<WorkoutSetEntity>): List<SessionSummary>
 @Composable
 private fun TrendLine(series: List<Double>, modifier: Modifier) {
     if (series.size < 2) {
-        Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Two sessions make a trend — one more to go.", color = TextDim, fontSize = FS.s11, fontFamily = Body)
-        }
+        EmptyState(
+            icon = Icons.Rounded.FitnessCenter,
+            title = "One more session",
+            hint = "Two sessions make a trend",
+            accent = Mod.Train,
+            modifier = modifier,
+        )
         return
     }
     Canvas(modifier) {
@@ -244,7 +264,7 @@ private fun TrendLine(series: List<Double>, modifier: Modifier) {
 
 @Composable
 private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
-    GlassPanel(modifier, corner = 14.dp) {
+    GlassPanel(modifier, corner = RElem) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(label, color = TextDim, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
             Spacer(Modifier.height(3.dp))
@@ -255,6 +275,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
 
 @Composable
 private fun PrTimelineRow(pr: PersonalRecordEntity) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val date = SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(Date(pr.date))
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(Champagne.copy(alpha = 0.9f)))
@@ -262,9 +283,9 @@ private fun PrTimelineRow(pr: PersonalRecordEntity) {
         Text(
             when (pr.type) {
                 PrType.MAX_REPS -> "${pr.value.toInt()} reps"
-                PrType.MAX_WEIGHT -> "${"%.1f".format(pr.value)} kg"
+                PrType.MAX_WEIGHT -> Units.fmtWeight(ctx, pr.value.toDouble())
                 PrType.MAX_VOLUME -> "${pr.value.toInt()} volume"
-                PrType.EST_1RM -> "${"%.1f".format(pr.value)} kg e1RM"
+                PrType.EST_1RM -> "${Units.fmtWeight(ctx, pr.value.toDouble())} e1RM"
                 PrType.LONGEST_HOLD -> "${pr.value.toInt()}s hold"
             },
             color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
@@ -276,6 +297,7 @@ private fun PrTimelineRow(pr: PersonalRecordEntity) {
 
 @Composable
 private fun RecentSetRow(s: WorkoutSetEntity) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val date = SimpleDateFormat("dd.MM", Locale.getDefault()).format(Date(s.loggedAt))
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(date, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, modifier = Modifier.width(42.dp))
@@ -284,7 +306,7 @@ private fun RecentSetRow(s: WorkoutSetEntity) {
             color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.width(80.dp),
         )
-        s.weight?.let { Text("${it} kg", color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.width(70.dp)) }
+        s.weight?.let { Text(Units.fmtWeight(ctx, it.toDouble()), color = TextMuted, fontSize = FS.s12, fontFamily = Body, modifier = Modifier.width(70.dp)) }
         Spacer(Modifier.weight(1f))
         s.rpe?.let { Text("RPE $it", color = TextDim, fontSize = FS.s10_5, fontFamily = Body) }
         if (s.isPersonalRecord) {

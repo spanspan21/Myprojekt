@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.training
 
+import com.ascend.lifeos.data.Prefs
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -127,12 +128,13 @@ fun MuscleMap(
  */
 @Composable
 fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier) {
-    // Only fatigue is painted; a fresh body reads as pure, calm line art.
+    val fCtx = androidx.compose.ui.platform.LocalContext.current
+    val freshThresh = Prefs.int(fCtx, Prefs.FRESHNESS_THRESHOLD, 45) / 100f
     fun tint(m: Muscle): Color? {
         val f = freshness?.get(m)?.coerceIn(0f, 1f) ?: return null
         return when {
             f >= 0.72f -> null                                    // fresh → clean
-            f >= 0.45f -> Warn.copy(alpha = 0.16f)
+            f >= freshThresh -> Warn.copy(alpha = 0.16f)
             else -> Crit.copy(alpha = 0.22f)
         }
     }

@@ -41,7 +41,7 @@ fun GameDayCard(modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val game by produceState<Pair<Int, Int>?>(null) {
         value = withContext(Dispatchers.IO) {
-            val today = LocalDate.now().toEpochDay()
+            val today = com.ascend.lifeos.core.todayDate().toEpochDay()
             runCatching {
                 CalendarRepo.dao(ctx).eventsInRangeOnce(today, today)
                     .filter { it.type == "HOCKEY" && !it.allDay }
@@ -77,7 +77,7 @@ fun GameDayCard(modifier: Modifier = Modifier) {
         else -> "Sip water steadily until warm-up, then taper."
     }
 
-    Panel(modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SectionLabel("${sport.emoji} ${sport.dayWord} · $startWord ${fmt(g.first)}", accent = Mod.Body)
             Spacer(Modifier.height(10.dp))
@@ -95,7 +95,7 @@ private fun Check(label: String, ok: Boolean, value: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             if (ok) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
-            null, tint = if (ok) Good else Crit, modifier = Modifier.size(17.dp),
+            "$label ${if (ok) "met" else "not met"}", tint = if (ok) Good else Crit, modifier = Modifier.size(17.dp),
         )
         Spacer(Modifier.width(10.dp))
         Text(label, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))

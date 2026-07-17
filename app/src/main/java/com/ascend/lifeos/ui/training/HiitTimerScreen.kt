@@ -20,6 +20,7 @@ import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
@@ -58,10 +60,10 @@ fun HiitTimerScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
 
     // Custom config state — persisted so last-used values survive screen re-entry
-    var cWork by remember { mutableStateOf(Prefs.int(ctx, "hiit_work", 30).toString()) }
-    var cRest by remember { mutableStateOf(Prefs.int(ctx, "hiit_rest", 15).toString()) }
-    var cRounds by remember { mutableStateOf(Prefs.int(ctx, "hiit_rounds", 8).toString()) }
-    var cSets by remember { mutableStateOf(Prefs.int(ctx, "hiit_sets", 3).toString()) }
+    var cWork by rememberSaveable { mutableStateOf(Prefs.int(ctx, Prefs.HIIT_WORK_SEC, 30).toString()) }
+    var cRest by rememberSaveable { mutableStateOf(Prefs.int(ctx, Prefs.HIIT_REST_SEC, 15).toString()) }
+    var cRounds by rememberSaveable { mutableStateOf(Prefs.int(ctx, Prefs.HIIT_ROUNDS, 8).toString()) }
+    var cSets by rememberSaveable { mutableStateOf(Prefs.int(ctx, Prefs.HIIT_SETS, 3).toString()) }
 
     LaunchedEffect(running, paused) {
         if (!running || paused) return@LaunchedEffect
@@ -86,7 +88,9 @@ fun HiitTimerScreen(onBack: () -> Unit) {
         val hCtx = androidx.compose.ui.platform.LocalContext.current
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale { Haptics.tick(hCtx); onBack() })
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(hCtx); onBack() }, contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp))
+            }
             Spacer(Modifier.width(12.dp))
             Text("HIIT Timer", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
         }
@@ -101,10 +105,10 @@ fun HiitTimerScreen(onBack: () -> Unit) {
                     Haptics.confirm(hCtx)
                     preset = p; currentRound = 1; currentSet = 1; isWork = true
                     remaining = p.workSec; totalPhase = p.workSec; running = true
-                }, corner = 14.dp) {
+                }, corner = RElem) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(p.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(p.name, color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("${p.workSec}s/${p.restSec}s · ${p.rounds}×${p.sets}", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
                         Icon(Icons.Rounded.PlayArrow, "Start preset", tint = Accent, modifier = Modifier.size(20.dp))
@@ -117,19 +121,19 @@ fun HiitTimerScreen(onBack: () -> Unit) {
             SectionLabel("Custom", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GlassField("Work", cWork, KeyboardType.Number, Modifier.weight(1f)) { cWork = it }
-                GlassField("Rest", cRest, KeyboardType.Number, Modifier.weight(1f)) { cRest = it }
-                GlassField("Rnd", cRounds, KeyboardType.Number, Modifier.weight(1f)) { cRounds = it }
+                GlassField("Work", cWork, KeyboardType.Number, Modifier.weight(1f), imeAction = androidx.compose.ui.text.input.ImeAction.Next) { cWork = it }
+                GlassField("Rest", cRest, KeyboardType.Number, Modifier.weight(1f), imeAction = androidx.compose.ui.text.input.ImeAction.Next) { cRest = it }
+                GlassField("Rnd", cRounds, KeyboardType.Number, Modifier.weight(1f), imeAction = androidx.compose.ui.text.input.ImeAction.Next) { cRounds = it }
                 GlassField("Sets", cSets, KeyboardType.Number, Modifier.weight(1f)) { cSets = it }
             }
             Spacer(Modifier.height(14.dp))
             HudButton("Start", Modifier.fillMaxWidth()) {
                 val w = cWork.toIntOrNull() ?: 30; val r = cRest.toIntOrNull() ?: 15
                 val rn = cRounds.toIntOrNull() ?: 8; val st = cSets.toIntOrNull() ?: 3
-                Prefs.setInt(ctx, "hiit_work", w)
-                Prefs.setInt(ctx, "hiit_rest", r)
-                Prefs.setInt(ctx, "hiit_rounds", rn)
-                Prefs.setInt(ctx, "hiit_sets", st)
+                Prefs.setInt(ctx, Prefs.HIIT_WORK_SEC, w)
+                Prefs.setInt(ctx, Prefs.HIIT_REST_SEC, r)
+                Prefs.setInt(ctx, Prefs.HIIT_ROUNDS, rn)
+                Prefs.setInt(ctx, Prefs.HIIT_SETS, st)
                 val p = HiitPreset("Custom", w, r, rn, st)
                 preset = p; currentRound = 1; currentSet = 1; isWork = true
                 remaining = p.workSec; totalPhase = p.workSec; running = true

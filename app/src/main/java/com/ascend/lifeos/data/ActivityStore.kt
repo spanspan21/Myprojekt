@@ -126,7 +126,7 @@ object ActivityStore {
         val sport = runCatching { Repo.data.profile.sport }.getOrDefault("hockey")
         if (entries.none { it.type == sport }) return entries
         val blockDays: Set<Long> = runCatching {
-            val today = java.time.LocalDate.now().toEpochDay()
+            val today = com.ascend.lifeos.core.todayDate().toEpochDay()
             val from = epochDayOf(sinceMs)
             com.ascend.lifeos.data.calendar.CalendarDatabase.get(ctx).dao()
                 .eventsInRangeOnce(from, today)

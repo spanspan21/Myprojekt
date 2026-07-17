@@ -27,7 +27,7 @@ object Backup {
     private const val KEY_URI = "tree_uri"
     private const val KEY_LAST = "last_ms"
     private const val KEEP = 8
-    private val DBS = listOf("ascend_training.db", "jarvis_calendar.db", "ascend_masterplan.db")
+    private val DBS = listOf("ascend_training.db", "jarvis_calendar.db", "ascend_masterplan.db", "jarvis_finance.db")
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
@@ -51,7 +51,10 @@ object Backup {
         val uri = folder(ctx) ?: return
         if (System.currentTimeMillis() - lastBackupMs(ctx) < 6L * 86_400_000) return
         // SAF enumeration + zip writing must never block the cold start.
-        Thread { runCatching { runNow(ctx.applicationContext, uri) } }.start()
+        Thread {
+            runCatching { runNow(ctx.applicationContext, uri) }
+                .onFailure { android.util.Log.e("Backup", "Auto-backup failed", it) }
+        }.start()
     }
 
     fun runNow(ctx: Context, uri: Uri? = folder(ctx)): Boolean {
@@ -101,15 +104,19 @@ object Backup {
         runCatching {
             TrainingDatabase.get(ctx).openHelper.writableDatabase
                 .query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
-        }
+        }.onFailure { android.util.Log.w("Backup", "WAL checkpoint failed: training", it) }
         runCatching {
             CalendarDatabase.get(ctx).openHelper.writableDatabase
                 .query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
-        }
+        }.onFailure { android.util.Log.w("Backup", "WAL checkpoint failed: calendar", it) }
         runCatching {
             MasterPlanDatabase.get(ctx).openHelper.writableDatabase
                 .query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
-        }
+        }.onFailure { android.util.Log.w("Backup", "WAL checkpoint failed: masterplan", it) }
+        runCatching {
+            com.ascend.lifeos.data.finance.FinanceDatabase.get(ctx).openHelper.writableDatabase
+                .query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
+        }.onFailure { android.util.Log.w("Backup", "WAL checkpoint failed: finance", it) }
     }
 
     /** Every SharedPreferences file that exists on disk right now. */
@@ -141,7 +148,7 @@ object Backup {
      * Restore the newest backup in the folder. Full (zip) restores swap prefs and
      * database files — the process MUST be restarted afterwards (`needsRestart`).
      */
-    data class RestoreResult(val ok: Boolean, val needsRestart: Boolean)
+    data class RestoreResult(val ok: Boolean, val needsRestart: Boolean, val error: String? = null)
 
     fun restoreLatest(ctx: Context): RestoreResult {
         val uri = folder(ctx) ?: return RestoreResult(false, false)
@@ -156,7 +163,8 @@ object Backup {
                 val json = ctx.contentResolver.openInputStream(latest.uri)?.use {
                     it.readBytes().toString(Charsets.UTF_8)
                 } ?: return RestoreResult(false, false)
-                RestoreResult(Repo.importJson(json), needsRestart = false)
+                val err = Repo.importJson(json)
+                RestoreResult(ok = err == null, needsRestart = false, error = err)
             }
         }.getOrDefault(RestoreResult(false, false))
     }
@@ -183,16 +191,20 @@ object Backup {
             entries["db/$db"]?.let { bytes ->
                 val f = ctx.getDatabasePath(db)
                 f.parentFile?.mkdirs()
+                val tmp = File(f.path + ".tmp")
+                tmp.writeBytes(bytes)
                 File(f.path + "-wal").delete()
                 File(f.path + "-shm").delete()
-                f.writeBytes(bytes)
+                tmp.renameTo(f)
             }
         }
         // 2) Restore every prefs store except our own (folder uri is device-specific).
         entries.keys.filter { it.startsWith("prefs/") }.forEach { key ->
             val name = key.removePrefix("prefs/").removeSuffix(".json")
             if (name == PREF) return@forEach
-            val o = runCatching { JSONObject(String(entries[key]!!)) }.getOrNull() ?: return@forEach
+            val o = runCatching { JSONObject(String(entries[key]!!)) }
+                .onFailure { android.util.Log.w("Backup", "Skipped corrupt prefs: $key", it) }
+                .getOrNull() ?: return@forEach
             val ed = ctx.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear()
             for (k in o.keys()) {
                 val e = o.optJSONObject(k) ?: continue

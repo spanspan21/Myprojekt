@@ -35,8 +35,12 @@ object SleepProtocol {
     /** The prescribed window: [tibMin] minutes in bed, ending at [anchorWakeMin]. */
     data class State(val tibMin: Int, val anchorWakeMin: Int, val phase: Phase)
 
-    /** Safety floor — the window is never restricted below 5.5 h. */
+    /** Default safety floor — the window is never restricted below 5.5 h. */
     const val FLOOR_MIN = 330
+
+    fun floorMin(ctx: android.content.Context): Int =
+        com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.SLEEP_FLOOR_MIN, FLOOR_MIN)
+            .coerceAtLeast(300)
 
     /** Minutes from bed to out-of-bed, wrapping midnight (23:30 → 06:30 = 420). */
     fun timeInBed(log: NightLog): Int =
@@ -69,9 +73,9 @@ object SleepProtocol {
      * First prescribed window: average actual sleep over the baseline, coerced
      * into 330..510. Needs at least 5 logged nights — returns -1 otherwise.
      */
-    fun initialTib(baselineLogs: List<NightLog>): Int {
+    fun initialTib(baselineLogs: List<NightLog>, floor: Int = FLOOR_MIN): Int {
         if (baselineLogs.size < 5) return -1
-        return baselineLogs.map { actualSleep(it) }.average().roundToInt().coerceIn(FLOOR_MIN, 510)
+        return baselineLogs.map { actualSleep(it) }.average().roundToInt().coerceIn(floor, 510)
     }
 
     /** The window never grows past max(baseline avg, 8 h), hard cap 9 h. */
@@ -90,7 +94,7 @@ object SleepProtocol {
      * SE ≥ 90 → +15 min (up to [maxTib]) · 85..90 → hold · < 85 → −15 min
      * (never below [FLOOR_MIN]). Returns the new state + a human reason line.
      */
-    fun weeklyAdjust(state: State, last7: List<NightLog>, baselineAvgSleep: Int): Pair<State, String> {
+    fun weeklyAdjust(state: State, last7: List<NightLog>, baselineAvgSleep: Int, floor: Int = FLOOR_MIN): Pair<State, String> {
         if (last7.size < 5) return state to "not enough logs"
         val se = last7.map { efficiency(it) }.average()
         val pct = se.roundToInt()
@@ -102,7 +106,7 @@ object SleepProtocol {
             }
             se >= 85.0 -> state to "SE $pct% — window held"
             else -> {
-                val next = max(state.tibMin - 15, FLOOR_MIN)
+                val next = max(state.tibMin - 15, floor)
                 if (next < state.tibMin) state.copy(tibMin = next) to "SE $pct% — window −15 min"
                 else state to "SE $pct% — window at floor"
             }

@@ -128,6 +128,7 @@ fun JarvisInterceptScreen(
         ) { showCasino ->
             if (showCasino) {
                 val ctx = LocalContext.current
+                val pkg = p.casinoPkg ?: return@AnimatedContent
                 Column(
                     Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
                         .verticalScroll(rememberScrollState())
@@ -135,7 +136,7 @@ fun JarvisInterceptScreen(
                 ) {
                     CasinoScreen(
                         appLabel = p.appLabel,
-                        ledger = remember(p.casinoPkg) { RealLedger(ctx, p.casinoPkg!!, p.skillMinutes) },
+                        ledger = remember(pkg) { RealLedger(ctx, pkg, p.skillMinutes) },
                         deficitMin = p.deficitMin,
                         onWin = onCasinoWin, onLose = onCasinoLose,
                         onBack = { casinoOpen = false },
@@ -313,7 +314,8 @@ private fun LimitLock(
             LockButton("Start skill work", primary = false, onClick = onSkill)
 
             val waiting = unlockIn > 0
-            val laterLabel = if (waiting) "Later · ${unlockIn}s" else "Later · 3 min"
+            val snoozeMin = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GUARD_SNOOZE_MIN, 3)
+            val laterLabel = if (waiting) "Later · ${unlockIn}s" else "Later · $snoozeMin min"
             if (!noSnooze || onCasino != null) {
                 Spacer(Modifier.height(9.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -566,6 +568,7 @@ private fun GateLock(
     onExit: () -> Unit,
     onOfferDone: () -> Unit,
 ) {
+    val ctx = LocalContext.current
     var ready by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { delay(6_000); ready = true }
 
@@ -682,7 +685,8 @@ private fun GateLock(
                         .padding(vertical = 15.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("Continue · 5 min", color = Muted, fontSize = FS.s14, fontWeight = FontWeight.Bold)
+                    val gateMin = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GUARD_GATE_MIN, 5)
+                    Text("Continue · $gateMin min", color = Muted, fontSize = FS.s14, fontWeight = FontWeight.Bold)
                 }
                 Box(
                     Modifier.weight(1f)

@@ -13,6 +13,7 @@ import com.ascend.lifeos.data.masterplan.TaskStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -32,6 +33,7 @@ class MasterPlanViewModel(app: Application) : AndroidViewModel(app) {
     private val engine = JarvisRoutingEngine()
 
     val domains: StateFlow<List<DomainWithGraph>> = dao.observeDomains()
+        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val prefs = app.getSharedPreferences("masterplan_prefs", android.content.Context.MODE_PRIVATE)

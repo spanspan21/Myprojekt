@@ -32,13 +32,15 @@ object JarvisVoice {
     fun line(s: Snapshot): String {
         val hour = LocalTime.now().hour
 
+        val rWarn = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.READINESS_WARN, 50) } ?: 50
+        val rGood = Repo.appContextOrNull()?.let { Prefs.int(it, Prefs.READINESS_GOOD, 75) } ?: 75
         // 1. Recovery critical — overrides everything.
-        if (s.readiness != null && s.readiness < 50) {
+        if (s.readiness != null && s.readiness < rWarn) {
             return "Recovery at ${s.readiness}. I'd keep today light — mobility over intensity."
         }
         // 2. Game day — the schedule outranks the gym.
         s.hockeyToday?.let { start ->
-            return if (s.readiness != null && s.readiness >= 75)
+            return if (s.readiness != null && s.readiness >= rGood)
                 "${s.sportWord} at $start. Recovery ${s.readiness} — you're primed. Save the legs until then."
             else
                 "${s.sportWord} at $start. Eat early, hydrate, keep the legs fresh."

@@ -34,8 +34,12 @@ object Prefs {
 
     fun int(ctx: Context, key: String, default: Int): Int = sp(ctx).getInt(key, default)
     fun setInt(ctx: Context, key: String, value: Int) = sp(ctx).edit().putInt(key, value).apply()
+    fun has(ctx: Context, key: String): Boolean = sp(ctx).contains(key)
 
     // ---- keys + defaults (single source of truth) ----------------------------
+    // Global
+    const val UNIT_SYSTEM = "unit_system"              // "metric" (default) | "imperial"
+    const val WEEK_START = "week_start"                // "monday" (default) | "sunday"
     // Shell
     const val CONTEXT_MODE = "context_mode"            // normal | exam | holiday
     const val HOME_CARDS = "home_cards"                // ordered visible card keys, csv
@@ -66,14 +70,14 @@ object Prefs {
     const val AFTER_SCHOOL_BUFFER_MIN = "after_school_buffer_min" // 45 — home-way + change before training
     const val LATEST_TRAIN_START_MIN = "latest_train_start_min"   // 1260 (21:00) latest afternoon start
     const val RESCHEDULE_HANDLED_DAY = "reschedule_handled_day"   // dayKey the user accepted/skipped
-    const val RESCHEDULE_NOTIFIED_DAY = "reschedule_notified_day" // dayKey the afternoon nudge fired
+
     const val RESCHEDULE_HOUR = "reschedule_hour"      // hour-of-day the afternoon nudge fires (default 15)
     const val TRAINED_TIMES = "trained_times"          // csv minute-of-day of recent finished sessions (learned default)
     // Finance intelligence
     const val RECURRING_AUTOBOOK = "recurring_autobook" // auto-book due subscriptions instead of asking
     const val ROUNDUP_ON = "roundup_on"                // round each expense up to the euro into a goal
     const val ROUNDUP_GOAL_ID = "roundup_goal_id"      // which SaveGoal the round-ups feed
-    const val BEDTIME_EARLY_DAY = "bedtime_early_day"  // dayKey an automation asked for an earlier bedtime (audit F3)
+
     // Fuel (adaptive-TDEE toggle lives on profile.kcalGoalAuto, not a pref)
     const val PROTEIN_NUDGE = "protein_nudge"          // true
     // Body
@@ -123,8 +127,14 @@ object Prefs {
     const val WEATHER_SLOTS = "weather_slots"          // true
     const val UNTIS_CHANGE_ALARM = "untis_change_alarm" // true
     // School
-    const val HOMEWORK_PROMPT = "homework_prompt"      // true
     const val EXAM_COUNTDOWN = "exam_countdown"        // true
+    // Guard timing
+    const val GUARD_GATE_MIN = "guard_gate_min"            // 5 — "Continue" pass duration in minutes
+    const val GUARD_SNOOZE_MIN = "guard_snooze_min"        // 3 — "Later" snooze duration in minutes
+    const val SLEEP_FLOOR_MIN = "sleep_floor_min"          // 330 — safety floor for sleep restriction (minutes)
+    const val MORNING_PREP_MIN = "morning_prep_min"        // 75 — morning prep buffer before first event (minutes)
+    const val STREAK_GUARD_HOUR = "streak_guard_hour"      // 20 — hour (0-23) after which streak guard fires
+    const val EARLY_START_HOUR = "early_start_hour"        // 8 — first event before this hour triggers bedtime hint
     // Tour
     // Guard score thresholds
     const val FOCUS_GOOD = "focus_good"                // 70 — focus score >= this → Good color
@@ -192,10 +202,27 @@ object Prefs {
     const val PROT_WINDOW_LOOKBACK = "prot_window_lookback" // 100 — minutes lookback for post-workout protein check
     const val PROT_WINDOW_THRESH = "prot_window_thresh"     // 20 — grams protein to consider window filled
     // Tour
-    const val TOUR_SEEN = "tour_seen"                  // false — one-time feature tour after first boot
+    const val TOUR_SEEN = "tour_seen"                  // false — legacy slide tour (retired)
+    const val TOUR2_SEEN = "tour2_seen"                // false — interactive spotlight tour after first boot
     // Notification times (minute-of-day; e.g. 420 = 07:00)
     const val NOTIF_MORNING_MIN = "notif_morning_min"  // 420 (07:00)
     const val NOTIF_FUEL_MIN = "notif_fuel_min"        // 780 (13:00)
     const val NOTIF_EVENING_MIN = "notif_evening_min"  // 1230 (20:30)
     const val NOTIF_WEEKLY_MIN = "notif_weekly_min"    // 1140 (19:00)
+    // HIIT timer
+    const val HIIT_WORK_SEC = "hiit_work"      // 30
+    const val HIIT_REST_SEC = "hiit_rest"      // 15
+    const val HIIT_ROUNDS = "hiit_rounds"      // 8
+    const val HIIT_SETS = "hiit_sets"          // 3
+    // CoachEngine guardrails
+    const val COACH_KCAL_FLOOR = "coach_kcal_floor"           // 1400 — minimum kcal target (safety floor)
+    const val COACH_MAX_STEP_KCAL = "coach_max_step_kcal"     // 250 — max kcal adjustment per weekly check-in
+    const val COACH_DIET_BREAK_WEEKS = "coach_diet_break_wks" // 8 — weeks in cut/recomp before suggesting a diet break
+    // Volume model
+    const val MEV_SETS = "mev_sets"                // 3 — minimum effective volume (sets per exercise)
+    const val MRV_SETS = "mrv_sets"                // 6 — maximum recoverable volume (sets per exercise)
+    // Muscle recovery
+    const val RECOVERY_CAPACITY = "recovery_cap"   // 20 — fatigue units to fully fry a muscle
+    // Calendar sync
+    const val CAL_SYNC_HOURS = "cal_sync_hours"    // 6 — hours between automatic calendar syncs
 }

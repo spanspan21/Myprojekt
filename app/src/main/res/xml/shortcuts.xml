@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="log_food"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_fuel"
+        android:shortcutShortLabel="@string/shortcut_log_food"
+        android:shortcutLongLabel="@string/shortcut_log_food_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ascend.lifeos"
+            android:targetClass="com.ascend.lifeos.MainActivity"
+            android:data="jarvis://quicklog" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="start_workout"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_train"
+        android:shortcutShortLabel="@string/shortcut_workout"
+        android:shortcutLongLabel="@string/shortcut_workout_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ascend.lifeos"
+            android:targetClass="com.ascend.lifeos.MainActivity"
+            android:data="jarvis://train" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="log_water"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_water"
+        android:shortcutShortLabel="@string/shortcut_water"
+        android:shortcutLongLabel="@string/shortcut_water_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ascend.lifeos"
+            android:targetClass="com.ascend.lifeos.MainActivity"
+            android:data="jarvis://fuel" />
+    </shortcut>
+</shortcuts>

@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ascend.lifeos.data.Prefs
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.prime.PrimeDirective
 import com.ascend.lifeos.data.prime.PrimeEngine
 import com.ascend.lifeos.ui.kit.Panel
@@ -39,25 +41,25 @@ import java.time.LocalTime
  * is tappable and deep-links into its module (same as the Prime cards).
  */
 @Composable
-fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier) {
+fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier, tick: Int = 0) {
     val ctx = LocalContext.current
     val cutoff = Prefs.int(ctx, Prefs.FOCUS_CARD_CUTOFF, 12)
     if (LocalTime.now().hour >= cutoff) return
 
-    val directives by produceState<List<PrimeDirective>>(emptyList()) {
+    val directives by produceState<List<PrimeDirective>>(emptyList(), tick) {
         value = withContext(Dispatchers.IO) {
             runCatching { PrimeEngine.buildCached(ctx).directives }.getOrDefault(emptyList())
         }
     }
     if (directives.isEmpty()) return
 
-    Panel(modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SectionLabel("Today's focus", accent = Mod.Home)
             Spacer(Modifier.height(10.dp))
             directives.take(3).forEachIndexed { i, d ->
                 if (i > 0) Spacer(Modifier.height(10.dp))
-                val rowMod = if (d.route != null) Modifier.fillMaxWidth().pressScale { onNavigate(d.route!!) }
+                val rowMod = if (d.route != null) Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); d.route?.let { onNavigate(it) } }
                 else Modifier.fillMaxWidth()
                 Row(rowMod, verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -66,8 +68,8 @@ fun TodayFocusCard(onNavigate: (String) -> Unit, modifier: Modifier = Modifier) 
                     ) { Text("${i + 1}", color = Mod.Home, fontFamily = Body, fontSize = FS.s11, fontWeight = FontWeight.ExtraBold) }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(d.text, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5, fontWeight = FontWeight.Bold)
-                        Text(d.why, color = TextDim, fontFamily = Body, fontSize = FS.s11)
+                        Text(d.text, color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(d.why, color = TextDim, fontFamily = Body, fontSize = FS.s11, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

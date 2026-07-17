@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.ActivityStore
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.masterplan.MasterPlanDatabase
 import com.ascend.lifeos.data.prime.PrimeEngine
@@ -88,7 +90,8 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
         val d = Repo.bodyDay(k) ?: return@map 0f
         val sm = d.sleepMin ?: return@map 0f
         val perf = (sm / Repo.sleepNeedMin().toDouble()).coerceIn(0.0, 1.0)
-        val rest = if (sm > 0) ((d.rem + d.deep).toDouble() / sm).coerceIn(0.0, 0.45) / 0.45 else 0.5
+        val rc = Prefs.int(ctx, Prefs.RESTORATIVE_CEIL, 45) / 100.0
+        val rest = if (sm > 0) ((d.rem + d.deep).toDouble() / sm).coerceIn(0.0, rc) / rc else 0.5
         ((0.65 * perf + 0.35 * rest) * 100).toFloat()
     }
     val rhrVals = keys.mapNotNull { Repo.bodyDay(it)?.restingHr }
@@ -138,7 +141,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
     var sharing by remember { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 40.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -151,7 +154,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
             }
             // share as image — rendered on demand, goes through the system sheet
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .then(if (!sharing) Modifier.pressScale {
@@ -175,7 +178,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
             }
             Spacer(Modifier.width(8.dp))
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale(onClick = onClose),
@@ -188,7 +191,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
             if (s == null) {
                 Column {
                     repeat(3) {
-                        ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
+                        ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = RElem)
                         Spacer(Modifier.height(12.dp))
                     }
                 }
@@ -196,6 +199,9 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 Column {
                     // ── train ────────────────────────────────────────────────────
                     ReportSection("Train", Mod.Train) {
+                        if (s.workouts == 0 && s.totalSets == 0) {
+                            Text("No workouts this week — start your first session", color = TextDim, fontSize = FS.s12, fontFamily = Body)
+                        } else {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             RStat("${s.workouts}", "SESSIONS", Mod.Train)
                             RStat("${s.totalSets}", "SETS", Mod.Train)
@@ -209,11 +215,12 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                                 RStat("${s.activityMinutes}", "ACTIVE MIN", Mod.Train)
                                 if (s.activityKm > 0.05) {
                                     RStat(
-                                        if (s.activityKm % 1.0 < 0.05) "${s.activityKm.toInt()}" else String.format(java.util.Locale.ROOT, "%.1f", s.activityKm),
-                                        "KM", Mod.Train,
+                                        Units.fmtDist(ctx, s.activityKm),
+                                        Units.distLabel(ctx), Mod.Train,
                                     )
                                 }
                             }
+                        }
                         }
                     }
 
@@ -274,14 +281,16 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                     }
 
                     // ── directives ───────────────────────────────────────────────
-                    Spacer(Modifier.height(6.dp))
-                    SectionLabel("Next week's directives")
-                    Spacer(Modifier.height(10.dp))
-                    s.recommendations.forEach { rec ->
-                        Panel(Modifier.fillMaxWidth(), corner = 14.dp, line = Mod.Home.copy(alpha = 0.3f)) {
-                            Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18, modifier = Modifier.padding(14.dp))
+                    if (s.recommendations.isNotEmpty()) {
+                        Spacer(Modifier.height(6.dp))
+                        SectionLabel("Next week's directives")
+                        Spacer(Modifier.height(10.dp))
+                        s.recommendations.forEach { rec ->
+                            Panel(Modifier.fillMaxWidth(), corner = RElem, line = Mod.Home.copy(alpha = 0.3f)) {
+                                Text(rec, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s18, modifier = Modifier.padding(14.dp))
+                            }
+                            Spacer(Modifier.height(8.dp))
                         }
-                        Spacer(Modifier.height(8.dp))
                     }
                 }
             }
@@ -291,7 +300,7 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
 
 @Composable
 private fun ReportSection(title: String, accent: Color, content: @Composable ColumnScope.() -> Unit) {
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth()) {
             Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
             Column(Modifier.padding(16.dp)) {

@@ -1,6 +1,7 @@
 package com.ascend.lifeos.ui.training
 
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -56,6 +58,7 @@ import com.ascend.lifeos.ui.theme.FS
 import com.ascend.lifeos.ui.theme.Ivory
 import com.ascend.lifeos.ui.theme.TextDim
 import com.ascend.lifeos.ui.theme.TextMuted
+import com.ascend.lifeos.ui.theme.RMicro
 import com.ascend.lifeos.ui.theme.TextPrimary
 
 /**
@@ -66,6 +69,7 @@ import com.ascend.lifeos.ui.theme.TextPrimary
  */
 @Composable
 fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, onClose: () -> Unit) {
+    val seCtx0 = androidx.compose.ui.platform.LocalContext.current
     val rev = vm.historyRev
     val sets by produceState(initialValue = emptyList<WorkoutSetEntity>(), rev) {
         value = vm.setsOfSession(session.id)
@@ -82,13 +86,12 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(session.templateName, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold)
+                            Text(session.templateName, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("$date · ${sets.size} sets", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                         }
-                        Icon(
-                            Icons.Rounded.Close, "Close", tint = TextMuted,
-                            modifier = Modifier.size(26.dp).pressScale(onClick = onClose),
-                        )
+                        Box(Modifier.size(44.dp).clip(CircleShape).pressScale { com.ascend.lifeos.data.Haptics.tick(seCtx0); onClose() }, contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Close, "Close", tint = TextMuted, modifier = Modifier.size(26.dp))
+                        }
                     }
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -104,6 +107,7 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
                         Text(
                             exName.uppercase(), color = Accent, fontFamily = Display,
                             fontSize = FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                         Spacer(Modifier.height(6.dp))
                     }
@@ -135,8 +139,9 @@ fun SessionEditorDialog(vm: TrainingViewModel, session: WorkoutSessionEntity, on
 
 @Composable
 private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, onDelete: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val isHold = set.holdSeconds != null
-    GlassPanel(Modifier.fillMaxWidth(), corner = 12.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RMicro) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -147,7 +152,7 @@ private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, 
                     buildString {
                         if (isHold) append("${set.holdSeconds}s hold") else append("${set.reps} reps")
                         set.weight?.takeIf { it > 0f }?.let {
-                            append(" · ${if (it % 1f == 0f) it.toInt().toString() else it.toString()} kg")
+                            append(" · ${if (it % 1f == 0f) it.toInt().toString() else it.toString()} ${Units.weightLabel(ctx)}")
                         }
                     },
                     color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold,
@@ -162,24 +167,26 @@ private fun HistorySetRow(set: WorkoutSetEntity, onEdit: (Int, Float?) -> Unit, 
                 MiniStep("+") { onEdit(+1, null) }
                 if ((set.weight ?: 0f) > 0f) {
                     Spacer(Modifier.width(10.dp))
-                    MiniStep("−kg") { onEdit(0, -2.5f) }
+                    MiniStep("−${Units.weightLabel(ctx)}") { onEdit(0, -2.5f) }
                     Spacer(Modifier.width(4.dp))
-                    MiniStep("+kg") { onEdit(0, +2.5f) }
+                    MiniStep("+${Units.weightLabel(ctx)}") { onEdit(0, +2.5f) }
                 }
             }
             Spacer(Modifier.width(10.dp))
             val seCtx = androidx.compose.ui.platform.LocalContext.current
             var armed by remember { mutableStateOf(false) }
             LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
-            Icon(
-                if (armed) Icons.Rounded.Delete else Icons.Rounded.Close,
-                if (armed) "Tap again" else "Delete set",
-                tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
-                modifier = Modifier.size(16.dp).pressScale {
-                    if (armed) { Haptics.confirm(seCtx); onDelete() }
-                    else { Haptics.warn(seCtx); armed = true }
-                },
-            )
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                if (armed) { Haptics.confirm(seCtx); onDelete() }
+                else { Haptics.warn(seCtx); armed = true }
+            }, contentAlignment = Alignment.Center) {
+                Icon(
+                    if (armed) Icons.Rounded.Delete else Icons.Rounded.Close,
+                    if (armed) "Tap again" else "Delete set",
+                    tint = if (armed) Crit else TextDim.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
     }
 }

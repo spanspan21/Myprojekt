@@ -240,8 +240,8 @@ object UntisSync {
             "${p.subject} $day ${"%02d:%02d".format(p.start / 60, p.start % 60)}"
         }
         val text = lines.joinToString(" · ") + " — free period unlocked."
-        val n = androidx.core.app.NotificationCompat.Builder(ctx, com.ascend.lifeos.data.Notifier.CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+        val n = androidx.core.app.NotificationCompat.Builder(ctx, com.ascend.lifeos.data.Notifier.CH_BRIEFINGS)
+            .setSmallIcon(com.ascend.lifeos.R.drawable.ic_notif)
             .setContentTitle(if (fresh.size == 1) "Lesson cancelled" else "${fresh.size} lessons cancelled")
             .setContentText(text)
             .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))

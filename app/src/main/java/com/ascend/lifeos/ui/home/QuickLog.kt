@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.todayKey
@@ -101,7 +104,7 @@ fun QuickLogSheet(onDismiss: () -> Unit, onOpenModule: (String) -> Unit) {
                         "BACK", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                            .pressScale { mode = QlMode.ACTIONS }
+                            .pressScale { Haptics.tick(ctx); mode = QlMode.ACTIONS }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
@@ -186,7 +189,7 @@ private fun ActionsPane(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             QlTile(
-                Icons.Rounded.MonitorWeight, "Weight", "%.1f kg".format(lastKg), Mod.Body,
+                Icons.Rounded.MonitorWeight, "Weight", Units.fmtWeight(ctx, lastKg.toDouble()), Mod.Body,
                 onClick = onWeight,
             )
             QlTile(
@@ -254,10 +257,10 @@ private fun RowScope.QlTile(
         Spacer(Modifier.height(9.dp))
         Text(
             label, color = TextPrimary, fontFamily = Body,
-            fontSize = FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1,
+            fontSize = FS.s11_5, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(2.dp))
-        Text(stat, color = statColor, style = metricStyle(10, FontWeight.SemiBold), maxLines = 1)
+        Text(stat, color = statColor, style = metricStyle(10, FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -265,9 +268,9 @@ private fun RowScope.QlTile(
 
 @Composable
 private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
-    var amount by remember { mutableStateOf("") }
-    var cat by remember { mutableStateOf<String?>(null) }
-    var note by remember { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var cat by rememberSaveable { mutableStateOf<String?>(null) }
+    var note by rememberSaveable { mutableStateOf("") }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { delay(250); runCatching { focus.requestFocus() } }
 
@@ -321,7 +324,7 @@ private fun PurchasePane(ctx: Context, onSaved: () -> Unit) {
                     val fg by animateColorAsState(if (on) Mod.Finance else TextMuted, tween(Motion.quick), label = "qcF")
                     Box(
                         Modifier.weight(1f)
-                            .pressScale { cat = c }
+                            .pressScale { Haptics.tick(ctx); cat = c }
                             .clip(RoundedCornerShape(12.dp))
                             .background(bg)
                             .border(0.5.dp, edge, RoundedCornerShape(12.dp))
@@ -398,7 +401,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             QlStep("−.1") { kg = (kg - 0.1).coerceAtLeast(30.0) }
             Text(
-                "%.1f".format(kg), color = TextPrimary, style = metricStyle(38),
+                "%.1f".format(Units.kgToDisplay(ctx, kg)), color = TextPrimary, style = metricStyle(38),
                 modifier = Modifier.widthIn(min = 112.dp), textAlign = TextAlign.Center,
             )
             QlStep("+.1") { kg = (kg + 0.1).coerceAtMost(250.0) }
@@ -406,7 +409,7 @@ private fun WeightPane(ctx: Context, onSaved: () -> Unit) {
             QlStep("+1") { kg = (kg + 1.0).coerceAtMost(250.0) }
         }
         Spacer(Modifier.height(4.dp))
-        Text("kilograms", color = TextDim, fontSize = FS.s11, fontFamily = Body)
+        Text(if (Units.isImperial(ctx)) "pounds" else "kilograms", color = TextDim, fontSize = FS.s11, fontFamily = Body)
         Spacer(Modifier.height(18.dp))
         Box(
             Modifier.fillMaxWidth()
@@ -527,7 +530,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
                         .clip(RoundedCornerShape(14.dp))
                         .background(bg)
                         .border(0.5.dp, edge, RoundedCornerShape(14.dp))
-                        .pressScale { selected = level }
+                        .pressScale { Haptics.tick(ctx); selected = level }
                         .padding(horizontal = 12.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -542,7 +545,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
             }
         }
         Spacer(Modifier.height(12.dp))
-        var moodNote by remember { mutableStateOf("") }
+        var moodNote by rememberSaveable { mutableStateOf("") }
         val moodFm = androidx.compose.ui.platform.LocalFocusManager.current
         androidx.compose.material3.OutlinedTextField(
             value = moodNote, onValueChange = { moodNote = it.take(120) },
@@ -578,7 +581,7 @@ private fun MoodPane(ctx: Context, onSaved: () -> Unit) {
 private fun JournalPane(ctx: Context, onSaved: () -> Unit) {
     val existing = Repo.data.days[todayKey()]?.journal ?: emptyList()
     val prompts = listOf("Best thing today?", "What annoyed you?", "What are you grateful for?")
-    var answers by remember { mutableStateOf(List(3) { existing.getOrElse(it) { "" } }) }
+    var answers by rememberSaveable { mutableStateOf(List(3) { existing.getOrElse(it) { "" } }) }
 
     val journalFocuses = List(3) { remember { androidx.compose.ui.focus.FocusRequester() } }
     val journalFm = androidx.compose.ui.platform.LocalFocusManager.current

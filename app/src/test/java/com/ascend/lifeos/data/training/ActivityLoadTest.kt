@@ -38,8 +38,8 @@ class ActivityLoadTest {
     @Test
     fun `sport catalog resolves and falls back safely`() {
         assertEquals("hockey", SportCatalog.byId("hockey").id)
-        assertEquals("hockey", SportCatalog.byId(null).id)        // existing installs
-        assertEquals("hockey", SportCatalog.byId("nonsense").id)
+        assertEquals("gym", SportCatalog.byId(null).id)
+        assertEquals("gym", SportCatalog.byId("nonsense").id)
         // every sport resolves a non-empty muscle map for calendar blocks
         SportCatalog.ALL.forEach { sp ->
             assertTrue("musclesFor(${sp.id}) empty", SportCatalog.musclesFor(sp.id).isNotEmpty())

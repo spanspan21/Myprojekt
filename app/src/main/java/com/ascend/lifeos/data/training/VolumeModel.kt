@@ -19,21 +19,17 @@ object VolumeModel {
 
     /**
      * Working sets per strength exercise for mesocycle [trainWeek] (0..4, 4 =
-     * planned deload). Ramps 3→4→5→6 across the build, deloads to 2. Volume does
-     * NOT shave for a low readiness score — that was the "feel tired, do less"
-     * softness. The only downward moves are the programmed deload and illness;
-     * genuine fatigue is handled by autoregulating UP on green-light days and by
-     * the periodised deload, never by quietly handing out an easy session. The
-     * [readiness] param is retained for callers/telemetry but no longer trims.
+     * planned deload). Ramps MEV→MRV across the build, deloads to 2.
+     * [mev]/[mrv] allow per-user tuning via Prefs.
      */
-    fun setsPerExercise(trainWeek: Int, readiness: Int?, deload: Boolean): Int {
+    fun setsPerExercise(
+        trainWeek: Int, readiness: Int?, deload: Boolean,
+        mev: Int = MEV_SETS_PER_EX, mrv: Int = MRV_SETS_PER_EX,
+    ): Int {
         if (deload) return 2
-        return when (trainWeek.coerceIn(0, 3)) {
-            0 -> 3          // week 1 — MEV, re-sensitise
-            1 -> 4
-            2 -> 5
-            else -> 6       // week 4 — MRV, the overreach before the deload
-        }
+        val span = (mrv - mev).coerceAtLeast(1)
+        val week = trainWeek.coerceIn(0, 3)
+        return (mev + (week.toFloat() / 3f * span).toInt()).coerceIn(mev, mrv)
     }
 
     /** Honest one-liner explaining today's volume choice. */

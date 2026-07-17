@@ -171,7 +171,7 @@ object PrimeEngine {
         } else null
         val screenBudget = WellbeingStore.budgetMin(ctx)
 
-        val todayEpoch = LocalDate.now().toEpochDay()
+        val todayEpoch = com.ascend.lifeos.core.todayDate().toEpochDay()
         val events = runCatching {
             CalendarDatabase.get(ctx).dao().eventsInRangeOnce(todayEpoch, todayEpoch + 3)
         }.getOrDefault(emptyList())
@@ -282,7 +282,7 @@ object PrimeEngine {
             directives += PrimeDirective(
                 if (over > 0) "Screen ${mins(over)} over budget" else "Screen budget nearly hit",
                 "Guard on — the evening belongs to logging off.",
-                1.0 + (screenMin.toDouble() / screenBudget),
+                1.0 + (screenMin.toDouble() / screenBudget.coerceAtLeast(1)),
                 route = "guard",
             )
         }
@@ -320,7 +320,7 @@ object PrimeEngine {
             )
         }
         // erst ab Monatstag ≥ 7 — davor ist die Hochrechnung aus 1–6 Tagen Kaffeesatz
-        if (budget > 0 && projectedSpend > budget && LocalDate.now().dayOfMonth >= 7) {
+        if (budget > 0 && projectedSpend > budget && com.ascend.lifeos.core.todayDate().dayOfMonth >= 7) {
             directives += PrimeDirective(
                 "Budget pace: ${euro(projectedSpend)} by month-end",
                 "Projection over ${euro(budget)} — cut the daily rate of ${euro(FinanceStore.dailyAvgSpendCents(ctx))}.",
@@ -369,14 +369,14 @@ object PrimeEngine {
             // Wert UND Verteilung jetzt aus derselben Quelle (SleepStore) — kein
             // z-Score mehr über zwei Messsysteme mit systematischem Offset.
             PrimeMath.zScore(tst7.dropLast(1), lastNightMin.toDouble(), minN = 4)?.let { z ->
-                if (abs(z) >= 1.6) anomalies += "Sleep ${mins(lastNightMin)} — ${if (z > 0) "clearly more" else "clearly less"} than your week (avg ${mins(sleepAvg7!!.toInt())})"
+                if (abs(z) >= 1.6) anomalies += "Sleep ${mins(lastNightMin)} — ${if (z > 0) "clearly more" else "clearly less"} than your week (avg ${mins(sleepAvg7?.toInt() ?: lastNightMin)})"
             }
         }
 
         // ── Muster: Korrelationen über 21 aligned Tage ──
         val insights = ArrayList<String>()
         val setsHist = histKeys.map { k ->
-            daySets(LocalDate.parse(k)).toDouble()   // Einzel-Sätze ODER Session-Aggregat (wie oben)
+            runCatching { daySets(LocalDate.parse(k)).toDouble() }.getOrDefault(0.0)
         }
         fun insight(a: List<Double>, b: List<Double>, text: (Double) -> String) {
             val pairs = a.zip(b).filter { it.first > 0 || it.second > 0 }

@@ -65,6 +65,7 @@ import com.ascend.lifeos.wellbeing.WellbeingStore
 
 @Composable
 fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
+    val ctx = LocalContext.current
     val domains by vm.domains.collectAsState()
     var openPath by remember { mutableStateOf<String?>(null) }
     var constellation by remember { mutableStateOf(false) }
@@ -102,7 +103,7 @@ fun SkillsScreen(vm: MasterPlanViewModel = viewModel()) {
                         .size(40.dp).clip(RoundedCornerShape(13.dp))
                         .background(Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-                        .pressScale { constellation = false },
+                        .pressScale { Haptics.tick(ctx); constellation = false },
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Rounded.Close, "Close", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
             }
@@ -160,7 +161,7 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
         Spacer(Modifier.height(14.dp))
         JarvisHeader(
             "Skills",
-            if (domains.isEmpty()) "loading paths…"
+            if (domains.isEmpty()) "Add a domain to begin"
             else "${domains.size} paths · always one clear next step",
             Mod.Skills,
         ) {
@@ -183,7 +184,7 @@ private fun PathsOverview(domains: List<DomainWithGraph>, onOpen: (String) -> Un
             }
             if (domains.isEmpty()) {
                 item(key = "empty") {
-                    EmptyState(Icons.Rounded.Psychology, "No skill domains", "Add a domain to start building your skill tree", Mod.Skills)
+                    EmptyState(Icons.Rounded.Psychology, "No skill domains", "Add a domain to start building your skill tree", Mod.Skills, actionLabel = "Explore Vault", onAction = onConstellation)
                 }
             } else {
                 items(domains, key = { it.domain.id }) { d ->
@@ -204,7 +205,7 @@ private fun FocusNowCard(
     onMinutes: (Int) -> Unit,
 ) {
     val ctx = LocalContext.current
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             SectionLabel(
                 plan.readiness?.let { "Do next · readiness $it" } ?: "Do next",
@@ -243,6 +244,7 @@ private fun FocusNowCard(
                             "${item.node.node.title} · ${item.minutes}m",
                             color = TextPrimary,
                             fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             "${item.domainTitle} — ${item.reason}",
@@ -280,7 +282,7 @@ private fun ReviewQueue(due: List<DueReview>, onGraded: () -> Unit) {
     var openId by remember { mutableStateOf<String?>(null) }
 
     Panel(
-        Modifier.fillMaxWidth(), corner = 20.dp,
+        Modifier.fillMaxWidth(),
         fill = Mod.Skills.copy(alpha = 0.05f),
         line = Mod.Skills.copy(alpha = 0.30f),
     ) {
@@ -315,12 +317,13 @@ private fun ReviewQueue(due: List<DueReview>, onGraded: () -> Unit) {
 
 @Composable
 private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onGrade: (Int) -> Unit) {
+    val rrCtx = LocalContext.current
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(Ivory.copy(alpha = if (expanded) 0.05f else 0.03f))
             .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
             .animateContentSize(animationSpec = Motion.springSmoothOf())
-            .pressScale(onToggle)
+            .pressScale { Haptics.tick(rrCtx); onToggle() }
             .padding(horizontal = 12.dp, vertical = 9.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -353,11 +356,12 @@ private fun ReviewRow(r: DueReview, expanded: Boolean, onToggle: () -> Unit, onG
 
 @Composable
 private fun RowScope.GradeChip(label: String, color: Color, onClick: () -> Unit) {
+    val gcCtx = LocalContext.current
     Box(
         Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
             .background(color.copy(alpha = 0.10f))
             .border(0.5.dp, color.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
-            .pressScale(onClick = onClick)
+            .pressScale { Haptics.confirm(gcCtx); onClick() }
             .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -381,7 +385,7 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, modifier: Modifier =
         SkillMeta.pathXp(ctx, d.domain.id, d.nodes.sumOf { it.doneCount }, proofs)
     }
 
-    Panel(modifier.fillMaxWidth(), corner = 20.dp, onClick = onOpen) {
+    Panel(modifier.fillMaxWidth(), onClick = onOpen) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Ring(
@@ -426,7 +430,7 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, modifier: Modifier =
                         .padding(horizontal = 12.dp, vertical = 9.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.PlayArrow, null, tint = accent, modifier = Modifier.size(14.dp))
+                        Icon(Icons.Rounded.PlayArrow, "Next up", tint = accent, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(7.dp))
                         Text(
                             "NEXT: ${next.node.title}",
@@ -446,6 +450,7 @@ private fun PathCard(d: DomainWithGraph, metaTick: Int = 0, modifier: Modifier =
 
 @Composable
 private fun PathDetail(d: DomainWithGraph, vm: MasterPlanViewModel, onBack: () -> Unit) {
+    val ctx = LocalContext.current
     val accent = Color(d.domain.accentColor)
     val ordered = remember(d) { orderedNodes(d) }
     val done = d.completedNodeIds
@@ -457,10 +462,9 @@ private fun PathDetail(d: DomainWithGraph, vm: MasterPlanViewModel, onBack: () -
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted,
-                    modifier = Modifier.size(22.dp).pressScale(onClick = onBack),
-                )
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onBack() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp))
+                }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(d.domain.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -500,12 +504,12 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
     val dimmed = state == NodeState.LOCKED
     Panel(
         Modifier.fillMaxWidth(),
-        corner = 16.dp,
+        corner = RElem,
         fill = if (state == NodeState.CURRENT) accent.copy(alpha = 0.06f) else Ivory.copy(alpha = 0.03f),
         line = if (state == NodeState.CURRENT) accent.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.10f),
-        onClick = { if (state != NodeState.LOCKED) expanded = !expanded },
+        onClick = { if (state != NodeState.LOCKED) { Haptics.tick(ctx); expanded = !expanded } },
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.animateContentSize(animationSpec = Motion.springSmoothOf()).padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(26.dp).clip(CircleShape)
@@ -519,10 +523,10 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                     contentAlignment = Alignment.Center,
                 ) {
                     when (state) {
-                        NodeState.DONE -> Icon(Icons.Rounded.Check, null, tint = accent, modifier = Modifier.size(14.dp))
-                        NodeState.CURRENT -> Icon(Icons.Rounded.PlayArrow, null, tint = Void, modifier = Modifier.size(15.dp))
+                        NodeState.DONE -> Icon(Icons.Rounded.Check, "Completed", tint = accent, modifier = Modifier.size(14.dp))
+                        NodeState.CURRENT -> Icon(Icons.Rounded.PlayArrow, "In progress", tint = Void, modifier = Modifier.size(15.dp))
                         NodeState.READY -> Box(Modifier.size(7.dp).clip(CircleShape).background(accent.copy(alpha = 0.7f)))
-                        NodeState.LOCKED -> Icon(Icons.Rounded.Lock, null, tint = TextDim, modifier = Modifier.size(12.dp))
+                        NodeState.LOCKED -> Icon(Icons.Rounded.Lock, "Locked", tint = TextDim, modifier = Modifier.size(12.dp))
                     }
                 }
                 Spacer(Modifier.width(12.dp))
@@ -542,7 +546,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                     Box(
                         Modifier.size(16.dp).clip(CircleShape).background(accent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center,
-                    ) { Icon(Icons.Rounded.Check, null, tint = accent, modifier = Modifier.size(10.dp)) }
+                    ) { Icon(Icons.Rounded.Check, "Completed", tint = accent, modifier = Modifier.size(10.dp)) }
                     Spacer(Modifier.width(6.dp))
                 }
                 if (state == NodeState.CURRENT) {
@@ -612,7 +616,7 @@ private fun MilestoneRow(n: NodeWithChildren, state: NodeState, accent: Color, v
                                     .background(if (doneTask) accent else Color.Transparent)
                                     .border(1.dp, if (doneTask) accent else Ivory.copy(alpha = 0.25f), CircleShape),
                                 contentAlignment = Alignment.Center,
-                            ) { if (doneTask) Icon(Icons.Rounded.Check, null, tint = Void, modifier = Modifier.size(11.dp)) }
+                            ) { if (doneTask) Icon(Icons.Rounded.Check, "Done", tint = Void, modifier = Modifier.size(11.dp)) }
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
@@ -700,6 +704,7 @@ private fun ResourceRowMini(r: ResourceEntity, accent: Color) {
             .background(Ivory.copy(alpha = 0.03f))
             .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
             .pressScale {
+                Haptics.tick(ctx)
                 runCatching {
                     ctx.startActivity(
                         android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(r.url))
@@ -727,12 +732,15 @@ private fun MetaField(
     accent: Color,
     singleLine: Boolean,
 ) {
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     BasicTextField(
         value = value,
         onValueChange = onChange,
         textStyle = TextStyle(color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s17),
         cursorBrush = SolidColor(accent),
         singleLine = singleLine,
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = if (singleLine) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Default),
+        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { focusManager.clearFocus() }),
         modifier = Modifier.fillMaxWidth(),
         decorationBox = { inner ->
             Box(

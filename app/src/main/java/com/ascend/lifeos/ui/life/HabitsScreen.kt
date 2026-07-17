@@ -20,16 +20,19 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.life.Habit
 import com.ascend.lifeos.data.life.HabitMetrics
 import com.ascend.lifeos.data.life.HabitReminders
@@ -54,7 +57,7 @@ fun HabitsScreen(onClose: () -> Unit) {
     @Suppress("UNUSED_EXPRESSION") LifeStores.rev
     val habits = LifeStores.habits(ctx)
     val today = todayKey()
-    val todayDate = LocalDate.now()
+    val todayDate = com.ascend.lifeos.core.todayDate()
     val scheduled = habits.filter { HabitMetrics.scheduledOn(it, todayDate) && !HabitMetrics.skipped(ctx, it, today) }
     val doneCount = scheduled.count { HabitMetrics.done(ctx, it, today) }
 
@@ -88,8 +91,10 @@ fun HabitsScreen(onClose: () -> Unit) {
             )
             Spacer(Modifier.height(12.dp))
         } else {
-            OverallHeader(habits, doneCount, scheduled.size, todayDate)
-            Spacer(Modifier.height(14.dp))
+            OverallHeader(habits, doneCount, scheduled.size)
+            Spacer(Modifier.height(4.dp))
+            Text("Tap to open · hold to skip a day", color = TextDim, fontSize = FS.s10, fontFamily = Body)
+            Spacer(Modifier.height(10.dp))
             habits.forEach { h ->   // manual order (reorder in the detail sheet)
                 HabitRow(h, today, todayDate, now) { detail = h }
                 Spacer(Modifier.height(8.dp))
@@ -117,12 +122,12 @@ fun HabitsScreen(onClose: () -> Unit) {
 }
 
 @Composable
-private fun OverallHeader(habits: List<Habit>, doneToday: Int, dueToday: Int, todayDate: LocalDate) {
+private fun OverallHeader(habits: List<Habit>, doneToday: Int, dueToday: Int) {
     val ctx = LocalContext.current
     val streak = HabitMetrics.overallStreak(ctx, habits)
     val rate = HabitMetrics.overallRate(ctx, habits, 30)
     val todayProgress = if (dueToday == 0) 0f else doneToday.toFloat() / dueToday
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Ring(progress = todayProgress, color = Mod.Mind, modifier = Modifier.size(64.dp), stroke = 6.dp) {
                 Text("$doneToday/$dueToday", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
@@ -159,8 +164,13 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
     val elapsedSec = if (running) ((now - timerStart) / 1000L).coerceAtLeast(0L) else 0L
     // tap opens detail; long-press skips/unskips today (streak freeze)
     Panel(
-        Modifier.fillMaxWidth().combinedClickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onTap, onLongClick = { Haptics.tick(ctx); LifeStores.toggleHabitSkip(ctx, h.id, today) }),
-        corner = 14.dp,
+        Modifier.fillMaxWidth().combinedClickable(indication = null, interactionSource = remember { MutableInteractionSource() }, role = androidx.compose.ui.semantics.Role.Button, onClick = onTap, onLongClick = {
+            val wasSkipped = LifeStores.habitSkipped(ctx, h.id, today)
+            LifeStores.toggleHabitSkip(ctx, h.id, today)
+            Haptics.tick(ctx)
+            AppFeedback.show(if (wasSkipped) "Unskipped" else "Skipped today — streak safe")
+        }),
+        corner = RElem,
     ) {
         Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -173,7 +183,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
                 when {
                     done -> Text("✓", color = Void, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                     skipped -> Text("–", color = Ivory.copy(alpha = 0.45f), fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
-                    auto -> Icon(Icons.Rounded.Bolt, null, tint = Ivory.copy(alpha = 0.35f), modifier = Modifier.size(11.dp))
+                    auto -> Icon(Icons.Rounded.Bolt, "Auto-tracked", tint = Ivory.copy(alpha = 0.35f), modifier = Modifier.size(11.dp))
                     else -> {}
                 }
             }
@@ -181,7 +191,7 @@ private fun HabitRow(h: Habit, today: String, todayDate: LocalDate, now: Long, o
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s13, fontFamily = Body); Spacer(Modifier.width(6.dp)) }
-                    Text(h.title, color = if (active) TextPrimary else TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(h.title, color = if (active) TextPrimary else TextDim, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (h.avoid) { Spacer(Modifier.width(6.dp)); Text("QUIT", color = Warn, fontSize = FS.s8, fontFamily = MicroLabel, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
                 }
                 Spacer(Modifier.height(2.dp))
@@ -287,8 +297,8 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (h.icon.isNotBlank()) { Text(h.icon, fontSize = FS.s20, fontFamily = Body); Spacer(Modifier.width(8.dp)) }
-                Text(h.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
+                Text(h.title, color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onDismiss), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp)) }
             }
             if (auto) {
                 Spacer(Modifier.height(4.dp))
@@ -342,7 +352,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
             // weekly trend sparkline
             SectionLabel("Last 8 weeks", accent = Mod.Mind)
             Spacer(Modifier.height(8.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Spark(
                     values = HabitMetrics.weeklyTrend(ctx, h, 8),
                     color = Mod.Mind,
@@ -395,11 +405,28 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                     Box(
                         Modifier.clip(RoundedCornerShape(11.dp)).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                            .pressScale { LifeStores.setHabitReminder(ctx, h.id, -1); HabitReminders.reschedule(ctx) }
+                            .pressScale { Haptics.tick(ctx); LifeStores.setHabitReminder(ctx, h.id, -1); HabitReminders.reschedule(ctx) }
                             .padding(horizontal = 14.dp, vertical = 10.dp),
                     ) { Text("Off", color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
                 }
             }
+            Spacer(Modifier.height(14.dp))
+
+            // skip today — alternative to long-press on row
+            val today = todayKey()
+            val isSkipped = LifeStores.habitSkipped(ctx, h.id, today)
+            Box(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                    .background(if (isSkipped) Mod.Mind.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.05f))
+                    .border(0.5.dp, if (isSkipped) Mod.Mind.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                    .pressScale {
+                        Haptics.tick(ctx)
+                        LifeStores.toggleHabitSkip(ctx, h.id, today)
+                        AppFeedback.show(if (isSkipped) "Unskipped" else "Skipped today — streak safe")
+                    }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) { Text(if (isSkipped) "Unskip today" else "Skip today — keep streak", color = if (isSkipped) Mod.Mind else TextMuted, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
             Spacer(Modifier.height(14.dp))
 
             // reorder
@@ -409,7 +436,7 @@ private fun HabitDetailSheet(initial: Habit, onDismiss: () -> Unit) {
                         Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
                             .background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                            .pressScale { LifeStores.moveHabit(ctx, h.id, up) }
+                            .pressScale { Haptics.tick(ctx); LifeStores.moveHabit(ctx, h.id, up) }
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center,
                     ) { Text(lbl, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold) }
@@ -571,13 +598,13 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
     @Suppress("UNUSED_EXPRESSION") LifeStores.rev
     val existingTitles = LifeStores.habits(ctx).map { it.title.lowercase() }.toSet()
     val existingMetrics = LifeStores.habits(ctx).mapNotNull { it.autoMetric.ifBlank { null } }.toSet()
-    var custom by remember { mutableStateOf("") }
+    var custom by rememberSaveable { mutableStateOf("") }
 
     JarvisSheet(onDismiss = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Add a habit", color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onDismiss), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp)) }
             }
             Spacer(Modifier.height(4.dp))
             Text("Auto ones fill themselves in from your data. Tap to add.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body)
@@ -607,7 +634,7 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
                     ) {
                         Text(p.icon, fontSize = FS.s13, fontFamily = Body)
                         Spacer(Modifier.width(6.dp))
-                        Text(p.title, color = if (added) TextDim else TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                        Text(p.title, color = if (added) TextDim else TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (added) { Spacer(Modifier.width(5.dp)); Text("✓", color = Mod.Mind, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                 }
@@ -641,15 +668,15 @@ private fun HabitCatalogSheet(onDismiss: () -> Unit, onBuild: () -> Unit) {
 @Composable
 private fun HabitBuilderSheet(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var emoji by remember { mutableStateOf("") }
-    var avoid by remember { mutableStateOf(false) }
-    var measurable by remember { mutableStateOf(false) }
-    var target by remember { mutableStateOf(20) }
-    var unit by remember { mutableStateOf("min") }
-    var mask by remember { mutableStateOf(0b1111111) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var emoji by rememberSaveable { mutableStateOf("") }
+    var avoid by rememberSaveable { mutableStateOf(false) }
+    var measurable by rememberSaveable { mutableStateOf(false) }
+    var target by rememberSaveable { mutableStateOf(20) }
+    var unit by rememberSaveable { mutableStateOf("min") }
+    var mask by rememberSaveable { mutableStateOf(0b1111111) }
     val emojis = listOf("⭐", "💪", "📖", "🧘", "🏃", "💧", "🥗", "😴", "🧠", "🎯", "🎸", "🧹", "💶", "☀️", "🚭", "📵")
-    val units = listOf("min", "reps", "glasses", "pages", "times", "km")
+    val units = listOf("min", "reps", "glasses", "pages", "times", Units.distLabelLower(ctx))
     val dayLabels = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
 
     @Composable
@@ -667,7 +694,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Build a habit", color = TextPrimary, fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).pressScale(onClick = onDismiss))
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onDismiss), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp)) }
             }
             Spacer(Modifier.height(14.dp))
             LifeField("Name (e.g. Read before bed)", name, Mod.Mind) { name = it }
@@ -677,10 +704,10 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 emojis.forEach { e ->
                     Box(
-                        Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                        Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
                             .background(if (emoji == e) Mod.Mind.copy(alpha = 0.2f) else Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, if (emoji == e) Mod.Mind.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                            .pressScale { emoji = if (emoji == e) "" else e },
+                            .pressScale { Haptics.tick(ctx); emoji = if (emoji == e) "" else e },
                         contentAlignment = Alignment.Center,
                     ) { Text(e, fontSize = FS.s17, fontFamily = Body) }
                 }
@@ -737,7 +764,7 @@ private fun HabitBuilderSheet(onDismiss: () -> Unit) {
                     .then(if (name.isNotBlank() && mask != 0) Modifier.pressScale {
                         Haptics.confirm(ctx)
                         LifeStores.addHabit(ctx, name, mask, emoji, "", 0, if (measurable) target else 0, if (measurable) unit else "", avoid)
-                        AppFeedback.show("Habit created")
+                        AppFeedback.show("Habit added")
                         onDismiss()
                     } else Modifier)
                     .padding(vertical = 13.dp),

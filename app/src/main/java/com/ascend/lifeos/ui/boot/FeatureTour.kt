@@ -34,13 +34,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.Hexagon
 import androidx.compose.material.icons.rounded.Psychology
-import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.SelfImprovement
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.Icon
@@ -95,60 +92,36 @@ private val SLIDES = listOf(
         features = listOf("Daily missions & streak", "Smart briefing", "Quick log in 3 seconds", "Command palette"),
     ),
     TourSlide(
-        overline = "TRAINING ENGINE",
-        title = "Train smarter, not harder",
-        body = "Evidence-based plans with progressive overload, recovery tracking and skill progressions. Every set is prescribed — volume, effort and rest are computed for you.",
+        overline = "TRAIN & FUEL",
+        title = "Body on autopilot",
+        body = "Evidence-based training with progressive overload, recovery tracking, and superset pairing. Log food by search, barcode, or recipe — adaptive calorie targets learn from your real metabolism.",
         accent = Mod.Train,
         icon = Icons.Rounded.FitnessCenter,
-        features = listOf("Auto-generated plans", "Progressive overload", "Muscle recovery map", "Superset pairing"),
+        features = listOf("Auto-generated plans", "Muscle recovery map", "345+ foods & barcode scanner", "Adaptive TDEE & weekly coach"),
     ),
     TourSlide(
-        overline = "NUTRITION",
-        title = "Fuel with precision",
-        body = "Log food by search, barcode or your own recipes. Adaptive calorie targets learn from your real metabolism. A weekly coach check-in keeps your macros honest.",
-        accent = Mod.Body,
-        icon = Icons.Rounded.Restaurant,
-        features = listOf("345+ foods & recipes", "Barcode scanner", "Adaptive TDEE", "Food quality scoring"),
-    ),
-    TourSlide(
-        overline = "DIGITAL WELLBEING",
-        title = "Guard your focus",
-        body = "Hard screen-time limits that actually hold. Morning blocks, wind-down rules, app-specific walls — with a casino where you can gamble for unlock time.",
-        accent = Mod.Fuel,
+        overline = "FOCUS & WELLBEING",
+        title = "Guard your time",
+        body = "Hard screen-time limits that actually hold — per-app walls, morning blocks, doomscroll detection. Plus breathing exercises, a wind-down routine, timer, and notes built in.",
+        accent = Mod.Guard,
         icon = Icons.Rounded.Shield,
-        features = listOf("Per-app limits", "Focus sessions", "Doomscroll detection", "Screen-time casino"),
+        features = listOf("Per-app limits & casino", "Focus sessions & tile", "Box & 4-7-8 breathing", "Wind-down evening routine"),
     ),
     TourSlide(
         overline = "LIFE SYSTEM",
-        title = "Everything in one place",
-        body = "Calendar with auto-scheduling, habit tracking, sleep protocol, finance with net worth, school timetable, flashcards — and Prime ties it all together into one daily index.",
-        accent = Mod.Guard,
-        icon = Icons.Rounded.CalendarMonth,
-        features = listOf("Calendar & time blocks", "Habit streaks", "Sleep & recovery", "Finance tracker"),
-    ),
-    TourSlide(
-        overline = "INTELLIGENCE",
-        title = "JARVIS learns you",
-        body = "Cross-module correlations, anomaly detection, forecasts — all from your own data. Prime gives you one number and three next actions. No guesswork.",
+        title = "One app, zero guesswork",
+        body = "Calendar, habits, sleep, finance, school — all connected. Prime distills everything into one readiness number and three next actions, powered by cross-module correlations from your own data.",
         accent = Mod.Skills,
         icon = Icons.Rounded.Psychology,
-        features = listOf("Prime readiness index", "Real correlations", "Smart directives", "Weekly report"),
-    ),
-    TourSlide(
-        overline = "TOOLKIT",
-        title = "Tools that replace apps",
-        body = "Breathing exercises with four patterns, stopwatch & countdown timer, quick notes, journal prompts — everything built in so you never need another app.",
-        accent = Mod.Calendar,
-        icon = Icons.Rounded.SelfImprovement,
-        features = listOf("Box & 4-7-8 breathing", "Timer & stopwatch", "Wind-down evening routine", "Quick notes & nap log"),
+        features = listOf("Calendar & habit streaks", "Sleep & recovery tracking", "Finance & net worth", "Prime readiness index"),
     ),
     TourSlide(
         overline = "YOUR RULES",
         title = "Everything is configurable",
-        body = "Tweak every threshold, every color boundary, every notification. Score thresholds, sleep debt warnings, step goals, water size — all in Settings. JARVIS adapts to you, not the other way around.",
+        body = "Every threshold, every notification, every color. JARVIS adapts to you, not the other way around. Find Settings in the System tab anytime.",
         accent = Mod.Finance,
         icon = Icons.Rounded.Settings,
-        features = listOf("Adjustable score thresholds", "Custom notification schedule", "Five visual themes", "Per-module accent colors"),
+        features = listOf("Adjustable score thresholds", "Custom notification schedule", "Seven visual themes", "Per-module accent colors"),
     ),
 )
 
@@ -159,6 +132,7 @@ fun FeatureTour(onComplete: () -> Unit) {
     val slide = SLIDES[page]
     var entered by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { delay(100); entered = true }
+    androidx.activity.compose.BackHandler(enabled = page > 0) { page-- }
 
     Box(Modifier.fillMaxSize().background(Void)) {
         // ambient nebula tinted to current slide
@@ -183,7 +157,7 @@ fun FeatureTour(onComplete: () -> Unit) {
                     "SKIP", color = TextDim, fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                        .pressScale { onComplete() }
+                        .pressScale { Haptics.tick(ftCtx); onComplete() }
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
@@ -250,7 +224,7 @@ fun FeatureTour(onComplete: () -> Unit) {
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SLIDES.indices.forEach { i ->
                         val w by animateFloatAsState(
                             if (i == page) 24f else 8f, tween(300), label = "dot$i",
@@ -260,9 +234,12 @@ fun FeatureTour(onComplete: () -> Unit) {
                         )
                         Box(
                             Modifier.height(8.dp).width(w.dp).clip(CircleShape)
-                                .background(slide.accent.copy(alpha = a)),
+                                .background(slide.accent.copy(alpha = a))
+                                .pressScale { Haptics.tick(ftCtx); page = i },
                         )
                     }
+                    Spacer(Modifier.width(6.dp))
+                    Text("${page + 1}/${SLIDES.size}", color = TextDim, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(Modifier.weight(1f))

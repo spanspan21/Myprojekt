@@ -1,5 +1,8 @@
 package com.ascend.lifeos.ui.life
 
+import androidx.compose.animation.animateContentSize
+import com.ascend.lifeos.ui.motion.Motion
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
@@ -47,10 +51,10 @@ fun NotesScreen(onClose: () -> Unit) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_EXPRESSION") LifeStores.rev
     val notes = LifeStores.notes(ctx)
-    var newText by remember { mutableStateOf("") }
-    var searchQuery by remember { mutableStateOf("") }
-    var editingId by remember { mutableStateOf<String?>(null) }
-    var editText by remember { mutableStateOf("") }
+    var newText by rememberSaveable { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var editText by rememberSaveable { mutableStateOf("") }
     val fmt = remember { DateTimeFormatter.ofPattern("dd.MM · HH:mm", Locale.getDefault()) }
 
     var armedNote by remember { mutableStateOf<String?>(null) }
@@ -69,13 +73,15 @@ fun NotesScreen(onClose: () -> Unit) {
                 .padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 100.dp),
         ) {
             JarvisHeader("Notes", "${notes.size} captured", Mod.Skills) {
-                Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp).clip(CircleShape).pressScale(onClick = onClose))
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onClose() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Close, "Close", tint = TextDim, modifier = Modifier.size(20.dp))
+                }
             }
             Spacer(Modifier.height(12.dp))
 
             // Search bar
             if (notes.size > 3) {
-                Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+                Panel(Modifier.fillMaxWidth(), corner = RElem) {
                     Row(
                         Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -93,11 +99,12 @@ fun NotesScreen(onClose: () -> Unit) {
                             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { searchFm.clearFocus() }),
                         )
                         if (searchQuery.isNotBlank()) {
-                            Spacer(Modifier.width(6.dp))
-                            Icon(
-                                Icons.Rounded.Close, "Clear search", tint = TextDim,
-                                modifier = Modifier.size(16.dp).clip(CircleShape).pressScale { searchQuery = "" },
-                            )
+                            Box(
+                                Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); searchQuery = "" },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(Icons.Rounded.Close, "Clear search", tint = TextDim, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
@@ -105,7 +112,7 @@ fun NotesScreen(onClose: () -> Unit) {
             }
 
             // New note input (multi-line)
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem) {
                 Column(Modifier.padding(12.dp)) {
                     OutlinedTextField(
                         value = newText, onValueChange = { newText = it.take(Prefs.int(ctx, Prefs.NOTE_CHAR_LIMIT, 1000)) },
@@ -151,7 +158,7 @@ fun NotesScreen(onClose: () -> Unit) {
                     val date = Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault())
                     val isEditing = editingId == id
 
-                    Panel(Modifier.fillMaxWidth(), corner = 14.dp) {
+                    Panel(Modifier.fillMaxWidth().animateContentSize(animationSpec = Motion.springSmoothOf()), corner = RElem) {
                         if (isEditing) {
                             Column(Modifier.padding(12.dp)) {
                                 OutlinedTextField(
@@ -176,7 +183,7 @@ fun NotesScreen(onClose: () -> Unit) {
                                     Box(
                                         Modifier.clip(RoundedCornerShape(10.dp))
                                             .background(Ivory.copy(alpha = 0.06f))
-                                            .pressScale { editingId = null }
+                                            .pressScale { Haptics.tick(ctx); editingId = null }
                                             .padding(horizontal = 14.dp, vertical = 8.dp),
                                     ) { Text("Cancel", color = TextDim, fontFamily = Body, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
                                 }
@@ -184,21 +191,19 @@ fun NotesScreen(onClose: () -> Unit) {
                         } else {
                             Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
                                 Column(Modifier.weight(1f)) {
-                                    Text(text, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, lineHeight = FS.s20)
+                                    Text(text, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, lineHeight = FS.s20, maxLines = 6, overflow = TextOverflow.Ellipsis)
                                     Spacer(Modifier.height(4.dp))
                                     Text(date.format(fmt), color = TextDim, fontFamily = Body, fontSize = FS.s10)
                                 }
-                                Spacer(Modifier.width(8.dp))
-                                Icon(
-                                    Icons.Rounded.Edit, "Edit note", tint = TextDim.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(16.dp).clip(CircleShape)
-                                        .pressScale { editingId = id; editText = text },
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Icon(
-                                    Icons.Rounded.Delete, "Delete note",
-                                    tint = if (armedNote == id) Crit else TextDim.copy(alpha = 0.3f),
-                                    modifier = Modifier.size(16.dp).clip(CircleShape)
+                                Box(
+                                    Modifier.size(36.dp).clip(CircleShape)
+                                        .pressScale { Haptics.tick(ctx); editingId = id; editText = text },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(Icons.Rounded.Edit, "Edit note", tint = TextDim.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
+                                }
+                                Box(
+                                    Modifier.size(36.dp).clip(CircleShape)
                                         .pressScale {
                                             if (armedNote == id) {
                                                 Haptics.confirm(ctx)
@@ -210,7 +215,10 @@ fun NotesScreen(onClose: () -> Unit) {
                                                 armedNote = id
                                             }
                                         },
-                                )
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(Icons.Rounded.Delete, "Delete note", tint = if (armedNote == id) Crit else TextDim.copy(alpha = 0.3f), modifier = Modifier.size(16.dp))
+                                }
                             }
                         }
                     }

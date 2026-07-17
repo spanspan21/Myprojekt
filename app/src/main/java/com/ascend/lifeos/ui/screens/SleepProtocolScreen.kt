@@ -63,10 +63,10 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         val avg7 = recent7.takeIf { it.isNotEmpty() }?.map { SleepProtocol.actualSleep(it) }?.average()?.toInt()
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
-        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "syncing from your watch…", Mod.Body) {}
+        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "syncing from your watch…", Mod.Body)
         Spacer(Modifier.height(18.dp))
 
         // ── sleep score hero — the ONE number for last night ─────────
@@ -74,7 +74,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         val sleepScore = Repo.sleepScore(h)
         val sleepDebt = Repo.sleepDebtMin()
         if (sleepScore != null || h?.sleepMin != null) {
-            Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RHero) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     val ssGood = Prefs.int(ctx, Prefs.SLEEP_SCORE_GOOD, 75)
                     val ssWarn = Prefs.int(ctx, Prefs.SLEEP_SCORE_WARN, 55)
@@ -121,7 +121,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         // ── nap logging ─────────────────────────────────────────────
         var napMin by remember { mutableIntStateOf(20) }
         var napLogged by remember { mutableStateOf(false) }
-        Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Panel(Modifier.fillMaxWidth(), corner = RElem) {
             Column(Modifier.padding(14.dp)) {
                 Text("Power nap", color = TextPrimary, fontFamily = Body, fontSize = FS.s13_5, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
@@ -136,7 +136,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp))
                                 .background(if (sel) Mod.Body.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
-                                .pressScale { napMin = m; napLogged = false }
+                                .pressScale { Haptics.tick(ctx); napMin = m; napLogged = false }
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                         ) {
                             Text(
@@ -164,7 +164,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
 
         // ── what this is, in one breath (plain language, P5) ─────────
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text(
                     "This tracks how long and how well you sleep — straight from your watch — and feeds your daily Readiness. " +
@@ -186,7 +186,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(10.dp))
         val lastMin = recent7.lastOrNull()?.let { SleepProtocol.actualSleep(it) }
         val consistency = sleepConsistency(recent7)
-        Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     val sleepNeed = Repo.sleepNeedMin()
@@ -210,8 +210,8 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         SectionLabel("Tonight")
         Spacer(Modifier.height(10.dp))
         if (restricting) {
-            val st = state!!
-            Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
+            val st = state ?: return@Column
+            Panel(Modifier.fillMaxWidth(), corner = RHero) {
                 Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -230,7 +230,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             }
         } else {
             val missing = (BASELINE_NIGHTS - logs.size).coerceAtLeast(0)
-            Panel(Modifier.fillMaxWidth(), corner = 22.dp) {
+            Panel(Modifier.fillMaxWidth(), corner = RHero) {
                 EmptyState(
                     Icons.Rounded.Bedtime,
                     if (missing > 0) "Log $missing more night${if (missing == 1) "" else "s"} to start"
@@ -247,7 +247,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         var refineOpen by remember { mutableStateOf(false) }
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                .pressScale { refineOpen = !refineOpen }
+                .pressScale { Haptics.tick(ctx); refineOpen = !refineOpen }
                 .padding(vertical = 6.dp, horizontal = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -273,7 +273,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         var up by remember { mutableIntStateOf(seed?.outOfBedMin ?: 6 * 60 + 30) }
         var saved by remember { mutableStateOf(false) }
 
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text(
                     "The one thing no sensor knows: how long you lay in bed before sleep. Correct it here — manual entries always beat synced ones.",
@@ -322,7 +322,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
         )
         Spacer(Modifier.height(10.dp))
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 val effs = logs.takeLast(14).map { SleepProtocol.efficiency(it).toFloat() }
                 val latest = effs.lastOrNull()
@@ -368,11 +368,11 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
             color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
         )
         Spacer(Modifier.height(10.dp))
-        Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+        Panel(Modifier.fillMaxWidth(), corner = RElem) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     if (restricting) {
-                        val st = state!!
+                        val st = state ?: return@Row
                         Text("Time in bed ${fmtDur(st.tibMin)}", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         Text(
                             "${SleepProtocol.formatMin(SleepProtocol.bedtimeFor(st))} → ${SleepProtocol.formatMin(st.anchorWakeMin)}" +
@@ -382,7 +382,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
                     } else {
                         Text("No window yet", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                         Text(
-                            "needs $BASELINE_NIGHTS baseline nights · floor ${fmtDur(SleepProtocol.FLOOR_MIN)}",
+                            "needs $BASELINE_NIGHTS baseline nights · floor ${fmtDur(SleepProtocol.floorMin(ctx))}",
                             color = TextDim, fontSize = FS.s11, fontFamily = Body,
                         )
                     }
@@ -406,7 +406,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         }
         adjustMsg?.let { msg ->
             Spacer(Modifier.height(8.dp))
-            Panel(Modifier.fillMaxWidth(), corner = 14.dp, line = Mod.Body.copy(alpha = 0.3f)) {
+            Panel(Modifier.fillMaxWidth(), corner = RElem, line = Mod.Body.copy(alpha = 0.3f)) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "WEEKLY ADJUST", color = Mod.Body, fontFamily = Display,
@@ -422,7 +422,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         // ── stimulus control ─────────────────────────────────────────
         SectionLabel("Stimulus control")
         Spacer(Modifier.height(10.dp))
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 RuleLine("Only to bed when sleepy")
                 RuleLine("Bed = sleep only")
@@ -435,7 +435,7 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         // ── hygiene ──────────────────────────────────────────────────
         SectionLabel("Hygiene")
         Spacer(Modifier.height(10.dp))
-        Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+        Panel(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 RuleLine("Caffeine cutoff 8 h before bed")
                 RuleLine("Screens dim in the evening, none in bed")

@@ -2,6 +2,8 @@ package com.ascend.lifeos.ui.hud
 
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -55,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -160,7 +163,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
     val p = Repo.profile()
 
     // ---- day cursor: 0 = today, 1 = yesterday, … — the backdating anchor ----
-    var dayOffset by remember { mutableIntStateOf(0) }
+    var dayOffset by rememberSaveable { mutableIntStateOf(0) }
     val dayKey = remember(dayOffset) {
         var k = todayKey(); repeat(dayOffset) { k = prevKey(k) }; k
     }
@@ -186,7 +189,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
     val gameDay by androidx.compose.runtime.produceState<String?>(null) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching {
-                val today = java.time.LocalDate.now().toEpochDay()
+                val today = com.ascend.lifeos.core.todayDate().toEpochDay()
                 CalendarDatabase.get(ctx).dao()
                     .eventsInRangeOnce(today, today)
                     .filter { it.type == "HOCKEY" && !it.allDay }
@@ -205,7 +208,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
 
     Box(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 110.dp),
         ) {
             JarvisHeader("Fuel", gameDay ?: contextLine(totals.kcal, p.kcalGoal, isToday), Mod.Fuel)
@@ -222,7 +225,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
             Spacer(Modifier.height(14.dp))
 
             // ---- macro arc-reactor ----
-            GlassPanel(Modifier.fillMaxWidth().pressScale { onMicros() }) {
+            GlassPanel(Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); onMicros() }) {
                 Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     MacroReactor(
                         pPct = fracRaw(totals.protein, p.proteinGoal),
@@ -252,7 +255,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                 val weekKeys = Repo.lastDayKeys(7)
                 val weekKcals = weekKeys.map { (Repo.dayFor(it)?.meals?.sumOf { m -> m.kcal } ?: 0) }
                 val weekProt = weekKeys.map { (Repo.dayFor(it)?.meals?.sumOf { m -> m.protein } ?: 0) }
-                if (weekKcals.count { it > 0 } >= 2) {
+                if (weekKcals.any { it > 0 }) {
                     Spacer(Modifier.height(10.dp))
                     GlassPanel(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -299,7 +302,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
                             // day labels
                             Row(Modifier.fillMaxWidth()) {
                                 dayLabels.forEach { label ->
-                                    Text(label, Modifier.weight(1f), color = TextMuted.copy(alpha = 0.5f), fontSize = FS.s9, fontFamily = Body, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                    Text(label, Modifier.weight(1f), color = TextDim, fontSize = FS.s10, fontFamily = Body, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                                 }
                             }
                             // protein row
@@ -414,7 +417,7 @@ private fun Dashboard(onMicros: () -> Unit, onStats: () -> Unit, onFasting: () -
         // ---- Quick-Add FAB — logs to the selected day ----
         Box(
             Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 22.dp, bottom = 96.dp)
-                .size(58.dp).clip(CircleShape).background(Mod.Fuel).pressScale { addOpen = true },
+                .size(58.dp).clip(CircleShape).background(Mod.Fuel).pressScale { Haptics.tick(ctx); addOpen = true },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.Add, "Add food", tint = Void, modifier = Modifier.size(28.dp)) }
     }
@@ -510,11 +513,12 @@ private fun DayCursor(offset: Int, dayKey: String, onPrev: () -> Unit, onNext: (
 
 @Composable
 private fun CursorArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
+    val caCtx = androidx.compose.ui.platform.LocalContext.current
     Box(
         Modifier.size(32.dp).clip(CircleShape)
             .background(Ivory.copy(alpha = if (enabled) 0.05f else 0.02f))
             .border(0.5.dp, if (enabled) HudLine else Ivory.copy(alpha = 0.04f), CircleShape)
-            .then(if (enabled) Modifier.pressScale(onClick = onClick) else Modifier),
+            .then(if (enabled) Modifier.pressScale { Haptics.tick(caCtx); onClick() } else Modifier),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label, tint = if (enabled) TextPrimary else TextDim.copy(alpha = 0.35f), modifier = Modifier.size(18.dp)) }
 }
@@ -542,10 +546,12 @@ private fun MacroReactor(pPct: Float, cPct: Float, fPct: Float, kcal: Int, kcalG
     )
     val gold = Champagne
     val left = kcalGoal - kcal
-    // Bigger, thicker, legible rings that can SHOW overshoot: the base arc fills to
-    // 100%, then any excess draws a second faint lap in the same hue, and a small
-    // gold pip marks a hit/over — 150/130 protein no longer looks like exactly 100%.
-    Box(Modifier.size(134.dp), contentAlignment = Alignment.Center) {
+    val reactorDesc = if (kcal == 0) "$kcalGoal kcal free"
+        else "$kcal of $kcalGoal kcal, ${if (left >= 0) "$left left" else "${-left} over"}"
+    Box(
+        Modifier.size(134.dp).semantics { contentDescription = reactorDesc },
+        contentAlignment = Alignment.Center,
+    ) {
         Canvas(Modifier.fillMaxSize()) {
             fun ring(inset: Float, pct: Float, color: Color, sw: Float) {
                 val sz = Size(size.width - 2 * inset, size.height - 2 * inset)
@@ -631,13 +637,18 @@ private fun CoachCheckInCard() {
         }.getOrNull()
     }
     val s = state
-    if (gone || s == null) return
+    if (gone) return
+    androidx.compose.animation.AnimatedVisibility(
+        visible = s != null,
+        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
+    ) { if (s == null) return@AnimatedVisibility
+    Column {
     Spacer(Modifier.height(14.dp))
     GlassPanel(
         Modifier.fillMaxWidth(),
         fill = Mod.Fuel.copy(alpha = 0.06f),
         line = Mod.Fuel.copy(alpha = 0.4f),
-        corner = 16.dp,
+        corner = RElem,
     ) {
         Column(Modifier.padding(14.dp).animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
             val c = s.checkIn
@@ -705,6 +716,7 @@ private fun CoachCheckInCard() {
                             HudChip("${r}%/wk", selected = kotlin.math.abs(currentRate - r) < 0.01) {
                                 Repo.setDietRate(r)
                                 refresh++
+                                AppFeedback.show("Rate set to ${r}%/wk")
                             }
                         }
                     }
@@ -728,6 +740,7 @@ private fun CoachCheckInCard() {
                         Modifier.clip(RoundedCornerShape(11.dp))
                             .background(Ivory.copy(alpha = 0.04f))
                             .pressScale {
+                                Haptics.tick(cctx)
                                 CoachRitual.snooze()
                                 gone = true
                             }
@@ -737,6 +750,8 @@ private fun CoachCheckInCard() {
             }
         }
     }
+    } // Column
+    } // AnimatedVisibility
 }
 
 @Composable
@@ -873,7 +888,7 @@ private fun HydrationCard(
         Row(Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.WaterDrop, null, tint = crest, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.WaterDrop, "Hydration", tint = crest, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("HYDRATION", color = if (goalReached) Champagne else Ivory.copy(alpha = 0.75f), fontSize = FS.s9_5, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, style = shadow)
                     if (goalReached) {
@@ -904,7 +919,7 @@ private fun HydrationCard(
                         },
                         color = if (bonusReason != null) Ivory.copy(alpha = 0.9f) else Ivory.copy(alpha = 0.62f),
                         fontSize = FS.s10, fontFamily = Body, fontWeight = if (bonusReason != null) FontWeight.SemiBold else FontWeight.Normal,
-                        maxLines = 1, style = shadow,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, style = shadow,
                     )
                     if (hot) {
                         val heatBonusL = Prefs.int(hCtx, Prefs.WATER_HEAT_BONUS, 300) / 1000f
@@ -912,7 +927,7 @@ private fun HydrationCard(
                     }
                     if (showHeat) {
                         Spacer(Modifier.width(7.dp))
-                        Text("+ Heat", color = Mod.Fuel, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.pressScale { onEnableHeat() })
+                        Text("+ Heat", color = Mod.Fuel, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold, style = shadow, modifier = Modifier.clip(RoundedCornerShape(6.dp)).pressScale { Haptics.tick(hCtx); onEnableHeat() }.padding(horizontal = 6.dp, vertical = 4.dp))
                     }
                 }
             }
@@ -953,15 +968,17 @@ private fun WaterButton(
     onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
+    val hCtx = androidx.compose.ui.platform.LocalContext.current
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Box(
         Modifier.size(size)
             .then(if (onLongClick != null)
                 Modifier.combinedClickable(
                     interactionSource = interaction, indication = null,
-                    onClick = onClick, onLongClick = onLongClick,
+                    role = androidx.compose.ui.semantics.Role.Button,
+                    onClick = { Haptics.tick(hCtx); onClick() }, onLongClick = onLongClick,
                 )
-            else Modifier.pressScale { onClick() })
+            else Modifier.pressScale { Haptics.tick(hCtx); onClick() })
             .clip(CircleShape)
             .background(if (filled) tint.copy(alpha = 0.26f) else Void.copy(alpha = 0.4f))
             .border(0.8.dp, tint.copy(alpha = if (filled) 0.6f else 0.35f), CircleShape),
@@ -975,6 +992,7 @@ private fun WaterButton(
 
 @Composable
 private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val f = Repo.data.fasting
     val protocol = FastingCalc.protocol(f.protocol)
     val elapsed = FastingCalc.elapsedHours(f.startEpoch)
@@ -984,7 +1002,7 @@ private fun FastingStrip(onOpen: () -> Unit, modifier: Modifier) {
         modifier.clip(RoundedCornerShape(14.dp))
             .background(Ivory.copy(alpha = 0.04f))
             .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
-            .pressScale { onOpen() }
+            .pressScale { Haptics.tick(ctx); onOpen() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1017,19 +1035,19 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
     val kcal = meals.sumOf { it.kcal }
     val logged = meals.isNotEmpty()
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(
             Modifier.fillMaxWidth().animateContentSize(Motion.springSmoothOf()),
         ) {
             Row(
-                Modifier.fillMaxWidth().then(if (logged) Modifier.pressScale { onToggle() } else Modifier).padding(horizontal = 15.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().then(if (logged) Modifier.pressScale { Haptics.tick(ctx); onToggle() } else Modifier).padding(horizontal = 15.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (logged) {
                     Box(Modifier.width(3.dp).height(18.dp).clip(RoundedCornerShape(2.dp)).background(Mod.Fuel.copy(alpha = 0.6f)))
                     Spacer(Modifier.width(10.dp))
                 }
-                Text(name, color = if (logged) TextPrimary else TextDim, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(name, color = if (logged) TextPrimary else TextDim, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 if (meals.isNotEmpty()) {
                     val protTotal = meals.sumOf { it.protein }
                     val protThresh = Prefs.int(ctx, Prefs.PROTEIN_PER_MEAL, 20)
@@ -1049,10 +1067,11 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
                             modifier = Modifier.pressScale {
                                 y.forEach { Repo.addFood(it.copy(id = "", ts = 0), dayKey) }
                                 Haptics.confirm(ctx)
+                                AppFeedback.show("${y.size} entries copied")
                             },
                         )
                     } else {
-                        Text("tap to add", color = TextDim.copy(alpha = 0.5f), fontSize = FS.s11, fontFamily = Body)
+                        Text("tap to add", color = TextDim, fontSize = FS.s11, fontFamily = Body)
                     }
                 }
             }
@@ -1095,7 +1114,7 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
                         var armed by remember(e.id) { mutableStateOf(false) }
                         LaunchedEffect(armed) { if (armed) { kotlinx.coroutines.delay(2500); armed = false } }
                         Box(
-                            Modifier.size(30.dp).clip(CircleShape).pressScale {
+                            Modifier.size(44.dp).clip(CircleShape).pressScale {
                                 if (armed) { Haptics.confirm(ctx); Repo.removeFood(e.id, dayKey); AppFeedback.show("Entry removed") }
                                 else { Haptics.warn(ctx); armed = true }
                             },
@@ -1106,7 +1125,7 @@ private fun MealSlot(name: String, code: String, meals: List<FoodEntry>, expande
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 15.dp, end = 15.dp, bottom = 12.dp)) {
-                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.pressScale { Haptics.success(ctx); Repo.saveMeal(name, meals); AppFeedback.show("Meal saved") })
+                    Text("＋ Save as meal", color = Mod.Fuel, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.success(ctx); Repo.saveMeal(name, meals); AppFeedback.show("Meal saved") }.padding(vertical = 8.dp, horizontal = 4.dp))
                 }
             }
         }
@@ -1152,6 +1171,7 @@ private fun GapFiller(totals: NutTotals, p: Profile, isToday: Boolean, dayKey: S
                     .pressScale {
                         Repo.addFood(pick.entry, dayKey)
                         Haptics.confirm(hCtx)
+                        AppFeedback.show("${pick.label} logged")
                     }
                     .padding(horizontal = 12.dp, vertical = 9.dp),
             ) {

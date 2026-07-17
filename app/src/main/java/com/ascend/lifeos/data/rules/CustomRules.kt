@@ -171,7 +171,7 @@ object CustomRules {
         RMetric.WATER -> Repo.today().water
         RMetric.STREAK -> Repo.profile().streak
         RMetric.CAL_BUSY_MIN -> runCatching {
-            val today = LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             CalendarDatabase.get(ctx).dao()
                 .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
                 .filter { !it.allDay && CalendarRepo.occursOn(it, today) }
@@ -191,9 +191,8 @@ object CustomRules {
             RAction.NOTIFY -> {}
             RAction.GUARD_TIGHT -> WellbeingStore.startFocus(ctx, 90)
             RAction.BEDTIME_EARLY -> {
-                com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.BEDTIME_EARLY_DAY, todayKey())
-                // and actually fire a wind-down reminder tonight (audit F6)
-                com.ascend.lifeos.data.Notifier.scheduleBedtime(ctx, 21, 30)
+                val bedH = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GREET_NIGHT_START, 22)
+                com.ascend.lifeos.data.Notifier.scheduleBedtime(ctx, bedH, 0)
             }
             RAction.TRAIN_EASY -> com.ascend.lifeos.data.Prefs.setString(ctx, com.ascend.lifeos.data.Prefs.TRAIN_EASY_DAY, todayKey())
         }

@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.theme.*
 
@@ -40,6 +41,7 @@ fun ProgressBar(progress: Float, color: Color = Accent, height: Dp = 7.dp, modif
 
 @Composable
 fun CheckBox(checked: Boolean, onClick: () -> Unit, dashed: Boolean = false) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val bg by animateColorAsState(if (checked) Accent else Color.Transparent, label = "cbbg")
     val border by animateColorAsState(if (checked) Accent else Line2, label = "cbborder")
     Box(
@@ -48,7 +50,7 @@ fun CheckBox(checked: Boolean, onClick: () -> Unit, dashed: Boolean = false) {
             .clip(RoundedCornerShape(9.dp))
             .background(bg)
             .border(BorderStroke(2.dp, border), RoundedCornerShape(9.dp))
-            .pressScale { onClick() },
+            .pressScale { Haptics.tick(ctx); onClick() },
         contentAlignment = Alignment.Center,
     ) {
         if (checked) Icon(Icons.Rounded.Check, "Checked", tint = Bg, modifier = Modifier.size(15.dp))

@@ -85,7 +85,8 @@ object SupersetPlanner {
             if (emitted[i]) continue
             val g = groupOf[i]
             if (g == 0) { out.add(strength[i]); emitted[i] = true; continue }
-            val partnerIdx = strength.indices.first { it != i && groupOf[it] == g }
+            val partnerIdx = strength.indices.firstOrNull { it != i && groupOf[it] == g }
+            if (partnerIdx == null) { out.add(strength[i]); emitted[i] = true; continue }
             val a = strength[i]; val b = strength[partnerIdx]
             val pairRest = maxOf(a.restSec, b.restSec)
             val aM = muscleOf(a.exerciseId); val bM = muscleOf(b.exerciseId)

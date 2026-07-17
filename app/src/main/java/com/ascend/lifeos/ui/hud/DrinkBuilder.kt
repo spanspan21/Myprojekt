@@ -26,11 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.CustomFood
@@ -127,16 +129,16 @@ fun DrinkBuilderPane(
     onAdded: () -> Unit,
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    var starred by remember { mutableStateOf(false) }
-    var tab by remember { mutableStateOf(0) } // 0 Kaffee & warm · 1 Kalt & Saft
+    var starred by rememberSaveable { mutableStateOf(false) }
+    var tab by rememberSaveable { mutableStateOf(0) } // 0 Kaffee & warm · 1 Kalt & Saft
     val bases = if (tab == 0) COFFEE_BASES else COLD_BASES
     var baseIdx by remember(tab) { mutableStateOf(0) }
-    var sizeIdx by remember { mutableStateOf(1) }       // M 200
-    var milkIdx by remember { mutableStateOf(0) }        // Vollmilch
+    var sizeIdx by rememberSaveable { mutableStateOf(1) }       // M 200
+    var milkIdx by rememberSaveable { mutableStateOf(0) }        // Vollmilch
     var shots by remember(baseIdx, tab) { mutableStateOf(bases[baseIdx].shots) }
-    var sugarTsp by remember { mutableStateOf(0) }       // TL à 4 g (16 kcal)
-    var sirup by remember { mutableStateOf(false) }      // 10 ml ≈ 34 kcal
-    var scoops by remember { mutableStateOf(1) }         // Whey 30 g
+    var sugarTsp by rememberSaveable { mutableStateOf(0) }       // TL à 4 g (16 kcal)
+    var sirup by rememberSaveable { mutableStateOf(false) }      // 10 ml ≈ 34 kcal
+    var scoops by rememberSaveable { mutableStateOf(1) }         // Whey 30 g
 
     val base = bases[baseIdx]
     val ml = SIZES[sizeIdx].second
@@ -167,7 +169,7 @@ fun DrinkBuilderPane(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
-                .background(Ivory.copy(alpha = 0.05f)).pressScale { onBack() },
+                .background(Ivory.copy(alpha = 0.05f)).pressScale { Haptics.tick(ctx); onBack() },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.ArrowBack, "Back", tint = TextPrimary, modifier = Modifier.size(18.dp)) }
         Spacer(Modifier.width(12.dp))
@@ -222,9 +224,9 @@ fun DrinkBuilderPane(
     }
 
     Spacer(Modifier.height(14.dp))
-    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(Modifier.fillMaxWidth().padding(14.dp)) {
-            Text(name, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2)
+            Text(name, color = TextPrimary, fontSize = FS.s13_5, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
             Text(
                 "$kcalI kcal · ${prot.roundToInt()} P · ${carb.roundToInt()} C · ${fat.roundToInt()} F · $ml ml",

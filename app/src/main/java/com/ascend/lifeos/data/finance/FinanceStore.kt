@@ -80,11 +80,9 @@ object FinanceStore {
     private fun prefs(ctx: Context): SharedPreferences =
         ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
-    private var idSeq = 0
-    private fun newId(prefix: String): String {
-        idSeq++
-        return "$prefix${System.currentTimeMillis()}x$idSeq"
-    }
+    private val idSeq = java.util.concurrent.atomic.AtomicInteger(0)
+    private fun newId(prefix: String): String =
+        "$prefix${System.currentTimeMillis()}x${idSeq.incrementAndGet()}"
 
     private fun array(ctx: Context, key: String): JSONArray =
         runCatching { JSONArray(prefs(ctx).getString(key, "[]") ?: "[]") }.getOrDefault(JSONArray())
@@ -174,15 +172,7 @@ object FinanceStore {
     fun move(ctx: Context, fromId: String, toId: String, cents: Long) {
         if (cents <= 0 || fromId == toId) return
         FinanceRoom.initIfNeeded(ctx)
-        val list = FinanceRoom.accounts()
-        if (list.none { it.id == fromId } || list.none { it.id == toId }) return
-        FinanceRoom.adjustBalance(fromId, -cents)
-        FinanceRoom.adjustBalance(toId, cents)
-    }
-
-    private fun adjustBalanceQuiet(ctx: Context, accountId: String, deltaCents: Long) {
-        FinanceRoom.initIfNeeded(ctx)
-        FinanceRoom.adjustBalance(accountId, deltaCents)
+        FinanceRoom.transferBalance(fromId, toId, cents)
     }
 
     // ─── Txn ↔ account bridge ───────────────────────────────────────────────
@@ -266,17 +256,6 @@ object FinanceStore {
         val linked = accountId?.takeIf { id -> FinanceRoom.accounts().any { it.id == id } }
         if (linked != null) FinanceRoom.adjustBalance(linked, t.amountCents)
         FinanceRoom.setTxnAccount(txnId, linked)
-    }
-
-    /** LifeStores caps txns at 1000 — drop mappings whose txn fell off the end. */
-    private fun pruneMapQuiet(ctx: Context, map: JSONObject) {
-        if (map.length() > 1200) {
-            val alive = LifeStores.txns(ctx).mapTo(HashSet()) { it.id }
-            val drop = ArrayList<String>()
-            for (k in map.keys()) if (k !in alive) drop.add(k)
-            drop.forEach { map.remove(it) }
-        }
-        putQuiet(ctx, "txn_acc", map.toString())
     }
 
     // ─── Budgets (per category, monthly) ────────────────────────────────────
@@ -371,7 +350,7 @@ object FinanceStore {
     /** Due = active, not booked this month, and this month's day is reached. */
     fun isDue(r: Recurring): Boolean {
         if (!r.active || bookedThisMonth(r)) return false
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         return today.dayOfMonth >= r.dayOfMonth.coerceAtMost(today.lengthOfMonth())
     }
 
@@ -572,12 +551,16 @@ object FinanceStore {
     }
 
     /** Average spend per day of this month so far, in cents (0 without spend). */
-    fun dailyAvgSpendCents(ctx: Context): Long =
-        LifeStores.monthSpend(ctx) / LocalDate.now().dayOfMonth
+    fun dailyAvgSpendCents(ctx: Context): Long {
+        val today = com.ascend.lifeos.core.todayDate()
+        return LifeStores.monthSpend(ctx) / today.dayOfMonth
+    }
 
     /** Honest projection: current daily average × days in month (0 without spend). */
-    fun projectedMonthEndCents(ctx: Context): Long =
-        dailyAvgSpendCents(ctx) * LocalDate.now().lengthOfMonth()
+    fun projectedMonthEndCents(ctx: Context): Long {
+        val today = com.ascend.lifeos.core.todayDate()
+        return dailyAvgSpendCents(ctx) * today.lengthOfMonth()
+    }
 
     /**
      * Consecutive days (back from today) whose spend stayed at or under the
@@ -586,7 +569,7 @@ object FinanceStore {
     fun daysUnderBudgetStreak(ctx: Context): Int {
         val budget = totalBudget(ctx)
         if (budget <= 0) return 0
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         val cap = budget / today.lengthOfMonth()
         val zone = ZoneId.systemDefault()
         val monthStart = today.withDayOfMonth(1).atStartOfDay(zone).toInstant().toEpochMilli()
@@ -731,7 +714,7 @@ object FinanceStore {
             val o = arr.getJSONObject(i)
             out.add(o.optLong("d") to o.optLong("c"))
         }
-        val today = LocalDate.now().toEpochDay()
+        val today = com.ascend.lifeos.core.todayDate().toEpochDay()
         val nw = netWorthCents(ctx)
         var changed = false
         if (out.isEmpty() || out.last().first != today) {

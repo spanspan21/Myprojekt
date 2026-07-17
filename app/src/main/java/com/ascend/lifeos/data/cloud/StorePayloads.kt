@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Calendar
 
 /**
  * Builds each non-core store as one composite document whose shape matches what
@@ -26,15 +25,19 @@ import java.util.Calendar
 object StorePayloads {
 
     fun appendAll(ctx: Context, add: (String, Any) -> Unit) {
-        runCatching { add("finance", finance(ctx)) }
-        runCatching { add("life", life(ctx)) }
-        runCatching { add("school", school(ctx)) }
-        runCatching { add("sleep", sleep(ctx)) }
-        runCatching { add("wellbeing", wellbeing(ctx)) }
-        runCatching { add("training", training(ctx)) }
-        runCatching { add("calendar", calendar(ctx)) }
-        runCatching { add("masterplan", masterplan(ctx)) }
-        runCatching { add("prime", prime(ctx)) }
+        fun tryAdd(key: String, block: () -> Any) {
+            runCatching { add(key, block()) }
+                .onFailure { android.util.Log.w("StorePayloads", "Skipped module '$key'", it) }
+        }
+        tryAdd("finance") { finance(ctx) }
+        tryAdd("life") { life(ctx) }
+        tryAdd("school") { school(ctx) }
+        tryAdd("sleep") { sleep(ctx) }
+        tryAdd("wellbeing") { wellbeing(ctx) }
+        tryAdd("training") { training(ctx) }
+        tryAdd("calendar") { calendar(ctx) }
+        tryAdd("masterplan") { masterplan(ctx) }
+        tryAdd("prime") { prime(ctx) }
     }
 
     // ── prime: the computed cross-module readiness report ─────────────────────
@@ -294,17 +297,11 @@ object StorePayloads {
 
     /** last n logical day keys ("yyyy-MM-dd", 6am rollover). */
     private fun recentDayKeys(n: Int): List<String> {
-        val out = ArrayList<String>(n)
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.HOUR_OF_DAY, -6)
-        for (i in 0 until n) {
-            out.add(
-                "%04d-%02d-%02d".format(
-                    cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)
-                )
-            )
-            cal.add(Calendar.DAY_OF_MONTH, -1)
+        var d = com.ascend.lifeos.core.todayDate()
+        return List(n) {
+            val key = "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
+            d = d.minusDays(1)
+            key
         }
-        return out
     }
 }

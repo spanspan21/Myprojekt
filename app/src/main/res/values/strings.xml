@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">JARVIS</string>
     <string name="guard_a11y_desc">Lets JARVIS Guard notice the instant a guarded app opens, so the lock screen appears immediately. JARVIS reads no screen content — window changes only, processed on-device.</string>
+    <string name="shortcut_log_food">Log Food</string>
+    <string name="shortcut_log_food_long">Quick-log a meal</string>
+    <string name="shortcut_workout">Workout</string>
+    <string name="shortcut_workout_long">Start a workout</string>
+    <string name="shortcut_water">Water</string>
+    <string name="shortcut_water_long">Track water intake</string>
 </resources>

@@ -64,7 +64,7 @@ object InsightMiner {
             val a = ms[i]; val b = ms[j]
             val common = a.series.keys intersect b.series.keys
             if (common.size < 10) continue
-            val pairs = common.map { a.series[it]!! to b.series[it]!! }
+            val pairs = common.mapNotNull { k -> a.series[k]?.let { av -> b.series[k]?.let { bv -> av to bv } } }
             // common.size >= 10 is guaranteed above, so PrimeMath's minN=10 never trips;
             // constant series: old fn returned 0.0 (→ skipped below), PrimeMath returns
             // null (→ skipped here) — same outcome.
@@ -75,7 +75,7 @@ object InsightMiner {
             val dir = if (r > 0) "higher" else "lower"
             val text = "On days with more ${a.label}, your ${b.label} runs $dir " +
                 "(r=%.2f · n=${common.size}).".format(r)
-            if (best == null || abs(r) > abs(best!!.r)) best = Insight(key, text, common.size, r)
+            if (best == null || abs(r) > abs(best.r)) best = Insight(key, text, common.size, r)
         }
         return best
     }

@@ -291,7 +291,7 @@ object WellbeingStore {
     /** Unlock buckets for the last 7 days keyed by weekday, 0 = Monday … 6 = Sunday. */
     fun hourHistory(ctx: Context): Map<Int, IntArray> {
         val out = HashMap<Int, IntArray>()
-        val today = LocalDate.now()
+        val today = com.ascend.lifeos.core.todayDate()
         for (i in 0..6) {
             val d = today.minusDays(i.toLong())
             val raw = prefs(ctx).getString("hours_$d", null) ?: continue

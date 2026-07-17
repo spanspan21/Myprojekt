@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.motion.pressScale
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.ActivityStore
@@ -58,11 +60,11 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
 
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 100.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 120.dp),
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp).pressScale { Haptics.tick(ctx); onBack() })
+                Box(Modifier.size(44.dp).clip(CircleShape).pressScale { Haptics.tick(ctx); onBack() }, contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = TextMuted, modifier = Modifier.size(22.dp)) }
                 Spacer(Modifier.width(12.dp))
                 Text("Statistics", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
             }
@@ -73,7 +75,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
         item {
             SectionLabel("Volume (recent workouts)", accent = Mod.Train)
             Spacer(Modifier.height(10.dp))
-            GlassPanel(Modifier.fillMaxWidth().height(180.dp), corner = 18.dp) {
+            GlassPanel(Modifier.fillMaxWidth().height(180.dp)) {
                 VolumeGraph(sessions.take(12).reversed(), Modifier.fillMaxSize().padding(16.dp))
             }
             Spacer(Modifier.height(22.dp))
@@ -106,7 +108,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             // below stay on the full list — a PR is a PR wherever it happened.
             val weekLoads by produceState(initialValue = FloatArray(8), actRev) {
                 value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    val today = java.time.LocalDate.now().toEpochDay()
+                    val today = com.ascend.lifeos.core.todayDate().toEpochDay()
                     val byDay = ActivityStore
                         .countedLoadByEpochDay(actCtx, today - 55, today)
                     FloatArray(8).also { arr ->
@@ -120,7 +122,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             if (acts.isNotEmpty()) {
                 SectionLabel("Activity load (8 weeks)", accent = Mod.Train)
                 Spacer(Modifier.height(10.dp))
-                GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                GlassPanel(Modifier.fillMaxWidth()) {
                     ActivityWeekBars(weekLoads, Modifier.fillMaxWidth().height(120.dp).padding(16.dp))
                 }
                 Spacer(Modifier.height(12.dp))
@@ -130,7 +132,7 @@ fun StatsScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                     if (bests.isNotEmpty()) {
                         val ty = ActivityTypes.byId(t)
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text("${ty?.emoji ?: "⚡"} ${ty?.label ?: t}", color = TextPrimary, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                             Text(
                                 bests.joinToString("  ") { "${it.emoji} ${it.value}" },
                                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
@@ -277,7 +279,7 @@ private fun MuscleHeatmap(sessions: List<SessionWithSets>, allExercises: List<Ex
     )
     val maxVol = muscleMap.values.maxOrNull()?.coerceAtLeast(1) ?: 1
 
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(Modifier.padding(16.dp)) {
             displayMuscles.forEach { muscle ->
                 val vol = muscleMap[muscle] ?: 0
@@ -334,7 +336,7 @@ private fun FrequencyCalendar(sessions: List<SessionWithSets>) {
     }
 
     val weeks = 12
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Row(
             Modifier.padding(14.dp).horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -366,7 +368,7 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
     val date = SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(Date(pr.date))
     val isToday = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).let { it.format(Date(pr.date)) == it.format(Date()) }
     GlassPanel(
-        Modifier.fillMaxWidth(), corner = 12.dp,
+        Modifier.fillMaxWidth(), corner = RMicro,
         fill = if (isToday) Amber.copy(alpha = 0.04f) else HudFill,
         line = if (isToday) Amber.copy(alpha = 0.3f) else HudLine,
     ) {
@@ -380,7 +382,7 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (isToday) {
                         Spacer(Modifier.width(6.dp))
                         Text("NEW", color = Amber, fontSize = FS.s8, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
@@ -389,7 +391,7 @@ private fun PrRow(pr: PersonalRecordEntity, onClick: () -> Unit = {}) {
                 Text(prLabel(pr.type), color = TextDim, fontSize = FS.s10, fontFamily = Body)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(prValueStr(pr), color = Amber, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                Text(prValueStr(ctx, pr), color = Amber, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
                 Text(date, color = TextDim, fontSize = FS.s10, fontFamily = Body)
             }
         }
@@ -402,10 +404,10 @@ private fun prLabel(t: PrType) = when (t) {
     PrType.LONGEST_HOLD -> "Longest Hold"
 }
 
-private fun prValueStr(pr: PersonalRecordEntity) = when (pr.type) {
+private fun prValueStr(ctx: android.content.Context, pr: PersonalRecordEntity) = when (pr.type) {
     PrType.MAX_REPS -> "${pr.value.toInt()} Reps"
-    PrType.MAX_WEIGHT -> "${"%.1f".format(pr.value)} kg"
+    PrType.MAX_WEIGHT -> Units.fmtWeight(ctx, pr.value.toDouble())
     PrType.MAX_VOLUME -> "${pr.value.toInt()} Vol"
-    PrType.EST_1RM -> "${"%.1f".format(pr.value)} kg"
+    PrType.EST_1RM -> Units.fmtWeight(ctx, pr.value.toDouble())
     PrType.LONGEST_HOLD -> "${pr.value.toInt()}s"
 }

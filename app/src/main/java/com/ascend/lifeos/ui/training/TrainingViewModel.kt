@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ascend.lifeos.data.ActivityStore
 import com.ascend.lifeos.data.Notifier
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.SoundFx
@@ -34,15 +35,19 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     // ── Observable state ────────────────────────────────────────────────────
 
     val exercises: StateFlow<List<ExerciseEntity>> = dao.allExercises()
+        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val recentSessions: StateFlow<List<SessionWithSets>> = dao.recentSessions(20)
+        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val recentPrs: StateFlow<List<PersonalRecordEntity>> = dao.recentPrs(10)
+        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val progressions: StateFlow<List<UserProgressionEntity>> = dao.allProgressions()
+        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // ── Active workout state ────────────────────────────────────────────────
@@ -178,8 +183,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             // session, then write the new one at the chosen slot
             runCatching {
                 val dao = CalendarRepo.dao(getApplication())
-                val from = java.time.LocalDate.now().minusDays(14).toEpochDay()
-                val to = java.time.LocalDate.now().plusDays(21).toEpochDay()
+                val from = com.ascend.lifeos.core.todayDate().minusDays(14).toEpochDay()
+                val to = com.ascend.lifeos.core.todayDate().plusDays(21).toEpochDay()
                 dao.eventsInRangeOnce(from, to)
                     .filter { it.type == EventType.TRAINING.name && it.note == "plan" && it.title == session.name }
                     .forEach { dao.delete(it.id) }
@@ -237,7 +242,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         // A deload is a real 7-day week: restore it from prefs each time we build the
         // plan, so it survives an app restart and expires on its own after the week.
         val deloadUntil = Prefs.int(getApplication(), Prefs.DELOAD_UNTIL, 0)
-        deloadActive = deloadUntil > 0 && java.time.LocalDate.now().toEpochDay().toInt() < deloadUntil
+        deloadActive = deloadUntil > 0 && com.ascend.lifeos.core.todayDate().toEpochDay().toInt() < deloadUntil
         // An automation (a fired TRAIN_EASY rule) can force today into an easy,
         // deload-style session — this is what makes that action real end-to-end,
         // reusing the tested deload path rather than new plan logic (audit F3/F5).
@@ -255,7 +260,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         muscleFreshness = fresh
         // exam within the next 7 days → trimmed volume
         val examSoon = runCatching {
-            val today = java.time.LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             CalendarRepo.dao(getApplication())
                 .eventsInRangeOnce(today.toEpochDay(), today.plusDays(7).toEpochDay())
                 .any { it.type == EventType.EXAM.name }
@@ -291,6 +296,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             seasonPhase = Prefs.string(getApplication(), Prefs.SEASON_PHASE, ""),
             highStrain = highStrain,
             daysSinceLastSession = daysSince,
+            mevSets = Prefs.int(getApplication(), Prefs.MEV_SETS, VolumeModel.MEV_SETS_PER_EX),
+            mrvSets = Prefs.int(getApplication(), Prefs.MRV_SETS, VolumeModel.MRV_SETS_PER_EX),
         )
         weekPlan = plan
         placements = runCatching {
@@ -339,7 +346,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun scheduleWeek() = viewModelScope.launch(Dispatchers.IO) {
         val p = Repo.data.profile
         runCatching { PlanGenerator.schedule(getApplication(), placements, p.sessionLen) }
-        scheduledOk = true
+            .onSuccess { scheduledOk = true }
+            .onFailure { scheduledOk = false }
     }
 
     var rescheduleNote by mutableStateOf<String?>(null)
@@ -365,7 +373,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             exercises = session.exercises.map { pe ->
                 TemplateExercise(
                     exerciseId = pe.exerciseId,
-                    exerciseName = pe.name + (pe.vestKg?.let { " · vest ${it}kg" } ?: ""),
+                    exerciseName = pe.name + (pe.vestKg?.let { " · vest ${Units.fmtWeightShort(getApplication(), it.toDouble())}" } ?: ""),
                     targetSets = pe.sets,
                     targetReps = if (pe.holdSec != null) pe.holdSec else pe.repsHigh,
                     restSeconds = pe.restSec,
@@ -403,6 +411,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     // ── Start workout ───────────────────────────────────────────────────────
 
     fun startWorkout(template: WorkoutTemplate?) {
+        if (activeSessionId != null) return
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         unlockCreditedThisSession.clear()
@@ -452,11 +461,13 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     // reorder only while the session is still untouched — if a set
                     // already landed in the ~100ms window, keep the user's ground
-                    if (reordered.size == activeExercises.size &&
-                        activeCurrentExIndex == 0 && activeExercises.all { it.loggedSets.isEmpty() }
-                    ) {
-                        activeExercises.clear()
-                        activeExercises.addAll(reordered)
+                    withContext(Dispatchers.Main) {
+                        if (reordered.size == activeExercises.size &&
+                            activeCurrentExIndex == 0 && activeExercises.all { it.loggedSets.isEmpty() }
+                        ) {
+                            activeExercises.clear()
+                            activeExercises.addAll(reordered)
+                        }
                     }
                 }
             }
@@ -767,8 +778,8 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         if (Prefs.bool(ctx, Prefs.REST_NOTIFICATION, true)) {
             runCatching {
                 Notifier.ensureChannel(ctx)
-                val n = androidx.core.app.NotificationCompat.Builder(ctx, Notifier.CHANNEL)
-                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                val n = androidx.core.app.NotificationCompat.Builder(ctx, Notifier.CH_TRAINING)
+                    .setSmallIcon(com.ascend.lifeos.R.drawable.ic_notif)
                     .setContentTitle("Rest · ${seconds}s")
                     .setContentText("Back under the bar when it ends")
                     .setUsesChronometer(true)
@@ -786,7 +797,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun adjustRestTimer(delta: Int) {
         restTimerTotal = (restTimerTotal + delta).coerceIn(15, 600)
         val elapsed = ((System.currentTimeMillis() - restTimerStartedAt) / 1000).toInt()
-        restTimerRemaining = restTimerTotal - elapsed
+        restTimerRemaining = (restTimerTotal - elapsed).coerceAtLeast(0)
     }
 
     fun skipRestTimer() { restTimerRunning = false; restTimerRemaining = 0 }
@@ -794,7 +805,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun tickRestTimer() {
         if (!restTimerRunning) return
         val elapsed = ((System.currentTimeMillis() - restTimerStartedAt) / 1000).toInt()
-        restTimerRemaining = restTimerTotal - elapsed
+        restTimerRemaining = (restTimerTotal - elapsed).coerceAtLeast(0)
     }
 
     // ── Finish workout ──────────────────────────────────────────────────────
@@ -802,16 +813,25 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun finishWorkout() {
         val sid = activeSessionId ?: return
         val now = System.currentTimeMillis()
-        val totalSets = activeExercises.sumOf { it.loggedSets.size }
-        val totalReps = activeExercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps } }
-        val tonnage = activeExercises.sumOf { ex -> ex.loggedSets.sumOf { ((it.weight ?: 0f) * it.reps).toInt() } }
-        val durMin = ((now - activeStartedAt) / 60_000).toInt()
+        val exercises = activeExercises.toList()
         val sessionName = activeTemplateName
+        val startedAt = activeStartedAt
+
+        // Clear active state atomically BEFORE any async work — a rapid
+        // finish→start must not have its new exercises wiped by the stale clear.
+        activeSessionId = null
+        activeExercises.clear()
+        restTimerRunning = false
+
+        val totalSets = exercises.sumOf { it.loggedSets.size }
+        val totalReps = exercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps } }
+        val tonnage = exercises.sumOf { ex -> ex.loggedSets.sumOf { ((it.weight ?: 0f) * it.reps).toInt() } }
+        val durMin = ((now - startedAt) / 60_000).toInt()
 
         // muscles this session actually hit (for the summary heat view)
         val byId = ExerciseSeed.ALL_EXERCISES.associateBy { it.id }
         val prim = HashSet<Muscle>(); val sec = HashSet<Muscle>()
-        activeExercises.filter { it.loggedSets.isNotEmpty() }.forEach { ex ->
+        exercises.filter { it.loggedSets.isNotEmpty() }.forEach { ex ->
             byId[ex.exerciseId]?.let { e -> prim.add(e.primaryMuscle); sec.addAll(e.secondaryMuscles) }
         }
         sec.removeAll(prim)
@@ -819,7 +839,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.upsertSession(WorkoutSessionEntity(
                 id = sid, templateId = null, templateName = sessionName,
-                startedAt = activeStartedAt, finishedAt = now, isComplete = true,
+                startedAt = startedAt, finishedAt = now, isComplete = true,
                 totalSets = totalSets, totalReps = totalReps, durationMinutes = durMin,
             ))
             val lastReps = runCatching { dao.lastRepsForTemplate(sessionName, sid) }.getOrNull() ?: 0
@@ -845,9 +865,6 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { TrainingReschedule.recordTrainedNow(getApplication()) }
         }
 
-        activeSessionId = null
-        activeExercises.clear()
-        restTimerRunning = false
     }
 
     fun cancelWorkout() {
@@ -955,7 +972,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     fun activateDeload() {
         // Persist a real 7-day deload week, then rebuild NOW so the lighter sessions
         // (2 sets, no vest, softer holds) show immediately instead of on next hub entry.
-        val until = java.time.LocalDate.now().toEpochDay().toInt() + 7
+        val until = com.ascend.lifeos.core.todayDate().toEpochDay().toInt() + 7
         Prefs.setInt(getApplication(), Prefs.DELOAD_UNTIL, until)
         deloadActive = true
         regeneratePlan()
@@ -997,16 +1014,21 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun startOfToday(): Long {
         val c = Calendar.getInstance()
-        c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0)
+        c.set(Calendar.HOUR_OF_DAY, 6); c.set(Calendar.MINUTE, 0)
         c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
+        if (c.timeInMillis > System.currentTimeMillis()) c.add(Calendar.DAY_OF_YEAR, -1)
         return c.timeInMillis
     }
 
     private fun startOfWeek(): Long {
         val c = Calendar.getInstance()
-        c.set(Calendar.DAY_OF_WEEK, c.firstDayOfWeek)
-        c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0)
+        val prefStart = if (Prefs.string(getApplication(), Prefs.WEEK_START, "monday") == "sunday")
+            Calendar.SUNDAY else Calendar.MONDAY
+        c.firstDayOfWeek = prefStart
+        c.set(Calendar.DAY_OF_WEEK, prefStart)
+        c.set(Calendar.HOUR_OF_DAY, 6); c.set(Calendar.MINUTE, 0)
         c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
+        if (c.timeInMillis > System.currentTimeMillis()) c.add(Calendar.WEEK_OF_YEAR, -1)
         return c.timeInMillis
     }
 }

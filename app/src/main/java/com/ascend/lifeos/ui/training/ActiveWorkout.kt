@@ -1,12 +1,16 @@
 package com.ascend.lifeos.ui.training
 
 import android.content.Context
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.draw.alpha
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
 import com.ascend.lifeos.data.SoundFx
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,12 +41,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.*
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.motion.sharedHero
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.ascend.lifeos.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.math.PI
@@ -85,9 +93,11 @@ fun ActiveWorkoutScreen(
     var armedCancel by remember { mutableStateOf(false) }
     LaunchedEffect(armedCancel) { if (armedCancel) { delay(2500); armedCancel = false } }
 
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
             Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
+            state = listState,
             contentPadding = PaddingValues(top = 12.dp, bottom = 130.dp),
         ) {
             // ── Header (the Hub's session card morphs into this row) ────
@@ -97,14 +107,14 @@ fun ActiveWorkoutScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(vm.activeTemplateName, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold)
+                        Text(vm.activeTemplateName, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text("$elapsedMin min", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                     }
                     // form-check camera
                     Box(
                         Modifier.clip(RoundedCornerShape(12.dp)).background(Ivory.copy(alpha = 0.05f))
                             .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
-                            .pressScale { formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
+                            .pressScale { Haptics.tick(ctx); formVideoOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                     ) { Icon(Icons.Rounded.Videocam, "Form video", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     // experimental rep counter (Settings → Training)
                     if (Prefs.bool(ctx, Prefs.AUTO_COUNT, false)) {
@@ -112,7 +122,7 @@ fun ActiveWorkoutScreen(
                         Box(
                             Modifier.clip(RoundedCornerShape(12.dp)).background(Ivory.copy(alpha = 0.05f))
                                 .border(0.5.dp, HudLine, RoundedCornerShape(12.dp))
-                                .pressScale { repCounterOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
+                                .pressScale { Haptics.tick(ctx); repCounterOpen = true }.padding(horizontal = 11.dp, vertical = 9.dp),
                         ) { Icon(Icons.Rounded.Visibility, "Rep counter", tint = TextMuted, modifier = Modifier.size(16.dp)) }
                     }
                     Spacer(Modifier.width(8.dp))
@@ -121,7 +131,7 @@ fun ActiveWorkoutScreen(
                             .background(Red.copy(alpha = if (armedCancel) 0.25f else 0.12f))
                             .border(0.5.dp, Red.copy(alpha = if (armedCancel) 0.6f else 0.3f), RoundedCornerShape(12.dp))
                             .pressScale {
-                                if (armedCancel) { Haptics.confirm(ctx); vm.cancelWorkout(); onFinish() }
+                                if (armedCancel) { Haptics.confirm(ctx); vm.cancelWorkout(); AppFeedback.show("Workout cancelled"); onFinish() }
                                 else { Haptics.warn(ctx); armedCancel = true }
                             }.padding(horizontal = 14.dp, vertical = 9.dp),
                     ) { Text(if (armedCancel) "Sure?" else "Cancel", color = Red, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
@@ -130,10 +140,16 @@ fun ActiveWorkoutScreen(
             }
 
             // ── Rest timer at top ───────────────────────────────────────
-            if (vm.restTimerRunning) {
-                item {
-                    RestTimerCard(vm)
-                    Spacer(Modifier.height(14.dp))
+            item {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = vm.restTimerRunning,
+                    enter = androidx.compose.animation.expandVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeIn(),
+                    exit = androidx.compose.animation.shrinkVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeOut(),
+                ) {
+                    Column {
+                        RestTimerCard(vm)
+                        Spacer(Modifier.height(14.dp))
+                    }
                 }
             }
 
@@ -164,14 +180,14 @@ fun ActiveWorkoutScreen(
                     WarmupGen.forSession(vm.activeExercises.firstOrNull()?.exerciseId, allEx)
                 }
                 if (items.isNotEmpty()) {
-                    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+                    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
                         Column(
                             Modifier
                                 .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                         ) {
                             Row(
-                                Modifier.fillMaxWidth().pressScale { warmupOpen = !warmupOpen },
+                                Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); warmupOpen = !warmupOpen },
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text("WARM-UP", color = Amber, fontSize = FS.s10, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
@@ -183,7 +199,7 @@ fun ActiveWorkoutScreen(
                                 items.forEach { w ->
                                     var done by remember(w.name) { mutableStateOf(false) }
                                     Row(
-                                        Modifier.fillMaxWidth().pressScale { done = !done }.padding(vertical = 4.dp),
+                                        Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); done = !done }.padding(vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Box(
@@ -196,7 +212,7 @@ fun ActiveWorkoutScreen(
                                             w.name,
                                             color = if (done) TextDim else TextMuted,
                                             fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
-                                            modifier = Modifier.weight(1f),
+                                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                                         )
                                         Text(w.detail, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
                                     }
@@ -244,14 +260,16 @@ fun ActiveWorkoutScreen(
                 )
                 Spacer(Modifier.height(12.dp))
             }
-            if (!vm.restTimerRunning) {
+            AnimatedVisibility(visible = !vm.restTimerRunning) {
                 val totalSets = vm.activeExercises.sumOf { it.loggedSets.size }
                 // der teuerste Moment im Kraftsport: der letzte Satz (Kap. 22) —
                 // eine Information, kein Nag
                 val toTarget = Repo.recoveryScore()?.let { rec ->
+                    val rGood = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
+                    val rWarn = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
                     val lo = when {
-                        rec >= 75 -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14)
-                        rec >= 50 -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10)
+                        rec >= rGood -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14)
+                        rec >= rWarn -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10)
                         else -> Prefs.int(ctx, Prefs.STRAIN_RED_LO, 4)
                     }
                     lo - vm.todaySetsLive
@@ -277,7 +295,7 @@ fun ActiveWorkoutScreen(
         }
 
         // ── camera tools ────────────────────────────────────────────────
-        if (formVideoOpen) {
+        AnimatedVisibility(visible = formVideoOpen, enter = fadeIn(tween(200)), exit = fadeOut(tween(200))) {
             Box(Modifier.fillMaxSize().background(Void)) {
                 FormVideoScreen(
                     exercise = vm.activeExercises.getOrNull(vm.activeCurrentExIndex)?.exerciseName ?: "",
@@ -285,7 +303,7 @@ fun ActiveWorkoutScreen(
                 )
             }
         }
-        if (repCounterOpen) {
+        AnimatedVisibility(visible = repCounterOpen, enter = fadeIn(tween(200)), exit = fadeOut(tween(200))) {
             RepCounterOverlay(
                 onUseCount = { counted ->
                     vm.activeExercises.getOrNull(vm.activeCurrentExIndex)?.let { ex ->
@@ -312,14 +330,14 @@ private fun ExerciseSetLogger(
     ctx: Context,
     onOpenDetail: (String) -> Unit = {},
 ) {
-    var reps by remember(ex.exerciseId) { mutableStateOf("${ex.targetReps}") }
-    var weight by remember(ex.exerciseId) { mutableStateOf("") }
-    var rpe by remember(ex.exerciseId) { mutableStateOf("") }
-    var tempo by remember(ex.exerciseId) { mutableStateOf("") }
-    var note by remember(ex.exerciseId) { mutableStateOf("") }
-    var setType by remember(ex.exerciseId) { mutableStateOf(SetType.NORMAL) }
-    var holdSec by remember(ex.exerciseId) { mutableStateOf("") }
-    var showAdvanced by remember(ex.exerciseId) { mutableStateOf(false) }
+    var reps by rememberSaveable(ex.exerciseId) { mutableStateOf("${ex.targetReps}") }
+    var weight by rememberSaveable(ex.exerciseId) { mutableStateOf("") }
+    var rpe by rememberSaveable(ex.exerciseId) { mutableStateOf("") }
+    var tempo by rememberSaveable(ex.exerciseId) { mutableStateOf("") }
+    var note by rememberSaveable(ex.exerciseId) { mutableStateOf("") }
+    var setType by rememberSaveable(ex.exerciseId) { mutableStateOf(SetType.NORMAL) }
+    var holdSec by rememberSaveable(ex.exerciseId) { mutableStateOf("") }
+    var showAdvanced by rememberSaveable(ex.exerciseId) { mutableStateOf(false) }
     var ghost by remember(ex.exerciseId) { mutableStateOf<String?>(null) }
     var target by remember(ex.exerciseId) { mutableStateOf<String?>(null) }
 
@@ -348,7 +366,7 @@ private fun ExerciseSetLogger(
                     last.weight?.let { w -> weight = if (w % 1f == 0f) "${w.toInt()}" else "$w" }
                     ghost = buildString {
                         append("Last: ${last.reps} reps")
-                        last.weight?.let { append(" · ${it}kg") }
+                        last.weight?.let { append(" · ${Units.fmtWeightShort(ctx, it.toDouble())}") }
                         last.rpe?.let { append(" · RPE $it") }
                     }
                 }
@@ -374,17 +392,18 @@ private fun ExerciseSetLogger(
     var linkOpen by remember(ex.exerciseId) { mutableStateOf(false) }
 
     GlassPanel(
-        Modifier.fillMaxWidth(), corner = 18.dp,
+        Modifier.fillMaxWidth(),
         line = ssColor?.copy(alpha = 0.35f) ?: HudLine,
     ) {
         Column(Modifier.animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(catIcon(exCategory ?: ExCategory.PUSH), null, tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                Icon(catIcon(exCategory ?: ExCategory.PUSH), (exCategory ?: ExCategory.PUSH).name.lowercase(), tint = Accent.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 // name opens the exercise deep dive (trend, PRs, history)
                 Text(
                     ex.exerciseName, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f).pressScale { onOpenDetail(ex.exerciseId) },
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).pressScale { Haptics.tick(ctx); onOpenDetail(ex.exerciseId) },
                 )
                 Text("${ex.loggedSets.size}/${ex.targetSets} sets", color = Accent, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
@@ -432,7 +451,7 @@ private fun ExerciseSetLogger(
                 Text(
                     if (linkOpen) "▾ Superset with…" else "⛓ Superset with…",
                     color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.pressScale { linkOpen = !linkOpen }.padding(vertical = 2.dp),
+                    modifier = Modifier.pressScale { Haptics.tick(ctx); linkOpen = !linkOpen }.padding(vertical = 2.dp),
                 )
                 AnimatedVisibility(linkOpen) {
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -454,7 +473,7 @@ private fun ExerciseSetLogger(
                 // you don't set it. The stepper below logs what you actually got.
                 Text("PRESCRIBED", color = Accent, fontSize = FS.s8_5, fontFamily = Display, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(2.dp))
-                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s16)
+                Text(it, color = Accent.copy(alpha = 0.9f), fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, lineHeight = FS.s16, maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
             Spacer(Modifier.height(10.dp))
             // the movement, drawn on the REAL anatomical body — the muscles this
@@ -486,7 +505,7 @@ private fun ExerciseSetLogger(
             Text(if (isHold) "Seconds held" else "Reps you got", color = TextDim, fontSize = FS.s11, fontFamily = Body, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             ghost?.let {
                 Spacer(Modifier.height(4.dp))
-                Text(it, color = Accent.copy(alpha = 0.7f), fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                Text(it, color = Accent.copy(alpha = 0.7f), fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             }
             // before the first set: the session target (double progression);
             // once sets land, live RPE autoregulation takes over the same slot
@@ -534,7 +553,7 @@ private fun ExerciseSetLogger(
                                 .background(Accent.copy(alpha = 0.10f))
                                 .border(0.5.dp, Accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                                 .padding(horizontal = 14.dp, vertical = 14.dp),
-                        ) { Text("${prescribedVest} kg", color = Accent, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                        ) { Text(Units.fmtWeight(ctx, prescribedVest.toDouble()), color = Accent, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                 }
                 GlassField("RPE", rpe, KeyboardType.Number, Modifier.weight(if (prescribedVest != null) 0.7f else 1f)) { rpe = it }
@@ -543,7 +562,7 @@ private fun ExerciseSetLogger(
                 weight.toFloatOrNull()?.takeIf { it > 0 }?.let { w ->
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Total system weight ${"%.1f".format(w + profileW.weightKg)} kg · load locked to the plan",
+                        "Total system weight ${Units.fmtWeight(ctx, (w + profileW.weightKg).toDouble())} · load locked to the plan",
                         color = TextDim, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     )
                 }
@@ -560,7 +579,7 @@ private fun ExerciseSetLogger(
             Text(
                 if (showAdvanced) "▾ Advanced" else "▸ Advanced",
                 color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                modifier = Modifier.pressScale { showAdvanced = !showAdvanced }.padding(vertical = 4.dp),
+                modifier = Modifier.pressScale { Haptics.tick(ctx); showAdvanced = !showAdvanced }.padding(vertical = 4.dp),
             )
             AnimatedVisibility(showAdvanced) {
                 Column {
@@ -573,13 +592,13 @@ private fun ExerciseSetLogger(
                     }
                     Spacer(Modifier.height(10.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        GlassField("Tempo (3-1-2-0)", tempo, KeyboardType.Text, Modifier.weight(1f)) { tempo = it }
+                        GlassField("Tempo (3-1-2-0)", tempo, KeyboardType.Text, Modifier.weight(1f), imeAction = ImeAction.Next) { tempo = it }
                         // For hold moves the seconds live in the main stepper; the
                         // Advanced hold field is only for adding a hold to a rep move.
-                        if (!isHold) GlassField("Hold (sec)", holdSec, KeyboardType.Number, Modifier.weight(0.6f)) { holdSec = it }
+                        if (!isHold) GlassField("Hold (sec)", holdSec, KeyboardType.Number, Modifier.weight(0.6f), imeAction = ImeAction.Next) { holdSec = it }
                     }
                     Spacer(Modifier.height(8.dp))
-                    GlassField("Note", note, KeyboardType.Text, Modifier.fillMaxWidth()) { note = it }
+                    GlassField("Note", note, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = ImeAction.Next) { note = it }
                     // External-load override — only for the rare case the plan didn't
                     // prescribe a vest but you genuinely added weight. Not the main dial.
                     if (prescribedVest == null) {
@@ -593,13 +612,13 @@ private fun ExerciseSetLogger(
             // ── Log button with dynamic text ───────────────────────
             val setNum = ex.loggedSets.size + 1
             val btnText = "Log set $setNum"
-            HudButton(btnText, Modifier.fillMaxWidth()) {
+            val repVal = if (isHold) 1 else (reps.toIntOrNull() ?: 0)
+            HudButton(btnText, Modifier.fillMaxWidth().alpha(if (repVal > 0) 1f else 0.4f)) {
+                if (repVal <= 0) { AppFeedback.show("Enter reps first"); return@HudButton }
                 Haptics.confirm(ctx)
-                // Holds: the stepper value IS the seconds → route to holdSeconds,
-                // count the hold as one rep so set/volume math stays sane.
                 vm.logSet(
                     exerciseId = ex.exerciseId,
-                    reps = if (isHold) 1 else (reps.toIntOrNull() ?: 0),
+                    reps = repVal,
                     weight = weight.toFloatOrNull(),
                     rpe = rpe.toIntOrNull(),
                     tempo = tempo.ifBlank { null },
@@ -617,7 +636,8 @@ private fun ExerciseSetLogger(
 private fun StepperButton(label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(56.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.06f))
-            .border(0.5.dp, HudLine, CircleShape).pressScale(onClick = onClick),
+            .border(0.5.dp, HudLine, CircleShape).pressScale(onClick = onClick)
+            .semantics { contentDescription = if (label == "+") "Increase" else "Decrease" },
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.Bold) }
 }
@@ -639,15 +659,15 @@ private fun SetRow(
     var eWeight by remember(set.id) { mutableStateOf("") }
     var eRpe by remember(set.id) { mutableStateOf("") }
 
-    GlassPanel(Modifier.fillMaxWidth(), corner = 12.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RMicro) {
         Column(Modifier.animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
             Row(Modifier.fillMaxWidth()) {
                 Box(Modifier.width(3.dp).height(44.dp).background(color))
                 Row(
                     Modifier.weight(1f)
                         .pressScale {
+                            Haptics.tick(ctx)
                             if (!editing) {
-                                // prefill from the row — the sweaty-hands edit path
                                 eMain = if (isHold) "${set.holdSeconds}" else "${set.reps}"
                                 eWeight = set.weight?.let { if (it % 1f == 0f) "${it.toInt()}" else "$it" } ?: ""
                                 eRpe = set.rpe?.toString() ?: ""
@@ -664,7 +684,7 @@ private fun SetRow(
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         val parts = mutableListOf(if (isHold) "${set.holdSeconds}s hold" else "${set.reps} Reps")
-                        set.weight?.let { parts.add("${it}kg") }
+                        set.weight?.let { parts.add(Units.fmtWeightShort(ctx, it.toDouble())) }
                         set.rpe?.let { parts.add("RPE $it") }
                         Text(parts.joinToString(" · "), color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                         val meta = mutableListOf(setTypeLabel(set.setType))
@@ -676,22 +696,24 @@ private fun SetRow(
                     }
                     var armedDel by remember { mutableStateOf(false) }
                     LaunchedEffect(armedDel) { if (armedDel) { delay(2500); armedDel = false } }
-                    Icon(
-                        if (armedDel) Icons.Rounded.Delete else Icons.Rounded.Close,
-                        if (armedDel) "Tap again" else "Delete set",
-                        tint = if (armedDel) Crit else TextDim.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp).pressScale {
-                            if (armedDel) { Haptics.confirm(ctx); onDelete() }
-                            else { Haptics.warn(ctx); armedDel = true }
-                        },
-                    )
+                    Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                        if (armedDel) { Haptics.confirm(ctx); onDelete() }
+                        else { Haptics.warn(ctx); armedDel = true }
+                    }, contentAlignment = Alignment.Center) {
+                        Icon(
+                            if (armedDel) Icons.Rounded.Delete else Icons.Rounded.Close,
+                            if (armedDel) "Tap again" else "Delete set",
+                            tint = if (armedDel) Crit else TextDim.copy(alpha = 0.5f),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
             if (editing) {
                 Column(Modifier.padding(start = 15.dp, end = 12.dp, bottom = 10.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        GlassField(if (isHold) "Sec" else "Reps", eMain, KeyboardType.Number, Modifier.weight(1f)) { eMain = it }
-                        GlassField("kg", eWeight, KeyboardType.Decimal, Modifier.weight(1f)) { eWeight = it }
+                        GlassField(if (isHold) "Sec" else "Reps", eMain, KeyboardType.Number, Modifier.weight(1f), imeAction = ImeAction.Next) { eMain = it }
+                        GlassField(Units.weightLabel(ctx), eWeight, KeyboardType.Decimal, Modifier.weight(1f), imeAction = ImeAction.Next) { eWeight = it }
                         GlassField("RPE", eRpe, KeyboardType.Number, Modifier.weight(0.8f)) { eRpe = it }
                     }
                     Spacer(Modifier.height(8.dp))
@@ -721,7 +743,7 @@ private fun SetRow(
 @Composable
 private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -729,19 +751,18 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
             Text("↺", color = TextDim, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(10.dp))
             Text(
-                "Satz gelöscht · $reps Reps",
+                "Set deleted · $reps Reps",
                 color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                "Rückgängig",
+                "Undo",
                 color = Accent, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.tick(ctx); onUndo() }.padding(horizontal = 12.dp, vertical = 8.dp),
             )
-            Icon(
-                Icons.Rounded.Close, "Dismiss", tint = TextDim.copy(alpha = 0.5f),
-                modifier = Modifier.size(16.dp).pressScale(onClick = onDismiss),
-            )
+            Box(Modifier.size(44.dp).clip(CircleShape).pressScale(onClick = onDismiss), contentAlignment = Alignment.Center) {
+                Icon(Icons.Rounded.Close, "Dismiss", tint = TextDim.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+            }
         }
     }
 }
@@ -750,7 +771,8 @@ private fun UndoDeleteBar(reps: Int, onUndo: () -> Unit, onDismiss: () -> Unit) 
 
 @Composable
 private fun RestTimerCard(vm: TrainingViewModel) {
-    GlassPanel(Modifier.fillMaxWidth(), corner = 20.dp, fill = Void.copy(alpha = 0.95f)) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    GlassPanel(Modifier.fillMaxWidth(), fill = Void.copy(alpha = 0.95f)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                 val fraction = if (vm.restTimerTotal > 0) (vm.restTimerRemaining.toFloat() / vm.restTimerTotal).coerceIn(0f, 1f) else 0f
@@ -790,7 +812,7 @@ private fun RestTimerCard(vm: TrainingViewModel) {
                         Box(
                             Modifier.clip(RoundedCornerShape(8.dp))
                                 .background(if (sel) Accent.copy(alpha = 0.16f) else Color.Transparent)
-                                .pressScale { vm.adjustRestTimer(sec - vm.restTimerTotal) }
+                                .pressScale { Haptics.tick(ctx); vm.adjustRestTimer(sec - vm.restTimerTotal) }
                                 .padding(horizontal = 7.dp, vertical = 3.dp),
                         ) {
                             Text("${sec}s", color = if (sel) Accent else TextDim, fontSize = FS.s9_5, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -840,20 +862,20 @@ fun PrCelebration(pr: PersonalRecordEntity, onDismiss: () -> Unit) {
                 scaleX = pop.value; scaleY = pop.value
                 this.alpha = ((pop.value - 0.6f) / 0.4f).coerceIn(0f, 1f)
             },
-            corner = 24.dp,
+            corner = RHero,
             fill = Champagne.copy(alpha = 0.08f * alpha),
             line = Champagne.copy(alpha = 0.4f * alpha),
         ) {
             Column(Modifier.padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("NEW PR", color = Champagne, fontSize = FS.s22, fontFamily = Body, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
                 Spacer(Modifier.height(8.dp))
-                Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(pr.exerciseName, color = TextPrimary, fontSize = FS.s16, fontFamily = Body, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
                 val valueStr = when (pr.type) {
                     PrType.MAX_REPS -> "${pr.value.toInt()} Reps"
-                    PrType.MAX_WEIGHT -> "${"%.1f".format(pr.value)} kg"
+                    PrType.MAX_WEIGHT -> Units.fmtWeight(ctx, pr.value.toDouble())
                     PrType.MAX_VOLUME -> "${pr.value.toInt()} Vol"
-                    PrType.EST_1RM -> "${"%.1f".format(pr.value)} kg (est 1RM)"
+                    PrType.EST_1RM -> "${Units.fmtWeight(ctx, pr.value.toDouble())} (est 1RM)"
                     PrType.LONGEST_HOLD -> "${pr.value.toInt()}s Hold"
                 }
                 // die Leistung steht größer als das Etikett (Kap. 20)
@@ -910,6 +932,7 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
             color = Accent.copy(alpha = 0.85f), fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(6.dp))
                 .pressScale {
+                    Haptics.tick(ctx)
                     val i = PlateMath.BARS.indexOfFirst { it.id == barId }
                     val next = PlateMath.BARS[(i + 1) % PlateMath.BARS.size].id
                     barId = next
@@ -929,10 +952,10 @@ private fun PlateHint(targetKg: Double, ctx: Context) {
         }
         load.plates.forEach { p -> PlateChip(p) }
         Spacer(Modifier.width(3.dp))
-        val kgStr = if (load.achievedKg % 1.0 == 0.0) "${load.achievedKg.toInt()}" else "%.1f".format(load.achievedKg)
+        val kgStr = if (load.achievedKg % 1.0 == 0.0) "${load.achievedKg.toInt()}" else String.format(java.util.Locale.ROOT, "%.1f", load.achievedKg)
         Text(
             buildString {
-                append("= $kgStr kg")
+                append("= ${String.format(java.util.Locale.ROOT, "%.1f", Units.kgToDisplay(ctx, kgStr.toDoubleOrNull() ?: 0.0))} ${Units.weightLabel(ctx)}")
                 if (bar.twoSided) append(" · per side shown")
                 if (!load.exact) append(" · closest")
             },

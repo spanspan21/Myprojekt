@@ -1,5 +1,7 @@
 package com.ascend.lifeos.ui.masterplan
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.TrackChanges
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -61,16 +64,33 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
     }
     val accent = active?.let { Color(it.domain.accentColor) } ?: Accent
 
+    val loaded by androidx.compose.runtime.produceState(false) {
+        kotlinx.coroutines.delay(300)
+        value = true
+    }
+
     Box(Modifier.fillMaxSize()) {
         // The constellation itself is the full-bleed background.
-        Crossfade(targetState = active != null, label = "vault", animationSpec = tween(400)) { loaded ->
-            if (loaded && active != null) {
+        Crossfade(targetState = active != null, label = "vault", animationSpec = tween(400)) { hasActive ->
+            if (hasActive && active != null) {
                 SkillNetworkCanvas(
                     nodes = active.nodes,
                     onNodeClick = { openNodeId = it },
                     accent = accent,
                     modifier = Modifier.fillMaxSize(),
                 )
+            } else if (loaded && domains.isEmpty()) {
+                Box(Modifier.fillMaxSize()) {
+                    VoidBackground(Accent)
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        com.ascend.lifeos.ui.kit.EmptyState(
+                            androidx.compose.material.icons.Icons.Rounded.TrackChanges,
+                            "No skill domains yet",
+                            "Add a domain in Masterplan to see your constellation here",
+                            com.ascend.lifeos.ui.theme.Mod.Skills,
+                        )
+                    }
+                }
             } else {
                 Box(Modifier.fillMaxSize()) {
                     VoidBackground(Accent)
@@ -92,7 +112,7 @@ fun SkillVaultScreen(vm: MasterPlanViewModel = viewModel()) {
             Text("SKILL VAULT", color = TextMuted, fontSize = FS.s11, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
             if (active != null) {
                 Spacer(Modifier.height(2.dp))
-                Text(active.domain.title, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.Bold)
+                Text(active.domain.title, color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Spacer(Modifier.height(12.dp))
             Row(
@@ -144,7 +164,7 @@ private fun DomainChip(
     ) {
         Box(Modifier.width(7.dp).height(7.dp).clip(RoundedCornerShape(4.dp)).background(accent))
         Spacer(Modifier.width(8.dp))
-        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+        Text(title, color = if (selected) TextPrimary else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.width(8.dp))
         Text("${(progress * 100).toInt()}%", color = if (selected) accent else TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
     }

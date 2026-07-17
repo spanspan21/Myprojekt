@@ -38,7 +38,7 @@ import java.time.LocalDate
  */
 @Composable
 fun WeeklyReviewCard(onOpenReport: () -> Unit, modifier: Modifier = Modifier) {
-    val dow = LocalDate.now().dayOfWeek
+    val dow = com.ascend.lifeos.core.todayDate().dayOfWeek
     if (dow != DayOfWeek.SUNDAY && dow != DayOfWeek.MONDAY) return
     val ctx = LocalContext.current
 
@@ -54,7 +54,7 @@ fun WeeklyReviewCard(onOpenReport: () -> Unit, modifier: Modifier = Modifier) {
     }
     val s = stats ?: return
 
-    Panel(modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SectionLabel("Week in review", accent = Mod.Home)
             Spacer(Modifier.height(12.dp))

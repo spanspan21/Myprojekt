@@ -1,6 +1,10 @@
 package com.ascend.lifeos.ui.training
 
+import androidx.compose.ui.draw.alpha
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.ascend.lifeos.data.ActivityStore
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.Repo
@@ -9,6 +13,7 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.kit.ShimmerPanel
 import com.ascend.lifeos.ui.kit.TickerNumber
@@ -78,12 +83,18 @@ fun TrainingHub(
     val progs by vm.progressions.collectAsState()
     val profile = vm.fitnessProfile
     val ctx = LocalContext.current
+    var resumeTick by remember { mutableIntStateOf(0) }
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(owner) {
+        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) resumeTick++ }
+        owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
+    }
     // The assignment is the plan; templates + free workout are a deliberate
     // detour, collapsed by default so they aren't an equal-weight escape hatch.
     var offPlanOpen by remember { mutableStateOf(false) }
     var historyEditorFor by remember { mutableStateOf<WorkoutSessionEntity?>(null) }
 
-    LaunchedEffect(progs, profile != null) {
+    LaunchedEffect(progs, profile != null, resumeTick) {
         if (profile != null) vm.regeneratePlan() else vm.refreshFreshness()
         vm.autoRescheduleCheck()
         vm.checkAbandonedSession()
@@ -95,22 +106,20 @@ fun TrainingHub(
     ) {
         // ── Header ──────────────────────────────────────────────────────
         item {
-            Text("Training", color = TextPrimary, fontFamily = Display, fontSize = FS.s27, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
-            Spacer(Modifier.height(6.dp))
             val lastInfo = vm.lastSplitInfo()
-            if (lastInfo.isNotEmpty()) {
-                Text(lastInfo, color = TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium)
-                Spacer(Modifier.height(4.dp))
-            }
+            JarvisHeader("Training", context = lastInfo.ifEmpty { null }, accent = Mod.Train)
+            Spacer(Modifier.height(6.dp))
             if (profile == null) {
                 Text("Next split: ${vm.suggestedSplit()}", color = Mod.Train, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             // Whoop-style strain target: recovery decides how hard today may be
             if (Prefs.bool(ctx, Prefs.STRAIN_TARGET_ON, true)) {
                 Repo.recoveryScore()?.let { rec ->
+                    val rGood = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
+                    val rWarn = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
                     val (lo, hi) = when {
-                        rec >= 75 -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14) to Prefs.int(ctx, Prefs.STRAIN_GREEN_HI, 20)
-                        rec >= 50 -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10) to Prefs.int(ctx, Prefs.STRAIN_AMBER_HI, 14)
+                        rec >= rGood -> Prefs.int(ctx, Prefs.STRAIN_GREEN_LO, 14) to Prefs.int(ctx, Prefs.STRAIN_GREEN_HI, 20)
+                        rec >= rWarn -> Prefs.int(ctx, Prefs.STRAIN_AMBER_LO, 10) to Prefs.int(ctx, Prefs.STRAIN_AMBER_HI, 14)
                         else -> Prefs.int(ctx, Prefs.STRAIN_RED_LO, 4) to Prefs.int(ctx, Prefs.STRAIN_RED_HI, 8)
                     }
                     Spacer(Modifier.height(3.dp))
@@ -118,8 +127,8 @@ fun TrainingHub(
                     val strainLabel = if (doneSets > 0) "Strain: $doneSets/$lo–$hi sets today (recovery $rec)"
                         else "Today's target: $lo–$hi sets (recovery $rec)"
                     val strainZone = when {
-                        rec >= 75 -> "Full volume"
-                        rec >= 50 -> "Moderate"
+                        rec >= rGood -> "Full volume"
+                        rec >= rWarn -> "Moderate"
                         else -> "Light day"
                     }
                     Text(
@@ -182,11 +191,15 @@ fun TrainingHub(
             item {
                 GlassPanel(
                     Modifier.fillMaxWidth(),
-                    fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.35f), corner = 14.dp,
+                    fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.35f), corner = RElem,
                 ) {
                     Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Resume ${s.templateName}?", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Row {
+                                Text("Resume ", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Text(s.templateName, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                                Text("?", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            }
                             val startedAgoMin = ((System.currentTimeMillis() - s.startedAt) / 60_000L).toInt()
                             Text(
                                 "Interrupted ${startedAgoMin} min ago — your logged sets are safe.",
@@ -211,11 +224,11 @@ fun TrainingHub(
         vm.rescheduleNote?.let { note ->
             item {
                 GlassPanel(
-                    Modifier.fillMaxWidth().pressScale { vm.dismissRescheduleNote() },
-                    fill = Purple.copy(alpha = 0.06f), line = Purple.copy(alpha = 0.35f), corner = 14.dp,
+                    Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); vm.dismissRescheduleNote() },
+                    fill = Purple.copy(alpha = 0.06f), line = Purple.copy(alpha = 0.35f), corner = RElem,
                 ) {
                     Row(Modifier.padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(note, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text(note, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                         Text("✓", color = Purple, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
@@ -242,22 +255,24 @@ fun TrainingHub(
                 SectionLabel("Next session", accent = Mod.Train)
                 Spacer(Modifier.height(10.dp))
                 val plan = vm.weekPlan
-                Crossfade(targetState = plan != null && plan.sessions.isNotEmpty(), label = "nextSession", animationSpec = tween(400)) { hasData ->
-                    if (!hasData) {
-                        ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = 16.dp)
-                    } else {
+                Crossfade(targetState = if (plan == null) 0 else if (plan.sessions.isNotEmpty()) 1 else 2, label = "nextSession", animationSpec = tween(400)) { state ->
+                    when (state) {
+                    0 -> ShimmerPanel(Modifier.fillMaxWidth(), height = 72.dp, corner = RElem)
+                    2 -> EmptyState(Icons.Rounded.FitnessCenter, "No sessions planned", "Complete the fitness assessment to generate your week", Mod.Train, actionLabel = "Start Assessment", onAction = onOpenAssess)
+                    else -> {
                         Column {
                             plan?.note?.let {
-                                Text(it, color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                                Text(it, color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 3, overflow = TextOverflow.Ellipsis)
                                 Spacer(Modifier.height(8.dp))
                             }
-                            val hero = plan!!.sessions.first()
+                            val hero = plan?.sessions?.firstOrNull() ?: return@Crossfade
                             NextSessionHero(
                                 session = hero,
                                 placement = vm.placements.find { it.session.index == hero.index },
                                 done = hero.name in vm.weekDoneNames,
                             ) { vm.startPlannedSession(hero); onStartWorkout() }
                         }
+                    }
                     }
                 }
                 Spacer(Modifier.height(18.dp))
@@ -311,14 +326,19 @@ fun TrainingHub(
                             Text("✓ Auto-scheduled — past sessions cleared", color = Accent, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.width(8.dp))
+                        var armedReplan by remember { mutableStateOf(false) }
+                        LaunchedEffect(armedReplan) { if (armedReplan) { kotlinx.coroutines.delay(2500); armedReplan = false } }
                         Box(
                             Modifier.clip(RoundedCornerShape(11.dp))
-                                .background(Ivory.copy(alpha = 0.05f))
-                                .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
-                                .pressScale { Haptics.confirm(ctx); vm.regeneratePlan(); AppFeedback.show("Plan regenerated") }
+                                .background(if (armedReplan) Warn.copy(alpha = 0.10f) else Ivory.copy(alpha = 0.05f))
+                                .border(0.5.dp, if (armedReplan) Warn.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(11.dp))
+                                .pressScale {
+                                    if (armedReplan) { Haptics.confirm(ctx); vm.regeneratePlan(); AppFeedback.show("Plan regenerated") }
+                                    else { Haptics.warn(ctx); armedReplan = true }
+                                }
                                 .padding(horizontal = 13.dp, vertical = 8.dp),
                         ) {
-                            Text("Re-plan now", color = TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(if (armedReplan) "Tap to confirm" else "Re-plan now", color = if (armedReplan) Warn else TextMuted, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
                     }
                 } else {
@@ -340,11 +360,13 @@ fun TrainingHub(
             }
 
             // ── Skill focus: the chain you're closest to levelling ──────
-            item {
-                SectionLabel("Skill focus", accent = Mod.Skills)
-                Spacer(Modifier.height(10.dp))
-                SkillFocusCard(progs, onOpenTestDay)
-                Spacer(Modifier.height(22.dp))
+            if (progs.isNotEmpty()) {
+                item {
+                    SectionLabel("Skill focus", accent = Mod.Skills)
+                    Spacer(Modifier.height(10.dp))
+                    SkillFocusCard(progs, onOpenTestDay)
+                    Spacer(Modifier.height(22.dp))
+                }
             }
         }
 
@@ -353,7 +375,7 @@ fun TrainingHub(
             item {
                 SectionLabel("Muscle status", accent = Mod.Body)
                 Spacer(Modifier.height(10.dp))
-                GlassPanel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                GlassPanel(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp)) {
                         MuscleHeatMap(
                             freshness = fresh.map,
@@ -414,7 +436,7 @@ fun TrainingHub(
         item {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                    .pressScale { offPlanOpen = !offPlanOpen }.padding(vertical = 6.dp),
+                    .pressScale { Haptics.tick(ctx); offPlanOpen = !offPlanOpen }.padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SectionLabel("Off-plan · Extra", accent = Mod.Train)
@@ -510,9 +532,10 @@ private fun BlockChips(blocks: List<PlannedBlock>) {
 }
 
 private fun placementLabel(p: Placement): String {
+    val td = com.ascend.lifeos.core.todayDate()
     val day = when (p.day) {
-        java.time.LocalDate.now() -> "Today"
-        java.time.LocalDate.now().plusDays(1) -> "Tomorrow"
+        td -> "Today"
+        td.plusDays(1) -> "Tomorrow"
         else -> p.day.format(java.time.format.DateTimeFormatter.ofPattern("EEE", java.util.Locale.ENGLISH))
     }
     return "$day %02d:%02d".format(p.startMin / 60, p.startMin % 60)
@@ -523,7 +546,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
     val heroCtx = LocalContext.current
     val accent = if (done) Good else Mod.Train
     GlassPanel(
-        Modifier.fillMaxWidth(), corner = 20.dp,
+        Modifier.fillMaxWidth(),
         line = if (done) Good.copy(alpha = 0.3f) else ChampagneLine,
         fill = if (done) Good.copy(alpha = 0.04f) else HudFill,
     ) {
@@ -537,9 +560,9 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                                 Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(6.dp))
                             }
-                            Text(session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold)
+                            Text(session.name, color = if (done) Good else TextPrimary, fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Text(session.focus, color = TextDim, fontSize = FS.s11, fontFamily = Body)
+                        Text(session.focus, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         placement?.let {
                             Spacer(Modifier.height(4.dp))
                             Text(placementLabel(it), color = Mod.Train, fontFamily = Display, fontSize = FS.s11, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
@@ -552,7 +575,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                 }
                 if (session.why.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    Text(session.why, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                    Text(session.why, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.height(10.dp))
                 BlockChips(session.blocks)
@@ -613,7 +636,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
     val accent = if (done) Good else Mod.Train
     GlassPanel(
         modifier.width(250.dp).then(if (done) Modifier else Modifier.pressScale { Haptics.tick(wscCtx); onStart() }),
-        corner = 16.dp,
+        corner = RElem,
         fill = if (done) Good.copy(alpha = 0.04f) else Ivory.copy(alpha = 0.04f),
         line = if (done) Good.copy(alpha = 0.25f) else Ivory.copy(alpha = 0.09f),
     ) {
@@ -670,9 +693,9 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
             Focus(chain, p?.currentLevel ?: 1, p?.unlockHitCount ?: 0)
         }
         .sortedWith(compareByDescending<Focus> { it.hits }.thenBy { it.level })
-        .first()
+        .firstOrNull() ?: return
 
-    val current = focused.chain.levels.find { it.level == focused.level } ?: focused.chain.levels.first()
+    val current = focused.chain.levels.find { it.level == focused.level } ?: focused.chain.levels.firstOrNull() ?: return
     val next = focused.chain.levels.find { it.level == focused.level + 1 }
     val testReady = focused.hits >= 2
     val mastery = current.isMastery
@@ -680,7 +703,7 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
 
     GlassPanel(
         Modifier.fillMaxWidth().then(if (mastery) Modifier else Modifier.pressScale { onOpenTestDay(focused.chain.groupKey) }),
-        corner = 16.dp,
+        corner = RElem,
         fill = if (testReady) Amber.copy(alpha = 0.06f) else Ivory.copy(alpha = 0.04f),
         line = if (testReady) Amber.copy(alpha = 0.4f) else Ivory.copy(alpha = 0.09f),
     ) {
@@ -723,6 +746,7 @@ private fun SkillFocusCard(progs: List<UserProgressionEntity>, onOpenTestDay: (S
 
 @Composable
 private fun ScheduleModeToggle(recommended: Boolean, onChange: (Boolean) -> Unit) {
+    val smCtx = androidx.compose.ui.platform.LocalContext.current
     Row(
         Modifier.clip(RoundedCornerShape(12.dp))
             .background(Ivory.copy(alpha = 0.05f))
@@ -734,7 +758,7 @@ private fun ScheduleModeToggle(recommended: Boolean, onChange: (Boolean) -> Unit
             Box(
                 Modifier.clip(RoundedCornerShape(10.dp))
                     .background(if (on) Mod.Train.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
-                    .pressScale { onChange(isRec) }
+                    .pressScale { Haptics.tick(smCtx); onChange(isRec) }
                     .padding(horizontal = 16.dp, vertical = 7.dp),
             ) { Text(label, color = if (on) Mod.Train else TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
@@ -742,7 +766,7 @@ private fun ScheduleModeToggle(recommended: Boolean, onChange: (Boolean) -> Unit
 }
 
 private fun dayLabel(d: java.time.LocalDate): String =
-    if (d == java.time.LocalDate.now()) "Today"
+    if (d == com.ascend.lifeos.core.todayDate()) "Today"
     else d.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH)
 
 @Composable
@@ -765,22 +789,23 @@ private fun CustomPlaceRow(
     done: Boolean = false,
     onPlace: (java.time.LocalDate, Int) -> Unit,
 ) {
-    val today = remember { java.time.LocalDate.now() }
+    val cpCtx = LocalContext.current
+    val today = remember { com.ascend.lifeos.core.todayDate() }
     var expanded by remember(session.index) { mutableStateOf(false) }
     var day by remember(session.index, placement) { mutableStateOf(placement?.day ?: today) }
     var min by remember(session.index, placement) { mutableStateOf(placement?.startMin ?: (6 * 60)) }
     fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
-    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(Modifier.animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(12.dp)) {
             Row(
-                Modifier.fillMaxWidth().pressScale { expanded = !expanded },
+                Modifier.fillMaxWidth().pressScale { Haptics.tick(cpCtx); expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (done) {
                     Icon(Icons.Rounded.Check, "Done", tint = Good, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(5.dp))
                 }
-                Text(session.name, color = if (done) Good else TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(session.name, color = if (done) Good else TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Text(
                     if (done) "✓ done" else (placement?.let { "${dayLabel(it.day)} ${fmt(it.startMin)}" } ?: "not placed"),
                     color = if (done) Good else if (placement != null) Mod.Train else Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
@@ -799,7 +824,7 @@ private fun CustomPlaceRow(
                                 Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
                                     .background(if (sel) Mod.Train.copy(alpha = 0.18f) else Ivory.copy(alpha = 0.05f))
                                     .border(0.5.dp, if (sel) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                                    .pressScale { day = d }
+                                    .pressScale { Haptics.tick(cpCtx); day = d }
                                     .padding(vertical = 6.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -819,7 +844,7 @@ private fun CustomPlaceRow(
                         Box(
                             Modifier.clip(RoundedCornerShape(10.dp)).background(Mod.Train.copy(alpha = 0.16f))
                                 .border(0.5.dp, Mod.Train.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                                .pressScale { onPlace(day, min); expanded = false }
+                                .pressScale { Haptics.confirm(cpCtx); onPlace(day, min); expanded = false }
                                 .padding(horizontal = 16.dp, vertical = 7.dp),
                         ) { Text("Place", color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
@@ -832,7 +857,7 @@ private fun CustomPlaceRow(
 @Composable
 private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOpenAssess: () -> Unit) {
     val p = Repo.data.profile
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Stepper(
@@ -880,6 +905,7 @@ private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
 
 @Composable
 private fun CalibrateCta(onOpenAssess: () -> Unit) {
+    val ccCtx = LocalContext.current
     val glow = com.ascend.lifeos.ui.motion.infiniteFloatOrStill(
         0.14f, 0.28f, 2000, RepeatMode.Reverse, still = 0.21f, label = "calGlow",
     )
@@ -888,7 +914,7 @@ private fun CalibrateCta(onOpenAssess: () -> Unit) {
             .clip(RoundedCornerShape(18.dp))
             .background(Mod.Train.copy(alpha = glow * 0.5f))
             .border(1.dp, Mod.Train.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
-            .pressScale { onOpenAssess() }
+            .pressScale { Haptics.tick(ccCtx); onOpenAssess() }
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -909,31 +935,26 @@ private fun CalibrateCta(onOpenAssess: () -> Unit) {
 
 @Composable
 private fun TodayStrip(sets: Int, reps: Int, weekSessions: Int) {
-    if (sets == 0 && reps == 0 && weekSessions == 0) {
-        GlassPanel(Modifier.fillMaxWidth()) {
-            Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Rounded.FitnessCenter, null, tint = TextDim, modifier = Modifier.size(28.dp))
-                Spacer(Modifier.height(8.dp))
-                Text("Start your first workout", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
-                Text("and watch your progress land here.", color = TextDim, fontSize = FS.s12, fontFamily = Body)
+    val hasStats = sets > 0 || reps > 0 || weekSessions > 0
+    Crossfade(targetState = hasStats, label = "todayStrip", animationSpec = androidx.compose.animation.core.tween(400)) { active ->
+        if (!active) {
+            GlassPanel(Modifier.fillMaxWidth()) {
+                Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Rounded.FitnessCenter, "No workouts yet", tint = TextDim, modifier = Modifier.size(28.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Text("Start your first workout", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                    Text("and watch your progress land here.", color = TextDim, fontSize = FS.s12, fontFamily = Body)
+                }
+            }
+        } else {
+            GlassPanel(Modifier.fillMaxWidth()) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 15.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    TickerStatBlock("SETS", sets, Accent)
+                    TickerStatBlock("REPS", reps, Cyan)
+                    TickerStatBlock("WEEK", weekSessions, Amber)
+                }
             }
         }
-    } else {
-        GlassPanel(Modifier.fillMaxWidth()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 15.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TickerStatBlock("SETS", sets, Accent)
-                TickerStatBlock("REPS", reps, Cyan)
-                TickerStatBlock("WEEK", weekSessions, Amber)
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatBlock(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = color, style = metricStyle(22))
-        Text(label, color = TextDim, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
     }
 }
 
@@ -972,7 +993,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             ) { Icon(Icons.Rounded.PlayArrow, "Start session", tint = Accent, modifier = Modifier.size(24.dp)) }
             Spacer(Modifier.width(14.dp))
             Column {
-                Text("Start $name", color = TextPrimary, fontFamily = Body, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold)
+                Text("Start $name", color = TextPrimary, fontFamily = Body, fontSize = FS.s16, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text("Today's assignment · non-negotiable", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
             }
         }
@@ -982,7 +1003,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
 @Composable
 private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val qaCtx = LocalContext.current
-    GlassPanel(modifier.pressScale { Haptics.tick(qaCtx); onClick() }, corner = 16.dp) {
+    GlassPanel(modifier.pressScale { Haptics.tick(qaCtx); onClick() }, corner = RElem) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, label, tint = Accent, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
@@ -995,7 +1016,7 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = M
 private fun TemplateCard(modifier: Modifier = Modifier, tpl: WorkoutTemplate, onClick: () -> Unit) {
     val tcCtx = LocalContext.current
     val color = templateColor(tpl.split)
-    GlassPanel(modifier.width(155.dp).pressScale { Haptics.tick(tcCtx); onClick() }, corner = 16.dp) {
+    GlassPanel(modifier.width(155.dp).pressScale { Haptics.tick(tcCtx); onClick() }, corner = RElem) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(color))
             Column(Modifier.padding(14.dp)) {
@@ -1018,7 +1039,7 @@ private fun SessionRow(sws: SessionWithSets, onOpen: (() -> Unit)? = null) {
     val s = sws.session
     val date = java.text.SimpleDateFormat("dd.MM", java.util.Locale.getDefault()).format(java.util.Date(s.startedAt))
     val color = templateColor(s.templateName)
-    GlassPanel(Modifier.fillMaxWidth(), corner = 14.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Row(Modifier.fillMaxWidth().let { m -> onOpen?.let { cb -> m.pressScale { cb() } } ?: m }) {
             Box(Modifier.width(3.dp).fillMaxHeight().background(color))
             Row(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1138,14 +1159,14 @@ private fun ActivityQuickLog() {
     // keyed on typeId: a run PR must not keep celebrating under the ride form
     var celebrate by remember(typeId) { mutableStateOf<String?>(null) }
 
-    GlassPanel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(
             Modifier
                 .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
                 .padding(horizontal = 14.dp, vertical = 12.dp),
         ) {
             Row(
-                Modifier.fillMaxWidth().pressScale { open = !open },
+                Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); open = !open },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("⚡", fontSize = FS.s16, fontFamily = Body)
@@ -1185,7 +1206,7 @@ private fun ActivityQuickLog() {
                 }
                 if (type.hasDistance) {
                     Spacer(Modifier.height(10.dp))
-                    GlassField("Distance km (optional)", km, KeyboardType.Decimal, Modifier.fillMaxWidth()) { km = it }
+                    GlassField("Distance ${Units.distLabelLower(ctx)} (optional)", km, KeyboardType.Decimal, Modifier.fillMaxWidth()) { km = it }
                 }
                 // the bests board for this type — what today's session is up against
                 val bests = remember(typeId, rev) {
@@ -1204,7 +1225,9 @@ private fun ActivityQuickLog() {
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                HudButton("Log ${type.emoji} ${type.label} · $minutes min", Modifier.fillMaxWidth()) {
+                val validMin = minutes > 0
+                HudButton("Log ${type.emoji} ${type.label} · $minutes min", Modifier.fillMaxWidth().alpha(if (validMin) 1f else 0.4f)) {
+                    if (!validMin) return@HudButton
                     val before = ActivityStore.all(ctx)
                     val logged = ActivityStore.add(
                         ctx, typeId, minutes, rpe,
@@ -1222,6 +1245,7 @@ private fun ActivityQuickLog() {
                 Text(
                     "🏆 $line", color = Amber, fontSize = FS.s11_5,
                     fontFamily = Body, fontWeight = FontWeight.Bold,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
 
@@ -1237,24 +1261,26 @@ private fun ActivityQuickLog() {
                         Text(
                             ActivityStore.label(e),
                             color = TextMuted, fontSize = FS.s11_5, fontFamily = Body,
-                            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
+                            fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                         )
                         Text(relDay(e.ts), color = TextDim, fontSize = FS.s10, fontFamily = Body)
                         Spacer(Modifier.width(8.dp))
                         val actArmed = armedDeleteActivity == e.id
-                        Icon(
-                            Icons.Rounded.Close, if (actArmed) "Confirm delete" else "Delete activity",
-                            tint = if (actArmed) Crit else TextDim.copy(alpha = 0.5f),
-                            modifier = Modifier.size(14.dp).pressScale {
-                                if (actArmed) {
-                                    Haptics.warn(ctx)
-                                    ActivityStore.delete(ctx, e.id)
-                                    celebrate = null
-                                    armedDeleteActivity = null
-                                    AppFeedback.show("Activity deleted")
-                                } else armedDeleteActivity = e.id
-                            },
-                        )
+                        Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
+                            if (actArmed) {
+                                Haptics.confirm(ctx)
+                                ActivityStore.delete(ctx, e.id)
+                                celebrate = null
+                                armedDeleteActivity = null
+                                AppFeedback.show("Activity deleted")
+                            } else { Haptics.warn(ctx); armedDeleteActivity = e.id }
+                        }, contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.Close, if (actArmed) "Confirm delete" else "Delete activity",
+                                tint = if (actArmed) Crit else TextDim.copy(alpha = 0.5f),
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
                     }
                 }
             }

@@ -17,7 +17,7 @@ object StudyPlanner {
     suspend fun sync(ctx: Context): Int {
         val exams = runCatching { SchoolStore.upcomingExams(ctx) }.getOrDefault(emptyList())
         if (exams.isEmpty()) return 0
-        val today = LocalDate.now().toEpochDay()
+        val today = com.ascend.lifeos.core.todayDate().toEpochDay()
         var created = 0
         for (ex in exams) {
             val daysUntil = (ex.dayEpoch - today).toInt()

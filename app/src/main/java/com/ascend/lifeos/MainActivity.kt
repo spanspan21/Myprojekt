@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
      * suffixes like /start are ignored, there is no per-action routing.
      */
     private fun handleJarvisIntent(intent: android.content.Intent?) {
-        intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.pending.value = it }
+        intent?.getStringExtra("open")?.let { com.ascend.lifeos.data.DeepLink.set(it) }
         val uri = intent?.data ?: return
         if (uri.scheme != "jarvis") return
         // Bank SCA return: browser → jarvis://bank-callback?code=… (Open Banking)
@@ -92,10 +92,10 @@ class MainActivity : ComponentActivity() {
             // also gets the callback (each no-ops if it isn't the pending link).
             runCatching { com.ascend.lifeos.data.finance.GoCardlessLink.handleCallback(applicationContext, uri) }
             runCatching { com.ascend.lifeos.data.finance.BankLink.handleCallback(applicationContext, uri) }
-            com.ascend.lifeos.data.DeepLink.pending.value = "finance"
+            com.ascend.lifeos.data.DeepLink.set("finance")
             return
         }
-        com.ascend.lifeos.data.DeepLink.pending.value = uri.toString().removePrefix("jarvis://").substringBefore("/")
+        com.ascend.lifeos.data.DeepLink.set(uri.toString().removePrefix("jarvis://").substringBefore("/"))
     }
 
     override fun onPause() {

@@ -1,6 +1,9 @@
 package com.ascend.lifeos.ui.home
 
+import androidx.compose.animation.animateContentSize
+import com.ascend.lifeos.ui.motion.Motion
 import androidx.compose.foundation.background
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.data.Haptics
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -103,7 +107,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
     var editorOpen by remember { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 40.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -115,7 +119,7 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
                 )
             }
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                     .background(Ivory.copy(alpha = 0.06f))
                     .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                     .pressScale(onClick = onClose),
@@ -175,17 +179,19 @@ fun RuleBuilderScreen(onClose: () -> Unit) {
             Spacer(Modifier.height(4.dp))
         }
 
-        if (!editorOpen && rules.isNotEmpty()) {
-            Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = { editorOpen = true }) {
-                Text(
-                    "+ New rule", color = Mod.Home, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
-                )
+        Column(Modifier.animateContentSize(animationSpec = Motion.springSmoothOf())) {
+            if (!editorOpen && rules.isNotEmpty()) {
+                Panel(Modifier.fillMaxWidth(), corner = RElem, onClick = { editorOpen = true }) {
+                    Text(
+                        "+ New rule", color = Mod.Home, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 14.dp).fillMaxWidth(), textAlign = TextAlign.Center,
+                    )
+                }
             }
-        }
 
-        if (editorOpen) {
-            RuleEditor(onDone = { editorOpen = false })
+            if (editorOpen) {
+                RuleEditor(onDone = { editorOpen = false })
+            }
         }
     }
 }
@@ -196,7 +202,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
     var armed by remember(rule.id) { mutableStateOf(false) }
     LaunchedEffect(armed) { if (armed) { delay(2500); armed = false } }
 
-    Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
+    Panel(Modifier.fillMaxWidth(), corner = RElem) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -208,7 +214,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     if (rule.enabled) "ON" else "OFF",
                     color = if (rule.enabled) Mod.Home else TextDim,
                     fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale(onClick = onToggle)
+                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale(onClick = { Haptics.tick(ctx); onToggle() })
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
                 Spacer(Modifier.width(6.dp))
@@ -217,12 +223,12 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
                     color = if (armed) Crit else TextDim,
                     fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clip(RoundedCornerShape(7.dp))
-                        .pressScale { if (armed) { Haptics.warn(ctx); onDelete(); AppFeedback.show("Rule deleted") } else armed = true }
+                        .pressScale { if (armed) { Haptics.confirm(ctx); onDelete(); AppFeedback.show("Rule deleted") } else { Haptics.warn(ctx); armed = true } }
                         .padding(horizontal = 6.dp, vertical = 3.dp),
                 )
             }
             Spacer(Modifier.height(4.dp))
-            Text(conditionLine(rule), color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16)
+            Text(conditionLine(rule), color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s16, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -230,7 +236,7 @@ private fun RuleRow(rule: CustomRule, onToggle: () -> Unit, onDelete: () -> Unit
 @Composable
 private fun RuleEditor(onDone: () -> Unit) {
     val ctx = LocalContext.current
-    var name by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
     var metric by remember { mutableStateOf(RMetric.RECOVERY) }
     var op by remember { mutableStateOf(ROp.LT) }
     var threshold by remember { mutableIntStateOf(defaultThreshold(RMetric.RECOVERY)) }
@@ -240,7 +246,7 @@ private fun RuleEditor(onDone: () -> Unit) {
     var threshold2 by remember { mutableIntStateOf(defaultThreshold(RMetric.SCREEN_MIN)) }
     var action by remember { mutableStateOf(RAction.NOTIFY) }
 
-    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -275,7 +281,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                 Text(
                     "+ Second condition", color = Mod.Home, fontSize = FS.s12, fontFamily = Body,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { second = true }
+                    modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { Haptics.tick(ctx); second = true }
                         .padding(vertical = 3.dp),
                 )
             } else {
@@ -288,7 +294,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                     Spacer(Modifier.weight(1f))
                     Text(
                         "Remove", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { second = false }
+                        modifier = Modifier.clip(RoundedCornerShape(7.dp)).pressScale { Haptics.tick(ctx); second = false }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
                     )
                 }
@@ -322,6 +328,7 @@ private fun RuleEditor(onDone: () -> Unit) {
                                 lastFiredDay = "",
                             ),
                         )
+                        AppFeedback.show("Rule saved")
                         onDone()
                     } else Modifier)
                     .padding(vertical = 13.dp),

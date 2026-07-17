@@ -1,7 +1,9 @@
 package com.ascend.lifeos.ui.hud
 
 import com.ascend.lifeos.data.Haptics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,15 +60,15 @@ private val UNITS = listOf("g", "ml", "pcs", "serving")
 @Composable
 fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -> Unit) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var serving by remember { mutableStateOf((existing?.servingG ?: 100).toString()) }
-    var unit by remember { mutableStateOf(existing?.unit ?: "g") }
-    var kcal by remember { mutableStateOf(existing?.kcal?.toString() ?: "") }
-    var protein by remember { mutableStateOf(existing?.protein?.toString() ?: "") }
-    var carbs by remember { mutableStateOf(existing?.carbs?.toString() ?: "") }
-    var fat by remember { mutableStateOf(existing?.fat?.toString() ?: "") }
-    var favorite by remember { mutableStateOf(existing?.favorite ?: false) }
-    var showMicros by remember { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf(existing?.name ?: "") }
+    var serving by rememberSaveable { mutableStateOf((existing?.servingG ?: 100).toString()) }
+    var unit by rememberSaveable { mutableStateOf(existing?.unit ?: "g") }
+    var kcal by rememberSaveable { mutableStateOf(existing?.kcal?.toString() ?: "") }
+    var protein by rememberSaveable { mutableStateOf(existing?.protein?.toString() ?: "") }
+    var carbs by rememberSaveable { mutableStateOf(existing?.carbs?.toString() ?: "") }
+    var fat by rememberSaveable { mutableStateOf(existing?.fat?.toString() ?: "") }
+    var favorite by rememberSaveable { mutableStateOf(existing?.favorite ?: false) }
+    var showMicros by rememberSaveable { mutableStateOf(false) }
     val barcode = existing?.barcode?.ifBlank { prefillBarcode } ?: prefillBarcode
 
     // Micro inputs in display units (µg/mg/g).
@@ -77,20 +80,20 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
         androidx.compose.runtime.mutableStateMapOf<String, String>().apply { putAll(m) }
     }
 
-    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp).padding(bottom = 20.dp).verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 20.dp).verticalScroll(rememberScrollState()).animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Custom food", color = TextPrimary, fontSize = FS.s20, fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-            Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f)).pressScale { Haptics.tick(ctx); favorite = !favorite }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(11.dp)).background(if (favorite) Amber.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f)).pressScale { Haptics.tick(ctx); favorite = !favorite }, contentAlignment = Alignment.Center) {
                 Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, if (favorite) "Remove from favorites" else "Add to favorites", tint = if (favorite) Amber else TextDim, modifier = Modifier.size(20.dp))
             }
         }
         if (barcode.isNotBlank()) Text("Barcode $barcode", color = TextDim, fontSize = FS.s11, fontFamily = Body)
 
         Spacer(Modifier.height(14.dp))
-        GlassField("Name", name, KeyboardType.Text, Modifier.fillMaxWidth()) { name = it }
+        GlassField("Name", name, KeyboardType.Text, Modifier.fillMaxWidth(), imeAction = ImeAction.Next) { name = it }
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.width(110.dp)) { GlassField("Serving", serving, KeyboardType.Number) { serving = it.filter(Char::isDigit).take(5) } }
+            Box(Modifier.width(110.dp)) { GlassField("Serving", serving, KeyboardType.Number, imeAction = ImeAction.Next) { serving = it.filter(Char::isDigit).take(5) } }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 UNITS.forEach { u -> HudChip(u, unit == u) { unit = u } }
             }
@@ -99,17 +102,17 @@ fun CustomFoodEditor(existing: CustomFood?, prefillBarcode: String, onDone: () -
         Spacer(Modifier.height(12.dp))
         Text("PER SERVING", color = TextDim, fontSize = FS.s9, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
         Spacer(Modifier.height(8.dp))
-        Box(Modifier.fillMaxWidth()) { GlassField("Calories (kcal)", kcal, KeyboardType.Number) { kcal = it.filter(Char::isDigit).take(5) } }
+        Box(Modifier.fillMaxWidth()) { GlassField("Calories (kcal)", kcal, KeyboardType.Number, imeAction = ImeAction.Next) { kcal = it.filter(Char::isDigit).take(5) } }
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.weight(1f)) { GlassField("Protein g", protein, KeyboardType.Number) { protein = it.filter(Char::isDigit).take(4) } }
-            Box(Modifier.weight(1f)) { GlassField("Carbs g", carbs, KeyboardType.Number) { carbs = it.filter(Char::isDigit).take(4) } }
+            Box(Modifier.weight(1f)) { GlassField("Protein g", protein, KeyboardType.Number, imeAction = ImeAction.Next) { protein = it.filter(Char::isDigit).take(4) } }
+            Box(Modifier.weight(1f)) { GlassField("Carbs g", carbs, KeyboardType.Number, imeAction = ImeAction.Next) { carbs = it.filter(Char::isDigit).take(4) } }
             Box(Modifier.weight(1f)) { GlassField("Fat g", fat, KeyboardType.Number) { fat = it.filter(Char::isDigit).take(4) } }
         }
 
         Spacer(Modifier.height(14.dp))
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ivory.copy(alpha = 0.04f)).pressScale { showMicros = !showMicros }.padding(14.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ivory.copy(alpha = 0.04f)).pressScale { Haptics.tick(ctx); showMicros = !showMicros }.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Micronutrients (optional)", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))

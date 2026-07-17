@@ -44,9 +44,9 @@ object GuardRuntime {
     @Volatile var lockVisible = false
 
     // ── Session state (used to live in the service — now survives restarts) ──
-    val cooldownUntil = HashMap<String, Long>()
-    val passUntil = HashMap<String, Long>()   // gate passes ("Continue · 5 min")
-    val lastSeenAt = HashMap<String, Long>()  // session continuity (M3/M4)
+    val cooldownUntil = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    val passUntil = java.util.concurrent.ConcurrentHashMap<String, Long>()   // gate passes ("Continue · 5 min")
+    val lastSeenAt = java.util.concurrent.ConcurrentHashMap<String, Long>()  // session continuity (M3/M4)
     @Volatile var lastPkg: String? = null
     @Volatile var sessionStart = 0L
 
@@ -54,7 +54,7 @@ object GuardRuntime {
 
     private var lastEventPkg: String? = null
     private var lastEventAt = 0L
-    private val launchable = HashMap<String, Boolean>()
+    private val launchable = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
 
     /**
      * Called by JarvisAccessibilityService on every window change. Filters the
@@ -97,15 +97,17 @@ object GuardRuntime {
     /** "Later" — an explicit, bounded pass. Escalates via DoomscrollDetector. */
     fun actLater(ctx: Context, pkg: String) {
         DoomscrollDetector.recordSnooze(ctx, pkg)
-        cooldownUntil[pkg] = System.currentTimeMillis() + SNOOZE_PASS_MS
+        val ms = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GUARD_SNOOZE_MIN, 3) * 60_000L
+        cooldownUntil[pkg] = System.currentTimeMillis() + ms
         clear()
     }
 
-    /** Gate "Continue · 5 min" — a deliberate, time-boxed entry. */
+    /** Gate "Continue" — a deliberate, time-boxed entry. */
     fun actGatePass(ctx: Context, pkg: String) {
         val n = System.currentTimeMillis()
-        passUntil[pkg] = n + GATE_PASS_MS
-        cooldownUntil[pkg] = n + GATE_PASS_MS
+        val ms = com.ascend.lifeos.data.Prefs.int(ctx, com.ascend.lifeos.data.Prefs.GUARD_GATE_MIN, 5) * 60_000L
+        passUntil[pkg] = n + ms
+        cooldownUntil[pkg] = n + ms
         clear()
     }
 
@@ -176,7 +178,5 @@ object GuardRuntime {
         }
     }
 
-    const val GATE_PASS_MS = 5 * 60_000L      // "Continue · 5 min"
-    const val SNOOZE_PASS_MS = 3 * 60_000L    // "Later" = 3 honest minutes
     const val REARM_GRACE_MS = 15_000L        // close-transition grace, not a pass
 }

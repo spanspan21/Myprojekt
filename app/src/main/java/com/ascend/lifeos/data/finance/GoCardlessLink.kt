@@ -179,7 +179,12 @@ object GoCardlessLink {
                 touch()
                 syncNow(ctx)
             } catch (e: Exception) {
-                status = e.message
+                status = when (e) {
+                is java.net.UnknownHostException -> "No internet connection"
+                is java.net.SocketTimeoutException -> "Connection timed out"
+                is javax.net.ssl.SSLException -> "Secure connection failed"
+                else -> e.message ?: "Unknown error"
+            }
             } finally { busy = false }
         }
     }
@@ -222,14 +227,18 @@ object GoCardlessLink {
                     seenSet.add(id); seen.add(id); imported++
                 }
                 bankBalanceCents(ctx, acc.gcId)?.let { FinanceStore.setAccountBalance(ctx, acc.financeAccountId, it) }
+                prefs(ctx).edit().putString("seen", JSONArray(seen.takeLast(4000)).toString()).apply()
             }
-            prefs(ctx).edit()
-                .putString("seen", JSONArray(seen.takeLast(4000)).toString())
-                .putLong("last_sync", System.currentTimeMillis()).apply()
+            prefs(ctx).edit().putLong("last_sync", System.currentTimeMillis()).apply()
             status = if (imported > 0) "$imported new" else "Up to date"
             touch()
         } catch (e: Exception) {
-            status = e.message
+            status = when (e) {
+                is java.net.UnknownHostException -> "No internet connection"
+                is java.net.SocketTimeoutException -> "Connection timed out"
+                is javax.net.ssl.SSLException -> "Secure connection failed"
+                else -> e.message ?: "Unknown error"
+            }
         } finally { busy = false }
     }
 

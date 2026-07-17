@@ -1,8 +1,13 @@
 package com.ascend.lifeos.ui.home
 
+import com.ascend.lifeos.ui.ShellMode
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.text.style.TextOverflow
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.firstOrNull
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -37,6 +42,7 @@ import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.SelfImprovement
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.Icon
@@ -123,6 +129,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val trainVm: TrainingViewModel = viewModel()
 
+    var resumeTick by remember { mutableIntStateOf(0) }
     // health refresh on resume (same honest policy as before: real data or nothing)
     fun refreshHealth() {
         scope.launch {
@@ -133,7 +140,7 @@ fun HomeScreen(
     }
     val owner = LocalLifecycleOwner.current
     DisposableEffect(owner) {
-        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) refreshHealth() }
+        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) { refreshHealth(); resumeTick++ } }
         owner.lifecycle.addObserver(obs)
         onDispose { owner.lifecycle.removeObserver(obs) }
     }
@@ -142,7 +149,6 @@ fun HomeScreen(
     val day = Repo.data.days[todayKey()]
     val readiness = Repo.recoveryScore(Repo.data.health)
     val kcalToday = day?.meals?.sumOf { it.kcal } ?: 0
-    val water = day?.water ?: 0
     // Hydration truth incl. logged drinks (matches Repo.completion + Prime + Fuel).
     val hydrationMl = day?.let { Repo.hydrationMl(it) } ?: 0
     val waterGoalMl = (profile.waterGoal * WaterCalc.glassMl()).coerceAtLeast(1)
@@ -156,29 +162,28 @@ fun HomeScreen(
     // Usage-access check + the UsageStats aggregation (a per-app PackageManager
     // IPC walk) used to run synchronously in composition on the main thread —
     // the one Home load that wasn't on IO, an ANR/jank hazard on the front door.
-    val screenState by produceState<Pair<Boolean, Int?>>(false to null) {
+    val screenState by produceState<Pair<Boolean, Int?>>(false to null, resumeTick) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val ok = runCatching { DigitalWellbeingManager.hasUsageAccess(ctx) }.getOrDefault(false)
             val min = if (ok) runCatching { (DigitalWellbeingManager.todayUsage(ctx).totalMs / 60000L).toInt() }.getOrNull() else null
             ok to min
         }
     }
-    val hasUsage = screenState.first
     val screenMin = screenState.second
     val healthConnected = Repo.data.health != null && Repo.data.health?.sleepMin != null
 
     LaunchedEffect(profile.streak) {
-        if (profile.streak == 7 && !Prefs.bool(ctx, "hint_edit_dashboard", false)) {
+        if (profile.streak >= 2 && !Prefs.bool(ctx, "hint_edit_dashboard", false)) {
             Prefs.setBool(ctx, "hint_edit_dashboard", true)
-            AppFeedback.show("One week in — tap 'Edit dashboard' below to reorder or hide cards")
+            AppFeedback.show("Tip: tap 'Edit dashboard' below to reorder or hide cards")
         }
     }
 
     // day context: today's ice block + imminent exam feed the Jarvis line
-    val dayContext by produceState<Pair<String?, Pair<String, Int>?>>(null to null) {
+    val dayContext by produceState<Pair<String?, Pair<String, Int>?>>(null to null, resumeTick) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching {
-                val today = LocalDate.now().toEpochDay()
+                val today = com.ascend.lifeos.core.todayDate().toEpochDay()
                 val events = CalendarDatabase.get(ctx).dao()
                     .eventsInRangeOnce(today, today + 7)   // exams look a week ahead
                 val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
@@ -262,23 +267,42 @@ fun HomeScreen(
             // ── status row (wordmark = command palette) ──────────────────
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onOpenPalette)
-                        .padding(vertical = 4.dp, horizontal = 2.dp),
+                    Modifier.clip(RoundedCornerShape(10.dp))
+                        .background(Ivory.copy(alpha = 0.04f))
+                        .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                        .pressScale(onClick = onOpenPalette)
+                        .padding(vertical = 6.dp, horizontal = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Icon(Icons.Rounded.Search, null, tint = TextDim, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(7.dp))
                     Text(
-                        "JARVIS", color = TextDim, fontFamily = Display,
-                        fontSize = FS.s12, fontWeight = FontWeight.SemiBold, letterSpacing = 4.sp,
+                        "COMMAND", color = TextDim, fontFamily = Display,
+                        fontSize = FS.s10_5, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
                     )
-                    Spacer(Modifier.width(10.dp))
-                    Box(Modifier.size(5.dp).clip(CircleShape).background(Mod.Home))
                 }
                 Spacer(Modifier.weight(1f))
                 Text(
-                    LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)).uppercase(),
+                    com.ascend.lifeos.core.todayDate().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)).uppercase(),
                     color = TextDim, fontFamily = Display, fontSize = FS.s10_5,
                     fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp,
                 )
+                val ctxMode = ShellMode.current.value
+                if (ctxMode != "normal") {
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        Modifier.clip(RoundedCornerShape(6.dp))
+                            .background(if (ctxMode == "exam") Amber.copy(alpha = 0.18f) else Good.copy(alpha = 0.15f))
+                            .pressScale { Haptics.tick(ctx); ShellMode.set(ctx, "normal"); AppFeedback.show("Mode reset") }
+                            .defaultMinSize(minHeight = 44.dp)
+                            .padding(horizontal = 7.dp, vertical = 3.dp),
+                    ) {
+                        Text(
+                            ctxMode.uppercase(), color = if (ctxMode == "exam") Amber else Good,
+                            fontSize = FS.s8, fontFamily = Display, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+                        )
+                    }
+                }
                 Spacer(Modifier.width(12.dp))
                 IconOrb(Icons.Rounded.Shield, "Open Guard", tint = Mod.Guard, size = 34.dp, onClick = onOpenGuard)
                 Spacer(Modifier.width(8.dp))
@@ -295,6 +319,7 @@ fun HomeScreen(
                     Text(
                         voice, color = TextMuted, fontFamily = Body,
                         fontSize = FS.s13_5, fontWeight = FontWeight.Medium, lineHeight = FS.s19,
+                        maxLines = 4, overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -305,7 +330,7 @@ fun HomeScreen(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(Warn.copy(alpha = 0.12f))
                         .border(0.5.dp, Warn.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .pressScale { Haptics.tick(ctx); Repo.setSickMode(false) }
+                        .pressScale { Haptics.confirm(ctx); Repo.setSickMode(false); AppFeedback.show("Sick mode off — back to normal") }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Text(
@@ -316,8 +341,8 @@ fun HomeScreen(
                 }
             }
             val deloadUntil = remember { Prefs.int(ctx, Prefs.DELOAD_UNTIL, 0).toLong() }
-            if (deloadUntil > 0 && deloadUntil >= LocalDate.now().toEpochDay()) {
-                val daysLeft = (deloadUntil - LocalDate.now().toEpochDay()).toInt()
+            if (deloadUntil > 0 && deloadUntil >= com.ascend.lifeos.core.todayDate().toEpochDay()) {
+                val daysLeft = (deloadUntil - com.ascend.lifeos.core.todayDate().toEpochDay()).toInt()
                 Reveal(0) {
                     Spacer(Modifier.height(10.dp))
                     Box(
@@ -339,7 +364,7 @@ fun HomeScreen(
 
             // ── BODY SCAN — your muscle map, swept by the scanner ────────
             Reveal(1) {
-                val freshness by produceState<Map<Muscle, Float>?>(null) {
+                val freshness by produceState<Map<Muscle, Float>?>(null, resumeTick) {
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         runCatching { MuscleRecovery.compute(ctx).map }.getOrNull()
                     }
@@ -361,7 +386,7 @@ fun HomeScreen(
                     )
                 }
                 // Hero = das lux-Panel des Screens: die eine Gold-Hairline (Kap. 23)
-                Panel(Modifier.fillMaxWidth(), corner = 22.dp, lux = true, onClick = onOpenBody) {
+                Panel(Modifier.fillMaxWidth(), corner = RHero, lux = true, onClick = onOpenBody) {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -385,6 +410,7 @@ fun HomeScreen(
                             color = TextDim, fontFamily = MicroLabel, fontSize = FS.s9,
                             fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
                             modifier = if (readiness != null) Modifier.pressScale {
+                                Haptics.tick(ctx)
                                 AppFeedback.show("Sleep (40%) + deep/REM (20%) + resting HR (25%) + training load (15%) + morning check-in")
                             } else Modifier,
                         )
@@ -392,7 +418,8 @@ fun HomeScreen(
                         val scanLine = remember(freshness) {
                             val f = freshness
                             when {
-                                f.isNullOrEmpty() -> "Scan idle — log sets to light it up"
+                                f == null -> "Scanning…"
+                                f.isEmpty() -> "Scan idle — log sets to light it up"
                                 else -> {
                                     val freshThresh = Prefs.int(ctx, Prefs.FRESHNESS_THRESHOLD, 45) / 100f
                                     val tired = f.filterValues { it < freshThresh }.keys.take(2)
@@ -453,7 +480,7 @@ fun HomeScreen(
                                         )
                                     }
                                     Icon(
-                                        Icons.Rounded.LocalFireDepartment, null,
+                                        Icons.Rounded.LocalFireDepartment, "Active streak",
                                         tint = Champagne, modifier = Modifier.size(12.dp),
                                     )
                                 }
@@ -512,7 +539,7 @@ fun HomeScreen(
                         .padding(horizontal = 13.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Rounded.Bolt, null, tint = Mod.Home, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Bolt, "Streak freeze used", tint = Mod.Home, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
                         "Streak saved — a freeze covered yesterday. ${profile.streak} days stand. (${profile.freezeAvail} left this week)",
@@ -531,19 +558,19 @@ fun HomeScreen(
             // ── DAILY BRIEFING — directives, patterns, exams: ONE panel ──
             homeCards["briefing"] = {
                 var protoTick by remember { mutableIntStateOf(0) }
+                var briefingLoaded by remember { mutableStateOf(false) }
                 val directives by produceState<List<Pair<Protocol, String>>>(emptyList(), protoTick) {
-                    // fire() reads prefs/data — keep it off the Main dispatcher
-                    // (produceState runs its block on the composition context) — audit B2-4
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         runCatching { Protocols.fire(ctx) }.getOrDefault(emptyList())
                     }
+                    briefingLoaded = true
                 }
                 val customFired by produceState<List<Pair<CustomRule, String>>>(emptyList(), protoTick) {
                     value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         runCatching { CustomRules.fire(ctx) }.getOrDefault(emptyList())
                     }
                 }
-                val insight by produceState<InsightMiner.Insight?>(null) {
+                val insight by produceState<InsightMiner.Insight?>(null, resumeTick) {
                     if (Prefs.bool(ctx, Prefs.INSIGHTS_ON, true)) {
                         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                             runCatching { InsightMiner.mine(ctx) }.getOrNull()
@@ -555,8 +582,8 @@ fun HomeScreen(
 
                 val ins = insight?.takeIf { !insightDismissed }
 
-                val goalDeadlines = remember {
-                    val now = java.time.LocalDate.now()
+                val goalDeadlines = remember(LifeStores.rev) {
+                    val now = com.ascend.lifeos.core.todayDate()
                     LifeStores.goals(ctx)
                         .filter { !it.archived && it.deadline.isNotBlank() }
                         .mapNotNull { g ->
@@ -570,11 +597,15 @@ fun HomeScreen(
                 }
 
                 val hasAny = directives.isNotEmpty() || customFired.isNotEmpty() || ins != null || exam != null || goalDeadlines.isNotEmpty()
-                if (hasAny) {
+                Crossfade(targetState = briefingLoaded, animationSpec = tween(300), label = "briefing") { loaded ->
+                if (!loaded) {
+                    Spacer(Modifier.height(24.dp))
+                    ShimmerPanel(Modifier.fillMaxWidth(), height = 56.dp, corner = RElem)
+                } else if (hasAny) {
                     Spacer(Modifier.height(24.dp))
                     SectionLabel("Daily briefing")
                     Spacer(Modifier.height(10.dp))
-                    Panel(Modifier.fillMaxWidth(), corner = 18.dp) {
+                    Panel(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(vertical = 5.dp)) {
                             var first = true
                             @Composable
@@ -624,6 +655,7 @@ fun HomeScreen(
                         }
                     }
                 }
+                }
             }
 
             homeCards["nextup"] = {
@@ -632,11 +664,11 @@ fun HomeScreen(
             // On hockey game days, a pre-game readiness card sits up top.
             GameDayCard(Modifier.padding(bottom = 12.dp))
             // Morning: Prime's top-3 as a start-the-day ritual. Sunday: week review.
-            TodayFocusCard(onNavigate = { onOpenModule(it) }, modifier = Modifier.padding(bottom = 12.dp))
+            TodayFocusCard(onNavigate = { onOpenModule(it) }, modifier = Modifier.padding(bottom = 12.dp), tick = resumeTick)
             WeeklyReviewCard(onOpenReport = { onOpenModule("report") }, modifier = Modifier.padding(bottom = 12.dp))
             SectionLabel("Next up")
             Spacer(Modifier.height(10.dp))
-            NextUpCard(trainVm, trainedToday, onOpenTrain, onOpenCalendar = { onOpenModule("calendar") })
+            NextUpCard(trainVm, trainedToday, onOpenTrain, onOpenCalendar = { onOpenModule("calendar") }, tick = resumeTick)
             // Missed the morning session? Offer a smart afternoon slot to move it to.
             RescheduleCard(Modifier.padding(top = 10.dp))
             // OF-1: from 19:00, if the watch auto-imported a night we don't yet have
@@ -676,11 +708,11 @@ fun HomeScreen(
                         left == 1 -> "1 left"
                         else -> "$left left"
                     },
-                    color = when {
+                    color = animateColorAsState(when {
                         left <= 0 -> Good
                         left == 1 -> Champagne
                         else -> TextDim
-                    },
+                    }, label = "missionLeft").value,
                     fontFamily = Display, fontSize = FS.s10,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
                 )
@@ -736,7 +768,7 @@ fun HomeScreen(
                     val h = screenMin / 60; val m = screenMin % 60
                     MissionChip(
                         Icons.Rounded.Shield, "${h}h ${m}m screen",
-                        progress = (screenMin / screenBudget.toFloat()), color = if (screenMin > screenBudget) Crit else Mod.Guard,
+                        progress = if (screenBudget > 0) screenMin / screenBudget.toFloat() else 0f, color = if (screenBudget > 0 && screenMin > screenBudget) Crit else Mod.Guard,
                         modifier = Modifier.weight(1f), onClick = onOpenGuard,
                     )
                 } else {
@@ -749,7 +781,7 @@ fun HomeScreen(
             }
 
             // today's skill step — the fifth mission, full width
-            val skillStep by produceState<Pair<String, Float>?>(null) {
+            val skillStep by produceState<Pair<String, Float>?>(null, resumeTick) {
                 value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     runCatching {
                         val domains = MasterPlanDatabase
@@ -776,77 +808,97 @@ fun HomeScreen(
             }
 
             // ── macro bar: P / C / F progress when food is logged ──────
-            if (kcalToday > 0) {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = kcalToday > 0,
+                enter = androidx.compose.animation.expandVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeOut(),
+            ) {
                 val proteinToday = day?.meals?.sumOf { it.protein } ?: 0
                 val carbsToday = day?.meals?.sumOf { it.carbs } ?: 0
                 val fatToday = day?.meals?.sumOf { it.fat } ?: 0
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    MacroBar("P", proteinToday, profile.proteinGoal, Cyan, Modifier.weight(1f))
-                    MacroBar("C", carbsToday, profile.carbGoal, Amber, Modifier.weight(1f))
-                    MacroBar("F", fatToday, profile.fatGoal, Crit, Modifier.weight(1f))
+                Column {
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        MacroBar("P", proteinToday, profile.proteinGoal, Cyan, Modifier.weight(1f))
+                        MacroBar("C", carbsToday, profile.carbGoal, Amber, Modifier.weight(1f))
+                        MacroBar("F", fatToday, profile.fatGoal, Crit, Modifier.weight(1f))
+                    }
                 }
             }
 
             // quick actions: +water without leaving Home
-            if (!waterDone) {
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                        .background(Mod.Body.copy(alpha = 0.08f))
-                        .pressScale {
-                            Repo.addWater(1)
-                            Haptics.confirm(ctx)
-                        }
-                        .padding(horizontal = 14.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Rounded.WaterDrop, "Add water", tint = Mod.Body, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("+ Water", color = Mod.Body, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.weight(1f))
-                    Text("$waterGlassEq/${profile.waterGoal}", color = TextDim, fontFamily = Body, fontSize = FS.s11, fontWeight = FontWeight.SemiBold)
+            androidx.compose.animation.AnimatedVisibility(
+                visible = !waterDone,
+                enter = androidx.compose.animation.expandVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeOut(),
+            ) {
+                Column {
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(Mod.Body.copy(alpha = 0.08f))
+                            .pressScale {
+                                Repo.addWater(1)
+                                Haptics.confirm(ctx)
+                                AppFeedback.show("+1 Water")
+                            }
+                            .padding(horizontal = 14.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Rounded.WaterDrop, "Add water", tint = Mod.Body, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("+ Water", color = Mod.Body, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.weight(1f))
+                        Text("$waterGlassEq/${profile.waterGoal}", color = TextDim, fontFamily = Body, fontSize = FS.s11, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
 
             // habit strip: due habits as tappable chips (mark done without leaving Home)
             val habitRev = LifeStores.rev
             val todayHabits = remember(habitRev) {
-                val todayDate = java.time.LocalDate.now()
+                val todayDate = com.ascend.lifeos.core.todayDate()
                 val dk = todayKey()
                 LifeStores.habits(ctx)
                     .filter { HabitMetrics.scheduledOn(it, todayDate) }
                     .filter { !HabitMetrics.skipped(ctx, it, dk) }
                     .filter { !HabitMetrics.isAuto(it) }
             }
-            if (todayHabits.isNotEmpty()) {
-                Spacer(Modifier.height(14.dp))
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    val dk = todayKey()
-                    todayHabits.forEach { h ->
-                        val done = HabitMetrics.done(ctx, h, dk)
-                        val icon = h.icon.ifBlank { "•" }
-                        Box(
-                            Modifier.clip(RoundedCornerShape(10.dp))
-                                .background(if (done) Good.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.04f))
-                                .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                                .then(if (!done) Modifier.pressScale {
-                                    Haptics.confirm(ctx)
-                                    LifeStores.setHabitDone(ctx, h.id, dk, true)
-                                } else Modifier)
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                        ) {
-                            Text(
-                                "$icon ${h.title}",
-                                color = if (done) Good else TextMuted,
-                                fontSize = FS.s10_5, fontFamily = Body,
-                                fontWeight = if (done) FontWeight.Bold else FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+            androidx.compose.animation.AnimatedVisibility(
+                visible = todayHabits.isNotEmpty(),
+                enter = androidx.compose.animation.expandVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkVertically(com.ascend.lifeos.ui.motion.Motion.springSmoothOf()) + androidx.compose.animation.fadeOut(),
+            ) {
+                Column {
+                    Spacer(Modifier.height(14.dp))
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        val dk = todayKey()
+                        todayHabits.forEach { h ->
+                            val done = HabitMetrics.done(ctx, h, dk)
+                            val icon = h.icon.ifBlank { "•" }
+                            Box(
+                                Modifier.clip(RoundedCornerShape(10.dp))
+                                    .background(if (done) Good.copy(alpha = 0.12f) else Ivory.copy(alpha = 0.04f))
+                                    .border(0.5.dp, if (done) Good.copy(alpha = 0.35f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                    .semantics { stateDescription = if (done) "completed" else "pending" }
+                                    .then(if (!done) Modifier.pressScale {
+                                        Haptics.confirm(ctx)
+                                        LifeStores.setHabitDone(ctx, h.id, dk, true)
+                                    } else Modifier)
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            ) {
+                                Text(
+                                    "$icon ${h.title}",
+                                    color = if (done) Good else TextMuted,
+                                    fontSize = FS.s10_5, fontFamily = Body,
+                                    fontWeight = if (done) FontWeight.Bold else FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
                     }
                 }
@@ -854,189 +906,51 @@ fun HomeScreen(
             }
             }
 
-            // ── WEEKLY RECAP — at-a-glance summary + last week delta ────
-            homeCards["weekRecap"] = {
-                data class WeekStat(val value: Int, val label: String, val prev: Int)
-                val weekData = remember(Repo.data.hashCode()) {
-                    data class ScanResult(val train: Int, val avgKcal: Int, val water: Int, val avgSleep: Int)
-                    fun scan(monday: java.time.LocalDate, until: java.time.LocalDate): ScanResult {
-                        var train = 0; var kcal = 0; var water = 0; var days = 0
-                        val sleepVals = mutableListOf<Int>()
-                        var d = monday
-                        while (!d.isAfter(until)) {
-                            val key = d.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
-                            val dd = Repo.data.days[key]
-                            if (dd != null) {
-                                days++
-                                if (dd.workoutDone || dd.trainSets > 0) train++
-                                kcal += dd.meals.sumOf { it.kcal }
-                                water += dd.water
-                            }
-                            Repo.bodyDay(key)?.sleepMin?.let { if (it > 0) sleepVals.add(it) }
-                            d = d.plusDays(1)
-                        }
-                        val avg = if (days > 0) kcal / days else 0
-                        val sleepAvg = if (sleepVals.isNotEmpty()) sleepVals.average().toInt() / 60 else 0
-                        return ScanResult(train, avg, water, sleepAvg)
-                    }
-                    val now = java.time.LocalDate.now()
-                    val monday = now.with(java.time.DayOfWeek.MONDAY)
-                    val prevMonday = monday.minusWeeks(1)
-                    val prevSunday = monday.minusDays(1)
-                    val cur = scan(monday, now)
-                    val prev = scan(prevMonday, prevSunday)
-                    val streak = Repo.profile().streak
-                    listOf(
-                        WeekStat(cur.train, "train", prev.train),
-                        WeekStat(cur.avgKcal, "kcal/d", prev.avgKcal),
-                        WeekStat(cur.avgSleep, "sleep h", prev.avgSleep),
-                        WeekStat(streak, "streak", streak),
-                    )
-                }
-                if (weekData.any { it.value > 0 }) {
-                    Spacer(Modifier.height(18.dp))
-                    Panel(Modifier.fillMaxWidth(), corner = 16.dp) {
-                        Column(Modifier.padding(14.dp)) {
-                            Text("WEEK RECAP", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                            Spacer(Modifier.height(10.dp))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                                weekData.forEach { stat ->
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        TickerNumber(stat.value, 20, color = TextPrimary, fontFamily = Display)
-                                        Text(stat.label, color = TextDim, fontSize = FS.s8_5, fontFamily = Body)
-                                        if (stat.prev > 0 && stat.label != "streak") {
-                                            val delta = stat.value - stat.prev
-                                            val sign = if (delta > 0) "↑" else if (delta < 0) "↓" else "="
-                                            val c = if (delta > 0) Good else if (delta < 0) Crit else TextDim
-                                            Text("$sign${kotlin.math.abs(delta)}", color = c, fontSize = FS.s8, fontFamily = Body, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // ── GLANCE DECK — week recap, last session & vitals in ONE card ──
+            // Three stacked stat panels used to cost ~340dp of scroll; now they
+            // are pages of a single fixed-height deck (see GlanceDeck below).
+            // The render loop maps their keys onto the deck, so the edit sheet
+            // still shows/hides/orders each page individually.
 
-            // ── LAST SESSION — what you did last time in the gym ──
-            homeCards["lastSession"] = {
-                val dao = remember { TrainingDatabase.get(ctx).dao() }
-                val lastSess by produceState<SessionWithSets?>(null) {
-                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching { dao.recentSessions(1).firstOrNull()?.firstOrNull() }.getOrNull()
-                    }
-                }
-                val s = lastSess
-                if (s != null && s.session.isComplete) {
-                    val ago = System.currentTimeMillis() - (s.session.finishedAt ?: s.session.startedAt)
-                    val agoText = when {
-                        ago < 3_600_000 -> "${(ago / 60_000).toInt()} min ago"
-                        ago < 86_400_000 -> "${(ago / 3_600_000).toInt()}h ago"
-                        ago < 172_800_000 -> "Yesterday"
-                        else -> "${(ago / 86_400_000).toInt()} days ago"
-                    }
-                    val exercises = s.sets.map { it.exerciseName }.distinct().take(4)
-                    Spacer(Modifier.height(18.dp))
-                    Panel(Modifier.fillMaxWidth().pressScale(onOpenTrain), corner = 16.dp) {
-                        Column(Modifier.padding(14.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("LAST SESSION", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.weight(1f))
-                                Text(agoText, color = Mod.Train, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
-                            }
-                            Spacer(Modifier.height(6.dp))
-                            Text(s.session.templateName, color = TextPrimary, fontFamily = Display, fontSize = FS.s16, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text("${s.session.totalSets} sets", color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.SemiBold)
-                                Text("${s.session.totalReps} reps", color = TextMuted, fontSize = FS.s12, fontFamily = Body)
-                                Text("${s.session.durationMinutes} min", color = TextMuted, fontSize = FS.s12, fontFamily = Body)
-                            }
-                            if (exercises.isNotEmpty()) {
-                                Spacer(Modifier.height(6.dp))
-                                Text(exercises.joinToString(" · "), color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ── VITALS GLANCE — compact body snapshot without leaving Home ──
-            homeCards["vitals"] = {
-                val health = Repo.data.health
-                val bd = Repo.bodyDay()
-                val sleepMin = health?.sleepMin
-                val steps = health?.steps
-                val rhr = bd?.restingHr ?: health?.restingHr
-                val weightPts = Repo.weightLog()
-                val lastWeight = weightPts.lastOrNull()?.kg
-                val needMin = runCatching { Repo.sleepNeedMin() }.getOrDefault(480)
-                if (sleepMin != null || steps != null || rhr != null || lastWeight != null) {
-                    Spacer(Modifier.height(18.dp))
-                    Panel(Modifier.fillMaxWidth(), corner = 16.dp, onClick = onOpenBody) {
-                        Column(Modifier.padding(14.dp)) {
-                            Text("VITALS", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                            Spacer(Modifier.height(10.dp))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                                sleepMin?.let { sm ->
-                                    VitalMini("Sleep", "${sm / 60}h${"%02d".format(sm % 60)}", sm / needMin.toFloat(), Mod.Body)
-                                }
-                                readiness?.let { r ->
-                                    val rG = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
-                                    val rW = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
-                                    VitalMini("Recovery", "$r%", r / 100f, when {
-                                        r >= rG -> Good; r >= rW -> Warn; else -> Crit
-                                    })
-                                }
-                                steps?.let { s ->
-                                    val stepGoal = Prefs.int(ctx, Prefs.STEP_GOAL, 10000)
-                                    VitalMini("Steps", if (s >= 1000) "${s / 1000}k" else "$s", (s / stepGoal.toFloat()).coerceAtMost(1f), Mod.Train)
-                                }
-                                rhr?.let { hr ->
-                                    VitalMini("RHR", "$hr", ((80f - hr.coerceIn(40, 80)) / 40f), Mod.Body)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ── SYSTEMS — rituals & archives as an orb row (the hub, distilled)
+            // ── SYSTEMS — rituals & archives, one swipeable orb row ──
+            // Was a 4-row grid (~330dp of scroll). One row with an edge fade
+            // keeps all ten reachable at a quarter of the height.
             homeCards["systems"] = {
                 Spacer(Modifier.height(24.dp))
                 SectionLabel("Systems")
-                Spacer(Modifier.height(12.dp))
-                // 3×3 grid — every orb fully visible, evenly spread (no clipped scroll row)
-                Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Prime", Icons.Rounded.AutoAwesome, Mod.Home) { onOpenModule("prime") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") } }
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier.fillMaxWidth()
+                        .drawWithContent {
+                            drawContent()
+                            // right edge fade = "there's more" affordance
+                            drawRect(
+                                Brush.horizontalGradient(
+                                    0.92f to Color.Transparent,
+                                    1f to Void,
+                                ),
+                            )
+                        }
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    SystemOrb("Prime", Icons.Rounded.AutoAwesome, Mod.Home) { onOpenModule("prime") }
+                    SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") }
+                    SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") }
+                    SystemOrb("Notes", Icons.Rounded.EditNote, Mod.Skills) { onOpenModule("notes") }
+                    SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") }
+                    SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") }
+                    SystemOrb("Automations", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") }
+                    SystemOrb("Breathe", Icons.Rounded.SelfImprovement, Good) { onOpenModule("breathe") }
+                    SystemOrb("Timer", Icons.Rounded.Timer, Crit) { onOpenModule("timer") }
+                    SystemOrb("Wind Down", Icons.Rounded.Bedtime, Mod.Mind) { onOpenModule("winddown") }
                 }
-                Spacer(Modifier.height(14.dp))
-                Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Notes", Icons.Rounded.EditNote, Mod.Skills) { onOpenModule("notes") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Decisions", Icons.Rounded.Psychology, Mod.Mind) { onOpenModule("decisions") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Heatmap", Icons.Rounded.FitnessCenter, Mod.Body) { onOpenModule("heatmap") } }
-                }
-                Spacer(Modifier.height(14.dp))
-                Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Automations", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Breathe", Icons.Rounded.SelfImprovement, Good) { onOpenModule("breathe") } }
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Timer", Icons.Rounded.Timer, Crit) { onOpenModule("timer") } }
-                }
-                Spacer(Modifier.height(14.dp))
-                Row(Modifier.fillMaxWidth()) {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { SystemOrb("Wind Down", Icons.Rounded.Bedtime, Mod.Mind) { onOpenModule("winddown") } }
-                    Box(Modifier.weight(1f)) {}
-                    Box(Modifier.weight(1f)) {}
-                }
-                // Wave F: "Wrapped" removed — once-a-year vanity that re-told the
-                // same story as Prime/Report. One synthesis surface, not four.
             }
 
             // ── First-day getting started card ──
             if (profile.streak == 0 && kcalToday == 0 && !trainedToday) {
                 Reveal(2) {
-                    Panel(Modifier.fillMaxWidth(), corner = 20.dp, fill = Mod.Home.copy(alpha = 0.06f), line = Mod.Home.copy(alpha = 0.25f)) {
+                    Panel(Modifier.fillMaxWidth(), fill = Mod.Home.copy(alpha = 0.06f), line = Mod.Home.copy(alpha = 0.25f)) {
                         Column(Modifier.padding(18.dp)) {
                             Text("YOUR FIRST DAY", color = Mod.Home, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
                             Spacer(Modifier.height(6.dp))
@@ -1054,11 +968,28 @@ fun HomeScreen(
             }
 
             // render in the saved order with a choreographed entrance;
-            // key() keeps each card's state stable even when reordered
+            // key() keeps each card's state stable even when reordered.
+            // The three glance keys collapse into ONE deck at the position of
+            // the first visible one — order & visibility still per key.
             val offset = if (profile.streak == 0 && kcalToday == 0 && !trainedToday) 3 else 2
+            val glanceKeys = listOf("weekRecap", "lastSession", "vitals")
+            val glanceVisible = cardOrder.filter { it in glanceKeys }
             cardOrder.forEachIndexed { i, k ->
                 androidx.compose.runtime.key(k) {
-                    Reveal(offset + i) { homeCards[k]?.invoke() }
+                    Reveal(offset + i) {
+                        when {
+                            k in glanceKeys && k == glanceVisible.firstOrNull() -> GlanceDeck(
+                                pages = glanceVisible,
+                                tick = resumeTick,
+                                readiness = readiness,
+                                onOpenTrain = onOpenTrain,
+                                onOpenBody = onOpenBody,
+                                onOpenReport = { onOpenModule("report") },
+                            )
+                            k in glanceKeys -> {}
+                            else -> homeCards[k]?.invoke()
+                        }
+                    }
                 }
             }
 
@@ -1070,7 +1001,8 @@ fun HomeScreen(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(8.dp))
-                    .pressScale { editCards = true }
+                    .pressScale { Haptics.tick(ctx); editCards = true }
+                    .defaultMinSize(minHeight = 44.dp)
                     .padding(horizontal = 10.dp, vertical = 5.dp),
             )
 
@@ -1090,47 +1022,6 @@ fun HomeScreen(
     }
 }
 
-// ─── Quick-log orb — breathing mint, above the dock ──────────────────────────
-
-@Composable
-private fun QuickLogOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val qlCtx = LocalContext.current
-    val breath by rememberInfiniteTransition(label = "ql").animateFloat(
-        0f, 1f,
-        infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "qla",
-    )
-    Box(
-        modifier
-            .navigationBarsPadding()
-            .padding(end = 20.dp, bottom = 86.dp)
-            .size(60.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        // breathing halo — glow without shadow. Scale + alpha are read in the
-        // draw/layer phase (graphicsLayer + drawBehind), not composition, so the
-        // perpetual breathing costs zero recompositions (audit B2-14 / A9).
-        Box(
-            Modifier.matchParentSize()
-                .graphicsLayer {
-                    val s = 1f + 0.16f * breath
-                    scaleX = s; scaleY = s
-                }
-                .drawBehind {
-                    drawCircle(Mod.Home.copy(alpha = 0.10f + 0.08f * (1f - breath)))
-                },
-        )
-        Box(
-            Modifier.size(52.dp).clip(CircleShape)
-                .background(Mod.Home)
-                .pressScale { Haptics.tick(qlCtx); onClick() },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Rounded.Add, "Quick log", tint = Void, modifier = Modifier.size(26.dp))
-        }
-    }
-}
-
 // ─── Sleep confirm card (OF-1) ───────────────────────────────────────────────
 // A watch import can't know the real lights-out time (it starts the clock at
 // sleep onset → ~95 % efficiency always), which would push the sleep-restriction
@@ -1145,15 +1036,16 @@ private fun SleepConfirmCard(
 ) {
     val scCtx = LocalContext.current
     val accent = Accent
-    Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+    Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
             Text(
                 "SLEEP · CONFIRM", color = accent, fontFamily = Display, fontSize = FS.s9,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
             Spacer(Modifier.height(6.dp))
+            val sleepMin = com.ascend.lifeos.data.sleep.SleepProtocol.actualSleep(night)
             Text(
-                "How long to fall asleep last night?", color = TextPrimary,
+                "Detected ${sleepMin / 60}h ${sleepMin % 60}m — how long to fall asleep?", color = TextPrimary,
                 fontFamily = Display, fontSize = FS.s16, fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(3.dp))
@@ -1177,7 +1069,7 @@ private fun SleepConfirmCard(
             Spacer(Modifier.height(9.dp))
             Text(
                 "That was a power nap →", color = TextDim, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale { Haptics.tick(scCtx); onNap() }.padding(vertical = 4.dp, horizontal = 2.dp),
             )
         }
     }
@@ -1186,11 +1078,11 @@ private fun SleepConfirmCard(
 // ─── NEXT UP card ────────────────────────────────────────────────────────────
 
 @Composable
-private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpenTrain: () -> Unit, onOpenCalendar: () -> Unit) {
+private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpenTrain: () -> Unit, onOpenCalendar: () -> Unit, tick: Int = 0) {
     val ctx = LocalContext.current
-    val timeline by produceState<DayTimeline?>(null) {
+    val timeline by produceState<DayTimeline?>(null, tick) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            val today = java.time.LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val dao = CalendarRepo.dao(ctx)
             val entities = runCatching {
                 dao.eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
@@ -1215,9 +1107,9 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
     // no flash of wrong advice: shimmer until the timeline actually loaded
     Crossfade(targetState = timeline != null, label = "schedule", animationSpec = tween(400)) { loaded ->
         if (!loaded) {
-            ShimmerPanel(height = 74.dp, corner = 20.dp)
+            ShimmerPanel(height = 74.dp)
         } else {
-            Panel(Modifier.fillMaxWidth(), corner = 20.dp) {
+            Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(18.dp)) {
                     when {
                         current != null -> {
@@ -1258,7 +1150,7 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                         else -> EventLine("DONE", "Training complete", "recovery is the mission now", Good, onClick = onOpenTrain)
                     }
                     if (nowMin >= 20 * 60 && (next == null || next.endMin <= nowMin)) {
-                        val tomorrow = java.time.LocalDate.now().plusDays(1)
+                        val tomorrow = com.ascend.lifeos.core.todayDate().plusDays(1)
                         val firstTomorrow by produceState<TimelineBlock?>(null, tomorrow) {
                             value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 runCatching {
@@ -1273,8 +1165,9 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                             HairLine()
                             Spacer(Modifier.height(10.dp))
                             Text(
-                                "Tomorrow · ${firstTomorrow!!.title} at ${fmt(firstTomorrow!!.startMin)}",
+                                "Tomorrow · ${firstTomorrow?.title} at ${fmt(firstTomorrow?.startMin ?: 0)}",
                                 color = TextDim, fontSize = FS.s11, fontFamily = Body,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
@@ -1331,7 +1224,8 @@ private fun HairLine() {
 
 @Composable
 private fun MacroBar(label: String, current: Int, goal: Int, color: Color, modifier: Modifier = Modifier) {
-    val frac = if (goal > 0) (current / goal.toFloat()).coerceIn(0f, 1.2f) else 0f
+    val raw = if (goal > 0) (current / goal.toFloat()).coerceIn(0f, 1.2f) else 0f
+    val frac by androidx.compose.animation.core.animateFloatAsState(raw, com.ascend.lifeos.ui.motion.Motion.springSmooth, label = "macro")
     Row(
         modifier.clip(RoundedCornerShape(8.dp))
             .background(Ivory.copy(alpha = 0.04f))
@@ -1405,6 +1299,189 @@ private fun FirstDayStep(num: String, title: String, hint: String, onClick: () -
     }
 }
 
+// ─── Glance deck — three stat cards as pages of one swipeable panel ──────────
+// Week recap, last session and vitals each carried a full card of scroll
+// height. The deck pins them to ONE fixed-height panel; swipe moves between
+// pages, a tap dives into the owning module. Pages without data drop out.
+
+@Composable
+private fun GlanceDeck(
+    pages: List<String>,
+    tick: Int,
+    readiness: Int?,
+    onOpenTrain: () -> Unit,
+    onOpenBody: () -> Unit,
+    onOpenReport: () -> Unit,
+) {
+    val ctx = LocalContext.current
+
+    // ── week recap data ──
+    data class WeekStat(val value: Int, val label: String, val prev: Int)
+    val weekData = remember(Repo.data.hashCode()) {
+        data class ScanResult(val train: Int, val avgKcal: Int, val water: Int, val avgSleep: Int)
+        fun scan(monday: java.time.LocalDate, until: java.time.LocalDate): ScanResult {
+            var train = 0; var kcal = 0; var water = 0; var days = 0
+            val sleepVals = mutableListOf<Int>()
+            var d = monday
+            while (!d.isAfter(until)) {
+                val key = d.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+                val dd = Repo.data.days[key]
+                if (dd != null) {
+                    days++
+                    if (dd.workoutDone || dd.trainSets > 0) train++
+                    kcal += dd.meals.sumOf { it.kcal }
+                    water += dd.water
+                }
+                Repo.bodyDay(key)?.sleepMin?.let { if (it > 0) sleepVals.add(it) }
+                d = d.plusDays(1)
+            }
+            val avg = if (days > 0) kcal / days else 0
+            val sleepAvg = if (sleepVals.isNotEmpty()) (sleepVals.average() / 60).roundToInt() else 0
+            return ScanResult(train, avg, water, sleepAvg)
+        }
+        val now = com.ascend.lifeos.core.todayDate()
+        val weekStart = if (Prefs.string(ctx, Prefs.WEEK_START, "monday") == "sunday")
+            java.time.DayOfWeek.SUNDAY else java.time.DayOfWeek.MONDAY
+        val thisStart = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(weekStart))
+        val cur = scan(thisStart, now)
+        val prev = scan(thisStart.minusWeeks(1), thisStart.minusDays(1))
+        val streak = Repo.profile().streak
+        listOf(
+            WeekStat(cur.train, "train", prev.train),
+            WeekStat(cur.avgKcal, "kcal/d", prev.avgKcal),
+            WeekStat(cur.avgSleep, "sleep h", prev.avgSleep),
+            WeekStat(streak, "streak", streak),
+        )
+    }
+
+    // ── last session data ──
+    val dao = remember { TrainingDatabase.get(ctx).dao() }
+    val lastSess by produceState<SessionWithSets?>(null, tick) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { dao.recentSessions(1).firstOrNull()?.firstOrNull() }.getOrNull()
+        }
+    }
+
+    // ── vitals data ──
+    val health = Repo.data.health
+    val bd = Repo.bodyDay()
+    val sleepMin = health?.sleepMin
+    val steps = health?.steps
+    val rhr = bd?.restingHr ?: health?.restingHr
+    val needMin = runCatching { Repo.sleepNeedMin() }.getOrDefault(480)
+
+    // pages that actually carry data right now
+    val live = pages.filter { key ->
+        when (key) {
+            "weekRecap" -> weekData.any { it.value > 0 }
+            "lastSession" -> lastSess?.session?.isComplete == true
+            "vitals" -> sleepMin != null || steps != null || rhr != null || readiness != null
+            else -> false
+        }
+    }
+    if (live.isEmpty()) return
+
+    Spacer(Modifier.height(18.dp))
+    val pager = androidx.compose.foundation.pager.rememberPagerState(pageCount = { live.size })
+    Panel(Modifier.fillMaxWidth(), corner = RElem) {
+        Column {
+            androidx.compose.foundation.pager.HorizontalPager(
+                state = pager,
+                modifier = Modifier.fillMaxWidth(),
+            ) { pi ->
+                when (live[pi]) {
+                    "weekRecap" -> Column(
+                        Modifier.fillMaxWidth().height(96.dp).pressScale(onOpenReport).padding(14.dp),
+                    ) {
+                        Text("WEEK RECAP", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        Spacer(Modifier.weight(1f))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            weekData.forEach { stat ->
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    TickerNumber(stat.value, 20, color = TextPrimary, fontFamily = Display)
+                                    Text(stat.label, color = TextDim, fontSize = FS.s8_5, fontFamily = Body)
+                                    if (stat.prev > 0 && stat.label != "streak") {
+                                        val delta = stat.value - stat.prev
+                                        val sign = if (delta > 0) "↑" else if (delta < 0) "↓" else "="
+                                        val c = if (delta > 0) Good else if (delta < 0) Crit else TextDim
+                                        Text("$sign${kotlin.math.abs(delta)}", color = c, fontSize = FS.s8, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.weight(1f))
+                    }
+                    "lastSession" -> lastSess?.let { s ->
+                        val ago = System.currentTimeMillis() - (s.session.finishedAt ?: s.session.startedAt)
+                        val agoText = when {
+                            ago < 3_600_000 -> "${(ago / 60_000).toInt()} min ago"
+                            ago < 86_400_000 -> "${(ago / 3_600_000).toInt()}h ago"
+                            ago < 172_800_000 -> "Yesterday"
+                            else -> "${(ago / 86_400_000).toInt()} days ago"
+                        }
+                        Column(Modifier.fillMaxWidth().height(96.dp).pressScale(onOpenTrain).padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("LAST SESSION", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.weight(1f))
+                                Text(agoText, color = Mod.Train, fontSize = FS.s10, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.weight(1f))
+                            Text(s.session.templateName, color = TextPrimary, fontFamily = Display, fontSize = FS.s15, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Spacer(Modifier.height(3.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("${s.session.totalSets} sets", color = Mod.Train, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
+                                Text("${s.session.totalReps} reps", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body)
+                                Text("${s.session.durationMinutes} min", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body)
+                            }
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                    "vitals" -> Column(
+                        Modifier.fillMaxWidth().height(96.dp).pressScale(onOpenBody).padding(14.dp),
+                    ) {
+                        Text("VITALS", color = TextDim, fontSize = FS.s8_5, fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        Spacer(Modifier.weight(1f))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            sleepMin?.let { sm ->
+                                VitalMini("Sleep", "${sm / 60}h${"%02d".format(sm % 60)}", sm / needMin.toFloat(), Mod.Body)
+                            }
+                            readiness?.let { r ->
+                                val rG = Prefs.int(ctx, Prefs.READINESS_GOOD, 75)
+                                val rW = Prefs.int(ctx, Prefs.READINESS_WARN, 50)
+                                VitalMini("Recovery", "$r%", r / 100f, when {
+                                    r >= rG -> Good; r >= rW -> Warn; else -> Crit
+                                })
+                            }
+                            steps?.let { s ->
+                                val stepGoal = Prefs.int(ctx, Prefs.STEP_GOAL, 10000)
+                                VitalMini("Steps", if (s >= 1000) "${s / 1000}k" else "$s", (s / stepGoal.toFloat()).coerceAtMost(1f), Mod.Train)
+                            }
+                            rhr?.let { hr ->
+                                VitalMini("RHR", "$hr", ((80f - hr.coerceIn(40, 80)) / 40f), Mod.Body)
+                            }
+                        }
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+            if (live.size > 1) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 9.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    live.indices.forEach { i ->
+                        val sel = pager.currentPage == i
+                        Box(
+                            Modifier.padding(horizontal = 3.dp).size(if (sel) 6.dp else 5.dp)
+                                .clip(CircleShape)
+                                .background(if (sel) TextMuted else Ivory.copy(alpha = 0.15f)),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ─── configurable dashboard (PDF: anpassbares Dashboard) ─────────────────────
 
 internal object HomeCards {
@@ -1412,9 +1489,9 @@ internal object HomeCards {
         "briefing" to "Daily briefing",
         "nextup" to "Next up",
         "missions" to "Today's missions",
-        "weekRecap" to "Weekly recap",
-        "lastSession" to "Last session",
-        "vitals" to "Vitals glance",
+        "weekRecap" to "Glance · Week recap",
+        "lastSession" to "Glance · Last session",
+        "vitals" to "Glance · Vitals",
         "systems" to "Systems row",
     )
     private val DEFAULT = ALL.map { it.first }
@@ -1485,6 +1562,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                             .clip(RoundedCornerShape(9.dp))
                             .background(if (visible) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.05f))
                             .pressScale {
+                                Haptics.tick(ctx)
                                 commit(if (visible) order - key else order + key)
                             }
                             .padding(horizontal = 11.dp, vertical = 6.dp)
@@ -1521,7 +1599,8 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                "Hidden cards stop computing entirely — less noise, less battery.",
+                "Hidden cards stop computing entirely — less noise, less battery. " +
+                    "Glance cards share one swipeable deck instead of stacking.",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
             Spacer(Modifier.height(10.dp))
@@ -1631,7 +1710,7 @@ private fun SystemOrb(label: String, icon: androidx.compose.ui.graphics.vector.I
         Spacer(Modifier.height(6.dp))
         Text(
             label, color = TextMuted, fontFamily = Body,
-            fontSize = FS.s10, fontWeight = FontWeight.SemiBold, maxLines = 1,
+            fontSize = FS.s10, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -1660,6 +1739,7 @@ private fun BriefRow(
             Text(
                 text, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body,
                 fontWeight = FontWeight.Medium, lineHeight = FS.s17,
+                maxLines = 3, overflow = TextOverflow.Ellipsis,
             )
         }
         if (action != null) {

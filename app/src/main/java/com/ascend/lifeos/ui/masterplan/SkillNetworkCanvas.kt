@@ -1,5 +1,6 @@
 package com.ascend.lifeos.ui.masterplan
 
+import com.ascend.lifeos.data.Haptics
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -225,6 +226,7 @@ fun SkillNetworkCanvas(
 
 @Composable
 private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: Modifier) {
+    val slCtx = androidx.compose.ui.platform.LocalContext.current
     val labelColor = when (star.state) {
         NodeState.DONE -> TextPrimary
         NodeState.AVAILABLE -> accent
@@ -239,7 +241,7 @@ private fun StarLabel(star: Star, accent: Color, onClick: () -> Unit, modifier: 
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = onClick,
+                    onClick = { Haptics.tick(slCtx); onClick() },
                 ),
         )
         Text(

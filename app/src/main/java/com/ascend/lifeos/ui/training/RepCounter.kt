@@ -74,7 +74,7 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                     Text("EXPERIMENTAL · on-device only", color = Warn, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                 }
                 Box(
-                    Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                    Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
                         .background(Ivory.copy(alpha = 0.06f))
                         .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                         .pressScale(onClick = onClose),
@@ -157,14 +157,16 @@ fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
                 )
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    var armedReset by remember { mutableStateOf(false) }
+                    LaunchedEffect(armedReset) { if (armedReset) { kotlinx.coroutines.delay(2500); armedReset = false } }
                     Box(
                         Modifier.weight(1f).clip(RoundedCornerShape(13.dp))
-                            .background(Ivory.copy(alpha = 0.06f))
-                            .border(0.5.dp, Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
-                            .pressScale { Haptics.warn(ctx); reps = 0; counter.reset() }
+                            .background(if (armedReset) Crit.copy(alpha = 0.10f) else Ivory.copy(alpha = 0.06f))
+                            .border(0.5.dp, if (armedReset) Crit.copy(alpha = 0.3f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(13.dp))
+                            .pressScale { if (armedReset) { Haptics.confirm(ctx); reps = 0; counter.reset() } else { Haptics.warn(ctx); armedReset = true } }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text("Reset", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                    ) { Text(if (armedReset) "Tap to confirm" else "Reset", color = if (armedReset) Crit else TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     Box(
                         Modifier.weight(2f).clip(RoundedCornerShape(13.dp))
                             .background(if (reps > 0) Mod.Train else Mod.Train.copy(alpha = 0.25f))

@@ -9,7 +9,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import com.ascend.lifeos.data.Haptics
+import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.Prefs
+import kotlin.math.roundToInt
 import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.ActivityStore
@@ -100,7 +104,7 @@ object CommandEngine {
             val v = m.groupValues[2].replace(',', '.').toDoubleOrNull()
             if (v != null && v in 35.0..250.0) {
                 Repo.logWeight(v)
-                return CmdResult.Done("Weight logged: %.1f kg".format(v))
+                return CmdResult.Done("Weight logged: ${Units.fmtWeight(ctx, v.toDouble())}")
             }
         }
 
@@ -316,14 +320,14 @@ object CommandEngine {
             val cm = m.groupValues[2].replace(',', '.').toDoubleOrNull() ?: return@let
             if (cm in 10.0..250.0) {
                 Repo.logMeasurement(key, cm)
-                return CmdResult.Done("${key.replaceFirstChar { it.uppercase() }} logged: %.1f cm".format(cm))
+                return CmdResult.Done("${key.replaceFirstChar { it.uppercase() }} logged: ${Units.fmtHeight(ctx, cm.roundToInt())}")
             }
         }
 
         // ---- deload toggle: "deload" / "deload off" ---------------------------
         if (q == "deload") {
             val cur = Prefs.int(ctx, Prefs.DELOAD_UNTIL, 0)
-            val today = LocalDate.now().toEpochDay().toInt()
+            val today = com.ascend.lifeos.core.todayDate().toEpochDay().toInt()
             if (cur > 0 && cur >= today) {
                 Prefs.setInt(ctx, Prefs.DELOAD_UNTIL, 0)
                 return CmdResult.Done("Deload ended — back to full training")
@@ -389,6 +393,31 @@ object CommandEngine {
             return CmdResult.Done("No food entries to undo")
         }
 
+        // ---- undo water: "undo water", "undo wasser" ---------------------------
+        if (q == "undo water" || q == "undo wasser") {
+            val day = Repo.today()
+            if (day.water > 0) {
+                Repo.addWater(-1)
+                return CmdResult.Done("Water −1 (now ${day.water - 1})")
+            }
+            return CmdResult.Done("Water is already at 0")
+        }
+
+        // ---- habit check: "habit [name]" ----------------------------------------
+        if (q.startsWith("habit ")) {
+            val name = q.removePrefix("habit ").trim()
+            val habits = com.ascend.lifeos.data.life.LifeStores.habits(ctx)
+            val match = habits.firstOrNull { it.title.equals(name, ignoreCase = true) }
+                ?: habits.firstOrNull { it.title.startsWith(name, ignoreCase = true) }
+            if (match != null) {
+                val dk = com.ascend.lifeos.core.todayKey()
+                val wasDone = com.ascend.lifeos.data.life.LifeStores.habitDone(ctx, match.id, dk)
+                com.ascend.lifeos.data.life.LifeStores.setHabitDone(ctx, match.id, dk, !wasDone)
+                return CmdResult.Done(if (wasDone) "${match.title} unchecked" else "${match.title} ✓")
+            }
+            return CmdResult.Done("No habit matching \"$name\"")
+        }
+
         // ---- quick factor toggles: "caffeine", "alcohol", "screen" ----------
         val factorCmds = mapOf(
             "caffeine" to "caffeineLate", "koffein" to "caffeineLate",
@@ -412,7 +441,17 @@ object CommandEngine {
             return CmdResult.Done("Factor logged: $factor")
         }
 
-        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · protein 30 · mood 4 · spend 12 coffee · income 500 · fast · sleep 7h30 · undo food · yesterday water 3 · lauf 45 · focus 50 · ${sportHintWord()} tue 17-19")
+        if (q == "help" || q == "hilfe" || q == "?") {
+            return CmdResult.Done(
+                "Commands: water [n] · [n] ml · [kg] · kcal [n] [food] · protein [n] · mood [1-5] · " +
+                "note [text] · journal [text] · spend [n] [what] · income [n] · focus [min] · " +
+                "train · nap [min] · sleep [h]h[m]m · fast · breathe · winddown · stretch · " +
+                "deep work [min] · [body part] [cm] · habit [name] · undo [food/water] · " +
+                "yesterday [cmd] · [event] [time] [day]"
+            )
+        }
+
+        return CmdResult.Unknown("Try: water 2 · 71.5 kg · kcal 400 · protein 30 · mood 4 · spend 12 coffee · income 500 · fast · sleep 7h30 · habit read · undo food · yesterday water 3 · lauf 45 · focus 50 · ${sportHintWord()} tue 17-19 · help")
     }
 
     private fun defaultMealSlot(): String {
@@ -490,16 +529,16 @@ object CommandEngine {
             "sat" to DayOfWeek.SATURDAY.value, "sa" to DayOfWeek.SATURDAY.value,
             "sun" to DayOfWeek.SUNDAY.value, "so" to DayOfWeek.SUNDAY.value,
         )
-        var day = LocalDate.now()
+        var day = com.ascend.lifeos.core.todayDate()
         val words = rest.split(" ").toMutableList()
         val dayWord = words.lastOrNull()?.let { w -> days.entries.find { it.key == w } }
         if (dayWord != null) {
             words.removeAt(words.size - 1)
             day = when (dayWord.value) {
-                0 -> LocalDate.now()
-                1 -> LocalDate.now().plusDays(1)
+                0 -> com.ascend.lifeos.core.todayDate()
+                1 -> com.ascend.lifeos.core.todayDate().plusDays(1)
                 else -> {
-                    var d = LocalDate.now()
+                    var d = com.ascend.lifeos.core.todayDate()
                     while (d.dayOfWeek.value != dayWord.value) d = d.plusDays(1)
                     d
                 }
@@ -533,7 +572,7 @@ object CommandEngine {
 fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    var input by remember { mutableStateOf("") }
+    var input by rememberSaveable { mutableStateOf("") }
     var feedback by remember { mutableStateOf<Pair<String, Boolean>?>(null) } // text, success
     val focus = remember { FocusRequester() }
 
@@ -575,16 +614,19 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                         }
                         Text(hints, color = TextDim, fontSize = FS.s13, fontFamily = Body)
                     }
-                    BasicTextField(
-                        value = input, onValueChange = { input = it }, singleLine = true,
-                        textStyle = TextStyle(color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold),
-                        cursorBrush = SolidColor(Mod.Home),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                        keyboardActions = KeyboardActions(onGo = {
-                            scope.launch { runCommand(input, ctx, onNavigate, onDismiss) { feedback = it } }
-                        }),
-                        modifier = Modifier.fillMaxWidth().focusRequester(focus),
-                    )
+                    Box(Modifier.fillMaxWidth()) {
+                        if (input.isEmpty()) Text("Type a command…", color = TextDim, fontSize = FS.s14, fontFamily = Body)
+                        BasicTextField(
+                            value = input, onValueChange = { input = it }, singleLine = true,
+                            textStyle = TextStyle(color = TextPrimary, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold),
+                            cursorBrush = SolidColor(Mod.Home),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                            keyboardActions = KeyboardActions(onGo = {
+                                scope.launch { runCommand(input, ctx, onNavigate, onDismiss) { feedback = it } }
+                            }),
+                            modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                        )
+                    }
                 }
                 Spacer(Modifier.width(10.dp))
                 Box(
@@ -592,6 +634,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                         .background(Mod.Home.copy(alpha = 0.14f))
                         .border(0.5.dp, Mod.Home.copy(alpha = 0.45f), CircleShape)
                         .pressScale {
+                            Haptics.tick(ctx)
                             val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                                 putExtra(RecognizerIntent.EXTRA_PROMPT, "JARVIS is listening…")
@@ -607,6 +650,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                 Text(
                     text, color = if (ok) Good else Warn,
                     fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
 
@@ -621,7 +665,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
             val chips = remember {
                 val c = mutableListOf<Pair<String, String>>()
                 when (hour) {
-                    in 5..10 -> { c.add("water 2" to "💧 Water"); c.add("71.5 kg" to "⚖️ Weigh-in") }
+                    in 5..10 -> { c.add("water 2" to "💧 Water"); c.add((if (Units.isImperial(ctx)) "157.6 lbs" else "71.5 kg") to "⚖️ Weigh-in") }
                     in 11..14 -> { c.add("kcal 400" to "🍽️ Lunch"); c.add("water 2" to "💧 Water") }
                     in 15..18 -> { c.add("train" to "🏋️ Train"); c.add("focus 50" to "🎯 Focus") }
                     in 19..22 -> { c.add("winddown" to "🌙 Wind Down"); c.add("mood 4" to "😊 Mood") }
@@ -636,6 +680,7 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                             .background(Mod.Home.copy(alpha = 0.08f))
                             .border(0.5.dp, Mod.Home.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
                             .pressScale {
+                                Haptics.tick(ctx)
                                 input = cmd
                                 scope.launch { runCommand(cmd, ctx, onNavigate, onDismiss) { feedback = it } }
                             }

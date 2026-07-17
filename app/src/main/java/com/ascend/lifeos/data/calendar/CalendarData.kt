@@ -44,6 +44,12 @@ interface CalendarDao {
     @Query("DELETE FROM cal_events WHERE note = 'ics'")
     suspend fun deleteBySource()
 
+    @Transaction
+    suspend fun replaceIcsEvents(events: List<CalEventEntity>) {
+        deleteBySource()
+        events.forEach { upsert(it) }
+    }
+
     /** Wipe every event imported via WebUntis login (markers: untis / untis_x). */
     @Query("DELETE FROM cal_events WHERE note LIKE 'untis%'")
     suspend fun deleteUntis()

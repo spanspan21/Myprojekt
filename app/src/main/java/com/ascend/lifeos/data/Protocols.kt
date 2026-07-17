@@ -29,7 +29,7 @@ object Protocols {
             "game_day", "Game day",
             "Sport block today → carbs at lunch, hydrate early, legs stay fresh",
         ) { ctx ->
-            val today = LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val dao = CalendarRepo.dao(ctx)
             val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
             val tl = CalendarRepo.timelineFor(ctx, today, entities)
@@ -48,7 +48,7 @@ object Protocols {
             "exam_focus", "Exam focus",
             "Exam within 3 days → study reminder, training already trimmed",
         ) { ctx ->
-            val today = LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val dao = CalendarRepo.dao(ctx)
             val exams = dao.eventsInRangeOnce(today.toEpochDay(), today.plusDays(3).toEpochDay())
                 .filter { it.type == EventType.EXAM.name && CalendarRepo.run { true } }
@@ -96,8 +96,8 @@ object Protocols {
         Protocol(
             "streak_guard", "Streak guard",
             "Evening with open missions → one warning before the chain breaks",
-        ) { _ ->
-            if (LocalTime.now().hour >= 20) {
+        ) { ctx ->
+            if (LocalTime.now().hour >= Prefs.int(ctx, Prefs.STREAK_GUARD_HOUR, 20)) {
                 val c = Repo.completion()
                 val p = Repo.profile()
                 if (c.done < c.total && p.streak >= 3) {
@@ -111,7 +111,7 @@ object Protocols {
             "holiday_slot", "Holiday bonus slot",
             "Holiday + nothing planned → claim the free morning",
         ) { ctx ->
-            val today = LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val dao = CalendarRepo.dao(ctx)
             val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())
             val tl = CalendarRepo.timelineFor(ctx, today, entities)
@@ -123,15 +123,16 @@ object Protocols {
             "bedtime_tomorrow", "Early-start warning",
             "First block before 08:00 tomorrow → bedtime heads-up at night",
         ) { ctx ->
-            if (LocalTime.now().hour < 21) return@Protocol null
-            val tomorrow = LocalDate.now().plusDays(1)
+            if (LocalTime.now().hour < Prefs.int(ctx, Prefs.STREAK_GUARD_HOUR, 20) + 1) return@Protocol null
+            val tomorrow = com.ascend.lifeos.core.todayDate().plusDays(1)
             val dao = CalendarRepo.dao(ctx)
             val entities = dao.eventsInRangeOnce(tomorrow.toEpochDay(), tomorrow.toEpochDay())
             val tl = CalendarRepo.timelineFor(ctx, tomorrow, entities)
             val first = tl.blocks.minByOrNull { it.startMin } ?: return@Protocol null
-            if (first.startMin <= 8 * 60) {
+            if (first.startMin <= Prefs.int(ctx, Prefs.EARLY_START_HOUR, 8) * 60) {
                 val need = Repo.sleepNeedMin()
-                val bed = ((first.startMin - 75 - need) % 1440 + 1440) % 1440
+                val prep = Prefs.int(ctx, Prefs.MORNING_PREP_MIN, 75)
+                val bed = ((first.startMin - prep - need) % 1440 + 1440) % 1440
                 "${first.title} at ${CalendarRepo.fmtMin(first.startMin)} tomorrow — lights out by ${CalendarRepo.fmtMin(bed)}."
             } else null
         },
@@ -156,7 +157,7 @@ object Protocols {
             runCatching { WeatherRepo.refresh(ctx) }
             val codes = WeatherRepo.hourlyCode ?: return@Protocol null
             val temps = WeatherRepo.hourlyTemp
-            val today = LocalDate.now()
+            val today = com.ascend.lifeos.core.todayDate()
             val nowMin = LocalTime.now().let { it.hour * 60 + it.minute }
             val ev = CalendarRepo.dao(ctx)
                 .eventsInRangeOnce(today.toEpochDay(), today.toEpochDay())

@@ -69,9 +69,6 @@ object HealthBridge {
         }
     }
 
-    /** Full diagnostics of the last run (record counts, freshness, sources). */
-    fun lastDiag(ctx: Context): String = Prefs.string(ctx, LAST_RESULT, "")
-
     class Worker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
         override suspend fun doWork(): Result {
             val ctx = applicationContext
