@@ -12,6 +12,10 @@ import com.ascend.lifeos.ui.motion.pressScale
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +32,22 @@ import com.ascend.lifeos.ui.theme.*
  * Keep the list short: only what the user can actually see or toggle.
  */
 object Changelog {
+    // What actually changed THIS release — the auto-sheet shows only these;
+    // everything below in ENTRIES is the archive behind "Earlier updates".
+    const val LATEST_VERSION = "2.30"
+    val LATEST = listOf(
+        "Training speaks your sport now: pick your disciplines (calisthenics, gym, running, yoga, swimming, HIIT) and JARVIS generates complete study-based weeks for each — C25K ladders, barbell 3×5, vinyasa flows, CSS swim sets",
+        "New session player for timed workouts — countdown ring, coaching cues, haptic phase changes; finishing logs the activity, ticks your missions and your week",
+        "Interactive tour replaces the slide deck: it walks the LIVE app with a spotlight — replay any time from Settings → Guide",
+        "Settings reorganized: five category pages with search, expert dials folded into Advanced",
+        "Your modules: switch off School, Finance, Skills, Guard, Sleep, Habits, Goals or Prime — off means gone from dock, home and palette",
+        "Tap a logged food to edit it — amount, meal slot, half/double shortcuts; macros scale automatically",
+        "Event reminders: a heads-up before timed calendar events (lead time in Settings → Notifications)",
+        "Preferred training time: Auto, Morning, Midday or Evening — sessions land where your day allows",
+        "First-week checklist on Home with auto-detected steps; palette autocompletes as you type",
+        "Skills starter gallery: pick the paths you want instead of inheriting defaults",
+    )
+
     // newest first — edit this list per release
     val ENTRIES = listOf(
         // ── v2.24 ──
@@ -235,8 +255,12 @@ object Changelog {
 @Composable
 fun ChangelogSheet(onDismiss: () -> Unit) {
     JarvisSheet(onDismiss = onDismiss) {
+        // Height-capped so the scrim stays visible: tap-outside always works
+        // (the old full-height sheet could trap the user under 100 entries).
         Column(
-            Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()
+            Modifier.fillMaxWidth()
+                .heightIn(max = 620.dp)
+                .padding(22.dp).navigationBarsPadding()
                 .verticalScroll(rememberScrollState()),
         ) {
             Text(
@@ -244,13 +268,32 @@ fun ChangelogSheet(onDismiss: () -> Unit) {
                 fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
             Spacer(Modifier.height(4.dp))
-            Text("New in this build", color = TextPrimary, fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold)
+            Text("New in v${Changelog.LATEST_VERSION}", color = TextPrimary, fontFamily = Display, fontSize = FS.s21, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
-            Changelog.ENTRIES.forEach {
+            Changelog.LATEST.forEach {
                 Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.Top) {
                     Box(Modifier.padding(top = 6.dp).size(5.dp).clip(CircleShape).background(Mod.Home))
                     Spacer(Modifier.width(10.dp))
                     Text(it, color = TextMuted, fontSize = FS.s13, fontFamily = Body, lineHeight = FS.s18)
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            var earlier by remember { mutableStateOf(false) }
+            Text(
+                if (earlier) "EARLIER UPDATES ▴" else "EARLIER UPDATES ▾",
+                color = TextDim, fontFamily = Display, fontSize = FS.s9,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                    .pressScale { earlier = !earlier }
+                    .padding(vertical = 8.dp, horizontal = 2.dp),
+            )
+            if (earlier) {
+                Changelog.ENTRIES.forEach {
+                    Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.Top) {
+                        Box(Modifier.padding(top = 6.dp).size(5.dp).clip(CircleShape).background(Ivory.copy(alpha = 0.25f)))
+                        Spacer(Modifier.width(10.dp))
+                        Text(it, color = TextDim, fontSize = FS.s12, fontFamily = Body, lineHeight = FS.s17)
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))

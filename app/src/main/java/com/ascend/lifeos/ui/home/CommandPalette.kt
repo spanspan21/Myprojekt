@@ -582,6 +582,67 @@ object CommandEngine {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+// ─── live palette autocomplete ───────────────────────────────────────────────
+// Cheap and local: command templates, navigation targets (module-gated) and
+// activity verbs. Full commands execute on tap; templates fill the field.
+
+private object CommandSuggest {
+    data class Sugg(val label: String, val hint: String, val fill: String, val execute: Boolean)
+
+    private data class Tpl(val key: String, val example: String, val hint: String, val execute: Boolean = false)
+
+    private val TEMPLATES = listOf(
+        Tpl("water", "water 2", "glasses of water"),
+        Tpl("kcal", "kcal 400", "quick calories"),
+        Tpl("protein", "protein 30", "protein quick-log"),
+        Tpl("mood", "mood 4", "mood 1–5 + note"),
+        Tpl("nap", "nap 20", "power nap"),
+        Tpl("fast", "fast", "toggle fasting", execute = true),
+        Tpl("focus", "focus 25", "hard-block session"),
+        Tpl("note", "note ", "capture a note"),
+        Tpl("journal", "journal", "open journal", execute = true),
+        Tpl("status", "status", "today in one line", execute = true),
+        Tpl("spend", "spend 12 lunch", "book an expense"),
+        Tpl("income", "income 50", "book income"),
+        Tpl("yesterday", "yesterday water 3", "backdate a log"),
+        Tpl("breathe", "breathe", "breathing exercise", execute = true),
+        Tpl("timer", "timer", "simple timer", execute = true),
+        Tpl("winddown", "winddown", "evening wind-down", execute = true),
+        Tpl("undo", "undo", "remove last food", execute = true),
+    )
+
+    private val NAV = listOf(
+        "train", "fuel", "body", "sleep", "calendar", "report", "recipes",
+        "achievements", "rules", "decisions", "notes", "heatmap", "stats",
+        // module-owned targets checked against Modules at query time:
+        "skills", "guard", "habits", "goals", "finance", "school", "prime",
+    )
+    private val NAV_MODULE = mapOf(
+        "skills" to "skills", "guard" to "guard", "habits" to "habits",
+        "goals" to "goals", "finance" to "finance", "school" to "school", "prime" to "prime",
+    )
+
+    private val ACTIVITY_VERBS = listOf("run", "lauf", "ride", "swim", "walk", "yoga", "hiit", "row", "climb")
+
+    fun forQuery(q: String, ctx: android.content.Context): List<Sugg> {
+        if (q.isBlank() || q.length > 24 || ' ' in q) return emptyList()
+        val out = ArrayList<Sugg>()
+        TEMPLATES.filter { it.key.startsWith(q) }.forEach {
+            out += Sugg(it.example, it.hint, it.example, it.execute)
+        }
+        NAV.filter { it.startsWith(q) }.forEach { t ->
+            val mod = NAV_MODULE[t]
+            if (mod == null || com.ascend.lifeos.data.Modules.isOn(ctx, mod)) {
+                out += Sugg("open $t", "navigate", t, execute = true)
+            }
+        }
+        ACTIVITY_VERBS.filter { it.startsWith(q) }.forEach { v ->
+            out += Sugg("$v 30", "log an activity (min · optional rpe)", "$v 30", execute = false)
+        }
+        return out.distinctBy { it.label }.take(5)
+    }
+}
+
 @Composable
 fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
@@ -666,6 +727,35 @@ fun CommandPalette(onNavigate: (String) -> Unit, onDismiss: () -> Unit) {
                     fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
+            }
+
+            // ── live suggestions — the legend was static; this completes as
+            // you type. Tap a full command to run it, a template to fill it.
+            val suggs = remember(input) { CommandSuggest.forQuery(input.trim().lowercase(), ctx) }
+            if (suggs.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                suggs.forEach { s ->
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .pressScale {
+                                Haptics.tick(ctx)
+                                if (s.execute) {
+                                    input = s.fill
+                                    scope.launch { runCommand(s.fill, ctx, onNavigate, onDismiss) { feedback = it } }
+                                } else {
+                                    input = s.fill
+                                }
+                            }
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            s.label, color = TextPrimary, fontSize = FS.s13, fontFamily = Body,
+                            fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                        )
+                        Text(s.hint, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                    }
+                }
             }
 
             Spacer(Modifier.height(16.dp))
