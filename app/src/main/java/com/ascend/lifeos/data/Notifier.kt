@@ -514,7 +514,13 @@ object Notifier {
                 if (recent.sumOf { it.protein } >= thresh) null
                 else {
                     val top = Repo.profile().recentFoods.sortedByDescending { it.protein }.take(2)
-                    val suggestion = top.joinToString(" or ") { it.name }.ifBlank { "Quark or eggs" }
+                    // fallback (empty history = new user) must respect the diet
+                    // preference — telling a vegan "Quark or eggs" rings hollow
+                    val fallback = when (Repo.profile().dietPref) {
+                        DietCheck.VEGAN -> "Tofu or lentils"
+                        else -> "Quark or eggs"
+                    }
+                    val suggestion = top.joinToString(" or ") { it.name }.ifBlank { fallback }
                     "Protein window" to "~30–40 g within the next hour locks in today's session. $suggestion closes it."
                 }
             }

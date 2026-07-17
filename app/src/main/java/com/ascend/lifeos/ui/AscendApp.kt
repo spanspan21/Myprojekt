@@ -167,7 +167,16 @@ fun AscendApp() {
 
     LaunchedEffect(Unit) { ShellMode.current.value = Prefs.string(ctx, Prefs.CONTEXT_MODE, "normal") }
 
-    var sub by rememberSaveable { mutableStateOf(Sub.HOME) }
+    // Start screen: user-configurable (Settings → Look → Experience). Validated
+    // against retired names and switched-off modules; rememberSaveable keeps the
+    // CURRENT tab across recreation — the pref only decides a fresh launch.
+    var sub by rememberSaveable {
+        mutableStateOf(
+            runCatching { Sub.valueOf(Prefs.string(ctx, Prefs.START_TAB, "HOME")) }
+                .getOrDefault(Sub.HOME)
+                .let { if (it.name in com.ascend.lifeos.data.Modules.hiddenSubs(ctx)) Sub.HOME else it },
+        )
+    }
     // The screen we came FROM, so a sub-screen's close button returns there
     // instead of always dumping to Calendar regardless of entry point (audit A8).
     var prevSub by rememberSaveable { mutableStateOf(Sub.HOME) }

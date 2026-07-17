@@ -1523,6 +1523,36 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
 
         // ── EXPERIENCE ───────────────────────────────────────────────
         if (page == "look") SettingsSection("Experience") {
+            // where the app opens — Today is the default command center, but a
+            // lifter lives on Train and a logger lives on Fuel (start-tab pref)
+            var startTab by remember { mutableStateOf(Prefs.string(ctx, Prefs.START_TAB, "HOME")) }
+            Text(
+                "START SCREEN", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(7.dp))
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            (androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf(
+                    "HOME" to "Today", "TRAIN" to "Train", "FUEL" to "Fuel",
+                    "VITALS" to "Vitals", "CALENDAR" to "Calendar", "HABITS" to "Habits",
+                ).forEach { (id, label) ->
+                    val on = startTab == id
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Home.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Home.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale { Haptics.tick(ctx); startTab = id; Prefs.setString(ctx, Prefs.START_TAB, id) }
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                    ) { Text(label, color = if (on) Mod.Home else TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            })
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Where JARVIS opens. Takes effect on the next launch.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
             // launcher icon variant — switching may briefly restart the launcher entry
             var icon by remember { mutableStateOf(currentIconAlias(ctx)) }
             Text(

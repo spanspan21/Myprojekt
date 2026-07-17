@@ -228,6 +228,8 @@ object Prefs {
     // Tour
     const val TOUR_SEEN = "tour_seen"                  // false — legacy slide tour (retired)
     const val TOUR2_SEEN = "tour2_seen"                // false — interactive spotlight tour after first boot
+    // Shell
+    const val START_TAB = "start_tab"                  // "HOME" — Sub enum name the app opens on
     // Notification times (minute-of-day; e.g. 420 = 07:00)
     const val NOTIF_MORNING_MIN = "notif_morning_min"  // 420 (07:00)
     const val NOTIF_FUEL_MIN = "notif_fuel_min"        // 780 (13:00)
