@@ -96,6 +96,7 @@ import com.ascend.lifeos.core.todayKey
 import com.ascend.lifeos.data.HealthConnect
 import com.ascend.lifeos.data.JarvisVoice
 import com.ascend.lifeos.data.Repo
+import com.ascend.lifeos.ui.boot.tourTarget
 import com.ascend.lifeos.ui.kit.*
 import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.pressScale
@@ -267,7 +268,8 @@ fun HomeScreen(
             // ── status row (wordmark = command palette) ──────────────────
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.clip(RoundedCornerShape(10.dp))
+                    Modifier.tourTarget("palette")
+                        .clip(RoundedCornerShape(10.dp))
                         .background(Ivory.copy(alpha = 0.04f))
                         .border(0.5.dp, Ivory.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
                         .pressScale(onClick = onOpenPalette)
@@ -386,7 +388,7 @@ fun HomeScreen(
                     )
                 }
                 // Hero = das lux-Panel des Screens: die eine Gold-Hairline (Kap. 23)
-                Panel(Modifier.fillMaxWidth(), corner = RHero, lux = true, onClick = onOpenBody) {
+                Panel(Modifier.fillMaxWidth().tourTarget("hero"), corner = RHero, lux = true, onClick = onOpenBody) {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -728,7 +730,7 @@ fun HomeScreen(
                 }
             }
             Column(
-                Modifier.fillMaxWidth().clipToBounds().drawWithContent {
+                Modifier.fillMaxWidth().tourTarget("missions").clipToBounds().drawWithContent {
                     drawContent()
                     if (sweep.value > 0.01f && sweep.value < 1f) {
                         val band = size.width * 0.30f

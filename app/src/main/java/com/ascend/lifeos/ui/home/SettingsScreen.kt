@@ -11,7 +11,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.GridView
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -114,6 +119,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
     }
 
+    // Hub-first navigation: 17 flat sections buried things — now a landing page
+    // with five categories (+ search) and each section lives on ONE sub-page.
+    var page by rememberSaveable { mutableStateOf<String?>(null) }
+    androidx.activity.compose.BackHandler(enabled = page != null) { page = null }
+
     Box(Modifier.fillMaxSize()) {
     var showDocs by remember { mutableStateOf(false) }
     Column(
@@ -122,13 +132,24 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(
-                    "· SETTINGS", color = Mod.Home, fontFamily = MicroLabel,
-                    fontSize = FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
-                )
+                if (page == null) {
+                    Text(
+                        "· SETTINGS", color = Mod.Home, fontFamily = MicroLabel,
+                        fontSize = FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
+                    )
+                } else {
+                    Text(
+                        "‹ ALL SETTINGS", color = Mod.Home, fontFamily = MicroLabel,
+                        fontSize = FS.s10, fontWeight = FontWeight.Medium, letterSpacing = 2.5.sp,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                            .pressScale { Haptics.tick(ctx); page = null }
+                            .padding(vertical = 2.dp),
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "System configuration", color = TextPrimary, fontFamily = Display,
+                    SETTINGS_CATS.firstOrNull { it.id == page }?.title ?: "System configuration",
+                    color = TextPrimary, fontFamily = Display,
                     fontStyle = DisplayItalic, fontSize = FS.s27, fontWeight = FontWeight.Normal,
                 )
             }
@@ -142,9 +163,77 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
         Spacer(Modifier.height(18.dp))
 
+        // ── HUB — landing page: search + five category doors ─────────
+        if (page == null) {
+            var query by remember { mutableStateOf("") }
+            com.ascend.lifeos.ui.hud.GlassField(
+                placeholder = "Search settings…", value = query,
+                keyboard = androidx.compose.ui.text.input.KeyboardType.Text,
+                modifier = Modifier.fillMaxWidth(),
+            ) { query = it }
+            Spacer(Modifier.height(14.dp))
+            val q = query.trim().lowercase()
+            if (q.length >= 2) {
+                val hits = SETTINGS_INDEX.filter {
+                    it.label.lowercase().contains(q) || it.keywords.contains(q)
+                }
+                if (hits.isEmpty()) {
+                    Text(
+                        "Nothing matches “$query”", color = TextDim,
+                        fontSize = FS.s12, fontFamily = Body,
+                        modifier = Modifier.padding(vertical = 10.dp),
+                    )
+                }
+                hits.forEach { hit ->
+                    val cat = SETTINGS_CATS.first { it.id == hit.page }
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .pressScale { Haptics.tick(ctx); page = hit.page; query = "" }
+                            .padding(horizontal = 6.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(cat.icon, null, tint = cat.tint, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(hit.label, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text(cat.title, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                        }
+                        Text("›", color = TextDim, fontSize = FS.s14, fontFamily = Body)
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+            } else {
+                SETTINGS_CATS.forEach { cat ->
+                    Panel(
+                        Modifier.fillMaxWidth(),
+                        onClick = { page = cat.id },
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                                    .background(cat.tint.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Icon(cat.icon, null, tint = cat.tint, modifier = Modifier.size(19.dp)) }
+                            Spacer(Modifier.width(14.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(cat.title, color = TextPrimary, fontSize = FS.s14_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(2.dp))
+                                Text(cat.sub, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Text("›", color = TextDim, fontSize = FS.s16, fontFamily = Body)
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+            }
+        }
+
         // ── PROFILE — the numbers every target is computed from ──────
         var profileOpen by remember { mutableStateOf(false) }
-        SettingsSection("Profile") {
+        if (page == "you") SettingsSection("Profile") {
             val p = Repo.profile()
             ActionRow(
                 "Body profile & targets",
@@ -225,12 +314,12 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── GUIDE — the full manual: every feature, tool & algorithm ─
-        SettingsSection("Guide") {
+        if (page == "data") SettingsSection("Guide") {
             ActionRow("Documentation", "Every feature, tool & algorithm — how it all works") { showDocs = true }
         }
 
         // ── CONTEXT MODE — a life phase hides what it doesn't need ───
-        SettingsSection("Context mode") {
+        if (page == "jarvis") SettingsSection("Context mode") {
             val mode by com.ascend.lifeos.ui.ShellMode.current
             Row(
                 Modifier.padding(vertical = 6.dp),
@@ -263,7 +352,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── JARVIS ───────────────────────────────────────────────────
-        SettingsSection("Jarvis") {
+        if (page == "jarvis") SettingsSection("Jarvis") {
             ToggleRow("Voice briefing", "Jarvis reads the morning status out loud", Prefs.TTS_BRIEFING, false)
             if (Prefs.bool(ctx, Prefs.TTS_BRIEFING, false)) {
                 ActionRow("Test voice", "\"All systems online.\"") {
@@ -311,7 +400,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── NOTIFICATIONS ────────────────────────────────────────────
-        SettingsSection("Notifications") {
+        if (page == "jarvis") SettingsSection("Notifications") {
             NotifToggleRow("Morning briefing", "recovery + plan", Prefs.NOTIF_MORNING, true, Prefs.NOTIF_MORNING_MIN, 420)
             NotifToggleRow("Fuel check", "only if nothing is logged", Prefs.NOTIF_FUEL, true, Prefs.NOTIF_FUEL_MIN, 780)
             NotifToggleRow("Evening review", "with 1-tap check-in", Prefs.NOTIF_EVENING, true, Prefs.NOTIF_EVENING_MIN, 1230)
@@ -319,7 +408,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── FINANCE ──────────────────────────────────────────────────
-        SettingsSection("Finance") {
+        if (page == "modules") SettingsSection("Finance") {
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
             ToggleRow("Round-up savings", "Round each expense up to the euro into a savings goal", Prefs.ROUNDUP_ON, false)
             if (Prefs.bool(ctx, Prefs.ROUNDUP_ON, false)) {
@@ -365,7 +454,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── TRAINING ─────────────────────────────────────────────────
-        SettingsSection("Training") {
+        if (page == "modules") SettingsSection("Training") {
             ToggleRow("Rest timer notification", "Countdown continues off-screen", Prefs.REST_NOTIFICATION, true)
             var restSec by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.DEFAULT_REST_SEC, 90)) }
             GoalStepperRow("Default rest", "${restSec}s",
@@ -568,7 +657,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── ACTIVITY LEVEL ────────────────────────────────────────────
-        SettingsSection("Activity level") {
+        if (page == "you") SettingsSection("Activity level") {
             var actLevel by remember { mutableIntStateOf(Repo.profile().activity) }
             Text("Drives your TDEE multiplier for calorie targets", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
             Spacer(Modifier.height(6.dp))
@@ -596,7 +685,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── TDEE ─────────────────────────────────────────────────────
-        SettingsSection("TDEE tuning") {
+        if (page == "you") SettingsSection("TDEE tuning") {
             var tdeeMin by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.TDEE_MIN_LOGGED_KCAL, 800)) }
             GoalStepperRow("Min logged kcal", "$tdeeMin kcal",
                 onDec = { tdeeMin = (tdeeMin - 50).coerceAtLeast(400); Prefs.setInt(ctx, Prefs.TDEE_MIN_LOGGED_KCAL, tdeeMin) },
@@ -624,7 +713,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── FUEL ─────────────────────────────────────────────────────
-        SettingsSection("Fuel") {
+        if (page == "modules") SettingsSection("Fuel") {
             val p = Repo.data.profile
             val phaseLabel = when (p.dietGoal) { "lose" -> "Cut"; "gain" -> "Build"; "fuel" -> "Fuel"; "recomp" -> "Recomp"; else -> "Maintain" }
             val phaseDays = p.dietPhaseSince?.let {
@@ -796,7 +885,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── BODY ─────────────────────────────────────────────────────
-        SettingsSection("Body") {
+        if (page == "modules") SettingsSection("Body") {
             ToggleRow("Illness early warning", "Resting-HR baseline watch", Prefs.SICKNESS_ALERT, true)
             ToggleRow("Learned sleep need", "From your free-day sleep instead of a fixed 8h", Prefs.SLEEP_NEED_AUTO, true)
             ToggleRow("Hard-day sleep boost", "Training and sport days raise the sleep target", Prefs.STRAIN_SLEEP_BOOST, true)
@@ -967,7 +1056,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── SCHOOL & CALENDAR ────────────────────────────────────────
-        SettingsSection("School & Calendar") {
+        if (page == "modules") SettingsSection("School & Calendar") {
             var syncH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.CAL_SYNC_HOURS, 6)) }
             GoalStepperRow("Auto-sync interval", "${syncH}h",
                 onDec = { syncH = (syncH - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.CAL_SYNC_HOURS, syncH) },
@@ -1009,7 +1098,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── DESIGN — der Themen-Salon (ATELIER Kap. 24) ──────────────
-        SettingsSection("Design") {
+        if (page == "look") SettingsSection("Design") {
             var themeId by remember { mutableStateOf(Prefs.string(ctx, Prefs.THEME, "lumen")) }
             Text(
                 "THEME", color = TextDim, fontFamily = Display,
@@ -1097,7 +1186,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── EXPERIENCE ───────────────────────────────────────────────
-        SettingsSection("Experience") {
+        if (page == "look") SettingsSection("Experience") {
             // launcher icon variant — switching may briefly restart the launcher entry
             var icon by remember { mutableStateOf(currentIconAlias(ctx)) }
             Text(
@@ -1179,7 +1268,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // where they live next to your custom rules — not a second surface here.
 
         // ── DATA ─────────────────────────────────────────────────────
-        SettingsSection("Data") {
+        if (page == "data") SettingsSection("Data") {
             ActionRow("Weekly report", "The last 7 days across every module") { onOpenReport() }
             ActionRow(
                 "Health bridge",
@@ -1296,7 +1385,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // Only surfaces once something actually crashed — the black box.
         var crashStamp by remember { mutableStateOf(CrashLog.latestStamp(ctx)) }
         crashStamp?.let { stamp ->
-            SettingsSection("Diagnostics") {
+            if (page == "data") SettingsSection("Diagnostics") {
                 ActionRow("Share crash report", "Last crash: $stamp — send it to your dev chat") {
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = "text/plain"
@@ -1313,13 +1402,14 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── ABOUT ────────────────────────────────────────────────────
-        SettingsSection("About") {
+        if (page == "data") SettingsSection("About") {
             var whatsNew by remember { mutableStateOf(false) }
             ActionRow("What's new", "The latest changes — auto-shows once per update") { whatsNew = true }
             if (whatsNew) ChangelogSheet(onDismiss = { whatsNew = false })
-            var showTour by remember { mutableStateOf(false) }
-            ActionRow("Feature tour", "Replay the guided introduction to every module") { showTour = true }
-            if (showTour) com.ascend.lifeos.ui.boot.FeatureTour(onComplete = { showTour = false })
+            ActionRow("Replay the tour", "The interactive walkthrough — spotlights the live app") {
+                com.ascend.lifeos.ui.boot.TourSignals.replay.value = true
+                onClose()
+            }
             val buildStamp = remember {
                 runCatching {
                     val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
@@ -1338,6 +1428,46 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         if (showDocs) DocumentationScreen(onClose = { showDocs = false })
     }
 }
+
+// ─── hub data — the five category doors + the search index ──────────────────
+
+private class SettingsCat(
+    val id: String,
+    val title: String,
+    val sub: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val tint: Color,
+)
+
+private val SETTINGS_CATS: List<SettingsCat> get() = listOf(
+    SettingsCat("you", "You", "Profile · Units · Activity level · TDEE", Icons.Rounded.Person, Mod.Home),
+    SettingsCat("modules", "Modules", "Training · Fuel · Body · Finance · School & Calendar", Icons.Rounded.GridView, Mod.Train),
+    SettingsCat("jarvis", "Jarvis", "Voice · Notifications · Context mode", Icons.Rounded.AutoAwesome, Mod.Skills),
+    SettingsCat("look", "Look & feel", "Themes · Icons · Motion · Haptics", Icons.Rounded.Palette, Mod.Fuel),
+    SettingsCat("data", "Data & about", "Backup · Health bridge · Guide · Diagnostics", Icons.Rounded.Storage, Mod.Finance),
+)
+
+private class SettingsHit(val label: String, val page: String, val keywords: String)
+
+private val SETTINGS_INDEX = listOf(
+    SettingsHit("Body profile & targets", "you", "profile age height weight sex kcal calorie goal body stats"),
+    SettingsHit("Units (metric / imperial)", "you", "units metric imperial kg lbs cm inches"),
+    SettingsHit("Activity level", "you", "activity level sedentary active neat multiplier"),
+    SettingsHit("TDEE tuning", "you", "tdee metabolism adaptive expenditure maintenance"),
+    SettingsHit("Training", "modules", "training sets rest superset pairing mev mrv volume recovery capacity plate bar vest sport season deload"),
+    SettingsHit("Fuel & water", "modules", "fuel nutrition water glass bottle size protein diet phase macro fasting hydration"),
+    SettingsHit("Body & sleep thresholds", "modules", "body sleep need readiness focus score thresholds heart rate"),
+    SettingsHit("Finance", "modules", "finance money budget bank gocardless subscription csv import savings"),
+    SettingsHit("School & calendar", "modules", "school calendar untis ics feed exam sync grade subjects vocab"),
+    SettingsHit("Jarvis voice & briefing", "jarvis", "jarvis voice speech tts briefing greeting speak"),
+    SettingsHit("Notifications", "jarvis", "notifications reminders bedtime morning protein rest timer nudge"),
+    SettingsHit("Context mode", "jarvis", "context mode exam holiday phase hide modules"),
+    SettingsHit("Design & themes", "look", "design theme accent color sovereign glacier neon terra mono lumen dark"),
+    SettingsHit("Experience", "look", "experience app icon haptics sounds motion reduced launcher stealth"),
+    SettingsHit("Data, backup & health", "data", "data backup restore export zip health connect bridge sync cloud dashboard reset recalibrate"),
+    SettingsHit("Guide & documentation", "data", "guide docs documentation help manual how it works"),
+    SettingsHit("About & what's new", "data", "about version changelog tour replay whats new build"),
+)
 
 // ─── pieces ─────────────────────────────────────────────────────────────────
 

@@ -60,6 +60,7 @@ import com.ascend.lifeos.ui.motion.Motion
 import com.ascend.lifeos.ui.motion.ShellMotion
 import com.ascend.lifeos.ui.motion.pressScale
 import com.ascend.lifeos.ui.boot.BootScreen
+import com.ascend.lifeos.ui.boot.tourTarget
 import com.ascend.lifeos.ui.calendar.CalendarScreen
 import com.ascend.lifeos.ui.home.HomeScreen
 import com.ascend.lifeos.ui.hud.GuardScreen
@@ -133,14 +134,20 @@ fun AscendApp() {
 
     val ctx = androidx.compose.ui.platform.LocalContext.current
 
-    // one-time feature tour after first boot
-    var tourSeen by rememberSaveable { mutableStateOf(Prefs.bool(ctx, Prefs.TOUR_SEEN, false)) }
-    if (!tourSeen) {
-        com.ascend.lifeos.ui.boot.FeatureTour(onComplete = {
-            Prefs.setBool(ctx, Prefs.TOUR_SEEN, true)
-            tourSeen = true
-        })
-        return
+    // One-time interactive tour after first boot: an overlay over the LIVE app
+    // (it navigates tabs and spotlights real UI), not a separate poster deck.
+    // Users who finished the retired slide tour (TOUR_SEEN) are not re-toured.
+    var tourActive by remember {
+        mutableStateOf(
+            !Prefs.bool(ctx, Prefs.TOUR2_SEEN, false) && !Prefs.bool(ctx, Prefs.TOUR_SEEN, false),
+        )
+    }
+    val tourReplay by com.ascend.lifeos.ui.boot.TourSignals.replay
+    LaunchedEffect(tourReplay) {
+        if (tourReplay) {
+            com.ascend.lifeos.ui.boot.TourSignals.replay.value = false
+            tourActive = true
+        }
     }
 
     // auto-show changelog once per app update
@@ -194,6 +201,7 @@ fun AscendApp() {
             reportOpen = false
         }
         when (target) {
+            "home" -> open(Sub.HOME)
             "train" -> open(Sub.TRAIN)
             "fuel" -> open(Sub.FUEL)
             "body" -> open(Sub.VITALS)
@@ -365,6 +373,19 @@ fun AscendApp() {
         }
 
         FeedbackHost(Modifier.align(Alignment.BottomCenter))
+
+        // Interactive tour rides on top of everything — it drives navigate()
+        // itself and cuts spotlight holes over the live screens below.
+        if (tourActive) {
+            com.ascend.lifeos.ui.boot.InteractiveTour(
+                onNavigate = { navigate(it) },
+                onDone = {
+                    Prefs.setBool(ctx, Prefs.TOUR2_SEEN, true)
+                    Prefs.setBool(ctx, Prefs.TOUR_SEEN, true)
+                    tourActive = false
+                },
+            )
+        }
     }
 }
 
@@ -418,6 +439,7 @@ private fun MorphingDock(
     Box(modifier.navigationBarsPadding().padding(bottom = 14.dp)) {
         Box(
             Modifier
+                .tourTarget("dock")
                 .clip(RoundedCornerShape(28.dp))
                 // Cockpit-Konsole: warmes Obsidian + Elfenbein-Kante mit
                 // Specular oben — die höchste ständige Ebene (Kap. 16)
