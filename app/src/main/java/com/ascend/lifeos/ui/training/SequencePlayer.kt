@@ -69,6 +69,17 @@ import kotlinx.coroutines.delay
 
 private data class SeqPhase(val name: String, val seconds: Int, val cue: String?, val section: BlockType)
 
+/** The tiny label under the countdown ring. Every phase in this player is a
+ *  timed segment (running / yoga / HIIT / swim), so a STRENGTH block is really
+ *  just the work interval — "STRENGTH" reads wrong on a run, show "WORK". Rest
+ *  phases inherit the surrounding section, so name them explicitly to avoid a
+ *  "Rest" title sitting under a "WORK" label. */
+private fun ringLabelOf(phase: SeqPhase): String = when {
+    phase.name == "Rest" -> "REST"
+    phase.section == BlockType.STRENGTH -> "WORK"
+    else -> phase.section.label.uppercase()
+}
+
 private fun phasesOf(session: PlannedSession): List<SeqPhase> {
     val out = ArrayList<SeqPhase>()
     session.exercises.forEach { ex ->
@@ -198,7 +209,7 @@ fun SequencePlayerScreen(vm: TrainingViewModel, onBack: () -> Unit) {
                             color = TextPrimary, fontFamily = Display, fontSize = FS.s46, fontWeight = FontWeight.Medium,
                         )
                         Text(
-                            phase.section.label.uppercase(), color = TextDim, fontFamily = MicroLabel,
+                            ringLabelOf(phase), color = TextDim, fontFamily = MicroLabel,
                             fontSize = FS.s9, fontWeight = FontWeight.Medium, letterSpacing = 2.sp,
                         )
                     }
