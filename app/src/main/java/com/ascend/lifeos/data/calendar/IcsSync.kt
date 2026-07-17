@@ -207,7 +207,11 @@ object IcsSync {
         return when {
             com.ascend.lifeos.data.training.SportCatalog.titleMatches(sport, s) -> EventType.HOCKEY
             "klausur" in s || "exam" in s || "prüfung" in s || "pruefung" in s -> EventType.EXAM
-            else -> EventType.SCHOOL
+            // school words only make school events — a dentist appointment from a
+            // personal ICS feed used to land as SCHOOL for everyone
+            "schule" in s || "school" in s || "unterricht" in s || "klasse " in s -> EventType.SCHOOL
+            "arbeit" in s || "work" in s || "meeting" in s || "schicht" in s -> EventType.WORK
+            else -> EventType.PERSONAL
         }
     }
 
