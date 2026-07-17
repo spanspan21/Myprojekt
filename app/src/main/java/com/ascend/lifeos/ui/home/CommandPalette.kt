@@ -243,7 +243,8 @@ object CommandEngine {
             if (amount <= 0 || amount > 99999) return@let
             val cents = -(amount * 100).toLong()
             val note = m.groupValues.getOrNull(2)?.trim().orEmpty()
-            val cat = guessCategory(note)
+            // learned corrections win over the fixed keyword heuristic
+            val cat = com.ascend.lifeos.data.finance.FinanceStore.learnedCategory(ctx, note) ?: guessCategory(note)
             FinanceStore.bookTxn(ctx, cents, cat, note)
             return CmdResult.Done("${com.ascend.lifeos.data.finance.Currency.format((amount * 100).toLong())} logged → $cat${if (note.isNotBlank()) " ($note)" else ""}")
         }

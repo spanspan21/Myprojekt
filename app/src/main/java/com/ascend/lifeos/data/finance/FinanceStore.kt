@@ -282,6 +282,30 @@ object FinanceStore {
 
     fun totalBudget(ctx: Context): Long = budgets(ctx).values.sum()
 
+    // ─── Learned categories ───────────────────────────────────────────────────
+    // Every recategorization teaches JARVIS: the note's strongest token maps to
+    // the chosen category, so the next "Aldi" or "Shell" lands right without the
+    // fixed German-merchant keyword list (audit finance i4).
+    private fun merchantKey(note: String): String? =
+        note.lowercase().split(' ', '-', '/', '.', ',').map { it.trim() }
+            .filter { it.length >= 3 && it.any(Char::isLetter) }
+            .maxByOrNull { it.length }
+
+    fun learnCategory(ctx: Context, note: String, category: String) {
+        val key = merchantKey(note) ?: return
+        if (category.isBlank() || category == "Other") return
+        val o = obj(ctx, "cat_learned")
+        o.put(key, category)
+        put(ctx, "cat_learned", o.toString())
+    }
+
+    /** A previously taught category for this note, or null. */
+    fun learnedCategory(ctx: Context, note: String): String? {
+        val key = merchantKey(note) ?: return null
+        val o = obj(ctx, "cat_learned")
+        return o.optString(key).takeIf { it.isNotBlank() }
+    }
+
     // ─── Budget rollover ──────────────────────────────────────────────────────
     // Opt-in YNAB-style carry: last month's leftover (base − spend) rolls into
     // this month's cap. Underspend gives you more room; overspend carries the

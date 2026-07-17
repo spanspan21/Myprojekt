@@ -492,6 +492,8 @@ internal fun TxnDetailSheet(txn: Txn, accounts: List<Account>, onDismiss: () -> 
             Haptics.confirm(ctx)
             if (category != txn.category || note.trim() != txn.note) {
                 FinanceStore.updateTxn(ctx, txn.id, category, note)
+                // a manual recategorization is a lesson: remember it for next time
+                if (category != txn.category) FinanceStore.learnCategory(ctx, note.trim().ifBlank { txn.note }, category)
             }
             if (accountId != FinanceStore.accountIdOf(ctx, txn.id)) {
                 FinanceStore.setTxnAccount(ctx, txn.id, accountId)

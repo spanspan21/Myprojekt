@@ -223,7 +223,7 @@ object GoCardlessLink {
                     val name = counterparty(t)
                     // roundUp=false: imported history must never trigger round-up
                     // savings (first connect pulls months of debits at once).
-                    FinanceStore.bookTxn(ctx, cents, BankLink.categorize(name, cents > 0), name.take(60), acc.financeAccountId, roundUp = false)
+                    FinanceStore.bookTxn(ctx, cents, BankLink.categorize(ctx, name, cents > 0), name.take(60), acc.financeAccountId, roundUp = false)
                     seenSet.add(id); seen.add(id); imported++
                 }
                 bankBalanceCents(ctx, acc.gcId)?.let { FinanceStore.setAccountBalance(ctx, acc.financeAccountId, it) }

@@ -371,7 +371,7 @@ object BankLink {
                 if (key in seenSet) continue
                 val cents = amountCents(t) ?: continue
                 val name = counterparty(t)
-                FinanceStore.bookTxn(ctx, cents, categorize(name, cents > 0), name.take(60), acc.financeAccountId)
+                FinanceStore.bookTxn(ctx, cents, categorize(ctx, name, cents > 0), name.take(60), acc.financeAccountId)
                 seenSet.add(key)
                 seen.add(key)
                 count++
@@ -449,6 +449,13 @@ object BankLink {
     private val FUN = listOf("spotify", "netflix", "disney", "dazn", "wow ", "prime video", "steam", "playstation", "nintendo", "xbox", "kino", "cinema", "epic games", "riot", "twitch", "youtube")
     private val TECH = listOf("apple", "google", "media markt", "saturn", "cyberport", "notebooksbilliger", "alternate", "conrad")
     private val CLOTHES = listOf("h&m", "hm ", "zara", "zalando", "about you", "snipes", "nike", "adidas", "c&a", "primark", "uniqlo", "bershka")
+
+    /** Context-aware: a learned correction beats the fixed merchant list. */
+    fun categorize(ctx: android.content.Context, name: String, income: Boolean): String {
+        if (income) return "Income"
+        FinanceStore.learnedCategory(ctx, name)?.let { return it }
+        return categorize(name, income)
+    }
 
     fun categorize(name: String, income: Boolean): String {
         if (income) return "Income"
