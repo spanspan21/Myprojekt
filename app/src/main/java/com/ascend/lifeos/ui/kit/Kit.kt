@@ -498,6 +498,38 @@ fun EmptyState(
 }
 
 /**
+ * Compact empty state — one row, not a monument. For screens where several
+ * sections can be empty at once (a new user's Vitals): three stacked 150dp
+ * EmptyStates read as a wall of "nothing here"; three 56dp rows read as a
+ * checklist. Keep the full EmptyState for a screen's single hero empty.
+ */
+@Composable
+fun EmptyHint(
+    icon: ImageVector,
+    title: String,
+    hint: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier.fillMaxWidth().padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
+                .background(accent.copy(alpha = 0.08f))
+                .border(0.5.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(11.dp)),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, null, tint = accent, modifier = Modifier.size(18.dp)) }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = TextPrimary, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
+            Text(hint, color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 2)
+        }
+    }
+}
+
+/**
  * Odometer number: each digit rolls vertically on change (up when growing,
  * down when shrinking), tabular figures keep the row from wobbling. The HUD
  * telemetry look for every stat (IRON MOTION M1.3).

@@ -1052,8 +1052,10 @@ private fun JournalImpactCards() {
     }
     SectionLabel("Your factors · measured")
     if (impacts.isEmpty()) {
-        Spacer(Modifier.height(10.dp))
-        EmptyState(Icons.Rounded.Bedtime, "Not enough data yet", "Log a few weeks of sleep to see what moves the needle", Mod.Body)
+        Spacer(Modifier.height(6.dp))
+        // compact on purpose: on a fresh profile several Vitals sections are
+        // empty at once — stacked monuments read as a wall of "nothing here"
+        com.ascend.lifeos.ui.kit.EmptyHint(Icons.Rounded.Bedtime, "Not enough data yet", "Log a few weeks of sleep to see what moves the needle", Mod.Body)
         return
     }
     Spacer(Modifier.height(10.dp))
@@ -1285,8 +1287,8 @@ private val MOOD_DOT_COLORS @Composable get() = listOf(Crit, Orange, Warn, Good,
 private fun MoodTimelineCard() {
     val entries = Repo.bodyDay()?.moodTimeline.orEmpty()
     if (entries.isEmpty()) {
-        Spacer(Modifier.height(12.dp))
-        EmptyState(
+        Spacer(Modifier.height(6.dp))
+        com.ascend.lifeos.ui.kit.EmptyHint(
             androidx.compose.material.icons.Icons.Rounded.Mood,
             "No moods logged yet",
             "Use the check-in to record how you feel",
