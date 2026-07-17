@@ -18,7 +18,7 @@ object PlanOrchestrator {
 
     /** Non-calisthenics engines, keyed by discipline id. */
     val engines: Map<String, PlanEngine> by lazy {
-        listOf(RunningEngine, YogaEngine, GymEngine).associateBy { it.id }
+        listOf(RunningEngine, YogaEngine, GymEngine, HiitEngine, SwimEngine).associateBy { it.id }
     }
 
     /** Program-week counter: stamped when a discipline is first enabled. */

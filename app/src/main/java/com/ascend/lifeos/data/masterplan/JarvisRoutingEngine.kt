@@ -330,12 +330,26 @@ class JarvisRoutingEngine {
             }
         }
 
+        // Coalesce ADJACENT slices of the same node into one line: with a single
+        // domain the round-robin used to render three identical-looking rows
+        // ("Assess & Set Your Baseline · 7m" ×3). Multi-domain alternation is
+        // untouched — variety only merges when it was never variety.
+        val merged = ArrayList<FocusItem>(items.size)
+        for (item in items) {
+            val prev = merged.lastOrNull()
+            if (prev != null && prev.node.node.id == item.node.node.id) {
+                merged[merged.size - 1] = prev.copy(minutes = prev.minutes + item.minutes)
+            } else {
+                merged += item
+            }
+        }
+
         return DayPlan(
             readiness = readiness,
             ceiling = ceiling,
             availableMinutes = availableMinutes,
-            items = items,
-            note = noteFor(readiness, items.isEmpty(), domains.isNotEmpty()),
+            items = merged,
+            note = noteFor(readiness, merged.isEmpty(), domains.isNotEmpty()),
         )
     }
 
