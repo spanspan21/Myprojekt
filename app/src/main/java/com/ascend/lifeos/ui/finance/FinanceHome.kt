@@ -362,12 +362,25 @@ fun FinanceHome(onClose: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     ExportCsvButton(count = txns.size) {
                         Haptics.tick(ctx)
-                        val send = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/csv"
-                            putExtra(Intent.EXTRA_SUBJECT, "JARVIS finance export")
-                            putExtra(Intent.EXTRA_TEXT, FinanceStore.exportCsv(ctx))
-                        }
-                        ctx.startActivity(Intent.createChooser(send, "Export transactions"))
+                        // Write a real .csv file and share it as a content:// URI —
+                        // EXTRA_TEXT dumped the whole export into the message body,
+                        // which spreadsheet apps can't open (audit finance i3).
+                        runCatching {
+                            val dir = java.io.File(ctx.cacheDir, "exports").apply { mkdirs() }
+                            val file = java.io.File(dir, "jarvis_finance_${com.ascend.lifeos.core.todayKey()}.csv")
+                            file.writeText(FinanceStore.exportCsv(ctx))
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                ctx, "${ctx.packageName}.fileprovider", file,
+                            )
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/csv"
+                                putExtra(Intent.EXTRA_SUBJECT, "JARVIS finance export")
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                clipData = android.content.ClipData.newRawUri("finance.csv", uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            ctx.startActivity(Intent.createChooser(send, "Export transactions").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }.onFailure { AppFeedback.show("Export failed") }
                     }
                 }
             }
