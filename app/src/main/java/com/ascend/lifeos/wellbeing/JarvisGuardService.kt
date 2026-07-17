@@ -316,9 +316,27 @@ class JarvisGuardService : Service() {
             }
         }
 
+        // 4.5 Approaching the wall — a quiet heads-up ~5 minutes out (once per
+        //     app per day) so the hard stop never feels like an ambush.
+        val casBonus = com.ascend.lifeos.data.casino.CasinoStore.bonusMin(this, fg)
+        if (limitMin != null) {
+            val leftMs = (limitMin + casBonus) * 60_000L - usedMs
+            if (leftMs in 1..(5 * 60_000L)) {
+                val soonKey = "limit_soon_$fg"
+                val today = com.ascend.lifeos.core.todayKey()
+                if (com.ascend.lifeos.data.Prefs.string(this, soonKey, "") != today) {
+                    com.ascend.lifeos.data.Prefs.setString(this, soonKey, today)
+                    runCatching {
+                        com.ascend.lifeos.data.Notifier.showLimitSoon(
+                            this, fg, ((leftMs + 59_999L) / 60_000L).toInt().coerceAtLeast(1),
+                        )
+                    }
+                }
+            }
+        }
+
         // 5. Daily limit reached — casino bonus minutes raise the bar, and the
         //    plain LIMIT intercept is the only place the tables are offered.
-        val casBonus = com.ascend.lifeos.data.casino.CasinoStore.bonusMin(this, fg)
         if (limitMin != null && usedMs >= (limitMin + casBonus) * 60_000L) {
             val effLimit = limitMin + casBonus
             // Ceil, not floor: a win must cover every second already burnt past

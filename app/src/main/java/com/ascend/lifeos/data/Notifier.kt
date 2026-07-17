@@ -384,6 +384,23 @@ object Notifier {
         runCatching { NotificationManagerCompat.from(ctx).notify(notifId, builder.build()) }
     }
 
+    /** Guard heads-up: "N min left in <app> today" — the wall never ambushes. */
+    fun showLimitSoon(ctx: Context, pkg: String, minLeft: Int) {
+        if (!hasPermission(ctx)) return
+        ensureChannel(ctx)
+        val label = runCatching {
+            val pm = ctx.packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+        }.getOrDefault(pkg.substringAfterLast('.'))
+        val builder = NotificationCompat.Builder(ctx, channelFor("screen80"))
+            .setSmallIcon(R.drawable.ic_notif)
+            .setContentTitle("$label — $minLeft min left today")
+            .setContentText("The wall comes up when the timer runs out. Land the plane.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+        runCatching { NotificationManagerCompat.from(ctx).notify(14, builder.build()) }
+    }
+
     private fun message(ctx: Context, kind: String): Pair<String, String>? {
         val p = runCatching { Repo.profile() }.getOrDefault(Profile())
         val name = p.name.ifBlank { "operator" }
