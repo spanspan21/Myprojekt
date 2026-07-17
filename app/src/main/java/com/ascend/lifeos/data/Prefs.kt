@@ -18,8 +18,22 @@ object Prefs {
     // drop an update or throw under concurrent structural mutation.
     private val boolStates = java.util.concurrent.ConcurrentHashMap<String, androidx.compose.runtime.MutableState<Boolean>>()
 
-    fun bool(ctx: Context, key: String, default: Boolean): Boolean =
-        boolStates.getOrPut(key) { mutableStateOf(sp(ctx).getBoolean(key, default)) }.value
+    fun bool(ctx: Context, key: String, default: Boolean): Boolean {
+        boolStates[key]?.let { return it.value }
+        // First touch of this key: create the mirror state inside a committed
+        // snapshot, never lazily inside the caller's composition/read snapshot.
+        // Composition and background workers (Notifier / HealthBridge /
+        // JarvisGuardService) race on the first access; a state created inside an
+        // unapplied read snapshot makes a concurrent reader throw
+        // "Reading a state that was created after the snapshot was taken".
+        // withMutableSnapshot applies immediately so the baseline record is
+        // globally visible before anyone reads it. Read .value OUTSIDE the block
+        // so the subscription lands in the caller's snapshot (recomposition).
+        val state = androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
+            boolStates.getOrPut(key) { mutableStateOf(sp(ctx).getBoolean(key, default)) }
+        }
+        return state.value
+    }
 
     fun setBool(ctx: Context, key: String, value: Boolean) {
         sp(ctx).edit().putBoolean(key, value).apply()
