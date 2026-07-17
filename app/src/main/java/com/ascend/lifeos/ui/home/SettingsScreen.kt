@@ -1614,6 +1614,38 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 com.ascend.lifeos.ui.boot.TourSignals.replay.value = true
                 onClose()
             }
+            var privacyOpen by remember { mutableStateOf(false) }
+            ActionRow("Privacy", "Everything stays on this device — the full statement") { privacyOpen = true }
+            if (privacyOpen) {
+                androidx.compose.ui.window.Dialog(onDismissRequest = { privacyOpen = false }) {
+                    Panel(Modifier.fillMaxWidth()) {
+                        Column(
+                            Modifier.fillMaxWidth().heightIn(max = 560.dp)
+                                .verticalScroll(rememberScrollState()).padding(18.dp),
+                        ) {
+                            Text("PRIVACY", color = Mod.Home, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 2.5.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Your data never leaves this device.\n\n" +
+                                    "• Everything you log — meals, workouts, sleep, habits, finances, school, journal — is stored locally in this app's private storage. There is no account, no cloud, no analytics, no ads, no tracking SDKs.\n\n" +
+                                    "• Health Connect: read-only access you grant explicitly (sleep, heart rate, steps, weight). Used solely to compute your recovery and readiness on-device. Never transmitted.\n\n" +
+                                    "• Food search: typing a food name or scanning a barcode queries the public OpenFoodFacts database — only the search term or barcode is sent, never who you are or what you logged.\n\n" +
+                                    "• Calendar feeds (ICS/WebUntis): fetched directly from the URL you configure. Credentials stay in local storage.\n\n" +
+                                    "• Optional self-hosted dashboard: if YOU configure a sync endpoint, your data goes only to that server of yours, protected by your own secret.\n\n" +
+                                    "• Backups: created only when you tap Backup, written to a folder you choose. Deleting the app deletes all local data — export first if you want to keep it.\n\n" +
+                                    "• Screen-time guard: app-usage access is read on-device to enforce YOUR limits. Usage data is never transmitted.",
+                                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, lineHeight = FS.s19,
+                            )
+                            Spacer(Modifier.height(14.dp))
+                            Box(
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Mod.Home)
+                                    .pressScale { privacyOpen = false }.padding(vertical = 11.dp),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("Understood", color = Void, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.ExtraBold) }
+                        }
+                    }
+                }
+            }
             val buildStamp = remember {
                 runCatching {
                     val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
