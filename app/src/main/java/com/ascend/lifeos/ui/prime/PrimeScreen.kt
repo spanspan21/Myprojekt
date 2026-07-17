@@ -121,6 +121,31 @@ fun PrimeScreen(onClose: () -> Unit, onNavigate: (String) -> Unit = {}) {
         )
         if (r != null) Column(Modifier.fillMaxWidth().graphicsLayer { alpha = secAlpha }) {
 
+        // ── 30-day trajectory — the index is a line now, not a mood ──────
+        val history = remember(r) {
+            com.ascend.lifeos.data.prime.PrimeHistory.series(ctx, 30).asReversed()
+        }
+        if (history.size >= 5) {
+            Spacer(Modifier.height(22.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SectionLabel("30-day trend", modifier = Modifier.weight(1f))
+                val delta = history.last().second - history.first().second
+                Text(
+                    if (delta >= 0) "+$delta" else "$delta",
+                    color = if (delta >= 0) Good else Warn,
+                    fontFamily = Display, fontSize = FS.s11, fontWeight = FontWeight.Bold,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Panel(Modifier.fillMaxWidth()) {
+                com.ascend.lifeos.ui.kit.Spark(
+                    values = history.map { it.second.toFloat() },
+                    color = Accent,
+                    modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+                )
+            }
+        }
+
         // ── Jetzt: die drei wirksamsten Handgriffe ───────────────────────
         if (r.directives.isNotEmpty()) {
             Spacer(Modifier.height(22.dp))

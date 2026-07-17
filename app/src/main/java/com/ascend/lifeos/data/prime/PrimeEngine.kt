@@ -236,6 +236,9 @@ object PrimeEngine {
                 (logScore to 0.10),
             ),
         )
+        // The index used to evaporate at midnight — keep one value per day so
+        // the Prime screen can show a trajectory (last write of the day wins).
+        index?.let { runCatching { PrimeHistory.record(ctx, todayKey(), it) } }
         // Each subscore carries its OWN contributor line (Oura/Whoop pattern) so
         // the index stops being a wall of opaque numbers — tap a bar, see why.
         fun mins7(m: Double) = "${(m / 60).toInt()}h %02dm".format((m % 60).toInt())
