@@ -176,7 +176,19 @@ object CommandEngine {
             "decisions" to "decisions", "entscheidungen" to "decisions",
             "school" to "school", "schule" to "school",
         )
-        navTargets[q]?.let { return CmdResult.Navigate(it, "Opening $it") }
+        navTargets[q]?.let { target ->
+            // a switched-off module is not a navigation target
+            val moduleOf = mapOf(
+                "school" to "school", "finance" to "finance", "skills" to "skills",
+                "guard" to "guard", "sleep" to "sleep", "habits" to "habits",
+                "goals" to "goals", "prime" to "prime",
+            )
+            val mod = moduleOf[target]
+            if (mod != null && !com.ascend.lifeos.data.Modules.isOn(ctx, mod)) {
+                return CmdResult.Done("${mod.replaceFirstChar { it.uppercase() }} is switched off — Settings → Modules to restore")
+            }
+            return CmdResult.Navigate(target, "Opening $target")
+        }
         if (q.startsWith("start") && ("workout" in q || "push" in q || "pull" in q || "leg" in q)) {
             return CmdResult.Navigate("train", "Opening training")
         }
@@ -348,7 +360,9 @@ object CommandEngine {
         }
 
         // ---- prime / heatmap shortcuts ----------------------------------------
-        if (q == "prime") return CmdResult.Navigate("prime", "Opening Prime")
+        if (q == "prime" && com.ascend.lifeos.data.Modules.isOn(ctx, "prime")) {
+            return CmdResult.Navigate("prime", "Opening Prime")
+        }
         if (q == "heatmap" || q == "map") return CmdResult.Navigate("heatmap", "Opening heatmap")
         if (q == "notes" || q == "notizen") return CmdResult.Navigate("notes", "Opening notes")
         // ---- status: quick one-line today summary ----------------------------

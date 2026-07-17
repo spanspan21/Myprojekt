@@ -268,8 +268,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val readiness = Repo.recoveryScore()
         val fresh = runCatching { MuscleRecovery.compute(getApplication()) }.getOrNull()
         muscleFreshness = fresh
-        // exam within the next 7 days → trimmed volume
-        val examSoon = runCatching {
+        // exam within the next 7 days → trimmed volume (only while the School
+        // module exists for this user — no phantom exam trims for non-students)
+        val examSoon = com.ascend.lifeos.data.Modules.isOn(getApplication(), "school") && runCatching {
             val today = com.ascend.lifeos.core.todayDate()
             CalendarRepo.dao(getApplication())
                 .eventsInRangeOnce(today.toEpochDay(), today.plusDays(7).toEpochDay())

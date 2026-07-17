@@ -408,6 +408,23 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         }
 
         // ── FINANCE ──────────────────────────────────────────────────
+        // ── YOUR MODULES — turn off what your life doesn't need ──────
+        if (page == "modules") SettingsSection("Your modules") {
+            @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.Modules.rev.intValue
+            Text(
+                "Off = gone: dock, home, palette and its reminders. Your data stays — flip it back any time.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                modifier = Modifier.padding(top = 4.dp, bottom = 6.dp),
+            )
+            com.ascend.lifeos.data.Modules.TOGGLEABLE.forEach { def ->
+                val on = com.ascend.lifeos.data.Modules.isOn(ctx, def.id)
+                ToggleRow("${def.emoji}  ${def.label}", def.blurb, on = on, onToggle = {
+                    com.ascend.lifeos.data.Modules.setOn(ctx, def.id, it)
+                    AppFeedback.show(if (it) "${def.label} restored" else "${def.label} hidden")
+                })
+            }
+        }
+
         if (page == "modules") SettingsSection("Finance") {
             ToggleRow("Auto-book subscriptions", "Book due recurring charges automatically", Prefs.RECURRING_AUTOBOOK, false)
             ToggleRow("Round-up savings", "Round each expense up to the euro into a savings goal", Prefs.ROUNDUP_ON, false)

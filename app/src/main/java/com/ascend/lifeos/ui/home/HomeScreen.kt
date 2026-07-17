@@ -936,7 +936,11 @@ fun HomeScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    SystemOrb("Prime", Icons.Rounded.AutoAwesome, Mod.Home) { onOpenModule("prime") }
+                    // disabled modules keep their orbs out of the row too
+                    @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.Modules.rev.intValue
+                    if (com.ascend.lifeos.data.Modules.isOn(ctx, "prime")) {
+                        SystemOrb("Prime", Icons.Rounded.AutoAwesome, Mod.Home) { onOpenModule("prime") }
+                    }
                     SystemOrb("Report", Icons.Rounded.Bolt, Mod.Home) { onOpenModule("report") }
                     SystemOrb("Milestones", Icons.Rounded.Hexagon, Mod.Train) { onOpenModule("achievements") }
                     SystemOrb("Notes", Icons.Rounded.EditNote, Mod.Skills) { onOpenModule("notes") }
@@ -945,7 +949,9 @@ fun HomeScreen(
                     SystemOrb("Automations", Icons.Rounded.Tune, Mod.Calendar) { onOpenModule("rules") }
                     SystemOrb("Breathe", Icons.Rounded.SelfImprovement, Good) { onOpenModule("breathe") }
                     SystemOrb("Timer", Icons.Rounded.Timer, Crit) { onOpenModule("timer") }
-                    SystemOrb("Wind Down", Icons.Rounded.Bedtime, Mod.Mind) { onOpenModule("winddown") }
+                    if (com.ascend.lifeos.data.Modules.isOn(ctx, "sleep")) {
+                        SystemOrb("Wind Down", Icons.Rounded.Bedtime, Mod.Mind) { onOpenModule("winddown") }
+                    }
                 }
             }
 

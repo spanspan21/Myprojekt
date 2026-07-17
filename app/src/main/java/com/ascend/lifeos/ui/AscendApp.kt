@@ -176,7 +176,12 @@ fun AscendApp() {
     var dockVisible by remember { mutableStateOf(true) }
 
     val mode by ShellMode.current
-    val hidden = ShellMode.hiddenSubs(mode)
+    // Modules the user switched off vanish from the dock entirely; the context
+    // mode (exam/holiday) layers its temporary hiding on top.
+    val modRev = com.ascend.lifeos.data.Modules.rev.intValue
+    val hidden = remember(mode, modRev) {
+        ShellMode.hiddenSubs(mode) + com.ascend.lifeos.data.Modules.hiddenSubs(ctx)
+    }
     val group = groupOf(sub)
 
     fun visibleSubs(g: Group): List<Sub> = g.subs.filter { it.name !in hidden }
@@ -229,8 +234,8 @@ fun AscendApp() {
         DeepLink.consume()?.let { navigate(it) }
     }
 
-    // a mode change can hide the screen you're on — fall back gracefully
-    LaunchedEffect(mode) { if (sub.name in hidden) openGroup(group) }
+    // a mode change or module toggle can hide the screen you're on — fall back
+    LaunchedEffect(mode, modRev) { if (sub.name in hidden) openGroup(group) }
 
     // Snap the accent — do NOT tween it. The nebula in ModuleBackground is drawn
     // inside a 90dp blur; an animated accent re-rasterizes that blurred layer on

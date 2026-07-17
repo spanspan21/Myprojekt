@@ -178,10 +178,15 @@ object PrimeEngine {
         val nowMin = hour * 60 + now.minute
         val nextEvent = events.filter { it.dayEpoch == todayEpoch && it.endMin > nowMin && !it.allDay }
             .minByOrNull { it.startMin }
-        val examSoon = events.filter { it.type == "EXAM" }.minByOrNull { it.dayEpoch }
+        val examSoon = if (com.ascend.lifeos.data.Modules.isOn(ctx, "school")) {
+            events.filter { it.type == "EXAM" }.minByOrNull { it.dayEpoch }
+        } else null
 
-        val budget = FinanceStore.totalBudget(ctx)
-        val projectedSpend = FinanceStore.projectedMonthEndCents(ctx)
+        // Disabled modules contribute nothing — no finance directives for a
+        // user who switched Finance off, no phantom exam pressure without School.
+        val financeOn = com.ascend.lifeos.data.Modules.isOn(ctx, "finance")
+        val budget = if (financeOn) FinanceStore.totalBudget(ctx) else 0L
+        val projectedSpend = if (financeOn) FinanceStore.projectedMonthEndCents(ctx) else 0L
 
         // ── Subsysteme (score 0..1, weight) — ohne Daten fällt das Gewicht weg ──
         // Fuel über die geloggten Tage der letzten 7 PLUS heute (sonst zählt dein

@@ -152,7 +152,15 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
     var sessionLen by rememberSaveable { mutableIntStateOf(p.sessionLen) }
     var goal by rememberSaveable { mutableStateOf(if (p.onboarded) p.dietGoal else "maintain") }
     val objectives = remember {
-        mutableStateListOf<String>().apply { addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES }) }
+        mutableStateListOf<String>().apply {
+            addAll(p.objectives.ifEmpty { DEFAULT_OBJECTIVES })
+            // Re-onboarding must not silently strip modules the user lives in:
+            // seed the chips from the CURRENT module state.
+            if (p.onboarded) {
+                if (com.ascend.lifeos.data.Modules.isOn(ctx, "school") && "school" !in this) add("school")
+                if (com.ascend.lifeos.data.Modules.isOn(ctx, "finance") && "money" !in this) add("money")
+            }
+        }
     }
 
     var permTick by remember { mutableIntStateOf(0) }
@@ -182,6 +190,14 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
                 curtain.animateTo(1f, tween(700, easing = com.ascend.lifeos.ui.motion.Motion.easeOut))
             }
             onFinish(sex, age, height, weight, activity, goal, objectives.toList())
+            // Objectives are REAL now: unchecked life areas leave the app
+            // (dock, home, palette) until re-enabled in Settings → Modules.
+            mapOf(
+                "sleep" to "sleep", "learn" to "skills", "focus" to "guard",
+                "school" to "school", "money" to "finance",
+            ).forEach { (obj, mod) ->
+                com.ascend.lifeos.data.Modules.setOn(ctx, mod, obj in objectives)
+            }
             Repo.setTrainPrefs(trainFreq, sessionLen, Repo.profile().hasVest)
             if (!Prefs.has(ctx, Prefs.NOTIF_MORNING_MIN)) Prefs.setInt(ctx, Prefs.NOTIF_MORNING_MIN, 420)
             if (!Prefs.has(ctx, Prefs.SLEEP_TARGET_MIN)) Prefs.setInt(ctx, Prefs.SLEEP_TARGET_MIN, 480)
@@ -223,7 +239,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Text("OBJECTIVES", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(3.dp))
-        Text("Modules you care about — shapes your daily missions and briefing", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
+        Text("What you don't pick stays hidden — Settings → Modules brings anything back", color = TextMuted, fontFamily = Body, fontSize = FS.s11)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             listOf("train" to "Train", "fuel" to "Fuel", "sleep" to "Sleep").forEach { (id, label) ->
@@ -233,8 +249,14 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
             }
         }
         Spacer(Modifier.height(7.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            listOf("learn" to "Learn skills", "focus" to "Screen focus").forEach { (id, label) ->
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            listOf(
+                "learn" to "Learn skills", "focus" to "Screen focus",
+                "school" to "School", "money" to "Finance",
+            ).forEach { (id, label) ->
                 BootChip(label, id in objectives) {
                     if (id in objectives) objectives.remove(id) else objectives.add(id)
                 }
