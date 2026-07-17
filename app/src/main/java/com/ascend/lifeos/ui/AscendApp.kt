@@ -150,11 +150,13 @@ fun AscendApp() {
         }
     }
 
-    // auto-show changelog once per app update
+    // Auto-show changelog once per app update — but never over the tour: a
+    // brand-new user has no "what's new", and the sheet used to open ON TOP of
+    // the tour's first step (first-run collision, seen live on the emulator).
     var changelogShown by rememberSaveable {
         mutableStateOf(!com.ascend.lifeos.ui.home.Changelog.shouldShow(ctx))
     }
-    if (!changelogShown) {
+    if (!changelogShown && !tourActive) {
         com.ascend.lifeos.ui.home.ChangelogSheet(onDismiss = {
             com.ascend.lifeos.ui.home.Changelog.markSeen(ctx)
             changelogShown = true
@@ -382,6 +384,10 @@ fun AscendApp() {
                 onDone = {
                     Prefs.setBool(ctx, Prefs.TOUR2_SEEN, true)
                     Prefs.setBool(ctx, Prefs.TOUR_SEEN, true)
+                    // A fresh user's first session should not end in an update
+                    // sheet — everything is new to them anyway.
+                    com.ascend.lifeos.ui.home.Changelog.markSeen(ctx)
+                    changelogShown = true
                     tourActive = false
                 },
             )

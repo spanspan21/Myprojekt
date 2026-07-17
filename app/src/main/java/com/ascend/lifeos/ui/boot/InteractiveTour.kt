@@ -165,10 +165,14 @@ fun InteractiveTour(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val rootH = with(density) { maxHeight.toPx() }
         val rootW = with(density) { maxWidth.toPx() }
-        // Off-screen guard: only spotlight targets actually visible right now;
-        // a scrolled-away anchor falls back to a centered card.
-        val hole = raw?.takeIf { it.top < rootH * 0.85f && it.bottom > 0f && it.width > 0f }
-            ?.let { Rect(it.left - 10f, it.top - 10f, it.right + 10f, it.bottom + 10f) }
+        // Off-screen guard: spotlight only targets whose visible portion covers
+        // most of them — a scrolled-away anchor falls back to a centered card.
+        // (A simple "top < 85% height" rule wrongly rejected the bottom-anchored
+        // dock, which is fully visible; measure the visible fraction instead.)
+        val hole = raw?.takeIf {
+            it.width > 0f && it.height > 0f &&
+                (minOf(it.bottom, rootH) - maxOf(it.top, 0f)) > it.height * 0.6f
+        }?.let { Rect(it.left - 10f, it.top - 10f, it.right + 10f, it.bottom + 10f) }
 
         val animHole by animateRectAsState(
             hole ?: Rect(rootW / 2f, rootH / 2f, rootW / 2f, rootH / 2f),
