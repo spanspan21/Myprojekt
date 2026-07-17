@@ -357,6 +357,49 @@ fun TrainingHub(
                 }
             }
 
+            // ── Rest days as first-class cards — planned recovery is training
+            //    doctrine (the MEV→MRV/deload model assumes it). Invisible gaps
+            //    nudged users toward junk extra sessions the ACR model penalizes.
+            if (vm.autoSchedule && vm.placements.isNotEmpty()) {
+                item {
+                    val today = com.ascend.lifeos.core.todayDate()
+                    val trainingDays = vm.placements.map { it.day }.toSet()
+                    val restDays = (0..6).map { today.plusDays(it.toLong()) }
+                        .filter { it !in trainingDays }
+                    if (restDays.isNotEmpty()) {
+                        val fmt = java.time.format.DateTimeFormatter.ofPattern("EEE", java.util.Locale.ENGLISH)
+                        val label = restDays.take(4).joinToString(" · ") {
+                            if (it == today) "Today" else it.format(fmt)
+                        }
+                        GlassPanel(
+                            Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); onOpenStretch() },
+                            corner = RElem,
+                            fill = Good.copy(alpha = 0.05f), line = Good.copy(alpha = 0.22f),
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("🌙", fontSize = FS.s16)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "Rest · $label",
+                                        color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                    )
+                                    Text(
+                                        "Muscle rebuilds on rest days — optional 10 min wind-down mobility.",
+                                        color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                Icon(Icons.Rounded.ChevronRight, "Open mobility", tint = TextDim, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
+                    }
+                }
+            }
+
             item {
                 // Scheduling: recommended (JARVIS auto-places + keeps it clean) vs
                 // custom (you set each session's day & time yourself).
