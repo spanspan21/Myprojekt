@@ -294,11 +294,21 @@ object Notifier {
         am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.timeInMillis, AlarmManager.INTERVAL_DAY * 7, pending(ctx, req, kind))
     }
 
+    /** Toggleable module that owns a notification kind (null = core, never gated).
+     *  The Modules card promises "off = gone: dock, home, palette and its
+     *  reminders" — a switched-off module must not keep talking. */
+    internal fun owningModule(kind: String): String? = when (kind) {
+        "bedtime" -> "sleep"
+        "screen80" -> "guard"
+        else -> null
+    }
+
     fun show(ctx: Context, kind: String) {
         if (!hasPermission(ctx)) return
         ensureChannel(ctx)
         runCatching { Repo.initIfNeeded(ctx) }
         if (Repo.profile().sickMode && kind != "morning") return  // rest means rest
+        owningModule(kind)?.let { if (!Modules.isOn(ctx, it)) return }
         // per-kind settings toggles
         val allowed = when (kind) {
             "morning", "workout_soon" -> Prefs.bool(ctx, Prefs.NOTIF_MORNING, true)

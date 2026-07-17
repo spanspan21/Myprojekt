@@ -493,7 +493,13 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 val on = com.ascend.lifeos.data.Modules.isOn(ctx, def.id)
                 ToggleRow("${def.emoji}  ${def.label}", def.blurb, on = on, onToggle = {
                     com.ascend.lifeos.data.Modules.setOn(ctx, def.id, it)
-                    AppFeedback.show(if (it) "${def.label} restored" else "${def.label} hidden")
+                    // Guard under armed Strict Mode: the UI hides, but walls keep
+                    // enforcing until strict is wound down — say so, or "off" looks broken.
+                    AppFeedback.show(
+                        if (!it && def.id == "guard" && com.ascend.lifeos.wellbeing.WellbeingStore.isStrict(ctx)) {
+                            "Guard hidden — Strict Mode still enforces until you disable it"
+                        } else if (it) "${def.label} restored" else "${def.label} hidden",
+                    )
                 })
             }
         }

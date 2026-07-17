@@ -162,6 +162,11 @@ class JarvisGuardService : Service() {
         // Guard pause (D3): everything above is maintenance and keeps running;
         // from here on it's walls — and walls sleep while the pause stands.
         if (WellbeingStore.isPaused(this)) return
+        // Module toggle: "off = gone" must hold for enforcement too — walls sleep
+        // when the Guard module is switched off in Settings. Exception: an armed
+        // Strict Mode is an explicit commitment device and outranks the module
+        // toggle, otherwise one Settings tap would defeat the whole point.
+        if (!com.ascend.lifeos.data.Modules.isOn(this, "guard") && !WellbeingStore.isStrict(this)) return
         if (!DigitalWellbeingManager.hasUsageAccess(this) || !DigitalWellbeingManager.canOverlay(this)) return
         if (runCatching { power?.isInteractive == false }.getOrDefault(false)) {
             GuardRuntime.lastPkg = null // screen off ends the session; next unlock counts as a new open
