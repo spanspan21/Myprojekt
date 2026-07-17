@@ -423,6 +423,8 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
         // ── YOUR MODULES — turn off what your life doesn't need ──────
         if (page == "modules") SettingsSection("Your modules") {
             @Suppress("UNUSED_EXPRESSION") com.ascend.lifeos.data.Modules.rev.intValue
+            // ticks the "Make it yours" step on the home setup checklist
+            LaunchedEffect(Unit) { Prefs.setBool(ctx, Prefs.SETUP_MODULES_SEEN, true) }
             Text(
                 "Off = gone: dock, home, palette and its reminders. Your data stays — flip it back any time.",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,

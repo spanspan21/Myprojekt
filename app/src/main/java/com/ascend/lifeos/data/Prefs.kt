@@ -165,6 +165,8 @@ object Prefs {
     const val EVENT_REMINDER_ON = "event_reminder_on"     // true — heads-up before timed calendar events
     const val EVENT_REMINDER_MIN = "event_reminder_min"   // 15 — minutes of lead time
     const val TRAIN_TIME_PREF = "train_time_pref"         // auto|morning|midday|evening — where sessions land
+    const val SETUP_DISMISSED = "setup_dismissed"         // false — first-week checklist hidden by hand
+    const val SETUP_MODULES_SEEN = "setup_modules_seen"   // false — user opened Settings > Modules once
     const val PRE_OBLIGATION_BUFFER_MIN = "pre_obligation_buffer_min" // 60 — session must end this early before the first booked block
     const val STUDY_BLOCK_MIN = "study_block_min"        // 45 — duration of auto-scheduled study blocks
     const val PANIC_FOCUS_MIN = "panic_focus_min"        // 30 — default panic focus duration

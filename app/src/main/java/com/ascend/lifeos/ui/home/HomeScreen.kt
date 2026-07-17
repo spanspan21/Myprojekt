@@ -955,20 +955,77 @@ fun HomeScreen(
                 }
             }
 
-            // ── First-day getting started card ──
-            if (profile.streak == 0 && kcalToday == 0 && !trainedToday) {
+            // ── Setup checklist — guides the whole FIRST WEEK, not just day
+            // one, with auto-detected completion instead of a static poster.
+            var setupDismissed by remember { mutableStateOf(Prefs.bool(ctx, Prefs.SETUP_DISMISSED, false)) }
+            val hcLinked by produceState(false, resumeTick) {
+                value = runCatching { com.ascend.lifeos.data.HealthConnect.grantedAny(ctx) }.getOrDefault(false)
+            }
+            data class SetupStep(val label: String, val sub: String, val done: Boolean, val action: () -> Unit)
+            val setupSteps = listOf(
+                SetupStep("Take the 60-second tour", "It walks the live app", Prefs.bool(ctx, Prefs.TOUR2_SEEN, false)) {
+                    com.ascend.lifeos.ui.boot.TourSignals.replay.value = true
+                },
+                SetupStep("Log your first meal", "Search, scan or quick-add", kcalToday > 0 || profile.recentFoods.isNotEmpty()) { onOpenModule("fuel") },
+                SetupStep(
+                    "Complete your first session", "Your generated week is ready",
+                    trainedToday || profile.workoutDays.isNotEmpty() ||
+                        runCatching { com.ascend.lifeos.data.ActivityStore.all(ctx).isNotEmpty() }.getOrDefault(false),
+                ) { onOpenModule("train") },
+                SetupStep("Connect Health Connect", "Sleep + heart rate sharpen everything", hcLinked) { onOpenModule("body") },
+                SetupStep("Make it yours", "Turn off modules you don't need", Prefs.bool(ctx, Prefs.SETUP_MODULES_SEEN, false)) { onOpenModule("settings") },
+            )
+            val setupOpen = !setupDismissed && setupSteps.any { !it.done } && profile.streak < 14
+            if (setupOpen) {
+                val doneCount = setupSteps.count { it.done }
                 Reveal(2) {
                     Panel(Modifier.fillMaxWidth(), fill = Mod.Home.copy(alpha = 0.06f), line = Mod.Home.copy(alpha = 0.25f)) {
                         Column(Modifier.padding(18.dp)) {
-                            Text("YOUR FIRST DAY", color = Mod.Home, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
-                            Spacer(Modifier.height(6.dp))
-                            Text("Three steps to activate JARVIS", color = TextPrimary, fontFamily = Display, fontSize = FS.s16, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(12.dp))
-                            FirstDayStep("1", "Log your first meal", "Tap + below or swipe to Fuel") { onOpenModule("fuel") }
-                            Spacer(Modifier.height(8.dp))
-                            FirstDayStep("2", "Start a workout", "Head to Training and hit Start") { onOpenModule("train") }
-                            Spacer(Modifier.height(8.dp))
-                            FirstDayStep("3", "Do your evening check-in", "Energy, soreness, mood — takes 10 seconds") { onOpenModule("body") }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("GETTING STARTED", color = Mod.Home, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp, modifier = Modifier.weight(1f))
+                                Text("$doneCount/${setupSteps.size}", color = if (doneCount == setupSteps.size) Good else TextDim, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.width(10.dp))
+                                Text(
+                                    "✕", color = TextDim, fontSize = FS.s12, fontFamily = Body,
+                                    modifier = Modifier.clip(CircleShape)
+                                        .pressScale { Haptics.tick(ctx); setupDismissed = true; Prefs.setBool(ctx, Prefs.SETUP_DISMISSED, true) }
+                                        .padding(6.dp),
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            // progress hairline
+                            Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(Ivory.copy(alpha = 0.08f))) {
+                                Box(
+                                    Modifier.fillMaxHeight().fillMaxWidth(doneCount / setupSteps.size.toFloat())
+                                        .clip(RoundedCornerShape(2.dp)).background(Mod.Home),
+                                )
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            setupSteps.forEach { step ->
+                                Row(
+                                    Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                        .then(if (step.done) Modifier else Modifier.pressScale { Haptics.tick(ctx); step.action() })
+                                        .padding(vertical = 7.dp, horizontal = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        if (step.done) "✓" else "○",
+                                        color = if (step.done) Good else TextDim,
+                                        fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            step.label,
+                                            color = if (step.done) TextDim else TextPrimary,
+                                            fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
+                                            textDecoration = if (step.done) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
+                                        )
+                                        if (!step.done) Text(step.sub, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                                    }
+                                    if (!step.done) Text("›", color = TextDim, fontSize = FS.s14, fontFamily = Body)
+                                }
+                            }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -979,7 +1036,7 @@ fun HomeScreen(
             // key() keeps each card's state stable even when reordered.
             // The three glance keys collapse into ONE deck at the position of
             // the first visible one — order & visibility still per key.
-            val offset = if (profile.streak == 0 && kcalToday == 0 && !trainedToday) 3 else 2
+            val offset = if (setupOpen) 3 else 2
             val glanceKeys = listOf("weekRecap", "lastSession", "vitals")
             val glanceVisible = cardOrder.filter { it in glanceKeys }
             cardOrder.forEachIndexed { i, k ->
