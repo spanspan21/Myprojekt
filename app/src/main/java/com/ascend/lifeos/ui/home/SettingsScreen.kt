@@ -457,6 +457,18 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 evOn = it; Prefs.setBool(ctx, Prefs.EVENT_REMINDER_ON, it)
                 if (it) runCatching { Notifier.scheduleEventHeadsUp(ctx) }
             })
+            var waterOn by remember { mutableStateOf(Prefs.bool(ctx, Prefs.WATER_REMINDER_ON, false)) }
+            ToggleRow("Water reminders", "Nudge through the day — only when you're behind pace", on = waterOn, onToggle = {
+                waterOn = it; Prefs.setBool(ctx, Prefs.WATER_REMINDER_ON, it)
+                runCatching { Notifier.schedule(ctx) }
+            })
+            if (waterOn) {
+                var everyH by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.WATER_REMINDER_EVERY_H, 3)) }
+                GoalStepperRow("Check every", "${everyH}h",
+                    onDec = { everyH = (everyH - 1).coerceAtLeast(1); Prefs.setInt(ctx, Prefs.WATER_REMINDER_EVERY_H, everyH); runCatching { Notifier.schedule(ctx) } },
+                    onInc = { everyH = (everyH + 1).coerceAtMost(6); Prefs.setInt(ctx, Prefs.WATER_REMINDER_EVERY_H, everyH); runCatching { Notifier.schedule(ctx) } },
+                )
+            }
             if (evOn) {
                 var evLead by remember { mutableIntStateOf(Prefs.int(ctx, Prefs.EVENT_REMINDER_MIN, 15)) }
                 GoalStepperRow("Lead time", "$evLead min",

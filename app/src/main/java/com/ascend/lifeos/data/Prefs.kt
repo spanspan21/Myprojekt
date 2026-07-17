@@ -164,6 +164,8 @@ object Prefs {
     const val WORKOUT_HEADSUP_MIN = "workout_headsup_min" // 30 — minutes before scheduled session for heads-up
     const val EVENT_REMINDER_ON = "event_reminder_on"     // true — heads-up before timed calendar events
     const val EVENT_REMINDER_MIN = "event_reminder_min"   // 15 — minutes of lead time
+    const val WATER_REMINDER_ON = "water_reminder_on"     // false — pace-aware hydration nudges
+    const val WATER_REMINDER_EVERY_H = "water_reminder_every_h" // 3 — hours between checks
     const val TRAIN_TIME_PREF = "train_time_pref"         // auto|morning|midday|evening — where sessions land
     const val SETUP_DISMISSED = "setup_dismissed"         // false — first-week checklist hidden by hand
     const val MISSIONS = "missions"                        // csv of daily missions (train/kcal/water/protein), "" = classic trio

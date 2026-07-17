@@ -39,6 +39,7 @@ object Notifier {
     private const val REQ_WORKOUT_SOON = 4106
     private const val REQ_RESCHEDULE = 4108
     private const val REQ_EVENT_SOON = 4111
+    private const val REQ_WATER = 4112
 
     fun hasPermission(ctx: Context): Boolean =
         Build.VERSION.SDK_INT < 33 ||
@@ -92,7 +93,26 @@ object Notifier {
         if (Prefs.bool(ctx, Prefs.RESCHEDULE_ON, true)) {
             scheduleDaily(ctx, REQ_RESCHEDULE, Prefs.int(ctx, Prefs.RESCHEDULE_HOUR, 15), 0, "reschedule")
         }
+        // pace-aware water reminders through the day (only fire when behind)
+        if (Prefs.bool(ctx, Prefs.WATER_REMINDER_ON, false)) {
+            val everyH = Prefs.int(ctx, Prefs.WATER_REMINDER_EVERY_H, 3).coerceIn(1, 6)
+            scheduleRepeating(ctx, REQ_WATER, 10, everyH * 60L * 60_000L, "water")
+        } else runCatching {
+            (ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pending(ctx, REQ_WATER, "water"))
+        }
         scheduleEventHeadsUp(ctx)
+    }
+
+    /** Repeating intra-day alarm from [startHour] at [intervalMs] spacing. */
+    private fun scheduleRepeating(ctx: Context, req: Int, startHour: Int, intervalMs: Long, kind: String) {
+        val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val now = System.currentTimeMillis()
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, startHour); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }
+        // advance to the next slot at or after now
+        while (cal.timeInMillis <= now) cal.add(Calendar.MILLISECOND, intervalMs.toInt())
+        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.timeInMillis, intervalMs, pending(ctx, req, kind))
     }
 
     /**
@@ -287,13 +307,14 @@ object Notifier {
             "weekly" -> Prefs.bool(ctx, Prefs.NOTIF_WEEKLY, true)
             "protein" -> Prefs.bool(ctx, Prefs.PROTEIN_NUDGE, true)
             "event_soon" -> Prefs.bool(ctx, Prefs.EVENT_REMINDER_ON, true)
+            "water" -> Prefs.bool(ctx, Prefs.WATER_REMINDER_ON, false)
             else -> true
         }
         if (!allowed) return
         val msg = (if (kind == "event_soon") eventSoonMessage(ctx) else message(ctx, kind)) ?: return
         // every kind gets its own id — protein sharing 4 with weekly used to
         // overwrite the Sunday report
-        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; "bedtime" -> 10; "event_soon" -> 13; else -> 4 }
+        val id = when (kind) { "morning" -> 1; "fuel" -> 3; "evening" -> 2; "workout_soon" -> 5; "screen80" -> 6; "protein" -> 8; "bedtime" -> 10; "event_soon" -> 13; "water" -> 15; else -> 4 }
 
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= 23) flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -342,6 +363,7 @@ object Notifier {
             "workout_soon" -> builder.addAction(0, "Start session", openApp("train"))
             "screen80" -> builder.addAction(0, "Open Guard", openApp("guard"))
             "event_soon" -> builder.addAction(0, "Open calendar", openApp("calendar"))
+            "water" -> builder.addAction(0, "Log water", openApp("fuel"))
         }
 
         runCatching { NotificationManagerCompat.from(ctx).notify(id, builder.build()) }
@@ -421,6 +443,18 @@ object Notifier {
             "fuel" -> {
                 if (kcal > 0) null  // already fueling — no nag
                 else "Fuel check" to "Nothing logged today. Even a quick entry keeps the data honest."
+            }
+            "water" -> {
+                // pace-aware: expected glasses ≈ goal · (elapsed waking hours / 14),
+                // fire only when you're a glass or more behind and not yet done
+                val glasses = Repo.hydrationMl(day) / WaterCalc.glassMl()
+                val goalG = p.waterGoal
+                if (goalG <= 0 || glasses >= goalG) return null
+                val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                if (h < 9 || h > 21) return null
+                val expected = (goalG * ((h - 8).coerceIn(0, 14) / 14.0)).toInt()
+                if (glasses >= expected - 1) return null   // on pace → stay quiet
+                "Hydration" to "You're at $glasses/$goalG glasses — a glass or two now keeps you on track."
             }
             "evening" -> {
                 val comp = Repo.completion(day, p)

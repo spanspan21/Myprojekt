@@ -600,14 +600,18 @@ fun BodyScreen() {
                             }
                             if (bmi != null) {
                                 Spacer(Modifier.width(8.dp))
-                                val bmiColor = when {
-                                    bmi < 18.5 -> Warn
-                                    bmi < 25.0 -> Good
-                                    bmi < 30.0 -> Warn
-                                    else -> Crit
+                                val age = Repo.data.profile.age
+                                // Adult BMI cut-offs don't apply to under-18s (BMI-for-age
+                                // percentiles do) — never slap 'obese' on a growing teen.
+                                // Show the number neutrally with a soft band + a 'teen' tag.
+                                val teen = age in 1..17
+                                val bmiColor = if (teen) {
+                                    when { bmi < 15.0 -> Warn; bmi <= 27.0 -> Good; bmi <= 30.0 -> Warn; else -> Crit }
+                                } else {
+                                    when { bmi < 18.5 -> Warn; bmi < 25.0 -> Good; bmi < 30.0 -> Warn; else -> Crit }
                                 }
                                 Text(
-                                    "BMI ${"%.1f".format(bmi)}",
+                                    "BMI ${"%.1f".format(bmi)}" + if (teen) " · teen" else "",
                                     color = bmiColor, fontSize = FS.s10_5,
                                     fontFamily = Body, fontWeight = FontWeight.Bold,
                                 )
