@@ -299,7 +299,9 @@ internal fun RecurringSheet(onDismiss: () -> Unit) {
         GlassField(name, { name = it }, "Name — e.g. Spotify, Pocket money", imeAction = androidx.compose.ui.text.input.ImeAction.Next)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            FinChip("Cost", isCost) { isCost = true }
+            // reset category off "Income" when switching back to Cost, or a cost
+            // saves miscategorized as Income (hidden from the spend breakdown)
+            FinChip("Cost", isCost) { if (!isCost) category = "Other"; isCost = true }
             FinChip("Income", !isCost) { isCost = false; category = "Income" }
         }
         Spacer(Modifier.height(12.dp))

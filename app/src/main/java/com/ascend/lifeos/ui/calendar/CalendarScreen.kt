@@ -624,7 +624,7 @@ private fun IcsFeedRow() {
                         Modifier.size(40.dp).clip(CircleShape).pressScale {
                             if (armedRemoveIdx == idx) {
                                 Haptics.confirm(ctx)
-                                scope.launch { IcsSync.removeFeedAt(ctx, idx); if (IcsSync.feeds(ctx).isNotEmpty()) IcsSync.sync(ctx) else IcsSync.removeFeed(ctx); error = null; tick++; AppFeedback.show("Feed removed") }
+                                scope.launch { IcsSync.removeFeedAtAndResync(ctx, idx); error = null; tick++; AppFeedback.show("Feed removed") }
                                 armedRemoveIdx = -1
                             } else { Haptics.warn(ctx); armedRemoveIdx = idx }
                         },

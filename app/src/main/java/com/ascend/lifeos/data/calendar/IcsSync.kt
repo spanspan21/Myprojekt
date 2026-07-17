@@ -81,6 +81,20 @@ object IcsSync {
         if (index in list.indices) { list.removeAt(index); writeFeeds(ctx, list) }
     }
 
+    /**
+     * Remove a feed AND clear its events, independent of the follow-up sync's
+     * outcome. Because ids aren't feed-columned we wipe all ics rows and best-
+     * effort re-import the survivors — the removed feed's events are gone even
+     * if the resync fails or returns empty (which the plain removeFeatAt+sync
+     * path left stranded on the calendar).
+     */
+    suspend fun removeFeedAtAndResync(ctx: Context, index: Int) = withContext(Dispatchers.IO) {
+        removeFeedAt(ctx, index)
+        if (feeds(ctx).isEmpty()) { removeFeed(ctx); return@withContext }
+        CalendarRepo.dao(ctx).deleteBySource()
+        runCatching { sync(ctx) }
+    }
+
     /** Forget ALL feeds and delete everything they imported. */
     suspend fun removeFeed(ctx: Context) = withContext(Dispatchers.IO) {
         CalendarRepo.dao(ctx).deleteBySource()
@@ -88,30 +102,39 @@ object IcsSync {
     }
 
     /**
-     * Fetch + parse + replace across EVERY feed. Each feed's ids are salted by
-     * its URL so two feeds with colliding UIDs don't overwrite each other; the
-     * union replaces the previous import in one atomic write. A feed that fails
-     * to fetch is skipped (the others still sync); success = total imported.
+     * Fetch + parse across EVERY feed. Each feed's ids are salted by its URL so
+     * two feeds with colliding UIDs don't overwrite each other. When ALL feeds
+     * succeed the union REPLACES the previous import (wholesale delete+insert,
+     * prunes stale lessons). On a PARTIAL failure a wholesale replace would
+     * delete the failed feed's still-valid rows — so instead the succeeded
+     * feeds are upserted non-destructively, leaving the failed feed's last-good
+     * events on the calendar until it next fetches. success = total imported.
      */
     suspend fun sync(ctx: Context): Result<Int> = withContext(Dispatchers.IO) {
         val list = feeds(ctx)
         if (list.isEmpty()) return@withContext Result.failure(IOException("No feed URL set"))
+        // Per-feed cap so one big feed can't monopolize the global budget and
+        // starve a later feed out of the truncation entirely.
+        val perFeedCap = (MAX_EVENTS / list.size).coerceAtLeast(1)
         val all = ArrayList<CalEventEntity>()
         var anyOk = false
+        var allOk = true
         var lastErr: Exception? = null
         for (feed in list) {
             try {
                 val body = fetch(feed.url)
                 if (!body.contains("BEGIN:VCALENDAR")) throw IOException("Not an ICS feed")
-                all += parse(body, idSalt = feed.url)
+                all += parse(body, idSalt = feed.url).take(perFeedCap)
                 anyOk = true
-            } catch (e: Exception) { lastErr = e }
+            } catch (e: Exception) { lastErr = e; allOk = false }
         }
         if (!anyOk) return@withContext Result.failure(lastErr ?: IOException("All feeds failed"))
-        // A transient empty result across feeds must not wipe the last good import.
+        // A transient empty result must not wipe the last good import.
         if (all.isEmpty()) return@withContext Result.success(0)
-        val deduped = all.distinctBy { it.id }.take(MAX_EVENTS)
-        CalendarRepo.dao(ctx).replaceIcsEvents(deduped)
+        val deduped = all.distinctBy { it.id }
+        val dao = CalendarRepo.dao(ctx)
+        if (allOk) dao.replaceIcsEvents(deduped)          // safe wholesale refresh
+        else deduped.forEach { dao.upsert(it) }           // partial: don't delete survivors
         prefs(ctx).edit().putLong(KEY_LAST, System.currentTimeMillis()).apply()
         Result.success(deduped.size)
     }

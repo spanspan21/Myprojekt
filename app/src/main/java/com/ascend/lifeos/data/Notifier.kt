@@ -453,7 +453,7 @@ object Notifier {
                 val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
                 if (h < 9 || h > 21) return null
                 val expected = (goalG * ((h - 8).coerceIn(0, 14) / 14.0)).toInt()
-                if (glasses >= expected - 1) return null   // on pace → stay quiet
+                if (glasses >= expected) return null   // on pace or ahead → stay quiet
                 "Hydration" to "You're at $glasses/$goalG glasses — a glass or two now keeps you on track."
             }
             "evening" -> {

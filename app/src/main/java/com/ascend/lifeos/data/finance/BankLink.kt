@@ -371,7 +371,9 @@ object BankLink {
                 if (key in seenSet) continue
                 val cents = amountCents(t) ?: continue
                 val name = counterparty(t)
-                FinanceStore.bookTxn(ctx, cents, categorize(ctx, name, cents > 0), name.take(60), acc.financeAccountId)
+                // imported bank history must never trigger round-up savings —
+                // the first connect pulls 90 days and would flood the goal
+                FinanceStore.bookTxn(ctx, cents, categorize(ctx, name, cents > 0), name.take(60), acc.financeAccountId, roundUp = false)
                 seenSet.add(key)
                 seen.add(key)
                 count++
