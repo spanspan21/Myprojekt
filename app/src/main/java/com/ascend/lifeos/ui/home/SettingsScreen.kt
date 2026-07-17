@@ -581,6 +581,30 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 onInc = { sLen = (sLen + 15).coerceAtMost(120); Repo.setTrainPrefs(Repo.profile().trainFreq, sLen, Repo.profile().hasVest) },
             )
             ToggleRow("Auto-schedule sessions", "JARVIS places sessions on your calendar vs you choose", Prefs.TRAIN_AUTO_SCHEDULE, true)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "PREFERRED TRAINING TIME", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            var timePref by remember { mutableStateOf(Prefs.string(ctx, Prefs.TRAIN_TIME_PREF, "auto")) }
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("auto" to "Auto", "morning" to "Morning", "midday" to "Midday", "evening" to "Evening").forEach { (id, label) ->
+                    val on = timePref == id
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .pressScale { Haptics.tick(ctx); timePref = id; Prefs.setString(ctx, Prefs.TRAIN_TIME_PREF, id) }
+                            .padding(horizontal = 9.dp, vertical = 6.dp),
+                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Auto trains first thing after your wake time and dodges booked blocks.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+            )
             var barId by remember { mutableStateOf(Prefs.string(ctx, Prefs.PLATE_BAR, "belt")) }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

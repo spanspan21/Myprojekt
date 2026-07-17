@@ -164,6 +164,8 @@ object Prefs {
     const val WORKOUT_HEADSUP_MIN = "workout_headsup_min" // 30 — minutes before scheduled session for heads-up
     const val EVENT_REMINDER_ON = "event_reminder_on"     // true — heads-up before timed calendar events
     const val EVENT_REMINDER_MIN = "event_reminder_min"   // 15 — minutes of lead time
+    const val TRAIN_TIME_PREF = "train_time_pref"         // auto|morning|midday|evening — where sessions land
+    const val PRE_OBLIGATION_BUFFER_MIN = "pre_obligation_buffer_min" // 60 — session must end this early before the first booked block
     const val STUDY_BLOCK_MIN = "study_block_min"        // 45 — duration of auto-scheduled study blocks
     const val PANIC_FOCUS_MIN = "panic_focus_min"        // 30 — default panic focus duration
     const val DOOMSCROLL_SNOOZES = "doomscroll_snoozes"  // 2 — max snoozes before lockout

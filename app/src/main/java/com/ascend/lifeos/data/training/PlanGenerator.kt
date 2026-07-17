@@ -208,12 +208,13 @@ object PlanGenerator {
         val dao = CalendarRepo.dao(ctx)
         val entities = dao.eventsInRangeOnce(today.toEpochDay(), today.plusDays(6).toEpochDay())
 
-        // Morning-first scheduling: the user trains before school. A morning
-        // session must finish early enough to shower + prep (~30 min) and make
-        // the ~30 min commute — so it ends PRE_SCHOOL_BUFFER before the first
-        // obligation, starting no earlier than EARLY_WAKE.
-        val earlyWake = 5 * 60 + 30            // 05:30 — up and at it
-        val preSchoolBuffer = 60               // 30 min shower/prep + 30 min commute
+        // Scheduling follows the USER's day, not the developer's timetable
+        // (was: hardcoded 05:30 wake + school commute). "auto" keeps the
+        // morning-first philosophy anchored to the configured wake time; the
+        // explicit preferences pin sessions into that day window instead.
+        val earlyWake = CalendarRepo.wakeStart()
+        val preObligationBuffer = Prefs.int(ctx, Prefs.PRE_OBLIGATION_BUFFER_MIN, 60)
+        val timePref = Prefs.string(ctx, Prefs.TRAIN_TIME_PREF, "auto") // auto|morning|midday|evening
 
         data class DayInfo(
             val day: LocalDate, val hockey: Boolean,
@@ -250,17 +251,30 @@ object PlanGenerator {
             } ?: infos.firstOrNull { it.day !in used && !it.hockey && fits(it) }
             ?: continue
 
-            // Try the morning-before-school window first (before EARLY_WAKE is
-            // free by definition — firstObligation is the earliest booked block).
             val nowMin = if (candidate.day == today) java.time.LocalTime.now().let { it.hour * 60 + it.minute } else 0
-            val morningStart = maxOf(earlyWake, nowMin)
-            val morningLatestEnd = candidate.firstObligationMin?.minus(preSchoolBuffer) ?: (11 * 60)
             val fitting = candidate.slots.filter { it.durationMin >= needMin }
-            val startMin = if (morningLatestEnd - morningStart >= needMin) {
-                morningStart                                    // train first thing, before school
-            } else {
-                // no morning room → earliest free slot of the day (evening after school)
-                (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.firstOrNull())?.startMin ?: continue
+            // earliest start inside [lo, hi) that a free slot can host
+            fun inWindow(lo: Int, hi: Int): Int? = candidate.slots.firstNotNullOfOrNull { s ->
+                val start = maxOf(s.startMin, lo, nowMin)
+                if (start < hi && start + needMin <= s.endMin) start else null
+            }
+            val morningStart = maxOf(earlyWake, nowMin)
+            val morningLatestEnd = candidate.firstObligationMin?.minus(preObligationBuffer) ?: (11 * 60)
+            val morningFits = morningLatestEnd - morningStart >= needMin
+            val startMin = when (timePref) {
+                "midday" -> inWindow(11 * 60, 16 * 60)
+                    ?: inWindow(9 * 60, 20 * 60)
+                    ?: fitting.firstOrNull()?.startMin ?: continue
+                "evening" -> inWindow(16 * 60, 22 * 60)
+                    ?: fitting.lastOrNull()?.startMin ?: continue
+                "morning" -> if (morningFits) morningStart
+                    else inWindow(earlyWake, 12 * 60) ?: fitting.firstOrNull()?.startMin ?: continue
+                else -> if (morningFits) {
+                    morningStart                                // train first thing, before the day starts
+                } else {
+                    // no morning room → earliest free slot of the day (late afternoon bias)
+                    (fitting.firstOrNull { it.startMin >= 15 * 60 } ?: fitting.firstOrNull())?.startMin ?: continue
+                }
             }
             out.add(Placement(session, candidate.day, startMin))
             used.add(candidate.day)
