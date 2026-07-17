@@ -223,9 +223,13 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
 
         com.ascend.lifeos.ui.home.Reveal(1) {
         BootPanel {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 BootChip("Male", sex == "m") { sex = "m" }
                 BootChip("Female", sex == "f") { sex = "f" }
+                BootChip("Prefer not to say", sex == "x") { sex = "x" }
             }
             Spacer(Modifier.height(12.dp))
             TuneStepper("Age", age, "y") { age = (age + it).coerceIn(12, 100) }
@@ -503,7 +507,7 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         }
         if (!canLaunch) {
             Spacer(Modifier.height(6.dp))
-            Text("Select Male or Female above to continue", color = TextMuted, fontFamily = Body, fontSize = FS.s11,
+            Text("Pick a body profile above to continue — it sets your calorie formula", color = TextMuted, fontFamily = Body, fontSize = FS.s11,
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
         }

@@ -199,8 +199,8 @@ fun WeeklyReportScreen(onClose: () -> Unit) {
                 Column {
                     // ── train ────────────────────────────────────────────────────
                     ReportSection("Train", Mod.Train) {
-                        if (s.workouts == 0 && s.totalSets == 0) {
-                            Text("No workouts this week — start your first session", color = TextDim, fontSize = FS.s12, fontFamily = Body)
+                        if (s.workouts == 0 && s.totalSets == 0 && s.activityCount == 0) {
+                            Text("No training this week — start your first session", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                         } else {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                             RStat("${s.workouts}", "SESSIONS", Mod.Train)

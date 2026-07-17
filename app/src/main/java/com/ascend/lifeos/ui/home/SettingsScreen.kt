@@ -237,7 +237,7 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             val p = Repo.profile()
             ActionRow(
                 "Body profile & targets",
-                "${if (p.sex == "m") "M" else "F"} · ${p.age} y · ${Units.fmtHeight(ctx, p.heightCm)} · ${Units.fmtWeight(ctx, p.weightKg.toDouble())} · ${p.kcalGoal} kcal",
+                "${when (p.sex) { "m" -> "M"; "f" -> "F"; else -> "•" }} · ${p.age} y · ${Units.fmtHeight(ctx, p.heightCm)} · ${Units.fmtWeight(ctx, p.weightKg.toDouble())} · ${p.kcalGoal} kcal",
             ) { profileOpen = true }
 
             var unitSys by remember { mutableStateOf(Prefs.string(ctx, Prefs.UNIT_SYSTEM, "metric")) }

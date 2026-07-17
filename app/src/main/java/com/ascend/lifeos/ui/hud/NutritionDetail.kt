@@ -672,6 +672,7 @@ fun GoalsSheet(sheetState: SheetState, onDismiss: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HudChip("Male", sex == "m") { sex = "m" }
                 HudChip("Female", sex == "f") { sex = "f" }
+                HudChip("N/A", sex == "x") { sex = "x" }
             }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -23,7 +23,10 @@ object NutritionCalc {
 
     fun breakdown(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, goal: String): Breakdown {
         val w = weightKg.coerceIn(30, 300)
-        val bmr = 10.0 * w + 6.25 * heightCm.coerceIn(120, 230) - 5.0 * age.coerceIn(12, 100) + if (sex == "f") -161 else 5
+        // Mifflin–St Jeor: +5 male, −161 female; "prefer not to say" takes the
+        // midpoint (−78) rather than silently assuming one formula.
+        val bmr = 10.0 * w + 6.25 * heightCm.coerceIn(120, 230) - 5.0 * age.coerceIn(12, 100) +
+            when (sex) { "f" -> -161.0; "x" -> -78.0; else -> 5.0 }
         val af = when (activity) { 1 -> 1.2; 2 -> 1.375; 3 -> 1.55; 4 -> 1.725; else -> 1.9 }
         val tdee = (bmr * af).roundToInt()
         val adj = when (goal) { "lose" -> "−deficit"; "gain" -> "+surplus"; else -> "maintenance" }
@@ -32,7 +35,10 @@ object NutritionCalc {
 
     fun compute(sex: String, age: Int, heightCm: Int, weightKg: Int, activity: Int, goal: String): Targets {
         val w = weightKg.coerceIn(30, 300)
-        val bmr = 10.0 * w + 6.25 * heightCm.coerceIn(120, 230) - 5.0 * age.coerceIn(12, 100) + if (sex == "f") -161 else 5
+        // Mifflin–St Jeor: +5 male, −161 female; "prefer not to say" takes the
+        // midpoint (−78) rather than silently assuming one formula.
+        val bmr = 10.0 * w + 6.25 * heightCm.coerceIn(120, 230) - 5.0 * age.coerceIn(12, 100) +
+            when (sex) { "f" -> -161.0; "x" -> -78.0; else -> 5.0 }
         val af = when (activity) { 1 -> 1.2; 2 -> 1.375; 3 -> 1.55; 4 -> 1.725; else -> 1.9 }
         var kcal = bmr * af
         val ctx = Repo.appContextOrNull()
