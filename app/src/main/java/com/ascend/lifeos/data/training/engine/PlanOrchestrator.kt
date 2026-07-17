@@ -22,13 +22,16 @@ object PlanOrchestrator {
     }
 
     /** Discipline id → ActivityStore type whose completions gate progression.
-     *  null = this discipline advances on the calendar alone (gym logs to the
-     *  training DB, not ActivityStore, and progresses by load anyway). */
+     *  Only the disciplines whose programWeek scales *difficulty/volume* are
+     *  gated — that's the injury-reduction rationale (running C25K ladder, swim
+     *  CSS volume). Yoga and HIIT use programWeek purely as a variety RNG seed
+     *  (cosmetic), so gating them would only freeze that variety for someone who
+     *  isn't practising yet — let it rotate on the calendar instead. Gym logs to
+     *  the training DB (not ActivityStore) and progresses by load, so it too
+     *  stays calendar-based (null). */
     private fun completionType(discipline: String): String? = when (discipline) {
         Disciplines.RUNNING -> "run"
-        Disciplines.YOGA -> "yoga"
         Disciplines.SWIM -> "swim"
-        Disciplines.HIIT -> "hiit"
         else -> null
     }
 
