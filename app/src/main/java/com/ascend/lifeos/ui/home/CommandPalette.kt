@@ -498,13 +498,14 @@ object CommandEngine {
         Regex("^([a-zäöüß][a-zäöüß .-]{2,})(?:\\s+(\\d{2,4})\\s?g?)?$").find(qEff)?.let { m ->
             val nameQ = m.groupValues[1].trim()
             val grams = m.groupValues[2].toIntOrNull()
-            // only STRONG matches log food — a weak substring hit on a typo'd
-            // command must fall through to the unknown hint, not book calories
+            // only STRONG matches log food — a weak substring hit OR a fuzzy
+            // did-you-mean on a typo'd command must fall through to the unknown
+            // hint, never silently book calories. Prefix match on name or word.
             val qn = com.ascend.lifeos.data.FoodRank.normalize(nameQ)
             val hit = com.ascend.lifeos.data.BasicFoods.search(nameQ).firstOrNull()?.takeIf { p ->
                 val n = com.ascend.lifeos.data.FoodRank.normalize(p.name)
                 n.startsWith(qn) || n.split(' ', '(', ',').any { it.startsWith(qn) }
-            } ?: com.ascend.lifeos.data.BasicFoods.didYouMean(nameQ)
+            }
             if (hit != null) {
                 val g = grams ?: hit.portions.firstOrNull()?.grams ?: hit.servingG ?: 100
                 val f = g / 100.0
