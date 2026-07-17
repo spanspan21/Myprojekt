@@ -21,8 +21,34 @@ object PlanOrchestrator {
         listOf(RunningEngine, YogaEngine, GymEngine, HiitEngine, SwimEngine).associateBy { it.id }
     }
 
-    /** Program-week counter: stamped when a discipline is first enabled. */
-    fun programWeek(ctx: Context, discipline: String): Int {
+    /** Discipline id → ActivityStore type whose completions gate progression.
+     *  null = this discipline advances on the calendar alone (gym logs to the
+     *  training DB, not ActivityStore, and progresses by load anyway). */
+    private fun completionType(discipline: String): String? = when (discipline) {
+        Disciplines.RUNNING -> "run"
+        Disciplines.YOGA -> "yoga"
+        Disciplines.SWIM -> "swim"
+        Disciplines.HIIT -> "hiit"
+        else -> null
+    }
+
+    /**
+     * Program-week counter — stamped when a discipline is first enabled, then
+     * advanced by *both* the calendar and actual completions. The endurance
+     * ladders (running C25K, swim CSS) scale difficulty by week and cite graded
+     * progression for injury reduction (Kluitenberg 2015), so they must never
+     * jump ahead on the clock alone: someone who enables running and then does
+     * nothing for a month should not land on week-5 intervals untested. The week
+     * is the *slower* of calendar weeks and completed-session weeks — you need
+     * both the time to pass and to have done roughly [sessionsPerWeek] sessions
+     * per week to move up. Gym/other stay calendar-based (completionType null).
+     */
+    fun programWeek(
+        ctx: Context,
+        discipline: String,
+        sessionsPerWeek: Int,
+        acts: List<ActivityStore.Entry>,
+    ): Int {
         val key = "disc_start_$discipline"
         val today = com.ascend.lifeos.core.todayDate().toEpochDay()
         val start = Prefs.int(ctx, key, 0).toLong()
@@ -30,8 +56,21 @@ object PlanOrchestrator {
             Prefs.setInt(ctx, key, today.toInt())
             return 0
         }
-        return (((today - start) / 7).toInt()).coerceAtLeast(0)
+        val calendarWeeks = (((today - start) / 7).toInt()).coerceAtLeast(0)
+        val typ = completionType(discipline) ?: return calendarWeeks
+        val done = acts.count { it.type == typ && epochDayOf(it.ts) >= start }
+        return gatedWeek(calendarWeeks, done, sessionsPerWeek)
     }
+
+    /** Pure gating rule: advance at the slower of elapsed calendar weeks and
+     *  completed-session weeks. Extracted so the progression math is unit-tested
+     *  without a Context. */
+    internal fun gatedWeek(calendarWeeks: Int, completedSessions: Int, sessionsPerWeek: Int): Int =
+        minOf(calendarWeeks.coerceAtLeast(0), completedSessions / sessionsPerWeek.coerceAtLeast(1))
+
+    private fun epochDayOf(ts: Long): Long =
+        java.time.Instant.ofEpochMilli(ts)
+            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
 
     fun level(ctx: Context, discipline: String): Int =
         Prefs.int(ctx, "disc_level_$discipline", 1).coerceIn(1, 3)
@@ -85,7 +124,7 @@ object PlanOrchestrator {
                     sessions = share,
                     sessionLenMin = sessionLenMin,
                     level = level(ctx, d),
-                    programWeek = programWeek(ctx, d),
+                    programWeek = programWeek(ctx, d, share, acts),
                     deload = deload,
                     bodyweightKg = bodyweightKg,
                     startIndex = index,
