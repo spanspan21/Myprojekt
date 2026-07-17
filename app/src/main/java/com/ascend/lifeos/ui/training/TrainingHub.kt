@@ -106,7 +106,10 @@ fun TrainingHub(
     var historyEditorFor by remember { mutableStateOf<WorkoutSessionEntity?>(null) }
 
     LaunchedEffect(progs, profile != null, resumeTick) {
-        if (profile != null) vm.regeneratePlan() else vm.refreshFreshness()
+        // Always generate: discipline engines (running/yoga/gym) build full
+        // weeks without the calisthenics calibration, and the calisthenics
+        // generator itself degrades gracefully to level-1 chains.
+        vm.regeneratePlan()   // also refreshes muscle freshness internally
         vm.autoRescheduleCheck()
         vm.checkAbandonedSession()
     }
@@ -120,7 +123,9 @@ fun TrainingHub(
             val lastInfo = vm.lastSplitInfo()
             JarvisHeader("Training", context = lastInfo.ifEmpty { null }, accent = Mod.Train)
             Spacer(Modifier.height(6.dp))
-            if (profile == null) {
+            if (profile == null && vm.weekPlan?.sessions.isNullOrEmpty()) {
+                // legacy quick-start hint — engine weeks name their own next
+                // session right below, so the split guess would just conflict
                 Text("Next split: ${vm.suggestedSplit()}", color = Mod.Train, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
             }
             // Whoop-style strain target: recovery decides how hard today may be
@@ -247,7 +252,12 @@ fun TrainingHub(
             }
         }
 
-        if (profile == null) {
+        // Discipline engines (running/yoga/gym) generate full weeks WITHOUT the
+        // calisthenics 7-max-test calibration — a runner must not face a test
+        // wall before seeing a single run. The classic CTA path only remains
+        // when there is genuinely nothing to show.
+        val hasEngineWeek = vm.weekPlan?.sessions?.isNotEmpty() == true
+        if (profile == null && !hasEngineWeek) {
             // ── No calibration yet: CTA + classic quick start ───────────
             item {
                 CalibrateCta(onOpenAssess)
@@ -261,6 +271,17 @@ fun TrainingHub(
                 Spacer(Modifier.height(22.dp))
             }
         } else {
+            val discs = Repo.data.profile.disciplines.ifEmpty {
+                com.ascend.lifeos.data.training.engine.Disciplines.fromSport(Repo.data.profile.sport)
+            }
+            if (profile == null && com.ascend.lifeos.data.training.engine.Disciplines.CALISTHENICS in discs) {
+                // Only the calisthenics share needs the max-test battery — a
+                // gym/running/yoga week is complete without it. Banner, not wall.
+                item {
+                    CalibrateCta(onOpenAssess)
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
             // ── Next session hero + week strip (generated plan) ─────────
             item {
                 SectionLabel("Next session", accent = Mod.Train)
