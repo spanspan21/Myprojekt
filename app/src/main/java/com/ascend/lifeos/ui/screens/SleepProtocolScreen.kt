@@ -66,7 +66,9 @@ fun SleepProtocolScreen(onBack: () -> Unit) {
         Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
     ) {
-        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "syncing from your watch…", Mod.Body)
+        // no nights yet ≠ "syncing…" — with no watch connected that line would
+        // spin forever; say what's actually true (same voice as BodyScreen)
+        JarvisHeader("Sleep", avg7?.let { "7-night average ${fmtDur(it)} · target 8–9 h" } ?: "no nights yet — connect your watch or log one", Mod.Body)
         Spacer(Modifier.height(18.dp))
 
         // ── sleep score hero — the ONE number for last night ─────────
