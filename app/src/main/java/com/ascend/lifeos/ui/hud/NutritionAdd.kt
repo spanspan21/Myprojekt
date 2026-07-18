@@ -182,7 +182,17 @@ fun AddFoodSheet(sheetState: SheetState, dayKey: String = todayKey(), onDismiss:
                     onEditCustom = { editExisting = it; editBarcode = ""; editing = true },
                     onOpenDrinks = { drinkBuilder = true },
                     onDismiss = onDismiss,
-                    basket = basket, onBasket = { basket = it },
+                    // Growing the basket must ANNOUNCE itself: the basket bar
+                    // renders below the result list — usually off-screen — so a
+                    // silent ＋ reads as "button does nothing" (observed live).
+                    basket = basket, onBasket = { new ->
+                        if (new.size > basket.size) {
+                            com.ascend.lifeos.ui.kit.AppFeedback.show(
+                                "${new.size} in basket · ${new.sumOf { it.kcal }} kcal — log below",
+                            )
+                        }
+                        basket = new
+                    },
                     autoFocus = autoFocus, onAutoFocused = { autoFocus = false },
                 )
             }
