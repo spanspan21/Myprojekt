@@ -39,6 +39,11 @@ import com.ascend.lifeos.data.training.engine.programs.TrackFieldProgram
 import com.ascend.lifeos.data.training.engine.programs.TrailRunningProgram
 import com.ascend.lifeos.data.training.engine.programs.TriathlonProgram
 import com.ascend.lifeos.data.training.engine.programs.XcSkiingProgram
+import com.ascend.lifeos.data.training.engine.programs.CrossfitProgram
+import com.ascend.lifeos.data.training.engine.programs.KettlebellProgram
+import com.ascend.lifeos.data.training.engine.programs.OlympicWeightliftingProgram
+import com.ascend.lifeos.data.training.engine.programs.PowerliftingProgram
+import com.ascend.lifeos.data.training.engine.programs.StrongmanProgram
 
 // ─── SportPrograms ───────────────────────────────────────────────────────────
 // The registry of data-driven skill/team/racket/combat sports. Each entry wraps
@@ -89,5 +94,10 @@ object SportPrograms {
         SkillSportEngine("circuit", "Circuit Training", CircuitProgram.program),
         SkillSportEngine("bootcamp", "Bootcamp", BootcampProgram.program),
         SkillSportEngine("jump_rope", "Jump Rope", JumpRopeProgram.program),
+        SkillSportEngine("powerlifting", "Powerlifting", PowerliftingProgram.program),
+        SkillSportEngine("olympic_weightlifting", "Olympic Weightlifting", OlympicWeightliftingProgram.program),
+        SkillSportEngine("crossfit", "CrossFit", CrossfitProgram.program),
+        SkillSportEngine("strongman", "Strongman", StrongmanProgram.program),
+        SkillSportEngine("kettlebell", "Kettlebell", KettlebellProgram.program),
     ).associateBy { it.id }
 }

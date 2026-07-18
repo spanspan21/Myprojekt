@@ -97,6 +97,11 @@ object Disciplines {
         Def("circuit", "Circuit Training", "🔄", "Conditioning"),
         Def("bootcamp", "Bootcamp", "🥾", "Conditioning"),
         Def("jump_rope", "Jump Rope", "🪢", "Conditioning"),
+        Def("powerlifting", "Powerlifting", "🏋", "Strength"),
+        Def("olympic_weightlifting", "Olympic Weightlifting", "🏋", "Strength"),
+        Def("crossfit", "CrossFit", "🤸", "Strength"),
+        Def("strongman", "Strongman", "🪨", "Strength"),
+        Def("kettlebell", "Kettlebell", "🔔", "Strength"),
     )
 
     fun byId(id: String): Def? = ALL.firstOrNull { it.id == id }
