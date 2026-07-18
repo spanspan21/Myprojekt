@@ -26,20 +26,39 @@ class JarvisApp : Application() {
         // crash in AscendApp (debug builds happened to touch these earlier).
         // Same bug class as Prefs.bool (56bb4e7). Touching them here, before
         // any composition exists, creates every state in the applied global
-        // snapshot. New shell-level signal/store singletons belong on this list.
+        // snapshot. This is the COMPLETE set of object-level Compose-state
+        // singletons in the app (verified by grepping mutableStateOf/…StateOf on
+        // objects) — every one is cheap to init (rev counters / null holders, no
+        // eager IO), so warming them all forecloses the whole release-only
+        // cold-start crash class regardless of which screen first reads one.
+        // New object-level state singletons belong on this list.
         runCatching {
+            // shell + first-frame (the ones the AscendApp/Home crash proved)
             com.ascend.lifeos.data.Modules.rev.intValue
             com.ascend.lifeos.data.DeepLink.pending.value
             com.ascend.lifeos.data.ActivityStore.rev
             com.ascend.lifeos.data.life.LifeStores.rev
             com.ascend.lifeos.data.finance.FinanceStore.rev
+            com.ascend.lifeos.data.finance.FinanceRoom.rev
             com.ascend.lifeos.data.sleep.SleepStore.rev
             com.ascend.lifeos.ui.ShellMode.current.value
             com.ascend.lifeos.ui.ShellSignals.target.value
             com.ascend.lifeos.ui.home.HomeSignals.quickLog.value
             com.ascend.lifeos.ui.home.SettingsSignals.page.value
             com.ascend.lifeos.ui.boot.TourSignals.replay.value
+            com.ascend.lifeos.ui.boot.TourTargets.bounds
             com.ascend.lifeos.ui.kit.AppFeedback.current
+            // child-screen singletons (same class, lower frequency) — cheap init
+            com.ascend.lifeos.data.Repo.jarvisReaction.value
+            com.ascend.lifeos.data.calendar.TaskBlocks.rev
+            com.ascend.lifeos.data.life.Achievements.rev
+            com.ascend.lifeos.data.life.Decisions.rev
+            com.ascend.lifeos.data.rules.CustomRules.rev
+            com.ascend.lifeos.data.WeatherRepo.tempC
+            com.ascend.lifeos.data.finance.BankLink.rev
+            com.ascend.lifeos.data.finance.GoCardlessLink.rev
+            com.ascend.lifeos.data.finance.Currency.current.value
+            com.ascend.lifeos.wellbeing.GuardRuntime.payload.value
         }
         mark("snapshotWarmup")
         // Init the store at the Application level so receivers/widgets that run
