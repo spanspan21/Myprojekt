@@ -234,6 +234,7 @@ object Prefs {
     const val GYM_SPLIT = "gym_split"                  // "" = auto — GymSplits id the gym engine uses
     const val GYM_SPLIT_CUSTOM = "gym_split_custom"    // "|"-joined day names when GYM_SPLIT == "custom"
     const val DENSITY_COMPACT = "density_compact"      // compact spacing (scales the Space/Pad tokens)
+    const val GYM_SWAPS = "gym_swaps"                  // "orig>repl|orig2>repl2" — user's per-lift plan swaps
     // Notification times (minute-of-day; e.g. 420 = 07:00)
     const val NOTIF_MORNING_MIN = "notif_morning_min"  // 420 (07:00)
     const val NOTIF_FUEL_MIN = "notif_fuel_min"        // 780 (13:00)

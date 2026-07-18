@@ -106,19 +106,22 @@ object GymEngine : PlanEngine {
         for (s in slots) {
             // deload: one set less, floor 2 — but never ABOVE the plan (1×5 deadlift stays 1)
             val sets = if (inp.deload) (s.sets - 1).coerceAtLeast(2).coerceAtMost(s.sets) else s.sets
-            val name = nameOf(s.id)
+            // the user's plan swap (if any) replaces the lift identity; the
+            // prescription (sets/reps/main) and the loading path stay the same.
+            val id = inp.gymSwaps[s.id] ?: s.id
+            val name = nameOf(id)
             if (s.main) {
-                var w = inp.bestE1Rm[s.id]?.times(pctForReps(s.high))
+                var w = inp.bestE1Rm[id]?.times(pctForReps(s.high))
                 if (inp.deload && w != null) w *= DELOAD_PCT
                 if (w != null) w *= detrainScale(inp.daysSinceLastSession)
                 val weight = w?.let { round25(it) }
                 if (!ramped) {           // warm-up ramp only before the day's first main lift
                     ramped = true
-                    if (weight != null) out += ramp(s.id, name, weight)
+                    if (weight != null) out += ramp(id, name, weight)
                 }
                 val reps = if (s.low == s.high) "${s.low}" else "${s.low}-${s.high}"
                 out += PlannedExercise(
-                    exerciseId = s.id, name = name, sets = sets,
+                    exerciseId = id, name = name, sets = sets,
                     repsLow = s.low, repsHigh = s.high,
                     holdSec = null, vestKg = null, isSkillWork = false,
                     restSec = REST_MAIN, section = BlockType.STRENGTH,
@@ -133,7 +136,7 @@ object GymEngine : PlanEngine {
                 )
             } else {
                 out += PlannedExercise(
-                    exerciseId = s.id, name = name, sets = sets,
+                    exerciseId = id, name = name, sets = sets,
                     repsLow = s.low, repsHigh = s.high,
                     holdSec = s.holdSec, vestKg = null, isSkillWork = false,
                     restSec = REST_ACC, section = BlockType.FINISHER,

@@ -159,6 +159,22 @@ class GymEngineTest {
         assertEquals(10, squat.repsHigh)
     }
 
+    // ── Plan swaps ────────────────────────────────────────────────────────────
+
+    @Test
+    fun `a plan swap replaces the lift and loads from the replacement e1RM`() {
+        // full-body A has gym_bench as a 3×5 main; swap it for the incline DB press
+        val e1 = mapOf("gym_incline_db_press" to 60.0)
+        val day0 = GymEngine.week(
+            inputs(e1 = e1).copy(gymSwaps = mapOf("gym_bench" to "gym_incline_db_press")),
+        )[0]
+        assertTrue("bench should be gone", day0.exercises.none { it.exerciseId == "gym_bench" })
+        val swapped = day0.exercises.first { it.exerciseId == "gym_incline_db_press" && it.section == BlockType.STRENGTH }
+        assertEquals(3, swapped.sets)                        // prescription preserved (3×5)
+        assertEquals(50.0, swapped.weightKg!!, 1e-9)         // 0.85 × 60 = 51 → 50, from the replacement's e1RM
+        assertTrue("un-swapped lifts stay", day0.exercises.any { it.exerciseId == "gym_squat" })
+    }
+
     // ── Catalog wiring ──────────────────────────────────────────────────────
 
     @Test

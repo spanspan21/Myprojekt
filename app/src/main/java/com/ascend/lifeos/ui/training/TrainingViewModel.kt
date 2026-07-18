@@ -1056,6 +1056,26 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         regeneratePlan()
     }
 
+    // ── Plan swaps (§10.2): swap a prescribed gym lift for an alternative ───────
+
+    fun gymSwaps(): Map<String, String> =
+        Prefs.string(getApplication(), Prefs.GYM_SWAPS, "").split("|").mapNotNull {
+            val p = it.split(">")
+            if (p.size == 2 && p[0].isNotBlank() && p[1].isNotBlank()) p[0] to p[1] else null
+        }.toMap()
+
+    /** Swap the plan lift that currently shows as [shownId] for [replacement]
+     *  (null reverts). Re-keys onto the ORIGINAL prescribed lift so re-swaps and
+     *  reverts stay consistent, then rebuilds the week. */
+    fun setGymSwap(shownId: String, replacement: String?) {
+        val map = gymSwaps().toMutableMap()
+        val original = map.entries.firstOrNull { it.value == shownId }?.key ?: shownId
+        if (replacement == null || replacement == original) map.remove(original)
+        else map[original] = replacement
+        Prefs.setString(getApplication(), Prefs.GYM_SWAPS, map.entries.joinToString("|") { "${it.key}>${it.value}" })
+        regeneratePlan()
+    }
+
     // ── Custom exercise (Spec §1.2) ─────────────────────────────────────────
 
     fun addCustomExercise(name: String, category: ExCategory, primaryMuscle: Muscle, unit: String = "reps") {

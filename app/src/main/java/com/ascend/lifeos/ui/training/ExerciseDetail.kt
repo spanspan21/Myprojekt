@@ -2,6 +2,7 @@ package com.ascend.lifeos.ui.training
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ascend.lifeos.data.training.*
 import com.ascend.lifeos.ui.hud.GlassPanel
+import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.endpointHalo
 import com.ascend.lifeos.ui.kit.smoothPath
 import com.ascend.lifeos.ui.kit.SectionLabel
@@ -103,6 +105,58 @@ fun ExerciseDetailDialog(vm: TrainingViewModel, exerciseId: String, onClose: () 
                     }
                     return@LazyColumn
                 }
+
+                // ── swap this lift in the plan (gym only) ───────────────
+                entity?.takeIf { it.id.startsWith("gym_") || exerciseId.startsWith("gym_") }?.let { e ->
+                    item {
+                        val exercises by vm.exercises.collectAsState()
+                        val originalOfShown = remember(exercises, exerciseId) {
+                            vm.gymSwaps().entries.firstOrNull { it.value == exerciseId }?.key
+                        }
+                        val alts = remember(exercises, exerciseId, e.primaryMuscle) {
+                            exercises.filter { it.id != exerciseId && it.id.startsWith("gym_") && it.primaryMuscle == e.primaryMuscle }.take(6)
+                        }
+                        if (alts.isNotEmpty()) {
+                            SectionLabel("Swap in plan", accent = Mod.Train)
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                "Replace this lift in your plan — takes effect from your next session.",
+                                color = TextDim, fontSize = FS.s11, fontFamily = Body,
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            if (originalOfShown != null) {
+                                Row(
+                                    Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                                        .background(Amber.copy(alpha = 0.10f))
+                                        .border(0.5.dp, Amber.copy(alpha = 0.35f), RoundedCornerShape(11.dp))
+                                        .pressScale { vm.setGymSwap(exerciseId, null); AppFeedback.show("Reverted to the original lift"); onClose() }
+                                        .padding(horizontal = 13.dp, vertical = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text("↩  Revert to the original lift", color = Amber, fontSize = FS.s12_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                            }
+                            alts.forEach { alt ->
+                                Row(
+                                    Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp))
+                                        .background(Ivory.copy(alpha = 0.04f))
+                                        .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+                                        .pressScale { vm.setGymSwap(exerciseId, alt.id); AppFeedback.show("Swapped to ${alt.name}"); onClose() }
+                                        .padding(horizontal = 13.dp, vertical = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text("⇄", color = Mod.Train, fontSize = FS.s14, fontFamily = Body)
+                                    Spacer(Modifier.width(10.dp))
+                                    Text(alt.name, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                                Spacer(Modifier.height(7.dp))
+                            }
+                            Spacer(Modifier.height(18.dp))
+                        }
+                    }
+                }
+
                 // ── the trend that matters for this movement ────────────
                 val perSession = sessionSummaries(sets)
                 val hasWeight = sets.any { (it.weight ?: 0f) > 0f }

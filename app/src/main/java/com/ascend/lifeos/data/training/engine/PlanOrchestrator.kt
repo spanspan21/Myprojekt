@@ -145,6 +145,7 @@ object PlanOrchestrator {
                     gymCustomDays = if (d == Disciplines.GYM) {
                         Prefs.string(ctx, Prefs.GYM_SPLIT_CUSTOM, "").split("|").filter { it.isNotBlank() }
                     } else emptyList(),
+                    gymSwaps = if (d == Disciplines.GYM) parseSwaps(Prefs.string(ctx, Prefs.GYM_SWAPS, "")) else emptyMap(),
                     daysSinceLastSession = daysSinceLastSession,
                 )
                 val week = runCatching { engine.week(inputs) }.getOrDefault(emptyList())
@@ -159,4 +160,11 @@ object PlanOrchestrator {
     // the ViewModel pre-warms this holder right before calling generate().
     @Volatile var gymBestsCache: Map<String, Double> = emptyMap()
     private fun gymBests(@Suppress("UNUSED_PARAMETER") ctx: Context): Map<String, Double> = gymBestsCache
+
+    /** "orig>repl|orig2>repl2" → {orig: repl}. Malformed pairs are skipped. */
+    private fun parseSwaps(s: String): Map<String, String> =
+        s.split("|").mapNotNull { pair ->
+            val parts = pair.split(">")
+            if (parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()) parts[0] to parts[1] else null
+        }.toMap()
 }
