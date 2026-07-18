@@ -114,8 +114,8 @@ class GymEngineTest {
         assertEquals(listOf("Upper", "Lower", "Upper", "Lower"), week.map { it.focus })
         assertEquals(listOf(5, 6, 7, 8), week.map { it.index })
         assertTrue(week.all { it.discipline == "gym" })
-        // double progression: 75% of e1RM for the 6-10 range
-        val bench = GymEngine.week(inputs(sessions = 2, level = 2, e1 = mapOf("gym_bench" to 100.0)))[0]
+        // double progression: 75% of e1RM for the 6-10 range (Upper day)
+        val bench = GymEngine.week(inputs(sessions = 4, level = 2, e1 = mapOf("gym_bench" to 100.0)))[0]
             .lift("gym_bench")
         assertEquals(75.0, bench.weightKg!!, 1e-9)
         assertEquals(6, bench.repsLow)
@@ -124,14 +124,20 @@ class GymEngineTest {
     }
 
     @Test
-    fun `level 3 back half becomes volume days`() {
-        val week = GymEngine.week(inputs(sessions = 4, level = 3))
-        assertEquals(listOf("Upper", "Lower", "Upper (Volume)", "Lower (Volume)"), week.map { it.focus })
-        val volSquat = GymEngine.week(inputs(sessions = 4, level = 3, e1 = mapOf("gym_squat" to 100.0)))[3]
+    fun `advanced frequency auto-recommends push-pull-legs for volume`() {
+        // the old level-3 "(Volume)" back-half was dropped — volume now comes
+        // from a higher-frequency split. 4 days = plain upper/lower...
+        val ul = GymEngine.week(inputs(sessions = 4, level = 3))
+        assertEquals(listOf("Upper", "Lower", "Upper", "Lower"), ul.map { it.focus })
+        // ...5-6 training days recommends push/pull/legs instead
+        val ppl = GymEngine.week(inputs(sessions = 6, level = 3))
+        assertEquals(listOf("Push", "Pull", "Legs", "Push", "Pull", "Legs"), ppl.map { it.focus })
+        // mains still load at 75% for the 6-10 range
+        val squat = GymEngine.week(inputs(sessions = 4, level = 3, e1 = mapOf("gym_squat" to 100.0)))[1]
             .lift("gym_squat")
-        assertEquals(70.0, volSquat.weightKg!!, 1e-9)   // 70% on volume days
-        assertEquals(8, volSquat.repsLow)
-        assertEquals(12, volSquat.repsHigh)
+        assertEquals(75.0, squat.weightKg!!, 1e-9)
+        assertEquals(6, squat.repsLow)
+        assertEquals(10, squat.repsHigh)
     }
 
     // ── Catalog wiring ──────────────────────────────────────────────────────

@@ -25,6 +25,7 @@ data class EngineInputs(
     val longestRunKm: Double? = null,
     // gym
     val bestE1Rm: Map<String, Double> = emptyMap(), // exerciseId -> best estimated 1RM
+    val gymSplit: String? = null,      // chosen GymSplit id, null = auto-recommend
     // yoga / mobility
     val focusAreas: List<String> = emptyList(),     // tight areas ("hips","shoulders","ankles")
 )

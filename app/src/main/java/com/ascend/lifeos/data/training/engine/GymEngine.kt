@@ -11,15 +11,17 @@ import kotlin.math.roundToInt
 /**
  * Barbell / dumbbell strength plans.
  *
- * Level 1 — novice alternating full-body A/B, 3×5 mains (deadlift 1×5),
- * session-to-session linear progression (ACSM progression position stand,
- * Ratamess 2009). Level 2/3 — upper/lower split, 3×6-10 mains with double
- * progression; level 3 turns the back half of the week into volume days.
+ * The day templates and rotation live in [GymSplits]; this engine loads,
+ * warms, deloads and length-fits whichever day the split hands it. The
+ * split is the user's pick ([EngineInputs.gymSplit]) or the frequency ×
+ * experience recommendation — novice → Full Body A/B (linear progression,
+ * ACSM position stand, Ratamess 2009), else Upper/Lower or Push/Pull/Legs
+ * with double progression.
  *
- * Loads come from the lifter's logged best e1RM per exercise: ~85% for a
- * 5-rep working set, ~75% for 8s, ~70% on volume days — all rounded to
- * 2.5 kg. No e1RM yet → weight is null and the note says how to find it.
- * Pure: no Context, no IO.
+ * Loads come from the lifter's logged best e1RM per exercise via the rep-max
+ * heuristic: ~85% for a 5-rep set, ~75% for tens — all rounded to 2.5 kg. No
+ * e1RM yet → weight is null and the note says how to find it. Pure: no
+ * Context, no IO.
  */
 object GymEngine : PlanEngine {
 
@@ -27,97 +29,58 @@ object GymEngine : PlanEngine {
     override val label = "Gym / Weights"
 
     private const val BAR_KG = 20.0
-    private const val NOVICE_PCT = 0.85        // ~5RM working weight
-    private const val INTERMEDIATE_PCT = 0.75  // ~8-rep working weight
-    private const val VOLUME_PCT = 0.70        // level-3 volume day
     private const val DELOAD_PCT = 0.85
     private const val REST_MAIN = 180
     private const val REST_ACC = 90
     private const val REST_WARM = 60
     private const val SET_WORK_SEC = 45.0      // time under bar per set
 
-    override fun week(inputs: EngineInputs): List<PlannedSession> =
-        (0 until inputs.sessions).map { pos ->
-            if (inputs.level <= 1) noviceSession(inputs, pos) else splitSession(inputs, pos)
+    override fun week(inputs: EngineInputs): List<PlannedSession> {
+        // The user's chosen split, or the frequency × experience recommendation
+        // (which reproduces the old behaviour: novice → Full Body A/B, else →
+        // Upper/Lower). Days rotate across the week; each is built identically.
+        val split = GymSplits.byId(inputs.gymSplit) ?: GymSplits.recommend(inputs.sessions, inputs.level)
+        return (0 until inputs.sessions).map { pos ->
+            val day = split.dayFor(inputs.programWeek, pos)
+            build(inputs, pos, split, day)
         }
-
-    // ── Session templates ───────────────────────────────────────────────────
-
-    /** One prescription slot before encoding. */
-    private data class Slot(
-        val id: String, val sets: Int, val low: Int, val high: Int,
-        val main: Boolean, val holdSec: Int? = null,
-    )
-
-    private fun noviceSession(inp: EngineInputs, pos: Int): PlannedSession {
-        // A/B alternates across the week's sessions; week parity flips the
-        // starting workout so 3×/week cycles A-B-A / B-A-B like classic LP.
-        val isA = (inp.programWeek + pos) % 2 == 0
-        val slots = if (isA) listOf(
-            Slot("gym_squat", 3, 5, 5, main = true),
-            Slot("gym_bench", 3, 5, 5, main = true),
-            Slot("gym_row", 3, 5, 5, main = true),
-            Slot("gym_ez_curl", 2, 10, 15, main = false),
-            Slot("core_plank", 2, 1, 1, main = false, holdSec = 45),
-        ) else listOf(
-            Slot("gym_squat", 3, 5, 5, main = true),
-            Slot("gym_ohp", 3, 5, 5, main = true),
-            Slot("gym_deadlift", 1, 5, 5, main = true),
-            Slot("gym_triceps_pushdown", 2, 10, 15, main = false),
-            Slot("gym_cable_crunch", 2, 10, 15, main = false),
-        )
-        val why = buildString {
-            append("Novice linear progression — 3×5 on the big lifts, +2.5 kg every session all reps land ")
-            append("(ACSM progression position stand, Ratamess 2009).")
-            if (inp.deload) append(" Deload week: 85% loads, one set less — dissipate fatigue, keep the groove.")
-        }
-        return build(
-            inp, pos, focus = if (isA) "Full Body A" else "Full Body B",
-            slots = slots, mainPct = NOVICE_PCT, why = why,
-            findNote = "start light — find your 5-rep weight, bar speed crisp",
-        )
     }
 
-    private fun splitSession(inp: EngineInputs, pos: Int): PlannedSession {
-        val upper = pos % 2 == 0
-        val volume = inp.level >= 3 && pos >= 2      // level 3: back half = volume days
-        val (low, high) = if (volume) 8 to 12 else 6 to 10
-        val slots = if (upper) listOf(
-            Slot("gym_bench", 3, low, high, main = true),
-            Slot("gym_row", 3, low, high, main = true),
-            Slot("gym_ohp", 3, low, high, main = true),
-            Slot("gym_lat_pulldown", 3, 10, 15, main = false),
-            Slot("gym_lateral_raise", 3, 10, 15, main = false),
-            Slot("gym_ez_curl", 3, 10, 15, main = false),
-            Slot("gym_triceps_pushdown", 3, 10, 15, main = false),
-            Slot("gym_face_pull", 3, 10, 15, main = false),
-        ) else listOf(
-            Slot("gym_squat", 3, low, high, main = true),
-            Slot("gym_rdl", 3, low, high, main = true),
-            Slot("gym_leg_press", 3, 10, 15, main = false),
-            Slot("gym_leg_curl", 3, 10, 15, main = false),
-            Slot("gym_calf_raise", 3, 10, 15, main = false),
-            Slot("gym_cable_crunch", 3, 10, 15, main = false),
-        )
-        val why = buildString {
-            append(if (volume) "Volume day — lighter loads, $low-$high reps, extra practice under the bar. "
-                   else "Upper/lower split, double progression — ")
-            append("fill the $low-$high range on every set, then the bar goes up 2.5 kg.")
-            if (inp.deload) append(" Deload week: 85% loads, one set less — recover, don't detrain.")
-        }
-        return build(
-            inp, pos,
-            focus = (if (upper) "Upper" else "Lower") + (if (volume) " (Volume)" else ""),
-            slots = slots, mainPct = if (volume) VOLUME_PCT else INTERMEDIATE_PCT, why = why,
-            findNote = "start light — find a weight where $high clean reps is hard but doable",
-        )
+    /** Working %e1RM from the top rep of the main lift — the standard rep-max
+     *  heuristic (≤5→85% ≈5RM · ≤10→75% ≈10RM · ≤15→68% · else 62%). */
+    private fun pctForReps(top: Int): Double = when {
+        top <= 5 -> 0.85
+        top <= 10 -> 0.75
+        top <= 15 -> 0.68
+        else -> 0.62
     }
 
     // ── Encoding ────────────────────────────────────────────────────────────
 
-    private fun build(
-        inp: EngineInputs, pos: Int, focus: String, slots: List<Slot>,
-        mainPct: Double, why: String, findNote: String,
+    private fun build(inp: EngineInputs, pos: Int, split: GymSplit, day: GymDay): PlannedSession {
+        val slots = day.slots
+        val focus = day.name
+        val topMain = slots.filter { it.main }.maxOfOrNull { it.high } ?: 5
+        val findNote =
+            if (topMain <= 5) "start light — find your 5-rep weight, bar speed crisp"
+            else "start light — find a weight where $topMain clean reps is hard but doable"
+        val why = buildString {
+            when (split.id) {
+                GymSplits.FULL_BODY -> append("Full body, linear progression — the big lifts every session, +2.5 kg when all reps land (ACSM position stand, Ratamess 2009). ")
+                GymSplits.UPPER_LOWER -> append("Upper/lower split — each muscle 2×/week, double progression: fill the range on every set, then +2.5 kg. ")
+                GymSplits.PPL -> append("Push/pull/legs — movements grouped by pattern, double progression through the rep range. ")
+                GymSplits.ARNOLD -> append("Arnold antagonist split — high volume, fill the range then add load. ")
+                GymSplits.BRO -> append("One group per day — maximal per-session volume; drive each lift through its rep range. ")
+                else -> append("Double progression — fill the rep range on every set, then the bar goes up 2.5 kg. ")
+            }
+            if (inp.deload) append("Deload week: 85% loads, one set less — recover, don't detrain.")
+        }
+        return encode(inp, pos, focus = focus, slots = slots, why = why, findNote = findNote)
+    }
+
+    private fun encode(
+        inp: EngineInputs, pos: Int, focus: String, slots: List<GymSlot>,
+        why: String, findNote: String,
     ): PlannedSession {
         val out = mutableListOf<PlannedExercise>()
         var ramped = false
@@ -126,7 +89,7 @@ object GymEngine : PlanEngine {
             val sets = if (inp.deload) (s.sets - 1).coerceAtLeast(2).coerceAtMost(s.sets) else s.sets
             val name = nameOf(s.id)
             if (s.main) {
-                var w = inp.bestE1Rm[s.id]?.times(mainPct)
+                var w = inp.bestE1Rm[s.id]?.times(pctForReps(s.high))
                 if (inp.deload && w != null) w *= DELOAD_PCT
                 val weight = w?.let { round25(it) }
                 if (!ramped) {           // warm-up ramp only before the day's first main lift

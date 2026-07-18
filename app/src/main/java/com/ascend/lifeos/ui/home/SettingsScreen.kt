@@ -809,6 +809,26 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 "Your weekly sessions are split across these — a runner gets running weeks, a yogi gets flows.",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
+            // Gym split chooser — only when Gym is one of the disciplines (§10)
+            if ("gym" in discs) {
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    "GYM SPLIT", color = TextDim, fontFamily = Display,
+                    fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+                )
+                Spacer(Modifier.height(7.dp))
+                val gymDays = remember(discs) {
+                    com.ascend.lifeos.data.training.engine.Disciplines
+                        .splitFrequency(Repo.data.profile.trainFreq, discs)["gym"] ?: 3
+                }
+                val gymLevel = remember { Prefs.int(ctx, "disc_level_gym", 1) }
+                com.ascend.lifeos.ui.training.GymSplitPicker(gymDays = gymDays, level = gymLevel)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "How your gym week is structured. Auto picks by your days & experience; takes effect next time you open Train.",
+                    color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
+                )
+            }
             Spacer(Modifier.height(12.dp))
             Text(
                 "YOUR EQUIPMENT", color = TextDim, fontFamily = Display,

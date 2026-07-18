@@ -140,6 +140,7 @@ object PlanOrchestrator {
                     longestRunKm = longestKm,
                     bestE1Rm = gymBests(ctx),
                     focusAreas = focus,
+                    gymSplit = if (d == Disciplines.GYM) Prefs.string(ctx, Prefs.GYM_SPLIT, "").ifBlank { null } else null,
                 )
                 val week = runCatching { engine.week(inputs) }.getOrDefault(emptyList())
                 sessions += week.map { it.copy(index = index++) }
