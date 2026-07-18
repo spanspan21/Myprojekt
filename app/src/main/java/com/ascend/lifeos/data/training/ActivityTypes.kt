@@ -122,6 +122,9 @@ object ActivityTypes {
         ActivityType("bjj", "Brazilian Jiu-Jitsu", "🥋", 7, false, m(Muscle.FOREARMS to 4.6, Muscle.LATS to 3.8, Muscle.ABS to 3.8, Muscle.LOWER_BACK to 3.4, Muscle.HIP_FLEXORS to 3.3, Muscle.GLUTES to 3.2, Muscle.OBLIQUES to 3.0, Muscle.TRAPS to 3.0, Muscle.BICEPS to 2.9, Muscle.QUADS to 2.8)),
         ActivityType("muay_thai", "Muay Thai", "🥊", 7, false, m(Muscle.SHOULDERS to 3.8, Muscle.OBLIQUES to 3.6, Muscle.QUADS to 3.5, Muscle.HIP_FLEXORS to 3.4, Muscle.CALVES to 3.2, Muscle.ABS to 3.2, Muscle.GLUTES to 2.8, Muscle.HAMSTRINGS to 2.6, Muscle.FOREARMS to 2.3, Muscle.LATS to 2.2)),
         ActivityType("wrestling", "Wrestling", "🤼", 7, false, m(Muscle.FOREARMS to 4.0, Muscle.QUADS to 3.8, Muscle.LATS to 3.7, Muscle.LOWER_BACK to 3.6, Muscle.GLUTES to 3.5, Muscle.TRAPS to 3.5, Muscle.ABS to 3.4, Muscle.HAMSTRINGS to 3.2, Muscle.OBLIQUES to 3.0, Muscle.SHOULDERS to 3.0)),
+        ActivityType("golf", "Golf", "🏌️", 6, false, m(Muscle.OBLIQUES to 3.4, Muscle.FOREARMS to 3.2, Muscle.LOWER_BACK to 3.0, Muscle.ABS to 2.6, Muscle.LATS to 2.6, Muscle.GLUTES to 2.4, Muscle.SHOULDERS to 2.2, Muscle.HIP_FLEXORS to 1.9, Muscle.QUADS to 1.7)),
+        ActivityType("climbing", "Climbing", "🧗", 7, false, m(Muscle.FOREARMS to 4.8, Muscle.LATS to 3.8, Muscle.BICEPS to 3.2, Muscle.ABS to 3.0, Muscle.SHOULDERS to 2.8, Muscle.OBLIQUES to 2.0, Muscle.TRAPS to 1.8, Muscle.REAR_DELTS to 1.6, Muscle.QUADS to 1.6, Muscle.CALVES to 1.3)),
+        ActivityType("martial_arts", "Martial Arts", "🥋", 7, false, m(Muscle.QUADS to 3.8, Muscle.HIP_FLEXORS to 3.6, Muscle.GLUTES to 3.4, Muscle.OBLIQUES to 3.2, Muscle.CALVES to 3.0, Muscle.ABS to 2.9, Muscle.HAMSTRINGS to 2.7, Muscle.FOREARMS to 2.5, Muscle.SHOULDERS to 2.3, Muscle.LOWER_BACK to 2.1)),
     )
 
     fun byId(id: String): ActivityType? = ALL.firstOrNull { it.id == id }

@@ -80,6 +80,10 @@ object Disciplines {
         Def("bjj", "Brazilian Jiu-Jitsu", "🥋", "Combat"),
         Def("muay_thai", "Muay Thai", "🥊", "Combat"),
         Def("wrestling", "Wrestling", "🤼", "Combat"),
+        Def("martial_arts", "Martial Arts", "🥋", "Combat"),
+        Def("golf", "Golf", "🏌️", "Other"),
+        Def("climbing", "Climbing", "🧗", "Other"),
+        Def("dance", "Dance", "💃", "Other"),
     )
 
     fun byId(id: String): Def? = ALL.firstOrNull { it.id == id }

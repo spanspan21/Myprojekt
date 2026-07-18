@@ -6,11 +6,15 @@ import com.ascend.lifeos.data.training.engine.programs.BaseballProgram
 import com.ascend.lifeos.data.training.engine.programs.BasketballProgram
 import com.ascend.lifeos.data.training.engine.programs.BjjProgram
 import com.ascend.lifeos.data.training.engine.programs.BoxingProgram
+import com.ascend.lifeos.data.training.engine.programs.ClimbingProgram
 import com.ascend.lifeos.data.training.engine.programs.CricketProgram
+import com.ascend.lifeos.data.training.engine.programs.DanceProgram
 import com.ascend.lifeos.data.training.engine.programs.FieldHockeyProgram
+import com.ascend.lifeos.data.training.engine.programs.GolfProgram
 import com.ascend.lifeos.data.training.engine.programs.HandballProgram
 import com.ascend.lifeos.data.training.engine.programs.IceHockeyProgram
 import com.ascend.lifeos.data.training.engine.programs.LacrosseProgram
+import com.ascend.lifeos.data.training.engine.programs.MartialArtsProgram
 import com.ascend.lifeos.data.training.engine.programs.MmaProgram
 import com.ascend.lifeos.data.training.engine.programs.MuayThaiProgram
 import com.ascend.lifeos.data.training.engine.programs.PadelProgram
@@ -55,5 +59,9 @@ object SportPrograms {
         SkillSportEngine("bjj", "Brazilian Jiu-Jitsu", BjjProgram.program),
         SkillSportEngine("muay_thai", "Muay Thai", MuayThaiProgram.program),
         SkillSportEngine("wrestling", "Wrestling", WrestlingProgram.program),
+        SkillSportEngine("golf", "Golf", GolfProgram.program),
+        SkillSportEngine("climbing", "Climbing", ClimbingProgram.program),
+        SkillSportEngine("dance", "Dance", DanceProgram.program),
+        SkillSportEngine("martial_arts", "Martial Arts", MartialArtsProgram.program),
     ).associateBy { it.id }
 }
