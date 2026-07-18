@@ -1026,8 +1026,20 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 .mapNotNull { Repo.bodyDay(it)?.sleepMin }
             nights.size >= 2 && nights.average() < need * 0.85
         }.getOrDefault(false)
+        // ACWR was an open loop — computed for the load gauge but never fed the
+        // deload trigger. A genuine acute:chronic spike (>1.5, with enough
+        // chronic base) IS the injury window, so let it raise the suggestion on
+        // its own; the softer signals still need a second to agree. Opt-in
+        // either way — the fixed plan only changes if the user taps activate.
+        val loadSpike = runCatching {
+            val st = com.ascend.lifeos.data.training.LoadLedger.state(getApplication())
+            st.ctl >= 0.35 &&
+                com.ascend.lifeos.data.training.TrainingLoad.verdict(st).zone ==
+                com.ascend.lifeos.data.training.TrainingLoad.Zone.BACK_OFF
+        }.getOrDefault(false)
 
-        deloadRecommended = listOf(volumeDrop, grinding, underslept).count { it } >= 2
+        deloadRecommended = loadSpike ||
+            listOf(volumeDrop, grinding, underslept, loadSpike).count { it } >= 2
     }
 
     fun activateDeload() {
