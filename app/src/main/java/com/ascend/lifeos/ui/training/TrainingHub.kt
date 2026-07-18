@@ -470,6 +470,20 @@ fun TrainingHub(
             }
         }
 
+        // ── Strength level (relative-strength standards, gym) ───────────
+        item {
+            val gymStr = Standards.gymStrength(
+                com.ascend.lifeos.data.training.engine.PlanOrchestrator.gymBestsCache,
+                Repo.data.profile.weightKg, Repo.data.profile.sex,
+            )
+            if (gymStr != null) {
+                SectionLabel("Strength level", accent = Mod.Train)
+                Spacer(Modifier.height(10.dp))
+                GymStrengthCard(gymStr)
+                Spacer(Modifier.height(22.dp))
+            }
+        }
+
         // ── Muscle status (Fitbod-style recovery map) ───────────────────
         vm.muscleFreshness?.let { fresh ->
             item {
@@ -1264,6 +1278,42 @@ private fun MuscleDetailSheet(muscle: Muscle, fresh: MuscleRecovery.Freshness, o
                 }
             }
             Spacer(Modifier.height(12.dp))
+        }
+    }
+}
+
+/**
+ * Relative-strength readout (master plan §8): the lifter's overall tier from
+ * [Standards], how far to the next, and the per-lift breakdown. Reads the e1RM
+ * the engine already tracks; display only — it does not change prescription.
+ */
+@Composable
+private fun GymStrengthCard(s: GymStrength) {
+    GlassPanel(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    s.tier.label, color = TextPrimary, fontSize = FS.s17,
+                    fontFamily = Display, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                )
+                val next = StrengthTier.entries.getOrNull(s.tier.ordinal + 1)
+                Text(
+                    if (next != null) "${(s.fractionToNext * 100).toInt()}% to ${next.label}" else "Top tier",
+                    color = Mod.Train, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            NeonBar(progress = s.fractionToNext, color = Mod.Train, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(12.dp))
+            s.lifts.take(5).forEach { l ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(l.name, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
+                    Text(
+                        "${l.tier.label} · ${String.format(java.util.Locale.ROOT, "%.2f", l.ratio)}×",
+                        color = TextDim, fontSize = FS.s11, fontFamily = Body,
+                    )
+                }
+            }
         }
     }
 }
