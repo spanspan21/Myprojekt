@@ -2,17 +2,18 @@
 
 # JARVIS — Life OS
 
-**A native, offline-first Android app that turns training, nutrition, recovery, focus and skills into one intelligent daily operating system.**
+**A native, offline-first Android app that fuses training, nutrition, recovery, focus, finance and study into one intelligent daily operating system.**
 
-Built entirely with Kotlin & Jetpack Compose · A single hand-crafted "IRON HUD" design language · No cloud account, no subscriptions, your data stays on the device.
+Built entirely with Kotlin & Jetpack Compose · one token-driven design system with **7 switchable "worlds"** · science-backed engines · no account, no cloud, no subscriptions — your data stays on the device.
 
-<!-- Badges: these are static shields based on the actual build config. Swap the license/CI ones once you add a LICENSE file / CI workflow. -->
 ![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 ![Language](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin&logoColor=white)
 ![UI](https://img.shields.io/badge/Jetpack%20Compose-BOM%202025.03-4285F4?logo=jetpackcompose&logoColor=white)
 ![Min SDK](https://img.shields.io/badge/minSdk-26-blue)
 ![Target SDK](https://img.shields.io/badge/targetSdk-34-blue)
-![Architecture](https://img.shields.io/badge/architecture-MVVM%20%2B%20Room-orange)
+![Version](https://img.shields.io/badge/version-2.33-success)
+![Architecture](https://img.shields.io/badge/architecture-single--activity%20Compose%20%2B%20Room-orange)
+![Tests](https://img.shields.io/badge/unit%20tests-~50%20files-brightgreen)
 
 </div>
 
@@ -20,218 +21,255 @@ Built entirely with Kotlin & Jetpack Compose · A single hand-crafted "IRON HUD"
 
 ## ✨ Overview
 
-**JARVIS** is a personal *Life OS* — a single app that replaces a stack of separate trackers (a training app, a nutrition scanner, a sleep dashboard, a focus blocker, a habit tracker, a spaced-repetition study tool…) with one coherent, science-backed system.
+**JARVIS** is a personal *Life OS* — one app that replaces a stack of separate trackers (a training app, a nutrition scanner, a sleep dashboard, a focus blocker, a habit tracker, a money manager, a study tool…) with a single coherent, studies-backed system.
 
-It's **offline-first**: everything runs on-device. The internet is used only for optional public data (Open Food Facts barcode lookups, weather-based hydration bonus), and health metrics are read locally from **Android Health Connect**. There is no login and nothing is uploaded.
+- **Offline-first & private.** Everything runs on-device (SharedPreferences + JSON, and Room for the relational stores). There is **no login and nothing is uploaded**. The internet is touched only for opt-in extras: Open Food Facts (barcodes), Open-Meteo (a hydration heat bonus), ICS/Untis calendar feeds, and optional GoCardless Open Banking. Health metrics are read **locally** from Android Health Connect.
+- **Pure, testable engines.** Every score, target and plan is a pure calculation core that takes plain inputs and returns plain values — decoupled from storage and covered by ~50 JVM unit-test files.
+- **One design system, many moods.** A single token-driven UI ("ATELIER") ships **7 worlds** you can switch instantly — `Lumen` (a bright light theme, the default), `Azure`, `Sovereign`, `Glacier`, `Neon`, `Terra`, `Mono`. Every colour, radius, font-voice and atmosphere is a live getter off the active world, so switching recomposes the whole app with no restart.
 
-The whole app is unified by one design language — **"IRON HUD"** (Obsidian & Champagne): a dark, HUD-style interface where every module has its own accent colour and signature motif, but shares the same typography, glass panels and motion — *"a puzzle, not a template."*
+> **Scope.** JARVIS is a private, non-Play-Store project built for a single user. It is deliberately opinionated (studies-backed progression, "non-negotiable" plans, English UI copy). Treat it as a reference architecture for a large single-activity Compose app rather than a general-purpose product.
 
-> **Note on the module split:** JARVIS is a private, non-Play-Store project built for a single user. It is deliberately opinionated (studies-backed training progression, "non-negotiable" plans, English-only copy). Treat it as a reference architecture for a large single-activity Compose app rather than a general-purpose product.
+Current release: **v2.33** (versionCode 35).
 
 ---
 
 ## 📸 Visuals
 
-> Replace the placeholders below with real captures. Suggested set — six shots that tell the whole story. A short **GIF of the dock morph / screen transition** at the top sells the app better than any static image.
+> Capture with `adb exec-out screencap -p > docs/screenshots/home.png`. A short GIF of a screen transition at the top sells the app better than any static shot.
 
 <div align="center">
 
 | | |
 |:---:|:---:|
-| ![Home / Today dashboard](docs/screenshots/home.png)<br/>**Home — command center**<br/><sub>Body-scan hero, daily briefing, today's missions</sub> | ![Prime index](docs/screenshots/prime.png)<br/>**Prime — the daily index**<br/><sub>Animated radial index ring + ranked directives</sub> |
-| ![Training session](docs/screenshots/train.png)<br/>**Train — active workout**<br/><sub>Generated plan, pose figures, prescriptions</sub> | ![Nutrition](docs/screenshots/fuel.png)<br/>**Fuel — nutrition & hydration**<br/><sub>Macro reactor rings, barcode scan, water wave</sub> |
-| ![Guard focus overlay](docs/screenshots/guard.png)<br/>**Guard — focus & wellbeing**<br/><sub>Usage stats, focus sessions, app lockdown overlay</sub> | ![Calendar timeline](docs/screenshots/calendar.png)<br/>**Calendar — the day's spine**<br/><sub>Vertical timeline, auto-scheduled training</sub> |
+| ![Home](docs/screenshots/home.png)<br/>**Home — command center**<br/><sub>Body-scan hero, briefing, daily missions</sub> | ![Prime](docs/screenshots/prime.png)<br/>**Prime — daily readiness index**<br/><sub>One score fused from every module</sub> |
+| ![Train](docs/screenshots/train.png)<br/>**Train — 50-sport adaptive plans**<br/><sub>Gym splits, pose figures, prescriptions</sub> | ![Fuel](docs/screenshots/fuel.png)<br/>**Fuel — nutrition & hydration**<br/><sub>Macro rings, barcode scan, water wave</sub> |
+| ![Body](docs/screenshots/body.png)<br/>**Vitals — recovery & trends**<br/><sub>Interactive body map, sleep, load</sub> | ![Guard](docs/screenshots/guard.png)<br/>**Guard — focus & wellbeing**<br/><sub>Usage, focus score, lockdown wall</sub> |
 
 </div>
 
-**Which shots to capture, and why:**
-
-| Placeholder | What to put there |
-|---|---|
-| `home.png` | The **Home / Today** screen right after opening — shows the greeting, daily briefing and the 3 mission tiles. This is your hero image. |
-| `prime.png` | The **Prime** screen with the radial index ring filled in — best "wow" screenshot; consider a **GIF** of the ring sweeping up on open. |
-| `train.png` | An **active workout** with an exercise pose figure and a prescription line ("Weighted Pull-ups · 8–15 reps @ 2 RIR"). |
-| `fuel.png` | The **Nutrition** screen showing the macro reactor rings + the animated hydration wave card. |
-| `guard.png` | The **Guard** overlay thrown over a blocked app, or the focus-score dashboard. |
-| `calendar.png` | The **Calendar** timeline with morning training auto-scheduled before school. |
-| *(optional)* `dock-morph.gif` | A short screen recording of the **morphing dock** switching groups + the shell transition between two tabs — the app's signature motion. Put it at the very top of the README. |
-
-<sub>💡 Capture on a device/emulator with `adb exec-out screencap -p > shot.png`. For a GIF, record with `adb shell screenrecord` and convert with `ffmpeg`.</sub>
-
 ---
 
-## 🚀 Features
+## 🚀 Feature tour
 
-JARVIS is organised into **four dock groups** containing **14 modules**:
+JARVIS is organised into **four dock groups** over **14 screens**. Eight modules are toggleable (`data/Modules.kt`); the core surfaces (Home, Train, Fuel, Vitals, Calendar, Settings) always stay.
 
 ### 🟢 Today
-- **Home** — the command center: an animated body-scan hero, a typed greeting, a daily briefing panel, and exactly three "non-negotiable" daily missions (train / calories / water) that drive the streak.
-- **Prime** — a single daily readiness **index** fused from training load, sleep, nutrition, hydration and calendar. Renders as an animated radial ring, plus the top-3 ranked directives with *why* each matters, anomaly detection and cross-metric insights.
+- **Home** — the command center: an animated body-scan hero, a typed greeting + one data-driven briefing line, hydration/calories/trained-today truth, a "Next up" card, four daily missions (user-selectable), a swipeable Glance deck, a reorderable dashboard, and a quick-log orb. Refreshes Health Connect on resume.
+- **Prime** — a single daily **readiness index** fused from Training, Fuel, Sleep, Hydration, Guard, Calendar and Finance against a rolling 21-day baseline. Renders as an animated ring plus the top-3 ranked directives (each deep-links to its module), anomaly detection, cross-metric correlations and short forecasts. Honestly returns *no score* when there's no data.
 
 ### 🔴 Body
-- **Train** — a studies-backed **plan generator**: max-reps calibration seeds strength-progression chains, volume ramps from MEV→MRV across a mesozyclus, RIR targets step down week-to-week, weighted-vest progression is earned, and 55 skills map onto real exercises. Sessions render articulated **pose figures** and explicit prescriptions.
-- **Fuel** — nutrition & hydration: **barcode scanner** (ML Kit, no camera permission, ZXING fallback), Open Food Facts lookup, a food-quality score that flags risky additives, macro reactor rings, curated recipes with a cooking mode, and an animated hydration card.
-- **Vitals** — the body dashboard: weight log, sleep trends, recovery, heart-rate/HRV/resting-HR from a fitness band via Health Connect, and cross-metric correlations.
-- **Sleep** — an athlete-focused sleep protocol (8–9 h target, consistency score, sleep-efficiency), auto-synced from Health Connect.
+- **Train** — the crown jewel: **50 sports with real, studies-backed plans** (see [Training](#-training-in-depth)). Choose your **gym split** (Full Body · Upper/Lower · PPL · Arnold · Bro) or **build a custom week** from day blocks; swap any prescribed lift for a same-muscle alternative; see your **relative-strength tier** per lift; the plan eases you back after a layoff. Strength sessions use a rep-by-rep logger; timed sessions (run/yoga/HIIT/swim/sport drills) use a countdown-ring sequence player.
+- **Fuel** — nutrition & hydration: **~350 verified offline foods** (per-100g, German aliases) + live **Open Food Facts** barcode lookup & search (ML Kit code-scanner, no camera permission, ZXing fallback), **~60 recipes** with a cooking mode + your own recipes, an alcohol-aware drinks builder, an honest 1–10 food-quality score that flags risky additives, diet + EU-14 allergen pre-log warnings, an adaptive-TDEE coach, fasting, and a weather-aware hydration card.
+- **Vitals** — the body dashboard: recovery score with "why" rows, a time-aware morning check-in, weight + rate-of-change, body measurements, sleep debt & bedtime consistency, an **interactive anatomical body map** (tap a muscle for its recovery status, hours-until-fresh and the lifts that train it), training-load ATL/CTL with an acute:chronic verdict, RHR/HRV trends, mood timeline, journal-factor impacts, statistically-guarded correlations, opt-in cycle awareness and side-by-side progress photos.
+- **Sleep** — an athlete-grade CBT-I protocol (Sleep Restriction + Stimulus Control), a morning-after night log, watch bed-time confirmation, plus wind-down and breathing overlays. Auto-synced from Health Connect.
 
 ### 🟣 Life
-- **Calendar** — a vertical timeline that is the spine of the day; imports read-only from the device calendar / ICS / Untis, and **auto-schedules training** into free slots (e.g. before school).
-- **Habits** — an auto-tracked checklist with a custom builder, per-habit reminders, streaks and stats.
-- **Finance** — a manual transaction & savings tracker with category heuristics.
-- **Goals** — long-term goals and targets.
-- **School** — a grade tracker plus a spaced-repetition (SM-2) vocabulary/study system.
+- **Calendar** — a timeline that is the spine of the day: your own events + read-only **device calendar**, **ICS feeds** and **Untis** timetable (throttled 6h auto-sync), typed blocks (School/Work/Training/Exam/Holiday…), automatic training placement into free slots, and an exam-aware study scheduler that drops focus blocks before tests.
+- **Habits** — an auto-tracked checklist with a custom builder, per-habit reminders, streaks, stats and achievements.
+- **Finance** — a manual-first money OS: balance hero, spending breakdown, trends, **~40 configurable currencies**, recurring charges + subscription radar, CSV import, savings goals, net worth, and optional **bank linking** via GoCardless Open Banking.
+- **Goals** — quarterly goals with measurable key-results (some bindable to real metrics like the weight log).
+- **School** — a **grade-average tracker** for German schools (Notenschnitt): subjects, two grade systems (1.0–6.0 or points), written/oral weighting, weighted averages and a "grade needed" calculator.
 
 ### 🟡 System
-- **Guard** — a digital-wellbeing engine: reads app usage, runs focus sessions, and can throw a **focus overlay** over distracting apps (a foreground service + Quick-Settings tile). Includes automations/protocols.
-- **Skills** — guided skill paths (WHY → LEARN → DO) backed by bundled JSON master plans (calisthenics, cybersecurity, AI automation), plus a constellation view.
-- **Settings** — five swappable themes, launcher-icon variants, a live wallpaper, diagnostics (crash black-box), and granular module/permission toggles.
+- **Guard** — a digital-wellbeing engine: one focus score with "why", per-app time limits, phone-free windows, focus sessions, an unlock heatmap and a bounded pause. Enforced by a foreground service + an accessibility service (instant window detection) that throws a full-screen **intercept wall** over blocked apps — which can include a **mini-game** (Dice/Mines/tables) played against your time budget. Strict mode, doomscroll detection, and WHEN→THEN protocols.
+- **Skills** — guided skill paths over an imported Master-Plan DAG (domains → nodes → tasks/resources, JSON-imported into Room), with notes, proof-of-work, **SM-2 spaced repetition**, weekly focus minutes, a monthly review→XP loop, and a network-constellation view.
+- **Settings** — five category doors + search: **You** (profile/units/TDEE), **Modules**, **Jarvis** (voice/notifications/context), **Look & feel** (7 themes, launcher icons, motion, haptics, **compact-density** toggle), **Data & about** (backup, health bridge, guide, diagnostics).
 
 ### 🎁 Cross-cutting
-- 🔒 **Offline-first & private** — no account, no analytics, data stays on-device.
-- 🎨 **Five-theme engine** — Sovereign, Glacier, Neon, Terra, Mono — every colour/type token is a live getter.
-- 🏠 **Home-screen widget** + **Quick-Settings focus tile** + **NFC deep links** (`jarvis://train` at the pull-up bar).
-- 🩺 **Crash black-box** — uncaught exceptions are logged to disk and shareable from Settings → Diagnostics.
-- ✅ **Unit-tested pure engines** — scores, targets and plan generation are decoupled from storage and covered by JVM tests.
+- 🔒 **Offline-first & private** — no account, no analytics, data on-device; local ZIP backup/restore.
+- 🎨 **7-world design system** — every colour/type/atmosphere token is a live getter; switch instantly.
+- 🩺 **HealthBridge** — a WorkManager job pulls Health Connect (Samsung Health) every 60 min, app open or not, and heals gaps after watch outages.
+- 🏠 **Home-screen widget** (next session + quick actions) · **Quick-Settings focus tile** · **NFC / `jarvis://` deep links** · 3 launcher-icon variants · live "breathing nebula" wallpaper.
+- 🧭 **Command palette** — long-press the dock anywhere; type or speak natural-language logs ("water 2", "kcal 400 pizza", "gestern …") and jump to any settings topic.
+- ☁️ **Optional CloudSync** — one-way mirror of every local store to a private web dashboard (config in git-ignored `local.properties`; off by default).
+- 🐞 **Crash black-box** — uncaught exceptions are written to disk and shareable from Settings → Diagnostics.
+- ✅ **~50 unit-test files** over the pure engines (plans, scores, targets, load, food, sleep, finance…).
 
 ---
 
-## 🛠 Tech Stack
+## 🏋 Training in depth
 
-| Layer | Technology |
-|---|---|
-| **Language** | Kotlin 1.9.24 |
-| **UI** | Jetpack Compose (BOM 2025.03.01), Material 3, custom "IRON HUD" design system |
-| **Architecture** | Single-Activity + MVVM · Compose state · unidirectional data flow · pure/testable engines |
-| **Persistence** | Room 2.6.1 (multiple databases: training, calendar, master plan, skill) + a `Repo` singleton over SharedPreferences/JSON |
-| **Async** | Kotlin Coroutines + Flow |
-| **Serialization** | `kotlinx.serialization` (JSON) |
-| **Health data** | Android Health Connect (`connect-client`) — sleep, heart rate, HRV, resting HR, steps |
-| **Vision / ML** | ML Kit Code Scanner + ZXing (barcodes) · ML Kit Pose Detection + CameraX (form video / rep counter) |
-| **Networking** | Lightweight direct calls to Open Food Facts & Open-Meteo (no heavy client) |
-| **Build** | Android Gradle Plugin 8.5.2 · KSP (Room codegen) · Compose compiler 1.5.14 · Java/JVM 17 |
-| **Testing** | JUnit 4 — JVM unit tests over the pure engines |
+Training is the most sophisticated subsystem — a pluggable, studies-backed plan generator across **50 disciplines**.
 
-**Design system:** one foundation (Void background, glass panels, Chakra Petch + Manrope typography, tabular figures, calibrated motion tokens) with seven per-module identities. See [`JARVIS_MASTERPLAN.md`](JARVIS_MASTERPLAN.md).
+### Architecture
+- **`PlanEngine`** (`data/training/engine/PlanEngine.kt`) — a pure interface: `week(inputs: EngineInputs): List<PlannedSession>`. `EngineInputs` carries per-discipline level, program week, deload, bodyweight, running bests, `bestE1Rm`, the chosen gym split / custom days / per-lift swaps, focus areas and `daysSinceLastSession`.
+- **`Disciplines.ALL`** — 50 sports across Strength · Endurance · Mind-body · Conditioning · Team · Racket · Combat · Other.
+- **`PlanOrchestrator`** — splits your weekly frequency across the disciplines you picked (`splitFrequency`), runs each engine for its share, re-stamps session indexes, and merges one `WeekPlan` that flows unchanged into the existing place/schedule/auto-reschedule pipeline. `programWeek()` is completion-gated (endurance ladders advance at the slower of calendar weeks vs completed sessions).
+- **The 50 = 1 + 5 + 44:**
+  - **Calisthenics** — the legacy `PlanGenerator` (below), the richest generator.
+  - **5 bespoke engines** — Gym, Running, Swim, Yoga, HIIT (each hard-codes one sport's grammar).
+  - **44 data-driven programs** — `engine/programs/*Program.kt` each expose a `SportProgram` (drills + session archetypes + a progression rule); one generic `SkillSportEngine` turns any of them into timed sessions. **A new sport = one data file, no new engine code.**
 
----
+### Gym
+- **`GymSplits.kt`** — 5 fixed splits (Full Body A/B, Upper/Lower, Push/Pull/Legs, Arnold, Bro), each a rotation of day templates. A frequency × experience matrix recommends one; a **custom builder** composes your own week from 13 named day blocks.
+- **`GymEngine.kt`** — loads each day from your best logged **e1RM × %-for-reps** (≤5→85%, ≤10→75%, ≤15→68%), rounded to 2.5 kg; adds a warm-up ramp before the first main lift; deloads to 85% / one set less; **eases the load back after a layoff** (≥14d→85%, ≥28d→70%); honours per-lift **swaps** (keep the prescription, change the movement).
 
-## ⚙️ Installation & Setup
+### Calisthenics (`PlanGenerator` + `TrainBrain`)
+- A 7-test **assessment** maps movement patterns (Push/Pull/Dip/Squat/Row/Core/Hang) to levels 1–6, seeds conservative **progression chains**, and prescribes mobility from 3 checks.
+- Sessions are 5 blocks (Warm-up → Skill → Strength → Finisher → Cool-down); **volume ramps MEV→MRV across a mesocycle** (`VolumeModel`); RIR steps down week-to-week; season phase, exam week and detraining fold into one scale; **muscle freshness** reorders the week and swaps fried movers; antagonist supersets are auto-paired.
 
-### Prerequisites
-- **Android Studio** (Ladybug or newer)
-- **JDK 17** — required by AGP 8.5. ⚠️ A system JDK 8 on your `PATH` will *not* build this project. Point Gradle at Android Studio's bundled JBR:
-  ```bash
-  # Windows (the bundled JetBrains Runtime is JDK 17)
-  export JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
-  ```
-- Android SDK **API 34** (compileSdk / targetSdk 34), min SDK 26.
-
-### Clone & build
-```bash
-# 1. Clone
-git clone https://github.com/spanspan21/Myprojekt.git
-cd Myprojekt
-
-# 2. Build a debug APK
-./gradlew :app:assembleDebug          # Windows: gradlew.bat :app:assembleDebug
-
-# 3. Install onto a connected device / emulator
-./gradlew :app:installDebug
-#   …or:  adb install -r app/build/outputs/apk/debug/app-debug.apk
-
-# 4. Run the unit tests
-./gradlew :app:testDebugUnitTest
-```
-
-Or simply **open the folder in Android Studio**, let Gradle sync, pick a device, and press ▶.
-
-### Optional runtime permissions
-Most features degrade gracefully, but a few are unlocked by user-granted permissions:
-
-| Feature | Permission | How to grant |
-|---|---|---|
-| Sleep / HR / HRV | Health Connect | In-app prompt |
-| Nutrition barcode scan | Camera | In-app prompt |
-| Focus guard overlay | Usage access + draw-over-apps | System settings (in-app deep link) |
-| Grayscale wind-down | `WRITE_SECURE_SETTINGS` | One-time adb:<br/>`adb shell pm grant com.ascend.lifeos android.permission.WRITE_SECURE_SETTINGS` |
-
-> This is a personal build: the `release` type is non-debuggable but signed with the **debug** key so `adb install -r` updates the existing install in place. There is no Play Store distribution.
+### Skill & autoregulation
+- **`Standards.kt`** — relative-strength tiers (e1RM ÷ bodyweight → Untrained…Elite, sex-specific) surfaced as a per-lift readout on the Train hub. A pure **read model** — it reports a level, it never changes the prescription.
+- **RPE-driven cues** — a live next-set hint and a session-over-session "today's target" (double progression modulated by last session's RPE).
+- **ACWR deload suggestion** — a genuine acute:chronic load spike (`TrainingLoad` ATL/CTL, ACR > 1.5) surfaces a one-tap "take a deload week". Opt-in by design — the plan stays fixed unless you accept.
+- **Recovery heatmap** — every logged session (rep logger or sequence player) feeds `MuscleRecovery`, rendered on the interactive body map so training and recovery stay in sync.
 
 ---
 
-## 📂 Project Structure
+## 🎨 Design system ("ATELIER")
 
-```
-Myprojekt/
-├── app/
-│   └── src/
-│       ├── main/
-│       │   ├── java/com/ascend/lifeos/
-│       │   │   ├── MainActivity.kt          # Single activity — hosts the Compose tree & deep links
-│       │   │   ├── JarvisApp.kt             # Application — installs the crash black-box, init
-│       │   │   ├── core/                    # Shared primitives (e.g. the SM-2 engine)
-│       │   │   │
-│       │   │   ├── data/                    # ── Domain & persistence (the "brains") ──
-│       │   │   │   ├── training/            #    Plan generator, volume model, progression
-│       │   │   │   ├── calendar/            #    Calendar / ICS / Untis sync
-│       │   │   │   ├── masterplan/          #    Room-backed guided skill plans
-│       │   │   │   ├── prime/               #    PrimeEngine + PrimeMath (the daily index)
-│       │   │   │   ├── sleep/               #    Sleep protocol & Health Connect sync
-│       │   │   │   ├── finance/  school/    #    Money & study/grade stores
-│       │   │   │   ├── skill/  life/  rules/#    Skill meta, life stores, automations
-│       │   │   │   └── Repo.kt, Haptics.kt… #    Prefs/JSON repo, haptics, crash log
-│       │   │   │
-│       │   │   ├── ui/                       # ── Jetpack Compose UI, one package per module ──
-│       │   │   │   ├── AscendApp.kt          #    Root shell: dock, groups, screen routing
-│       │   │   │   ├── kit/                  #    Shared UI kit (Panel, Ring, SectionLabel…)
-│       │   │   │   ├── theme/                #    5-theme engine (ThemeSpec, Color, Type)
-│       │   │   │   ├── motion/               #    Motion tokens & shell transitions
-│       │   │   │   ├── home/ prime/ training/#    Per-module screens…
-│       │   │   │   ├── hud/ calendar/ school/#    …
-│       │   │   │   ├── skills/ masterplan/   #    Guided paths + constellation
-│       │   │   │   └── wallpaper/            #    Live "breathing nebula" wallpaper
-│       │   │   │
-│       │   │   ├── wellbeing/                # Guard: focus service, tile, overlay
-│       │   │   └── widget/                   # Home-screen widget + action receivers
-│       │   │
-│       │   ├── assets/masterplans/*.json     # Bundled skill plans (imported into Room)
-│       │   ├── res/font/                     # Chakra Petch + Manrope (OFL)
-│       │   └── AndroidManifest.xml
-│       └── test/                             # JVM unit tests for the pure engines
-│
-├── JARVIS_MASTERPLAN.md                      # The design bible ("IRON HUD" system + module specs)
-├── build.gradle · settings.gradle            # AGP 8.5.2, Kotlin 1.9.24, KSP
-└── README.md
-```
+One foundation, seven worlds. Each world is a full `ThemeSpec`; every UI token is a live getter, so a theme switch recomposes everything with no restart.
 
-> The repo also contains several `JARVIS_*_PLAN.md` / `.pdf` design dossiers documenting each major feature wave (training, nutrition, motion, themes, prime). They're the "why" behind the code.
+- **7 worlds** (`ui/theme/Themes.kt`) — **Lumen** (light, default) · Azure (editorial serif) · Sovereign (obsidian & champagne) · Glacier · Neon (arcade) · Terra (warm) · Mono (ink, no glow). Each carries a 10-jewel per-module palette, semantics (good/warn/crit), metal, atmosphere (nebula/grain/scanlines/vignette), form (radii) and a display voice.
+- **Typography** — Chakra Petch + Manrope bundled (device Serif/Mono for editorial worlds). The display voice is a per-world parameter; **body is always Manrope**; tabular figures everywhere. Named roles live in `object JarvisText`.
+- **Tokens** — colour roles + `object Mod` per-module accents (`Color.kt`), a spacing scale `Space`/`Pad` that respects a **compact-density** factor (`Space.kt`), named font sizes `FS` (`FontSizes.kt`), and per-world radii.
+- **Shared kit** (`ui/kit`, `ui/hud`) — `Panel`/`GlassPanel` (the one glass card), `Ring`, `Spark`, **`TrendChart`** (area + moving-average + delta pill), `Celebrate` (victory burst), `NeonBar`, `HudChip`, `HudButton`, `GlassField`, `SectionLabel`, `JarvisSheet`, `TickerNumber`, `ShimmerPanel`, `EmptyState`, plus the Lumen light primitives (`glow`, aurora background, faceted crystal).
+- **Motion** (`ui/motion/Motion.kt`) — "one law book": four durations, four springs, two easings, a reduced-motion switch; the dock/tab transition is a calm cross-fade (`ShellMotion`), and `Modifier.pressScale` gives every control a springy press.
+- **Personalization** — pick any of the 7 themes and toggle compact spacing in Look & feel; accents are derived from the active world and the on-screen module (`LocalModuleAccent`).
 
 ---
 
-## 🧭 Architecture at a glance
+## 🏛 Architecture
 
 ```
-        ┌──────────────────────────────────────────────┐
-        │  Compose UI  (ui/ — one package per module)   │
-        │  AscendApp shell · dock · per-module screens  │
-        └───────────────┬──────────────────────────────┘
-                        │  state / events (MVVM)
-        ┌───────────────▼──────────────────────────────┐
-        │  Pure engines  (data/*)                        │
-        │  PrimeEngine · PlanGenerator · FoodScore ·     │
-        │  SleepProtocol · TrainBrain …  (unit-tested)   │
-        └───────────────┬──────────────────────────────┘
+        ┌───────────────────────────────────────────────┐
+        │  Compose UI  (ui/ — one package per module)    │
+        │  AscendApp shell · morphing dock · screens     │
+        └───────────────┬───────────────────────────────┘
+                        │  state / events (MVVM, ViewModels)
+        ┌───────────────▼───────────────────────────────┐
+        │  Pure engines  (data/*, domain/*)              │
+        │  PrimeEngine · PlanOrchestrator · GymEngine ·  │
+        │  TrainBrain · TrainingLoad · Standards ·       │
+        │  FoodScore · SleepProtocol · Sm2 …  (tested)   │
+        └───────────────┬───────────────────────────────┘
                         │  read / write
-        ┌───────────────▼──────────────────────────────┐
-        │  Persistence: Room DBs + Repo (Prefs/JSON)     │
-        │  Health Connect · Open Food Facts (network)    │
+        ┌───────────────▼───────────────────────────────┐
+        │  Persistence                                   │
+        │  Repo (Prefs + JSON)  ·  4 Room databases      │
+        │  Health Connect · Open Food Facts · Open-Meteo │
         └───────────────────────────────────────────────┘
 ```
 
-The guiding principle: **keep the calculation cores pure** (scores, targets, plans take plain inputs and return plain values), decoupled from storage, so they can be unit-tested on the JVM without an emulator.
+- **Single-activity Compose.** `MainActivity` hosts the whole tree; `AscendApp` is the shell (morphing dock, 4 groups, screen routing, deep links). `JarvisApp` (Application) installs the crash black-box and warms object-level Compose state at startup (an important detail — a state singleton first touched inside composition crashes release cold-starts).
+- **Pure calculation cores.** Scores, targets and plans take plain inputs and return plain values, so they unit-test on the JVM without an emulator.
+- **Persistence.** A central `Repo` singleton holds app state as a JSON blob in SharedPreferences (with twin-copy corruption recovery), alongside many focused stores (`ActivityStore`, `WellbeingStore`, `SleepStore`, `LifeStores`, `SkillMeta`, `SchoolStore`, `CasinoStore`, `CustomRules`…). Four **Room** databases back the relational data: `ascend_training` (exercises/sessions/sets/PRs/progressions), `ascend_finance` (accounts/txns), calendar (`cal_events`) and `ascend_masterplan` (skill domains/nodes/tasks/resources). Finance is mid-migration behind a `FinanceRepo` facade (Room = source of truth, Prefs kept as backup).
+- **Health & network.** `HealthConnect.kt` reads HR/HRV/RHR/sleep/steps/weight; `HealthBridge` (WorkManager) pulls it in the background. `FoodApi` (host-allowlisted Open Food Facts) and `WeatherRepo` (Open-Meteo) are the only other network touchpoints besides optional calendar feeds, bank linking and CloudSync.
+
+---
+
+## 🛠 Tech stack
+
+| Layer | Technology |
+|---|---|
+| **Language** | Kotlin 1.9.24 (JVM 17) |
+| **UI** | Jetpack Compose (BOM 2025.03.01), Material 3, custom "ATELIER" design system |
+| **Architecture** | Single-activity + MVVM · Compose snapshot state · unidirectional flow · pure/testable engines |
+| **Persistence** | Room 2.6.1 (4 DBs) + a `Repo` singleton over SharedPreferences/JSON (kotlinx.serialization & org.json) |
+| **Async** | Kotlin Coroutines + Flow |
+| **Health** | Android Health Connect (`connect-client`) + WorkManager background bridge |
+| **Vision / ML** | ML Kit Code Scanner + ZXing (barcodes) · ML Kit Pose Detection + CameraX (form video / experimental rep counter) |
+| **Networking** | Direct HTTPS to Open Food Facts, Open-Meteo, ICS/Untis, GoCardless (no heavy client) |
+| **Build** | Android Gradle Plugin 8.5.2 · KSP (Room codegen) · Compose compiler 1.5.14 |
+| **Testing** | JUnit 4 — ~50 JVM unit-test files over the pure engines |
+
+---
+
+## ⚙️ Build & run
+
+### Prerequisites
+- **Android Studio** (Ladybug or newer) and **Android SDK API 34** (compileSdk/targetSdk 34, minSdk 26).
+- **JDK 17.** ⚠️ A system JDK 8 on your `PATH` will *not* build this project (AGP 8.5 needs 17). Point Gradle at Android Studio's bundled JetBrains Runtime:
+  ```bash
+  export JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+  ```
+
+### Commands
+```bash
+git clone https://github.com/spanspan21/Myprojekt.git
+cd Myprojekt
+
+# Debug APK
+./gradlew :app:assembleDebug           # Windows: gradlew.bat :app:assembleDebug
+
+# Unit tests (pure engines)
+./gradlew :app:testDebugUnitTest
+
+# Install onto a connected device / emulator
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# Personal-device release (non-debuggable, signed with the debug key so
+# `install -r` updates in place — there is no Play Store distribution)
+./gradlew :app:assembleRelease
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+Or just **open the folder in Android Studio**, let Gradle sync, pick a device and press ▶.
+
+### Optional runtime permissions
+Most features degrade gracefully; a few are unlocked by grants:
+
+| Feature | Permission | How to grant |
+|---|---|---|
+| Sleep / HR / HRV / steps | Health Connect | In-app prompt |
+| Nutrition barcode scan | Camera | In-app prompt |
+| Focus guard (usage + overlay + instant lock) | Usage access · draw-over-apps · accessibility | System settings (in-app deep links) |
+| Calendar import | `READ_CALENDAR` | In-app prompt |
+| Grayscale wind-down | `WRITE_SECURE_SETTINGS` | One-time adb: `adb shell pm grant com.ascend.lifeos android.permission.WRITE_SECURE_SETTINGS` |
+
+### Optional CloudSync
+Off unless configured. Put `SYNC_URL` / `SYNC_SECRET` in the git-ignored `local.properties` to mirror the app one-way to a private web dashboard.
+
+---
+
+## 📂 Project structure
+
+```
+Myprojekt/
+├── app/src/
+│   ├── main/java/com/ascend/lifeos/
+│   │   ├── MainActivity.kt          # Single activity — Compose host, deep links, startup apply
+│   │   ├── JarvisApp.kt             # Application — crash black-box + snapshot-state warmup
+│   │   ├── core/                    # Shared primitives (Sm2 spaced repetition…)
+│   │   ├── domain/                  # Pure cores extracted from data (RecoveryEngine…)
+│   │   ├── data/                    # ── Domain & persistence (the "brains") ──
+│   │   │   ├── training/            #    PlanGenerator, TrainBrain, VolumeModel, MuscleRecovery,
+│   │   │   │   └── engine/          #    TrainingLoad, Standards + engines/ (Gym/Run/Swim/Yoga/HIIT)
+│   │   │   │       └── programs/    #    44 data-driven SportPrograms
+│   │   │   ├── nutrition/ prime/    #    CoachEngine · PrimeEngine (readiness index)
+│   │   │   ├── sleep/ calendar/     #    SleepProtocol · ICS/Untis/device sync
+│   │   │   ├── finance/ school/     #    Room finance + facade · grade tracker
+│   │   │   ├── life/ skill/ rules/  #    habits/goals · SkillMeta+SM-2 · automations
+│   │   │   ├── masterplan/ casino/  #    Room skill DAG · Guard mini-game
+│   │   │   ├── cloud/  HealthBridge #    dashboard mirror · Health Connect bridge
+│   │   │   └── Repo.kt Prefs.kt …   #    central store, settings, foods, scoring
+│   │   ├── ui/                      # ── Jetpack Compose, one package per module ──
+│   │   │   ├── AscendApp.kt         #    Root shell: morphing dock, groups, routing
+│   │   │   ├── theme/ kit/ hud/     #    7-world design system + shared UI kit
+│   │   │   ├── motion/              #    Motion tokens + shell transitions
+│   │   │   ├── home/ prime/ training/ hud/ screens/ calendar/
+│   │   │   ├── finance/ school/ life/ skills/ masterplan/ insights/
+│   │   │   ├── boot/                #    onboarding + interactive tour
+│   │   │   └── wallpaper/           #    live "breathing nebula" wallpaper
+│   │   ├── wellbeing/               # Guard: focus service, a11y service, tile, wall, casino
+│   │   ├── widget/                  # Home-screen widget + action receivers
+│   │   ├── assets/masterplans/*.json  # Bundled skill plans (imported into Room)
+│   │   └── res/font/               # Chakra Petch + Manrope
+│   └── test/                        # ~50 JVM unit-test files (pure engines)
+│
+├── docs/                            # MASTER_PLAN_UI_ADAPTIVE.md, ADAPTIVE_SPORTS_50.md, session logs
+├── JARVIS_*.md / *.pdf              # design dossiers (the "why" behind each feature wave)
+├── build.gradle · settings.gradle  # AGP 8.5.2, Kotlin 1.9.24, KSP
+└── README.md
+```
+
+---
+
+## 🔒 Privacy & data
+
+No account, no analytics, no ads. All personal data lives on the device (SharedPreferences + Room). Network access is limited to: Open Food Facts (barcodes/search), Open-Meteo (hydration heat bonus), your own ICS/Untis calendar feeds, optional GoCardless Open Banking, and — only if you configure it — a one-way push to your own private web dashboard. Health data is read locally via Health Connect and never leaves the device except through that optional, self-hosted mirror. A full local ZIP backup/restore lives in Settings → Data.
 
 ---
 
 <div align="center">
-<sub>Built with Kotlin & Jetpack Compose · Offline-first · One HUD to run the day.</sub>
+<sub>Built with Kotlin & Jetpack Compose · Offline-first · One HUD to run the day. · v2.33</sub>
 </div>
