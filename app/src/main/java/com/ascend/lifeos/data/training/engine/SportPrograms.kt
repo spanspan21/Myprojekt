@@ -1,19 +1,27 @@
 package com.ascend.lifeos.data.training.engine
 
 import com.ascend.lifeos.data.training.engine.programs.AmericanFootballProgram
+import com.ascend.lifeos.data.training.engine.programs.BadmintonProgram
 import com.ascend.lifeos.data.training.engine.programs.BaseballProgram
 import com.ascend.lifeos.data.training.engine.programs.BasketballProgram
+import com.ascend.lifeos.data.training.engine.programs.BjjProgram
 import com.ascend.lifeos.data.training.engine.programs.BoxingProgram
 import com.ascend.lifeos.data.training.engine.programs.CricketProgram
 import com.ascend.lifeos.data.training.engine.programs.FieldHockeyProgram
 import com.ascend.lifeos.data.training.engine.programs.HandballProgram
 import com.ascend.lifeos.data.training.engine.programs.IceHockeyProgram
 import com.ascend.lifeos.data.training.engine.programs.LacrosseProgram
+import com.ascend.lifeos.data.training.engine.programs.MmaProgram
+import com.ascend.lifeos.data.training.engine.programs.MuayThaiProgram
+import com.ascend.lifeos.data.training.engine.programs.PadelProgram
 import com.ascend.lifeos.data.training.engine.programs.RugbyProgram
 import com.ascend.lifeos.data.training.engine.programs.SoccerProgram
+import com.ascend.lifeos.data.training.engine.programs.SquashProgram
+import com.ascend.lifeos.data.training.engine.programs.TableTennisProgram
 import com.ascend.lifeos.data.training.engine.programs.TennisProgram
 import com.ascend.lifeos.data.training.engine.programs.VolleyballProgram
 import com.ascend.lifeos.data.training.engine.programs.WaterPoloProgram
+import com.ascend.lifeos.data.training.engine.programs.WrestlingProgram
 
 // ─── SportPrograms ───────────────────────────────────────────────────────────
 // The registry of data-driven skill/team/racket/combat sports. Each entry wraps
@@ -39,5 +47,13 @@ object SportPrograms {
         SkillSportEngine("cricket", "Cricket", CricketProgram.program),
         SkillSportEngine("water_polo", "Water Polo", WaterPoloProgram.program),
         SkillSportEngine("lacrosse", "Lacrosse", LacrosseProgram.program),
+        SkillSportEngine("badminton", "Badminton", BadmintonProgram.program),
+        SkillSportEngine("table_tennis", "Table Tennis", TableTennisProgram.program),
+        SkillSportEngine("squash", "Squash", SquashProgram.program),
+        SkillSportEngine("padel", "Padel", PadelProgram.program),
+        SkillSportEngine("mma", "MMA", MmaProgram.program),
+        SkillSportEngine("bjj", "Brazilian Jiu-Jitsu", BjjProgram.program),
+        SkillSportEngine("muay_thai", "Muay Thai", MuayThaiProgram.program),
+        SkillSportEngine("wrestling", "Wrestling", WrestlingProgram.program),
     ).associateBy { it.id }
 }

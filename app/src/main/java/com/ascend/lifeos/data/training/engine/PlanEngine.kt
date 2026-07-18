@@ -71,7 +71,15 @@ object Disciplines {
         Def("water_polo", "Water Polo", "🤽", "Team"),
         Def("lacrosse", "Lacrosse", "🥍", "Team"),
         Def("tennis", "Tennis", "🎾", "Racket"),
+        Def("badminton", "Badminton", "🏸", "Racket"),
+        Def("table_tennis", "Table Tennis", "🏓", "Racket"),
+        Def("squash", "Squash", "🎾", "Racket"),
+        Def("padel", "Padel", "🎾", "Racket"),
         Def("boxing", "Boxing", "🥊", "Combat"),
+        Def("mma", "MMA", "🥊", "Combat"),
+        Def("bjj", "Brazilian Jiu-Jitsu", "🥋", "Combat"),
+        Def("muay_thai", "Muay Thai", "🥊", "Combat"),
+        Def("wrestling", "Wrestling", "🤼", "Combat"),
     )
 
     fun byId(id: String): Def? = ALL.firstOrNull { it.id == id }
