@@ -48,6 +48,7 @@ class JarvisApp : Application() {
             com.ascend.lifeos.ui.boot.TourSignals.replay.value
             com.ascend.lifeos.ui.boot.TourTargets.bounds
             com.ascend.lifeos.ui.kit.AppFeedback.current
+            com.ascend.lifeos.ui.theme.densityScale.floatValue
             // child-screen singletons (same class, lower frequency) — cheap init
             com.ascend.lifeos.data.Repo.jarvisReaction.value
             com.ascend.lifeos.data.calendar.TaskBlocks.rev

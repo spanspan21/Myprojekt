@@ -540,7 +540,11 @@ fun BodyScreen() {
             Spacer(Modifier.height(10.dp))
             Panel(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Spark(values = rhr90, color = Warn, modifier = Modifier.fillMaxWidth().height(56.dp))
+                    TrendChart(
+                        values = rhr90, color = Warn, upIsGood = false,
+                        deltaLabel = { d -> (if (d >= 0) "+" else "") + "${d.toInt()} bpm" },
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                    )
                     Spacer(Modifier.height(8.dp))
                     val first = rhr90.take(7).average().toInt()
                     val last = rhr90.takeLast(7).average().toInt()

@@ -51,6 +51,9 @@ class MainActivity : ComponentActivity() {
             com.ascend.lifeos.ui.theme.applyTheme(id)
         }
         com.ascend.lifeos.ui.theme.applyAccent(Repo.profile().accent)
+        com.ascend.lifeos.ui.theme.applyDensity(
+            com.ascend.lifeos.data.Prefs.bool(applicationContext, com.ascend.lifeos.data.Prefs.DENSITY_COMPACT, false),
+        )
         com.ascend.lifeos.data.finance.Currency.init(applicationContext)
         if (Repo.profile().reminders && Notifier.hasPermission(applicationContext)) {
             Notifier.schedule(applicationContext)

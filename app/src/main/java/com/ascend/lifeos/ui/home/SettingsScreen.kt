@@ -1635,6 +1635,16 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
             )
             ToggleRow("Sounds", "PR, level-up and focus chimes", Prefs.SOUNDS_ON, true)
             ToggleRow("Haptics", "The tactile language of the app", Prefs.HAPTICS_ON, true)
+            var compact by remember { mutableStateOf(Prefs.bool(ctx, Prefs.DENSITY_COMPACT, false)) }
+            ToggleRow(
+                "Compact spacing", "Tighter padding — fit more on screen at once",
+                on = compact,
+                onToggle = {
+                    compact = it
+                    Prefs.setBool(ctx, Prefs.DENSITY_COMPACT, it)
+                    com.ascend.lifeos.ui.theme.applyDensity(it)
+                },
+            )
             ActionRow("Live wallpaper", "Breathing JARVIS nebula for the home screen") {
                 val i = android.content.Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
                     putExtra(
