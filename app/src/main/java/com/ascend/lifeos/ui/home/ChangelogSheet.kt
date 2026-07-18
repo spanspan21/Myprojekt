@@ -34,8 +34,20 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // What actually changed THIS release — the auto-sheet shows only these;
     // everything below in ENTRIES is the archive behind "Earlier updates".
-    const val LATEST_VERSION = "2.32"
+    const val LATEST_VERSION = "2.33"
     val LATEST = listOf(
+        "Choose your gym split — Full Body, Upper/Lower, Push/Pull/Legs, Arnold or Bro — or build a custom week from day blocks (Settings → Modules → Training)",
+        "Swap a lift in your plan: open any exercise and pick a same-muscle alternative — it sticks from your next session",
+        "Your strength level, per lift — a relative-strength tier from Untrained to Elite with progress to the next, on the Train hub",
+        "Tap any muscle on the recovery map for its status, hours until fresh, and the lifts that train it",
+        "Coming back after a break? The plan eases the load back automatically and tells you why",
+        "Group switching is one tap now — Train, Body, Life and System are always on the dock",
+        "A load spike can suggest a deload week (you decide); plus a session-complete celebration and a unified trend chart",
+        "Compact-spacing option in Look & feel; the 'Log water' shortcut actually logs water now",
+    )
+
+    // ── archived: v2.32 (50-sport adaptive training) ──
+    private val V2_32 = listOf(
         "50 sports now have real training plans — pick yours in onboarding or Settings → Modules. Football, basketball, tennis, boxing, BJJ, cycling, rowing, climbing, powerlifting, pilates and 40 more",
         "Every plan is deep and study-backed: small-sided games for football, Ronnestad intervals for cycling, 80–85%/RPE for powerlifting, Tour-Tempo for golf — with an expert coaching cue on every drill",
         "Mix disciplines and JARVIS splits your week across them, rotating each sport's own session types",
@@ -70,7 +82,7 @@ object Changelog {
     )
 
     // newest first — edit this list per release
-    val ENTRIES = V2_31 + V2_30 + listOf(
+    val ENTRIES = V2_32 + V2_31 + V2_30 + listOf(
         // ── v2.24 ──
         "TickerNumber odometer on recovery hero, sleep score, nutrition hero stats, rep counter and logged-days counter — every key number rolls in with animated digits",
         "Haptic feedback on all armed deletes: workout set, session history, notes, finance entries, food entries, school subjects, Guard windows — first tap warns, second tap confirms with a buzz",
