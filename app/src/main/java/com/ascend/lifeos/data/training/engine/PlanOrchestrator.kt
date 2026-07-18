@@ -71,9 +71,12 @@ object PlanOrchestrator {
     internal fun gatedWeek(calendarWeeks: Int, completedSessions: Int, sessionsPerWeek: Int): Int =
         minOf(calendarWeeks.coerceAtLeast(0), completedSessions / sessionsPerWeek.coerceAtLeast(1))
 
+    // 6am-rollover logical day, NOT raw calendar date — `start`/`today` come
+    // from todayDate() which rolls at 06:00, so completions must bucket the same
+    // way or a pre-6am session lands on the wrong side of the start boundary
+    // (app-wide DayKey convention, audit C1-1/C1-2).
     private fun epochDayOf(ts: Long): Long =
-        java.time.Instant.ofEpochMilli(ts)
-            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+        com.ascend.lifeos.core.dayDateOf(ts).toEpochDay()
 
     fun level(ctx: Context, discipline: String): Int =
         Prefs.int(ctx, "disc_level_$discipline", 1).coerceIn(1, 3)
