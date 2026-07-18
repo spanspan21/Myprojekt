@@ -16,9 +16,11 @@ import com.ascend.lifeos.data.training.prescribedMobility
 
 object PlanOrchestrator {
 
-    /** Non-calisthenics engines, keyed by discipline id. */
+    /** Non-calisthenics engines, keyed by discipline id: the bespoke ones plus
+     *  every data-driven skill/team/racket/combat sport (SportPrograms). */
     val engines: Map<String, PlanEngine> by lazy {
-        listOf(RunningEngine, YogaEngine, GymEngine, HiitEngine, SwimEngine).associateBy { it.id }
+        (listOf(RunningEngine, YogaEngine, GymEngine, HiitEngine, SwimEngine).associateBy { it.id }) +
+            SportPrograms.ENGINES
     }
 
     /** Discipline id → ActivityStore type whose completions gate progression.

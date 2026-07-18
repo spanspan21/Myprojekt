@@ -103,13 +103,13 @@ private fun phasesOf(session: PlannedSession): List<SeqPhase> {
     return out
 }
 
-/** Discipline id → ActivityStore type for the completion log. */
+/** Discipline id → ActivityStore type for the completion log (feeds the heatmap
+ *  & recovery via that type's muscle map). Skill/team/racket/combat sports share
+ *  their id with an ActivityType, so a matching type is used directly; only the
+ *  bespoke-engine ids need remapping. */
 private fun activityTypeOf(discipline: String): String = when (discipline) {
     "running" -> "run"
-    "yoga" -> "yoga"
-    "swim" -> "swim"
-    "hiit" -> "hiit"
-    else -> "other"
+    else -> if (com.ascend.lifeos.data.training.ActivityTypes.byId(discipline) != null) discipline else "other"
 }
 
 @Composable

@@ -45,16 +45,20 @@ object Disciplines {
     const val YOGA = "yoga"
     const val SWIM = "swim"
     const val HIIT = "hiit"
+    const val SOCCER = "soccer"
 
-    data class Def(val id: String, val label: String, val emoji: String)
+    /** @param category groups the picker (Strength · Endurance · Mind-body ·
+     *  Conditioning · Team · Racket · Combat · Other). */
+    data class Def(val id: String, val label: String, val emoji: String, val category: String = "Core")
 
     val ALL = listOf(
-        Def(CALISTHENICS, "Calisthenics", "🤸"),
-        Def(GYM, "Gym / Weights", "🏋"),
-        Def(RUNNING, "Running", "🏃"),
-        Def(YOGA, "Yoga", "🧘"),
-        Def(SWIM, "Swimming", "🏊"),
-        Def(HIIT, "HIIT", "⚡"),
+        Def(CALISTHENICS, "Calisthenics", "🤸", "Strength"),
+        Def(GYM, "Gym / Weights", "🏋", "Strength"),
+        Def(RUNNING, "Running", "🏃", "Endurance"),
+        Def(SWIM, "Swimming", "🏊", "Endurance"),
+        Def(YOGA, "Yoga", "🧘", "Mind-body"),
+        Def(HIIT, "HIIT", "⚡", "Conditioning"),
+        Def(SOCCER, "Soccer", "⚽", "Team"),
     )
 
     fun byId(id: String): Def? = ALL.firstOrNull { it.id == id }
