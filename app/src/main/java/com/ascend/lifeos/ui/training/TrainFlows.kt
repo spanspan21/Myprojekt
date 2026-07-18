@@ -31,6 +31,7 @@ import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Units
 import com.ascend.lifeos.data.training.PrType
 import com.ascend.lifeos.data.training.TrainBrain
+import com.ascend.lifeos.ui.kit.Celebrate
 import com.ascend.lifeos.ui.kit.Panel
 import com.ascend.lifeos.ui.kit.ProgressDots
 import com.ascend.lifeos.ui.kit.TickerNumber
@@ -141,6 +142,21 @@ fun WorkoutSummaryScreen(vm: TrainingViewModel, onDone: () -> Unit) {
                 .padding(vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Done", color = Void, fontFamily = Body, fontSize = FS.s15, fontWeight = FontWeight.ExtraBold) }
+
+        // The arrival: a one-shot burst the first time this summary appears —
+        // renders in its own Dialog window, so its place in the column is moot.
+        // Celebrates finishing the session; the PRs already popped mid-workout,
+        // so here they crown the recap rather than repeat the alert.
+        var burst by remember { mutableStateOf(true) }
+        if (burst) {
+            val prN = s.prs.size
+            Celebrate(
+                title = if (prN > 0) "Session + ${prN} PR${if (prN > 1) "s" else ""}" else "Session Complete",
+                subtitle = "${s.sets} sets · ${s.durMin} min" +
+                    (s.repsVsLast?.let { d -> "  ·  ${if (d >= 0) "+" else ""}$d% vol" } ?: ""),
+                accent = if (prN > 0) Amber else ember,
+            ) { burst = false }
+        }
     }
 }
 
