@@ -84,6 +84,19 @@ object Disciplines {
         Def("golf", "Golf", "🏌️", "Other"),
         Def("climbing", "Climbing", "🧗", "Other"),
         Def("dance", "Dance", "💃", "Other"),
+        Def("road_cycling", "Road Cycling", "🚴", "Endurance"),
+        Def("mountain_biking", "Mountain Biking", "🚵", "Endurance"),
+        Def("rowing", "Rowing", "🚣", "Endurance"),
+        Def("triathlon", "Triathlon", "🏊", "Endurance"),
+        Def("trail_running", "Trail Running", "⛰️", "Endurance"),
+        Def("track_field", "Track & Field", "🏃", "Endurance"),
+        Def("xc_skiing", "Cross-Country Skiing", "⛷️", "Endurance"),
+        Def("pilates", "Pilates", "🧘", "Mind-body"),
+        Def("mobility", "Mobility & Stretching", "🤸", "Mind-body"),
+        Def("barre", "Barre", "🩰", "Mind-body"),
+        Def("circuit", "Circuit Training", "🔄", "Conditioning"),
+        Def("bootcamp", "Bootcamp", "🥾", "Conditioning"),
+        Def("jump_rope", "Jump Rope", "🪢", "Conditioning"),
     )
 
     fun byId(id: String): Def? = ALL.firstOrNull { it.id == id }

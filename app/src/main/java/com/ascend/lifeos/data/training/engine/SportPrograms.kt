@@ -26,6 +26,19 @@ import com.ascend.lifeos.data.training.engine.programs.TennisProgram
 import com.ascend.lifeos.data.training.engine.programs.VolleyballProgram
 import com.ascend.lifeos.data.training.engine.programs.WaterPoloProgram
 import com.ascend.lifeos.data.training.engine.programs.WrestlingProgram
+import com.ascend.lifeos.data.training.engine.programs.BarreProgram
+import com.ascend.lifeos.data.training.engine.programs.BootcampProgram
+import com.ascend.lifeos.data.training.engine.programs.CircuitProgram
+import com.ascend.lifeos.data.training.engine.programs.JumpRopeProgram
+import com.ascend.lifeos.data.training.engine.programs.MobilityProgram
+import com.ascend.lifeos.data.training.engine.programs.MountainBikingProgram
+import com.ascend.lifeos.data.training.engine.programs.PilatesProgram
+import com.ascend.lifeos.data.training.engine.programs.RoadCyclingProgram
+import com.ascend.lifeos.data.training.engine.programs.RowingProgram
+import com.ascend.lifeos.data.training.engine.programs.TrackFieldProgram
+import com.ascend.lifeos.data.training.engine.programs.TrailRunningProgram
+import com.ascend.lifeos.data.training.engine.programs.TriathlonProgram
+import com.ascend.lifeos.data.training.engine.programs.XcSkiingProgram
 
 // ─── SportPrograms ───────────────────────────────────────────────────────────
 // The registry of data-driven skill/team/racket/combat sports. Each entry wraps
@@ -63,5 +76,18 @@ object SportPrograms {
         SkillSportEngine("climbing", "Climbing", ClimbingProgram.program),
         SkillSportEngine("dance", "Dance", DanceProgram.program),
         SkillSportEngine("martial_arts", "Martial Arts", MartialArtsProgram.program),
+        SkillSportEngine("road_cycling", "Road Cycling", RoadCyclingProgram.program),
+        SkillSportEngine("mountain_biking", "Mountain Biking", MountainBikingProgram.program),
+        SkillSportEngine("rowing", "Rowing", RowingProgram.program),
+        SkillSportEngine("triathlon", "Triathlon", TriathlonProgram.program),
+        SkillSportEngine("trail_running", "Trail Running", TrailRunningProgram.program),
+        SkillSportEngine("track_field", "Track & Field", TrackFieldProgram.program),
+        SkillSportEngine("xc_skiing", "Cross-Country Skiing", XcSkiingProgram.program),
+        SkillSportEngine("pilates", "Pilates", PilatesProgram.program),
+        SkillSportEngine("mobility", "Mobility", MobilityProgram.program),
+        SkillSportEngine("barre", "Barre", BarreProgram.program),
+        SkillSportEngine("circuit", "Circuit Training", CircuitProgram.program),
+        SkillSportEngine("bootcamp", "Bootcamp", BootcampProgram.program),
+        SkillSportEngine("jump_rope", "Jump Rope", JumpRopeProgram.program),
     ).associateBy { it.id }
 }
