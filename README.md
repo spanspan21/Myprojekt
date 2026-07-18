@@ -35,15 +35,15 @@ Current release: **v2.33** (versionCode 35).
 
 ## 📸 Visuals
 
-> Capture with `adb exec-out screencap -p > docs/screenshots/home.png`. A short GIF of a screen transition at the top sells the app better than any static shot.
+<sub>Captured on the Lumen (light) theme. The design recomposes instantly across all 7 worlds.</sub>
 
 <div align="center">
 
 | | |
 |:---:|:---:|
-| ![Home](docs/screenshots/home.png)<br/>**Home — command center**<br/><sub>Body-scan hero, briefing, daily missions</sub> | ![Prime](docs/screenshots/prime.png)<br/>**Prime — daily readiness index**<br/><sub>One score fused from every module</sub> |
-| ![Train](docs/screenshots/train.png)<br/>**Train — 50-sport adaptive plans**<br/><sub>Gym splits, pose figures, prescriptions</sub> | ![Fuel](docs/screenshots/fuel.png)<br/>**Fuel — nutrition & hydration**<br/><sub>Macro rings, barcode scan, water wave</sub> |
-| ![Body](docs/screenshots/body.png)<br/>**Vitals — recovery & trends**<br/><sub>Interactive body map, sleep, load</sub> | ![Guard](docs/screenshots/guard.png)<br/>**Guard — focus & wellbeing**<br/><sub>Usage, focus score, lockdown wall</sub> |
+| ![Home](docs/screenshots/home.png)<br/>**Home — command center**<br/><sub>Body-scan hero · greeting · getting-started</sub> | ![Prime](docs/screenshots/prime.png)<br/>**Prime — daily readiness index**<br/><sub>Faceted index crystal, subscores & ranked directives</sub> |
+| ![Train](docs/screenshots/train.png)<br/>**Train — 50-sport adaptive plans**<br/><sub>Next-session hero, week strip, session blocks</sub> | ![Fuel](docs/screenshots/fuel.png)<br/>**Fuel — nutrition & hydration**<br/><sub>Macro reactor rings, quick-add foods, hydration</sub> |
+| ![Body map](docs/screenshots/body.png)<br/>**Recovery — the interactive body map**<br/><sub>Front + back heatmap · tap a muscle for detail</sub> | ![Guard](docs/screenshots/guard.png)<br/>**Guard — focus & wellbeing**<br/><sub>Setup, per-app limits · Rules · Casino · Insights</sub> |
 
 </div>
 
