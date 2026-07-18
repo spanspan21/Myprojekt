@@ -908,7 +908,8 @@ private fun CalibratePhase(onNext: () -> Unit) {
                     color = if (on) s.accent else TextDim,
                     fontFamily = Display, fontSize = FS.s9_5,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
-                    modifier = Modifier.width(46.dp), textAlign = TextAlign.End,
+                    // 46dp wrapped "ONLINE" onto two lines (ONLIN/E, seen live)
+                    modifier = Modifier.width(58.dp), textAlign = TextAlign.End, maxLines = 1,
                 )
             }
             Spacer(Modifier.height(17.dp))
