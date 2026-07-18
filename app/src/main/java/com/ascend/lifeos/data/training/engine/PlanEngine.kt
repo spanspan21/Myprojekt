@@ -59,6 +59,10 @@ object Disciplines {
         Def(YOGA, "Yoga", "🧘", "Mind-body"),
         Def(HIIT, "HIIT", "⚡", "Conditioning"),
         Def(SOCCER, "Soccer", "⚽", "Team"),
+        Def("basketball", "Basketball", "🏀", "Team"),
+        Def("volleyball", "Volleyball", "🏐", "Team"),
+        Def("tennis", "Tennis", "🎾", "Racket"),
+        Def("boxing", "Boxing", "🥊", "Combat"),
     )
 
     fun byId(id: String): Def? = ALL.firstOrNull { it.id == id }

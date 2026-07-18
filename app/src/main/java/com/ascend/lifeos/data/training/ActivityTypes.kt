@@ -101,6 +101,10 @@ object ActivityTypes {
             Muscle.QUADS to 2.0, Muscle.HAMSTRINGS to 1.6, Muscle.GLUTES to 1.6,
             Muscle.SHOULDERS to 1.2, Muscle.ABS to 1.2, Muscle.CALVES to 1.2,
         )),
+        // ── 50-sport rollout: per-sport load maps (feed the recovery heatmap) ──
+        ActivityType("volleyball", "Volleyball", "🏐", 7, false, m(Muscle.SHOULDERS to 3.8, Muscle.QUADS to 3.4, Muscle.CALVES to 3.2, Muscle.GLUTES to 2.9, Muscle.ABS to 2.5, Muscle.HAMSTRINGS to 2.4, Muscle.OBLIQUES to 2.3, Muscle.FOREARMS to 2.0, Muscle.LOWER_BACK to 1.9, Muscle.TRICEPS to 1.7)),
+        ActivityType("tennis", "Tennis", "🎾", 7, false, m(Muscle.FOREARMS to 4.0, Muscle.SHOULDERS to 3.8, Muscle.OBLIQUES to 3.7, Muscle.QUADS to 3.6, Muscle.CALVES to 3.3, Muscle.ABS to 3.0, Muscle.GLUTES to 2.8, Muscle.TRICEPS to 2.5, Muscle.HAMSTRINGS to 2.4, Muscle.LOWER_BACK to 2.3)),
+        ActivityType("boxing", "Boxing", "🥊", 7, false, m(Muscle.SHOULDERS to 4.0, Muscle.OBLIQUES to 3.4, Muscle.CALVES to 3.2, Muscle.FOREARMS to 3.0, Muscle.ABS to 2.8, Muscle.QUADS to 2.6, Muscle.TRICEPS to 2.4, Muscle.GLUTES to 2.2, Muscle.LATS to 2.0, Muscle.CHEST to 1.9)),
     )
 
     fun byId(id: String): ActivityType? = ALL.firstOrNull { it.id == id }
