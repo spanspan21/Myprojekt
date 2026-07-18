@@ -2,6 +2,7 @@ package com.ascend.lifeos.wellbeing
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +28,17 @@ class InterceptActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         GuardRuntime.lockVisible = true
 
+        // Back never returns into the blocked app — it leaves it, like every
+        // serious blocker. Registered on the dispatcher (not an onBackPressed
+        // override) so it holds under predictive back too: with
+        // enableOnBackInvokedCallback=true the system bypasses the deprecated
+        // override on API 33+ and only dispatcher callbacks still fire.
+        onBackPressedDispatcher.addCallback(this) {
+            GuardRuntime.payload.value?.let { GuardRuntime.actExitHome(this@InterceptActivity, it.pkg) }
+                ?: GuardRuntime.goHome(this@InterceptActivity)
+            finishLock()
+        }
+
         setContent {
             val p by GuardRuntime.payload
             val cur = p
@@ -47,15 +59,6 @@ class InterceptActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        // Back never returns into the blocked app — it leaves it, like every
-        // serious blocker. (Gesture back lands here too on this config.)
-        GuardRuntime.payload.value?.let { GuardRuntime.actExitHome(this, it.pkg) }
-            ?: GuardRuntime.goHome(this)
-        finishLock()
     }
 
     override fun onStop() {

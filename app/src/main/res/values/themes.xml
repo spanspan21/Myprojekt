@@ -1,7 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Compose-friendly platform theme (no AppCompat). Bars are transparent;
          Compose draws edge-to-edge and handles insets. -->
-    <style name="Theme.Ascend" parent="android:Theme.Material.NoActionBar">
+    <!-- windowLightNavigationBar is API 27+; on 26 the single attribute is
+         ignored by the platform, which is exactly the intended behavior. -->
+    <style name="Theme.Ascend" parent="android:Theme.Material.NoActionBar" tools:targetApi="o_mr1">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/app_bg</item>

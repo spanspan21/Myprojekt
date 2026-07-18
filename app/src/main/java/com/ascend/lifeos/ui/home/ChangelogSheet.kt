@@ -34,8 +34,20 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // What actually changed THIS release — the auto-sheet shows only these;
     // everything below in ENTRIES is the archive behind "Earlier updates".
-    const val LATEST_VERSION = "2.30"
+    const val LATEST_VERSION = "2.31"
     val LATEST = listOf(
+        "Widget shows your next planned session — one tap starts your day's training",
+        "Start screen is yours: open JARVIS on Today, Train, Fuel, Vitals, Calendar or Habits (Settings → Look & feel)",
+        "Cycle tracking (opt-in): log your period, see your phase and a training-aware note on Vitals",
+        "Train hub has a settings shortcut now — disciplines, equipment and session length are one tap away",
+        "Type \"currency\", \"theme\" or \"diet\" into COMMAND — it jumps straight to the right settings page",
+        "Endurance plans now progress when YOU do: C25K and swim weeks advance with completed sessions, not just the calendar",
+        "Switched-off modules are truly silent now — no more bedtime or screen-budget pings from a module you disabled",
+        "Cleaner Vitals: compact hints instead of stacked \"no data yet\" cards",
+    )
+
+    // newest first — edit this list per release
+    private val V2_30 = listOf(
         "Training speaks your sport now: pick your disciplines (calisthenics, gym, running, yoga, swimming, HIIT) and JARVIS generates complete study-based weeks for each — C25K ladders, barbell 3×5, vinyasa flows, CSS swim sets",
         "New session player for timed workouts — countdown ring, coaching cues, haptic phase changes; finishing logs the activity, ticks your missions and your week",
         "Interactive tour replaces the slide deck: it walks the LIVE app with a spotlight — replay any time from Settings → Guide",
@@ -49,7 +61,7 @@ object Changelog {
     )
 
     // newest first — edit this list per release
-    val ENTRIES = listOf(
+    val ENTRIES = V2_30 + listOf(
         // ── v2.24 ──
         "TickerNumber odometer on recovery hero, sleep score, nutrition hero stats, rep counter and logged-days counter — every key number rolls in with animated digits",
         "Haptic feedback on all armed deletes: workout set, session history, notes, finance entries, food entries, school subjects, Guard windows — first tap warns, second tap confirms with a buzz",

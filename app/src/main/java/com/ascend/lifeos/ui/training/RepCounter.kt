@@ -42,6 +42,7 @@ import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
  * squats. On-device only; frames are analyzed and dropped, never stored.
  * It's a helper, not ground truth — the user confirms the count on save.
  */
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun RepCounterOverlay(onUseCount: (Int) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current

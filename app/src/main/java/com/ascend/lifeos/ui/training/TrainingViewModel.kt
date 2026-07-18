@@ -849,7 +849,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                     .setSilent(true)
                     .build()
                 // id 9: must not collide with Notifier's fixed ids (guard screen80 uses 6)
-                androidx.core.app.NotificationManagerCompat.from(ctx).notify(9, n)
+                com.ascend.lifeos.data.Notifier.post(ctx, 9, n)
             }
         }
     }

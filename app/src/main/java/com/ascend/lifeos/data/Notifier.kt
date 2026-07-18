@@ -46,6 +46,17 @@ object Notifier {
             ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED
 
+    /** The one notify() gate: inline SDK-gated POST_NOTIFICATIONS check (the
+     *  form the MissingPermission lint can follow), SecurityException-safe.
+     *  Every notification in the app posts through here. */
+    fun post(ctx: Context, id: Int, n: android.app.Notification) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) return
+        runCatching { NotificationManagerCompat.from(ctx).notify(id, n) }
+    }
+
     private fun channelFor(kind: String): String = when (kind) {
         "morning", "evening", "weekly" -> CH_BRIEFINGS
         "workout_soon", "protein", "reschedule", "reschedule_accept", "reschedule_skip" -> CH_TRAINING
@@ -263,7 +274,7 @@ object Notifier {
             .addAction(0, "Other time", openPi)
             .addAction(0, "Skip", action("reschedule_skip", 4211))
             .build()
-        androidx.core.app.NotificationManagerCompat.from(ctx).notify(11, n)
+        post(ctx, 11, n)
     }
 
     private fun pending(ctx: Context, req: Int, kind: String): PendingIntent {
@@ -376,7 +387,7 @@ object Notifier {
             "water" -> builder.addAction(0, "Log water", openApp("fuel"))
         }
 
-        runCatching { NotificationManagerCompat.from(ctx).notify(id, builder.build()) }
+        post(ctx, id, builder.build())
     }
 
     /**
@@ -413,7 +424,7 @@ object Notifier {
             .setAutoCancel(true)
             .setContentIntent(pi)
             .addAction(0, "Open", pi)
-        runCatching { NotificationManagerCompat.from(ctx).notify(notifId, builder.build()) }
+        post(ctx, notifId, builder.build())
     }
 
     /** Guard heads-up: "N min left in <app> today" — the wall never ambushes. */
@@ -430,7 +441,7 @@ object Notifier {
             .setContentText("The wall comes up when the timer runs out. Land the plane.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
-        runCatching { NotificationManagerCompat.from(ctx).notify(14, builder.build()) }
+        post(ctx, 14, builder.build())
     }
 
     private fun message(ctx: Context, kind: String): Pair<String, String>? {

@@ -247,6 +247,6 @@ object UntisSync {
             .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
             .setAutoCancel(true)
             .build()
-        runCatching { androidx.core.app.NotificationManagerCompat.from(ctx).notify(7, n) }
+        com.ascend.lifeos.data.Notifier.post(ctx, 7, n)
     }
 }

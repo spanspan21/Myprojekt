@@ -24,6 +24,12 @@ object Haptics {
 
     private fun on(ctx: Context): Boolean = Prefs.bool(ctx, Prefs.HAPTICS_ON, true)
 
+    // ChecksSdkIntAtLeast teaches lint that a true return implies API 31+ — the
+    // composition calls behind every primitives() branch are provably safe.
+    // WrongConstant: the vararg erases the IntDef; call sites only ever pass
+    // VibrationEffect.Composition.PRIMITIVE_* constants.
+    @androidx.annotation.ChecksSdkIntAtLeast(api = 31)
+    @android.annotation.SuppressLint("WrongConstant")
     private fun primitives(v: Vibrator, vararg ids: Int): Boolean =
         Build.VERSION.SDK_INT >= 31 && runCatching { v.areAllPrimitivesSupported(*ids) }.getOrDefault(false)
 

@@ -68,7 +68,8 @@ object CsvImport {
     }
 
     private fun key(ts: Long, cents: Long, note: String): String {
-        val day = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(ts), zone).toEpochDay()
+        // NOT LocalDate.ofInstant — that overload is API 34+ and this must run on 26
+        val day = java.time.Instant.ofEpochMilli(ts).atZone(zone).toLocalDate().toEpochDay()
         return "$day|$cents|${note.trim().lowercase().take(40)}"
     }
 
