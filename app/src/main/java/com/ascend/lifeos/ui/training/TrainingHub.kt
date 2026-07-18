@@ -15,6 +15,7 @@ import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
 import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
+import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.kit.ShimmerPanel
 import com.ascend.lifeos.ui.kit.TickerNumber
@@ -472,13 +473,22 @@ fun TrainingHub(
         // ── Muscle status (Fitbod-style recovery map) ───────────────────
         vm.muscleFreshness?.let { fresh ->
             item {
+                var pickedMuscle by remember { mutableStateOf<Muscle?>(null) }
                 SectionLabel("Muscle status", accent = Mod.Body)
                 Spacer(Modifier.height(10.dp))
                 GlassPanel(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp)) {
                         MuscleHeatMap(
                             freshness = fresh.map,
+                            onMuscle = { Haptics.tick(ctx); pickedMuscle = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 26.dp),
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Tap a muscle for detail", color = TextDim,
+                            fontSize = FS.s9_5, fontFamily = Body,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         )
                         Spacer(Modifier.height(10.dp))
                         val tired = fresh.tiredest
@@ -502,6 +512,7 @@ fun TrainingHub(
                         }
                     }
                 }
+                pickedMuscle?.let { m -> MuscleDetailSheet(m, fresh) { pickedMuscle = null } }
                 Spacer(Modifier.height(22.dp))
             }
         }
@@ -1195,6 +1206,66 @@ internal fun muscleLabel(m: Muscle) = when (m) {
     Muscle.CALVES -> "Calves"; Muscle.HIP_FLEXORS -> "Hip flexors"
     Muscle.ABS -> "Abs"; Muscle.OBLIQUES -> "Obliques"; Muscle.LOWER_BACK -> "Lower back"
     Muscle.FULL_BODY -> "Full body"
+}
+
+/**
+ * Tap-a-muscle detail (master plan §1.6 — interactive body map). Opens from the
+ * hub's recovery map: this muscle's recovery status, when it's fresh again, and
+ * the lifts that train it. Read-only; the body map's static call sites are
+ * untouched (onMuscle defaults to null there).
+ */
+@Composable
+private fun MuscleDetailSheet(muscle: Muscle, fresh: MuscleRecovery.Freshness, onDismiss: () -> Unit) {
+    val f = fresh.map[muscle]?.coerceIn(0f, 1f)
+    val hours = if (f != null && f < 0.85f) MuscleRecovery.hoursUntilFresh(muscle, f) else 0
+    val (status, statusColor) = when {
+        f == null || f >= 0.72f -> "Fresh" to Good
+        f >= 0.45f -> "Working" to Amber
+        else -> "Recovering" to Crit
+    }
+    val movers = remember(muscle) {
+        ExerciseSeed.ALL_EXERCISES.filter { it.primaryMuscle == muscle }.map { it.name }.distinct().take(8)
+    }
+    JarvisSheet(onDismiss = onDismiss) {
+        Column(Modifier.fillMaxWidth().padding(22.dp).navigationBarsPadding()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    muscleLabel(muscle), color = TextPrimary, fontSize = FS.s20,
+                    fontFamily = Body, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f),
+                )
+                Box(
+                    Modifier.clip(RoundedCornerShape(7.dp)).background(statusColor.copy(alpha = 0.14f))
+                        .padding(horizontal = 9.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        status.uppercase(), color = statusColor, fontSize = FS.s10,
+                        fontFamily = Body, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (hours > 0) "Ready to train fresh in about ${hours}h" else "Recovered — ready to train",
+                color = TextMuted, fontSize = FS.s12_5, fontFamily = Body,
+            )
+            if (movers.isNotEmpty()) {
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "TRAINS THIS MUSCLE", color = TextDim, fontFamily = Display,
+                    fontSize = FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                )
+                Spacer(Modifier.height(8.dp))
+                movers.forEach { name ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(5.dp).clip(CircleShape).background(Mod.Body.copy(alpha = 0.7f)))
+                        Spacer(Modifier.width(9.dp))
+                        Text(name, color = TextMuted, fontSize = FS.s13, fontFamily = Body)
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+    }
 }
 
 private fun templateColor(split: String) = when {

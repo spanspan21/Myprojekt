@@ -13,10 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.scale
@@ -46,6 +49,25 @@ private object ParsedBody {
     val structBack: List<Path> by lazy { BodyPaths.STRUCT_BACK.map(::parse) }
     val front: Map<Muscle, List<Path>> by lazy { BodyPaths.FRONT.mapValues { it.value.map(::parse) } }
     val back: Map<Muscle, List<Path>> by lazy { BodyPaths.BACK.mapValues { it.value.map(::parse) } }
+}
+
+/** True if this viewport-space path encloses the point (android Region hit-test). */
+private fun Path.enclosesPoint(x: Float, y: Float): Boolean {
+    val ap = asAndroidPath()
+    val b = android.graphics.RectF()
+    ap.computeBounds(b, true)
+    if (x < b.left || x > b.right || y < b.top || y > b.bottom) return false
+    val clip = android.graphics.Region(
+        Math.floor(b.left.toDouble()).toInt(), Math.floor(b.top.toDouble()).toInt(),
+        Math.ceil(b.right.toDouble()).toInt(), Math.ceil(b.bottom.toDouble()).toInt(),
+    )
+    return android.graphics.Region().apply { setPath(ap, clip) }.contains(x.toInt(), y.toInt())
+}
+
+/** Which muscle region on the given side encloses the viewport point, if any. */
+private fun muscleAt(front: Boolean, vx: Float, vy: Float): Muscle? {
+    val regions = if (front) ParsedBody.front else ParsedBody.back
+    return regions.entries.firstOrNull { (_, paths) -> paths.any { it.enclosesPoint(vx, vy) } }?.key
 }
 
 /**
@@ -88,11 +110,27 @@ private fun DrawScope.drawBody(front: Boolean, fillFor: (Muscle) -> Color?) {
 }
 
 @Composable
-private fun BodyFigure(front: Boolean, fillFor: (Muscle) -> Color?, modifier: Modifier = Modifier) {
+private fun BodyFigure(
+    front: Boolean,
+    fillFor: (Muscle) -> Color?,
+    modifier: Modifier = Modifier,
+    onMuscle: ((Muscle) -> Unit)? = null,
+) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Canvas(Modifier.fillMaxWidth().aspectRatio(BodyPaths.VIEW_W / BodyPaths.VIEW_H)) {
-            drawBody(front, fillFor)
+        var canvasMod = Modifier.fillMaxWidth().aspectRatio(BodyPaths.VIEW_W / BodyPaths.VIEW_H)
+        if (onMuscle != null) {
+            // invert the drawBody transform (scale s, then translate -BACK_X_OFFSET
+            // on the back) to turn a screen tap into viewport coords, then hit-test.
+            canvasMod = canvasMod.pointerInput(front) {
+                detectTapGestures { off ->
+                    val s = size.width / BodyPaths.VIEW_W
+                    val vx = off.x / s + if (front) 0f else BodyPaths.BACK_X_OFFSET
+                    val vy = off.y / s
+                    muscleAt(front, vx, vy)?.let(onMuscle)
+                }
+            }
         }
+        Canvas(canvasMod) { drawBody(front, fillFor) }
         Spacer(Modifier.height(6.dp))
         Text(
             if (front) "FRONT" else "BACK",
@@ -184,6 +222,7 @@ fun ScanBodyFigure(freshness: Map<Muscle, Float>?, modifier: Modifier = Modifier
 fun MuscleHeatMap(
     freshness: Map<Muscle, Float>,
     modifier: Modifier = Modifier,
+    onMuscle: ((Muscle) -> Unit)? = null,
 ) {
     val fresh = Good
     val fried = Crit
@@ -193,8 +232,8 @@ fun MuscleHeatMap(
             .copy(alpha = 0.28f + 0.45f * (1f - f))   // fatigue demands attention
     }
     Row(modifier, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp)) {
-        BodyFigure(front = true, fillFor = ::tint, modifier = Modifier.weight(1f))
-        BodyFigure(front = false, fillFor = ::tint, modifier = Modifier.weight(1f))
+        BodyFigure(front = true, fillFor = ::tint, modifier = Modifier.weight(1f), onMuscle = onMuscle)
+        BodyFigure(front = false, fillFor = ::tint, modifier = Modifier.weight(1f), onMuscle = onMuscle)
     }
 }
 
