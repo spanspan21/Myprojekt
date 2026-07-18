@@ -28,6 +28,9 @@ data class EngineInputs(
     val gymSplit: String? = null,      // chosen GymSplit id, null = auto-recommend
     // yoga / mobility
     val focusAreas: List<String> = emptyList(),     // tight areas ("hips","shoulders","ankles")
+    // recovery / re-entry — days since the last completed session of ANY kind.
+    // 0 = trained recently / never trained. Engines may ease load after a layoff.
+    val daysSinceLastSession: Int = 0,
 )
 
 interface PlanEngine {

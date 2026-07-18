@@ -19,9 +19,11 @@ class GymEngineTest {
     private fun inputs(
         sessions: Int = 3, len: Int = 90, level: Int = 1, week: Int = 0,
         deload: Boolean = false, e1: Map<String, Double> = emptyMap(), start: Int = 0,
+        daysSince: Int = 0,
     ) = EngineInputs(
         sessions = sessions, sessionLenMin = len, level = level, programWeek = week,
         deload = deload, bodyweightKg = 75, startIndex = start, bestE1Rm = e1,
+        daysSinceLastSession = daysSince,
     )
 
     private fun PlannedSession.lift(id: String) =
@@ -82,6 +84,23 @@ class GymEngineTest {
         // 1×5 deadlift must not GAIN a set from the min-2 floor
         val b = GymEngine.week(inputs(week = 1, deload = true)).first()
         assertEquals(1, b.lift("gym_deadlift").sets)
+    }
+
+    // ── Return-from-layoff re-entry ──────────────────────────────────────────
+
+    @Test
+    fun `return from a layoff eases the working load and says so`() {
+        val e1 = mapOf("gym_squat" to 100.0)
+        val fresh = GymEngine.week(inputs(e1 = e1))[0].lift("gym_squat")
+        val backTwoWeeks = GymEngine.week(inputs(e1 = e1, daysSince = 20))[0]
+        val backAMonth = GymEngine.week(inputs(e1 = e1, daysSince = 40))[0]
+        // fresh 3×5 squat = 85 (0.85×e1RM); 14-27d off → ×0.85; ≥28d → ×0.70
+        assertEquals(85.0, fresh.weightKg!!, 1e-9)
+        assertEquals(72.5, backTwoWeeks.lift("gym_squat").weightKg!!, 1e-9)  // 85 × .85 → 72.5
+        assertEquals(60.0, backAMonth.lift("gym_squat").weightKg!!, 1e-9)    // 85 × .70 → 60.0
+        assertTrue(backTwoWeeks.why.contains("Back after 20 days"))
+        // no layoff → no scaling and no re-entry note
+        assertTrue(GymEngine.week(inputs(e1 = e1))[0].why.let { !it.contains("Back after") })
     }
 
     // ── Warm-up ramp ────────────────────────────────────────────────────────

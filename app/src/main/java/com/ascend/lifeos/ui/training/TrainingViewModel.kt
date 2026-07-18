@@ -349,6 +349,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 sessionLenMin = p.sessionLen,
                 deload = deloadActive || currentTrainWeek() == 4,
                 bodyweightKg = p.weightKg,
+                daysSinceLastSession = daysSince,
                 calisthenics = ::calisthenicsWeek,
             )
         }

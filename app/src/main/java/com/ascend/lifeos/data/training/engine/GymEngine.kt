@@ -55,6 +55,15 @@ object GymEngine : PlanEngine {
         else -> 0.62
     }
 
+    /** Return-from-layoff re-entry: ease the bar back after a long break so tissue
+     *  and technique rebuild before intensity (≥28d → 70%, ≥14d → 85%). Mirrors
+     *  the calisthenics detrain scale (PlanGenerator) — a real safety gap for gym. */
+    private fun detrainScale(days: Int): Double = when {
+        days >= 28 -> 0.70
+        days >= 14 -> 0.85
+        else -> 1.0
+    }
+
     // ── Encoding ────────────────────────────────────────────────────────────
 
     private fun build(inp: EngineInputs, pos: Int, split: GymSplit, day: GymDay): PlannedSession {
@@ -74,6 +83,12 @@ object GymEngine : PlanEngine {
                 else -> append("Double progression — fill the rep range on every set, then the bar goes up 2.5 kg. ")
             }
             if (inp.deload) append("Deload week: 85% loads, one set less — recover, don't detrain.")
+            val reentry = when {
+                inp.daysSinceLastSession >= 28 -> 70
+                inp.daysSinceLastSession >= 14 -> 85
+                else -> 0
+            }
+            if (reentry > 0) append(" Back after ${inp.daysSinceLastSession} days — starting at $reentry% to rebuild safely.")
         }
         return encode(inp, pos, focus = focus, slots = slots, why = why, findNote = findNote)
     }
@@ -91,6 +106,7 @@ object GymEngine : PlanEngine {
             if (s.main) {
                 var w = inp.bestE1Rm[s.id]?.times(pctForReps(s.high))
                 if (inp.deload && w != null) w *= DELOAD_PCT
+                if (w != null) w *= detrainScale(inp.daysSinceLastSession)
                 val weight = w?.let { round25(it) }
                 if (!ramped) {           // warm-up ramp only before the day's first main lift
                     ramped = true

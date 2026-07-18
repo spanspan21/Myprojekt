@@ -98,6 +98,7 @@ object PlanOrchestrator {
         sessionLenMin: Int,
         deload: Boolean,
         bodyweightKg: Int,
+        daysSinceLastSession: Int = 0,
         calisthenics: (Int) -> WeekPlan,
     ): WeekPlan {
         val discs = disciplines.ifEmpty { listOf(Disciplines.CALISTHENICS) }
@@ -141,6 +142,7 @@ object PlanOrchestrator {
                     bestE1Rm = gymBests(ctx),
                     focusAreas = focus,
                     gymSplit = if (d == Disciplines.GYM) Prefs.string(ctx, Prefs.GYM_SPLIT, "").ifBlank { null } else null,
+                    daysSinceLastSession = daysSinceLastSession,
                 )
                 val week = runCatching { engine.week(inputs) }.getOrDefault(emptyList())
                 sessions += week.map { it.copy(index = index++) }
