@@ -34,6 +34,6 @@
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.ascend.lifeos"
             android:targetClass="com.ascend.lifeos.MainActivity"
-            android:data="jarvis://fuel" />
+            android:data="jarvis://water" />
     </shortcut>
 </shortcuts>

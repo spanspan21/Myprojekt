@@ -243,6 +243,15 @@ fun AscendApp() {
             "report" -> reportOpen = true
             "heatmap", "achievements", "decisions", "rules", "notes", "breathe", "timer", "winddown" -> overlay = target
             "quicklog" -> { open(Sub.HOME); com.ascend.lifeos.ui.home.HomeSignals.quickLog.value = true }
+            // the "Log water" launcher shortcut promises a one-tap log — actually
+            // log it (it used to just open the food screen) and land on Home so the
+            // ring updates under the confirmation.
+            "water" -> {
+                com.ascend.lifeos.data.Repo.addWater(1)
+                com.ascend.lifeos.data.Repo.flush()
+                open(Sub.HOME)
+                com.ascend.lifeos.ui.kit.AppFeedback.show("Logged a glass of water")
+            }
             // palette targets that used to dismiss into nothing (audit: dead ends)
             "quicklog_journal" -> {
                 open(Sub.HOME)
