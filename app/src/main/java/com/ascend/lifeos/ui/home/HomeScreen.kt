@@ -1197,12 +1197,22 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
     }
 
     val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
-    val split = trainVm.suggestedSplit()
     fun fmt(min: Int) = CalendarRepo.fmtMin(min)
 
     val blocks = timeline?.blocks.orEmpty().filter { it.endMin > nowMin }
     val current = blocks.firstOrNull { it.startMin <= nowMin }
     val next = blocks.firstOrNull { it.startMin > nowMin }
+    // The session actually planned for today beats the legacy PPL split guess —
+    // a runner must not read "Push Day" on Home (not everyone does
+    // calisthenics). Source order: today's placed TRAINING block (calendar,
+    // survives process death) → the engines' week plan → the split heuristic
+    // as the last pre-plan fallback. And when a training block is already on
+    // today's timeline, it shows as NOW/NEXT anyway — don't ALSO pitch a
+    // second session into a free slot.
+    val plannedTraining = blocks.firstOrNull { it.type == com.ascend.lifeos.data.calendar.EventType.TRAINING }
+    val split = plannedTraining?.title
+        ?: trainVm.weekPlan?.sessions?.minByOrNull { it.index }?.name
+        ?: trainVm.suggestedSplit()
     // first free slot from now that fits a session
     val minSlot = Prefs.int(ctx, Prefs.CAL_MIN_SLOT, 40)
     val slot = timeline?.freeSlots.orEmpty()
@@ -1223,14 +1233,14 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                                 "${fmt(current.startMin)}–${fmt(current.endMin)} · ${eventLabel(current.type)}",
                                 eventColor(current.type), onClick = onOpenCalendar,
                             )
-                            if (!trainedToday && slot != null) {
+                            if (!trainedToday && slot != null && plannedTraining == null) {
                                 Spacer(Modifier.height(12.dp))
                                 HairLine()
                                 Spacer(Modifier.height(12.dp))
                                 EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
                             }
                         }
-                        !trainedToday && slot != null && (next == null || slot.startMin < next.startMin) -> {
+                        !trainedToday && slot != null && plannedTraining == null && (next == null || slot.startMin < next.startMin) -> {
                             val tag = if (slot.startMin <= nowMin) "READY NOW" else "READY ${fmt(slot.startMin)}"
                             val sub = if (next != null) "fits before ${next.title} at ${fmt(next.startMin)}"
                             else "${slot.durationMin} min free · no blockers"
@@ -1244,7 +1254,7 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                         }
                         next != null -> {
                             EventLine("NEXT", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
-                            if (!trainedToday && slot != null) {
+                            if (!trainedToday && slot != null && plannedTraining == null) {
                                 Spacer(Modifier.height(12.dp))
                                 HairLine()
                                 Spacer(Modifier.height(12.dp))
