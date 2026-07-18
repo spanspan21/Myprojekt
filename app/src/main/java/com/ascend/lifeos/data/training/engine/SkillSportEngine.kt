@@ -27,6 +27,9 @@ class SkillSportEngine(
     private val program: SportProgram,
 ) : PlanEngine {
 
+    /** Structural test hook — lets the catalog-wide validation read the program. */
+    internal val programForTest: SportProgram get() = program
+
     private companion object {
         const val TRANSITION_SEC = 5
         const val LOW_FIT = 0.90
