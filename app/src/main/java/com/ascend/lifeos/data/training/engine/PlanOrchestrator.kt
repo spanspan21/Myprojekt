@@ -142,6 +142,9 @@ object PlanOrchestrator {
                     bestE1Rm = gymBests(ctx),
                     focusAreas = focus,
                     gymSplit = if (d == Disciplines.GYM) Prefs.string(ctx, Prefs.GYM_SPLIT, "").ifBlank { null } else null,
+                    gymCustomDays = if (d == Disciplines.GYM) {
+                        Prefs.string(ctx, Prefs.GYM_SPLIT_CUSTOM, "").split("|").filter { it.isNotBlank() }
+                    } else emptyList(),
                     daysSinceLastSession = daysSinceLastSession,
                 )
                 val week = runCatching { engine.week(inputs) }.getOrDefault(emptyList())

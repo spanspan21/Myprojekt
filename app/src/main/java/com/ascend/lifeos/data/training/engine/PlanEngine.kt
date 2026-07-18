@@ -26,6 +26,7 @@ data class EngineInputs(
     // gym
     val bestE1Rm: Map<String, Double> = emptyMap(), // exerciseId -> best estimated 1RM
     val gymSplit: String? = null,      // chosen GymSplit id, null = auto-recommend
+    val gymCustomDays: List<String> = emptyList(), // ordered day names when gymSplit == "custom"
     // yoga / mobility
     val focusAreas: List<String> = emptyList(),     // tight areas ("hips","shoulders","ankles")
     // recovery / re-entry — days since the last completed session of ANY kind.

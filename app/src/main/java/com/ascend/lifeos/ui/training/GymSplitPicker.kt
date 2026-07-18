@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ascend.lifeos.data.Haptics
 import com.ascend.lifeos.data.Prefs
 import com.ascend.lifeos.data.training.engine.GymSplits
@@ -61,6 +62,16 @@ fun GymSplitPicker(
         onChanged()
     }
 
+    var customDays by remember {
+        mutableStateOf(Prefs.string(ctx, Prefs.GYM_SPLIT_CUSTOM, "").split("|").filter { it.isNotBlank() })
+    }
+    fun setCustom(days: List<String>) {
+        Haptics.tick(ctx)
+        customDays = days
+        Prefs.setString(ctx, Prefs.GYM_SPLIT_CUSTOM, days.joinToString("|"))
+        onChanged()
+    }
+
     Column(modifier.fillMaxWidth()) {
         // Auto row
         SplitRow(
@@ -82,6 +93,81 @@ fun GymSplitPicker(
                 onClick = { pick(split.id) },
             )
             Spacer(Modifier.height(7.dp))
+        }
+        // Custom — compose your own week from the day blocks (§10.2)
+        SplitRow(
+            title = "Custom — build your own",
+            sub = if (customDays.isEmpty()) "Compose your week from day blocks"
+                  else customDays.joinToString(" · "),
+            selected = chosen == GymSplits.CUSTOM,
+            badge = null,
+            accent = Mod.Train,
+            onClick = { pick(GymSplits.CUSTOM) },
+        )
+        if (chosen == GymSplits.CUSTOM) {
+            Spacer(Modifier.height(7.dp))
+            CustomBuilder(customDays, Mod.Train, onChange = ::setCustom)
+        }
+    }
+}
+
+/** The day-block composer shown when "Custom" is selected. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun CustomBuilder(days: List<String>, accent: Color, onChange: (List<String>) -> Unit) {
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(11.dp))
+            .background(Ivory.copy(alpha = 0.03f))
+            .border(0.5.dp, Ivory.copy(alpha = 0.10f), RoundedCornerShape(11.dp))
+            .padding(12.dp),
+    ) {
+        Text(
+            "YOUR WEEK · ${days.size} DAY${if (days.size == 1) "" else "S"}",
+            color = TextDim, fontSize = FS.s8_5, fontFamily = Body,
+            fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp,
+        )
+        Spacer(Modifier.height(7.dp))
+        if (days.isEmpty()) {
+            Text("Tap day blocks below to build your rotation.", color = TextMuted, fontSize = FS.s11, fontFamily = Body)
+        } else {
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                days.forEachIndexed { i, name ->
+                    DayChip(name, accent, filled = true, trailing = "✕") {
+                        onChange(days.toMutableList().also { it.removeAt(i) })
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            "ADD A DAY", color = TextDim, fontSize = FS.s8_5, fontFamily = Body,
+            fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp,
+        )
+        Spacer(Modifier.height(7.dp))
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            GymSplits.ALL_DAYS.forEach { day ->
+                DayChip(day.name, accent, filled = false) { onChange(days + day.name) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayChip(label: String, accent: Color, filled: Boolean, trailing: String? = null, onClick: () -> Unit) {
+    Row(
+        Modifier.padding(bottom = 6.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (filled) accent.copy(alpha = 0.16f) else Ivory.copy(alpha = 0.05f))
+            .border(0.5.dp, if (filled) accent.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+            .pressScale(onClick = onClick)
+            .padding(horizontal = 9.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = if (filled) accent else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold)
+        if (trailing != null) {
+            Spacer(Modifier.padding(horizontal = 3.dp))
+            Text(trailing, color = if (filled) accent else TextDim, fontSize = FS.s10_5, fontFamily = Body)
         }
     }
 }

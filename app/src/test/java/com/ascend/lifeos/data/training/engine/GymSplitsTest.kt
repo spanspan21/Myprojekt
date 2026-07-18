@@ -3,6 +3,7 @@ package com.ascend.lifeos.data.training.engine
 import com.ascend.lifeos.data.training.ExerciseSeed
 import com.ascend.lifeos.data.training.GymExercises
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -70,5 +71,31 @@ class GymSplitsTest {
         assertEquals("Upper · Lower · Upper · Lower",
             GymSplits.byId(GymSplits.UPPER_LOWER)!!.preview(4))
         assertEquals("Push · Pull · Legs", GymSplits.byId(GymSplits.PPL)!!.preview(3))
+    }
+
+    @Test fun `custom split builds from day names and rotates`() {
+        val split = GymSplits.customSplit(listOf("Push", "Pull", "Legs", "Upper"))!!
+        assertEquals(GymSplits.CUSTOM, split.id)
+        assertEquals(listOf("Push", "Pull", "Legs", "Upper"), split.days.map { it.name })
+        assertEquals("Push", split.dayFor(0, 0).name)
+        assertEquals("Upper", split.dayFor(0, 3).name)
+        assertEquals("Pull", split.dayFor(0, 5).name)         // (0+5) mod 4 = 1
+        // unknown names dropped; all-unknown / empty → null (engine then auto-picks)
+        assertEquals(1, GymSplits.customSplit(listOf("Push", "Nonsense"))!!.days.size)
+        assertNull(GymSplits.customSplit(listOf("Nonsense")))
+        assertNull(GymSplits.customSplit(emptyList()))
+        // every ALL_DAYS name round-trips through dayByName
+        assertTrue(GymSplits.ALL_DAYS.all { GymSplits.dayByName(it.name) === it })
+    }
+
+    @Test fun `GymEngine honours a custom split, falling back when empty`() {
+        val inp = EngineInputs(
+            sessions = 3, sessionLenMin = 60, level = 2, programWeek = 0,
+            deload = false, bodyweightKg = 80, gymSplit = GymSplits.CUSTOM,
+            gymCustomDays = listOf("Legs", "Push", "Pull"),
+        )
+        assertEquals(listOf("Legs", "Push", "Pull"), GymEngine.week(inp).map { it.focus })
+        // custom chosen but no days → recommendation, never an empty/broken week
+        assertEquals(3, GymEngine.week(inp.copy(gymCustomDays = emptyList())).size)
     }
 }

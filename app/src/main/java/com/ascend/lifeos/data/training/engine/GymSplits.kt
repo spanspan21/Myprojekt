@@ -193,4 +193,28 @@ object GymSplits {
         daysPerWeek == 4 -> byId(UPPER_LOWER)!!
         else -> byId(PPL)!!
     }
+
+    // ── custom split ─────────────────────────────────────────────────────────
+    // "Compose your own week" (master plan §10.2): the user orders day templates
+    // from ALL_DAYS into their own rotation. Reuses the exact GymDay slots the
+    // fixed splits use, so GymEngine loads/warms/deloads a custom day identically.
+    const val CUSTOM = "custom"
+
+    /** Every named training day the builder can pick from (deduped by name). */
+    val ALL_DAYS: List<GymDay> = listOf(
+        fullA, fullB, upper, lower, push, pull, legs,
+        chestBack, shouldersArms, broChest, broBack, broShoulders, broArms,
+    )
+
+    fun dayByName(name: String): GymDay? = ALL_DAYS.firstOrNull { it.name == name }
+
+    /** Build a split from an ordered list of day names (unknown names dropped). */
+    fun customSplit(dayNames: List<String>): GymSplit? {
+        val days = dayNames.mapNotNull(::dayByName)
+        if (days.isEmpty()) return null
+        return GymSplit(
+            CUSTOM, "Custom", days.size, days.size, "Custom", "your rotation",
+            "Your own week — day blocks in the order you chose.", days,
+        )
+    }
 }

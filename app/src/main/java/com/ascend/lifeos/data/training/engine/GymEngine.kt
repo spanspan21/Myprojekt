@@ -39,7 +39,11 @@ object GymEngine : PlanEngine {
         // The user's chosen split, or the frequency × experience recommendation
         // (which reproduces the old behaviour: novice → Full Body A/B, else →
         // Upper/Lower). Days rotate across the week; each is built identically.
-        val split = GymSplits.byId(inputs.gymSplit) ?: GymSplits.recommend(inputs.sessions, inputs.level)
+        val split = when {
+            inputs.gymSplit == GymSplits.CUSTOM ->
+                GymSplits.customSplit(inputs.gymCustomDays) ?: GymSplits.recommend(inputs.sessions, inputs.level)
+            else -> GymSplits.byId(inputs.gymSplit) ?: GymSplits.recommend(inputs.sessions, inputs.level)
+        }
         return (0 until inputs.sessions).map { pos ->
             val day = split.dayFor(inputs.programWeek, pos)
             build(inputs, pos, split, day)
