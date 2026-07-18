@@ -34,8 +34,17 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // What actually changed THIS release — the auto-sheet shows only these;
     // everything below in ENTRIES is the archive behind "Earlier updates".
-    const val LATEST_VERSION = "2.31"
+    const val LATEST_VERSION = "2.32"
     val LATEST = listOf(
+        "50 sports now have real training plans — pick yours in onboarding or Settings → Modules. Football, basketball, tennis, boxing, BJJ, cycling, rowing, climbing, powerlifting, pilates and 40 more",
+        "Every plan is deep and study-backed: small-sided games for football, Ronnestad intervals for cycling, 80–85%/RPE for powerlifting, Tour-Tempo for golf — with an expert coaching cue on every drill",
+        "Mix disciplines and JARVIS splits your week across them, rotating each sport's own session types",
+        "New categorized sport picker with search — Strength · Endurance · Mind-body · Conditioning · Team · Racket · Combat",
+        "Every sport feeds the recovery heatmap with its own muscle load, so training and recovery stay in sync",
+    )
+
+    // newest first — edit this list per release
+    private val V2_31 = listOf(
         "Widget shows your next planned session — one tap starts your day's training",
         "Start screen is yours: open JARVIS on Today, Train, Fuel, Vitals, Calendar or Habits (Settings → Look & feel)",
         "Cycle tracking (opt-in): log your period, see your phase and a training-aware note on Vitals",
@@ -61,7 +70,7 @@ object Changelog {
     )
 
     // newest first — edit this list per release
-    val ENTRIES = V2_30 + listOf(
+    val ENTRIES = V2_31 + V2_30 + listOf(
         // ── v2.24 ──
         "TickerNumber odometer on recovery hero, sleep score, nutrition hero stats, rep counter and logged-days counter — every key number rolls in with animated digits",
         "Haptic feedback on all armed deletes: workout set, session history, notes, finance entries, food entries, school subjects, Guard windows — first tap warns, second tap confirms with a buzz",
