@@ -13,18 +13,48 @@ import com.ascend.lifeos.di.AppContainer
 class JarvisApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        val bootT0 = android.os.SystemClock.elapsedRealtime()
+        fun mark(tag: String) = android.util.Log.d("BootProf", "$tag +${android.os.SystemClock.elapsedRealtime() - bootT0}ms")
         CrashLog.install(this)
         container = AppContainer(this)
+        mark("container")
+        // Object-level Compose states must be BORN in the global snapshot: if a
+        // singleton holding a mutableStateOf is first touched from inside a
+        // composition, its lazy object-init runs in that composition's read
+        // snapshot and readers then throw "Reading a state that was created
+        // after the snapshot was taken" — seen as a RELEASE-ONLY cold-start
+        // crash in AscendApp (debug builds happened to touch these earlier).
+        // Same bug class as Prefs.bool (56bb4e7). Touching them here, before
+        // any composition exists, creates every state in the applied global
+        // snapshot. New shell-level signal/store singletons belong on this list.
+        runCatching {
+            com.ascend.lifeos.data.Modules.rev.intValue
+            com.ascend.lifeos.data.DeepLink.pending.value
+            com.ascend.lifeos.data.ActivityStore.rev
+            com.ascend.lifeos.data.life.LifeStores.rev
+            com.ascend.lifeos.data.finance.FinanceStore.rev
+            com.ascend.lifeos.data.sleep.SleepStore.rev
+            com.ascend.lifeos.ui.ShellMode.current.value
+            com.ascend.lifeos.ui.ShellSignals.target.value
+            com.ascend.lifeos.ui.home.HomeSignals.quickLog.value
+            com.ascend.lifeos.ui.home.SettingsSignals.page.value
+            com.ascend.lifeos.ui.boot.TourSignals.replay.value
+            com.ascend.lifeos.ui.kit.AppFeedback.current
+        }
+        mark("snapshotWarmup")
         // Init the store at the Application level so receivers/widgets that run
         // before any Activity find Repo ready (audit: init-ordering hazard).
         runCatching { Repo.initIfNeeded(this) }
+        mark("repo")
         // Warm the Room finance store (migrates from prefs once, keeps prefs as backup).
         runCatching { com.ascend.lifeos.data.finance.FinanceRoom.init(this) }
+        mark("financeRoom")
         // Health bridge: hourly Health Connect pull, app open or not — the
         // in-app replacement for the retired Health Sync subscription. Plus one
         // immediate pull per process start so opening the app is always fresh.
         runCatching { com.ascend.lifeos.data.HealthBridge.schedule(this) }
         runCatching { com.ascend.lifeos.data.HealthBridge.syncNow(this) }
+        mark("healthBridge")
         // Guard survives app updates: the foreground service dies with the old
         // process and nothing restarted it until the toggle was cycled by hand.
         runCatching {
@@ -46,6 +76,7 @@ class JarvisApp : Application() {
                 }.start()
             }
         }
+        mark("onCreateDone")
     }
 
     companion object {

@@ -23,10 +23,14 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val actT0 = android.os.SystemClock.elapsedRealtime()
+        fun mark(tag: String) = android.util.Log.d("BootProf", "act:$tag +${android.os.SystemClock.elapsedRealtime() - actT0}ms")
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Repo.init(applicationContext)
+        mark("repoInit")
         com.ascend.lifeos.data.OwnRecipes.init(applicationContext)
+        mark("recipes")
         // ATELIER: Welt zuerst (setzt Welt-Default-Akzent), dann gewinnt der
         // gespeicherte Nutzer-Akzent
         run {
@@ -66,11 +70,13 @@ class MainActivity : ComponentActivity() {
             runCatching { com.ascend.lifeos.data.calendar.CalendarAutoSync.maybe(applicationContext) }
         }
         handleJarvisIntent(intent)
+        mark("preSetContent")
         setContent {
             AscendTheme {
                 AscendApp()
             }
         }
+        mark("setContent")
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
