@@ -117,7 +117,17 @@ suspend fun buildWeekStats(ctx: Context): WeekStats = withContext(Dispatchers.IO
         .getOrDefault(emptyList())
         .take(3)
         .map { d -> d.text + (d.why.takeIf { it.isNotBlank() }?.let { " — $it" } ?: "") }
-        .ifEmpty { listOf("Everything on target. Raise one goal a notch — comfort is the enemy.") }
+        .ifEmpty {
+            // an empty week is NOT "on target" — a fresh user with no training
+            // and barely any logs gets honesty, not premature praise
+            listOf(
+                if (workouts == 0 && kcals.size < 2) {
+                    "Not enough data yet — a few logged days and JARVIS starts handing out directives."
+                } else {
+                    "Everything on target. Raise one goal a notch — comfort is the enemy."
+                },
+            )
+        }
 
     WeekStats(
         workouts, sets, reps, prs,
