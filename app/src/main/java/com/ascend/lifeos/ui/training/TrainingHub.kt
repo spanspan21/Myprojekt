@@ -13,6 +13,7 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.animateColorAsState
 import com.ascend.lifeos.ui.kit.AppFeedback
 import com.ascend.lifeos.ui.kit.EmptyState
+import com.ascend.lifeos.ui.kit.IconOrb
 import com.ascend.lifeos.ui.kit.JarvisHeader
 import com.ascend.lifeos.ui.kit.SectionLabel
 import com.ascend.lifeos.ui.kit.ShimmerPanel
@@ -136,7 +137,15 @@ fun TrainingHub(
         // ── Header ──────────────────────────────────────────────────────
         item {
             val lastInfo = vm.lastSplitInfo()
-            JarvisHeader("Training", context = lastInfo.ifEmpty { null }, accent = Mod.Train)
+            JarvisHeader("Training", context = lastInfo.ifEmpty { null }, accent = Mod.Train, actions = {
+                // settings-in-context: disciplines, equipment, session length and
+                // training times live in Settings → Modules — one tap from here
+                // beats knowing where to dig
+                IconOrb(Icons.Rounded.Tune, label = "Training settings") {
+                    com.ascend.lifeos.ui.home.SettingsSignals.page.value = "modules"
+                    com.ascend.lifeos.ui.ShellSignals.target.value = "settings"
+                }
+            })
             Spacer(Modifier.height(6.dp))
             if (profile == null && vm.weekPlan?.sessions.isNullOrEmpty()) {
                 // legacy quick-start hint — engine weeks name their own next

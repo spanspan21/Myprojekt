@@ -340,6 +340,24 @@ object CommandEngine {
         if (q == "settings" || q == "einstellungen" || q == "config") {
             return CmdResult.Navigate("settings", "Opening settings")
         }
+        // settings TOPICS: "currency", "theme", "diet"… jump straight to the
+        // right category page instead of dumping the user on the settings hub
+        run {
+            val topic = mapOf(
+                "you" to listOf("profile", "units", "tdee", "activity level"),
+                "modules" to listOf(
+                    "currency", "währung", "diet", "diät", "allergen", "equipment",
+                    "discipline", "disziplin", "missions", "water goal", "module",
+                ),
+                "jarvis" to listOf("notification", "reminder", "briefing", "voice", "context mode"),
+                "look" to listOf("theme", "icon", "design", "motion", "haptic", "start screen", "look"),
+                "data" to listOf("backup", "export", "privacy", "health bridge", "diagnostics"),
+            ).entries.firstOrNull { (_, keys) -> keys.any { q.startsWith(it) } }?.key
+            if (topic != null) {
+                SettingsSignals.page.value = topic
+                return CmdResult.Navigate("settings", "Opening settings · $topic")
+            }
+        }
 
         // ---- sick mode toggle -------------------------------------------------
         if (q == "sick" || q == "krank") {

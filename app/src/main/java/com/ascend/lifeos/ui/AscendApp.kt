@@ -111,6 +111,13 @@ private enum class Group(val label: String, val icon: ImageVector, val subs: Lis
 
 private fun groupOf(sub: Sub): Group = Group.entries.first { sub in it.subs }
 
+/** Cross-screen navigation requests (settings-in-context shortcuts): a screen
+ *  deep inside a tab sets a target and the shell navigates — same one-shot
+ *  pattern as HomeSignals/TourSignals. */
+object ShellSignals {
+    val target = mutableStateOf<String?>(null)   // navigate() target string
+}
+
 /** Context modes: a life phase hides what it doesn't need (PDF: Kontext-Modi). */
 object ShellMode {
     val current = mutableStateOf("normal") // normal | exam | holiday
@@ -251,6 +258,12 @@ fun AscendApp() {
     val pendingLink by DeepLink.pending
     LaunchedEffect(pendingLink) {
         DeepLink.consume()?.let { navigate(it) }
+    }
+
+    // consume in-app navigation requests (settings-in-context shortcuts)
+    val shellTarget by ShellSignals.target
+    LaunchedEffect(shellTarget) {
+        shellTarget?.let { ShellSignals.target.value = null; navigate(it) }
     }
 
     // a mode change or module toggle can hide the screen you're on — fall back

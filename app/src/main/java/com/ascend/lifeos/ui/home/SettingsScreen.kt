@@ -122,6 +122,11 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
     // Hub-first navigation: 17 flat sections buried things — now a landing page
     // with five categories (+ search) and each section lives on ONE sub-page.
     var page by rememberSaveable { mutableStateOf<String?>(null) }
+    // settings-in-context: a screen (Train gear, palette keyword) can request a
+    // specific category page before navigating here — consumed once
+    LaunchedEffect(Unit) {
+        SettingsSignals.page.value?.let { page = it; SettingsSignals.page.value = null }
+    }
     androidx.activity.compose.BackHandler(enabled = page != null) { page = null }
 
     Box(Modifier.fillMaxSize()) {
@@ -2251,4 +2256,10 @@ private fun switchIconAlias(ctx: android.content.Context, target: String) {
             android.content.pm.PackageManager.DONT_KILL_APP,
         )
     }
+}
+
+/** One-shot request: which settings category page to open on next composition
+ *  (settings-in-context — the Train gear and palette keywords set this). */
+object SettingsSignals {
+    val page = androidx.compose.runtime.mutableStateOf<String?>(null)
 }
