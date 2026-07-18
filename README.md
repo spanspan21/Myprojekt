@@ -256,9 +256,9 @@ Myprojekt/
 │   │   └── res/font/               # Chakra Petch + Manrope
 │   └── test/                        # ~50 JVM unit-test files (pure engines)
 │
-├── docs/                            # MASTER_PLAN_UI_ADAPTIVE.md, ADAPTIVE_SPORTS_50.md, session logs
-├── JARVIS_*.md / *.pdf              # design dossiers (the "why" behind each feature wave)
-├── build.gradle · settings.gradle  # AGP 8.5.2, Kotlin 1.9.24, KSP
+├── docs/                            # design docs, 50-sport spec, session logs, screenshots
+├── .github/workflows/build-apk.yml  # CI — builds the debug APK on push
+├── build.gradle · settings.gradle   # AGP 8.5.2, Kotlin 1.9.24, KSP
 └── README.md
 ```
 
