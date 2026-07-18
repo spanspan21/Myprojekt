@@ -553,34 +553,26 @@ private fun MorphingDock(
                         Modifier.height(56.dp).horizontalScroll(rememberScrollState()),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // The four areas, always visible — one tap switches group
-                        // with no zoom step (the plan's "group nav one tap away").
-                        // Still ONE bar: this group strip + the current group's
-                        // rooms, so Train is one tap from Guard. No second stacked
-                        // bar (stacking was a prior user "no").
-                        Group.entries.forEach { g ->
-                            val isCur = g == group
-                            val gAccent = accentOf(g)
-                            val gBg by animateColorAsState(
-                                if (isCur) gAccent.copy(alpha = 0.14f) else Color.Transparent,
-                                tween(220), label = "railBg",
+                        // anchor: the group glyph — tap to zoom back to the 4 areas
+                        val groupAccent = accentOf(group)
+                        Column(
+                            Modifier
+                                .pressScale { Haptics.tick(ctx); zoomedOut = true }
+                                .clip(RoundedCornerShape(18.dp))
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Icon(
+                                group.icon, contentDescription = "All areas",
+                                tint = groupAccent.copy(alpha = 0.9f),
+                                modifier = Modifier.size(19.dp),
                             )
-                            Box(
-                                Modifier
-                                    .pressScale { Haptics.tick(ctx); if (!isCur) onSelectGroup(g) }
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(gBg)
-                                    .padding(horizontal = 8.dp, vertical = 9.dp),
-                            ) {
-                                Icon(
-                                    g.icon, contentDescription = g.label,
-                                    tint = if (isCur) gAccent else TextDim.copy(alpha = 0.75f),
-                                    modifier = Modifier.size(17.dp),
-                                )
-                            }
+                            Text(
+                                "▾", color = TextDim, fontSize = FS.s7, fontFamily = Body, fontWeight = FontWeight.Bold,
+                            )
                         }
                         Box(
-                            Modifier.padding(horizontal = 3.dp).size(0.5.dp, 26.dp)
+                            Modifier.padding(horizontal = 2.dp).size(0.5.dp, 26.dp)
                                 .background(Ivory.copy(alpha = 0.12f)),
                         )
                         subs.forEach { s ->

@@ -41,7 +41,6 @@ object Changelog {
         "Your strength level, per lift — a relative-strength tier from Untrained to Elite with progress to the next, on the Train hub",
         "Tap any muscle on the recovery map for its status, hours until fresh, and the lifts that train it",
         "Coming back after a break? The plan eases the load back automatically and tells you why",
-        "Group switching is one tap now — Train, Body, Life and System are always on the dock",
         "A load spike can suggest a deload week (you decide); plus a session-complete celebration and a unified trend chart",
         "Compact-spacing option in Look & feel; the 'Log water' shortcut actually logs water now",
     )
