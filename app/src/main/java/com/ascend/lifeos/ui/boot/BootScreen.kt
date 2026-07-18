@@ -328,17 +328,14 @@ private fun TunePhase(onFinish: (String, Int, Int, Int, Int, String, List<String
         Text("WHAT DO YOU TRAIN?", color = TextDim, fontFamily = Display, fontSize = FS.s9_5,
             fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp)
         Spacer(Modifier.height(8.dp))
-        Row(
-            Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-        ) {
-            com.ascend.lifeos.data.training.engine.Disciplines.ALL.forEach { d ->
-                BootChip("${d.emoji} ${d.label}", d.id in discs) {
-                    val next = if (d.id in discs) discs - d.id else discs + d.id
-                    if (next.isNotEmpty()) { discs = next; Repo.setDisciplines(next) }
-                }
-            }
-        }
+        com.ascend.lifeos.ui.training.DisciplinePicker(
+            selected = discs.toSet(),
+            onToggle = { id ->
+                val next = if (id in discs) discs - id else discs + id
+                if (next.isNotEmpty()) { discs = next; Repo.setDisciplines(next) }
+            },
+            accent = Mod.Home,
+        )
         Spacer(Modifier.height(5.dp))
         Text(
             "Pick more than one and your week is split across them.",

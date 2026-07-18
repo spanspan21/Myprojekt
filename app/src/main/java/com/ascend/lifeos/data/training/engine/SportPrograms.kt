@@ -1,10 +1,19 @@
 package com.ascend.lifeos.data.training.engine
 
+import com.ascend.lifeos.data.training.engine.programs.AmericanFootballProgram
+import com.ascend.lifeos.data.training.engine.programs.BaseballProgram
 import com.ascend.lifeos.data.training.engine.programs.BasketballProgram
 import com.ascend.lifeos.data.training.engine.programs.BoxingProgram
+import com.ascend.lifeos.data.training.engine.programs.CricketProgram
+import com.ascend.lifeos.data.training.engine.programs.FieldHockeyProgram
+import com.ascend.lifeos.data.training.engine.programs.HandballProgram
+import com.ascend.lifeos.data.training.engine.programs.IceHockeyProgram
+import com.ascend.lifeos.data.training.engine.programs.LacrosseProgram
+import com.ascend.lifeos.data.training.engine.programs.RugbyProgram
 import com.ascend.lifeos.data.training.engine.programs.SoccerProgram
 import com.ascend.lifeos.data.training.engine.programs.TennisProgram
 import com.ascend.lifeos.data.training.engine.programs.VolleyballProgram
+import com.ascend.lifeos.data.training.engine.programs.WaterPoloProgram
 
 // ─── SportPrograms ───────────────────────────────────────────────────────────
 // The registry of data-driven skill/team/racket/combat sports. Each entry wraps
@@ -21,5 +30,14 @@ object SportPrograms {
         SkillSportEngine("volleyball", "Volleyball", VolleyballProgram.program),
         SkillSportEngine("tennis", "Tennis", TennisProgram.program),
         SkillSportEngine("boxing", "Boxing", BoxingProgram.program),
+        SkillSportEngine("american_football", "American Football", AmericanFootballProgram.program),
+        SkillSportEngine("ice_hockey", "Ice Hockey", IceHockeyProgram.program),
+        SkillSportEngine("field_hockey", "Field Hockey", FieldHockeyProgram.program),
+        SkillSportEngine("handball", "Handball", HandballProgram.program),
+        SkillSportEngine("rugby", "Rugby", RugbyProgram.program),
+        SkillSportEngine("baseball", "Baseball", BaseballProgram.program),
+        SkillSportEngine("cricket", "Cricket", CricketProgram.program),
+        SkillSportEngine("water_polo", "Water Polo", WaterPoloProgram.program),
+        SkillSportEngine("lacrosse", "Lacrosse", LacrosseProgram.program),
     ).associateBy { it.id }
 }

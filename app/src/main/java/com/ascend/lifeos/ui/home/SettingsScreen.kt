@@ -797,22 +797,13 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                     },
                 )
             }
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                com.ascend.lifeos.data.training.engine.Disciplines.ALL.forEach { d ->
-                    val on = d.id in discs
-                    Box(
-                        Modifier.clip(RoundedCornerShape(9.dp))
-                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
-                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
-                            .pressScale {
-                                Haptics.tick(ctx)
-                                val next = if (on) discs - d.id else discs + d.id
-                                if (next.isNotEmpty()) { discs = next; Repo.setDisciplines(next) }
-                            }
-                            .padding(horizontal = 9.dp, vertical = 6.dp),
-                    ) { Text("${d.emoji} ${d.label}", color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
-                }
-            }
+            com.ascend.lifeos.ui.training.DisciplinePicker(
+                selected = discs.toSet(),
+                onToggle = { id ->
+                    val next = if (id in discs) discs - id else discs + id
+                    if (next.isNotEmpty()) { discs = next; Repo.setDisciplines(next) }
+                },
+            )
             Spacer(Modifier.height(4.dp))
             Text(
                 "Your weekly sessions are split across these — a runner gets running weeks, a yogi gets flows.",
