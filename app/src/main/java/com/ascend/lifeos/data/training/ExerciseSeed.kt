@@ -147,7 +147,32 @@ object ExerciseSeed {
         ex("plyo_depth", "Depth Drops", LEGS, QUADS, listOf(GLUTES, CALVES), "Step off a low box and absorb the landing — freeze on impact, chest up.", 16),
     )
 
-    val ALL_EXERCISES: List<ExerciseEntity> = push + pull + legs + core + skill + cardio + mobility + grip + plyo + GymExercises.ALL
+    /**
+     * Catalog duplicates found in the v2 audit — one physical exercise, two
+     * ids (U02 §2.6). Ids never die (they are foreign keys in workout_sets /
+     * personal_records); the alias makes reads converge on ONE truth. The
+     * skill ids stay canonical (they are the SkillCatalog ladder identities).
+     */
+    private val ALIASES = mapOf(
+        "plyo_boxjump" to "cardio_box",
+        "pull_muscleup" to "skill_mu",
+        "core_flag" to "skill_hf",
+    )
+
+    val ALL_EXERCISES: List<ExerciseEntity> =
+        (push + pull + legs + core + skill + cardio + mobility + grip + plyo + GymExercises.ALL)
+            .map { e -> ALIASES[e.id]?.let { e.copy(aliasOf = it) } ?: e }
+            .map { com.ascend.lifeos.data.training.packs.ExercisePacks.upgrade(it) } +
+            com.ascend.lifeos.data.training.packs.ExercisePacks.NEW
+
+    /** Content fingerprint of the whole catalog — the seed-once guard key. */
+    fun catalogFingerprint(): String {
+        var h = 1469598103934665603L // FNV-1a
+        fun mix(s: String) { for (c in s) { h = h xor c.code.toLong(); h *= 1099511628211L } }
+        ALL_EXERCISES.forEach { mix(it.toString()) }
+        com.ascend.lifeos.data.training.packs.ExercisePacks.EDGES.forEach { mix(it.toString()) }
+        return java.lang.Long.toHexString(h)
+    }
 
     private fun ex(
         id: String, name: String, cat: ExCategory,

@@ -126,9 +126,22 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun seed() = viewModelScope.launch(Dispatchers.IO) {
-        // Always re-upsert: seed edits (e.g. renamed exercises) reach existing
-        // installs. REPLACE keys on id, so logged sets stay linked.
-        dao.upsertExercises(ExerciseSeed.ALL_EXERCISES)
+        // Always-upsert semantics stay (code beats DB, custom rows untouched;
+        // REPLACE keys on id so logged sets stay linked) — but guarded by the
+        // catalog hash: at 1200-exercise scale the upsert runs once per catalog
+        // change instead of once per process (cold-start guard, U02 §2.4.3).
+        val prefs = getApplication<android.app.Application>()
+            .getSharedPreferences("training_seed", android.content.Context.MODE_PRIVATE)
+        // Fingerprint over the FULL catalog content (entities + edges), not just
+        // the packs constant — any seed edit anywhere still reaches existing
+        // installs exactly once, preserving the old always-upsert guarantee.
+        val hash = ExerciseSeed.catalogFingerprint()
+        if (prefs.getString("catalog_hash", "") != hash) {
+            dao.upsertExercises(ExerciseSeed.ALL_EXERCISES)
+            dao.upsertEdges(com.ascend.lifeos.data.training.packs.ExercisePacks.EDGES)
+            dao.pruneDeadEdges() // edges never outlive their nodes
+            prefs.edit().putString("catalog_hash", hash).apply()
+        }
     }
 
     fun refreshTodayStats() = viewModelScope.launch(Dispatchers.IO) {

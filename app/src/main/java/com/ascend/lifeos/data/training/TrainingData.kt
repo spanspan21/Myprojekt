@@ -28,13 +28,31 @@ data class ExerciseEntity(
     @PrimaryKey val id: String,
     val name: String,
     val category: ExCategory,
-    val primaryMuscle: Muscle,
-    val secondaryMuscles: List<Muscle>,
+    val primaryMuscle: Muscle,            // v2: derived — argmax(muscleShares)
+    val secondaryMuscles: List<Muscle>,   // v2: derived — shares in [0.10, argmax)
     val description: String,
     val unit: String, // "reps" | "sec"
     val youtubeUrl: String?,
     val isCustom: Boolean,
     val orderIndex: Int,
+    // ── ExerciseDB v2 (plan U02): all with defaults ⇒ migration = ADD COLUMNs.
+    // Empty shares/cues = the honest "unknown" state (legacy recovery path).
+    @ColumnInfo(defaultValue = "ISOLATION") val pattern: MovementPattern = MovementPattern.ISOLATION,
+    @ColumnInfo(defaultValue = "{}") val muscleShares: Map<Muscle, Float> = emptyMap(),
+    @ColumnInfo(defaultValue = "[\"BODYWEIGHT\"]") val equipment: Set<Equipment> = setOf(Equipment.BODYWEIGHT),
+    @ColumnInfo(defaultValue = "BILATERAL") val laterality: Laterality = Laterality.BILATERAL,
+    @ColumnInfo(defaultValue = "FULL") val romEmphasis: RomEmphasis = RomEmphasis.FULL,
+    @ColumnInfo(defaultValue = "COMPOUND") val mechanics: Mechanics = Mechanics.COMPOUND,
+    @ColumnInfo(defaultValue = "3.0") val difficulty: Float = 3f,
+    @ColumnInfo(defaultValue = "2") val systemicCost: Int = 2,
+    @ColumnInfo(defaultValue = "NONE") val loadMode: LoadMode = LoadMode.NONE,
+    @ColumnInfo(defaultValue = "{}") val skillRequires: Map<Pattern, Int> = emptyMap(),
+    @ColumnInfo(defaultValue = "[]") val contraFlags: Set<InjuryFlag> = emptySet(),
+    @ColumnInfo(defaultValue = "") val cueSetup: String = "",
+    @ColumnInfo(defaultValue = "") val cueExec: String = "",
+    @ColumnInfo(defaultValue = "") val cueFix: String = "",
+    val aliasOf: String? = null,          // set ⇒ points at the canonical id
+    @ColumnInfo(defaultValue = "seed") val packId: String = "seed",
 )
 
 @Entity(tableName = "workout_sessions")
@@ -212,4 +230,44 @@ class TrainingConverters {
     @TypeConverter fun toSetType(v: String): SetType = SetType.valueOf(v)
     @TypeConverter fun fromPrType(v: PrType): String = v.name
     @TypeConverter fun toPrType(v: String): PrType = PrType.valueOf(v)
+
+    // ── ExerciseDB v2 (same JSON-string pattern as fromMuscleList) ──────────
+    @TypeConverter fun fromMovementPattern(v: MovementPattern): String = v.name
+    @TypeConverter fun toMovementPattern(v: String): MovementPattern =
+        runCatching { MovementPattern.valueOf(v) }.getOrDefault(MovementPattern.ISOLATION)
+    @TypeConverter fun fromLaterality(v: Laterality): String = v.name
+    @TypeConverter fun toLaterality(v: String): Laterality =
+        runCatching { Laterality.valueOf(v) }.getOrDefault(Laterality.BILATERAL)
+    @TypeConverter fun fromRom(v: RomEmphasis): String = v.name
+    @TypeConverter fun toRom(v: String): RomEmphasis =
+        runCatching { RomEmphasis.valueOf(v) }.getOrDefault(RomEmphasis.FULL)
+    @TypeConverter fun fromMechanics(v: Mechanics): String = v.name
+    @TypeConverter fun toMechanics(v: String): Mechanics =
+        runCatching { Mechanics.valueOf(v) }.getOrDefault(Mechanics.COMPOUND)
+    @TypeConverter fun fromLoadMode(v: LoadMode): String = v.name
+    @TypeConverter fun toLoadMode(v: String): LoadMode =
+        runCatching { LoadMode.valueOf(v) }.getOrDefault(LoadMode.NONE)
+    @TypeConverter fun fromEdgeType(v: EdgeType): String = v.name
+    @TypeConverter fun toEdgeType(v: String): EdgeType =
+        runCatching { EdgeType.valueOf(v) }.getOrDefault(EdgeType.LATERAL)
+    @TypeConverter fun fromShares(v: Map<Muscle, Float>): String =
+        json.encodeToString(v.entries.associate { it.key.name to it.value })
+    @TypeConverter fun toShares(v: String): Map<Muscle, Float> = runCatching {
+        json.decodeFromString<Map<String, Float>>(v).entries.associate { Muscle.valueOf(it.key) to it.value }
+    }.getOrDefault(emptyMap())
+    @TypeConverter fun fromEquipmentSet(v: Set<Equipment>): String =
+        json.encodeToString(v.map { it.name })
+    @TypeConverter fun toEquipmentSet(v: String): Set<Equipment> = runCatching {
+        json.decodeFromString<List<String>>(v).map { Equipment.valueOf(it) }.toSet()
+    }.getOrDefault(setOf(Equipment.BODYWEIGHT))
+    @TypeConverter fun fromInjurySet(v: Set<InjuryFlag>): String =
+        json.encodeToString(v.map { it.name })
+    @TypeConverter fun toInjurySet(v: String): Set<InjuryFlag> = runCatching {
+        json.decodeFromString<List<String>>(v).map { InjuryFlag.valueOf(it) }.toSet()
+    }.getOrDefault(emptySet())
+    @TypeConverter fun fromSkillReq(v: Map<Pattern, Int>): String =
+        json.encodeToString(v.entries.associate { it.key.name to it.value })
+    @TypeConverter fun toSkillReq(v: String): Map<Pattern, Int> = runCatching {
+        json.decodeFromString<Map<String, Int>>(v).entries.associate { Pattern.valueOf(it.key) to it.value }
+    }.getOrDefault(emptyMap())
 }

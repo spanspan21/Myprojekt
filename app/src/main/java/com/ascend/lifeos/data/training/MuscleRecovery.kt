@@ -65,15 +65,22 @@ object MuscleRecovery {
         // Muskeln je Übung: die DB ist die Wahrheit (deckt Custom-Übungen und
         // Alt-IDs früherer Seeds), der Seed füllt auf, der NAME fängt den Rest —
         // vorher fiel jeder Satz einer unbekannten ID still aus der Heatmap.
-        val muscleOf = HashMap<String, Pair<Muscle, List<Muscle>>>()
-        val byName = HashMap<String, Pair<Muscle, List<Muscle>>>()
+        // v2: gewichtete muscleShares (argmax-normalisiert — Primärmuskel bleibt
+        // exakt 1.0 Unit, Bestandsschutz) statt uniform 0.4; leere Shares =
+        // exakt der alte 1.0/0.4-Pfad. Alias-IDs lösen auf ihre kanonische
+        // Übung auf (eine Wahrheit pro Übung, U02 §2.6).
+        val muscleOf = HashMap<String, Map<Muscle, Double>>()
+        val byName = HashMap<String, Map<Muscle, Double>>()
+        val aliasOf = HashMap<String, String>()
         ExerciseSeed.ALL_EXERCISES.forEach {
-            muscleOf[it.id] = it.primaryMuscle to it.secondaryMuscles
-            byName[it.name.trim().lowercase()] = it.primaryMuscle to it.secondaryMuscles
+            muscleOf[it.id] = setUnits(it)
+            byName[it.name.trim().lowercase()] = setUnits(it)
+            it.aliasOf?.let { canon -> aliasOf[it.id] = canon }
         }
         runCatching { dao.allExercisesOnce() }.getOrDefault(emptyList()).forEach {
-            muscleOf[it.id] = it.primaryMuscle to it.secondaryMuscles
-            byName[it.name.trim().lowercase()] = it.primaryMuscle to it.secondaryMuscles
+            muscleOf[it.id] = setUnits(it)
+            byName[it.name.trim().lowercase()] = setUnits(it)
+            it.aliasOf?.let { canon -> aliasOf[it.id] = canon }
         }
 
         val fatigue = HashMap<Muscle, Double>()
@@ -87,15 +94,14 @@ object MuscleRecovery {
         for (s in sets) {
             if (s.setType == SetType.WARMUP) continue
             val ageH = ((now - s.loggedAt).coerceAtLeast(0L)) / 3600_000.0
-            val pm = muscleOf[s.exerciseId] ?: byName[s.exerciseName.trim().lowercase()]
-            if (pm == null) { skipped++; continue }
-            val (prim, secs) = pm
+            val id = aliasOf[s.exerciseId] ?: s.exerciseId
+            val units = muscleOf[id] ?: byName[s.exerciseName.trim().lowercase()]
+            if (units == null) { skipped++; continue }
             resolved++
             // working set (RPE 8) = 1.0 unit; centred on 8, not 7, so a normal
             // hard set costs one unit rather than 1.15
             val intensity = (1.0 + ((s.rpe ?: 8) - 8) * 0.15).coerceIn(0.55, 1.30)
-            add(prim, intensity, ageH)
-            secs.forEach { add(it, intensity * 0.4, ageH) }
+            units.forEach { (m, f) -> add(m, intensity * f, ageH) }
         }
 
         // Rettungsnetz: Sessions, deren Einzel-Sets fehlen (Alt-Datenverlust durch
@@ -180,6 +186,24 @@ object MuscleRecovery {
                 (1.0 - ((fatigue[m] ?: 0.0) / CAPACITY).coerceIn(0.0, 1.0)).toFloat()
             }
         return Freshness(map)
+    }
+
+    /**
+     * Per-set fatigue factors for one exercise (pure, unit-tested): v2 shares
+     * argmax-normalised — the primary muscle stays EXACTLY 1.0 unit (the
+     * compat pin that keeps Max' freshness numbers stable), secondaries scale
+     * proportionally 0.1–0.9 instead of uniform 0.4. Empty shares = the exact
+     * legacy 1.0/0.4 path.
+     */
+    fun setUnits(e: ExerciseEntity): Map<Muscle, Double> {
+        if (e.muscleShares.isNotEmpty()) {
+            val top = e.muscleShares.values.max().toDouble()
+            if (top > 0.0) return e.muscleShares.entries.associate { it.key to it.value.toDouble() / top }
+        }
+        return buildMap {
+            put(e.primaryMuscle, 1.0)
+            e.secondaryMuscles.forEach { put(it, 0.4) }
+        }
     }
 
     /** Template-Name → (primäre, sekundäre) Muskeln — nur fürs Session-Rettungsnetz. */
