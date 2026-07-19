@@ -137,8 +137,12 @@ object GymEngine : PlanEngine {
                 )
             }
         }
-        // fit the session length: drop trailing accessories, never mains
-        val exercises: List<PlannedExercise> = StrengthMath.lengthFit(out, inp.sessionLenMin)
+        // fit the session length: Fitting v2 ladder (rest trim → −1 set
+        // round-robin → drop as LAST resort; mains never die). Within budget
+        // the plan is untouched — identical to v1 (compat pin).
+        val fitted = FitLadder.fit(out, inp.sessionLenMin)
+        val exercises: List<PlannedExercise> = fitted.exercises
+        val fitNote = FitLadder.summary(fitted.steps)
         val blocks = BlockType.entries.mapNotNull { t ->
             val mins = exercises.filter { it.section == t }.sumOf { StrengthMath.exMinutes(it) }
             if (mins < 0.5) null else PlannedBlock(t, mins.roundToInt().coerceAtLeast(1))
@@ -150,7 +154,7 @@ object GymEngine : PlanEngine {
             exercises = exercises,
             estMin = blocks.sumOf { it.minutes },
             blocks = blocks,
-            why = why,
+            why = if (fitNote != null) "$why · $fitNote" else why,
             discipline = Disciplines.GYM,
         )
     }

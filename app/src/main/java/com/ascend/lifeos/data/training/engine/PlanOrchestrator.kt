@@ -117,10 +117,15 @@ object PlanOrchestrator {
         bodyweightKg: Int,
         daysSinceLastSession: Int = 0,
         taperScale: Double = 1.0,
+        disciplineWeights: Map<String, Int> = emptyMap(),
         calisthenics: (Int) -> WeekPlan,
     ): WeekPlan {
         val discs = disciplines.ifEmpty { listOf(Disciplines.CALISTHENICS) }
-        val split = Disciplines.splitFrequency(freq, discs)
+        // weighted, HONEST split (U08 §8.2): sum == freq always; benched
+        // disciplines rotate in by ISO week. Equal weights + freq ≥ n keeps
+        // the legacy result exactly.
+        val rotation = com.ascend.lifeos.core.isoWeek().takeLast(2).toIntOrNull() ?: 0
+        val split = Disciplines.splitFrequencyWeighted(freq, discs, disciplineWeights, rotation)
 
         // Endurance/gym context, read once
         val acts = runCatching { ActivityStore.all(ctx) }.getOrDefault(emptyList())

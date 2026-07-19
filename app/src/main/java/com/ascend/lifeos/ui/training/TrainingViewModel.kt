@@ -377,6 +377,14 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 // exam taper reaches EVERY discipline now, not just calisthenics
                 // (U06 §6.4 consistency repair — same planned ×0.70 reduction)
                 taperScale = if (examSoon) 0.70 else 1.0,
+                // priority weights 1..5 per discipline ("calisthenics:5|yoga:2");
+                // absent = 3 = equal split (U08 §8.2)
+                disciplineWeights = Prefs.string(getApplication(), "disc_weights", "")
+                    .split("|").mapNotNull { pair ->
+                        val p = pair.split(":")
+                        val v = p.getOrNull(1)?.toIntOrNull()
+                        if (p.size == 2 && v != null) p[0] to v else null
+                    }.toMap(),
                 calisthenics = ::calisthenicsWeek,
             )
         }

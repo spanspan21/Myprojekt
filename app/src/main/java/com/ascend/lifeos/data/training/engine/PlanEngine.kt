@@ -143,6 +143,10 @@ object Disciplines {
      * Split the weekly frequency across enabled disciplines: everyone gets at
      * least one session, remainder goes front-to-back in the user's order.
      * freq 3 × [calisthenics, running] → [2, 1]; freq 5 → [3, 2].
+     *
+     * NOTE (U08 §8.2): this legacy split silently LIFTS freq to the discipline
+     * count. [splitFrequencyWeighted] is the honest successor — kept for the
+     * call sites that still pin the old behaviour.
      */
     fun splitFrequency(freq: Int, disciplines: List<String>): Map<String, Int> {
         if (disciplines.isEmpty()) return emptyMap()
@@ -151,5 +155,40 @@ object Disciplines {
         val base = f / n
         val extra = f % n
         return disciplines.mapIndexed { i, d -> d to (base + if (i < extra) 1 else 0) }.toMap()
+    }
+
+    /**
+     * Weighted split (U08 §8.2): largest-remainder (Hare-Niemeyer) over
+     * priority weights 1–5 (absent = 3 = today's equal split). HONEST: the
+     * sum always equals [freq] — no silent lifting; when freq < n the benched
+     * disciplines rotate in over the following weeks via [rotationOffset]
+     * (ISO week — deterministic, reproducible, no RNG state). Equal weights
+     * with freq ≥ n reproduce the legacy result exactly (compat pin).
+     */
+    fun splitFrequencyWeighted(
+        freq: Int,
+        disciplines: List<String>,
+        weights: Map<String, Int> = emptyMap(),
+        rotationOffset: Int = 0,
+    ): Map<String, Int> {
+        if (disciplines.isEmpty()) return emptyMap()
+        val f = freq.coerceAtLeast(1)
+        val w = disciplines.map { (weights[it] ?: 3).coerceIn(1, 5) }
+        val totalW = w.sum().toDouble()
+        val quota = disciplines.indices.map { f * w[it] / totalW }
+        val floor = quota.map { it.toInt() }.toIntArray()
+        val rest = f - floor.sum()
+        quota.indices.sortedWith(
+            compareByDescending<Int> { quota[it] - floor[it] }.thenBy { it }, // tie → user order
+        ).take(rest).forEach { floor[it]++ }
+        // rotation fairness: benched disciplines take turns claiming a slot
+        // from the strongest 2+-session discipline (only when freq < n)
+        val benched = disciplines.indices.filter { floor[it] == 0 }
+        if (benched.isNotEmpty() && f < disciplines.size) {
+            val turn = benched[rotationOffset.mod(benched.size)]
+            val donor = disciplines.indices.filter { floor[it] >= 2 }.maxByOrNull { floor[it] }
+            if (donor != null) { floor[donor]--; floor[turn]++ }
+        }
+        return disciplines.mapIndexed { i, d -> d to floor[i] }.toMap()
     }
 }

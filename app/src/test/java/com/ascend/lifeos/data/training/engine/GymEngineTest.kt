@@ -219,9 +219,18 @@ class GymEngineTest {
         assertEquals(day.estMin, day.blocks.sumOf { it.minutes })
         assertTrue(day.blocks.any { it.type == BlockType.STRENGTH })
         assertTrue(day.why.contains("Ratamess 2009"))
-        // short sessions trim accessories, never mains
+        // Fitting v2 (U08): short sessions COMPRESS before anything dies —
+        // sets shrink round-robin, exercises survive, mains are untouchable
         val short = GymEngine.week(inputs(len = 40, level = 2, sessions = 2))[0]
+        val long = GymEngine.week(inputs(len = 120, level = 2, sessions = 2))[0]
         assertTrue(short.exercises.count { it.section == BlockType.STRENGTH } == 3)
-        assertTrue(short.exercises.size < GymEngine.week(inputs(len = 120, level = 2, sessions = 2))[0].exercises.size)
+        // the ladder stops at the earliest sufficient stage: rest-trim may
+        // already fit the budget (sets survive with shorter rests)
+        val shortSets = short.exercises.sumOf { it.sets }
+        val longSets = long.exercises.sumOf { it.sets }
+        val restsTrimmed = short.exercises.any { it.restSec == 150 || it.restSec == 75 }
+        assertTrue("compression must show: fewer sets OR trimmed rests", shortSets < longSets || restsTrimmed)
+        assertTrue("short honours its budget (est ${short.estMin})", short.estMin <= 44)
+        assertTrue("fit note explains the compression", short.why.contains("fitted:"))
     }
 }
