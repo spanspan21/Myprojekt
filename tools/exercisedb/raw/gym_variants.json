@@ -1,0 +1,3610 @@
+[
+  {
+    "id": "gym_goblet_squat",
+    "name": "DB Goblet Squat",
+    "aliases": [
+      "Dumbbell Goblet Squat"
+    ],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "ABS": 0.1,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Hold one dumbbell at the chest, elbows tucked.",
+      "exec": "Sit between the hips, elbows inside the knees, full depth.",
+      "fix": "Heels lifting? Widen the stance and slow the descent."
+    },
+    "edges": [
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "ohne Last"
+      },
+      {
+        "to": "gym_box_squat_high",
+        "type": "EASIER",
+        "note": "Box begrenzt Tiefe und gibt Zielhoehe"
+      },
+      {
+        "to": "gym_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Langhantel-Vollversion"
+      },
+      {
+        "to": "gym_front_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "frontgelastete Langhantel-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_box_squat_high",
+    "name": "High Box Squat",
+    "aliases": [
+      "Box Squat (high box)"
+    ],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.1,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "BOX"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "PARTIAL_TOP",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Box behind you at knee height, feet shoulder-width.",
+      "exec": "Sit back until you touch, stand up without rocking.",
+      "fix": "Plopping down? Control the last third of the descent."
+    }
+  },
+  {
+    "id": "gym_smith_squat",
+    "name": "Smith Machine Squat",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.1,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "SMITH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Bar on the upper back, feet slightly in front of the bar path.",
+      "exec": "Unhook, sit straight down along the rail, drive back up.",
+      "fix": "Knees caving? Screw the feet into the floor and push them out."
+    },
+    "edges": [
+      {
+        "to": "gym_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Stange statt freier Langhantel"
+      },
+      {
+        "to": "gym_goblet_squat",
+        "type": "EASIER",
+        "note": "leichtere Last, freies Muster"
+      }
+    ]
+  },
+  {
+    "id": "gym_hack_squat",
+    "name": "Hack Squat",
+    "aliases": [
+      "Machine Hack Squat"
+    ],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.6,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Back flat on the pad, feet mid-platform, shoulders under the pads.",
+      "exec": "Lower deep with knees tracking the toes, press without locking hard.",
+      "fix": "Hips lifting off the pad? Raise the foot position slightly."
+    },
+    "edges": [
+      {
+        "to": "gym_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Maschine statt freier Hantel"
+      },
+      {
+        "to": "gym_leg_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "stehendes Pendant zur Beinpresse"
+      }
+    ]
+  },
+  {
+    "id": "gym_box_squat",
+    "name": "Barbell Box Squat",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.4,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.15,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "BARBELL",
+      "BOX"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Bar on the back, box at parallel height behind you.",
+      "exec": "Sit back to a soft touch, stay tight, drive up through the heels.",
+      "fix": "Rocking off the box? Pause dead still, then stand in one piece."
+    },
+    "edges": [
+      {
+        "to": "gym_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Box-Variante mit definierter Tiefe"
+      },
+      {
+        "to": "gym_goblet_squat",
+        "type": "EASIER",
+        "note": "leichtere frontgelastete Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_front_squat",
+    "name": "DB Front Squat",
+    "aliases": [
+      "Double Dumbbell Front Squat"
+    ],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.55,
+      "GLUTES": 0.25,
+      "ABS": 0.1,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "One dumbbell on each shoulder, elbows high, torso tall.",
+      "exec": "Squat to full depth keeping the chest up and elbows lifted.",
+      "fix": "Falling forward? Lighter dumbbells, drive the elbows up."
+    },
+    "edges": [
+      {
+        "to": "gym_front_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt Langhantel im Frontrack"
+      },
+      {
+        "to": "gym_goblet_squat",
+        "type": "EASIER",
+        "note": "eine Hantel, einfacheres Rack"
+      }
+    ]
+  },
+  {
+    "id": "gym_rack_pull",
+    "name": "Rack Pull",
+    "aliases": [
+      "Block Pull"
+    ],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.35,
+      "LOWER_BACK": 0.25,
+      "HAMSTRINGS": 0.2,
+      "TRAPS": 0.1,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "PARTIAL_TOP",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Bar in the rack at knee height, hands just outside the legs.",
+      "exec": "Hinge, brace, drive the hips through to a tall lockout.",
+      "fix": "Yanking with the arms? Push the floor away, arms stay ropes."
+    },
+    "edges": [
+      {
+        "to": "gym_deadlift",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "verkuerzter Weg aus dem Rack"
+      },
+      {
+        "to": "gym_cable_pull_through",
+        "type": "EASIER",
+        "note": "Hinge-Muster ohne Achslast"
+      }
+    ]
+  },
+  {
+    "id": "gym_trap_bar_deadlift",
+    "name": "Trap Bar Deadlift",
+    "aliases": [
+      "Hex Bar Deadlift"
+    ],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.35,
+      "QUADS": 0.25,
+      "HAMSTRINGS": 0.2,
+      "LOWER_BACK": 0.1,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "TRAP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Stand centered in the bar, neutral grip on the handles.",
+      "exec": "Push the floor away, hips and chest rise together, stand tall.",
+      "fix": "Back rounding? Drop the hips and re-set the lats first."
+    },
+    "edges": [
+      {
+        "to": "gym_deadlift",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "neutrale Griffe, Last in der Koerperachse"
+      },
+      {
+        "to": "gym_rack_pull",
+        "type": "EASIER",
+        "note": "kuerzerer Weg, weniger Startposition"
+      }
+    ]
+  },
+  {
+    "id": "gym_sumo_deadlift",
+    "name": "Sumo Deadlift",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.4,
+      "QUADS": 0.2,
+      "HAMSTRINGS": 0.2,
+      "LOWER_BACK": 0.1,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK",
+      "GROIN"
+    ],
+    "cues": {
+      "setup": "Wide stance, toes out, shins vertical, hands inside the knees.",
+      "exec": "Wedge the hips down, spread the floor, drive to lockout.",
+      "fix": "Knees caving? Push them out over the toes off the floor."
+    },
+    "edges": [
+      {
+        "to": "gym_deadlift",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "breiter Stand, aufrechterer Ruecken"
+      },
+      {
+        "to": "gym_rack_pull",
+        "type": "EASIER",
+        "note": "reduzierter Bewegungsweg"
+      }
+    ]
+  },
+  {
+    "id": "gym_cable_pull_through",
+    "name": "Cable Pull-Through",
+    "aliases": [
+      "Glute Pull-Through"
+    ],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.5,
+      "HAMSTRINGS": 0.3,
+      "LOWER_BACK": 0.2
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Face away, rope between the legs, step out until taut.",
+      "exec": "Hinge back letting the rope pull, snap the hips to stand tall.",
+      "fix": "Squatting it? Soft knees only, hips travel back not down."
+    },
+    "edges": [
+      {
+        "to": "gym_hip_thrust",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "stehendes Kabel-Pendant zur Hueftstreckung"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_rdl",
+    "name": "DB Romanian Deadlift",
+    "aliases": [
+      "Dumbbell RDL"
+    ],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "HAMSTRINGS": 0.45,
+      "GLUTES": 0.35,
+      "LOWER_BACK": 0.2
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK",
+      "HAMSTRING"
+    ],
+    "cues": {
+      "setup": "Dumbbells in front of the thighs, soft knees, chest proud.",
+      "exec": "Hinge until the hamstrings load, then stand by squeezing glutes.",
+      "fix": "Back rounding at depth? Shorten the range, re-set the brace."
+    },
+    "edges": [
+      {
+        "to": "gym_rdl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt Langhantel"
+      },
+      {
+        "to": "gym_cable_pull_through",
+        "type": "EASIER",
+        "note": "Kabel fuehrt das Hinge-Muster"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_leg_rdl",
+    "name": "Single-Leg Romanian Deadlift",
+    "aliases": [
+      "Single-Leg DB RDL"
+    ],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "HAMSTRINGS": 0.45,
+      "GLUTES": 0.3,
+      "LOWER_BACK": 0.15,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "HAMSTRING",
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Dumbbell opposite the standing leg, soft knee, square hips.",
+      "exec": "Hinge as the rear leg lifts, torso and leg move as one lever.",
+      "fix": "Hips opening? Point the rear toes down and slow the rep."
+    },
+    "edges": [
+      {
+        "to": "gym_rdl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einbeinige Kurzhantel-Version"
+      },
+      {
+        "to": "gym_db_rdl",
+        "type": "EASIER",
+        "note": "beidbeinig, ohne Balanceanteil"
+      }
+    ]
+  },
+  {
+    "id": "gym_good_morning",
+    "name": "Good Morning",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "HAMSTRINGS": 0.4,
+      "GLUTES": 0.3,
+      "LOWER_BACK": 0.3
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK",
+      "HAMSTRING"
+    ],
+    "cues": {
+      "setup": "Light bar on the back, feet hip-width, soft knees.",
+      "exec": "Hinge until the torso nears parallel, stand with tight glutes.",
+      "fix": "Losing the arch? Reduce depth, brace before every rep."
+    },
+    "edges": [
+      {
+        "to": "gym_rdl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Stange auf dem Ruecken statt in den Haenden"
+      },
+      {
+        "to": "gym_back_extension",
+        "type": "EASIER",
+        "note": "gestuetztes Hinge auf der Bank"
+      }
+    ]
+  },
+  {
+    "id": "gym_glute_bridge_bb",
+    "name": "Barbell Glute Bridge",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.55,
+      "HAMSTRINGS": 0.25,
+      "QUADS": 0.1,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BARBELL",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "On the floor, padded bar over the hips, heels close.",
+      "exec": "Drive the hips up to a straight line, squeeze one second.",
+      "fix": "Arching the back? Tuck the ribs, finish with the glutes."
+    },
+    "edges": [
+      {
+        "to": "gym_hip_thrust",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Boden statt Bank, kuerzerer Weg"
+      },
+      {
+        "to": "gym_glute_bridge",
+        "type": "EASIER",
+        "note": "gleiches Muster ohne Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_glute_bridge",
+    "name": "Glute Bridge",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.6,
+      "HAMSTRINGS": 0.25,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Lie down, knees bent, heels under the knees, arms flat.",
+      "exec": "Push through the heels, lift the hips, squeeze at the top.",
+      "fix": "Hamstrings cramping? Move the heels an inch closer."
+    },
+    "edges": [
+      {
+        "to": "gym_hip_thrust",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Bodenversion des Hip Thrust"
+      }
+    ]
+  },
+  {
+    "id": "gym_smith_hip_thrust",
+    "name": "Smith Machine Hip Thrust",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.55,
+      "HAMSTRINGS": 0.25,
+      "QUADS": 0.2
+    },
+    "equipment": [
+      "SMITH",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Upper back on the bench, padded smith bar over the hips.",
+      "exec": "Unhook, drive hips to full extension, chin tucked.",
+      "fix": "Overarching at the top? Stop at a straight hip line."
+    },
+    "edges": [
+      {
+        "to": "gym_hip_thrust",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Stange, leichteres Setup"
+      }
+    ]
+  },
+  {
+    "id": "gym_walking_lunge",
+    "name": "DB Walking Lunge",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Dumbbells at the sides, tall posture, eyes forward.",
+      "exec": "Step long, rear knee kisses the floor, drive through the front heel.",
+      "fix": "Wobbling sideways? Shorten the step and slow the tempo."
+    },
+    "edges": [
+      {
+        "to": "gym_db_lunge",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gehend statt am Platz"
+      },
+      {
+        "to": "gym_split_squat",
+        "type": "EASIER",
+        "note": "statisch, ohne Schrittwechsel"
+      }
+    ]
+  },
+  {
+    "id": "gym_split_squat",
+    "name": "DB Split Squat",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.1,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Staggered stance, dumbbells at the sides, hips square.",
+      "exec": "Lower straight down until the rear knee hovers, drive up.",
+      "fix": "Front heel lifting? Lengthen the stance one shoe."
+    },
+    "edges": [
+      {
+        "to": "gym_bulgarian",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Fuss am Boden statt erhoeht"
+      },
+      {
+        "to": "gym_split_squat_bw",
+        "type": "EASIER",
+        "note": "gleiches Muster ohne Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_split_squat_bw",
+    "name": "Bodyweight Split Squat",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Staggered stance, hands on hips or out for balance.",
+      "exec": "Drop the rear knee toward the floor, torso tall, push back up.",
+      "fix": "Knee diving inward? Track it over the middle toes."
+    }
+  },
+  {
+    "id": "gym_reverse_lunge",
+    "name": "DB Reverse Lunge",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Dumbbells at the sides, feet hip-width, chest tall.",
+      "exec": "Step back, lower the rear knee, push through the front foot.",
+      "fix": "Knee pain stepping forward? This version keeps the shin vertical."
+    },
+    "edges": [
+      {
+        "to": "gym_db_lunge",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Schritt nach hinten, kniefreundlicher"
+      },
+      {
+        "to": "gym_split_squat",
+        "type": "EASIER",
+        "note": "statische Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_step_up",
+    "name": "DB Step-Up",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.15
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BOX"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Box at knee height, whole foot on top, dumbbells at the sides.",
+      "exec": "Drive through the top heel to stand, lower with control.",
+      "fix": "Pushing off the floor leg? Keep its toes light, top leg works."
+    },
+    "edges": [
+      {
+        "to": "gym_db_lunge",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Box-Variante des Ausfallschritt-Musters"
+      },
+      {
+        "to": "gym_split_squat_bw",
+        "type": "EASIER",
+        "note": "statisches Muster ohne Last und Box"
+      }
+    ]
+  },
+  {
+    "id": "gym_bulgarian_smith",
+    "name": "Smith Machine Bulgarian Split Squat",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.1,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "SMITH",
+      "BENCH"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Rear foot on the bench, bar on the back, front foot forward.",
+      "exec": "Lower along the rail to 90 degrees, drive up evenly.",
+      "fix": "Sliding forward? Re-set the front foot further out."
+    },
+    "edges": [
+      {
+        "to": "gym_bulgarian",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Stange statt Kurzhanteln"
+      },
+      {
+        "to": "gym_split_squat",
+        "type": "EASIER",
+        "note": "Fuss am Boden, freie Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_leg_press",
+    "name": "Single-Leg Press",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.6,
+      "GLUTES": 0.25,
+      "HAMSTRINGS": 0.15
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "One foot mid-platform, hips square against the pad.",
+      "exec": "Lower deep, knee tracks the toes, press without locking out.",
+      "fix": "Hip twisting? Reduce the weight and slow the negative."
+    },
+    "edges": [
+      {
+        "to": "gym_leg_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einbeinige Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_seated_leg_curl",
+    "name": "Seated Leg Curl",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "HAMSTRINGS": 0.8,
+      "CALVES": 0.2
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Thigh pad locked down, knee joint aligned with the pivot.",
+      "exec": "Curl the pad under the seat, pause, return slowly.",
+      "fix": "Hips lifting? Pull the lap pad tighter before the set."
+    },
+    "edges": [
+      {
+        "to": "gym_leg_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "sitzend, Hueftwinkel dehnt die Hamstrings"
+      }
+    ]
+  },
+  {
+    "id": "gym_sliding_leg_curl",
+    "name": "Sliding Leg Curl",
+    "aliases": [
+      "Slider Leg Curl"
+    ],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "HAMSTRINGS": 0.7,
+      "GLUTES": 0.3
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "HAMSTRING"
+    ],
+    "cues": {
+      "setup": "On your back, heels on sliders or a towel, hips bridged.",
+      "exec": "Slide the heels out long, pull them back keeping hips high.",
+      "fix": "Hips dropping? Shorten the slide until you own the bridge."
+    },
+    "edges": [
+      {
+        "to": "gym_band_leg_curl",
+        "type": "EASIER",
+        "note": "Band-Curl ohne Bruecken-Haltearbeit"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_leg_curl",
+    "name": "Band Leg Curl",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "HAMSTRINGS": 0.85,
+      "CALVES": 0.15
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Lie prone, band anchored low behind you, loop around the ankles.",
+      "exec": "Curl the heels to the glutes, resist the band on the way back.",
+      "fix": "Hips popping up? Squeeze the glutes and press them down."
+    },
+    "edges": [
+      {
+        "to": "gym_leg_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_leg_ext",
+    "name": "Single-Leg Extension",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "QUADS": 0.9,
+      "HIP_FLEXORS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "One shin behind the pad, knee aligned with the machine pivot.",
+      "exec": "Extend to a full squeeze, lower over two seconds.",
+      "fix": "Strong leg taking over across sets? Start with the weaker leg."
+    },
+    "edges": [
+      {
+        "to": "gym_leg_ext",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einbeinige Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_leg_ext",
+    "name": "Band Leg Extension",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "QUADS": 0.9,
+      "HIP_FLEXORS": 0.1
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Seated, band anchored behind, loop around one ankle.",
+      "exec": "Straighten the knee against the band, pause, return slow.",
+      "fix": "Band slipping? Anchor lower and shorten the loop."
+    },
+    "edges": [
+      {
+        "to": "gym_leg_ext",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_seated_calf_raise",
+    "name": "Seated Calf Raise",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CALVES": 0.9,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Balls of the feet on the ledge, pads snug on the knees.",
+      "exec": "Deep stretch at the bottom, pause, press to full tiptoe.",
+      "fix": "Bouncing? Two-second pause in the stretch kills momentum."
+    },
+    "edges": [
+      {
+        "to": "gym_calf_raise",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "sitzend, Soleus-Betonung"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_leg_calf_raise",
+    "name": "Single-Leg Calf Raise",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CALVES": 0.9,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "One foot on a step edge, fingertips on the wall for balance.",
+      "exec": "Lower to a full stretch, rise all the way onto the big toe.",
+      "fix": "Rolling to the outside? Finish over the big toe every rep."
+    },
+    "edges": [
+      {
+        "to": "gym_calf_raise",
+        "type": "EASIER",
+        "note": "beidbeinige Grundversion"
+      }
+    ]
+  },
+  {
+    "id": "gym_smith_calf_raise",
+    "name": "Smith Machine Calf Raise",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CALVES": 0.9,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "SMITH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bar on the upper back, balls of the feet on a plate or block.",
+      "exec": "Full stretch down, powerful rise, one-second squeeze on top.",
+      "fix": "Knees bending? Keep them long so the calves do the work."
+    },
+    "edges": [
+      {
+        "to": "gym_calf_raise",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Stange, stabile Lastfuehrung"
+      }
+    ]
+  },
+  {
+    "id": "gym_hip_abduction",
+    "name": "Hip Abduction Machine",
+    "aliases": [],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "GLUTES": 0.85,
+      "HIP_FLEXORS": 0.15
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "HIP"
+    ],
+    "cues": {
+      "setup": "Sit tall, knees against the pads, feet on the rests.",
+      "exec": "Press the knees apart, hold the widest point briefly.",
+      "fix": "Leaning back to cheat? Chest stays over the hips."
+    },
+    "edges": [
+      {
+        "to": "gym_band_lateral_walk",
+        "type": "EASIER",
+        "note": "Band-Variante ohne Geraet"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_lateral_walk",
+    "name": "Band Lateral Walk",
+    "aliases": [
+      "Monster Walk"
+    ],
+    "category": "LEGS",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "GLUTES": 0.8,
+      "QUADS": 0.2
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Mini band above the knees, quarter-squat stance.",
+      "exec": "Step sideways keeping tension, feet never touch together.",
+      "fix": "Standing tall between steps? Stay low the whole set."
+    },
+    "edges": [
+      {
+        "to": "gym_hip_abduction",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_bench",
+    "name": "DB Bench Press",
+    "aliases": [
+      "Dumbbell Bench Press"
+    ],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "SHOULDERS": 0.3,
+      "TRICEPS": 0.25
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Dumbbells over the chest, feet planted, blades pinned.",
+      "exec": "Lower to the outer chest, press up and slightly together.",
+      "fix": "Wrists wobbling at the bottom? Reduce the load one step."
+    },
+    "edges": [
+      {
+        "to": "gym_bench",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt Langhantel, mehr Stabilisierung"
+      }
+    ]
+  },
+  {
+    "id": "gym_machine_chest_press",
+    "name": "Machine Chest Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.5,
+      "SHOULDERS": 0.25,
+      "TRICEPS": 0.25
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Seat so the handles sit at mid-chest, blades back.",
+      "exec": "Press to a soft lockout, return until the chest stretches.",
+      "fix": "Shoulders rolling forward? Pin the blades before each press."
+    },
+    "edges": [
+      {
+        "to": "gym_bench",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Maschine statt freier Langhantel"
+      },
+      {
+        "to": "gym_band_chest_press",
+        "type": "EASIER",
+        "note": "Band-Version, frei skalierbar"
+      }
+    ]
+  },
+  {
+    "id": "gym_smith_bench",
+    "name": "Smith Machine Bench Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "SHOULDERS": 0.3,
+      "TRICEPS": 0.25
+    },
+    "equipment": [
+      "SMITH",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Bench under the rail so the bar meets mid-chest.",
+      "exec": "Unhook, lower to a light touch, press along the rail.",
+      "fix": "Bar path feels off? Shift the bench, not your arch."
+    },
+    "edges": [
+      {
+        "to": "gym_bench",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Stange statt freier Hantel"
+      },
+      {
+        "to": "gym_machine_chest_press",
+        "type": "EASIER",
+        "note": "Maschine mit Sitz statt Bank-Setup"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_floor_press",
+    "name": "DB Floor Press",
+    "aliases": [
+      "Dumbbell Floor Press"
+    ],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "TRICEPS": 0.35,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "PARTIAL_TOP",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "On the floor, knees bent, dumbbells over the chest.",
+      "exec": "Lower until the upper arms rest, pause, press back up.",
+      "fix": "Bouncing the elbows? Dead-stop each rep on the floor."
+    },
+    "edges": [
+      {
+        "to": "gym_db_bench",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Boden begrenzt ROM, schulterfreundlich"
+      },
+      {
+        "to": "gym_machine_chest_press",
+        "type": "EASIER",
+        "note": "gefuehrtes Pressen mit weniger Stabilisierung"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_floor_press",
+    "name": "Band Floor Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "TRICEPS": 0.35,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "RESISTANCE_BAND",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "PARTIAL_TOP",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band under the upper back, one end in each hand, knees bent.",
+      "exec": "Press to lockout against rising band tension, lower slow.",
+      "fix": "Band rolling? Re-seat it across the shoulder blades."
+    },
+    "edges": [
+      {
+        "to": "gym_db_floor_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_chest_press",
+    "name": "Band Chest Press",
+    "aliases": [
+      "Standing Band Chest Press"
+    ],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.5,
+      "SHOULDERS": 0.25,
+      "TRICEPS": 0.25
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band anchored at chest height behind you, staggered stance.",
+      "exec": "Press both handles forward to full reach, control the return.",
+      "fix": "Torso twisting? Brace the core, press strictly forward."
+    }
+  },
+  {
+    "id": "gym_incline_bench",
+    "name": "Incline Bench Press",
+    "aliases": [
+      "Incline Barbell Bench Press"
+    ],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "SHOULDERS": 0.35,
+      "TRICEPS": 0.2
+    },
+    "equipment": [
+      "BARBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Bench at ~30 degrees, grip just outside the shoulders.",
+      "exec": "Bar to the upper chest, press up and slightly back.",
+      "fix": "Butt leaving the bench? Lower the incline or the load."
+    },
+    "edges": [
+      {
+        "to": "gym_incline_db_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Langhantel statt Kurzhanteln"
+      },
+      {
+        "to": "gym_incline_machine_press",
+        "type": "EASIER",
+        "note": "gefuehrte Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_incline_machine_press",
+    "name": "Incline Machine Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "SHOULDERS": 0.35,
+      "TRICEPS": 0.2
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Seat so the handles start at upper-chest height.",
+      "exec": "Press up-and-forward, lower until the chest opens.",
+      "fix": "Elbows flaring wide? Keep them ~45 degrees from the body."
+    },
+    "edges": [
+      {
+        "to": "gym_incline_db_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt Kurzhanteln"
+      },
+      {
+        "to": "gym_band_chest_press",
+        "type": "EASIER",
+        "note": "Band-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_smith_ohp",
+    "name": "Smith Machine Overhead Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.55,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "SMITH",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Seated under the rail, bar at chin height to start.",
+      "exec": "Press straight up to lockout, lower to the chin.",
+      "fix": "Neck craning forward? Pull the chin back, bar passes close."
+    },
+    "edges": [
+      {
+        "to": "gym_ohp",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Stange, sitzend"
+      },
+      {
+        "to": "gym_machine_shoulder_press",
+        "type": "EASIER",
+        "note": "Maschine mit fixer Bahn"
+      }
+    ]
+  },
+  {
+    "id": "gym_machine_shoulder_press",
+    "name": "Machine Shoulder Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.55,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Seat so the handles start at ear height, back flat.",
+      "exec": "Press overhead without shrugging, lower with control.",
+      "fix": "Lower back arching? Plant the feet and tuck the ribs."
+    },
+    "edges": [
+      {
+        "to": "gym_ohp",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt freier Langhantel"
+      },
+      {
+        "to": "gym_db_shoulder_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt Kurzhanteln"
+      },
+      {
+        "to": "gym_band_shoulder_press",
+        "type": "EASIER",
+        "note": "Band-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_seated_db_shoulder_press",
+    "name": "Seated DB Shoulder Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.55,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Backrest near vertical, dumbbells at shoulder height.",
+      "exec": "Press up until the arms frame the ears, lower to the jaw.",
+      "fix": "Clanging at the top? Stop just short and keep tension."
+    },
+    "edges": [
+      {
+        "to": "gym_db_shoulder_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "sitzend mit Rueckenlehne"
+      },
+      {
+        "to": "gym_machine_shoulder_press",
+        "type": "EASIER",
+        "note": "gefuehrte Bahn"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_shoulder_press",
+    "name": "Band Overhead Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.6,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.1
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand on the band, handles at the shoulders, palms forward.",
+      "exec": "Press overhead to full lockout, resist on the way down.",
+      "fix": "Leaning back? Squeeze the glutes and ribs down."
+    },
+    "edges": [
+      {
+        "to": "gym_ohp",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Langhantel"
+      }
+    ]
+  },
+  {
+    "id": "gym_landmine_press",
+    "name": "Landmine Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.5,
+      "CHEST": 0.2,
+      "TRICEPS": 0.2,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bar end anchored in a corner, other end at the shoulder.",
+      "exec": "Press up and slightly forward along the bar arc.",
+      "fix": "Overhead hurts? This diagonal path is the friendly middle."
+    },
+    "edges": [
+      {
+        "to": "gym_ohp",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "diagonale Druckbahn, schulterfreundlich"
+      },
+      {
+        "to": "gym_band_shoulder_press",
+        "type": "EASIER",
+        "note": "Band statt Hantelarm"
+      }
+    ]
+  },
+  {
+    "id": "gym_arnold_press",
+    "name": "Arnold Press",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.6,
+      "TRICEPS": 0.25,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Dumbbells at the chin, palms facing you to start.",
+      "exec": "Rotate the palms out as you press to lockout, reverse down.",
+      "fix": "Rushing the twist? Rotate through the middle third only."
+    },
+    "edges": [
+      {
+        "to": "gym_db_shoulder_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "mit Rotation durch den Weg"
+      },
+      {
+        "to": "gym_machine_shoulder_press",
+        "type": "EASIER",
+        "note": "fixe Bahn ohne Rotation"
+      }
+    ]
+  },
+  {
+    "id": "gym_front_raise",
+    "name": "DB Front Raise",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "SHOULDERS": 0.8,
+      "TRAPS": 0.1,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Dumbbells in front of the thighs, slight elbow bend.",
+      "exec": "Raise one arm to eye level, lower slow, alternate.",
+      "fix": "Swinging the torso? Lighter weight, glutes tight."
+    },
+    "edges": [
+      {
+        "to": "gym_lateral_raise",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "frontale statt seitliche Hebeebene"
+      }
+    ]
+  },
+  {
+    "id": "gym_cable_lateral_raise",
+    "name": "Cable Lateral Raise",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "SHOULDERS": 0.8,
+      "TRAPS": 0.2
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Cable at ankle height, handle in the far hand, lean slightly.",
+      "exec": "Raise the arm to shoulder height against constant tension.",
+      "fix": "Shrugging up? Push the shoulder down before each rep."
+    },
+    "edges": [
+      {
+        "to": "gym_lateral_raise",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel: konstante Spannung von unten"
+      },
+      {
+        "to": "gym_machine_lateral_raise",
+        "type": "EASIER",
+        "note": "gestuetzte Maschinen-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_machine_lateral_raise",
+    "name": "Machine Lateral Raise",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "SHOULDERS": 0.85,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Upper arms under the pads, elbows bent 90 degrees.",
+      "exec": "Lift the elbows to shoulder height, lower with control.",
+      "fix": "Hands leading? Drive with the elbows, hands just rest."
+    },
+    "edges": [
+      {
+        "to": "gym_lateral_raise",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_lateral_raise",
+    "name": "Band Lateral Raise",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "SHOULDERS": 0.8,
+      "TRAPS": 0.2
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand on the band middle, one end in each hand.",
+      "exec": "Raise both arms to shoulder height, pause, lower slow.",
+      "fix": "Tension too easy up top? Widen your stance on the band."
+    },
+    "edges": [
+      {
+        "to": "gym_lateral_raise",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_pushdown",
+    "name": "Band Triceps Pushdown",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRICEPS": 0.9,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band anchored overhead, elbows pinned to the sides.",
+      "exec": "Extend to full lockout, squeeze, return with control.",
+      "fix": "Elbows drifting forward? Pin them and shorten the range."
+    },
+    "edges": [
+      {
+        "to": "gym_triceps_pushdown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kabelturm"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_arm_pushdown",
+    "name": "Single-Arm Triceps Pushdown",
+    "aliases": [],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRICEPS": 0.9,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Single handle at the top pulley, elbow pinned to the side.",
+      "exec": "Extend fully, one-second squeeze, slow return.",
+      "fix": "Shoulder creeping up? Step closer to the stack."
+    },
+    "edges": [
+      {
+        "to": "gym_triceps_pushdown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einarmige Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_skullcrusher",
+    "name": "DB Skullcrusher",
+    "aliases": [
+      "Dumbbell Lying Triceps Extension"
+    ],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRICEPS": 0.9,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "On the bench, dumbbells overhead with neutral grip.",
+      "exec": "Bend only the elbows, lower beside the head, extend up.",
+      "fix": "Elbows flaring out? Squeeze them toward each other."
+    },
+    "edges": [
+      {
+        "to": "gym_skullcrusher",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt EZ-Stange"
+      },
+      {
+        "to": "gym_overhead_cable_extension",
+        "type": "EASIER",
+        "note": "Kabel fuehrt die Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_overhead_cable_extension",
+    "name": "Overhead Cable Triceps Extension",
+    "aliases": [
+      "Cable Overhead Extension"
+    ],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRICEPS": 0.9,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Rope at the low pulley, face away, hands behind the head.",
+      "exec": "Extend overhead to lockout, deep stretch on the return.",
+      "fix": "Ribs flaring? Small forward lean, core braced."
+    },
+    "edges": [
+      {
+        "to": "gym_skullcrusher",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel ueber Kopf, Stretch-Betonung"
+      }
+    ]
+  },
+  {
+    "id": "gym_pec_deck",
+    "name": "Pec Deck Fly",
+    "aliases": [
+      "Machine Chest Fly"
+    ],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CHEST": 0.8,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Seat so the handles sit at mid-chest, slight elbow bend.",
+      "exec": "Sweep the arms together, squeeze, open until the chest stretches.",
+      "fix": "Shoulders rolling in? Keep the blades pinned to the pad."
+    }
+  },
+  {
+    "id": "gym_cable_fly",
+    "name": "Cable Fly",
+    "aliases": [
+      "Cable Crossover"
+    ],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CHEST": 0.8,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Pulleys at chest height, one step forward, slight lean.",
+      "exec": "Hug the arms together in an arc, resist the way back.",
+      "fix": "Turning it into a press? Fix the elbow angle for the set."
+    },
+    "edges": [
+      {
+        "to": "gym_pec_deck",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel statt Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_fly",
+    "name": "DB Fly",
+    "aliases": [
+      "Dumbbell Chest Fly"
+    ],
+    "category": "PUSH",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CHEST": 0.8,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Dumbbells over the chest, palms facing, soft elbows.",
+      "exec": "Open wide until the chest stretches, sweep back together.",
+      "fix": "Going too deep? Stop where the stretch ends, not the pain."
+    },
+    "edges": [
+      {
+        "to": "gym_cable_fly",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt Kabel"
+      },
+      {
+        "to": "gym_pec_deck",
+        "type": "EASIER",
+        "note": "gefuehrte Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_tbar_row",
+    "name": "T-Bar Row",
+    "aliases": [
+      "Landmine Row"
+    ],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "BICEPS": 0.2,
+      "REAR_DELTS": 0.15,
+      "LOWER_BACK": 0.1,
+      "TRAPS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Straddle the bar, hinge to ~45 degrees, grip the handle.",
+      "exec": "Pull the handle to the sternum, squeeze the blades, lower slow.",
+      "fix": "Standing up with the weight? Lock the hinge angle first."
+    },
+    "edges": [
+      {
+        "to": "gym_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Landmine-Hebel statt freier Langhantel"
+      },
+      {
+        "to": "gym_chest_supported_row",
+        "type": "EASIER",
+        "note": "Bank stuetzt den Ruecken"
+      }
+    ]
+  },
+  {
+    "id": "gym_chest_supported_row",
+    "name": "Chest-Supported DB Row",
+    "aliases": [
+      "Incline DB Row"
+    ],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.2,
+      "REAR_DELTS": 0.2,
+      "TRAPS": 0.1
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Chest on an incline bench, dumbbells hanging straight down.",
+      "exec": "Row the elbows past the ribs, squeeze, lower to a stretch.",
+      "fix": "Chest lifting off? The pad is the lie detector — stay on it."
+    },
+    "edges": [
+      {
+        "to": "gym_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Brust aufgestuetzt, Ruecken entlastet"
+      },
+      {
+        "to": "gym_db_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "beidarmig mit Bankstuetze"
+      },
+      {
+        "to": "gym_machine_row",
+        "type": "EASIER",
+        "note": "gefuehrte Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_machine_row",
+    "name": "Machine Row",
+    "aliases": [
+      "Seated Machine Row"
+    ],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.25,
+      "REAR_DELTS": 0.15,
+      "TRAPS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Chest against the pad, arms long to start.",
+      "exec": "Drive the elbows back, squeeze the blades, return slow.",
+      "fix": "Yanking with momentum? Pause one second at the chest."
+    },
+    "edges": [
+      {
+        "to": "gym_cable_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine mit Brustpad statt Kabelzug"
+      },
+      {
+        "to": "gym_band_row",
+        "type": "EASIER",
+        "note": "Band-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_row",
+    "name": "Band Row",
+    "aliases": [
+      "Seated Band Row"
+    ],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.25,
+      "REAR_DELTS": 0.15,
+      "TRAPS": 0.1
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Sit tall, band around the feet, ends in both hands.",
+      "exec": "Pull to the belly, elbows close, chest stays proud.",
+      "fix": "Rounding forward on the return? Hinge only from the hips."
+    },
+    "edges": [
+      {
+        "to": "gym_cable_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kabelturm"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_arm_cable_row",
+    "name": "Single-Arm Cable Row",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.25,
+      "REAR_DELTS": 0.15,
+      "OBLIQUES": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Seated or split stance, single handle at belly height.",
+      "exec": "Row to the hip without twisting, full stretch forward.",
+      "fix": "Torso rotating? Brace the obliques, shoulders stay square."
+    },
+    "edges": [
+      {
+        "to": "gym_db_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel statt Kurzhantel"
+      },
+      {
+        "to": "gym_cable_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einarmige Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_pulldown",
+    "name": "Band Lat Pulldown",
+    "aliases": [
+      "Kneeling Band Pulldown"
+    ],
+    "category": "PULL",
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.55,
+      "BICEPS": 0.25,
+      "REAR_DELTS": 0.1,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band anchored overhead, kneel below, arms long.",
+      "exec": "Pull the elbows to the ribs, squeeze the lats, return slow.",
+      "fix": "Leaning way back? Stay tall, the lats pull down not back."
+    },
+    "edges": [
+      {
+        "to": "gym_lat_pulldown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kabelturm"
+      }
+    ]
+  },
+  {
+    "id": "gym_single_arm_pulldown",
+    "name": "Single-Arm Lat Pulldown",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.6,
+      "BICEPS": 0.25,
+      "FOREARMS": 0.15
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Single handle overhead, kneel or sit sideways to the stack.",
+      "exec": "Pull the elbow to the hip, feel the lat shorten, return long.",
+      "fix": "Wrist curling? Grip like a hook, the arm is just a rope."
+    },
+    "edges": [
+      {
+        "to": "gym_lat_pulldown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einarmige Version"
+      },
+      {
+        "to": "gym_band_pulldown",
+        "type": "EASIER",
+        "note": "Band-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_close_grip_pulldown",
+    "name": "Close-Grip Lat Pulldown",
+    "aliases": [
+      "V-Grip Pulldown"
+    ],
+    "category": "PULL",
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.35,
+      "FOREARMS": 0.15
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "V-handle attached, thighs locked under the pads.",
+      "exec": "Pull the handle to the upper chest, elbows tight, slow return.",
+      "fix": "Shoulders shrugging on the stretch? Keep them packed."
+    },
+    "edges": [
+      {
+        "to": "gym_lat_pulldown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "enger Neutralgriff statt weiter Griff"
+      }
+    ]
+  },
+  {
+    "id": "gym_assisted_pullup",
+    "name": "Assisted Pull-up",
+    "aliases": [
+      "Machine-Assisted Pull-up"
+    ],
+    "category": "PULL",
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.55,
+      "BICEPS": 0.25,
+      "FOREARMS": 0.1,
+      "REAR_DELTS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Knees on the assist pad, hands just outside the shoulders.",
+      "exec": "Pull the chin over the bar, lower to a full hang.",
+      "fix": "Assist too generous? Drop it a plate before adding reps."
+    },
+    "edges": [
+      {
+        "to": "gym_lat_pulldown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gleicher Zug, Koerper statt Stange bewegt"
+      },
+      {
+        "to": "gym_band_pulldown",
+        "type": "EASIER",
+        "note": "Zug ohne Koerpergewicht"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_assisted_pullup",
+    "name": "Band-Assisted Pull-up",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.55,
+      "BICEPS": 0.25,
+      "FOREARMS": 0.1,
+      "REAR_DELTS": 0.1
+    },
+    "equipment": [
+      "PULLUP_BAR",
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Band looped over the bar, one knee or foot in the loop.",
+      "exec": "Pull the chin over the bar, control the descent fully.",
+      "fix": "Band does the bottom for you — fight the last inch down."
+    },
+    "edges": [
+      {
+        "to": "gym_assisted_pullup",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Maschine als Hilfe"
+      },
+      {
+        "to": "gym_band_pulldown",
+        "type": "EASIER",
+        "note": "Pulldown statt Koerpergewicht"
+      }
+    ]
+  },
+  {
+    "id": "gym_reverse_pec_deck",
+    "name": "Reverse Pec Deck",
+    "aliases": [
+      "Machine Rear Delt Fly"
+    ],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "REAR_DELTS": 0.7,
+      "TRAPS": 0.3
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Face the pad, handles at shoulder height, slight elbow bend.",
+      "exec": "Sweep the arms back until in line with the shoulders.",
+      "fix": "Squeezing the blades first? Let the arms lead, not the traps."
+    },
+    "edges": [
+      {
+        "to": "gym_rear_delt_fly",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_cable_rear_delt_fly",
+    "name": "Cable Rear Delt Fly",
+    "aliases": [
+      "Cable Reverse Fly"
+    ],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "REAR_DELTS": 0.7,
+      "TRAPS": 0.2,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Cross the cables at chest height, arms long in front.",
+      "exec": "Open the arms wide and back, thumbs slightly down.",
+      "fix": "Elbows bending more each rep? Fix the angle, drop weight."
+    },
+    "edges": [
+      {
+        "to": "gym_rear_delt_fly",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel: konstante Spannung"
+      },
+      {
+        "to": "gym_band_pull_apart",
+        "type": "EASIER",
+        "note": "Band-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_pull_apart",
+    "name": "Band Pull-Apart",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "REAR_DELTS": 0.6,
+      "TRAPS": 0.3,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band at shoulder height, arms long, shoulder-width grip.",
+      "exec": "Pull the band to the chest by spreading the arms wide.",
+      "fix": "Shrugging? Push the shoulders down, lead with the knuckles."
+    },
+    "edges": [
+      {
+        "to": "gym_rear_delt_fly",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kurzhanteln"
+      },
+      {
+        "to": "gym_face_pull",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "horizontale Band-Variante des Face Pull"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_face_pull",
+    "name": "Band Face Pull",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "REAR_DELTS": 0.5,
+      "TRAPS": 0.3,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band anchored at face height, split stance, arms long.",
+      "exec": "Pull to the face, elbows high, rotate the knuckles back.",
+      "fix": "Elbows dropping? Pull along eye level, not the chest."
+    },
+    "edges": [
+      {
+        "to": "gym_face_pull",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kabelzug"
+      }
+    ]
+  },
+  {
+    "id": "gym_cable_curl",
+    "name": "Cable Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.75,
+      "FOREARMS": 0.25
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Straight bar at the low pulley, elbows at the sides.",
+      "exec": "Curl to the chest against constant tension, lower slow.",
+      "fix": "Elbows drifting up? Pin them and finish lower."
+    },
+    "edges": [
+      {
+        "to": "gym_ez_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel statt EZ-Stange"
+      }
+    ]
+  },
+  {
+    "id": "gym_bb_curl",
+    "name": "Barbell Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.75,
+      "FOREARMS": 0.25
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Shoulder-width grip, elbows pinned to the sides.",
+      "exec": "Curl without swinging, squeeze, lower over two seconds.",
+      "fix": "Wrists aching? Switch to the EZ bar or widen the grip."
+    },
+    "edges": [
+      {
+        "to": "gym_ez_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gerade Stange statt EZ-Stange"
+      },
+      {
+        "to": "gym_cable_curl",
+        "type": "EASIER",
+        "note": "Kabel fuehrt die Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_preacher_curl",
+    "name": "Preacher Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.8,
+      "FOREARMS": 0.2
+    },
+    "equipment": [
+      "EZ_BAR",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Upper arms flat on the pad, armpits on the top edge.",
+      "exec": "Curl up, lower until the arms are almost straight.",
+      "fix": "Bouncing at the bottom? Stop one degree short of lockout."
+    },
+    "edges": [
+      {
+        "to": "gym_ez_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Pad fixiert die Oberarme"
+      }
+    ]
+  },
+  {
+    "id": "gym_hammer_curl",
+    "name": "Hammer Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.6,
+      "FOREARMS": 0.4
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Neutral grip, dumbbells at the sides, elbows pinned.",
+      "exec": "Curl thumb-up to the shoulder, alternate arms.",
+      "fix": "Swinging? Slow the negative and lighten the load."
+    },
+    "edges": [
+      {
+        "to": "gym_db_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "neutraler Griff, mehr Brachialis/Unterarm"
+      }
+    ]
+  },
+  {
+    "id": "gym_incline_db_curl",
+    "name": "Incline DB Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.8,
+      "FOREARMS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Bench at ~45 degrees, arms hanging behind the torso.",
+      "exec": "Curl from the deep stretch, elbows stay behind the ribs.",
+      "fix": "Elbows swinging forward? Lighter weight, keep the stretch."
+    },
+    "edges": [
+      {
+        "to": "gym_db_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Schraegbank verlaengert den Biceps"
+      },
+      {
+        "to": "gym_band_curl",
+        "type": "EASIER",
+        "note": "Band-Version"
+      }
+    ]
+  },
+  {
+    "id": "gym_band_curl",
+    "name": "Band Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.75,
+      "FOREARMS": 0.25
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand on the band, handles in both hands, palms up.",
+      "exec": "Curl against rising tension, slow three-second lowering.",
+      "fix": "Too easy at the bottom? Widen the stance for pre-tension."
+    },
+    "edges": [
+      {
+        "to": "gym_db_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_reverse_curl",
+    "name": "Reverse EZ-Bar Curl",
+    "aliases": [
+      "Reverse Curl"
+    ],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "FOREARMS": 0.55,
+      "BICEPS": 0.45
+    },
+    "equipment": [
+      "EZ_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Overhand grip on the EZ bar, elbows at the sides.",
+      "exec": "Curl with knuckles up, wrists straight the whole way.",
+      "fix": "Wrists collapsing? Lighter bar, squeeze the grip hard."
+    },
+    "edges": [
+      {
+        "to": "gym_ez_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Obergriff verlagert auf Unterarme"
+      },
+      {
+        "to": "gym_wrist_curl",
+        "type": "EASIER",
+        "note": "reines Unterarm-Isolat"
+      }
+    ]
+  },
+  {
+    "id": "gym_wrist_curl",
+    "name": "Wrist Curl",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "FOREARMS": 0.9,
+      "BICEPS": 0.1
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Forearms on the bench, wrists hanging over the edge.",
+      "exec": "Let the weight roll to the fingers, curl the wrists up.",
+      "fix": "Forearms lifting? Pin them down, only the wrists move."
+    }
+  },
+  {
+    "id": "gym_shrug",
+    "name": "Barbell Shrug",
+    "aliases": [],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRAPS": 0.8,
+      "FOREARMS": 0.2
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "NECK"
+    ],
+    "cues": {
+      "setup": "Bar in front, shoulder-width grip, arms long.",
+      "exec": "Shrug straight up toward the ears, pause, lower fully.",
+      "fix": "Rolling the shoulders? Straight up and down only."
+    },
+    "edges": [
+      {
+        "to": "gym_db_shrug",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Langhantel vs. Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_shrug",
+    "name": "DB Shrug",
+    "aliases": [
+      "Dumbbell Shrug"
+    ],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRAPS": 0.8,
+      "FOREARMS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "NECK"
+    ],
+    "cues": {
+      "setup": "Dumbbells at the sides, palms facing the thighs.",
+      "exec": "Shrug up, one-second squeeze, stretch fully at the bottom.",
+      "fix": "Chin poking forward? Keep the neck long and neutral."
+    }
+  },
+  {
+    "id": "gym_pullover",
+    "name": "DB Pullover",
+    "aliases": [
+      "Dumbbell Pullover"
+    ],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "LATS": 0.5,
+      "CHEST": 0.3,
+      "TRICEPS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Upper back on the bench, one dumbbell held over the chest.",
+      "exec": "Lower behind the head to a deep stretch, pull back over.",
+      "fix": "Elbows flaring apart? Keep them narrow like a frame."
+    },
+    "edges": [
+      {
+        "to": "gym_straight_arm_pulldown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "stehendes Kabel-Pendant"
+      }
+    ]
+  },
+  {
+    "id": "gym_straight_arm_pulldown",
+    "name": "Straight-Arm Pulldown",
+    "aliases": [
+      "Cable Pullover"
+    ],
+    "category": "PULL",
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "LATS": 0.7,
+      "TRICEPS": 0.2,
+      "REAR_DELTS": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bar at the high pulley, hinge slightly, arms long.",
+      "exec": "Sweep the bar to the thighs with straight arms, return high.",
+      "fix": "Turning it into a pushdown? Lock the elbow angle."
+    }
+  },
+  {
+    "id": "gym_machine_crunch",
+    "name": "Machine Crunch",
+    "aliases": [
+      "Ab Crunch Machine"
+    ],
+    "category": "CORE",
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.8,
+      "OBLIQUES": 0.2
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Chest on the pad or handles gripped, feet anchored.",
+      "exec": "Crunch the ribs toward the pelvis, pause, uncurl slowly.",
+      "fix": "Pulling with the arms? They only rest on the handles."
+    },
+    "edges": [
+      {
+        "to": "gym_cable_crunch",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt Kabelzug"
+      }
+    ]
+  },
+  {
+    "id": "gym_decline_situp",
+    "name": "Decline Sit-up",
+    "aliases": [],
+    "category": "CORE",
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.7,
+      "HIP_FLEXORS": 0.2,
+      "OBLIQUES": 0.1
+    },
+    "equipment": [
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Feet hooked on the decline bench, hands at the temples.",
+      "exec": "Curl up vertebra by vertebra, lower under full control.",
+      "fix": "Yanking the neck? Fingertips touch, never pull."
+    },
+    "edges": [
+      {
+        "to": "gym_cable_crunch",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Schraege statt Kabellast"
+      },
+      {
+        "to": "gym_machine_crunch",
+        "type": "EASIER",
+        "note": "gefuehrte Maschine, feste Bahn"
+      }
+    ]
+  },
+  {
+    "id": "gym_pallof_press",
+    "name": "Pallof Press",
+    "aliases": [],
+    "category": "CORE",
+    "pattern": "CORE_ANTI_ROTATION",
+    "muscleShares": {
+      "OBLIQUES": 0.6,
+      "ABS": 0.4
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Cable at chest height, stand sideways, handle at the sternum.",
+      "exec": "Press straight out and back in — refuse the twist.",
+      "fix": "Hips rotating? Narrow the stance and lower the weight."
+    }
+  },
+  {
+    "id": "gym_band_pallof_press",
+    "name": "Band Pallof Press",
+    "aliases": [],
+    "category": "CORE",
+    "pattern": "CORE_ANTI_ROTATION",
+    "muscleShares": {
+      "OBLIQUES": 0.6,
+      "ABS": 0.4
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Band anchored at chest height, step out sideways until taut.",
+      "exec": "Press out, hold two seconds, return without twisting.",
+      "fix": "Shoulders sneaking up? Long neck, ribs stacked over hips."
+    },
+    "edges": [
+      {
+        "to": "gym_pallof_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Band statt Kabelzug"
+      }
+    ]
+  },
+  {
+    "id": "gym_cable_woodchop",
+    "name": "Cable Woodchop",
+    "aliases": [
+      "Cable Chop"
+    ],
+    "category": "CORE",
+    "pattern": "ROTATION",
+    "muscleShares": {
+      "OBLIQUES": 0.6,
+      "ABS": 0.3,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Cable high, stand sideways, both hands on the handle.",
+      "exec": "Chop diagonally across to the far hip, pivot the back foot.",
+      "fix": "Arms doing the chop? Turn from the trunk, arms stay long."
+    },
+    "edges": [
+      {
+        "to": "gym_pallof_press",
+        "type": "EASIER",
+        "note": "erst Anti-Rotation kontrollieren, dann rotieren"
+      }
+    ]
+  },
+  {
+    "id": "gym_back_extension",
+    "name": "Back Extension",
+    "aliases": [
+      "45-Degree Hyperextension"
+    ],
+    "category": "CORE",
+    "pattern": "HINGE",
+    "muscleShares": {
+      "LOWER_BACK": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Hips on the pad edge, ankles locked, arms crossed.",
+      "exec": "Lower long, rise to a straight line — never hyperextend.",
+      "fix": "Swinging up? Two seconds up, two seconds down."
+    },
+    "edges": [
+      {
+        "to": "gym_rdl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gestuetztes Hinge auf der 45-Grad-Bank"
+      }
+    ]
+  }
+]

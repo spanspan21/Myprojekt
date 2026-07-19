@@ -1,0 +1,3786 @@
+[
+  {
+    "id": "cardio_box",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.4,
+      "GLUTES": 0.3,
+      "CALVES": 0.2,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "BOX"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Stand an arm-length from a sturdy box, feet hip-width.",
+      "exec": "Swing arms, jump onto the box, land soft in a quarter squat, step down.",
+      "fix": "Landing loud? Pick a lower box and stick each landing quietly."
+    },
+    "edges": [
+      {
+        "to": "legs_jump",
+        "type": "LATERAL",
+        "note": "gleicher Streckimpuls ohne Box"
+      }
+    ]
+  },
+  {
+    "id": "cardio_burpee",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.3,
+      "CHEST": 0.25,
+      "SHOULDERS": 0.15,
+      "ABS": 0.15,
+      "GLUTES": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 4,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand tall, feet shoulder-width, hands free.",
+      "exec": "Squat, kick back to a push-up, press up, hop feet in, jump tall.",
+      "fix": "Back sagging in the plank? Brace the core before kicking back."
+    }
+  },
+  {
+    "id": "cardio_hk",
+    "upgrade": true,
+    "pattern": "SPRINT",
+    "muscleShares": {
+      "HIP_FLEXORS": 0.45,
+      "QUADS": 0.2,
+      "CALVES": 0.2,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand tall, arms bent at 90 degrees.",
+      "exec": "Drive knees to hip height with quick steps, pump the arms.",
+      "fix": "Leaning back? Keep ribs down and land under your hips."
+    }
+  },
+  {
+    "id": "cardio_jj",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "CALVES": 0.35,
+      "SHOULDERS": 0.25,
+      "QUADS": 0.2,
+      "GLUTES": 0.1,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand upright, arms at your sides.",
+      "exec": "Jump feet wide while arms sweep overhead, snap back together.",
+      "fix": "Heels slamming? Stay springy on the balls of your feet."
+    }
+  },
+  {
+    "id": "cardio_mountain",
+    "upgrade": true,
+    "pattern": "CORE_ANTI_EXTENSION",
+    "muscleShares": {
+      "ABS": 0.4,
+      "HIP_FLEXORS": 0.25,
+      "SHOULDERS": 0.2,
+      "QUADS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "High plank, hands under shoulders, body straight.",
+      "exec": "Drive knees to the chest alternately, hips stay level.",
+      "fix": "Hips piking up? Slow down and keep the plank line."
+    }
+  },
+  {
+    "id": "cardio_rope",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "CALVES": 0.45,
+      "FOREARMS": 0.2,
+      "SHOULDERS": 0.2,
+      "QUADS": 0.15
+    },
+    "equipment": [
+      "JUMP_ROPE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Elbows close, rope handles at hip height.",
+      "exec": "Spin from the wrists, small two-footed hops, stay tall.",
+      "fix": "Jumping too high? An inch of air is enough — save the calves."
+    }
+  },
+  {
+    "id": "core_abwheel",
+    "upgrade": true,
+    "pattern": "CORE_ANTI_EXTENSION",
+    "muscleShares": {
+      "ABS": 0.55,
+      "LOWER_BACK": 0.15,
+      "SHOULDERS": 0.15,
+      "OBLIQUES": 0.15
+    },
+    "equipment": [
+      "AB_WHEEL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 3
+    },
+    "contraFlags": [
+      "LOWER_BACK",
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Kneel, hands on the wheel under the shoulders, hips tucked.",
+      "exec": "Roll out slowly as far as the flat back allows, pull back with the abs.",
+      "fix": "Lower back arching? Shorten the rollout and re-tuck the pelvis."
+    },
+    "edges": [
+      {
+        "to": "core_plank",
+        "type": "EASIER",
+        "note": "gleiche Anti-Extension, statisch statt rollend"
+      }
+    ]
+  },
+  {
+    "id": "core_dragon",
+    "upgrade": true,
+    "pattern": "CORE_ANTI_EXTENSION",
+    "muscleShares": {
+      "ABS": 0.55,
+      "LOWER_BACK": 0.15,
+      "OBLIQUES": 0.15,
+      "HIP_FLEXORS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 4
+    },
+    "contraFlags": [
+      "LOWER_BACK",
+      "NECK"
+    ],
+    "cues": {
+      "setup": "Lie on a bench, grip it behind your head, legs together.",
+      "exec": "Raise the body to the shoulders, lower as one straight line.",
+      "fix": "Hips breaking the line? Lower only as far as you stay rigid."
+    },
+    "edges": [
+      {
+        "to": "core_lsit",
+        "type": "EASIER",
+        "note": "Kompressionskraft zuerst aufbauen"
+      },
+      {
+        "to": "core_hollow",
+        "type": "EASIER",
+        "note": "gleiche Koerperspannung am Boden"
+      }
+    ]
+  },
+  {
+    "id": "core_flag",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "OBLIQUES": 0.35,
+      "LATS": 0.25,
+      "SHOULDERS": 0.25,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "POLE"
+    ],
+    "laterality": "SIDE_HOLD",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 8.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 5,
+      "PUSH": 5,
+      "CORE": 5
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Wide grip on the pole: top arm pulls, bottom arm presses.",
+      "exec": "Lift the body sideways to horizontal, stack hips and shoulders.",
+      "fix": "Hips rotating open? Squeeze glutes and keep the chest square."
+    }
+  },
+  {
+    "id": "core_hlr",
+    "upgrade": true,
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.5,
+      "HIP_FLEXORS": 0.25,
+      "FOREARMS": 0.15,
+      "OBLIQUES": 0.1
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Dead hang, shoulders lightly packed, legs together.",
+      "exec": "Raise straight legs to hip height, lower with control.",
+      "fix": "Swinging? Pause at the bottom until the body is still."
+    },
+    "edges": [
+      {
+        "to": "core_plank",
+        "type": "EASIER",
+        "note": "statische Basis-Spannung zuerst"
+      }
+    ]
+  },
+  {
+    "id": "core_hollow",
+    "upgrade": true,
+    "pattern": "CORE_ANTI_EXTENSION",
+    "muscleShares": {
+      "ABS": 0.6,
+      "HIP_FLEXORS": 0.25,
+      "OBLIQUES": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Lie on your back, arms overhead, legs long.",
+      "exec": "Press the lower back down, hover arms and legs, hold and breathe.",
+      "fix": "Lower back lifting? Raise the legs higher or bend the knees."
+    }
+  },
+  {
+    "id": "core_lsit",
+    "upgrade": true,
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.5,
+      "HIP_FLEXORS": 0.3,
+      "TRICEPS": 0.1,
+      "QUADS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 5.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 3,
+      "DIP": 2
+    },
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Hands beside the hips, fingers forward, shoulders down.",
+      "exec": "Press tall, lift the hips, hold the legs straight out in front.",
+      "fix": "Legs dropping? Tuck the knees first and build the hold time."
+    },
+    "edges": [
+      {
+        "to": "core_toes",
+        "type": "EASIER",
+        "note": "dynamische Kompression an der Stange"
+      }
+    ]
+  },
+  {
+    "id": "core_plank",
+    "upgrade": true,
+    "pattern": "CORE_ANTI_EXTENSION",
+    "muscleShares": {
+      "ABS": 0.6,
+      "OBLIQUES": 0.25,
+      "LOWER_BACK": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Forearms down, elbows under shoulders, toes tucked.",
+      "exec": "Squeeze glutes, ribs down, one straight line — breathe.",
+      "fix": "Hips sagging? Tuck the pelvis and shorten the set."
+    }
+  },
+  {
+    "id": "core_toes",
+    "upgrade": true,
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.5,
+      "HIP_FLEXORS": 0.2,
+      "LATS": 0.15,
+      "FOREARMS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 3,
+      "HANG": 2
+    },
+    "contraFlags": [],
+    "cues": {
+      "setup": "Dead hang, grip crushed, body still.",
+      "exec": "Fold at the hips and bring the toes all the way to the bar.",
+      "fix": "Using swing? Lower slower — the way down builds the control."
+    },
+    "edges": [
+      {
+        "to": "core_hlr",
+        "type": "EASIER",
+        "note": "gleiche Bewegung, kuerzerer Weg"
+      }
+    ]
+  },
+  {
+    "id": "core_wiper",
+    "upgrade": true,
+    "pattern": "ROTATION",
+    "muscleShares": {
+      "OBLIQUES": 0.45,
+      "ABS": 0.3,
+      "LATS": 0.15,
+      "HIP_FLEXORS": 0.1
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 4,
+      "PULL": 3,
+      "HANG": 3
+    },
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Hang, raise the legs to the bar first.",
+      "exec": "Sweep the straight legs side to side like wipers, torso quiet.",
+      "fix": "Losing height? Rebuild toes-to-bar strength before adding reps."
+    },
+    "edges": [
+      {
+        "to": "core_toes",
+        "type": "EASIER",
+        "note": "erst Beine sicher zur Stange bringen"
+      }
+    ]
+  },
+  {
+    "id": "grip_hang",
+    "upgrade": true,
+    "pattern": "HANG_GRIP",
+    "muscleShares": {
+      "FOREARMS": 0.6,
+      "LATS": 0.2,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Full grip on the bar, thumbs wrapped.",
+      "exec": "Hang with relaxed shoulders, crush the bar, breathe calmly.",
+      "fix": "Shoulders at the ears hurting? Pack them slightly down and hold."
+    }
+  },
+  {
+    "id": "grip_onearm",
+    "upgrade": true,
+    "pattern": "HANG_GRIP",
+    "muscleShares": {
+      "FOREARMS": 0.6,
+      "LATS": 0.2,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 6,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "HANG": 5
+    },
+    "contraFlags": [
+      "ELBOW",
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Grip the bar with one hand, thumb wrapped, shoulder set.",
+      "exec": "Release the helper hand, hang still, keep the shoulder packed.",
+      "fix": "Body spinning? Touch the helper hand back until it calms."
+    },
+    "edges": [
+      {
+        "to": "grip_towel",
+        "type": "EASIER",
+        "note": "beidarmig mit haerterem Griffreiz"
+      }
+    ]
+  },
+  {
+    "id": "grip_towel",
+    "upgrade": true,
+    "pattern": "HANG_GRIP",
+    "muscleShares": {
+      "FOREARMS": 0.7,
+      "LATS": 0.15,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 3,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "HANG": 3
+    },
+    "contraFlags": [],
+    "cues": {
+      "setup": "Drape a towel over the bar, grip both ends high.",
+      "exec": "Hang from the towel only — pure crush grip, body still.",
+      "fix": "Grip failing fast? Alternate towel and bar hangs each set."
+    },
+    "edges": [
+      {
+        "to": "grip_hang",
+        "type": "EASIER",
+        "note": "Stange statt Handtuch — voller Griffschluss"
+      }
+    ]
+  },
+  {
+    "id": "gym_bench",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "SHOULDERS": 0.3,
+      "TRICEPS": 0.25
+    },
+    "equipment": [
+      "BARBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Shoulder blades pinned, feet planted, slight arch.",
+      "exec": "Bar to mid-chest, press to lockout, elbows ~45 degrees.",
+      "fix": "Flaring elbows? Tuck them and shorten the arch."
+    },
+    "edges": [
+      {
+        "to": "gym_incline_db_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln + Schraegbank statt Langhantel"
+      },
+      {
+        "to": "push_pushup",
+        "type": "EASIER",
+        "note": "gleiches Muster ohne Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_bulgarian",
+    "upgrade": true,
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Rear foot on the bench, dumbbells at the sides, front shin vertical.",
+      "exec": "Lower until the front thigh is parallel, drive through the whole foot.",
+      "fix": "Knee caving in? Lighter dumbbells, push the knee over the toes."
+    },
+    "edges": [
+      {
+        "to": "legs_bulgarian",
+        "type": "EASIER",
+        "note": "gleiche Uebung ohne Zusatzlast"
+      }
+    ]
+  },
+  {
+    "id": "gym_cable_crunch",
+    "upgrade": true,
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.7,
+      "OBLIQUES": 0.3
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Kneel facing the stack, rope beside the ears.",
+      "exec": "Crunch ribs toward pelvis against the cable, hips still.",
+      "fix": "Pulling with the arms? Lock them — only the spine flexes."
+    }
+  },
+  {
+    "id": "gym_cable_row",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "BICEPS": 0.2,
+      "TRAPS": 0.2,
+      "REAR_DELTS": 0.15
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Sit tall, feet braced, grab the handle with long arms.",
+      "exec": "Pull to the belly, squeeze the blades, control the return.",
+      "fix": "Torso rocking? Freeze the hips and let the back do the work."
+    },
+    "edges": [
+      {
+        "to": "pull_australian",
+        "type": "EASIER",
+        "note": "Koerpergewichts-Rudern als Basis"
+      }
+    ]
+  },
+  {
+    "id": "gym_calf_raise",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CALVES": 0.9,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Balls of the feet on the platform, heels free.",
+      "exec": "Full stretch at the bottom, pause high on the toes.",
+      "fix": "Bouncing? Two seconds down, one second pause at both ends."
+    },
+    "edges": [
+      {
+        "to": "legs_calf",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Maschine statt Koerpergewicht"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_curl",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.7,
+      "FOREARMS": 0.3
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand tall, dumbbells at the sides, palms in.",
+      "exec": "Curl one arm, rotate the palm up on the way, lower slow.",
+      "fix": "Swinging the torso? Pin the elbows to the ribs and go lighter."
+    }
+  },
+  {
+    "id": "gym_db_lunge",
+    "upgrade": true,
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Dumbbells at the sides, chest tall.",
+      "exec": "Big step forward, rear knee toward the floor, push back up.",
+      "fix": "Wobbling? Shorter steps and eyes on a fixed point."
+    },
+    "edges": [
+      {
+        "to": "legs_lunge",
+        "type": "EASIER",
+        "note": "gleiches Muster ohne Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_row",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.2,
+      "REAR_DELTS": 0.15,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "One hand and knee on the bench, flat back, dumbbell hanging long.",
+      "exec": "Pull the dumbbell to the hip, elbow close, lower with control.",
+      "fix": "Twisting up? Keep both shoulders square to the floor."
+    },
+    "edges": [
+      {
+        "to": "pull_australian",
+        "type": "EASIER",
+        "note": "beidarmiges Koerpergewichts-Rudern"
+      }
+    ]
+  },
+  {
+    "id": "gym_db_shoulder_press",
+    "upgrade": true,
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.55,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Dumbbells at shoulder height, ribs down, glutes tight.",
+      "exec": "Press overhead until the arms lock, lower to the ears.",
+      "fix": "Arching the back? Brace the core or press seated."
+    }
+  },
+  {
+    "id": "gym_deadlift",
+    "upgrade": true,
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.25,
+      "LOWER_BACK": 0.2,
+      "QUADS": 0.1,
+      "TRAPS": 0.1,
+      "FOREARMS": 0.05
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 5,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Bar over mid-foot, grip just outside the legs, flat back.",
+      "exec": "Push the floor away, bar close to the shins, stand tall.",
+      "fix": "Back rounding? Reset the hips and take weight off the bar."
+    },
+    "edges": [
+      {
+        "to": "gym_rdl",
+        "type": "EASIER",
+        "note": "Hinge-Muster mit kuerzerem Weg zuerst schulen"
+      }
+    ]
+  },
+  {
+    "id": "gym_ez_curl",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "BICEPS": 0.75,
+      "FOREARMS": 0.25
+    },
+    "equipment": [
+      "EZ_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Grip the EZ bar at the angled bends, elbows at the ribs.",
+      "exec": "Curl to the chest without swinging, lower in two seconds.",
+      "fix": "Elbows drifting forward? Pin them and finish lower."
+    },
+    "edges": [
+      {
+        "to": "gym_db_curl",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt EZ-Stange"
+      }
+    ]
+  },
+  {
+    "id": "gym_face_pull",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "REAR_DELTS": 0.5,
+      "TRAPS": 0.3,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Rope at face height, step back until the cable is taut.",
+      "exec": "Pull to the face, elbows high, rotate the knuckles back.",
+      "fix": "Shrugging? Lower the weight and lead with the elbows."
+    }
+  },
+  {
+    "id": "gym_front_squat",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.55,
+      "GLUTES": 0.25,
+      "ABS": 0.1,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "WRIST",
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Bar racked on the front delts, elbows high, full grip or fingertips.",
+      "exec": "Sit straight down between the hips, torso upright, stand tall.",
+      "fix": "Elbows dropping? Mobilize wrists and lats, lighten the bar."
+    },
+    "edges": [
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "Muster ohne Last festigen"
+      }
+    ]
+  },
+  {
+    "id": "gym_hip_thrust",
+    "upgrade": true,
+    "pattern": "HINGE",
+    "muscleShares": {
+      "GLUTES": 0.6,
+      "HAMSTRINGS": 0.25,
+      "QUADS": 0.15
+    },
+    "equipment": [
+      "BARBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Upper back on the bench, bar over the hips, feet planted.",
+      "exec": "Drive the hips to full lockout, chin tucked, squeeze at the top.",
+      "fix": "Overarching at the top? Ribs down — finish with the glutes."
+    }
+  },
+  {
+    "id": "gym_incline_db_press",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.4,
+      "SHOULDERS": 0.35,
+      "TRICEPS": 0.25
+    },
+    "equipment": [
+      "DUMBBELL",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Bench at ~30 degrees, dumbbells at the shoulders.",
+      "exec": "Press up and slightly together, lower to a full chest stretch.",
+      "fix": "Wrists tipping back? Stack knuckles over forearms."
+    },
+    "edges": [
+      {
+        "to": "push_pushup",
+        "type": "EASIER",
+        "note": "Druckmuster ohne Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_lat_pulldown",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.55,
+      "BICEPS": 0.25,
+      "FOREARMS": 0.1,
+      "REAR_DELTS": 0.1
+    },
+    "equipment": [
+      "CABLE",
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Thighs under the pad, wide grip, chest tall.",
+      "exec": "Pull the bar to the collarbone, elbows down, control the way up.",
+      "fix": "Leaning way back? Slight lean only — the lats pull, not gravity."
+    }
+  },
+  {
+    "id": "gym_lateral_raise",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "SHOULDERS": 0.75,
+      "TRAPS": 0.25
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand tall, dumbbells at the sides, slight elbow bend.",
+      "exec": "Raise to shoulder height leading with the elbows, lower slow.",
+      "fix": "Shrugging up? Lighter weights, pause a beat at the top."
+    }
+  },
+  {
+    "id": "gym_leg_curl",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "HAMSTRINGS": 0.85,
+      "CALVES": 0.15
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2.5,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Pad just above the heels, hips pressed into the bench.",
+      "exec": "Curl the pad to the glutes, lower in three seconds.",
+      "fix": "Hips lifting? Lower the weight and pin them down."
+    }
+  },
+  {
+    "id": "gym_leg_ext",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "QUADS": 0.9,
+      "HIP_FLEXORS": 0.1
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Pad on the shins, knees aligned with the machine pivot.",
+      "exec": "Extend to a full squeeze, lower slowly without slamming.",
+      "fix": "Knees hurting? Reduce range at the bottom and go lighter."
+    }
+  },
+  {
+    "id": "gym_leg_press",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "MACHINE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Feet mid-platform, hip-width, back flat on the pad.",
+      "exec": "Lower deep under control, press without locking out hard.",
+      "fix": "Lower back curling off the pad? Shorten the depth."
+    },
+    "edges": [
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "freies Muster ohne Maschine"
+      }
+    ]
+  },
+  {
+    "id": "gym_ohp",
+    "upgrade": true,
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.5,
+      "TRICEPS": 0.25,
+      "TRAPS": 0.15,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Bar at the collarbone, grip just outside shoulders, glutes tight.",
+      "exec": "Press straight up past the face, lock out overhead, head through.",
+      "fix": "Ribs flaring? Squeeze glutes and brace before the press."
+    },
+    "edges": [
+      {
+        "to": "gym_db_shoulder_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kurzhanteln statt Langhantel"
+      },
+      {
+        "to": "push_pike",
+        "type": "EASIER",
+        "note": "vertikales Drücken mit Koerpergewicht"
+      }
+    ]
+  },
+  {
+    "id": "gym_rdl",
+    "upgrade": true,
+    "pattern": "HINGE",
+    "muscleShares": {
+      "HAMSTRINGS": 0.4,
+      "GLUTES": 0.3,
+      "LOWER_BACK": 0.2,
+      "FOREARMS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK",
+      "HAMSTRING"
+    ],
+    "cues": {
+      "setup": "Soft knees, bar against the thighs, shoulders over the bar.",
+      "exec": "Hinge the hips back, bar slides down the legs, stand tall.",
+      "fix": "Bar drifting away? Drag it along the thighs the whole way."
+    }
+  },
+  {
+    "id": "gym_rear_delt_fly",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "REAR_DELTS": 0.6,
+      "TRAPS": 0.25,
+      "SHOULDERS": 0.15
+    },
+    "equipment": [
+      "DUMBBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Hinge to ~45 degrees, flat back, dumbbells hanging.",
+      "exec": "Sweep the arms wide, thumbs slightly down, pause at the top.",
+      "fix": "Using momentum? Lighter weights, strict two-second lowers."
+    },
+    "edges": [
+      {
+        "to": "gym_face_pull",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabelzug statt Kurzhanteln"
+      }
+    ]
+  },
+  {
+    "id": "gym_row",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "BICEPS": 0.15,
+      "REAR_DELTS": 0.15,
+      "LOWER_BACK": 0.15,
+      "TRAPS": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Hinge to ~45 degrees, flat back, grip outside the knees.",
+      "exec": "Pull the bar to the lower ribs, no body English, lower slow.",
+      "fix": "Torso bouncing? Lighten the bar and freeze the hinge."
+    },
+    "edges": [
+      {
+        "to": "gym_db_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "einarmig mit Kurzhantel"
+      },
+      {
+        "to": "gym_cable_row",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabelzug sitzend"
+      },
+      {
+        "to": "pull_australian",
+        "type": "EASIER",
+        "note": "Rudern mit Koerpergewicht"
+      }
+    ]
+  },
+  {
+    "id": "gym_skullcrusher",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRICEPS": 0.9,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "EZ_BAR",
+      "BENCH"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 3,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Lie back, EZ bar over the chest, hands at the narrow bends.",
+      "exec": "Lower to the forehead with still elbows, extend back up.",
+      "fix": "Elbows flaring? Narrow the path and drop the weight."
+    },
+    "edges": [
+      {
+        "to": "gym_triceps_pushdown",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Kabel statt freier Stange"
+      }
+    ]
+  },
+  {
+    "id": "gym_squat",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.15,
+      "LOWER_BACK": 0.1
+    },
+    "equipment": [
+      "BARBELL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "LOWER_BACK"
+    ],
+    "cues": {
+      "setup": "Bar on the upper back, grip tight, brace before unracking.",
+      "exec": "Sit between the hips to full depth, drive up through mid-foot.",
+      "fix": "Chest collapsing? Brace harder and slow the descent."
+    },
+    "edges": [
+      {
+        "to": "gym_front_squat",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "Frontrack statt Nacken"
+      },
+      {
+        "to": "gym_leg_press",
+        "type": "EQUIPMENT_VARIANT",
+        "note": "gefuehrte Maschine statt freier Hantel"
+      },
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "Muster ohne Last"
+      }
+    ]
+  },
+  {
+    "id": "gym_triceps_pushdown",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "TRICEPS": 0.9,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "CABLE"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "SHORTENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Elbows pinned to the sides, slight forward lean.",
+      "exec": "Press the cable to lockout, squeeze, let it rise with control.",
+      "fix": "Elbows drifting up? Reset them at the ribs every rep."
+    }
+  },
+  {
+    "id": "legs_bulgarian",
+    "upgrade": true,
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "BENCH"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Rear foot on a bench, front shin vertical, hips square.",
+      "exec": "Lower until the front thigh is parallel, drive through the foot.",
+      "fix": "Hips twisting? Narrow the stance and slow the descent."
+    },
+    "edges": [
+      {
+        "to": "legs_lunge",
+        "type": "EASIER",
+        "note": "beide Fuesse am Boden"
+      },
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "beidbeinige Basis"
+      }
+    ]
+  },
+  {
+    "id": "legs_calf",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "CALVES": 0.9,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Balls of the feet on an edge, heels hanging free.",
+      "exec": "Full stretch at the bottom, press high onto the toes, pause.",
+      "fix": "Rushing? Three seconds up-pause-down beats twenty bounces."
+    }
+  },
+  {
+    "id": "legs_jump",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.4,
+      "GLUTES": 0.3,
+      "CALVES": 0.2,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Feet shoulder-width, arms ready to swing.",
+      "exec": "Squat deep, explode up, land soft back into the squat.",
+      "fix": "Knees caving on landing? Land wider and absorb quietly."
+    },
+    "edges": [
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "ohne Sprungimpuls"
+      }
+    ]
+  },
+  {
+    "id": "legs_lunge",
+    "upgrade": true,
+    "pattern": "LUNGE",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Stand tall, hands on hips or free.",
+      "exec": "Big step forward, rear knee near the floor, push back up.",
+      "fix": "Front heel lifting? Longer step, weight through the whole foot."
+    },
+    "edges": [
+      {
+        "to": "legs_squat",
+        "type": "EASIER",
+        "note": "beidbeinig statt im Ausfallschritt"
+      }
+    ]
+  },
+  {
+    "id": "legs_nordic",
+    "upgrade": true,
+    "pattern": "ISOLATION",
+    "muscleShares": {
+      "HAMSTRINGS": 0.75,
+      "GLUTES": 0.15,
+      "CALVES": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "ISOLATION",
+    "difficulty": 7.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "SQUAT": 4,
+      "CORE": 4
+    },
+    "contraFlags": [
+      "HAMSTRING",
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Kneel with the ankles anchored, hips extended, body tall.",
+      "exec": "Lower the torso forward as slowly as possible, catch with hands.",
+      "fix": "Breaking at the hips? Keep glutes tight — bend only at the knees."
+    },
+    "edges": [
+      {
+        "to": "gym_leg_curl",
+        "type": "EASIER",
+        "note": "Maschinen-Regression fuer die Hamstrings"
+      }
+    ]
+  },
+  {
+    "id": "legs_pistol",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HIP_FLEXORS": 0.1,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 3,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {
+      "SQUAT": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Stand on one leg, other leg and arms reaching forward.",
+      "exec": "Sit to full depth on one leg, heel down, stand back up.",
+      "fix": "Falling backward? Hold a counterweight forward or use a box."
+    },
+    "edges": [
+      {
+        "to": "legs_shrimp",
+        "type": "EASIER",
+        "note": "weniger Sprunggelenks-Mobilitaet noetig"
+      }
+    ]
+  },
+  {
+    "id": "legs_shrimp",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.1,
+      "HIP_FLEXORS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6,
+    "systemicCost": 3,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {
+      "SQUAT": 4
+    },
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Stand on one leg, grab the other foot behind you.",
+      "exec": "Lower until the rear knee kisses the floor, drive back up.",
+      "fix": "Knee slamming down? Slow the last inches — touch, do not drop."
+    },
+    "edges": [
+      {
+        "to": "legs_sissy",
+        "type": "EASIER",
+        "note": "beidbeinige Quad-Vorstufe"
+      }
+    ]
+  },
+  {
+    "id": "legs_sissy",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.8,
+      "HIP_FLEXORS": 0.1,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {
+      "SQUAT": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Feet hip-width, hold something for balance at first.",
+      "exec": "Knees travel far forward, torso leans back in one line, rise.",
+      "fix": "Knee pain? Reduce the lean and build range gradually."
+    },
+    "edges": [
+      {
+        "to": "legs_bulgarian",
+        "type": "EASIER",
+        "note": "klassische einbeinige Vorstufe"
+      },
+      {
+        "to": "gym_leg_ext",
+        "type": "EASIER",
+        "note": "Maschinen-Regression fuer die Quads"
+      }
+    ]
+  },
+  {
+    "id": "legs_squat",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.5,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.2
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Feet shoulder-width, toes slightly out.",
+      "exec": "Sit between the hips to full depth, chest tall, drive up.",
+      "fix": "Heels lifting? Widen the stance or elevate the heels slightly."
+    }
+  },
+  {
+    "id": "legs_wallsit",
+    "upgrade": true,
+    "pattern": "SQUAT",
+    "muscleShares": {
+      "QUADS": 0.6,
+      "GLUTES": 0.3,
+      "CALVES": 0.1
+    },
+    "equipment": [
+      "WALL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Back flat on the wall, feet out in front.",
+      "exec": "Slide down until thighs are parallel, hold and breathe.",
+      "fix": "Hands on the thighs? Arms crossed — no cheating the quads."
+    }
+  },
+  {
+    "id": "mob_catcow",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "LOWER_BACK": 0.6,
+      "ABS": 0.4
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "On all fours, hands under shoulders, knees under hips.",
+      "exec": "Round the whole spine on the exhale, arch it on the inhale.",
+      "fix": "Only the neck moving? Push the floor away, move rib by rib."
+    }
+  },
+  {
+    "id": "mob_disco",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "SHOULDERS": 0.7,
+      "CHEST": 0.3
+    },
+    "equipment": [
+      "RESISTANCE_BAND"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Wide grip on a band or stick, arms long.",
+      "exec": "Sweep overhead and behind in one slow arc, arms straight.",
+      "fix": "Elbows bending? Widen the grip until the circle is smooth."
+    }
+  },
+  {
+    "id": "mob_hip90",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "HIP_FLEXORS": 0.6,
+      "GLUTES": 0.4
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Sit with both legs bent at 90 degrees.",
+      "exec": "Rotate the knees side to side, chest tall, hands free.",
+      "fix": "Collapsing sideways? Sit taller — height beats range here."
+    }
+  },
+  {
+    "id": "mob_pigeon",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "GLUTES": 0.7,
+      "HIP_FLEXORS": 0.3
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Front shin folded across, rear leg long behind.",
+      "exec": "Sink the hips square and level, breathe into the glute.",
+      "fix": "Front knee pinching? Slide the shin steeper toward the hip."
+    }
+  },
+  {
+    "id": "mob_thoracic",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "LOWER_BACK": 0.6,
+      "OBLIQUES": 0.4
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Side-lying, knees stacked at 90 degrees, arms together.",
+      "exec": "Open the top arm to the other side, follow with the eyes.",
+      "fix": "Knees separating? Pin them with the bottom hand."
+    }
+  },
+  {
+    "id": "mob_wgs",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "HIP_FLEXORS": 0.5,
+      "HAMSTRINGS": 0.3,
+      "CHEST": 0.2
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1.5,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Deep lunge, hands inside the front foot.",
+      "exec": "Drop the inside elbow, rotate open to the sky, then sit back.",
+      "fix": "Rear knee collapsing? Squeeze the rear glute the whole flow."
+    }
+  },
+  {
+    "id": "mob_wrist",
+    "upgrade": true,
+    "pattern": "MOBILITY",
+    "muscleShares": {
+      "FOREARMS": 0.9,
+      "SHOULDERS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 1,
+    "systemicCost": 1,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Kneel, palms down, fingers pointing each direction in turn.",
+      "exec": "Rock gently through all wrist angles, build pressure slowly.",
+      "fix": "Sharp pain? Shrink the range — load the edges gradually."
+    }
+  },
+  {
+    "id": "plyo_boxjump",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.4,
+      "GLUTES": 0.3,
+      "CALVES": 0.2,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "BOX"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Stand an arm-length from a sturdy box, feet hip-width.",
+      "exec": "Swing arms, jump onto the box, land soft in a quarter squat, step down.",
+      "fix": "Landing loud? Pick a lower box and stick each landing quietly."
+    }
+  },
+  {
+    "id": "plyo_broad",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "GLUTES": 0.4,
+      "QUADS": 0.3,
+      "HAMSTRINGS": 0.2,
+      "CALVES": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Feet hip-width, arms back, hips loaded.",
+      "exec": "Swing and jump for distance, stick the landing in a half squat.",
+      "fix": "Landing stiff-legged? Absorb through hips and knees."
+    },
+    "edges": [
+      {
+        "to": "plyo_skater",
+        "type": "LATERAL",
+        "note": "seitliche statt horizontale Power"
+      }
+    ]
+  },
+  {
+    "id": "plyo_depth",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.25,
+      "CALVES": 0.2,
+      "HAMSTRINGS": 0.1
+    },
+    "equipment": [
+      "BOX"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Stand on a low box, toes at the edge.",
+      "exec": "Step off, land soft on both feet, freeze on impact, chest up.",
+      "fix": "Knees caving on impact? Lower box, land wider, freeze longer."
+    },
+    "edges": [
+      {
+        "to": "cardio_box",
+        "type": "EASIER",
+        "note": "erst hochspringen, dann Landungen absorbieren"
+      }
+    ]
+  },
+  {
+    "id": "plyo_lateral",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "CALVES": 0.45,
+      "QUADS": 0.3,
+      "GLUTES": 0.25
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Stand beside a line, feet together, ankles springy.",
+      "exec": "Quick two-footed hops side to side, minimal ground contact.",
+      "fix": "Contacts getting long? Shorter sets — speed is the point."
+    }
+  },
+  {
+    "id": "plyo_skater",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "GLUTES": 0.45,
+      "QUADS": 0.3,
+      "CALVES": 0.25
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Stand on one leg, hips slightly loaded.",
+      "exec": "Bound sideways leg to leg, hold each landing for a beat.",
+      "fix": "Wobbling on landing? Shorter bounds until each one sticks."
+    }
+  },
+  {
+    "id": "plyo_split",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "GLUTES": 0.3,
+      "HAMSTRINGS": 0.15,
+      "CALVES": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE"
+    ],
+    "cues": {
+      "setup": "Start in a lunge, both knees at 90 degrees.",
+      "exec": "Jump, switch legs mid-air, land soft back in the lunge.",
+      "fix": "Landing hard? Lower jump height, prioritize quiet knees."
+    },
+    "edges": [
+      {
+        "to": "legs_lunge",
+        "type": "EASIER",
+        "note": "ohne Flugphase"
+      }
+    ]
+  },
+  {
+    "id": "plyo_sprint",
+    "upgrade": true,
+    "pattern": "SPRINT",
+    "muscleShares": {
+      "GLUTES": 0.35,
+      "HAMSTRINGS": 0.3,
+      "QUADS": 0.2,
+      "CALVES": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 4,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "HAMSTRING"
+    ],
+    "cues": {
+      "setup": "Warm up thoroughly, pick a hill or flat stretch.",
+      "exec": "Sprint all-out, tall posture, drive the arms, full recovery.",
+      "fix": "Overstriding? Land under the hips with quick, punchy steps."
+    }
+  },
+  {
+    "id": "plyo_tuck",
+    "upgrade": true,
+    "pattern": "JUMP",
+    "muscleShares": {
+      "QUADS": 0.45,
+      "HIP_FLEXORS": 0.2,
+      "CALVES": 0.2,
+      "GLUTES": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "KNEE",
+      "ANKLE"
+    ],
+    "cues": {
+      "setup": "Feet hip-width, arms ready.",
+      "exec": "Jump straight up, knees to the chest, land quiet, reset.",
+      "fix": "Reps getting sloppy? Stop the set — height and form count."
+    },
+    "edges": [
+      {
+        "to": "legs_jump",
+        "type": "EASIER",
+        "note": "ohne Knieanzug"
+      }
+    ]
+  },
+  {
+    "id": "pull_archer",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "BICEPS": 0.25,
+      "FOREARMS": 0.15,
+      "REAR_DELTS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Wide grip, one arm ready to pull, the other straight.",
+      "exec": "Pull toward the working hand, the straight arm only guides.",
+      "fix": "Straight arm bending? Widen the grip, slow the negative."
+    },
+    "edges": [
+      {
+        "to": "pull_pullup",
+        "type": "EASIER",
+        "note": "beidarmig, symmetrische Last"
+      }
+    ]
+  },
+  {
+    "id": "pull_australian",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "BICEPS": 0.2,
+      "REAR_DELTS": 0.2,
+      "TRAPS": 0.2
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Low bar, hang underneath, body straight, heels on the floor.",
+      "exec": "Pull the chest to the bar, squeeze the blades, lower slow.",
+      "fix": "Hips sagging? Squeeze glutes — plank rules apply here too."
+    },
+    "edges": [
+      {
+        "to": "pull_ringrow",
+        "type": "EASIER",
+        "note": "Ringe erlauben flacheren, leichteren Winkel"
+      }
+    ]
+  },
+  {
+    "id": "pull_chinup",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "BICEPS": 0.4,
+      "LATS": 0.35,
+      "FOREARMS": 0.15,
+      "REAR_DELTS": 0.1
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Underhand grip, shoulder-width, dead hang.",
+      "exec": "Pull the chin over the bar, chest to the bar, lower fully.",
+      "fix": "Half reps? Full hang at the bottom — every rep from zero."
+    },
+    "edges": [
+      {
+        "to": "pull_australian",
+        "type": "EASIER",
+        "note": "horizontale Vorstufe"
+      },
+      {
+        "to": "pull_pullup",
+        "type": "LATERAL",
+        "note": "pronierter statt supinierter Griff"
+      }
+    ]
+  },
+  {
+    "id": "pull_flrow",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "ABS": 0.2,
+      "BICEPS": 0.2,
+      "REAR_DELTS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4,
+      "CORE": 4
+    },
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Hold a tuck or full front-lever angle under the bar.",
+      "exec": "Row the chest to the bar while the body stays horizontal.",
+      "fix": "Hips dropping mid-row? Regress the lever angle first."
+    },
+    "edges": [
+      {
+        "to": "skill_fl_tuck",
+        "type": "EASIER",
+        "note": "erst die Halteposition besitzen"
+      }
+    ]
+  },
+  {
+    "id": "pull_lsit",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "ABS": 0.25,
+      "BICEPS": 0.2,
+      "HIP_FLEXORS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 3,
+      "CORE": 3
+    },
+    "contraFlags": [],
+    "cues": {
+      "setup": "Hang with legs held straight out at 90 degrees.",
+      "exec": "Pull up while the L holds, chin over the bar, lower slow.",
+      "fix": "Legs dropping? Fewer honest-L reps beat many without."
+    },
+    "edges": [
+      {
+        "to": "pull_pullup",
+        "type": "EASIER",
+        "note": "ohne L-Halte"
+      }
+    ]
+  },
+  {
+    "id": "pull_muscleup",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "BICEPS": 0.2,
+      "CHEST": 0.2,
+      "TRICEPS": 0.2
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4,
+      "DIP": 3
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "False grip or deep overhand grip, hollow body.",
+      "exec": "Explosive pull to the sternum, lean over the bar, press out.",
+      "fix": "Stuck at the transition? Slow transition negatives, low bar."
+    }
+  },
+  {
+    "id": "pull_pullup",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.5,
+      "BICEPS": 0.25,
+      "FOREARMS": 0.15,
+      "REAR_DELTS": 0.1
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 3,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Overhand grip just outside shoulders, dead hang, core tight.",
+      "exec": "Pull the chin over the bar without swinging, lower fully.",
+      "fix": "Kipping in? Slow negatives until strict reps return."
+    },
+    "edges": [
+      {
+        "to": "pull_australian",
+        "type": "EASIER",
+        "note": "horizontale Vorstufe"
+      },
+      {
+        "to": "gym_lat_pulldown",
+        "type": "EASIER",
+        "note": "dosierbare Last an der Maschine"
+      }
+    ]
+  },
+  {
+    "id": "pull_ringrow",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "REAR_DELTS": 0.25,
+      "BICEPS": 0.2,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "RINGS"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Rings at hip height, walk the feet forward to set the angle.",
+      "exec": "Pull the chest to the rings, turn them out at the top.",
+      "fix": "Too easy or too hard? Move the feet — the angle is the load."
+    }
+  },
+  {
+    "id": "push_archer",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "TRICEPS": 0.25,
+      "SHOULDERS": 0.2,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5.5,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {
+      "PUSH": 4
+    },
+    "contraFlags": [
+      "WRIST",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Wide hands, one arm straight out to the side.",
+      "exec": "Lower onto the bent arm, straight arm guides only.",
+      "fix": "Hips rotating? Brace and keep both shoulders square."
+    },
+    "edges": [
+      {
+        "to": "push_diamond",
+        "type": "EASIER",
+        "note": "beidarmig, Trizeps-lastige Vorstufe"
+      },
+      {
+        "to": "push_pushup",
+        "type": "EASIER",
+        "note": "beidarmig, halbe Anforderung"
+      }
+    ]
+  },
+  {
+    "id": "push_diamond",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "TRICEPS": 0.45,
+      "CHEST": 0.35,
+      "SHOULDERS": 0.2
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [
+      "WRIST",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Hands form a diamond under the chest, body straight.",
+      "exec": "Lower the chest to the hands, elbows tracking back, press.",
+      "fix": "Elbows flaring wide? Keep them brushing the ribs."
+    },
+    "edges": [
+      {
+        "to": "push_pushup",
+        "type": "EASIER",
+        "note": "normale Handposition"
+      }
+    ]
+  },
+  {
+    "id": "push_dips",
+    "upgrade": true,
+    "pattern": "DIP",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "TRICEPS": 0.3,
+      "SHOULDERS": 0.25
+    },
+    "equipment": [
+      "DIP_BARS"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Support on the bars, shoulders down, slight forward lean.",
+      "exec": "Lower until shoulders dip below elbows, press to lockout.",
+      "fix": "Shoulder pinching? Reduce depth and keep the lean forward."
+    },
+    "edges": [
+      {
+        "to": "push_pushup",
+        "type": "LATERAL",
+        "note": "horizontales statt vertikales Druecken"
+      }
+    ]
+  },
+  {
+    "id": "push_hspu",
+    "upgrade": true,
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.55,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 9,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 6,
+      "CORE": 5
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST",
+      "NECK"
+    ],
+    "cues": {
+      "setup": "Kick to a freestanding handstand, hands shoulder-width.",
+      "exec": "Lower the head to the floor with control, press to lockout.",
+      "fix": "Losing balance in the press? Build wall HSPU volume first."
+    },
+    "edges": [
+      {
+        "to": "push_pike",
+        "type": "EASIER",
+        "note": "Schulterdruecken mit Fuessen am Boden"
+      }
+    ]
+  },
+  {
+    "id": "push_pike",
+    "upgrade": true,
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.55,
+      "TRICEPS": 0.3,
+      "TRAPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {},
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Hips high in a pike, hands shoulder-width, heels down.",
+      "exec": "Lower the crown of the head to the floor, press back up.",
+      "fix": "Turning into a push-up? Keep the hips stacked over the hands."
+    },
+    "edges": [
+      {
+        "to": "push_pushup",
+        "type": "EASIER",
+        "note": "horizontale Basis"
+      }
+    ]
+  },
+  {
+    "id": "push_pseudo",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.45,
+      "CHEST": 0.25,
+      "TRICEPS": 0.2,
+      "ABS": 0.1
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Hands beside the hips, fingers back or out, lean forward.",
+      "exec": "Push-up while the shoulders stay in front of the hands.",
+      "fix": "Lean collapsing? Shift more weight forward before the rep."
+    },
+    "edges": [
+      {
+        "to": "push_archer",
+        "type": "EASIER",
+        "note": "unilaterale Kraft-Vorstufe"
+      }
+    ]
+  },
+  {
+    "id": "push_pushup",
+    "upgrade": true,
+    "pattern": "HORIZONTAL_PUSH",
+    "muscleShares": {
+      "CHEST": 0.45,
+      "TRICEPS": 0.3,
+      "SHOULDERS": 0.25
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Hands under the shoulders, body one straight line.",
+      "exec": "Chest to the floor, elbows ~45 degrees, press to lockout.",
+      "fix": "Hips sagging? Squeeze glutes and re-brace every rep."
+    }
+  },
+  {
+    "id": "push_ringdips",
+    "upgrade": true,
+    "pattern": "DIP",
+    "muscleShares": {
+      "CHEST": 0.4,
+      "TRICEPS": 0.3,
+      "SHOULDERS": 0.3
+    },
+    "equipment": [
+      "RINGS"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 3,
+    "loadMode": "BODYWEIGHT_PLUS",
+    "skillRequires": {
+      "DIP": 3
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Support on the rings, arms locked, rings turned slightly out.",
+      "exec": "Lower with the rings close to the body, press to lockout.",
+      "fix": "Rings wobbling wildly? Build the support hold first."
+    },
+    "edges": [
+      {
+        "to": "push_dips",
+        "type": "EASIER",
+        "note": "stabile Holme statt Ringe"
+      }
+    ]
+  },
+  {
+    "id": "skill_bl",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "SHOULDERS": 0.25,
+      "LOWER_BACK": 0.2,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 3,
+      "CORE": 4,
+      "HANG": 3
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "From an inverted hang, lower face-down, arms straight.",
+      "exec": "Hold the body horizontal facing the floor, glutes tight.",
+      "fix": "Shoulders screaming? More German hang prep, shorter holds."
+    },
+    "edges": [
+      {
+        "to": "skill_bl_str",
+        "type": "EASIER",
+        "note": "Graetsche verkuerzt den Hebel"
+      }
+    ]
+  },
+  {
+    "id": "skill_bl_str",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "SHOULDERS": 0.25,
+      "LOWER_BACK": 0.2,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Inverted hang, legs straddled wide.",
+      "exec": "Lower to horizontal face-down, legs wide, arms straight.",
+      "fix": "Hips rotating? Lower slower and fix the eyes on the floor."
+    },
+    "edges": [
+      {
+        "to": "skill_bl_tuck",
+        "type": "EASIER",
+        "note": "angezogene Knie, kleinster Hebel"
+      }
+    ]
+  },
+  {
+    "id": "skill_bl_tuck",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "SHOULDERS": 0.25,
+      "LOWER_BACK": 0.2,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 2,
+      "CORE": 2
+    },
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Inverted hang, knees pulled to the chest.",
+      "exec": "Lower face-down to horizontal with tucked knees, arms straight.",
+      "fix": "Elbows bending? Turn the pits forward and lock hard."
+    }
+  },
+  {
+    "id": "skill_fl",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "ABS": 0.25,
+      "LOWER_BACK": 0.15,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 8,
+    "systemicCost": 4,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 5,
+      "CORE": 5,
+      "HANG": 4
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Hang, shoulders packed, body hollow.",
+      "exec": "Pull the body to one horizontal line under the bar, arms straight.",
+      "fix": "Hips sagging? Back down a rung — the line is the exercise."
+    },
+    "edges": [
+      {
+        "to": "skill_fl_half",
+        "type": "EASIER",
+        "note": "ein Bein gestreckt, eines angezogen"
+      }
+    ]
+  },
+  {
+    "id": "skill_fl_adv",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "ABS": 0.25,
+      "LOWER_BACK": 0.15,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4,
+      "CORE": 4
+    },
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Tuck front lever first, back flat.",
+      "exec": "Open the hips until the thighs point out, back stays level.",
+      "fix": "Back rounding? Close the tuck and rebuild the flat back."
+    },
+    "edges": [
+      {
+        "to": "skill_fl_tuck",
+        "type": "EASIER",
+        "note": "geschlossener Tuck"
+      }
+    ]
+  },
+  {
+    "id": "skill_fl_half",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "ABS": 0.25,
+      "LOWER_BACK": 0.15,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 5,
+      "CORE": 5
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Hang, pull to horizontal, one leg extended, one tucked.",
+      "exec": "Hold the flat-back line, hips level, arms straight.",
+      "fix": "Extended leg dropping? Point the toes and squeeze the quad."
+    },
+    "edges": [
+      {
+        "to": "skill_fl_str",
+        "type": "EASIER",
+        "note": "Graetsche statt halber Streckung"
+      }
+    ]
+  },
+  {
+    "id": "skill_fl_str",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "ABS": 0.25,
+      "LOWER_BACK": 0.15,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4,
+      "CORE": 4
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Hang, shoulders packed, legs ready to straddle.",
+      "exec": "Horizontal line with legs straight and split wide.",
+      "fix": "Line breaking? Narrow the straddle only as you get stronger."
+    },
+    "edges": [
+      {
+        "to": "skill_fl_adv",
+        "type": "EASIER",
+        "note": "geoeffneter Tuck als Vorstufe"
+      }
+    ]
+  },
+  {
+    "id": "skill_fl_tuck",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "LATS": 0.45,
+      "ABS": 0.25,
+      "LOWER_BACK": 0.15,
+      "BICEPS": 0.15
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Hang, pull the knees to the chest.",
+      "exec": "Pull the hips up until the back is flat and horizontal.",
+      "fix": "Back staying round? Pull the bar toward the hips harder."
+    }
+  },
+  {
+    "id": "skill_hf",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "OBLIQUES": 0.35,
+      "LATS": 0.25,
+      "SHOULDERS": 0.25,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "POLE"
+    ],
+    "laterality": "SIDE_HOLD",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 8.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 5,
+      "PUSH": 5,
+      "CORE": 5
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Wide grip on the pole: top arm pulls, bottom arm presses.",
+      "exec": "Lift the body sideways to horizontal, stack hips and shoulders.",
+      "fix": "Hips rotating open? Squeeze glutes and keep the chest square."
+    },
+    "edges": [
+      {
+        "to": "skill_hf_str",
+        "type": "EASIER",
+        "note": "Graetsche verkuerzt den Hebel"
+      }
+    ]
+  },
+  {
+    "id": "skill_hf_str",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "OBLIQUES": 0.35,
+      "LATS": 0.25,
+      "SHOULDERS": 0.25,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "POLE"
+    ],
+    "laterality": "SIDE_HOLD",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4,
+      "PUSH": 4,
+      "CORE": 4
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Flag grip set, body ready to lift sideways.",
+      "exec": "Hold near horizontal with the legs split wide.",
+      "fix": "Sinking fast? Hold above horizontal and lower gradually."
+    },
+    "edges": [
+      {
+        "to": "skill_hf_tuck",
+        "type": "EASIER",
+        "note": "angezogene Knie"
+      }
+    ]
+  },
+  {
+    "id": "skill_hf_tuck",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "OBLIQUES": 0.35,
+      "LATS": 0.25,
+      "SHOULDERS": 0.25,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "POLE"
+    ],
+    "laterality": "SIDE_HOLD",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 3,
+      "PUSH": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Flag grip, jump the hips up, knees tucked.",
+      "exec": "Hold the tucked body off vertical, hips stacked sideways.",
+      "fix": "Bottom arm collapsing? Press the pole away like a push-up."
+    },
+    "edges": [
+      {
+        "to": "skill_hf_vert",
+        "type": "EASIER",
+        "note": "vertikale Einstiegs-Position"
+      }
+    ]
+  },
+  {
+    "id": "skill_hf_vert",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PULL",
+    "muscleShares": {
+      "OBLIQUES": 0.35,
+      "LATS": 0.25,
+      "SHOULDERS": 0.25,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "POLE"
+    ],
+    "laterality": "SIDE_HOLD",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 2,
+      "PUSH": 2
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Flag grip on the pole, arms locked.",
+      "exec": "Support the body vertical beside the pole, top pulls, bottom presses.",
+      "fix": "Grip slipping? Chalk up and set the top hand higher."
+    }
+  },
+  {
+    "id": "skill_hs",
+    "upgrade": true,
+    "pattern": "BALANCE",
+    "muscleShares": {
+      "SHOULDERS": 0.5,
+      "TRICEPS": 0.2,
+      "TRAPS": 0.15,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 3,
+      "CORE": 4
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Hands shoulder-width, fingers spread, eyes between the hands.",
+      "exec": "Kick up, stack hips over shoulders, balance with the fingers.",
+      "fix": "Banana back? Ribs down, tuck the pelvis, push tall."
+    },
+    "edges": [
+      {
+        "to": "skill_hs_kick",
+        "type": "EASIER",
+        "note": "Aufschwung und Balancefang ueben"
+      }
+    ]
+  },
+  {
+    "id": "skill_hs_kick",
+    "upgrade": true,
+    "pattern": "BALANCE",
+    "muscleShares": {
+      "SHOULDERS": 0.5,
+      "TRICEPS": 0.2,
+      "TRAPS": 0.15,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "WALL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 2,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Hands down a step from the wall, one leg ready to kick.",
+      "exec": "Kick up, catch the balance point, wall only as backstop.",
+      "fix": "Crashing over? Kick softer — find the wall with one heel."
+    },
+    "edges": [
+      {
+        "to": "skill_hs_wall",
+        "type": "EASIER",
+        "note": "statische Wand-Halte zuerst"
+      }
+    ]
+  },
+  {
+    "id": "skill_hs_wall",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.5,
+      "TRICEPS": 0.2,
+      "TRAPS": 0.15,
+      "ABS": 0.15
+    },
+    "equipment": [
+      "WALL"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 2,
+      "CORE": 2
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Chest to the wall, walk up until the body is near vertical.",
+      "exec": "Push tall, hollow line, breathe through the hold.",
+      "fix": "Shoulders sagging? Push the floor away — grow an inch taller."
+    }
+  },
+  {
+    "id": "skill_manna",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "ABS": 0.45,
+      "HIP_FLEXORS": 0.3,
+      "SHOULDERS": 0.15,
+      "TRICEPS": 0.1
+    },
+    "equipment": [
+      "PARALLETTES"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 9.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 6,
+      "DIP": 4
+    },
+    "contraFlags": [
+      "WRIST",
+      "ELBOW",
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Support on parallettes, legs in a high V-sit.",
+      "exec": "Lean back, hands behind the hips, lift the legs past the face.",
+      "fix": "Stuck at V-sit? Reverse compression drills before attempts."
+    },
+    "edges": [
+      {
+        "to": "skill_vsit",
+        "type": "EASIER",
+        "note": "V-Sit als direkte Vorstufe"
+      }
+    ]
+  },
+  {
+    "id": "skill_mu",
+    "upgrade": true,
+    "pattern": "VERTICAL_PULL",
+    "muscleShares": {
+      "LATS": 0.4,
+      "BICEPS": 0.2,
+      "CHEST": 0.2,
+      "TRICEPS": 0.2
+    },
+    "equipment": [
+      "PULLUP_BAR"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PULL": 4,
+      "DIP": 3
+    },
+    "contraFlags": [
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "False grip or deep overhand grip, hollow body.",
+      "exec": "Explosive pull to the sternum, lean over the bar, press out.",
+      "fix": "Stuck at the transition? Slow transition negatives, low bar."
+    },
+    "edges": [
+      {
+        "to": "pull_pullup",
+        "type": "EASIER",
+        "note": "der Zug-Anteil"
+      },
+      {
+        "to": "push_dips",
+        "type": "EASIER",
+        "note": "der Druck-Anteil oberhalb der Stange"
+      }
+    ]
+  },
+  {
+    "id": "skill_pl_adv",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.45,
+      "CHEST": 0.2,
+      "ABS": 0.2,
+      "TRICEPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 7.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 5,
+      "CORE": 5,
+      "DIP": 4
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Tuck planche first, back flat, arms locked.",
+      "exec": "Open the hips until the back is flat, hips at shoulder height.",
+      "fix": "Falling forward? Less lean — the opening hips add the load."
+    },
+    "edges": [
+      {
+        "to": "skill_pl_tuck",
+        "type": "EASIER",
+        "note": "geschlossener Tuck"
+      }
+    ]
+  },
+  {
+    "id": "skill_pl_lean",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.5,
+      "CHEST": 0.2,
+      "ABS": 0.15,
+      "TRICEPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 3,
+      "CORE": 3
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER"
+    ],
+    "cues": {
+      "setup": "Plank on straight arms, hands turned slightly out.",
+      "exec": "Lean forward until shoulders pass the wrists, hold, breathe.",
+      "fix": "Wrists complaining? Warm them up and lean a little less."
+    }
+  },
+  {
+    "id": "skill_pl_str",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.45,
+      "CHEST": 0.2,
+      "ABS": 0.2,
+      "TRICEPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 8.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 6,
+      "CORE": 5,
+      "DIP": 5
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Lean into locked arms, hips rising, legs ready to open.",
+      "exec": "Hold the body horizontal, legs straight and split wide.",
+      "fix": "One hip dropping? Even out the lean before widening the legs."
+    },
+    "edges": [
+      {
+        "to": "skill_pl_adv",
+        "type": "EASIER",
+        "note": "geoeffneter Tuck"
+      }
+    ]
+  },
+  {
+    "id": "skill_pl_tuck",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.45,
+      "CHEST": 0.2,
+      "ABS": 0.2,
+      "TRICEPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 3,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 4,
+      "CORE": 4,
+      "DIP": 4
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Deep planche lean, knees pulled to the chest.",
+      "exec": "Feet leave the floor, hips high, full weight on straight arms.",
+      "fix": "Feet dipping back down? Deepen the lean, not the pull."
+    },
+    "edges": [
+      {
+        "to": "skill_pl_lean",
+        "type": "EASIER",
+        "note": "Vorlehnen mit Fussbodenkontakt"
+      }
+    ]
+  },
+  {
+    "id": "skill_planche",
+    "upgrade": true,
+    "pattern": "ISO_HOLD_PUSH",
+    "muscleShares": {
+      "SHOULDERS": 0.45,
+      "CHEST": 0.2,
+      "ABS": 0.2,
+      "TRICEPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 9.5,
+    "systemicCost": 4,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "PUSH": 6,
+      "CORE": 6,
+      "DIP": 5
+    },
+    "contraFlags": [
+      "WRIST",
+      "SHOULDER",
+      "ELBOW"
+    ],
+    "cues": {
+      "setup": "Hands down, fingers spread, shoulders far past the wrists.",
+      "exec": "Hover the straight body horizontal on locked arms.",
+      "fix": "Hips below shoulders? Back to straddle — earn the line first."
+    },
+    "edges": [
+      {
+        "to": "skill_pl_str",
+        "type": "EASIER",
+        "note": "Graetsche verkuerzt den Hebel"
+      },
+      {
+        "to": "push_pseudo",
+        "type": "EASIER",
+        "note": "reptaugliche Druck-Vorstufe"
+      }
+    ]
+  },
+  {
+    "id": "skill_vsit",
+    "upgrade": true,
+    "pattern": "CORE_FLEXION",
+    "muscleShares": {
+      "ABS": 0.5,
+      "HIP_FLEXORS": 0.35,
+      "TRICEPS": 0.15
+    },
+    "equipment": [
+      "BODYWEIGHT",
+      "FLOOR_ONLY"
+    ],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "ISOLATION",
+    "difficulty": 7.5,
+    "systemicCost": 2,
+    "loadMode": "NONE",
+    "skillRequires": {
+      "CORE": 5,
+      "DIP": 3
+    },
+    "contraFlags": [
+      "WRIST"
+    ],
+    "cues": {
+      "setup": "Support like an L-sit, hands beside the hips.",
+      "exec": "Lift the straight legs past 90 degrees toward the chest.",
+      "fix": "Knees bending? Raise only as far as the legs stay straight."
+    },
+    "edges": [
+      {
+        "to": "core_lsit",
+        "type": "EASIER",
+        "note": "L-Sit als Basis-Kompression"
+      }
+    ]
+  }
+]
