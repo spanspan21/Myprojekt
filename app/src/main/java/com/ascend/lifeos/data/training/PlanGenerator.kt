@@ -64,6 +64,10 @@ data class PlannedSession(
     // "sets" → ActiveWorkout, "timed" → SequencePlayer. Derived, additive:
     // custom templates (plan_*) can be either, so an id whitelist can't route them.
     val mode: String = "sets",
+    // Adaptive overlay (U06): today's effort ceiling and its explanation.
+    // null = untouched plan — the base week NEVER carries these.
+    val rpeCap: Int? = null,
+    val adjustedWhy: String? = null,
 )
 
 data class WeekPlan(val sessions: List<PlannedSession>, val note: String?)

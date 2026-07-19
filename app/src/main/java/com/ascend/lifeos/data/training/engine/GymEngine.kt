@@ -91,7 +91,12 @@ object GymEngine : PlanEngine {
         var ramped = false
         for (s in slots) {
             // deload: one set less, floor 2 — but never ABOVE the plan (1×5 deadlift stays 1)
-            val sets = if (inp.deload) (s.sets - 1).coerceAtLeast(2).coerceAtMost(s.sets) else s.sets
+            var sets = if (inp.deload) (s.sets - 1).coerceAtLeast(2).coerceAtMost(s.sets) else s.sets
+            // exam-week taper (planned reduction, same category as the deload)
+            if (inp.taperScale < 1.0) {
+                sets = (sets * inp.taperScale).let { kotlin.math.ceil(it).toInt() }
+                    .coerceAtLeast(2).coerceAtMost(sets)
+            }
             // the user's plan swap (if any) replaces the lift identity; the
             // prescription (sets/reps/main) and the loading path stay the same.
             val id = inp.gymSwaps[s.id] ?: s.id

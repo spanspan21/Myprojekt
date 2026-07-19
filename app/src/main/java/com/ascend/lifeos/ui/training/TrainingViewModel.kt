@@ -374,6 +374,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 deload = deloadActive || currentTrainWeek() == 4,
                 bodyweightKg = p.weightKg,
                 daysSinceLastSession = daysSince,
+                // exam taper reaches EVERY discipline now, not just calisthenics
+                // (U06 §6.4 consistency repair — same planned ×0.70 reduction)
+                taperScale = if (examSoon) 0.70 else 1.0,
                 calisthenics = ::calisthenicsWeek,
             )
         }

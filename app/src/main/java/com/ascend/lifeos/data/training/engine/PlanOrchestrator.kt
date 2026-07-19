@@ -116,6 +116,7 @@ object PlanOrchestrator {
         deload: Boolean,
         bodyweightKg: Int,
         daysSinceLastSession: Int = 0,
+        taperScale: Double = 1.0,
         calisthenics: (Int) -> WeekPlan,
     ): WeekPlan {
         val discs = disciplines.ifEmpty { listOf(Disciplines.CALISTHENICS) }
@@ -168,7 +169,8 @@ object PlanOrchestrator {
                         Prefs.string(ctx, Prefs.GYM_SPLIT_CUSTOM, "").split("|").filter { it.isNotBlank() }
                     } else emptyList(),
                     gymSwaps = if (d == Disciplines.GYM) parseSwaps(Prefs.string(ctx, Prefs.GYM_SWAPS, "")) else emptyMap(),
-                    daysSinceLastSession = daysSinceLastSession,
+                    daysSinceLastSession = daysSinceByDiscipline(acts, d) ?: daysSinceLastSession,
+                    taperScale = taperScale,
                 )
                 val week = runCatching { engine.week(inputs) }.getOrDefault(emptyList())
                 sessions += week.map { it.copy(index = index++) }
@@ -182,6 +184,20 @@ object PlanOrchestrator {
     // the ViewModel pre-warms this holder right before calling generate().
     @Volatile var gymBestsCache: Map<String, Double> = emptyMap()
     private fun gymBests(@Suppress("UNUSED_PARAMETER") ctx: Context): Map<String, Double> = gymBestsCache
+
+    /**
+     * Per-discipline layoff (U06 §6.5.3): a daily runner is not "detrained"
+     * for running because his gym sets paused. Counted over ActivityStore on
+     * the canonical id; null = no completions for this discipline (caller
+     * falls back to the global counter).
+     */
+    private fun daysSinceByDiscipline(acts: List<ActivityStore.Entry>, discipline: String): Int? {
+        val canon = com.ascend.lifeos.data.training.ActivityTypes.canonicalId(discipline)
+        val lastDay = acts
+            .filter { com.ascend.lifeos.data.training.ActivityTypes.canonicalId(it.type) == canon }
+            .maxOfOrNull { com.ascend.lifeos.core.dayDateOf(it.ts).toEpochDay() } ?: return null
+        return (com.ascend.lifeos.core.todayDate().toEpochDay() - lastDay).toInt().coerceAtLeast(0)
+    }
 
     /** A user template registered as its own engine — null when unknown. */
     private fun customEngineFor(ctx: Context, disciplineId: String): PlanEngine? {

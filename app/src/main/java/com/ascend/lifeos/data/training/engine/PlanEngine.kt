@@ -38,6 +38,15 @@ data class EngineInputs(
     // mesoPos = (programWeek - anchor) % mesoWeeks; anchor==programWeek → week 0
     // = the neutral, pre-feature behaviour.
     val periodizationAnchor: Int = 0,
+    // Exam-week taper (U06 §6.4): a PLANNED, deterministic reduction of the
+    // same category as season phases — expressly exempt from the FIXED lock
+    // ("Only the programmed deload + illness reduce it"). 1.0 = no taper;
+    // engines multiply set/drill counts by it, floor MEV/1.
+    val taperScale: Double = 1.0,
+    // Per-discipline layoff days (U06 §6.5.3): a daily runner is not
+    // "detrained" for running just because his gym sets paused. Empty map =
+    // legacy behaviour (global daysSinceLastSession applies).
+    val daysSinceByDiscipline: Map<String, Int> = emptyMap(),
 )
 
 interface PlanEngine {

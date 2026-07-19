@@ -114,8 +114,11 @@ class SkillSportEngine(
 
         // deload/taper build toward an honestly REDUCED target (−22 %): rich
         // drill pools genuinely shrink, sparse pools may still inflate to the
-        // session floor — volume down without breaking the length contract
-        val effTarget = if (isDeload || isTaper) (0.78 * target).toInt() else target
+        // session floor — volume down without breaking the length contract.
+        // The exam taper (inputs.taperScale, a PLANNED reduction) multiplies in
+        // — the consistency repair that extends the calisthenics-only ×0.70.
+        val effTarget = ((if (isDeload || isTaper) 0.78 * target else target.toDouble()) *
+            inputs.taperScale.coerceIn(0.5, 1.0)).toInt()
 
         // seed with every eligible main drill once, then repeat the pool until the
         // session is long enough (skill work rewards repetition of the same drills)
