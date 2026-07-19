@@ -1,0 +1,651 @@
+[
+  {
+    "id": "kb_hinge_drill",
+    "name": "KB Hip Hinge Drill",
+    "aliases": ["Kettlebell Deadlift"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "GLUTES": 0.4, "HAMSTRINGS": 0.35, "LOWER_BACK": 0.15, "FOREARMS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 1.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bell between the feet, soft knees, chest proud.",
+      "exec": "Hinge back until the hands pass the knees, stand tall.",
+      "fix": "Back rounding? Lift the chest and sit the hips back more."
+    }
+  },
+  {
+    "id": "kb_swing",
+    "name": "Kettlebell Swing",
+    "aliases": ["Two-Hand Swing", "Russian Swing"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "GLUTES": 0.4, "HAMSTRINGS": 0.3, "LOWER_BACK": 0.15, "ABS": 0.1, "FOREARMS": 0.05 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK"],
+    "cues": {
+      "setup": "Bell a foot ahead, hinge back, lats loaded, flat back.",
+      "exec": "Snap the hips, bell floats to chest height, arms relaxed.",
+      "fix": "Squatting the swing? Push the hips BACK, not down."
+    },
+    "edges": [
+      { "to": "kb_hinge_drill", "type": "EASIER", "note": "Huefthinge ohne Schwungdynamik" },
+      { "to": "gym_rdl", "type": "LATERAL", "note": "gleicher Hinge, langsam statt ballistisch" }
+    ]
+  },
+  {
+    "id": "kb_swing_one_arm",
+    "name": "One-Arm Kettlebell Swing",
+    "aliases": ["Single-Arm Swing", "One-Hand Swing"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "GLUTES": 0.38, "HAMSTRINGS": 0.27, "LOWER_BACK": 0.12, "OBLIQUES": 0.1, "FOREARMS": 0.08, "ABS": 0.05 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK"],
+    "cues": {
+      "setup": "One hand on the horn, free arm back, hinge loaded like the two-hand swing.",
+      "exec": "Snap the hips, shoulders stay square, bell floats to chest height.",
+      "fix": "Torso twisting? Pack the shoulder and brace the obliques."
+    },
+    "edges": [
+      { "to": "kb_swing", "type": "EASIER", "note": "beidarmig, ohne Anti-Rotations-Anteil" }
+    ]
+  },
+  {
+    "id": "kb_rdl",
+    "name": "Kettlebell Romanian Deadlift",
+    "aliases": ["KB RDL"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "HAMSTRINGS": 0.4, "GLUTES": 0.3, "LOWER_BACK": 0.15, "FOREARMS": 0.15 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK", "HAMSTRING"],
+    "cues": {
+      "setup": "Bell in both hands at the thighs, soft knees, shoulders back.",
+      "exec": "Push the hips back, bell slides down the legs, feel the hamstrings.",
+      "fix": "Rounding? Shorten the range and re-set the flat back."
+    },
+    "edges": [
+      { "to": "kb_hinge_drill", "type": "EASIER", "note": "gleiches Muster, kuerzerer Hebel vom Boden" },
+      { "to": "gym_rdl", "type": "EQUIPMENT_VARIANT", "note": "Kettlebell statt Langhantel" }
+    ]
+  },
+  {
+    "id": "kb_single_leg_rdl",
+    "name": "Single-Leg Kettlebell RDL",
+    "aliases": ["Single-Leg KB Deadlift"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "HAMSTRINGS": 0.35, "GLUTES": 0.3, "LOWER_BACK": 0.1, "OBLIQUES": 0.1, "FOREARMS": 0.1, "CALVES": 0.05 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK", "HAMSTRING"],
+    "cues": {
+      "setup": "Bell in one hand, stand on the opposite leg, hips square.",
+      "exec": "Hinge forward, rear leg extends back, bell lowers to mid-shin.",
+      "fix": "Hip opening up? Point the rear toes down and slow the rep."
+    },
+    "edges": [
+      { "to": "kb_rdl", "type": "EASIER", "note": "beidbeinig, ohne Balance-Anteil" }
+    ]
+  },
+  {
+    "id": "kb_goblet_squat",
+    "name": "Goblet Squat",
+    "aliases": ["Kettlebell Goblet Squat"],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": { "QUADS": 0.45, "GLUTES": 0.3, "ABS": 0.15, "LOWER_BACK": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.0,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["KNEE"],
+    "cues": {
+      "setup": "Hold the bell by the horns at the chest, elbows tucked.",
+      "exec": "Sit between the heels, elbows track inside the knees, drive up.",
+      "fix": "Heels lifting? Widen the stance and slow the descent."
+    },
+    "edges": [
+      { "to": "legs_squat", "type": "EASIER", "note": "gleiches Muster ohne Frontlast" }
+    ]
+  },
+  {
+    "id": "kb_front_rack_squat",
+    "name": "Double Kettlebell Front Squat",
+    "aliases": ["KB Front Rack Squat", "Double KB Front Squat"],
+    "category": "LEGS",
+    "pattern": "SQUAT",
+    "muscleShares": { "QUADS": 0.4, "GLUTES": 0.25, "ABS": 0.2, "LOWER_BACK": 0.1, "FOREARMS": 0.05 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.0,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["KNEE"],
+    "cues": {
+      "setup": "Two bells racked on the forearms, wrists straight, elbows down.",
+      "exec": "Brace, squat to depth, keep the rack tight, stand strong.",
+      "fix": "Chest collapsing? Exhale hard against the brace out of the hole."
+    },
+    "edges": [
+      { "to": "kb_goblet_squat", "type": "EASIER", "note": "eine Bell, stabilere Goblet-Position" },
+      { "to": "gym_front_squat", "type": "EQUIPMENT_VARIANT", "note": "Doppel-KB-Rack statt Langhantel-Frontrack" }
+    ]
+  },
+  {
+    "id": "kb_reverse_lunge",
+    "name": "Kettlebell Reverse Lunge",
+    "aliases": ["Goblet Reverse Lunge"],
+    "category": "LEGS",
+    "pattern": "LUNGE",
+    "muscleShares": { "QUADS": 0.4, "GLUTES": 0.3, "HAMSTRINGS": 0.1, "ABS": 0.1, "FOREARMS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["KNEE"],
+    "cues": {
+      "setup": "Bell held goblet style at the chest, feet hip width.",
+      "exec": "Step back, rear knee kisses the floor, drive up through the front heel.",
+      "fix": "Wobbling? Push the floor apart and slow the descent."
+    },
+    "edges": [
+      { "to": "kb_goblet_squat", "type": "EASIER", "note": "beidbeinig statt gesplittet" },
+      { "to": "gym_db_lunge", "type": "LATERAL", "note": "Rueckschritt mit KB statt DB-Ausfallschritt" }
+    ]
+  },
+  {
+    "id": "kb_clean",
+    "name": "Kettlebell Clean",
+    "aliases": ["KB Clean"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "GLUTES": 0.3, "HAMSTRINGS": 0.2, "TRAPS": 0.15, "FOREARMS": 0.15, "BICEPS": 0.1, "ABS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK"],
+    "cues": {
+      "setup": "Bell between the feet, hinge back, grip the horn loosely.",
+      "exec": "Zip the bell up the midline, rotate the hand, land soft in the rack.",
+      "fix": "Bell banging the wrist? Keep it close and tame the arc."
+    },
+    "edges": [
+      { "to": "kb_swing", "type": "EASIER", "note": "Hinge-Ballistik zuerst beidarmig lernen" }
+    ]
+  },
+  {
+    "id": "kb_press",
+    "name": "Kettlebell Press",
+    "aliases": ["KB Overhead Press", "Single-Arm KB Press"],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": { "SHOULDERS": 0.5, "TRICEPS": 0.25, "TRAPS": 0.15, "ABS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.0,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["SHOULDER"],
+    "cues": {
+      "setup": "Bell racked at the shoulder, wrist straight, glutes tight.",
+      "exec": "Press straight up, biceps to the ear, lock out fully.",
+      "fix": "Leaning sideways? Brace the core and lighten the bell."
+    },
+    "edges": [
+      { "to": "gym_ohp", "type": "EQUIPMENT_VARIANT", "note": "Kettlebell einarmig statt Langhantel" },
+      { "to": "kb_halo", "type": "EASIER", "note": "Schulterkontrolle vor dem Drueckmuster" }
+    ]
+  },
+  {
+    "id": "kb_push_press",
+    "name": "Kettlebell Push Press",
+    "aliases": ["KB Push Press"],
+    "category": "PUSH",
+    "pattern": "VERTICAL_PUSH",
+    "muscleShares": { "SHOULDERS": 0.4, "TRICEPS": 0.2, "QUADS": 0.15, "GLUTES": 0.1, "TRAPS": 0.1, "ABS": 0.05 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["SHOULDER"],
+    "cues": {
+      "setup": "Bell racked, feet hip width, torso tall.",
+      "exec": "Dip shallow, drive with the legs, punch the bell to lockout.",
+      "fix": "Pressing too early? Let the leg drive float the bell first."
+    },
+    "edges": [
+      { "to": "kb_press", "type": "EASIER", "note": "strikt ohne Beinschub, weniger Last moeglich" },
+      { "to": "gym_db_shoulder_press", "type": "LATERAL", "note": "gleiche Druckrichtung, DB strikt statt KB mit Beinschub" }
+    ]
+  },
+  {
+    "id": "kb_snatch",
+    "name": "Kettlebell Snatch",
+    "aliases": ["KB Snatch"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "GLUTES": 0.3, "HAMSTRINGS": 0.2, "SHOULDERS": 0.2, "TRAPS": 0.1, "FOREARMS": 0.1, "ABS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.0,
+    "systemicCost": 5,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": { "PUSH": 4, "CORE": 4 },
+    "contraFlags": ["LOWER_BACK", "SHOULDER"],
+    "cues": {
+      "setup": "Hike the bell like a one-arm swing, shoulder packed.",
+      "exec": "Snap the hips, pull high, punch through to a silent lockout.",
+      "fix": "Bell flipping hard? Punch earlier and keep the arc tight."
+    },
+    "edges": [
+      { "to": "kb_high_pull", "type": "EASIER", "note": "gleiche Huftpower ohne Ueberkopf-Fang" },
+      { "to": "kb_clean", "type": "EASIER", "note": "Rack-Fang statt Ueberkopf-Fang" }
+    ]
+  },
+  {
+    "id": "kb_high_pull",
+    "name": "Kettlebell High Pull",
+    "aliases": ["KB High Pull"],
+    "category": "LEGS",
+    "pattern": "HINGE",
+    "muscleShares": { "GLUTES": 0.3, "TRAPS": 0.2, "HAMSTRINGS": 0.15, "SHOULDERS": 0.15, "FOREARMS": 0.1, "ABS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 5.0,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK", "SHOULDER"],
+    "cues": {
+      "setup": "Hike the bell one-armed, shoulder packed, flat back.",
+      "exec": "Snap the hips, pull the elbow high and back, bell stays close.",
+      "fix": "Arm doing the work? Let the hips launch the bell first."
+    },
+    "edges": [
+      { "to": "kb_swing_one_arm", "type": "EASIER", "note": "reiner Swing ohne Zugphase" }
+    ]
+  },
+  {
+    "id": "kb_tgu",
+    "name": "Turkish Get-up",
+    "aliases": ["TGU", "Kettlebell Get-up"],
+    "category": "CORE",
+    "pattern": "BALANCE",
+    "muscleShares": { "ABS": 0.3, "SHOULDERS": 0.25, "OBLIQUES": 0.15, "GLUTES": 0.15, "QUADS": 0.1, "TRICEPS": 0.05 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 6.5,
+    "systemicCost": 4,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": { "PUSH": 4, "CORE": 5 },
+    "contraFlags": ["SHOULDER"],
+    "cues": {
+      "setup": "Press the bell up lying down, eyes on the bell, free arm at 45 degrees.",
+      "exec": "Roll to elbow, to hand, sweep the leg, lunge up tall; reverse down.",
+      "fix": "Rushing? Own each position for a breath before moving on."
+    },
+    "edges": [
+      { "to": "kb_half_getup", "type": "EASIER", "note": "nur bis zur Hand, kein Aufstehen" },
+      { "to": "kb_windmill", "type": "EASIER", "note": "Ueberkopf-Stabilitaet ohne Boden-Transfer" }
+    ]
+  },
+  {
+    "id": "kb_half_getup",
+    "name": "Half Turkish Get-up",
+    "aliases": ["Half Get-up"],
+    "category": "CORE",
+    "pattern": "BALANCE",
+    "muscleShares": { "ABS": 0.3, "SHOULDERS": 0.25, "OBLIQUES": 0.2, "HIP_FLEXORS": 0.15, "TRICEPS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.0,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["SHOULDER"],
+    "cues": {
+      "setup": "Lie down, bell pressed over the chest, same-side knee bent.",
+      "exec": "Roll up to the elbow, then the hand, chest tall; reverse with control.",
+      "fix": "Shoulder shrugging? Pull it away from the ear at every stage."
+    },
+    "edges": [
+      { "to": "kb_halo", "type": "EASIER", "note": "Schulterkontrolle unter Last zuerst im Stand" }
+    ]
+  },
+  {
+    "id": "kb_windmill",
+    "name": "Kettlebell Windmill",
+    "aliases": ["KB Windmill"],
+    "category": "CORE",
+    "pattern": "ROTATION",
+    "muscleShares": { "OBLIQUES": 0.3, "SHOULDERS": 0.25, "HAMSTRINGS": 0.2, "ABS": 0.15, "GLUTES": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "LENGTHENED",
+    "mechanics": "COMPOUND",
+    "difficulty": 5.0,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": { "CORE": 4, "PUSH": 3 },
+    "contraFlags": ["LOWER_BACK", "SHOULDER"],
+    "cues": {
+      "setup": "Bell locked out overhead, feet angled away, eyes on the bell.",
+      "exec": "Push the hip out, slide the free hand down the leg, stay stacked.",
+      "fix": "Bending the top arm? Lighten the bell and shorten the range."
+    },
+    "edges": [
+      { "to": "kb_around_world", "type": "EASIER", "note": "Rotationskontrolle ohne Ueberkopf-Last" }
+    ]
+  },
+  {
+    "id": "kb_halo",
+    "name": "Kettlebell Halo",
+    "aliases": ["KB Halo"],
+    "category": "MOBILITY",
+    "pattern": "MOBILITY",
+    "muscleShares": { "SHOULDERS": 0.5, "TRAPS": 0.2, "FOREARMS": 0.15, "ABS": 0.15 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.0,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Hold the bell upside down by the horns at chest height.",
+      "exec": "Circle the bell slowly around the head, ribs down, both directions.",
+      "fix": "Ribs flaring? Brace lightly and shrink the circle."
+    }
+  },
+  {
+    "id": "kb_around_world",
+    "name": "Kettlebell Around the World",
+    "aliases": ["Around the Body Pass"],
+    "category": "CORE",
+    "pattern": "ROTATION",
+    "muscleShares": { "OBLIQUES": 0.35, "ABS": 0.25, "FOREARMS": 0.2, "SHOULDERS": 0.2 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.0,
+    "systemicCost": 1,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bell in one hand at the hip, stand tall, feet planted.",
+      "exec": "Pass the bell around the body hand to hand, hips stay still.",
+      "fix": "Hips swaying? Squeeze the glutes and slow the pass."
+    }
+  },
+  {
+    "id": "kb_row",
+    "name": "Single-Arm Kettlebell Row",
+    "aliases": ["KB Row", "One-Arm KB Row"],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": { "LATS": 0.45, "BICEPS": 0.2, "TRAPS": 0.15, "REAR_DELTS": 0.1, "FOREARMS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.0,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK"],
+    "cues": {
+      "setup": "Hinge, free hand braced on the knee, flat back.",
+      "exec": "Pull the bell to the hip, elbow close, squeeze the lat.",
+      "fix": "Torso rotating? Lower the weight and pin the hips square."
+    },
+    "edges": [
+      { "to": "gym_db_row", "type": "EQUIPMENT_VARIANT", "note": "Kettlebell statt Kurzhantel" }
+    ]
+  },
+  {
+    "id": "kb_gorilla_row",
+    "name": "Gorilla Row",
+    "aliases": ["Double KB Row"],
+    "category": "PULL",
+    "pattern": "HORIZONTAL_PULL",
+    "muscleShares": { "LATS": 0.4, "BICEPS": 0.2, "REAR_DELTS": 0.1, "TRAPS": 0.1, "LOWER_BACK": 0.1, "FOREARMS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "ALTERNATING",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["LOWER_BACK"],
+    "cues": {
+      "setup": "Two bells between the feet, deep hinge, flat back, grip both horns.",
+      "exec": "Row one bell to the hip while the other stays grounded, alternate.",
+      "fix": "Standing up between reps? Hold the hinge, move only the arm."
+    },
+    "edges": [
+      { "to": "kb_row", "type": "EASIER", "note": "abgestuetzt, ohne gehaltenen Hinge" }
+    ]
+  },
+  {
+    "id": "kb_farmer_carry",
+    "name": "Kettlebell Farmer Carry",
+    "aliases": ["KB Farmer's Walk"],
+    "category": "CORE",
+    "pattern": "CARRY",
+    "muscleShares": { "FOREARMS": 0.35, "TRAPS": 0.25, "ABS": 0.15, "GLUTES": 0.15, "OBLIQUES": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.0,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bell in each hand, stand tall, shoulders down and back.",
+      "exec": "Walk a set length tall and controlled; one length counts as one rep.",
+      "fix": "Leaning or shuffling? Slow down and re-stack the posture."
+    },
+    "edges": [
+      { "to": "kb_hinge_drill", "type": "EASIER", "note": "sauberes Anheben vor dem Tragen" }
+    ]
+  },
+  {
+    "id": "kb_farmer_march",
+    "name": "Kettlebell Farmer March",
+    "aliases": ["Loaded March"],
+    "category": "CORE",
+    "pattern": "CARRY",
+    "muscleShares": { "FOREARMS": 0.25, "TRAPS": 0.2, "ABS": 0.15, "HIP_FLEXORS": 0.15, "GLUTES": 0.15, "OBLIQUES": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "BILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 2.5,
+    "systemicCost": 2,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Bells at the sides, stand tall, core braced.",
+      "exec": "March in place, knees to hip height; count steps as reps.",
+      "fix": "Torso rocking? Slow the cadence and squeeze the handles."
+    },
+    "edges": [
+      { "to": "kb_farmer_carry", "type": "EASIER", "note": "gehen statt Knieheben unter Last" }
+    ]
+  },
+  {
+    "id": "kb_suitcase_carry",
+    "name": "Kettlebell Suitcase Carry",
+    "aliases": ["One-Arm Farmer Carry"],
+    "category": "CORE",
+    "pattern": "CARRY",
+    "muscleShares": { "OBLIQUES": 0.35, "FOREARMS": 0.25, "TRAPS": 0.15, "ABS": 0.15, "GLUTES": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.0,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "One bell at the side like a suitcase, shoulders level.",
+      "exec": "Walk a length without leaning; one length per side is one rep.",
+      "fix": "Hip hiking? Lighten the bell and brace the far-side obliques."
+    },
+    "edges": [
+      { "to": "kb_farmer_carry", "type": "EASIER", "note": "beidseitig, ohne Anti-Lateralflexion" }
+    ]
+  },
+  {
+    "id": "kb_rack_carry",
+    "name": "Kettlebell Front Rack Carry",
+    "aliases": ["Racked Carry"],
+    "category": "CORE",
+    "pattern": "CARRY",
+    "muscleShares": { "ABS": 0.3, "OBLIQUES": 0.2, "FOREARMS": 0.15, "TRAPS": 0.15, "SHOULDERS": 0.1, "GLUTES": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 3.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": [],
+    "cues": {
+      "setup": "Clean the bell to the rack, forearm vertical, ribs down.",
+      "exec": "Walk a length tall and braced; one length per side is one rep.",
+      "fix": "Elbow drifting out? Re-rack and pin it to the ribs."
+    },
+    "edges": [
+      { "to": "kb_farmer_carry", "type": "EASIER", "note": "Last haengt statt Rack-Position" }
+    ]
+  },
+  {
+    "id": "kb_overhead_carry",
+    "name": "Kettlebell Overhead Carry",
+    "aliases": ["Waiter Carry"],
+    "category": "CORE",
+    "pattern": "CARRY",
+    "muscleShares": { "SHOULDERS": 0.35, "TRAPS": 0.2, "ABS": 0.2, "OBLIQUES": 0.15, "FOREARMS": 0.1 },
+    "equipment": ["KETTLEBELL"],
+    "laterality": "UNILATERAL",
+    "romEmphasis": "FULL",
+    "mechanics": "COMPOUND",
+    "difficulty": 4.5,
+    "systemicCost": 3,
+    "loadMode": "EXTERNAL",
+    "unit": "reps",
+    "skillRequires": {},
+    "contraFlags": ["SHOULDER"],
+    "cues": {
+      "setup": "Press the bell to lockout, biceps by the ear, shoulder packed.",
+      "exec": "Walk a length with the elbow locked; one length per side is one rep.",
+      "fix": "Arm bending? Take a lighter bell and shorten the length."
+    },
+    "edges": [
+      { "to": "kb_rack_carry", "type": "EASIER", "note": "Rack-Hoehe statt Ueberkopf-Lockout" }
+    ]
+  }
+]

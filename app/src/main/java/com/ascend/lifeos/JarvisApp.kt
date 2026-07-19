@@ -70,6 +70,7 @@ class JarvisApp : Application() {
             com.ascend.lifeos.ui.hud.cookingRecipe.value
             com.ascend.lifeos.data.OwnRecipes.rev
             com.ascend.lifeos.data.training.plan.PlanStore.rev
+            com.ascend.lifeos.data.training.DisciplineLevelStore.rev
         }
         mark("snapshotWarmup")
         // Init the store at the Application level so receivers/widgets that run

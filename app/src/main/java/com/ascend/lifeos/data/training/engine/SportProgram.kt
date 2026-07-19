@@ -27,6 +27,7 @@ data class Drill(
     val level: Int = 1,            // minimum athlete level 1..3 to include this drill
     val cue: String,               // one-line coaching cue shown under the ring
     val tags: List<String> = emptyList(),
+    val lift: LiftRef? = null,     // set → a LOGGED lift segment instead of a timer (U05 §5.3)
 ) {
     /** Total on-clock seconds this drill contributes (sets × work, ignoring rest). */
     val totalSec: Int get() = if (workSec > 0) workSec * sets else 0
@@ -55,7 +56,8 @@ data class SportProgram(
     val sportId: String,
     val drills: List<Drill>,
     val archetypes: List<SessionArchetype>,
-    val progression: String,       // how the plan advances over weeks (feeds the `why`)
+    val progression: String,       // the MODEL description (program detail view; the weekly truth line is computed)
+    val periodization: PeriodizationSpec? = null,  // null → PerioPresets.forSport(sportId)
 ) {
     private val byId: Map<String, Drill> = drills.associateBy { it.id }
     fun drill(id: String): Drill? = byId[id]

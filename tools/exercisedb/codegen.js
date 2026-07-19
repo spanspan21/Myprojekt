@@ -612,8 +612,11 @@ function importsFor(body) {
     'InjuryFlag', 'Laterality', 'LoadMode', 'Mechanics', 'MovementPattern',
     'Muscle', 'Pattern', 'RomEmphasis',
   ];
+  // Nur Code zählt — Kommentare (Doc-Blöcke, //) würden Wort-Treffer wie
+  // "Pattern" fälschlich als Nutzung werten.
+  const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
   return classes
-    .filter((c) => new RegExp(`(^|[^A-Za-z0-9_])${c}[.(]`).test(body))
+    .filter((c) => new RegExp(`(^|[^A-Za-z0-9_])${c}($|[^A-Za-z0-9_])`, 'm').test(code))
     .map((c) => `import com.ascend.lifeos.data.training.${c}`)
     .join('\n');
 }

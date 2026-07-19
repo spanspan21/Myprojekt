@@ -80,6 +80,23 @@ object PlanOrchestrator {
     private fun epochDayOf(ts: Long): Long =
         com.ascend.lifeos.core.dayDateOf(ts).toEpochDay()
 
+    /**
+     * Meso anchor (U05): the programWeek at which this discipline's current
+     * cycle started. Stamped on first read — existing users enter periodisation
+     * at meso week 0, the neutral point (byte-identical plans), instead of
+     * landing mid-cycle on a surprise deload. Re-stamped on level-up/demote.
+     */
+    fun periodizationAnchor(ctx: Context, discipline: String, currentProgramWeek: Int): Int {
+        val key = "disc_meso_anchor_$discipline"
+        val stored = Prefs.int(ctx, key, -1)
+        if (stored >= 0) return stored
+        Prefs.setInt(ctx, key, currentProgramWeek)
+        return currentProgramWeek
+    }
+
+    fun restampAnchor(ctx: Context, discipline: String, currentProgramWeek: Int) =
+        Prefs.setInt(ctx, "disc_meso_anchor_$discipline", currentProgramWeek)
+
     fun level(ctx: Context, discipline: String): Int =
         Prefs.int(ctx, "disc_level_$discipline", 1).coerceIn(1, 3)
 
@@ -132,11 +149,13 @@ object PlanOrchestrator {
                 // activated plan templates ("plan_*" ids ARE disciplines — they
                 // inherit placeWeek/heatmap/deload/frequency for free, U03 §3.3)
                 val engine = engines[d] ?: customEngineFor(ctx, d) ?: continue
+                val pw = programWeek(ctx, d, share, acts)
                 val inputs = EngineInputs(
                     sessions = share,
                     sessionLenMin = sessionLenMin,
                     level = level(ctx, d),
-                    programWeek = programWeek(ctx, d, share, acts),
+                    programWeek = pw,
+                    periodizationAnchor = periodizationAnchor(ctx, d, pw),
                     deload = deload,
                     bodyweightKg = bodyweightKg,
                     startIndex = index,

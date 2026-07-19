@@ -326,6 +326,11 @@ private fun SequenceFinish(session: PlannedSession, minutes: Int, onDone: () -> 
                     val dist = km.replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() && it > 0 }
                     val history = ActivityStore.all(ctx)
                     val entry = ActivityStore.add(ctx, type, minutes, rpe, dist, label = session.name)
+                    // earned levels (U05): every completion feeds the evidence
+                    // ledger on the canonical discipline id
+                    runCatching {
+                        com.ascend.lifeos.data.training.DisciplineLevelStore.recordSession(ctx, session.discipline)
+                    }
                     ActivityBests.highlight(entry, history)?.let { AppFeedback.show(it) }
                         ?: AppFeedback.show("Logged — ${session.name}")
                     Haptics.epic(ctx)

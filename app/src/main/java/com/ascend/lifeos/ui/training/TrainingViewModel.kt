@@ -468,7 +468,7 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             },
             estimatedMinutes = session.estMin,
         )
-        startWorkout(template)
+        startWorkout(template, discipline = session.discipline)
     }
 
     // ── Split rotation (Spec §5.3) ──────────────────────────────────────────
@@ -495,12 +495,17 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
 
     // ── Start workout ───────────────────────────────────────────────────────
 
-    fun startWorkout(template: WorkoutTemplate?) {
+    // the discipline the active set-based session belongs to — earned-level
+    // evidence (U05) counts on it at finish; calisthenics is the legacy base
+    private var activeDiscipline: String = "calisthenics"
+
+    fun startWorkout(template: WorkoutTemplate?, discipline: String = "calisthenics") {
         if (activeSessionId != null) return
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
         unlockCreditedThisSession.clear()
         activeSessionId = id
+        activeDiscipline = discipline
         activeTemplateName = template?.name ?: "Free Workout"
         activeStartedAt = now
         activeExercises.clear()
@@ -948,6 +953,11 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { Repo.markTrained(totalSets) }
             // learn when you actually train → smarter reschedule default (idea #5)
             runCatching { TrainingReschedule.recordTrainedNow(getApplication()) }
+            // earned levels (U05): set-based sessions feed the evidence ledger
+            // on the discipline the session was started for
+            runCatching {
+                com.ascend.lifeos.data.training.DisciplineLevelStore.recordSession(getApplication(), activeDiscipline)
+            }
         }
 
     }

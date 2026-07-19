@@ -33,6 +33,11 @@ data class EngineInputs(
     // recovery / re-entry — days since the last completed session of ANY kind.
     // 0 = trained recently / never trained. Engines may ease load after a layoff.
     val daysSinceLastSession: Int = 0,
+    // periodisation anchor: the programWeek at which this discipline's current
+    // meso cycle started (stamped at rollout / level-up / demote-accept, U05).
+    // mesoPos = (programWeek - anchor) % mesoWeeks; anchor==programWeek → week 0
+    // = the neutral, pre-feature behaviour.
+    val periodizationAnchor: Int = 0,
 )
 
 interface PlanEngine {
