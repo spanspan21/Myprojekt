@@ -18,8 +18,10 @@ object LoadLedger {
         val byDay = HashMap<Long, Double>()
 
         TrainingDatabase.get(ctx).dao().setsLoggedSince(since).forEach { s ->
-            val d = java.time.Instant.ofEpochMilli(s.loggedAt)
-                .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+            // 6am-rollover day, NOT raw calendar date: a post-midnight session
+            // belongs to the same logical day as the streak/nutrition bucket it
+            // ticked (the app-wide dayKey convention, audit C1 line).
+            val d = com.ascend.lifeos.core.dayDateOf(s.loggedAt).toEpochDay()
             byDay[d] = (byDay[d] ?: 0.0) + TrainingLoad.setLoad(s.rpe)
         }
 

@@ -8,9 +8,11 @@ package com.ascend.lifeos.data.training
 // ceiling). We deliver that across ~2 exercises × 2 sessions/week, so the lever
 // per exercise is the set count: it climbs across the block, then deloads.
 //
-// Fatigue is handled HONESTLY — not by handing out an easy day, but by a
-// CALCULATED nudge: a genuinely low recovery score shaves exactly one set,
-// and never below the effective minimum. You still show up and work.
+// Fatigue does NOT scale this model: the plan is FIXED by design (discipline
+// over comfort — AuditFixesTest pins that readiness never shrinks volume).
+// The [readiness] parameter is accepted for telemetry/rationale call sites
+// only and is deliberately unused here. Fatigue relief exists solely as the
+// visible, opt-in deload suggestion (TrainingViewModel.checkDeload).
 
 object VolumeModel {
 

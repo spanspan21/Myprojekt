@@ -293,8 +293,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 .any { it.type == EventType.EXAM.name }
         }.getOrDefault(false)
 
-        // RPE feedback loop: if the most recent session averaged RPE ≥ 9.3 across
-        // ≥3 rated work sets, the generator pulls next volume down one notch.
+        // RPE strain flag: true if the most recent session averaged RPE ≥ 9.3
+        // across ≥3 rated work sets. Deliberately does NOT scale the plan
+        // (FIXED-plan philosophy; PlanGenerator keeps it for telemetry only) —
+        // it feeds the opt-in deload suggestion via checkDeload's grind signal.
         val highStrain = runCatching {
             val recent = dao.setsLoggedSince(System.currentTimeMillis() - 5L * 86_400_000)
                 .filter { it.setType == SetType.NORMAL && it.rpe != null }
@@ -303,11 +305,20 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             rated.size >= 3 && rated.average() >= 9.3
         }.getOrDefault(false)
 
-        // Detraining: days since the last completed session (long break → soft re-entry)
+        // Detraining: days since the last completed session of ANY kind —
+        // gym/calisthenics sets in the training DB *and* ActivityStore
+        // completions (runs, yoga, all 44 sports). Before, a daily runner
+        // counted as detrained for the gym engine (×0.70) because only DB
+        // sessions reset this clock (EngineInputs contract: "any kind").
         val daysSince = runCatching {
-            val last = dao.sessionsSince(System.currentTimeMillis() - 90L * 86_400_000)
+            val horizon = System.currentTimeMillis() - 90L * 86_400_000
+            val lastDb = dao.sessionsSince(horizon)
                 .filter { it.session.isComplete }
                 .maxOfOrNull { it.session.startedAt }
+            val lastAct = com.ascend.lifeos.data.ActivityStore
+                .since(getApplication(), horizon)
+                .maxOfOrNull { it.ts }
+            val last = maxOf(lastDb ?: 0L, lastAct ?: 0L).takeIf { it > 0L }
             if (last == null) 0 else ((System.currentTimeMillis() - last) / 86_400_000L).toInt()
         }.getOrDefault(0)
 

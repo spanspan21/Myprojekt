@@ -111,8 +111,11 @@ object ActivityStore {
     /** Foster session-RPE load in hard-set units. */
     fun loadOf(e: Entry): Double = TrainingLoad.sessionRpeLoad(e.minutes, e.rpe)
 
-    private fun epochDayOf(ts: Long): Long = java.time.Instant.ofEpochMilli(ts)
-        .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+    // 6am-rollover day (same convention as dayKeyOf above): a 00:30 activity
+    // belongs to the evening's logical day — for the ATL/CTL series AND the
+    // same-sport block dedup, which both previously used the raw calendar day
+    // and could split one training evening across two ledger days.
+    private fun epochDayOf(ts: Long): Long = com.ascend.lifeos.core.dayDateOf(ts).toEpochDay()
 
     /**
      * review #1: entries that count toward LOAD/RECOVERY. A calendar sport

@@ -264,3 +264,19 @@ fun applyTheme(id: String) {
     themeSpec.value = spec
     accentState.value = spec.accentDefault
 }
+
+/**
+ * Apply the SAVED theme + accent for composition hosts that can run in a
+ * process where MainActivity never started (guard InterceptActivity, service
+ * overlay). Without this the wall renders in the LUMEN default instead of the
+ * user's world. Idempotent and cheap; MainActivity keeps its richer one-time
+ * migration logic and does not call this.
+ */
+fun ensureThemeApplied(ctx: android.content.Context) {
+    runCatching {
+        com.ascend.lifeos.data.Repo.initIfNeeded(ctx.applicationContext)
+        val saved = com.ascend.lifeos.data.Prefs.string(ctx.applicationContext, com.ascend.lifeos.data.Prefs.THEME, "lumen")
+        applyTheme(Themes.migrate(saved))
+        applyAccent(com.ascend.lifeos.data.Repo.profile().accent)
+    }
+}

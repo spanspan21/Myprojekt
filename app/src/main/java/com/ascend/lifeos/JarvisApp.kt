@@ -60,6 +60,15 @@ class JarvisApp : Application() {
             com.ascend.lifeos.data.finance.GoCardlessLink.rev
             com.ascend.lifeos.data.finance.Currency.current.value
             com.ascend.lifeos.wellbeing.GuardRuntime.payload.value
+            // theme layer — read by EVERY composition host, including the two
+            // MainActivity-less ones (InterceptActivity, guard overlay): the
+            // colour tokens are live getters on these two states (K1).
+            com.ascend.lifeos.ui.theme.themeSpec.value
+            com.ascend.lifeos.ui.theme.accentState.value
+            // file-level + store states that previously relied on incidental
+            // MainActivity init order instead of this list (K1 follow-ups)
+            com.ascend.lifeos.ui.hud.cookingRecipe.value
+            com.ascend.lifeos.data.OwnRecipes.rev
         }
         mark("snapshotWarmup")
         // Init the store at the Application level so receivers/widgets that run

@@ -1408,7 +1408,7 @@ private fun ActivityQuickLog() {
             if (open) {
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ActivityTypes.ALL.forEach { t ->
+                    ActivityTypes.PICKER.forEach { t ->
                         HudChip("${t.emoji} ${t.label}", t.id == typeId) { typeId = t.id }
                     }
                 }

@@ -146,6 +146,31 @@ object ActivityTypes {
     )
 
     fun byId(id: String): ActivityType? = ALL.firstOrNull { it.id == id }
+
+    /**
+     * Legacy quick-log ids that duplicate a 50-sport id ("one sport = one
+     * ledger"): bests, achievements and any grouping aggregate by
+     * [canonicalId], and the picker shows only the canonical entry. Existing
+     * logs keep their raw id on disk — canonicalisation is read-time only, so
+     * nothing is migrated and old entries still render via [byId].
+     */
+    private val LEGACY_ALIAS = mapOf(
+        "hockey" to "ice_hockey",
+        "racket" to "tennis",
+        "martial" to "martial_arts",
+        "climb" to "climbing",
+        "row" to "rowing",
+        "ride" to "road_cycling",
+    )
+
+    fun canonicalId(id: String): String = LEGACY_ALIAS[id] ?: id
+
+    /** The legacy ids that fold into [canonical] (for id-stable dedup checks). */
+    fun legacyAliasesOf(canonical: String): List<String> =
+        LEGACY_ALIAS.filterValues { it == canonical }.keys.toList()
+
+    /** Every sport exactly once — the quick-log picker list (aliases hidden). */
+    val PICKER: List<ActivityType> by lazy { ALL.filter { it.id !in LEGACY_ALIAS.keys } }
 }
 
 /**

@@ -30,9 +30,12 @@ object ActivityBests {
     private fun fmtKm(km: Double): String =
         if (km % 1.0 == 0.0) "${km.toInt()} km" else String.format(Locale.ROOT, "%.1f km", km)
 
-    /** The bests board for one activity type (chips above the recent list). */
+    /** The bests board for one activity type (chips above the recent list).
+     *  Groups by canonical id so a legacy "hockey" log and a new "ice_hockey"
+     *  log feed ONE ledger (one truth per sport). */
     fun bestsFor(entries: List<ActivityStore.Entry>, type: String): List<Best> {
-        val of = entries.filter { it.type == type }
+        val canon = ActivityTypes.canonicalId(type)
+        val of = entries.filter { ActivityTypes.canonicalId(it.type) == canon }
         if (of.isEmpty()) return emptyList()
         val out = ArrayList<Best>(3)
         of.mapNotNull { e -> e.distanceKm?.let { it to e } }.maxByOrNull { it.first }?.let { (km, _) ->
@@ -52,7 +55,8 @@ object ActivityBests {
      * [e])? Returns the celebration line or null — silence beats noise.
      */
     fun highlight(e: ActivityStore.Entry, history: List<ActivityStore.Entry>): String? {
-        val peers = history.filter { it.type == e.type }
+        val canon = ActivityTypes.canonicalId(e.type)
+        val peers = history.filter { ActivityTypes.canonicalId(it.type) == canon }
         val km = e.distanceKm
         if (km != null && km > (peers.mapNotNull { it.distanceKm }.maxOrNull() ?: 0.0)) {
             return "New longest — ${fmtKm(km)}!"

@@ -86,8 +86,9 @@ import java.net.URL
 
 private val FILTERS = listOf("all" to "Suggested", "fit" to "Fits today", "protein" to "High protein", "lowcarb" to "Low carb", "b" to "Breakfast")
 
-/** Cooking-Mode-Ziel (Kap. 41) — Datei-Level, damit RecipeCard ihn setzen kann. */
-private val cookingRecipe = androidx.compose.runtime.mutableStateOf<RecipeDb.Recipe?>(null)
+/** Cooking-Mode-Ziel (Kap. 41) — Datei-Level, damit RecipeCard ihn setzen kann.
+ *  internal (nicht private), damit der JarvisApp-Snapshot-Warmup ihn anfassen kann. */
+internal val cookingRecipe = androidx.compose.runtime.mutableStateOf<RecipeDb.Recipe?>(null)
 
 @Composable
 fun RecipesView(onBack: () -> Unit, onShopping: () -> Unit) {

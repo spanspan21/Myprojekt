@@ -117,13 +117,20 @@ object Achievements {
         // 5k/10k matter exactly like a lifter's PR); idempotent per mark.
         runCatching {
             val acts = com.ascend.lifeos.data.ActivityStore.all(ctx)
-            acts.groupBy { it.type }.forEach { (type, list) ->
+            // canonical grouping: legacy "hockey"/"ride"/… and their 50-sport
+            // twins feed ONE milestone ledger. New badges use the canonical id;
+            // a mark already granted under a legacy id is honoured (no re-grant
+            // of the same milestone under the new key).
+            acts.groupBy { com.ascend.lifeos.data.training.ActivityTypes.canonicalId(it.type) }.forEach { (type, list) ->
                 val t = com.ascend.lifeos.data.training.ActivityTypes.byId(type) ?: return@forEach
                 val maxKm = list.mapNotNull { it.distanceKm }.maxOrNull() ?: return@forEach
+                val legacyIds = com.ascend.lifeos.data.training.ActivityTypes.legacyAliasesOf(type)
+                val already = list(ctx)
                 var mark = 5.0
                 while (mark <= maxKm + 1e-9) {
                     val hit = list.firstOrNull { (it.distanceKm ?: 0.0) >= mark - 1e-9 }
-                    val newHit = add(
+                    val grantedAsLegacy = legacyIds.any { la -> already.any { a -> a.id == "act_${la}_km_${num(mark)}" } }
+                    val newHit = !grantedAsLegacy && add(
                         ctx, "act_${type}_km_${num(mark)}", "train",
                         "${t.label} ${num(mark)} km", "Longest ${t.label.lowercase(Locale.US)} reached ${num(mark)} km",
                         ts = hit?.ts ?: System.currentTimeMillis(),

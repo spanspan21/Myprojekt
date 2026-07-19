@@ -567,6 +567,9 @@ class JarvisGuardService : Service() {
         val lifecycleOwner = OverlayLifecycleOwner()
         overlayLifecycle = lifecycleOwner
 
+        // Fresh guard process: MainActivity's theme init never ran here — apply
+        // the user's saved world/accent so the wall doesn't render LUMEN-default.
+        com.ascend.lifeos.ui.theme.ensureThemeApplied(this)
         val composeView = ComposeView(this).apply {
             setViewTreeLifecycleOwner(lifecycleOwner)
             setViewTreeSavedStateRegistryOwner(lifecycleOwner)

@@ -3,9 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-        Ascend — Life OS. Native Jetpack Compose app, offline-first.
-        Internet is used only to fetch public chess ratings; health data is
-        read locally from Android Health Connect.
+        JARVIS — Life OS. Native Jetpack Compose app, offline-first.
+        Internet is used only for user-initiated / opt-in fetches: Open Food
+        Facts lookups, Open-Meteo weather (hydration), ICS/WebUntis calendar
+        feeds, optional open-banking sync, and the optional one-way CloudSync
+        mirror. Health data is read locally from Android Health Connect and
+        never leaves the device.
     -->
 
     <!-- Open Food Facts, weather for hydration, resource links. -->

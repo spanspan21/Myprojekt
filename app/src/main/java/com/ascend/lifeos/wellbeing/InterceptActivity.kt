@@ -26,6 +26,9 @@ class InterceptActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Fresh guard process: MainActivity's theme init never ran here — apply
+        // the user's saved world/accent so the wall doesn't render LUMEN-default.
+        com.ascend.lifeos.ui.theme.ensureThemeApplied(this)
         GuardRuntime.lockVisible = true
 
         // Back never returns into the blocked app — it leaves it, like every

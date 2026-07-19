@@ -157,7 +157,20 @@ object MuscleRecovery {
                 val ageH = ((now - a.ts).coerceAtLeast(0L)) / 3600_000.0
                 val durH = a.minutes / 60.0
                 val intensity = TrainingLoad.setLoad(a.rpe)
-                type.muscleUnitsPerHour.forEach { (m, u) -> add(m, durH * u * intensity, ageH) }
+                type.muscleUnitsPerHour.forEach { (m, u) ->
+                    if (m == Muscle.FULL_BODY) {
+                        // Systemic load (strongman): FULL_BODY is filtered out of
+                        // the freshness map below, so units parked there used to
+                        // vanish. Spread them over the muscles the map does NOT
+                        // list — "everything works" without double-counting the
+                        // majors the map already loads explicitly.
+                        val rest = Muscle.entries.filter { r -> r != Muscle.FULL_BODY && r !in type.muscleUnitsPerHour }
+                        if (rest.isNotEmpty()) {
+                            val each = u / rest.size
+                            rest.forEach { r -> add(r, durH * each * intensity, ageH) }
+                        }
+                    } else add(m, durH * u * intensity, ageH)
+                }
             }
         }
 
