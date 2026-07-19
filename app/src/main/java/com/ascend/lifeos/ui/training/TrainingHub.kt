@@ -81,6 +81,7 @@ fun TrainingHub(
     onOpenAssess: () -> Unit = {},
     onOpenSkillGoals: () -> Unit = {},
     onOpenTestDay: (String) -> Unit = {},
+    onOpenPlanStudio: () -> Unit = {},
 ) {
     val sessions by vm.recentSessions.collectAsState()
     val progs by vm.progressions.collectAsState()
@@ -107,6 +108,25 @@ fun TrainingHub(
     var offPlanOpen by remember { mutableStateOf(false) }
     var historyEditorFor by remember { mutableStateOf<WorkoutSessionEntity?>(null) }
 
+    // ── engine week through the same rater mirror (U04 §4.7/4.8) ────────────
+    // Debounced 400 ms, Default dispatcher — the rater is pure math.
+    var engineReviewOpen by remember { mutableStateOf(false) }
+    val weekRating by produceState<com.ascend.lifeos.data.training.rating.PlanRating?>(
+        null, vm.weekPlan, vm.placements,
+    ) {
+        val plan = vm.weekPlan
+        if (plan == null || plan.sessions.isEmpty()) { value = null; return@produceState }
+        kotlinx.coroutines.delay(400)
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            runCatching {
+                val rc = buildRaterContext(ctx, Repo.data.profile.sessionLen)
+                com.ascend.lifeos.data.training.rating.PlanRater.rate(
+                    engineWeekToRatable(plan, vm.placements), rc,
+                )
+            }.getOrNull()
+        }
+    }
+
     LaunchedEffect(progs, profile != null, resumeTick) {
         // Always generate: discipline engines (running/yoga/gym) build full
         // weeks without the calisthenics calibration, and the calisthenics
@@ -132,7 +152,7 @@ fun TrainingHub(
     }
 
     LazyColumn(
-        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
+        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = Pad.screen),
         contentPadding = PaddingValues(top = 16.dp, bottom = 140.dp),
     ) {
         // ── Header ──────────────────────────────────────────────────────
@@ -165,8 +185,9 @@ fun TrainingHub(
                     }
                     Spacer(Modifier.height(3.dp))
                     val doneSets = vm.todaySetsLive // include the live session
-                    val strainLabel = if (doneSets > 0) "Strain: $doneSets/$lo–$hi sets today (recovery $rec)"
-                        else "Today's target: $lo–$hi sets (recovery $rec)"
+                    // the fused score is READINESS — recovery is only one input (U06)
+                    val strainLabel = if (doneSets > 0) "Strain: $doneSets/$lo–$hi sets today (readiness $rec)"
+                        else "Today's target: $lo–$hi sets (readiness $rec)"
                     val strainZone = when {
                         rec >= rGood -> "Full volume"
                         rec >= rWarn -> "Moderate"
@@ -178,7 +199,7 @@ fun TrainingHub(
                         fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.pressScale {
                             Haptics.tick(ctx)
-                            AppFeedback.show("$strainZone — recovery $rec%. Green ≥75: full volume, Amber ≥50: moderate, Red: light day")
+                            AppFeedback.show("$strainZone — readiness $rec. Green ≥75: full volume, Amber ≥50: moderate, Red: light day")
                         },
                     )
                 }
@@ -203,7 +224,7 @@ fun TrainingHub(
             AnimatedVisibility(vm.deloadRecommended && !vm.deloadActive) {
                 Column {
                     GlassPanel(Modifier.fillMaxWidth().pressScale { Haptics.confirm(ctx); vm.activateDeload(); AppFeedback.show("Deload activated") }, fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.3f)) {
-                        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.padding(Pad.card), verticalAlignment = Alignment.CenterVertically) {
                             Text("Deload recommended", color = Orange, fontSize = FS.s14, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Text("Activate", color = Orange, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -215,7 +236,7 @@ fun TrainingHub(
             AnimatedVisibility(vm.deloadActive) {
                 Column {
                     GlassPanel(Modifier.fillMaxWidth(), fill = Amber.copy(alpha = 0.06f), line = Amber.copy(alpha = 0.3f)) {
-                        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.padding(Pad.card), verticalAlignment = Alignment.CenterVertically) {
                             Text("Deload week active", color = Amber, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Text("End", color = TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Medium,
@@ -227,6 +248,11 @@ fun TrainingHub(
             }
         }
 
+        // ── Adaptive mode: max one card per day (U06 §6.6) ──────────────
+        item {
+            AdaptiveHubCard(vm)
+        }
+
         // ── Resume: an unfinished session survived a process death ──────
         vm.abandonedSession?.let { s ->
             item {
@@ -234,7 +260,7 @@ fun TrainingHub(
                     Modifier.fillMaxWidth(),
                     fill = Mod.Train.copy(alpha = 0.08f), line = Mod.Train.copy(alpha = 0.35f), corner = RElem,
                 ) {
-                    Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.padding(horizontal = 14.dp, vertical = Pad.cardV), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Row {
                                 Text("Resume ", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
@@ -257,7 +283,7 @@ fun TrainingHub(
                         )
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
             }
         }
 
@@ -273,7 +299,7 @@ fun TrainingHub(
                         Text("✓", color = Purple, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
             }
         }
 
@@ -286,7 +312,7 @@ fun TrainingHub(
             // ── No calibration yet: CTA + classic quick start ───────────
             item {
                 CalibrateCta(onOpenAssess)
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
                 StartWorkoutCard(vm.suggestedSplit()) {
                     val template = ExerciseSeed.TEMPLATES.find { it.name == vm.suggestedSplit() }
                         ?: ExerciseSeed.TEMPLATES.first()
@@ -304,12 +330,29 @@ fun TrainingHub(
                 // gym/running/yoga week is complete without it. Banner, not wall.
                 item {
                     CalibrateCta(onOpenAssess)
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(Space.m))
                 }
             }
             // ── Next session hero + week strip (generated plan) ─────────
             item {
-                SectionLabel("Next session", accent = Mod.Train)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionLabel("Next session", accent = Mod.Train, modifier = Modifier.weight(1f))
+                    // the same judge for JARVIS weeks — honesty as a feature (U04 §4.7)
+                    weekRating?.let { r ->
+                        Box(
+                            Modifier.clip(RoundedCornerShape(9.dp))
+                                .background(ChampagneSoft)
+                                .border(0.5.dp, ChampagneLine, RoundedCornerShape(9.dp))
+                                .pressScale { Haptics.tick(ctx); engineReviewOpen = true }
+                                .padding(horizontal = 9.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                "JARVIS week · ${r.total}", color = Champagne,
+                                fontFamily = Display, fontSize = FS.s10_5, fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
                 Spacer(Modifier.height(10.dp))
                 val plan = vm.weekPlan
                 Crossfade(targetState = if (plan == null) 0 else if (plan.sessions.isNotEmpty()) 1 else 2, label = "nextSession", animationSpec = tween(400)) { state ->
@@ -320,7 +363,7 @@ fun TrainingHub(
                         Column {
                             plan?.note?.let {
                                 Text(it, color = Amber, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(Space.s))
                             }
                             val hero = plan?.sessions?.firstOrNull() ?: return@Crossfade
                             NextSessionHero(
@@ -387,11 +430,11 @@ fun TrainingHub(
                             fill = Good.copy(alpha = 0.05f), line = Good.copy(alpha = 0.22f),
                         ) {
                             Row(
-                                Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 12.dp),
+                                Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = Pad.cardV),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text("🌙", fontSize = FS.s16)
-                                Spacer(Modifier.width(12.dp))
+                                Spacer(Modifier.width(Space.m))
                                 Column(Modifier.weight(1f)) {
                                     Text(
                                         "Rest · $label",
@@ -425,7 +468,7 @@ fun TrainingHub(
                         ) {
                             Text("✓ Auto-scheduled — past sessions cleared", color = Accent, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(Space.s))
                         var armedReplan by remember { mutableStateOf(false) }
                         LaunchedEffect(armedReplan) { if (armedReplan) { kotlinx.coroutines.delay(2500); armedReplan = false } }
                         Box(
@@ -443,7 +486,7 @@ fun TrainingHub(
                     }
                 } else {
                     Text("Tap a session to set its day & time.", color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Medium)
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                     vm.weekPlan?.sessions.orEmpty().forEach { session ->
                         CustomPlaceRow(
                             session = session,
@@ -451,11 +494,28 @@ fun TrainingHub(
                             done = session.index in doneByIndex,
                             onPlace = { d, m -> vm.placeSessionManually(session, d, m) },
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(Space.s))
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
                 ProgramRow(vm, onOpenSkillGoals, onOpenAssess)
+                Spacer(Modifier.height(10.dp))
+                // Plan Studio — build your own, next to the engine plan (U03 §3.4)
+                GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
+                    Row(
+                        Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); onOpenPlanStudio() }
+                            .padding(horizontal = 14.dp, vertical = Pad.cardV),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("📐", fontSize = FS.s15)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Plan Studio — build your own", color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
+                            Text("Templates · your gym week · blank — rated live", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
+                        }
+                        Text("→", color = Mod.Train, fontSize = FS.s15, fontFamily = Body, fontWeight = FontWeight.Bold)
+                    }
+                }
                 Spacer(Modifier.height(22.dp))
             }
 
@@ -550,7 +610,7 @@ fun TrainingHub(
                     SessionRow(sws, onOpen = if (sws.session.isComplete) {
                         { historyEditorFor = sws.session }
                     } else null)
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                 }
             }
             item { Spacer(Modifier.height(14.dp)) }
@@ -564,12 +624,12 @@ fun TrainingHub(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SectionLabel("Off-plan · Extra", accent = Mod.Train)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(Space.s))
                 Text(if (offPlanOpen) "▾" else "▸  templates & free workout", color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
             }
             AnimatedVisibility(offPlanOpen) {
                 Column {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                     Text(
                         "Your assignment above is the plan. Use these only when you genuinely can't run today's session.",
                         color = TextDim, fontSize = FS.s11, fontFamily = Body, lineHeight = FS.s15,
@@ -608,6 +668,19 @@ fun TrainingHub(
     historyEditorFor?.let { s ->
         SessionEditorDialog(vm, s) { historyEditorFor = null }
     }
+
+    // the engine week in the rater mirror — findings shown, fixes read-only
+    if (engineReviewOpen) {
+        weekRating?.let { r ->
+            PlanReviewSheet(
+                rating = r,
+                planName = "JARVIS week",
+                onDismiss = { engineReviewOpen = false },
+                engineWeek = true,
+                onFix = null,
+            )
+        }
+    }
 }
 
 // ─── Session presentation ───────────────────────────────────────────────────
@@ -642,13 +715,13 @@ private fun BlockChips(blocks: List<PlannedBlock>) {
                 Modifier.clip(RoundedCornerShape(8.dp))
                     .background(Ivory.copy(alpha = 0.04f))
                     .border(0.5.dp, blockColor(b.type).copy(alpha = 0.35f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = Pad.chip, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.size(5.dp).clip(CircleShape).background(blockColor(b.type)))
                 Spacer(Modifier.width(5.dp))
                 Text(b.type.label, color = TextMuted, fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(Space.xs))
                 Text("${b.minutes}'", color = blockColor(b.type), fontFamily = Display, fontSize = FS.s9, fontWeight = FontWeight.Bold)
             }
         }
@@ -676,7 +749,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.padding(Pad.card)) {
                 Row(verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -690,7 +763,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                         }
                         Text(session.focus, color = TextDim, fontSize = FS.s11, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         placement?.let {
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Space.xs))
                             Text(placementLabel(it), color = Mod.Train, fontFamily = Display, fontSize = FS.s11, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
                         }
                     }
@@ -700,7 +773,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                     }
                 }
                 if (session.why.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                     Text(session.why, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.height(10.dp))
@@ -710,7 +783,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                     .filter { it.section == BlockType.SKILL }
                     .take(2).joinToString(" · ") { it.name }
                 if (skillNames.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(4.dp).clip(CircleShape).background(Purple))
                         Spacer(Modifier.width(6.dp))
@@ -719,7 +792,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                 }
                 val muscles = mainMuscleLine(session)
                 if (muscles.isNotEmpty()) {
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(Space.xs))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(4.dp).clip(CircleShape).background(Mod.Train.copy(alpha = 0.7f)))
                         Spacer(Modifier.width(6.dp))
@@ -733,7 +806,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp))
                             .background(Good.copy(alpha = 0.12f))
                             .border(0.5.dp, Good.copy(alpha = 0.4f), RoundedCornerShape(13.dp))
-                            .pressScale { Haptics.tick(heroCtx); onStart() }.padding(vertical = 12.dp),
+                            .pressScale { Haptics.tick(heroCtx); onStart() }.padding(vertical = Pad.cardV),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("✓ Complete — tap to redo", color = Good, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold)
@@ -741,7 +814,7 @@ private fun NextSessionHero(session: PlannedSession, placement: Placement?, done
                 } else {
                     Box(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(Mod.Train)
-                            .pressScale { Haptics.confirm(heroCtx); onStart() }.padding(vertical = 12.dp),
+                            .pressScale { Haptics.confirm(heroCtx); onStart() }.padding(vertical = Pad.cardV),
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -783,7 +856,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
                     placement?.let { placementLabel(it) } ?: session.focus,
                     color = TextDim, fontSize = FS.s10_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Space.s))
                 BlockChips(session.blocks)
                 val muscles = mainMuscleLine(session)
                 if (muscles.isNotEmpty()) {
@@ -800,7 +873,7 @@ private fun WeekSessionCard(modifier: Modifier = Modifier, session: PlannedSessi
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Rounded.PlayArrow, "Start", tint = Mod.Train, modifier = Modifier.size(15.dp))
-                        Spacer(Modifier.width(4.dp))
+                        Spacer(Modifier.width(Space.xs))
                         Text("Start", color = Mod.Train, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold)
                     }
                 }
@@ -887,7 +960,7 @@ private fun ScheduleModeToggle(recommended: Boolean, onChange: (Boolean) -> Unit
                 Modifier.clip(RoundedCornerShape(10.dp))
                     .background(if (on) Mod.Train.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
                     .pressScale { Haptics.tick(smCtx); onChange(isRec) }
-                    .padding(horizontal = 16.dp, vertical = 7.dp),
+                    .padding(horizontal = Pad.card, vertical = 7.dp),
             ) { Text(label, color = if (on) Mod.Train else TextDim, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
         }
     }
@@ -924,7 +997,7 @@ private fun CustomPlaceRow(
     var min by remember(session.index, placement) { mutableStateOf(placement?.startMin ?: (6 * 60)) }
     fun fmt(m: Int) = "%02d:%02d".format(m / 60, m % 60)
     GlassPanel(Modifier.fillMaxWidth(), corner = RElem) {
-        Column(Modifier.animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(12.dp)) {
+        Column(Modifier.animateContentSize(animationSpec = com.ascend.lifeos.ui.motion.Motion.springSmoothOf()).padding(Space.m)) {
             Row(
                 Modifier.fillMaxWidth().pressScale { Haptics.tick(cpCtx); expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
@@ -973,7 +1046,7 @@ private fun CustomPlaceRow(
                             Modifier.clip(RoundedCornerShape(10.dp)).background(Mod.Train.copy(alpha = 0.16f))
                                 .border(0.5.dp, Mod.Train.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
                                 .pressScale { Haptics.confirm(cpCtx); onPlace(day, min); expanded = false }
-                                .padding(horizontal = 16.dp, vertical = 7.dp),
+                                .padding(horizontal = Pad.card, vertical = 7.dp),
                         ) { Text("Place", color = Mod.Train, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold) }
                     }
                 }
@@ -1001,7 +1074,7 @@ private fun ProgramRow(vm: TrainingViewModel, onOpenSkillGoals: () -> Unit, onOp
                     onPlus = { Repo.setTrainPrefs(p.trainFreq, (len + 15).coerceAtMost(120), p.hasVest); vm.regeneratePlan() },
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Space.s))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "Skill targets (${p.skillGoals.size})", color = Purple, fontSize = FS.s12, fontFamily = Body, fontWeight = FontWeight.Bold,
@@ -1022,10 +1095,10 @@ private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     val stCtx = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("−", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onMinus() }.padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onMinus() }.padding(horizontal = Pad.chip, vertical = 2.dp))
         Text(value, color = TextPrimary, fontFamily = Display, fontSize = FS.s13, fontWeight = FontWeight.ExtraBold)
         Text("+", color = TextMuted, fontSize = FS.s17, fontFamily = Body, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onPlus() }.padding(horizontal = 8.dp, vertical = 2.dp))
+            modifier = Modifier.clip(CircleShape).pressScale { Haptics.tick(stCtx); onPlus() }.padding(horizontal = Pad.chip, vertical = 2.dp))
     }
 }
 
@@ -1043,7 +1116,7 @@ private fun CalibrateCta(onOpenAssess: () -> Unit) {
             .background(Mod.Train.copy(alpha = glow * 0.5f))
             .border(1.dp, Mod.Train.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
             .pressScale { Haptics.tick(ccCtx); onOpenAssess() }
-            .padding(16.dp),
+            .padding(Pad.card),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -1069,7 +1142,7 @@ private fun TodayStrip(sets: Int, reps: Int, weekSessions: Int) {
             GlassPanel(Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Rounded.FitnessCenter, "No workouts yet", tint = TextDim, modifier = Modifier.size(28.dp))
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                     Text("Start your first workout", color = TextMuted, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                     Text("and watch your progress land here.", color = TextDim, fontSize = FS.s12, fontFamily = Body)
                 }
@@ -1110,7 +1183,7 @@ private fun StartWorkoutCard(name: String, onClick: () -> Unit) {
             .background(Brush.horizontalGradient(listOf(Accent.copy(alpha = glow), Cyan.copy(alpha = glow * 0.7f))))
             .border(1.dp, Accent.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
             .pressScale { Haptics.confirm(swCtx); onClick() }
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = Pad.screen),
         contentAlignment = Alignment.CenterStart,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1134,7 +1207,7 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier = M
     GlassPanel(modifier.pressScale { Haptics.tick(qaCtx); onClick() }, corner = RElem) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, label, tint = Accent, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(Space.s))
             Text(label, color = TextMuted, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -1153,9 +1226,9 @@ private fun TemplateCard(modifier: Modifier = Modifier, tpl: WorkoutTemplate, on
                     Spacer(Modifier.width(6.dp))
                     Text(tpl.name, color = TextPrimary, fontFamily = Body, fontSize = FS.s13, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Space.xs))
                 Text(tpl.split, color = TextDim, fontSize = FS.s10, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Space.xs))
                 Text("~${tpl.estimatedMinutes} min · ${tpl.exercises.size} exercises", color = TextMuted, fontSize = FS.s10, fontFamily = Body)
             }
         }
@@ -1177,7 +1250,7 @@ private fun SessionRow(sws: SessionWithSets, onOpen: (() -> Unit)? = null) {
                 }
                 if (s.isComplete) {
                     Box(
-                        Modifier.clip(RoundedCornerShape(6.dp)).background(Accent.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 3.dp),
+                        Modifier.clip(RoundedCornerShape(6.dp)).background(Accent.copy(alpha = 0.12f)).padding(horizontal = Pad.chip, vertical = 3.dp),
                     ) { Text("✓", color = Accent, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold) }
                 }
             }
@@ -1263,12 +1336,12 @@ private fun MuscleDetailSheet(muscle: Muscle, fresh: MuscleRecovery.Freshness, o
                 color = TextMuted, fontSize = FS.s12_5, fontFamily = Body,
             )
             if (movers.isNotEmpty()) {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(Space.l))
                 Text(
                     "TRAINS THIS MUSCLE", color = TextDim, fontFamily = Display,
                     fontSize = FS.s9_5, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Space.s))
                 movers.forEach { name ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(5.dp).clip(CircleShape).background(Mod.Body.copy(alpha = 0.7f)))
@@ -1277,7 +1350,7 @@ private fun MuscleDetailSheet(muscle: Muscle, fresh: MuscleRecovery.Freshness, o
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(Space.m))
         }
     }
 }
@@ -1302,9 +1375,9 @@ private fun GymStrengthCard(s: GymStrength) {
                     color = Mod.Train, fontSize = FS.s11, fontFamily = Body, fontWeight = FontWeight.Bold,
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Space.s))
             NeonBar(progress = s.fractionToNext, color = Mod.Train, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(Space.m))
             s.lifts.take(5).forEach { l ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(l.name, color = TextMuted, fontSize = FS.s12_5, fontFamily = Body, modifier = Modifier.weight(1f))
@@ -1387,7 +1460,7 @@ private fun ActivityQuickLog() {
         Column(
             Modifier
                 .animateContentSize(com.ascend.lifeos.ui.motion.Motion.springSmoothOf())
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 14.dp, vertical = Pad.cardV),
         ) {
             Row(
                 Modifier.fillMaxWidth().pressScale { Haptics.tick(ctx); open = !open },
@@ -1406,7 +1479,7 @@ private fun ActivityQuickLog() {
             }
 
             if (open) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ActivityTypes.PICKER.forEach { t ->
                         HudChip("${t.emoji} ${t.label}", t.id == typeId) { typeId = t.id }
@@ -1448,7 +1521,7 @@ private fun ActivityQuickLog() {
                         }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
                 val validMin = minutes > 0
                 HudButton("Log ${type.emoji} ${type.label} · $minutes min", Modifier.fillMaxWidth().alpha(if (validMin) 1f else 0.4f)) {
                     if (!validMin) return@HudButton
@@ -1465,7 +1538,7 @@ private fun ActivityQuickLog() {
             }
 
             celebrate?.let { line ->
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Space.s))
                 Text(
                     "🏆 $line", color = Amber, fontSize = FS.s11_5,
                     fontFamily = Body, fontWeight = FontWeight.Bold,
@@ -1488,7 +1561,7 @@ private fun ActivityQuickLog() {
                             fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                         )
                         Text(relDay(e.ts), color = TextDim, fontSize = FS.s10, fontFamily = Body)
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(Space.s))
                         val actArmed = armedDeleteActivity == e.id
                         Box(Modifier.size(44.dp).clip(CircleShape).pressScale {
                             if (actArmed) {

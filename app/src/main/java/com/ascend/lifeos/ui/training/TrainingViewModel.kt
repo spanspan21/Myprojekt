@@ -393,7 +393,10 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
         val placed = runCatching {
             PlanGenerator.placeWeek(getApplication(), plan, p.sessionLen)
         }.getOrDefault(emptyList())
-        weekPlan = plan
+        // An applied adaptive overlay (U06 §6.6) survives regeneration for its
+        // day — the base plan stays fixed, the overlay re-applies on top.
+        val ov = adaptiveOverlay
+        weekPlan = if (ov != null && ov.dayKey == todayKey()) AdaptiveOverlay.apply(plan, ov) else plan
         placements = placed
         // Recommended mode keeps the calendar in sync by itself: wipe the old
         // auto-placed blocks and write the fresh week. So changing anything (freq,
@@ -442,6 +445,110 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
                 .onSuccess { scheduledOk = true }
                 .onFailure { scheduledOk = false }
         }
+    }
+
+    // ── Earned levels: the LevelUp moment + tech-check offer (U05 §5.2) ────
+
+    data class LevelUpEvent(val discipline: String, val to: Int, val reason: String)
+
+    var levelUpPending by mutableStateOf<LevelUpEvent?>(null)
+        private set
+    var techCheckPending by mutableStateOf<String?>(null)   // canonical discipline id
+        private set
+
+    /** Post-session gate check: Promote → full-screen moment; quantitative
+     *  gates met but self-check missing → tech-check sheet (max 1 offer/7 d). */
+    fun checkLevelAfterSession(disciplineId: String) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val ctx = getApplication<Application>()
+            val canon = ActivityTypes.canonicalId(disciplineId)
+            // calisthenics levels live in the chains; template plans have no level track
+            if (canon == "calisthenics" || canon.startsWith("plan_")) return@runCatching
+            val st = DisciplineLevelStore.state(ctx, canon)
+            val ev = DisciplineLevelStore.evidence(ctx, canon, PlanOrchestrator.gymBestsCache)
+            val klass = LevelEngine.klassOf(canon)
+            when (val v = LevelEngine.evaluate(st.level, klass, ev)) {
+                is LevelEngine.Verdict.Promote -> levelUpPending = LevelUpEvent(canon, v.to, v.reason)
+                else -> {
+                    if (LevelEngine.readyForTechCheck(st.level, klass, ev)) {
+                        val today = com.ascend.lifeos.core.todayDate().toEpochDay().toInt()
+                        val last = Prefs.int(ctx, "techcheck_offer_$canon", 0)
+                        if (today - last >= 7) {
+                            Prefs.setInt(ctx, "techcheck_offer_$canon", today)
+                            techCheckPending = canon
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** All three toggles confirmed → the check passes and the gate re-evaluates. */
+    fun confirmTechCheck(discipline: String) = viewModelScope.launch(Dispatchers.IO) {
+        runCatching {
+            val ctx = getApplication<Application>()
+            val st = DisciplineLevelStore.state(ctx, discipline)
+            DisciplineLevelStore.passTechCheck(ctx, discipline, st.level + 1)
+            val ev = DisciplineLevelStore.evidence(ctx, discipline, PlanOrchestrator.gymBestsCache)
+            val v = LevelEngine.evaluate(st.level, LevelEngine.klassOf(discipline), ev)
+            if (v is LevelEngine.Verdict.Promote) levelUpPending = LevelUpEvent(discipline, v.to, v.reason)
+        }
+        techCheckPending = null
+    }
+
+    /** "Not yet" = 14-day snooze, no penalty (U05 §5.2.2). */
+    fun snoozeTechCheck(discipline: String) {
+        val today = com.ascend.lifeos.core.todayDate().toEpochDay().toInt()
+        Prefs.setInt(getApplication(), "techcheck_offer_$discipline", today + 7)
+        techCheckPending = null
+    }
+
+    /** Continue on the moment: level applies, meso restarts in week 0 (U05). */
+    fun applyPendingLevelUp() {
+        val ev = levelUpPending ?: return
+        levelUpPending = null
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val ctx = getApplication<Application>()
+                val acts = runCatching { ActivityStore.all(ctx) }.getOrDefault(emptyList())
+                val pw = PlanOrchestrator.programWeek(ctx, ev.discipline, 1, acts)
+                DisciplineLevelStore.applyLevel(ctx, ev.discipline, ev.to, pw)
+            }
+            regeneratePlan()
+        }
+    }
+
+    // ── Adaptive overlay (U06 §6.6): bounded, explained, revertible ────────
+    // The applied overlay for today, kept in-memory (re-applied over every
+    // regenerate for its dayKey) — the BASE plan is never mutated.
+    var adaptiveOverlay by mutableStateOf<AdaptiveOverlay.Overlay?>(null)
+        private set
+
+    fun applyAdaptiveOverlay(o: AdaptiveOverlay.Overlay) {
+        adaptiveOverlay = o
+        weekPlan = weekPlan?.let { AdaptiveOverlay.apply(it, o) }
+        Prefs.setString(getApplication(), "adaptive_applied_day", todayKey())
+    }
+
+    /** Revert applies for the whole day (invariant 6) — back to the fixed plan. */
+    fun revertAdaptive() {
+        adaptiveOverlay = null
+        Prefs.setString(getApplication(), "adaptive_applied_day", "")
+        Prefs.setString(getApplication(), "adaptive_card_dismissed", todayKey())
+        regeneratePlan()
+    }
+
+    /** Ø RPE of NORMAL sets: last 7 days vs the 28-day personal baseline. */
+    suspend fun rpeAverages(): Pair<Double?, Double?> = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        val sets = runCatching {
+            dao.setsLoggedSince(now - 28L * 86_400_000)
+                .filter { it.setType == SetType.NORMAL && it.rpe != null }
+        }.getOrDefault(emptyList())
+        val r28 = sets.mapNotNull { it.rpe }.takeIf { it.size >= 6 }?.average()
+        val r7 = sets.filter { it.loggedAt >= now - 7L * 86_400_000 }
+            .mapNotNull { it.rpe }.takeIf { it.size >= 3 }?.average()
+        r7 to r28
     }
 
     var rescheduleNote by mutableStateOf<String?>(null)
@@ -969,6 +1076,9 @@ class TrainingViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 com.ascend.lifeos.data.training.DisciplineLevelStore.recordSession(getApplication(), activeDiscipline)
             }
+            // …and the fresh evidence may cross a promotion/tech-check gate —
+            // the moment renders full-screen before the summary (U05 §5.2.5)
+            checkLevelAfterSession(activeDiscipline)
         }
 
     }

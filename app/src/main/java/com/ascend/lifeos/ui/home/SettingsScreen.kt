@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -809,6 +810,78 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 "Your weekly sessions are split across these — a runner gets running weeks, a yogi gets flows.",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
+            // ── priority weights (U08 §8.2): 5 discrete dots per discipline,
+            //    live session preview via the honest weighted split ──────────
+            var prioritizeOpen by remember { mutableStateOf(false) }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (prioritizeOpen) "▾ Prioritize" else "▸ Prioritize",
+                color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                    .pressScale { Haptics.tick(ctx); prioritizeOpen = !prioritizeOpen }
+                    .padding(vertical = 5.dp, horizontal = 2.dp),
+            )
+            if (prioritizeOpen) {
+                var weights by remember {
+                    mutableStateOf(
+                        Prefs.string(ctx, "disc_weights", "").split("|").mapNotNull { pair ->
+                            val p = pair.split(":"); val v = p.getOrNull(1)?.toIntOrNull()
+                            if (p.size == 2 && v != null) p[0] to v else null
+                        }.toMap(),
+                    )
+                }
+                val freq = Repo.data.profile.trainFreq
+                val split = remember(weights, discs, freq) {
+                    com.ascend.lifeos.data.training.engine.Disciplines
+                        .splitFrequencyWeighted(freq, discs, weights)
+                }
+                Spacer(Modifier.height(4.dp))
+                discs.forEach { id ->
+                    val def = com.ascend.lifeos.data.training.engine.Disciplines.byId(id)
+                    val label = def?.let { "${it.emoji} ${it.label}" }
+                        ?: com.ascend.lifeos.data.training.plan.PlanStore.byId(ctx, id)?.name ?: id
+                    val w = (weights[id] ?: 3).coerceIn(1, 5)
+                    val share = split[id] ?: 0
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            label, color = TextMuted, fontSize = FS.s11_5, fontFamily = Body,
+                            fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            (1..5).forEach { i ->
+                                Box(
+                                    Modifier.size(18.dp).clip(CircleShape)
+                                        .background(if (i <= w) Mod.Train.copy(alpha = 0.85f) else Ivory.copy(alpha = 0.08f))
+                                        .pressScale {
+                                            Haptics.tick(ctx)
+                                            weights = weights + (id to i)
+                                            Prefs.setString(
+                                                ctx, "disc_weights",
+                                                weights.entries.joinToString("|") { "${it.key}:${it.value}" },
+                                            )
+                                        },
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            if (share > 0) "→ $share" else "→ rotates",
+                            color = if (share > 0) Mod.Train else Amber,
+                            fontSize = FS.s10_5, fontFamily = Display, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.width(58.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Preview updates live · sessions always sum to $freq. Equal dots = equal split (today's behavior); a 0-session week rotates back in next week.",
+                    color = TextDim, fontSize = FS.s10, fontFamily = Body, lineHeight = FS.s13,
+                )
+            }
             // Gym split chooser — only when Gym is one of the disciplines (§10)
             if ("gym" in discs) {
                 Spacer(Modifier.height(14.dp))
@@ -942,6 +1015,86 @@ fun SettingsScreen(onClose: () -> Unit, onOpenReport: () -> Unit = {}) {
                 "Breather between paired exercises. 0-60s keeps the time saving with full output (Paz 2014).",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
             )
+
+            // ── Adaptive mode (U06 §6.6): explicit opt-in, Auto is earned ──
+            Spacer(Modifier.height(14.dp))
+            Text(
+                "ADAPTIVE MODE", color = TextDim, fontFamily = Display,
+                fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(7.dp))
+            var adMode by remember {
+                mutableStateOf(Prefs.string(ctx, com.ascend.lifeos.ui.training.AdaptivePrefs.MODE, "off"))
+            }
+            val autoEarned = remember(adMode) {
+                com.ascend.lifeos.ui.training.AdaptivePrefs.autoEarned(ctx)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("off" to "Off", "suggest" to "Suggest", "auto" to "Auto").forEach { (id, label) ->
+                    val on = adMode == id
+                    val locked = id == "auto" && !autoEarned
+                    Box(
+                        Modifier.clip(RoundedCornerShape(9.dp))
+                            .background(if (on) Mod.Train.copy(alpha = 0.14f) else Ivory.copy(alpha = 0.04f))
+                            .border(0.5.dp, if (on) Mod.Train.copy(alpha = 0.5f) else Ivory.copy(alpha = 0.10f), RoundedCornerShape(9.dp))
+                            .alpha(if (locked) 0.4f else 1f)
+                            .pressScale {
+                                Haptics.tick(ctx)
+                                if (locked) {
+                                    val since = Prefs.int(ctx, com.ascend.lifeos.ui.training.AdaptivePrefs.SUGGEST_SINCE, 0)
+                                    val left = if (since <= 0) 7
+                                    else (7 - (com.ascend.lifeos.core.todayDate().toEpochDay() - since)).coerceAtLeast(1)
+                                    com.ascend.lifeos.ui.kit.AppFeedback.show("Auto unlocks after 7 days on Suggest — ${left}d to go")
+                                } else {
+                                    adMode = id
+                                    Prefs.setString(ctx, com.ascend.lifeos.ui.training.AdaptivePrefs.MODE, id)
+                                    if (id == "suggest" && Prefs.int(ctx, com.ascend.lifeos.ui.training.AdaptivePrefs.SUGGEST_SINCE, 0) <= 0) {
+                                        Prefs.setInt(
+                                            ctx, com.ascend.lifeos.ui.training.AdaptivePrefs.SUGGEST_SINCE,
+                                            com.ascend.lifeos.core.todayDate().toEpochDay().toInt(),
+                                        )
+                                    }
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) { Text(label, color = if (on) Mod.Train else TextMuted, fontSize = FS.s10_5, fontFamily = Body, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "JARVIS never rewrites your plan. Suggest shows cards you can apply; Auto applies bounded tweaks — and always shows its work.",
+                color = TextDim, fontSize = FS.s10_5, fontFamily = Body, lineHeight = FS.s14,
+            )
+            var adDials by remember { mutableStateOf(false) }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (adDials) "▾ Algorithm dials" else "▸ Algorithm dials",
+                color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                    .pressScale { Haptics.tick(ctx); adDials = !adDials }
+                    .padding(vertical = 5.dp, horizontal = 2.dp),
+            )
+            if (adDials) {
+                @Composable
+                fun dialRow(label: String, key: String, def: Int, min: Int, max: Int, step: Int) {
+                    var v by remember(key) { mutableIntStateOf(Prefs.int(ctx, key, def)) }
+                    GoalStepperRow(label, "$v",
+                        onDec = { v = (v - step).coerceAtLeast(min); Prefs.setInt(ctx, key, v) },
+                        onInc = { v = (v + step).coerceAtMost(max); Prefs.setInt(ctx, key, v) },
+                    )
+                }
+                dialRow("Recovery weight", "adw_recovery", 55, 0, 70, 5)
+                dialRow("Sleep-debt weight", "adw_debt", 15, 0, 70, 5)
+                dialRow("Load-ratio weight", "adw_acwr", 20, 0, 70, 5)
+                dialRow("Effort-trend weight", "adw_rpe", 10, 0, 70, 5)
+                dialRow("Cycle weight", "adw_cycle", 0, 0, 15, 5)
+                dialRow("Sleep-debt floor (min)", "adw_debt_floor", 180, 60, 360, 30)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Weights renormalise honestly — they need not sum to 100. Thresholds green/amber are shared with the readiness bands above.",
+                    color = TextDim, fontSize = FS.s10, fontFamily = Body, lineHeight = FS.s13,
+                )
+            }
         }
 
         // ── ACTIVITY LEVEL ────────────────────────────────────────────

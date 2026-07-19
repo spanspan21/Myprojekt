@@ -188,6 +188,9 @@ fun SequencePlayerScreen(vm: TrainingViewModel, onBack: () -> Unit) {
             SequenceFinish(session = session, minutes = (elapsed / 60).coerceAtLeast(1), onDone = {
                 vm.activeSequence = null
                 vm.refreshTodayStats()   // week tick appears immediately, not on next resume
+                // earned levels (U05): the fresh completion may cross a gate —
+                // the LevelUp moment / tech-check sheet renders over the hub
+                vm.checkLevelAfterSession(session.discipline)
                 onBack()
             })
         } else phases.getOrNull(idx)?.let { phase ->

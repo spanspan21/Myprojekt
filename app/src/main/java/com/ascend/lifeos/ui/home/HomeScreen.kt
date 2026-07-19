@@ -268,7 +268,7 @@ fun HomeScreen(
         Column(
             Modifier.fillMaxSize().statusBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp).padding(top = 14.dp, bottom = 120.dp),
+                .padding(horizontal = Pad.screen).padding(top = 14.dp, bottom = 120.dp),
         ) {
             // ── status row (wordmark = command palette) ──────────────────
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -296,7 +296,7 @@ fun HomeScreen(
                 )
                 val ctxMode = ShellMode.current.value
                 if (ctxMode != "normal") {
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(Space.s))
                     Box(
                         Modifier.clip(RoundedCornerShape(6.dp))
                             .background(if (ctxMode == "exam") Amber.copy(alpha = 0.18f) else Good.copy(alpha = 0.15f))
@@ -310,9 +310,9 @@ fun HomeScreen(
                         )
                     }
                 }
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(Space.m))
                 IconOrb(Icons.Rounded.Shield, "Open Guard", tint = Mod.Guard, size = 34.dp, onClick = onOpenGuard)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(Space.s))
                 IconOrb(Icons.Rounded.Tune, "Open settings", size = 34.dp, onClick = onOpenSystem)
             }
 
@@ -338,7 +338,7 @@ fun HomeScreen(
                         .background(Warn.copy(alpha = 0.12f))
                         .border(0.5.dp, Warn.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                         .pressScale { Haptics.confirm(ctx); Repo.setSickMode(false); AppFeedback.show("Sick mode off — back to normal") }
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = Pad.card, vertical = 10.dp),
                 ) {
                     Text(
                         "🤒 Sick mode — tap to deactivate",
@@ -356,7 +356,7 @@ fun HomeScreen(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                             .background(Cyan.copy(alpha = 0.10f))
                             .border(0.5.dp, Cyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                            .padding(horizontal = Pad.card, vertical = 10.dp),
                     ) {
                         Text(
                             "🧊 Deload week — $daysLeft day${if (daysLeft != 1) "s" else ""} left · reduced volume",
@@ -395,7 +395,7 @@ fun HomeScreen(
                 // Hero = das lux-Panel des Screens: die eine Gold-Hairline (Kap. 23)
                 Panel(Modifier.fillMaxWidth().tourTarget("hero"), corner = RHero, lux = true, onClick = onOpenBody) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = Pad.card, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     com.ascend.lifeos.ui.training.ScanBodyFigure(
@@ -491,7 +491,7 @@ fun HomeScreen(
                                         tint = Champagne, modifier = Modifier.size(12.dp),
                                     )
                                 }
-                                Spacer(Modifier.width(4.dp))
+                                Spacer(Modifier.width(Space.xs))
                             }
                             // Gentle streak (Finch): a broken chain shouldn't read as
                             // a demoralising "day one" if you've actually been showing
@@ -538,7 +538,7 @@ fun HomeScreen(
 
             // ── streak saved: the freeze did its job — say so, once ──────
             if (Repo.streakSavedYesterday()) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(Space.m))
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                         .background(Mod.Home.copy(alpha = 0.08f))
@@ -547,7 +547,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(Icons.Rounded.Bolt, "Streak freeze used", tint = Mod.Home, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(Space.s))
                     Text(
                         "Streak saved — a freeze covered yesterday. ${profile.streak} days stand. (${profile.freezeAvail} left this week)",
                         color = TextMuted, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold,
@@ -606,10 +606,10 @@ fun HomeScreen(
                 val hasAny = directives.isNotEmpty() || customFired.isNotEmpty() || ins != null || exam != null || goalDeadlines.isNotEmpty()
                 Crossfade(targetState = briefingLoaded, animationSpec = tween(300), label = "briefing") { loaded ->
                 if (!loaded) {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(Space.xl))
                     ShimmerPanel(Modifier.fillMaxWidth(), height = 56.dp, corner = RElem)
                 } else if (hasAny) {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(Space.xl))
                     SectionLabel("Daily briefing")
                     Spacer(Modifier.height(10.dp))
                     Panel(Modifier.fillMaxWidth()) {
@@ -665,9 +665,14 @@ fun HomeScreen(
                 }
             }
 
+            // ── WHAT NOW — the routing engine's one answer (U10 §10.3) ──
+            homeCards["whatnow"] = {
+                WhatNowCard(tick = resumeTick, onOpenSkills = onOpenSkills)
+            }
+
             homeCards["nextup"] = {
             // ── NEXT UP ──────────────────────────────────────────────────
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(Space.xl))
             // On hockey game days, a pre-game readiness card sits up top.
             GameDayCard(Modifier.padding(bottom = 12.dp))
             // Morning: Prime's top-3 as a start-the-day ritual. Sunday: week review.
@@ -703,7 +708,7 @@ fun HomeScreen(
 
             homeCards["missions"] = {
             // ── MISSIONS ─────────────────────────────────────────────────
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(Space.xl))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 SectionLabel("Today's missions")
                 Spacer(Modifier.weight(1f))
@@ -888,7 +893,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(Icons.Rounded.WaterDrop, "Add water", tint = Mod.Body, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(Space.s))
                         Text("+ Water", color = Mod.Body, fontFamily = Body, fontSize = FS.s12_5, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.weight(1f))
                         Text("$waterGlassEq/${profile.waterGoal}", color = TextDim, fontFamily = Body, fontSize = FS.s11, fontWeight = FontWeight.SemiBold)
@@ -915,7 +920,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(14.dp))
                     Row(
                         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
                         val dk = todayKey()
                         todayHabits.forEach { h ->
@@ -958,7 +963,7 @@ fun HomeScreen(
             // Was a 4-row grid (~330dp of scroll). One row with an edge fade
             // keeps all ten reachable at a quarter of the height.
             homeCards["systems"] = {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(Space.xl))
                 SectionLabel("Systems")
                 Spacer(Modifier.height(10.dp))
                 Row(
@@ -1032,7 +1037,7 @@ fun HomeScreen(
                                         .padding(6.dp),
                                 )
                             }
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Space.xs))
                             // progress hairline
                             Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(Ivory.copy(alpha = 0.08f))) {
                                 Box(
@@ -1053,7 +1058,7 @@ fun HomeScreen(
                                         color = if (step.done) Good else TextDim,
                                         fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold,
                                     )
-                                    Spacer(Modifier.width(12.dp))
+                                    Spacer(Modifier.width(Space.m))
                                     Column(Modifier.weight(1f)) {
                                         Text(
                                             step.label,
@@ -1098,7 +1103,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(Space.m))
             Text(
                 "Edit dashboard",
                 color = TextDim, fontSize = FS.s10_5, fontFamily = Body,
@@ -1158,7 +1163,7 @@ private fun SleepConfirmCard(
                 "Your watch only sees when you slept — this keeps the sleep window honest.",
                 color = TextDim, fontSize = FS.s11_5, fontFamily = Body, lineHeight = FS.s15,
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(Space.m))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf("Instant" to 0, "15m" to 15, "30m" to 30, "45m" to 45, "1h+" to 75).forEach { (label, mins) ->
                     Box(
@@ -1234,9 +1239,9 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                                 eventColor(current.type), onClick = onOpenCalendar,
                             )
                             if (!trainedToday && slot != null && plannedTraining == null) {
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(Space.m))
                                 HairLine()
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(Space.m))
                                 EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
                             }
                         }
@@ -1246,18 +1251,18 @@ private fun NextUpCard(trainVm: TrainingViewModel, trainedToday: Boolean, onOpen
                             else "${slot.durationMin} min free · no blockers"
                             EventLine(tag, split, sub, Mod.Train, onClick = onOpenTrain)
                             if (next != null) {
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(Space.m))
                                 HairLine()
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(Space.m))
                                 EventLine("LATER", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
                             }
                         }
                         next != null -> {
                             EventLine("NEXT", next.title, "${fmt(next.startMin)}–${fmt(next.endMin)} · ${eventLabel(next.type)}", eventColor(next.type), onClick = onOpenCalendar)
                             if (!trainedToday && slot != null && plannedTraining == null) {
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(Space.m))
                                 HairLine()
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(Space.m))
                                 EventLine("THEN", split, "free ${fmt(slot.startMin)}–${fmt(slot.endMin)} · ~${slot.durationMin} min", Mod.Train, onClick = onOpenTrain)
                             }
                         }
@@ -1308,7 +1313,7 @@ private fun EventLine(tag: String, title: String, sub: String, color: Color, onC
                 tag, color = color, fontFamily = Display, fontSize = FS.s9_5,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(Space.hair))
             Text(title, color = TextPrimary, fontFamily = Body, fontSize = FS.s15_5, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(sub, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -1344,7 +1349,7 @@ private fun MacroBar(label: String, current: Int, goal: Int, color: Color, modif
     Row(
         modifier.clip(RoundedCornerShape(8.dp))
             .background(Ivory.copy(alpha = 0.04f))
-            .padding(horizontal = 8.dp, vertical = 5.dp),
+            .padding(horizontal = Pad.chip, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = color, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold)
@@ -1386,7 +1391,7 @@ private fun VitalMini(label: String, value: String, progress: Float, color: Colo
             }
             Text(value, color = TextPrimary, fontFamily = Display, fontSize = FS.s10, fontWeight = FontWeight.Bold)
         }
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(Space.xs))
         Text(label, color = TextDim, fontFamily = Body, fontSize = FS.s8_5)
     }
 }
@@ -1405,7 +1410,7 @@ private fun FirstDayStep(num: String, title: String, hint: String, onClick: () -
             Modifier.size(26.dp).clip(CircleShape).background(Mod.Home.copy(alpha = 0.16f)),
             contentAlignment = Alignment.Center,
         ) { Text(num, color = Mod.Home, fontFamily = Display, fontSize = FS.s12, fontWeight = FontWeight.Bold) }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(Space.m))
         Column(Modifier.weight(1f)) {
             Text(title, color = TextPrimary, fontSize = FS.s13, fontFamily = Body, fontWeight = FontWeight.Bold)
             Text(hint, color = TextDim, fontSize = FS.s10_5, fontFamily = Body)
@@ -1542,7 +1547,7 @@ private fun GlanceDeck(
                             Spacer(Modifier.weight(1f))
                             Text(s.session.templateName, color = TextPrimary, fontFamily = Display, fontSize = FS.s15, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(3.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                                 Text("${s.session.totalSets} sets", color = Mod.Train, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.SemiBold)
                                 Text("${s.session.totalReps} reps", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body)
                                 Text("${s.session.durationMinutes} min", color = TextMuted, fontSize = FS.s11_5, fontFamily = Body)
@@ -1602,6 +1607,7 @@ private fun GlanceDeck(
 internal object HomeCards {
     val ALL = listOf(
         "briefing" to "Daily briefing",
+        "whatnow" to "What now",
         "nextup" to "Next up",
         "missions" to "Today's missions",
         "weekRecap" to "Glance · Week recap",
@@ -1655,7 +1661,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                 "DASHBOARD", color = Mod.Home, fontFamily = Display,
                 fontSize = FS.s10, fontWeight = FontWeight.SemiBold, letterSpacing = 3.sp,
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Space.xs))
             Text(
                 "Your Today, your order", color = TextPrimary,
                 fontFamily = Display, fontSize = FS.s20, fontWeight = FontWeight.Bold,
@@ -1698,7 +1704,7 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                                     val m = order.toMutableList()
                                     m[idx] = m[idx - 1].also { m[idx - 1] = m[idx] }
                                     commit(m)
-                                } else Modifier).padding(8.dp),
+                                } else Modifier).padding(Pad.chip),
                             )
                             Text(
                                 "▼", color = if (idx < order.lastIndex) TextMuted else TextDim.copy(alpha = 0.35f), fontSize = FS.s13, fontFamily = Body,
@@ -1706,13 +1712,13 @@ private fun EditDashboardSheet(onDismiss: () -> Unit, onChanged: () -> Unit) {
                                     val m = order.toMutableList()
                                     m[idx] = m[idx + 1].also { m[idx + 1] = m[idx] }
                                     commit(m)
-                                } else Modifier).padding(8.dp),
+                                } else Modifier).padding(Pad.chip),
                             )
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Space.s))
             Text(
                 "Hidden cards stop computing entirely — less noise, less battery. " +
                     "Glance cards share one swipeable deck instead of stacking.",
@@ -1850,7 +1856,7 @@ private fun BriefRow(
                 overline, color = dot, fontFamily = Display,
                 fontSize = FS.s8_5, fontWeight = FontWeight.SemiBold, letterSpacing = 1.8.sp,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(Space.hair))
             Text(
                 text, color = TextPrimary, fontSize = FS.s12_5, fontFamily = Body,
                 fontWeight = FontWeight.Medium, lineHeight = FS.s17,
@@ -1858,7 +1864,7 @@ private fun BriefRow(
             )
         }
         if (action != null) {
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(Space.s))
             Text(
                 action, color = TextDim, fontSize = FS.s11_5, fontFamily = Body, fontWeight = FontWeight.Bold,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).pressScale(onClick = onAction).padding(6.dp),

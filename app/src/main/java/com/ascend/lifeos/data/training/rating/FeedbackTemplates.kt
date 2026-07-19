@@ -24,7 +24,7 @@ object FeedbackTemplates {
     fun volumeLow(m: Muscle, sets: Float, mev: Int, missing: Int, targetDay: Int): RatingFinding = RatingFinding(
         criterion = Criterion.VOLUME,
         severity = if (sets < mev * 0.5f) Severity.CRIT else Severity.WARN,
-        message = "Add $missing sets of ${m.label()} work — you're at ${f1(sets)} sets, MEV is $mev.",
+        message = "Add $missing ${if (missing == 1) "set" else "sets"} of ${m.label()} work — you're at ${f1(sets)} sets, MEV is $mev.",
         detail = "Minimum effective volume, Israetel/RP landmarks on the Schoenfeld 2017 dose-response corridor (heuristic, adjustable in Your Rules).",
         autoFix = AutoFix.AddSets(m, missing, targetDay),
     )

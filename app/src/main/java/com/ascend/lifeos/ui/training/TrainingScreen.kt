@@ -40,7 +40,7 @@ import com.ascend.lifeos.ui.kit.JarvisSheet
 import com.ascend.lifeos.ui.kit.Spark
 import com.ascend.lifeos.ui.theme.*
 
-private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY, SEQUENCE }
+private enum class TrainRoute { HUB, WORKOUT, HIIT, STRETCH, STATS, METRONOME, PICK_EXERCISE, EXERCISES, ASSESS, SKILL_GOALS, SUMMARY, TEST_DAY, SEQUENCE, PLAN_STUDIO }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -105,6 +105,7 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
                 onOpenAssess = { route = TrainRoute.ASSESS },
                 onOpenSkillGoals = { route = TrainRoute.SKILL_GOALS },
                 onOpenTestDay = { key -> testChain = key; route = TrainRoute.TEST_DAY },
+                onOpenPlanStudio = { route = TrainRoute.PLAN_STUDIO },
             )
             TrainRoute.WORKOUT -> ActiveWorkoutScreen(
                 vm = vm,
@@ -139,9 +140,37 @@ fun TrainingScreen(onDockVisible: (Boolean) -> Unit = {}) {
                 vm = vm,
                 onBack = { vm.regeneratePlan(); route = TrainRoute.HUB },
             )
+            TrainRoute.PLAN_STUDIO -> PlanStudioScreen(
+                vm = vm,
+                onBack = { vm.regeneratePlan(); route = TrainRoute.HUB },
+            )
         }
         }
     }
+    }
+
+    // ── Earned levels (U05 §5.2.5): promote → full-screen moment; gates met
+    //    but self-check missing → the 20-second tech-check sheet. Rendered as
+    //    dialog/sheet so they float over whatever route is active.
+    val levelCtx = androidx.compose.ui.platform.LocalContext.current
+    vm.levelUpPending?.let { ev ->
+        LevelUpMoment(
+            discipline = ev.discipline,
+            newLevel = ev.to,
+            reason = ev.reason,
+            onContinue = { vm.applyPendingLevelUp() },
+        )
+    }
+    vm.techCheckPending?.let { d ->
+        val lvl = remember(d) {
+            com.ascend.lifeos.data.training.DisciplineLevelStore.state(levelCtx, d).level
+        }
+        TechCheckSheet(
+            discipline = d,
+            currentLevel = lvl,
+            onNotYet = { vm.snoozeTechCheck(d) },
+            onConfirm = { vm.confirmTechCheck(d) },
+        )
     }
 }
 
