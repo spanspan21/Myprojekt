@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "jarvis://tools/exercisedb/schema/exercise.schema.json",
+  "title": "ExerciseDB v2 raw file (Plan U02 §2.7)",
+  "description": "Rohformat für Agenten-Recherche. Eine raw/*.json-Datei ist ein JSON-Array solcher Einträge. codegen.js validiert dieselben Regeln maschinell (plus Cross-File-Checks: ID/Namens-Eindeutigkeit inkl. frozen.json, Kanten-Endpunkte, EASIER-DAG + Monotonie, EQUIPMENT_VARIANT-Regeln) und emittiert compile-sicheres Kotlin. Enum-Wahrheit: ExerciseTaxonomy.kt, TrainingData.kt (Muscle/ExCategory), TrainBrain.kt (Pattern).",
+  "type": "array",
+  "minItems": 1,
+  "items": { "$ref": "#/definitions/entry" },
+  "definitions": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-z0-9_]+$",
+      "description": "Namespace-Präfix muss zur Familien-Datei passen (bw_ calisthenics.json, gym_ gym_variants.json, kb_ kettlebell.json). str_ ist durch StretchRoutine-IDs belegt und verboten."
+    },
+    "muscle": {
+      "description": "Muscle-Enum (TrainingData.kt) OHNE FULL_BODY — FULL_BODY ist in muscleShares verboten.",
+      "enum": [
+        "CHEST", "SHOULDERS", "TRICEPS",
+        "LATS", "BICEPS", "FOREARMS", "TRAPS", "REAR_DELTS",
+        "QUADS", "HAMSTRINGS", "GLUTES", "CALVES", "HIP_FLEXORS",
+        "ABS", "OBLIQUES", "LOWER_BACK"
+      ]
+    },
+    "exCategory": {
+      "enum": ["PUSH", "PULL", "LEGS", "CORE", "SKILL", "CARDIO", "MOBILITY"]
+    },
+    "movementPattern": {
+      "enum": [
+        "HORIZONTAL_PUSH", "VERTICAL_PUSH", "HORIZONTAL_PULL", "VERTICAL_PULL",
+        "DIP", "SQUAT", "HINGE", "LUNGE", "CARRY", "JUMP", "SPRINT",
+        "CORE_ANTI_EXTENSION", "CORE_ANTI_ROTATION", "CORE_FLEXION", "HANG_GRIP",
+        "ISO_HOLD_PUSH", "ISO_HOLD_PULL", "BALANCE", "ROTATION", "ISOLATION", "MOBILITY"
+      ]
+    },
+    "equipment": {
+      "enum": [
+        "BODYWEIGHT", "PULLUP_BAR", "DIP_BARS", "RINGS", "PARALLETTES", "POLE",
+        "RESISTANCE_BAND", "TRX", "WEIGHT_VEST", "AB_WHEEL", "JUMP_ROPE", "BOX",
+        "DUMBBELL", "BARBELL", "EZ_BAR", "KETTLEBELL", "CABLE", "MACHINE", "BENCH",
+        "SMITH", "TRAP_BAR", "SANDBAG", "SLED", "MEDICINE_BALL", "WALL", "FLOOR_ONLY"
+      ]
+    },
+    "laterality": { "enum": ["BILATERAL", "UNILATERAL", "ALTERNATING", "SIDE_HOLD"] },
+    "romEmphasis": { "enum": ["FULL", "LENGTHENED", "SHORTENED", "PARTIAL_TOP"] },
+    "mechanics": { "enum": ["COMPOUND", "ISOLATION"] },
+    "loadMode": {
+      "enum": ["NONE", "EXTERNAL", "BODYWEIGHT_PLUS"],
+      "description": "EXTERNAL ⇒ unit = reps UND equipment enthält ein Lastgerät (DUMBBELL/BARBELL/EZ_BAR/KETTLEBELL/CABLE/MACHINE/SMITH/TRAP_BAR/SANDBAG/SLED/MEDICINE_BALL)."
+    },
+    "injuryFlag": {
+      "enum": ["SHOULDER", "WRIST", "ELBOW", "LOWER_BACK", "HIP", "KNEE", "ANKLE", "HAMSTRING", "GROIN", "NECK"]
+    },
+    "legacyPattern": {
+      "description": "Das grobe 7-Werte-Pattern-Enum aus TrainBrain.kt — Währung der SkillCatalog-Gates.",
+      "enum": ["PUSH", "PULL", "DIP", "SQUAT", "ROW", "CORE", "HANG"]
+    },
+    "cue": { "type": "string", "minLength": 1, "maxLength": 90 },
+    "edge": {
+      "type": "object",
+      "description": "Ausgehende Kante dieses Eintrags (from = eigene id). EASIER deklariert die SCHWERERE Übung und zeigt zur leichteren (Monotonie: difficulty(from) ≥ difficulty(to) + 0.3, DAG). LATERAL/EQUIPMENT_VARIANT sind symmetrisch gemeint und werden nur EINMAL gespeichert. similarity und delta werden von codegen.js BERECHNET, nie angegeben.",
+      "required": ["to", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "to": { "$ref": "#/definitions/id" },
+        "type": { "enum": ["EASIER", "LATERAL", "EQUIPMENT_VARIANT"] },
+        "note": { "type": "string", "maxLength": 120 }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "id", "pattern", "muscleShares", "equipment", "laterality",
+        "romEmphasis", "mechanics", "difficulty", "systemicCost", "loadMode",
+        "skillRequires", "contraFlags", "cues"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "upgrade": {
+          "const": true,
+          "description": "Nur in seed_v2.json: hebt eine EXISTIERENDE frozen-ID auf v2-Attribute. Die id muss in frozen.json stehen; name/unit (falls angegeben) müssen dem Bestand entsprechen; category/orderIndex/description sind verboten (copy() ändert sie nicht)."
+        },
+        "name": {
+          "type": "string", "minLength": 3, "maxLength": 60,
+          "description": "Pflicht für neue Einträge. Englisch (App-Sprache). Global eindeutig (normalisiert: lowercase, Whitespace-kollabiert, Umlaut-treu)."
+        },
+        "aliases": {
+          "type": "array", "uniqueItems": true, "default": [],
+          "items": { "type": "string", "minLength": 2, "maxLength": 60 },
+          "description": "Deklarierte Alternativ-Namen (Such-Treffer). Jede nicht deklarierte Namensdopplung wird hart abgelehnt."
+        },
+        "category": { "$ref": "#/definitions/exCategory", "description": "Pflicht für neue Einträge; bei upgrade verboten." },
+        "pattern": { "$ref": "#/definitions/movementPattern" },
+        "muscleShares": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 6,
+          "propertyNames": { "$ref": "#/definitions/muscle" },
+          "additionalProperties": { "type": "number", "exclusiveMinimum": 0, "maximum": 0.9 },
+          "description": "Σ ∈ [0.98, 1.02], jeder Wert ∈ (0, 0.9], max. 6 Muskeln, KEIN FULL_BODY. argmax wird primaryMuscle; Shares ≥ 0.10 (außer argmax) werden secondaryMuscles."
+        },
+        "equipment": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": { "$ref": "#/definitions/equipment" },
+          "description": "UND-Semantik: ALLES Gelistete ist nötig (Bulgarian Split Squat = [DUMBBELL, BENCH])."
+        },
+        "laterality": { "$ref": "#/definitions/laterality", "description": "SIDE_HOLD ⇒ unit = sec." },
+        "romEmphasis": { "$ref": "#/definitions/romEmphasis" },
+        "mechanics": { "$ref": "#/definitions/mechanics" },
+        "difficulty": {
+          "type": "number", "minimum": 1, "maximum": 10,
+          "description": "Float, innerhalb der Pattern-Familie geankert (Anker-Tabellen im Briefing). Kein Inter-Familien-Vergleich."
+        },
+        "systemicCost": {
+          "type": "integer", "minimum": 1, "maximum": 5,
+          "description": "Axiale/systemische Last: Deadlift 5, Squat 4, Bench 3, Curl 1, Mobility 1."
+        },
+        "loadMode": { "$ref": "#/definitions/loadMode" },
+        "unit": {
+          "enum": ["reps", "sec"],
+          "description": "Pflicht für neue Einträge; bei upgrade optional und muss dem Bestand entsprechen. SIDE_HOLD/ISO_HOLD_* ⇒ sec; EXTERNAL ⇒ reps."
+        },
+        "skillRequires": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/legacyPattern" },
+          "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "description": "Level-Gates im SkillDef.requires-Format, z. B. {\"PULL\": 4, \"CORE\": 4}. Leeres Objekt = frei."
+        },
+        "contraFlags": {
+          "type": "array", "maxItems": 3, "uniqueItems": true,
+          "items": { "$ref": "#/definitions/injuryFlag" },
+          "description": "\"Belastet diese Struktur deutlich\" — max. 3, sonst ist alles geflaggt und nichts geflaggt."
+        },
+        "cues": {
+          "type": "object",
+          "required": ["setup", "exec", "fix"],
+          "additionalProperties": false,
+          "properties": {
+            "setup": { "$ref": "#/definitions/cue" },
+            "exec": { "$ref": "#/definitions/cue" },
+            "fix": { "$ref": "#/definitions/cue" }
+          },
+          "description": "Drei scanbare Zeilen à ≤ 90 Zeichen (Text-Diät): Aufbau, Ausführung, häufigster Fehler + Korrektur."
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/edge" }
+        },
+        "description": { "type": "string", "maxLength": 200, "description": "Optional; Fallback ist cues.exec." },
+        "orderIndex": { "type": "integer", "minimum": 0, "description": "Optional; fehlt er, vergibt codegen.js 100 + Position (id-sortiert) im Pack." }
+      },
+      "allOf": [
+        {
+          "if": { "not": { "required": ["upgrade"] } },
+          "then": { "required": ["name", "category", "unit"] },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["category"] },
+                { "required": ["orderIndex"] },
+                { "required": ["description"] }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

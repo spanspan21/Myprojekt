@@ -25,11 +25,16 @@ object MuscleRecovery {
     // Recovery half-lives (h). Legs recover slower than upper body. Calibrated
     // 2026-07 so a normal hard day (8–12 sets) lands at ~48–72 h, matching the
     // ≥2×/week frequency the hypertrophy evidence favours (Schoenfeld 2016).
-    private fun halfLifeHours(m: Muscle): Double = when (m) {
+    // internal + re-exported as halfLife(): the PlanRater simulates PLANNED
+    // weeks on the same calibrated constants (one truth per half-life, U04).
+    internal fun halfLifeHours(m: Muscle): Double = when (m) {
         Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES, Muscle.LOWER_BACK -> 38.0
         Muscle.CALVES, Muscle.FOREARMS, Muscle.ABS, Muscle.OBLIQUES -> 24.0
         else -> 30.0
     }
+
+    /** The calibrated recovery half-life in hours — read-only export. */
+    fun halfLife(m: Muscle): Double = halfLifeHours(m)
 
     /**
      * Hours until [freshness] decays back up to [target]. Ratio (1−freshness)/
