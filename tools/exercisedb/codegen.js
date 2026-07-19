@@ -675,8 +675,18 @@ function entityKt(entry, fam, orderIndex) {
 }
 
 function overrideKt(entry) {
+  // primary/secondary sind abgeleitete Felder (§2.4.1) — auch beim Upgrade
+  // neu setzen. Für normale Seeds ein No-op (Validator: argmax == Bestands-
+  // primary); für FULL_BODY-Zeilen (Burpee, Jumping Jacks) ersetzt es den in
+  // Shares verbotenen Legacy-Wert durch den argmax.
+  const d = derive(entry.muscleShares);
+  const secondary = d.secondary.length
+    ? `listOf(${d.secondary.map((m) => `Muscle.${m}`).join(', ')})`
+    : 'emptyList()';
   return [
     `        "${esc(entry.id)}" -> e.copy(`,
+    `            primaryMuscle = Muscle.${d.primary},`,
+    `            secondaryMuscles = ${secondary},`,
     `            pattern = MovementPattern.${entry.pattern},`,
     `            muscleShares = ${sharesKt(entry.muscleShares)},`,
     `            equipment = ${enumSetKt('Equipment', entry.equipment, EQUIPMENT)},`,
