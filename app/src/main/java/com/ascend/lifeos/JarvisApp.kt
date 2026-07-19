@@ -69,6 +69,7 @@ class JarvisApp : Application() {
             // MainActivity init order instead of this list (K1 follow-ups)
             com.ascend.lifeos.ui.hud.cookingRecipe.value
             com.ascend.lifeos.data.OwnRecipes.rev
+            com.ascend.lifeos.data.training.plan.PlanStore.rev
         }
         mark("snapshotWarmup")
         // Init the store at the Application level so receivers/widgets that run

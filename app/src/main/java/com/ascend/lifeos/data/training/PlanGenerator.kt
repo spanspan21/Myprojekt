@@ -61,6 +61,9 @@ data class PlannedSession(
     val blocks: List<PlannedBlock> = emptyList(),   // per-block minutes, display order
     val why: String = "",                            // "Recovery 82 · fresh chest · off-season build"
     val discipline: String = "calisthenics",         // Disciplines id — routes the player on start
+    // "sets" → ActiveWorkout, "timed" → SequencePlayer. Derived, additive:
+    // custom templates (plan_*) can be either, so an id whitelist can't route them.
+    val mode: String = "sets",
 )
 
 data class WeekPlan(val sessions: List<PlannedSession>, val note: String?)

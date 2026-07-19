@@ -120,4 +120,7 @@ dependencies {
 
     // Local JVM unit tests for the pure engines (scores, targets, plans).
     testImplementation 'junit:junit:4.13.2'
+    // real org.json on the JVM test classpath — Android's stub throws "not
+    // mocked", and the plan codec (PlanCodec) is pure JSON worth unit-testing
+    testImplementation 'org.json:json:20240303'
 }

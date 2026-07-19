@@ -1,0 +1,987 @@
+{
+  "_comment": "GENERIERT von tools/exercisedb/extract_frozen.js aus ExerciseSeed.kt + GymExercises.kt. Bestands-IDs, die die Pipeline nie kollidieren oder verändern darf (U02 §2.7 Regel 2). Nach Änderungen am Seed neu generieren.",
+  "count": 109,
+  "exercises": [
+    {
+      "id": "cardio_box",
+      "name": "Box Jumps",
+      "category": "CARDIO",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "cardio_burpee",
+      "name": "Burpees",
+      "category": "CARDIO",
+      "primaryMuscle": "FULL_BODY",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "cardio_hk",
+      "name": "High Knees",
+      "category": "CARDIO",
+      "primaryMuscle": "HIP_FLEXORS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "cardio_jj",
+      "name": "Jumping Jacks",
+      "category": "CARDIO",
+      "primaryMuscle": "FULL_BODY",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "cardio_mountain",
+      "name": "Mountain Climbers",
+      "category": "CARDIO",
+      "primaryMuscle": "ABS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "cardio_rope",
+      "name": "Jump Rope",
+      "category": "CARDIO",
+      "primaryMuscle": "CALVES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_abwheel",
+      "name": "Ab-Wheel Rollouts",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_dragon",
+      "name": "Dragon Flags",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_flag",
+      "name": "Human Flag",
+      "category": "CORE",
+      "primaryMuscle": "OBLIQUES",
+      "unit": "sec",
+      "aliasOf": "skill_hf",
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_hlr",
+      "name": "Hanging Leg Raises",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_hollow",
+      "name": "Hollow Body Hold",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_lsit",
+      "name": "L-Sit",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_plank",
+      "name": "Plank",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_toes",
+      "name": "Toes-to-Bar",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "core_wiper",
+      "name": "Windshield Wipers",
+      "category": "CORE",
+      "primaryMuscle": "OBLIQUES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "grip_hang",
+      "name": "Dead Hang",
+      "category": "PULL",
+      "primaryMuscle": "FOREARMS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "grip_onearm",
+      "name": "One-Arm Hang",
+      "category": "PULL",
+      "primaryMuscle": "FOREARMS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "grip_towel",
+      "name": "Towel Hang",
+      "category": "PULL",
+      "primaryMuscle": "FOREARMS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "gym_bench",
+      "name": "Bench Press",
+      "category": "PUSH",
+      "primaryMuscle": "CHEST",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_bulgarian",
+      "name": "DB Bulgarian Split Squat",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_cable_crunch",
+      "name": "Cable Crunch",
+      "category": "CORE",
+      "primaryMuscle": "ABS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_cable_row",
+      "name": "Seated Cable Row",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_calf_raise",
+      "name": "Calf Raise",
+      "category": "LEGS",
+      "primaryMuscle": "CALVES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_db_curl",
+      "name": "DB Curl",
+      "category": "PULL",
+      "primaryMuscle": "BICEPS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_db_lunge",
+      "name": "DB Lunge",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_db_row",
+      "name": "DB Row",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_db_shoulder_press",
+      "name": "DB Shoulder Press",
+      "category": "PUSH",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_deadlift",
+      "name": "Deadlift",
+      "category": "LEGS",
+      "primaryMuscle": "GLUTES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_ez_curl",
+      "name": "EZ-Bar Curl",
+      "category": "PULL",
+      "primaryMuscle": "BICEPS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_face_pull",
+      "name": "Face Pull",
+      "category": "PULL",
+      "primaryMuscle": "REAR_DELTS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_front_squat",
+      "name": "Front Squat",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_hip_thrust",
+      "name": "Hip Thrust",
+      "category": "LEGS",
+      "primaryMuscle": "GLUTES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_incline_db_press",
+      "name": "Incline DB Press",
+      "category": "PUSH",
+      "primaryMuscle": "CHEST",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_lat_pulldown",
+      "name": "Lat Pulldown",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_lateral_raise",
+      "name": "Lateral Raise",
+      "category": "PUSH",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_leg_curl",
+      "name": "Leg Curl",
+      "category": "LEGS",
+      "primaryMuscle": "HAMSTRINGS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_leg_ext",
+      "name": "Leg Extension",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_leg_press",
+      "name": "Leg Press",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_ohp",
+      "name": "Overhead Press",
+      "category": "PUSH",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_rdl",
+      "name": "Romanian Deadlift",
+      "category": "LEGS",
+      "primaryMuscle": "HAMSTRINGS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_rear_delt_fly",
+      "name": "Rear Delt Fly",
+      "category": "PULL",
+      "primaryMuscle": "REAR_DELTS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_row",
+      "name": "Barbell Row",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_skullcrusher",
+      "name": "Skullcrusher",
+      "category": "PUSH",
+      "primaryMuscle": "TRICEPS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_squat",
+      "name": "Back Squat",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "gym_triceps_pushdown",
+      "name": "Triceps Pushdown",
+      "category": "PUSH",
+      "primaryMuscle": "TRICEPS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "GymExercises.kt"
+    },
+    {
+      "id": "legs_bulgarian",
+      "name": "Bulgarian Split Squats",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_calf",
+      "name": "Calf Raises",
+      "category": "LEGS",
+      "primaryMuscle": "CALVES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_jump",
+      "name": "Jump Squats",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_lunge",
+      "name": "Lunges",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_nordic",
+      "name": "Nordic Curls",
+      "category": "LEGS",
+      "primaryMuscle": "HAMSTRINGS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_pistol",
+      "name": "Pistol Squats",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_shrimp",
+      "name": "Shrimp Squats",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_sissy",
+      "name": "Sissy Squats",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_squat",
+      "name": "Squats",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "legs_wallsit",
+      "name": "Wall Sits",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_catcow",
+      "name": "Cat-Cow",
+      "category": "MOBILITY",
+      "primaryMuscle": "LOWER_BACK",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_disco",
+      "name": "Shoulder Dislocates",
+      "category": "MOBILITY",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_hip90",
+      "name": "Hip 90/90",
+      "category": "MOBILITY",
+      "primaryMuscle": "HIP_FLEXORS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_pigeon",
+      "name": "Pigeon Stretch",
+      "category": "MOBILITY",
+      "primaryMuscle": "GLUTES",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_thoracic",
+      "name": "Thoracic Rotation",
+      "category": "MOBILITY",
+      "primaryMuscle": "LOWER_BACK",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_wgs",
+      "name": "World's Greatest Stretch",
+      "category": "MOBILITY",
+      "primaryMuscle": "HIP_FLEXORS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "mob_wrist",
+      "name": "Wrist Mobility",
+      "category": "MOBILITY",
+      "primaryMuscle": "FOREARMS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_boxjump",
+      "name": "Box Jumps",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": "cardio_box",
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_broad",
+      "name": "Broad Jumps",
+      "category": "LEGS",
+      "primaryMuscle": "GLUTES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_depth",
+      "name": "Depth Drops",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_lateral",
+      "name": "Lateral Hops",
+      "category": "LEGS",
+      "primaryMuscle": "CALVES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_skater",
+      "name": "Skater Bounds",
+      "category": "LEGS",
+      "primaryMuscle": "GLUTES",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_split",
+      "name": "Split Jump Lunges",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_sprint",
+      "name": "Hill/Flat Sprints",
+      "category": "CARDIO",
+      "primaryMuscle": "GLUTES",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "plyo_tuck",
+      "name": "Tuck Jumps",
+      "category": "LEGS",
+      "primaryMuscle": "QUADS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_archer",
+      "name": "Archer Pull-ups",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_australian",
+      "name": "Australian Pull-ups",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_chinup",
+      "name": "Chin-ups",
+      "category": "PULL",
+      "primaryMuscle": "BICEPS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_flrow",
+      "name": "Front Lever Rows",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_lsit",
+      "name": "L-Sit Pull-ups",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_muscleup",
+      "name": "Muscle-ups",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": "skill_mu",
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_pullup",
+      "name": "Pull-ups",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "pull_ringrow",
+      "name": "Ring Rows",
+      "category": "PULL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_archer",
+      "name": "Archer Push-ups",
+      "category": "PUSH",
+      "primaryMuscle": "CHEST",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_diamond",
+      "name": "Diamond Push-ups",
+      "category": "PUSH",
+      "primaryMuscle": "TRICEPS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_dips",
+      "name": "Dips",
+      "category": "PUSH",
+      "primaryMuscle": "CHEST",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_hspu",
+      "name": "Handstand Push-ups",
+      "category": "PUSH",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_pike",
+      "name": "Pike Push-ups",
+      "category": "PUSH",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_pseudo",
+      "name": "Pseudo-Planche Push-ups",
+      "category": "PUSH",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_pushup",
+      "name": "Push-ups",
+      "category": "PUSH",
+      "primaryMuscle": "CHEST",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "push_ringdips",
+      "name": "Ring Dips",
+      "category": "PUSH",
+      "primaryMuscle": "CHEST",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_bl",
+      "name": "Back Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_bl_str",
+      "name": "Straddle Back Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_bl_tuck",
+      "name": "Tuck Back Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_fl",
+      "name": "Front Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_fl_adv",
+      "name": "Advanced Tuck Front Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_fl_half",
+      "name": "Half-Lay Front Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_fl_str",
+      "name": "Straddle Front Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_fl_tuck",
+      "name": "Tuck Front Lever",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hf",
+      "name": "Human Flag",
+      "category": "SKILL",
+      "primaryMuscle": "OBLIQUES",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hf_str",
+      "name": "Straddle Flag",
+      "category": "SKILL",
+      "primaryMuscle": "OBLIQUES",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hf_tuck",
+      "name": "Tuck Flag",
+      "category": "SKILL",
+      "primaryMuscle": "OBLIQUES",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hf_vert",
+      "name": "Vertical Flag",
+      "category": "SKILL",
+      "primaryMuscle": "OBLIQUES",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hs",
+      "name": "Handstand (freestanding)",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hs_kick",
+      "name": "Kick-up to Balance",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_hs_wall",
+      "name": "Wall Handstand",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_manna",
+      "name": "Manna",
+      "category": "SKILL",
+      "primaryMuscle": "ABS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_mu",
+      "name": "Muscle-up",
+      "category": "SKILL",
+      "primaryMuscle": "LATS",
+      "unit": "reps",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_pl_adv",
+      "name": "Advanced Tuck Planche",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_pl_lean",
+      "name": "Planche Lean",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_pl_str",
+      "name": "Straddle Planche",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_pl_tuck",
+      "name": "Tuck Planche",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_planche",
+      "name": "Planche",
+      "category": "SKILL",
+      "primaryMuscle": "SHOULDERS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    },
+    {
+      "id": "skill_vsit",
+      "name": "V-Sit",
+      "category": "SKILL",
+      "primaryMuscle": "ABS",
+      "unit": "sec",
+      "aliasOf": null,
+      "source": "ExerciseSeed.kt"
+    }
+  ]
+}

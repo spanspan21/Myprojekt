@@ -128,7 +128,10 @@ object PlanOrchestrator {
                 sessions += plan.sessions.take(share).map { it.copy(index = index++) }
                 note = note ?: plan.note
             } else {
-                val engine = engines[d] ?: continue
+                // two-stage resolution: built-in engines, then the user's own
+                // activated plan templates ("plan_*" ids ARE disciplines — they
+                // inherit placeWeek/heatmap/deload/frequency for free, U03 §3.3)
+                val engine = engines[d] ?: customEngineFor(ctx, d) ?: continue
                 val inputs = EngineInputs(
                     sessions = share,
                     sessionLenMin = sessionLenMin,
@@ -160,6 +163,13 @@ object PlanOrchestrator {
     // the ViewModel pre-warms this holder right before calling generate().
     @Volatile var gymBestsCache: Map<String, Double> = emptyMap()
     private fun gymBests(@Suppress("UNUSED_PARAMETER") ctx: Context): Map<String, Double> = gymBestsCache
+
+    /** A user template registered as its own engine — null when unknown. */
+    private fun customEngineFor(ctx: Context, disciplineId: String): PlanEngine? {
+        if (!disciplineId.startsWith("plan_")) return null
+        val t = runCatching { com.ascend.lifeos.data.training.plan.PlanStore.byId(ctx, disciplineId) }.getOrNull() ?: return null
+        return com.ascend.lifeos.data.training.plan.TemplateEngine(t)
+    }
 
     /** "orig>repl|orig2>repl2" → {orig: repl}. Malformed pairs are skipped. */
     private fun parseSwaps(s: String): Map<String, String> =
