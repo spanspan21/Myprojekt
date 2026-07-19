@@ -34,8 +34,21 @@ import com.ascend.lifeos.ui.theme.*
 object Changelog {
     // What actually changed THIS release — the auto-sheet shows only these;
     // everything below in ENTRIES is the archive behind "Earlier updates".
-    const val LATEST_VERSION = "2.33"
+    const val LATEST_VERSION = "2.34"
     val LATEST = listOf(
+        "Plan Studio: build your own training plan — any exercise, sets, reps, load style, supersets, even a 4-week wave — and it runs as a first-class plan with calendar, heatmap and deloads",
+        "Your plan gets GRADED: a 0–100 score across nine coached criteria (volume, balance, recovery collisions, time realism …) with one-tap fixes that show their real point gain",
+        "JARVIS grades its own weeks with the same score — when your plan beats the engine, the app says so",
+        "The exercise library tripled: ~300 exercises with muscle-share maps, equipment, difficulty ladders and swap suggestions; every skill feeder is now a real, loggable exercise",
+        "Levels are earned now, not set: sessions, consistency and real strength standards promote you — with a proper celebration and newly unlocked drills",
+        "Every sport periodizes for real: build weeks, deloads and tapers you can see ('Meso W3/4 · density +8 %'), not just read about",
+        "Adaptive Mode (opt-in): readiness from sleep, load and effort trend suggests light days or effort caps — Auto is earned and always shows its work",
+        "Prioritize your sports with weight dots; short on time? The plan compresses honestly (trimmed rests, −1 set) before anything gets cut",
+        "A 'What now?' card on Home answers the only question that matters; bank credentials and your Untis password are Keystore-encrypted now",
+    )
+
+    // ── archived: v2.33 (gym splits & the interactive body map) ──
+    private val V2_33 = listOf(
         "Choose your gym split — Full Body, Upper/Lower, Push/Pull/Legs, Arnold or Bro — or build a custom week from day blocks (Settings → Modules → Training)",
         "Swap a lift in your plan: open any exercise and pick a same-muscle alternative — it sticks from your next session",
         "Your strength level, per lift — a relative-strength tier from Untrained to Elite with progress to the next, on the Train hub",
@@ -81,7 +94,7 @@ object Changelog {
     )
 
     // newest first — edit this list per release
-    val ENTRIES = V2_32 + V2_31 + V2_30 + listOf(
+    val ENTRIES = V2_33 + V2_32 + V2_31 + V2_30 + listOf(
         // ── v2.24 ──
         "TickerNumber odometer on recovery hero, sleep score, nutrition hero stats, rep counter and logged-days counter — every key number rolls in with animated digits",
         "Haptic feedback on all armed deletes: workout set, session history, notes, finance entries, food entries, school subjects, Guard windows — first tap warns, second tap confirms with a buzz",

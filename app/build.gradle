@@ -18,8 +18,8 @@ android {
         applicationId "com.ascend.lifeos"
         minSdk 26
         targetSdk 34
-        versionCode 35
-        versionName "2.33"
+        versionCode 36
+        versionName "2.34"
         vectorDrawables { useSupportLibrary true }
 
         buildConfigField "String", "SYNC_URL", "\"${_localProps.getProperty('JARVIS_SYNC_URL', '')}\""
@@ -127,3 +127,4 @@ dependencies {
     // mocked", and the plan codec (PlanCodec) is pure JSON worth unit-testing
     testImplementation 'org.json:json:20240303'
 }
+
