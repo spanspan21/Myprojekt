@@ -112,6 +112,9 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         // Process death must never lose the debounced write.
         Repo.flush()
+        // Same guarantee for the async finance persists — a booking made
+        // seconds before backgrounding must reach Room (loss window fix).
+        runCatching { com.ascend.lifeos.data.finance.FinanceRoom.flush() }
     }
 
     override fun onStop() {

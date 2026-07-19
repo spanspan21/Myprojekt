@@ -42,7 +42,7 @@ object GoCardlessLink {
     private var cachedBanks: List<GcBank>? = null
 
     private fun prefs(ctx: Context): SharedPreferences =
-        ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        com.ascend.lifeos.data.SecurePrefs.get(ctx, PREF) // credentials → Keystore-encrypted
     private fun touch() { rev++ }
 
     // ── credentials (pasted in-app) ─────────────────────────────────────────

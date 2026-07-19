@@ -119,6 +119,9 @@ dependencies {
     ksp 'androidx.room:room-compiler:2.6.1'
 
     // Local JVM unit tests for the pure engines (scores, targets, plans).
+    // Keystore-encrypted prefs for credentials (GoCardless, Untis) — the
+    // plaintext-secrets audit finding, finally closed (G-plan §8)
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     testImplementation 'junit:junit:4.13.2'
     // real org.json on the JVM test classpath — Android's stub throws "not
     // mocked", and the plan codec (PlanCodec) is pure JSON worth unit-testing

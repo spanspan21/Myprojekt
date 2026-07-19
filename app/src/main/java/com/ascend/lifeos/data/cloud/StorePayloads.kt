@@ -85,7 +85,10 @@ object StorePayloads {
             FinanceStore.recurrings(ctx).forEach {
                 put(JSONObject().put("id", it.id).put("name", it.name)
                     .put("cents", it.amountCents).put("cat", it.category)
-                    .put("day", it.dayOfMonth).put("active", it.active))
+                    .put("day", it.dayOfMonth).put("active", it.active)
+                    // the missing field the web needs (G-parity P1): without it
+                    // a yearly sub was counted 12× in every web money view
+                    .put("interval", it.interval))
             }
         }
         val goals = JSONArray().apply {
@@ -103,6 +106,8 @@ object StorePayloads {
         return JSONObject().put("accounts", accounts).put("txns", txns)
             .put("budgets", budgets).put("recurring", recurring)
             .put("goals", goals).put("holdings", holdings)
+            // currency code so the web stops hardcoding EUR (G-parity P1)
+            .put("currency", com.ascend.lifeos.data.Prefs.string(ctx, com.ascend.lifeos.data.Prefs.CURRENCY, "EUR"))
     }
 
     // ── life: habits, OKR goals, per-day habit-done map ───────────────────────

@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter
 object UntisSync {
     private const val PREF = "untis"
 
-    private fun prefs(ctx: Context) = ctx.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+    private fun prefs(ctx: Context) = com.ascend.lifeos.data.SecurePrefs.get(ctx, PREF) // password → Keystore-encrypted
 
     private data class P(
         val day: LocalDate, val start: Int, val end: Int,

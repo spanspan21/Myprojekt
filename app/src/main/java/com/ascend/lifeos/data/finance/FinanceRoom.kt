@@ -75,7 +75,24 @@ object FinanceRoom {
     }
 
     private fun persist(block: suspend FinanceDao.() -> Unit) {
-        scope.launch { dao.block(); reloadInternal() }
+        pending.incrementAndGet()
+        scope.launch {
+            try { dao.block(); reloadInternal() } finally { pending.decrementAndGet() }
+        }
+    }
+
+    private val pending = java.util.concurrent.atomic.AtomicInteger(0)
+
+    /**
+     * Drain outstanding async writes — called from MainActivity.onPause (the
+     * Repo.flush() pattern): a process kill between cache update and Room
+     * write used to lose the booking silently (G-parity hardening).
+     */
+    fun flush(timeoutMs: Long = 2000) {
+        val t0 = System.currentTimeMillis()
+        while (pending.get() > 0 && System.currentTimeMillis() - t0 < timeoutMs) {
+            Thread.sleep(10)
+        }
     }
 
     // ── synchronous reads (from cache) ──
